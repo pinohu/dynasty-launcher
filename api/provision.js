@@ -172,6 +172,23 @@ export default async function handler(req, res) {
 
     await new Promise(r => setTimeout(r, 2000)); // extra settle time
 
+    // 3a-pre. Patch package.json — fix tsx → npx tsx in build script
+    try {
+      const pkgResp = await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/package.json`, {
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+      });
+      if (pkgResp.ok) {
+        const pkgData = await pkgResp.json();
+        const pkg = JSON.parse(Buffer.from(pkgData.content, 'base64').toString());
+        if (pkg.scripts?.build?.includes('tsx scripts/') && !pkg.scripts.build.includes('npx tsx')) {
+          pkg.scripts.build = pkg.scripts.build.replace('tsx scripts/', 'npx tsx scripts/');
+          const patchedPkg = JSON.stringify(pkg, null, 2);
+          await pushFile(GITHUB_TOKEN, ORG, project_slug, 'package.json', patchedPkg, 'fix: npx tsx for Vercel compatibility');
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+    } catch {}
+
     // 3a. Push @dynasty/contracts stub (monorepo package not available in standalone repo)
     const CONTRACTS_STUB = `// @dynasty/contracts standalone stub — no monorepo required
 
