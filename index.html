@@ -189,13 +189,22 @@ function updateLaunchBtn(){
   }
 }
 
+let TOOL_INVENTORY = null;
+async function loadInventory(){
+  if(TOOL_INVENTORY) return;
+  try{const r=await fetch('/api/provision?action=inventory');TOOL_INVENTORY=await r.json();}catch{}
+}
 async function inferConfig(desc){
+  await loadInventory();
+  const toolContext=TOOL_INVENTORY?`
+Available Dynasty tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TOOL_INVENTORY.payments||[]).join(',')}) Comms(${(TOOL_INVENTORY.comms||[]).join(',')}) Infra(${(TOOL_INVENTORY.infrastructure||[]).join(',')}) SuiteDash(${TOOL_INVENTORY.suitedash_licenses} licenses) BD(${TOOL_INVENTORY.brilliant_licenses} licenses)`:'';
+
   try{
     const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,
         messages:[{role:'user',content:`Analyze this project description and infer all configuration. Return ONLY valid JSON.
 
-Description: "${desc}"
+Description: "${desc}"${toolContext}
 
 Return:
 {
@@ -1027,6 +1036,30 @@ volumes:
       setP('pf','run',`${i+1}/${fl.length} — ${p}`);
     }
     setP('pf','ok',`${fl.length} files live`);
+
+    // ── Live tool provisioning ────────────────────────────────────────────
+    const provisionSvcs = [];
+    if((inf.flint_svcs||[]).includes('vercel')) provisionSvcs.push('vercel');
+    if((inf.manual_svcs||[]).includes('stripe')) provisionSvcs.push('stripe');
+    if((inf.manual_svcs||[]).includes('callscaler')||true) provisionSvcs.push('acumbamail','pulsetic');
+    if(provisionSvcs.length){
+      addP('prov',`Provisioning ${provisionSvcs.length} services directly`,'Using Dynasty tool stack — no manual steps');setP('prov','run');
+      try{
+        const pr=await fetch('/api/provision?action=provision',{method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            project_name:inf.name,
+            project_slug:inf.repo,
+            description:desc,
+            services:provisionSvcs
+          })});
+        const pd=await pr.json();
+        if(pd.success){
+          const done=Object.entries(pd.results).filter(([,v])=>v.success).map(([k])=>k);
+          setP('prov','ok',`Provisioned: ${done.join(', ')||'setup complete'}`);
+        } else {setP('prov','sk','Partial — some services logged to MANUAL-ACTIONS.md');}
+      }catch{setP('prov','sk','Provision API offline — queuing to Flint');}
+    }
 
     const ftasks=inf.flint_svcs||[];
     if(ftasks.length){
