@@ -190,6 +190,20 @@ function updateLaunchBtn(){
 }
 
 let TOOL_INVENTORY = null;
+let HEALTH_STATUS = null;
+async function checkHealth(){
+  try{
+    const r=await fetch('/api/health');
+    HEALTH_STATUS=await r.json();
+    if(HEALTH_STATUS.expired_or_failing?.length){
+      const warn=document.createElement('div');
+      warn.style.cssText='background:#1a0808;border:1px solid rgba(229,83,75,0.3);border-radius:8px;padding:8px 12px;margin-bottom:1rem;font-size:11px;color:#F07070';
+      warn.innerHTML='⚠ Credential check: <strong>'+HEALTH_STATUS.expired_or_failing.join(', ')+'</strong> need refreshing — some provisioning steps will skip. <a href="/api/health" target="_blank" style="color:#F07070;margin-left:6px">Details ↗</a>';
+      document.querySelector('.page').insertBefore(warn,document.querySelector('.tbanner')||document.querySelector('.hero'));
+    }
+  }catch{}
+}
+checkHealth();
 async function loadInventory(){
   if(TOOL_INVENTORY) return;
   try{const r=await fetch('/api/provision?action=inventory');TOOL_INVENTORY=await r.json();}catch{}
@@ -1260,6 +1274,28 @@ export const nicheConfig: NicheConfig = {
         setP('fl','ok',`${ftasks.length} tasks queued — Flint building autonomously`);
       }catch{setP('fl','sk','Flint unreachable — see MANUAL-ACTIONS.md');}
     }
+
+    // Quality validation — check generated files for placeholders
+    const criticalFiles = {
+      'DESIGN.md': df?.design_md || '',
+      'SPEC.md': dc?.spec_md || '',
+      'BUSINESS-SYSTEM.md': bz?.biz_system || '',
+      'backend/main.py': be?.main_py || '',
+    };
+    let qualityOk = true;
+    try {
+      const vr = await fetch('/api/validate', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ files: criticalFiles })
+      });
+      const vd = await vr.json();
+      if (!vd.ok) {
+        qualityOk = false;
+        const warn = Object.entries(vd.issues).map(([f,issues]) => `${f}: ${issues.length} issue(s)`).join(' | ');
+        addP('qv', `Quality check: ${vd.total_issues} placeholder(s) found`, warn, '⬡ Quality');
+        setP('qv', 'sk', warn);
+      }
+    } catch {}
 
     showDone(inf,repo,fl.length,ftasks,inf.manual_svcs||[]);
   }catch(e){
