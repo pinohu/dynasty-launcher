@@ -1005,13 +1005,65 @@ volumes:
     catch{setP('dx','sk','Skipped');}
 
     addP('cr',`Creating github.com/${ORG}/${inf.repo}`);setP('cr','run','From dynasty-project-template…');
-    // Authority site types fork from the authority site Gold Master
+    // Authority site types push into DYNASTY-SITE-FACTORY instead of creating a standalone repo
     const authorityTypes=['auth-gen','auth-pest','auth-imm','auth-freight','auth-legal','auth-hvac','auth-med','landing'];
     const isAuthority=authorityTypes.includes(inf.type_id||'');
-    const tmpl=isAuthority?`${ORG}/authoritysite`:`${ORG}/dynasty-project-template`;
-    const cr=await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire ${isAuthority?'authority site':'business system'}`,private:true,include_all_branches:false});
+
+    // Preset mapping based on project type
+    const presetMap={
+      'auth-pest':'rugged-trustworthy','auth-hvac':'rugged-trustworthy',
+      'auth-legal':'professional-legal','auth-imm':'immigration-directory',
+      'auth-freight':'bold-industrial','auth-med':'modern-medical',
+      'auth-gen':'warm-authority','landing':'warm-authority'
+    };
+    const designPreset=presetMap[inf.type_id]||'warm-authority';
+
+    // Hex to HSL approximation for color overrides
+    function hexToHslStr(hex){
+      hex=hex.replace('#','');
+      const r=parseInt(hex.substr(0,2),16)/255,g=parseInt(hex.substr(2,2),16)/255,b=parseInt(hex.substr(4,2),16)/255;
+      const max=Math.max(r,g,b),min=Math.min(r,g,b);
+      let h,s,l=(max+min)/2;
+      if(max===min){h=s=0;}else{
+        const d=max-min;s=l>0.5?d/(2-max-min):d/(max+min);
+        switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;default:h=(r-g)/d+4;}
+        h=Math.round(h*60);s=Math.round(s*100);l=Math.round(l*100);
+      }
+      return`${h} ${s}% ${l}%`;
+    }
+
+    if(isAuthority){
+      addP('factory',`Adding to DYNASTY-SITE-FACTORY as factory/niches/${inf.repo}/`,'','⬡ Site Factory');setP('factory','run');
+      try{
+        const siteYaml=`niche: "${inf.name}"
+slug: "${inf.repo}"
+engine: "ailurophobia"
+domain: "${inf.domain}"
+blueprint: "authority"
+`;
+        const hslOverride=hexToHslStr(inf.accent);
+        const designYaml=`preset: "${designPreset}"
+brand:
+  name: "${inf.name}"
+tone:
+  adjectives: [${(inf.stack||[]).slice(0,3).map(s=>`"${s.toLowerCase()}"`).join(',')||'"trustworthy","local","expert"'}]
+  reading_level: "grade9"
+# HSL override from inferred accent
+hsl:
+  accent: "${hslOverride}"
+`;
+
+        await pushF(`${ORG}/DYNASTY-SITE-FACTORY`,`factory/niches/${inf.repo}/site.yaml`,siteYaml,`feat: add ${inf.name} niche config`);
+        await pushF(`${ORG}/DYNASTY-SITE-FACTORY`,`factory/niches/${inf.repo}/design.yaml`,designYaml,`feat: add ${inf.name} design config (preset: ${designPreset})`);
+        setP('factory','ok',`Added to factory — Flint will run: npm run build:niche -- ${inf.repo}`);
+      }catch(e){setP('factory','er',e.message);}
+    }
+
+    // Non-authority types create a standalone repo; authority types skip this
+    const tmpl=`${ORG}/dynasty-project-template`;
+    const cr=isAuthority?{ok:true,status:200}:await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
     if(!cr.ok&&cr.status!==422){const e=await cr.json();if(!e.message?.includes('already exists'))throw new Error(e.message);}
-    await new Promise(r=>setTimeout(r,3500));setP('cr','ok');
+    if(!isAuthority){await new Promise(r=>setTimeout(r,3500));}setP('cr','ok');
 
     // ── Authority site: generate niche.config.ts ───────────────────────────
     if(isAuthority){
