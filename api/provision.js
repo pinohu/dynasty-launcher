@@ -318,6 +318,27 @@ export const getMonetizationConfig = () => nicheConfig.monetization ?? {
       await new Promise(r => setTimeout(r, 500));
     }
 
+    // 3c. Patch package.json: fix tsx → npx tsx in build script
+    try {
+      const pkgResp = await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/package.json`, {
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+      });
+      if (pkgResp.ok) {
+        const pkgData = await pkgResp.json();
+        const pkgContent = JSON.parse(Buffer.from(pkgData.content.replace(/\n/g,''), 'base64').toString());
+        if (pkgContent.scripts?.build?.includes('&& tsx ')) {
+          pkgContent.scripts.build = pkgContent.scripts.build.replace('&& tsx ', '&& npx tsx ');
+          const newContent = Buffer.from(JSON.stringify(pkgContent, null, 2)).toString('base64');
+          await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/package.json`, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'fix: tsx → npx tsx in build script', content: newContent, sha: pkgData.sha })
+          });
+        }
+      }
+    } catch {}
+    await new Promise(r => setTimeout(r, 400));
+
     // 4. Push theme.generated.css
     let css = theme_css;
     if (!css && accent_hex) {
