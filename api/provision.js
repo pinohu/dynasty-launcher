@@ -292,13 +292,17 @@ export const getMonetizationConfig = () => nicheConfig.monetization ?? {
   enableLeads: false, enableAffiliate: false, enablePremium: false,
 };
 `;
-      // Strip any existing get* export functions to avoid duplicates, then append canonical set
-      const strippedNicheConfig = niche_config
-        .split('\n')
-        .filter(line => !line.match(/^export const (getConfig|getSiteConfig|getBrandingConfig|getSEOConfig|getNicheConfig|getNavigationConfig|getSocialConfig|getFeaturesConfig|getDirectoryConfig|getContentConfig|getMonetizationConfig)\s*=/))
-        .join('\n')
-        .trimEnd();
-      const fullNicheConfig = strippedNicheConfig + REQUIRED_EXPORTS;
+      // Truncate at the first get* export helper (handles multiline bodies correctly)
+      let configCore = niche_config;
+      const GET_EXPORT_RE = /^export const (getConfig|getSiteConfig|getBrandingConfig|getSEOConfig|getNicheConfig|getNavigationConfig|getSocialConfig|getFeaturesConfig|getDirectoryConfig|getContentConfig|getMonetizationConfig)\s*=/m;
+      const getMatch = configCore.match(GET_EXPORT_RE);
+      if (getMatch) {
+        configCore = configCore.substring(0, getMatch.index).trimEnd();
+      }
+      // Also strip at export comment markers
+      const helperIdx = configCore.search(/\/\/ Export (helper|individual)/);
+      if (helperIdx >= 0) configCore = configCore.substring(0, helperIdx).trimEnd();
+      const fullNicheConfig = configCore + '\n' + REQUIRED_EXPORTS;
       await pushFile(GITHUB_TOKEN, ORG, project_slug,
         'src/config/niche.config.ts', fullNicheConfig,
         'feat: dynasty niche configuration');
