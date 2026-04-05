@@ -427,12 +427,38 @@ export const getMonetizationConfig = () => nicheConfig.monetization ?? {
       } catch {}
     }
 
+    // 8. Push trigger commit AFTER Vercel project is created
+    // This makes Vercel detect the push and start a build
+    try {
+      const triggerContent = Buffer.from(
+        `# ${niche_name}\nDynasty Empire authority site — deployed by dynasty-launcher\n\nBuild: ${new Date().toISOString()}\n`
+      ).toString('base64');
+      const triggerHeaders = {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json'
+      };
+      // Check if file exists
+      let triggerSha;
+      const checkResp = await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/DYNASTY-BUILT.md`, { headers: triggerHeaders });
+      if (checkResp.ok) { const cd = await checkResp.json(); triggerSha = cd.sha; }
+      await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/DYNASTY-BUILT.md`, {
+        method: 'PUT',
+        headers: triggerHeaders,
+        body: JSON.stringify({
+          message: `chore: trigger Vercel build — ${niche_name}`,
+          content: triggerContent,
+          ...(triggerSha ? { sha: triggerSha } : {})
+        })
+      });
+    } catch {}
+
     return res.json({
       ok: true,
       repo_url: `https://github.com/${ORG}/${project_slug}`,
       vercel_url,
       vercel_project_id: projectId || null,
-      note: 'Vercel auto-builds on push — live in ~90s'
+      note: 'Vercel building now — live in ~90s'
     });
   }
 
