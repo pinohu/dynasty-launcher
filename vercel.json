@@ -2,12 +2,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/claude.js": {
-      "maxDuration": 120
-    },
-    "api/github.js": {
-      "maxDuration": 30
-    }
+    "api/claude.js": { "maxDuration": 300 },
+    "api/github.js": { "maxDuration": 30 }
   },
   "headers": [
     {
