@@ -282,27 +282,26 @@ async function pushF(repo,path,content,msg){
   const r=await gh(`/repos/${repo}/contents/${path}`,'PUT',pl);
   if(!r.ok)throw new Error(`Push failed: ${path}`);
 }
-async function ai(prompt,max=7000){
-  const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:max,messages:[{role:'user',content:prompt}]})});
-  if(!r.ok)throw new Error(`AI API ${r.status}`);
-  const d=await r.json();
-  if(d.error)throw new Error(d.error.message||'API error');
-  const t=d.content?.find(b=>b.type==='text')?.text||'';
-  // Extract JSON — find first { and last }
-  const start=t.indexOf('{');
-  const end=t.lastIndexOf('}');
-  if(start===-1)throw new Error('No JSON in response');
-  let raw=t.slice(start,end+1);
-  try{return JSON.parse(raw);}catch(e){
-    // Try to repair truncated JSON by removing incomplete last key
-    const lastComma=raw.lastIndexOf('","');
-    if(lastComma>0){
-      try{return JSON.parse(raw.slice(0,lastComma)+'"}}');}catch{}
-    }
-    throw new Error('JSON parse error — try again with a shorter description.');
+async function parseDelimited(text,keys){
+  const result={};
+  for(const key of keys){
+    const re=new RegExp('---BEGIN:'+key+'---([\\s\\S]*?)---END:'+key+'---');
+    const m=text.match(re);
+    result[key]=m?m[1].trim():'';
   }
+  return result;
 }
-
+async function ai(prompt,keys,max=8000){
+  const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:max,
+      messages:[{role:'user',content:prompt}]})});
+  if(!r.ok)throw new Error('AI API '+r.status);
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message||'AI error');
+  const t=d.content?.find(b=>b.type==='text')?.text||'';
+  if(!t)throw new Error('Empty AI response');
+  return parseDelimited(t,keys);
+}
 function cx(desc,inf){return`Project: ${inf.name}\nDescription: ${desc}\nRepo: ${ORG}/${inf.repo}\nType: ${inf.type_label}\nSurface: ${inf.surface}\nAccent: ${inf.accent}\nFonts: ${inf.fonts}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nAcquisition: ${inf.acquisition}\nMVP: ${inf.mvp}`;}
 
 async function build(desc,inf){
@@ -310,43 +309,608 @@ async function build(desc,inf){
   try{
     addP('g1','Generating DESIGN.md + CLAUDE.md','','⬡ Design System');setP('g1','run');
     let df;try{
-      df=await ai(`Generate Dynasty Empire design files. Return ONLY valid JSON.\n${cx(desc,inf)}\nMaster tokens: dynasty-black #0A0A0A, dynasty-gold #C9A84C, 8px spacing, shadow-border rgba(0,0,0,0.08) 0px 0px 0px 1px, WCAG AA.\nReturn:{"design_md":"# DESIGN.md — ${inf.name}\\n> Inherits from: DYNASTY-DESIGN.md\\n## 1. Visual Theme & Atmosphere\\n[3 specific paragraphs — precise, evocative]\\nKey Characteristics: [8 technical bullets]\\n## 2. Color Palette & Roles\\n[Full tables: surfaces, brand ${inf.accent}, status system, dynasty-gold, borders/shadows]\\n## 3. Typography\\nFont Stack + 14-row hierarchy table (Role/Font/Size/Weight/LineHeight/LetterSpacing/Use)\\n## 4. Component Stylings\\n[Buttons all variants, cards, status badges pill 9999px labeled, inputs all states, nav]\\n## 5. Layout Principles\\n## 6. Depth & Elevation\\n## 7. Do's and Don'ts [12+ specific]\\n## 8. Responsive Behavior\\n## 9. Agent Prompt Guide [5 full prompts + 7-point guide]","claude_md":"# CLAUDE.md — ${inf.name}\\n## Project Overview [stack, repo ${repo}, domain]\\n## Design Rules MANDATORY [10+ rules exact hex, border technique, focus ring, fonts, status badge rule, what NOT to use]\\n## Required States [all 6 per component]\\n## Architecture Rules [file conventions, ${(inf.stack||[]).slice(0,3).join('/')} conventions, DB rules, auth]\\n## Environment Variables [all likely vars]\\n## Git Rules [git config user.email polycarpohu@gmail.com && user.name pinohu]\\n## Do Not [14 specific prohibitions]"}`,6000);
+      df=await ai(`GENERATE DYNASTY EMPIRE DESIGN FILES. No preamble. Return ONLY in the delimiter format below.
+
+${cx(desc,inf)}
+Master tokens: dynasty-black #0A0A0A, dynasty-gold #C9A84C, 8px spacing, shadow-border rgba(0,0,0,0.08) 0px 0px 0px 1px, WCAG AA required.
+
+---BEGIN:design_md---
+# DESIGN.md — ${inf.name}
+> Inherits from: DYNASTY-DESIGN.md
+
+## 1. Visual Theme & Atmosphere
+[3 specific paragraphs — precise and evocative, never generic. Describe the product's visual identity, surface treatment, and typographic signature.]
+Key Characteristics:
+- [8 precise technical bullets with exact values]
+
+## 2. Color Palette & Roles
+| Color | Hex | Role |
+[Complete table: page background, card surface, primary text, secondary text, muted text, primary accent ${inf.accent}, accent hover, accent light, borders, shadows, focus ring]
+[Status system table: verified/pending/expired/draft/admin with bg/text/border hex for each]
+[Dynasty Gold #C9A84C — premium tier markers only]
+
+## 3. Typography Rules
+Font Stack:
+| Role | Font | Fallback |
+[Font stack table]
+
+Hierarchy:
+| Role | Font | Size | Weight | Line Height | Letter Spacing | Use |
+[14+ rows covering all content levels]
+
+## 4. Component Stylings
+[Exact specs for: Primary button, Secondary button, Destructive button, Standard card, Featured card, Status badges (always pill 9999px + text label), Form inputs (all 6 states), Navigation]
+
+## 5. Layout Principles
+[Page structure, spacing scale, whitespace philosophy]
+
+## 6. Depth & Elevation
+| Level | Treatment | Use |
+[6 levels from flat to modal]
+
+## 7. Do's and Don'ts
+Do: [12 specific rules for this product]
+Don't: [12 specific anti-patterns]
+
+## 8. Responsive Behavior
+| Breakpoint | Width | Key Changes |
+[4 breakpoints + collapsing strategy]
+
+## 9. Agent Prompt Guide
+Quick Color Reference: [table]
+Example Component Prompts: [5 copy-paste-ready prompts]
+Iteration Guide: [7-point guide]
+---END:design_md---
+
+---BEGIN:claude_md---
+# CLAUDE.md — ${inf.name}
+Read DYNASTY-DESIGN.md then DESIGN.md before any UI code.
+
+## Project Overview
+Stack: ${(inf.stack||[]).join(', ')}
+Repo: ${ORG}/${inf.repo}
+Domain: [to be configured]
+
+## Design Rules MANDATORY
+[10 critical rules with exact hex values, border technique, focus ring color, font rules, status badge requirement, what NOT to use from other Dynasty products]
+
+## Required States
+Every interactive component must implement: default / hover / focus / active / disabled / loading
+
+## Architecture Rules
+[File conventions for ${(inf.stack||[]).slice(0,3).join('/')}. Database rules. Auth pattern. Third-party service conventions.]
+
+## Environment Variables
+[All likely vars for this stack, grouped by service with comments]
+
+## Git Rules
+Always run before committing:
+git config user.email "polycarpohu@gmail.com"
+git config user.name "pinohu"
+
+## Do Not
+[14 specific prohibitions — include colors from other Dynasty products, and any anti-patterns specific to this stack]
+---END:claude_md---
+`, ['design_md','claude_md'], 8000);
       setP('g1','ok',`${((df.design_md?.length||0)/1000).toFixed(1)}k chars`);
     }catch(e){setP('g1','er',e.message);throw e;}
 
-    addP('g2a','Generating SPEC.md + ROADMAP.md + README.md + MANUAL-ACTIONS.md','','⬡ Product Docs');setP('g2a','run');
-    let dc1;try{
-      dc1=await ai(`Generate Dynasty Empire product docs. Be concise but complete. Return ONLY valid JSON, no markdown fences.\n${cx(desc,inf)}\nReturn exactly these 4 keys:{"spec_md":"# SPEC.md — ${inf.name}\\n## Product Vision (2 sentences)\\n## Target Users (primary + secondary)\\n## Core Features\\nP0 (must ship in MVP):\\n- [feature with acceptance criteria]\\n- [feature]\\n- [feature]\\nP1 (phase 2):\\n- [feature]\\n- [feature]\\nP2 (phase 3):\\n- [feature]\\n## Key Integrations\\n## Success Metrics","roadmap_md":"# ROADMAP.md — ${inf.name}\\n## Phase 1: MVP (${inf.mvp})\\n[10 specific tasks with owners]\\n## Phase 2: Core Features (week 3-4)\\n[8 tasks]\\n## Phase 3: Launch (week 5-6)\\n[6 tasks]\\n## Phase 4: Scale\\n[5 milestones]","readme_md":"# ${inf.name}\\n> [one line description]\\n## Overview\\n## Quick Start\\n\\`\\`\\`bash\\ngh repo clone ${ORG}/${inf.repo} && cd ${inf.repo}\\ncp .env.example .env.local\\n# fill env vars\\nclaude\\n\\`\\`\\`\\n## Architecture\\n## Deployment\\n\\`\\`\\`bash\\ndocker-compose up -d\\n\\`\\`\\`","manual_md":"# MANUAL-ACTIONS.md — ${inf.name}\\n${(inf.manual_svcs||[]).length?'## Actions Required\\n\\n'+(inf.manual_svcs||[]).map(k=>`### ${k}\\nWhy: [explain why this product needs it]\\nSteps:\\n1. [exact action]\\n2. [exact action]\\nResult: [what to do with output]`).join('\\n\\n'):'No manual actions selected.'}"}`,6000);
-      setP('g2a','ok','4 docs ready');
-    }catch(e){setP('g2a','er',e.message);throw e;}
+    addP('g2','Generating SPEC + ROADMAP + README + MANUAL-ACTIONS + .env','','⬡ Product Docs');setP('g2','run');
+    let dc;try{
+      dc=await ai(`GENERATE PRODUCT DOCUMENTATION for a Dynasty Empire project. Return ONLY content in the delimiter format below. No JSON. No preamble. No explanation.
 
-    addP('g2b','Generating .env.example + DATA-MODEL.md + API-CONTRACTS.md + KB-OUTLINES.md','');setP('g2b','run');
-    let dc2;try{
-      dc2=await ai(`Generate Dynasty Empire technical docs. Be concise. Return ONLY valid JSON, no markdown fences.\n${cx(desc,inf)}\nReturn exactly these 4 keys:{"env_ex":"# .env.example — ${inf.name}\\n# Copy to .env.local\\n\\n[all likely env vars for ${(inf.stack||[]).join('/')} stack, grouped by service with explanatory comments]","data_model":"# docs/DATA-MODEL.md — ${inf.name}\\n## Core Tables\\n[for each table: name, key columns with types, primary key, foreign keys, indexes]\\n## Key Relationships\\n## Migration Notes","api_contracts":"# docs/API-CONTRACTS.md — ${inf.name}\\n## Authentication\\nBearer JWT — POST /auth/login → {token}\\n## Endpoints\\n[for each resource group: GET/POST/PUT/DELETE with path, request body schema, response schema]","kb_outlines":"# docs/KB-OUTLINES.md — ${inf.name}\\n## 10 Seed Articles\\n[for each: Title / Target keyword / H2 outline (4-5 headers) / Word count target]"}`,5000);
-      setP('g2b','ok','4 technical docs ready');
-    }catch(e){setP('g2b','er',e.message);throw e;}
-    
-    // Merge both calls
-    const dc={...dc1,...dc2};
+${cx(desc,inf)}
 
-    addP('g3','Generating BUSINESS-SYSTEM + AGENT-SYSTEM + REVENUE-MODEL + GTM + FAILURE-MODES','','⬡ Business System');setP('g3','run');
-    let bz;try{
-      bz=await ai(`Creative Authority Architect: generate complete deployable business system. No theory. No fluff. Real numbers. Return ONLY valid JSON.\n${cx(desc,inf)}\nReturn:{"biz_system":"# BUSINESS-SYSTEM.md — ${inf.name}\\n## 1. Strategy\\nNiche/Offer/Positioning/Why this wins [3 specific reasons]\\n## 2. Agent System\\n[All 11 agents: Intake/Idea Generator/Evaluator/Architect/MVP/Proof Engine/GTM/Sales/Financial Model/Deal Structuring/Scale Plan]\\n[Each: Purpose/Inputs/Outputs/Tool Dependency Block table/Trigger/Success Criteria/Fallback]\\n[Dynasty tools: CallScaler=Sales, SEO Machine=GTM, Stripe=Deal, Insighto=Sales, n8n=Orchestration, Flint=MVP/Architect]\\n## 3. Revenue Model\\n[3 pricing tiers with exact prices]\\n[Month 1/3/6/12: customers × ${inf.price} = MRR/ARR table]\\n[CAC/LTV/LTV:CAC/payback period/break-even month — real numbers]\\n## 4. MVP — ${inf.mvp}\\n[Exactly 6-8 features. What does NOT ship. Binary definition of done]\\n## 5. GTM — ${inf.acquisition}\\n[Day-by-day week 1 execution with exact targets. Weeks 2-4 weekly. KPIs with numbers]\\n## 6. Financial Model\\n[Month 1-12 table: Revenue/COGS/Gross Margin/OpEx/EBITDA. Key assumptions listed]\\n## 7. Deal Structure\\n[3 pricing tiers exact. Annual discount %. Refund policy. Stripe product names to create]\\n## 8. Scale Plan\\n[Month 3/6/12/24: revenue target + customer count + key initiative]","agent_system":"# AGENT-SYSTEM.md — ${inf.name}\\n[All 11 agents with Tool Dependency Block per agent]\\n| Tool | Purpose | Used In | Input | Output |\\n[Dynasty tool mappings explicit]","revenue_model":"# REVENUE-MODEL.md\\n## Pricing Tiers [3 exact]\\n## Month 1-12 Projections [table: customers/MRR/ARR]\\n## Unit Economics [CAC/LTV/payback/churn assumption]\\n## Milestones [$1K/$5K/$10K/$25K MRR — which month]\\n## Expense Model [hosting/tools/labor per month]","gtm_playbook":"# GTM-PLAYBOOK.md\\n## Channel: ${inf.acquisition}\\n## Week 1 Day-by-Day [exact daily targets and actions]\\n## Weeks 2-4 [weekly execution plan]\\n## Messaging [Hook/Pain/Solution/CTA — exact copy]\\n## Sales Script [Opening/Discovery/Pitch/Objections/Close — word for word]\\n## Dynasty Comms Stack [CallScaler script / Insighto agent script / SMS-iT sequence if applicable]\\n## KPIs [leading + lagging with specific numbers]","failure_modes":"# FAILURE-MODES.md\\n## 10 Failure Scenarios [JWT expiry/DB loss/Stripe webhook/Rate limit/Redis down/3rd-party timeout/Payment fail/Upload fail/Email fail/Auth outage]\\n[Each: Detection/Immediate fallback/Recovery/Circuit breaker pattern]\\n## Backup Strategy\\n## Monitoring Alerts [what to alert on, threshold, escalation]"}`,6000);
-      setP('g3','ok','5 business files ready');
+---BEGIN:spec_md---
+# SPEC.md — ${inf.name}
+## Product Vision
+[2 paragraphs: what this product does, who it serves, and why it wins in this market]
+
+## Target Users
+### Primary: [Persona name]
+[Description, key pain point, how this product solves it]
+### Secondary: [Persona name]
+[Description]
+
+## Core Features
+### P0 — Included in ${inf.mvp} MVP
+[List 6-8 features, each with: Feature name / What it does / Acceptance criteria]
+
+### P1 — Phase 2
+[4-5 features with brief description]
+
+### P2 — Future
+[3-4 features]
+
+## Data Model Overview
+[Key entities and their relationships in plain language]
+
+## Key Integrations
+[Each integration with its role in the product]
+
+## Success Metrics
+[5 specific KPIs with target values and measurement method]
+---END:spec_md---
+
+---BEGIN:roadmap_md---
+# ROADMAP.md — ${inf.name}
+## Phase 1: MVP — ${inf.mvp}
+[12 specific tasks, each actionable by a single developer]
+
+## Phase 2: Core Features (Weeks 3-4)
+[10 specific tasks]
+
+## Phase 3: Polish + Launch (Weeks 5-6)
+[8 tasks focused on reliability, performance, and GTM]
+
+## Phase 4: Scale (Post-launch)
+[6 strategic growth initiatives]
+---END:roadmap_md---
+
+---BEGIN:readme_md---
+# ${inf.name}
+
+> [One-line value proposition]
+
+## Overview
+[3 paragraphs: what it does, technology approach, Dynasty Empire context]
+
+## Quick Start
+Clone and run:
+  gh repo clone ${ORG}/${inf.repo}
+  cd ${inf.repo}
+  cp .env.example .env.local
+
+Fill in env vars, then:
+  docker-compose up -d
+  npm install && npm run dev
+
+## Architecture
+[Brief description of the system components and how they interact]
+
+## Deployment
+[Production deployment steps]
+---END:readme_md---
+
+---BEGIN:manual_md---
+# MANUAL-ACTIONS.md — ${inf.name}
+These actions require human interaction in a browser or dashboard.
+
+${(inf.manual_svcs||[]).length > 0 ? (inf.manual_svcs||[]).map(k => `## ${k}
+Why this product needs it: [specific reason]
+
+Steps:
+1. [Exact URL and action]
+2. [Exact action]
+3. [Exact action]
+
+Output: [Where to put the result — .env variable name, config location, etc.]`).join('\n\n') : 'No manual actions required for this configuration.'}
+---END:manual_md---
+
+---BEGIN:env_ex---
+# .env.example — ${inf.name}
+# Copy to .env.local and fill in all values
+
+# ── Database ──────────────────────────────────
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+
+# ── Authentication ────────────────────────────
+# [relevant auth vars for ${(inf.stack||[]).filter(s=>['Clerk','Supabase'].includes(s)).join(', ')||'your auth provider'}]
+
+# ── Payments ──────────────────────────────────
+# [Stripe or other payment vars if applicable]
+
+# ── Infrastructure ────────────────────────────
+# [Vercel, Redis, CDN vars as needed]
+
+# ── Third-party Services ──────────────────────
+# [All external API keys with comments on where to find them]
+
+# ── Application ───────────────────────────────
+SECRET_KEY=generate-with-openssl-rand-hex-32
+NODE_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+---END:env_ex---
+`, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 8000);
+      setP('g2','ok',`${Object.values(dc).filter(v=>v).length} docs ready`);
+    }catch(e){setP('g2','er',e.message);throw e;}
+
+    addP('g3','Generating DATA-MODEL + API-CONTRACTS + KB-OUTLINES','','⬡ Supporting Docs');setP('g3','run');
+    let ds;try{
+      ds=await ai(`GENERATE DYNASTY EMPIRE TECHNICAL DOCS. Return ONLY content in delimiter format below. No JSON. No preamble.
+
+${cx(desc,inf)}
+
+---BEGIN:data_model---
+# DATA-MODEL.md — ${inf.name}
+## Overview
+[Brief description of the data architecture]
+
+## Core Tables
+[For each table: Table name / Columns with types / Indexes / Relationships]
+
+## Key Relationships
+[Entity relationship descriptions in plain language]
+
+## Migration Strategy
+[How to handle schema changes in production]
+---END:data_model---
+
+---BEGIN:api_contracts---
+# API-CONTRACTS.md — ${inf.name}
+## Authentication
+[Auth method, token format, how to include in requests]
+
+## Core Endpoints
+[For each resource group: Method / Path / Request body / Response schema / Example]
+
+## Error Codes
+[Standard error response format and common codes]
+
+## Rate Limits
+[Rate limit policies per endpoint group]
+---END:api_contracts---
+
+---BEGIN:kb_outlines---
+# KB-OUTLINES.md — ${inf.name}
+## Knowledge Base Article Plan
+[10 seed articles, each with:]
+[Title / Target keyword / H2 outline (3-5 sections) / Target word count / Internal link opportunities]
+---END:kb_outlines---
+`, ['data_model','api_contracts','kb_outlines'], 6000);
+      setP('g3','ok','Technical docs ready');
     }catch(e){setP('g3','er',e.message);throw e;}
 
-    addP('g4','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend');setP('g4','run');
-    let be;try{
-      be=await ai(`Generate production-ready FastAPI backend. Real runnable Python code only. Return ONLY valid JSON.\nProject: ${inf.name} | Type: ${inf.type_label} | Stack: ${(inf.stack||[]).join(',')} | Revenue: ${inf.revenue_model} at ${inf.price}\nReturn:{"main_py":"#!/usr/bin/env python3\\n# ${inf.name} — FastAPI Backend\\n[Full ~200 line implementation with real imports and real code:]\\n[FastAPI setup, CORS, SQLAlchemy+PostgreSQL, Redis client, Stripe init]\\n[JWT auth: create_access_token(), verify_token(), get_current_user()]\\n[slowapi rate limiter: 100/min default, 10/min on auth endpoints]\\n[loguru structured logging middleware]\\n[Error handler middleware]\\n[Health check GET /health]\\n[Auth endpoints: POST /auth/register, POST /auth/login]\\n[Core domain endpoints for ${inf.type_label} (at least 4 specific to this product type)]\\n[Stripe webhook POST /webhooks/stripe with sig verification]\\n[Checkout session POST /billing/checkout]\\n[Startup/shutdown events]","requirements":"fastapi>=0.104.1\\nuvicorn[standard]>=0.24.0\\nsqlalchemy>=2.0.23\\npsycopg2-binary>=2.9.9\\nredis>=5.0.1\\nslowapi>=0.1.9\\nstripe>=7.6.0\\npython-jose[cryptography]>=3.3.0\\npasslib[bcrypt]>=1.7.4\\nloguru>=0.7.2\\npython-dotenv>=1.0.0\\nalembic>=1.12.1\\npydantic[email]>=2.5.0","dockerfile":"FROM python:3.11-slim AS builder\\nWORKDIR /app\\nCOPY requirements.txt .\\nRUN pip install --no-cache-dir -r requirements.txt\\nFROM python:3.11-slim\\nWORKDIR /app\\nCOPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages\\nCOPY --from=builder /usr/local/bin /usr/local/bin\\nCOPY . .\\nEXPOSE 8000\\nHEALTHCHECK --interval=30s --timeout=10s CMD curl -f http://localhost:8000/health || exit 1\\nCMD [\\"uvicorn\\", \\"main:app\\", \\"--host\\", \\"0.0.0.0\\", \\"--port\\", \\"8000\\", \\"--workers\\", \\"2\\"]","docker_compose":"version: '3.9'\\nservices:\\n  app:\\n    build: ./backend\\n    ports: ['8000:8000']\\n    environment:\\n      - DATABASE_URL=postgresql://dynasty:dynasty_pass@db:5432/${sl(inf.repo||'dynasty')}\\n      - REDIS_URL=redis://redis:6379/0\\n      - SECRET_KEY=\\${SECRET_KEY}\\n      - STRIPE_SECRET_KEY=\\${STRIPE_SECRET_KEY}\\n      - STRIPE_WEBHOOK_SECRET=\\${STRIPE_WEBHOOK_SECRET}\\n    depends_on: {db: {condition: service_healthy}, redis: {condition: service_healthy}}\\n    restart: unless-stopped\\n  db:\\n    image: postgres:15-alpine\\n    environment: {POSTGRES_DB: ${sl(inf.repo||'dynasty')}, POSTGRES_USER: dynasty, POSTGRES_PASSWORD: dynasty_pass}\\n    volumes: [postgres_data:/var/lib/postgresql/data]\\n    healthcheck: {test: [\\"CMD-SHELL\\", \\"pg_isready -U dynasty\\"], interval: 10s, timeout: 5s, retries: 5}\\n    restart: unless-stopped\\n  redis:\\n    image: redis:7-alpine\\n    volumes: [redis_data:/data]\\n    healthcheck: {test: [\\"CMD\\", \\"redis-cli\\", \\"ping\\"], interval: 10s, timeout: 5s, retries: 5}\\n    restart: unless-stopped\\n  nginx:\\n    image: nginx:alpine\\n    ports: ['80:80','443:443']\\n    volumes: ['./nginx.conf:/etc/nginx/conf.d/default.conf']\\n    depends_on: [app]\\n    restart: unless-stopped\\nvolumes: {postgres_data: {}, redis_data: {}}"}`,6500);
-      setP('g4','ok','Production backend code ready');
+    addP('g4','Generating BUSINESS-SYSTEM + AGENT-SYSTEM + REVENUE-MODEL + GTM + FAILURE-MODES','','⬡ Business System');setP('g4','run');
+    let bz;try{
+      bz=await ai(`CREATIVE AUTHORITY ARCHITECT: Generate complete deployable business system. No theory. No fluff. Real numbers. Return ONLY in delimiter format. No JSON. No preamble.
+
+${cx(desc,inf)}
+
+---BEGIN:biz_system---
+# BUSINESS-SYSTEM.md — ${inf.name}
+## 1. Strategy
+Niche: [one sentence]
+Offer: [one sentence — what you sell and to whom]
+Positioning: [one sentence — why you win vs alternatives]
+Why this wins:
+1. [Specific competitive advantage]
+2. [Specific competitive advantage]
+3. [Specific competitive advantage]
+
+## 2. Agent System — All 11 Agents
+[For each of the 11 agents (Intake, Idea Generator, Evaluator, Architect, MVP Builder, Proof Engine, GTM, Sales, Financial Model, Deal Structuring, Scale Plan):]
+### Agent: [Name]
+Purpose: [one sentence]
+Trigger: [what kicks this off]
+Inputs: [list]
+Outputs: [list]
+Tool Dependency Block:
+| Tool | Purpose | Where Used | Input | Output |
+[table — map to Dynasty tools: CallScaler/Insighto/SMS-iT/SEO Machine/Stripe/n8n/Flint/Claude]
+Success Criteria: [measurable]
+Fallback: [if primary tool fails]
+
+## 3. Revenue Model
+Pricing Tiers:
+| Tier | Price | Features | Target Customer |
+[3 tiers with exact prices]
+
+Month 1-12 Projections:
+| Month | Customers | MRR | ARR |
+[12-row table with realistic ramp]
+
+Unit Economics:
+CAC: $[number] | LTV: $[number] | LTV:CAC: [ratio] | Payback: [months] | Churn: [%/month]
+
+## 4. MVP Scope — ${inf.mvp}
+Ships:
+[6-8 specific features only]
+
+Does NOT ship:
+[4-5 things explicitly excluded]
+
+Definition of Done: [binary, measurable statement]
+
+## 5. GTM Plan — ${inf.acquisition}
+Week 1 (Days 1-7):
+[Day-by-day actions with exact daily targets]
+
+Weeks 2-4:
+[Weekly execution plan with KPIs]
+
+Messaging Framework:
+Hook: [exact copy]
+Pain: [exact copy]
+Solution: [exact copy]
+CTA: [exact copy]
+
+## 6. Financial Model (Month 1-12)
+| Month | Revenue | COGS | Gross Margin | OpEx | EBITDA |
+[12-row table]
+Key assumptions: [list]
+
+## 7. Deal Structure
+Tier 1: $[price]/mo — [features] — Stripe product: [name]
+Tier 2: $[price]/mo — [features] — Stripe product: [name]
+Tier 3: $[price]/mo — [features] — Stripe product: [name]
+Annual discount: [%] | Refund policy: [policy]
+
+## 8. Scale Plan
+Month 3: $[MRR] / [X] customers / Initiative: [key action]
+Month 6: $[MRR] / [X] customers / Initiative: [key action]
+Month 12: $[MRR] / [X] customers / Initiative: [key action]
+Month 24: $[MRR] / [X] customers / Initiative: [key action]
+---END:biz_system---
+
+---BEGIN:agent_system---
+# AGENT-SYSTEM.md — ${inf.name}
+## Agent Architecture Overview
+[Brief description of how the 11 agents work together for this specific product]
+
+## Dynasty Tool Stack
+[Map each agent to specific Dynasty tools: CallScaler=Sales agent, SEO Machine=GTM agent, Stripe=Deal Structuring, Insighto=Sales calls, n8n=Orchestration, Flint=MVP + Architect, Claude=Idea Generator + Evaluator]
+
+[Full detail for each agent with Tool Dependency Block table]
+---END:agent_system---
+
+---BEGIN:revenue_model---
+# REVENUE-MODEL.md — ${inf.name}
+## Pricing Tiers
+[3 tiers with exact prices, included features, and target customer segment]
+
+## Month 1-12 Projections
+[Table: Month / New Customers / Total Customers / MRR / ARR / Notes]
+
+## Unit Economics
+[CAC / LTV / LTV:CAC ratio / Payback period / Monthly churn assumption / Annual churn]
+
+## Revenue Milestones
+$1K MRR: Month [X] — [X] customers
+$5K MRR: Month [X] — [X] customers
+$10K MRR: Month [X] — [X] customers
+$25K MRR: Month [X] — [X] customers
+
+## Expense Model
+[Monthly breakdown: Hosting/Infrastructure / Tools/SaaS / Labor / Marketing / Total]
+---END:revenue_model---
+
+---BEGIN:gtm_playbook---
+# GTM-PLAYBOOK.md — ${inf.name}
+## Channel: ${inf.acquisition}
+
+## Week 1 Execution (Day-by-Day)
+[Day 1-7: exact action, target metric, how to measure]
+
+## Weeks 2-4 (Weekly)
+[Week 2/3/4: focus area, weekly target, key activities]
+
+## Messaging Framework
+Hook (attention): [exact copy — one sentence]
+Pain (problem): [exact copy — one to two sentences]
+Solution (offer): [exact copy — one sentence]
+CTA (action): [exact copy — one sentence]
+
+## Sales Script
+Opening: [word-for-word]
+Discovery questions: [3-5 questions]
+Pitch: [word-for-word, 30-60 seconds]
+Objection: "Too expensive" → [word-for-word response]
+Objection: "Not now" → [word-for-word response]
+Close: [word-for-word]
+
+## Dynasty Comms Stack Usage
+CallScaler: [when to call, script outline]
+Insighto voice agent: [agent script for this product]
+SMS-iT sequence: [if applicable — message 1 / message 2 / message 3]
+
+## KPIs
+Leading: [metric with weekly target]
+Leading: [metric with weekly target]
+Lagging: [metric with monthly target]
+Lagging: [metric with monthly target]
+---END:gtm_playbook---
+
+---BEGIN:failure_modes---
+# FAILURE-MODES.md — ${inf.name}
+## Failure Scenarios
+
+### 1. JWT Token Expiry
+Detection: 401 responses after previously authenticated requests
+Fallback: Redirect to re-authentication, preserve user's current page in state
+Recovery: Implement token refresh endpoint with 7-day refresh window
+Circuit breaker: Auto-logout after 3 consecutive auth failures
+
+### 2. Database Connection Loss
+Detection: SQLAlchemy OperationalError, connection pool exhausted
+Fallback: Serve cached responses for read operations; queue writes
+Recovery: Exponential backoff reconnection (1s, 2s, 4s, 8s, max 30s)
+Circuit breaker: Open circuit after 5 failed connections in 60 seconds
+
+### 3. Stripe Webhook Failure
+Detection: Webhook endpoint returns non-200; Stripe retry queue fills
+Fallback: Poll Stripe API for payment status on next user request
+Recovery: Reprocess webhook from Stripe dashboard; idempotency keys prevent duplication
+Circuit breaker: Alert on 3+ consecutive webhook failures
+
+### 4. Rate Limit Hit
+Detection: slowapi raises RateLimitExceeded; 429 response
+Fallback: Return 429 with Retry-After header; client queues retry
+Recovery: Automatic — limits reset per window
+Circuit breaker: N/A — rate limits are protective by design
+
+### 5. Redis Unavailable
+Detection: redis.ConnectionError on cache operations
+Fallback: Bypass cache, serve from database directly
+Recovery: Reconnect with exponential backoff; rebuild cache on reconnect
+Circuit breaker: Disable caching after 10 consecutive failures
+
+### 6-10. [Third-party API timeout / Payment processing failure / File upload failure / Email delivery failure / Auth provider outage]
+[Each with: Detection / Fallback / Recovery / Circuit breaker]
+
+## Backup Strategy
+Database: Daily automated snapshots to S3, 30-day retention
+Redis: RDB persistence enabled, hourly snapshots
+Code: Git-based, tagged releases for every production deploy
+
+## Monitoring Alerts
+[Alert name / Threshold / Escalation path for each critical metric]
+---END:failure_modes---
+`, ['biz_system','agent_system','revenue_model','gtm_playbook','failure_modes'], 8000);
+      setP('g4','ok','Business system files ready');
     }catch(e){setP('g4','er',e.message);throw e;}
+
+    addP('g5','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend Code');setP('g5','run');
+    let be;try{
+      be=await ai(`GENERATE PRODUCTION-READY FASTAPI BACKEND CODE. Return ONLY code in delimiter format below. Real Python code only — no pseudocode, no placeholder comments like 'add your logic here'.
+
+Project: ${inf.name} | Type: ${inf.type_label} | Stack: ${(inf.stack||[]).join(',')} | Revenue: ${inf.revenue_model} at ${inf.price}
+
+---BEGIN:main_py---
+#!/usr/bin/env python3
+# ${inf.name} — FastAPI Backend
+# Generated by Dynasty Business System Launcher
+
+from fastapi import FastAPI, HTTPException, Depends, Request, status, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from sqlalchemy import create_engine, Column, String, DateTime, Boolean, Integer, Float, text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from loguru import logger
+import stripe
+import redis
+import os
+import uuid
+from datetime import datetime, timedelta
+from typing import Optional
+from pydantic import BaseModel, EmailStr
+from dotenv import load_dotenv
+
+load_dotenv()
+
+[Full ~200 line implementation for ${inf.type_label} including:]
+[- Database setup, Redis client, Stripe initialization, rate limiter]
+[- JWT: create_access_token, verify_token, get_current_user]
+[- Health check: GET /health]
+[- Auth: POST /auth/register, POST /auth/login]
+[- 4+ domain endpoints specific to ${inf.type_label}]
+[- Stripe webhook: POST /webhooks/stripe with signature verification]
+[- Checkout: POST /billing/checkout]
+[- Request logging middleware with loguru]
+[- CORS configuration]
+[- Startup/shutdown events]
+---END:main_py---
+
+---BEGIN:requirements---
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+sqlalchemy>=2.0.23
+psycopg2-binary>=2.9.9
+redis>=5.0.1
+slowapi>=0.1.9
+stripe>=7.6.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+loguru>=0.7.2
+python-dotenv>=1.0.0
+alembic>=1.12.1
+pydantic[email]>=2.5.0
+httpx>=0.25.0
+---END:requirements---
+
+---BEGIN:dockerfile---
+FROM python:3.11-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY . .
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost:8000/health || exit 1
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+---END:dockerfile---
+
+---BEGIN:docker_compose---
+version: '3.9'
+
+services:
+  app:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://dynasty:dynasty_pass@db:5432/${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
+      POSTGRES_USER: dynasty
+      POSTGRES_PASSWORD: dynasty_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dynasty"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+---END:docker_compose---
+`, ['main_py','requirements','dockerfile','docker_compose'], 8000);
+      setP('g5','ok','Production backend code ready');
+    }catch(e){setP('g5','er',e.message);throw e;}
 
     addP('dx','Fetching DYNASTY-DESIGN.md from master repo','','⬡ GitHub');setP('dx','run');
     let dy='';
     try{const r=await gh(`/repos/${ORG}/DYNASTY/contents/DYNASTY-DESIGN.md`);if(r.ok){const d=await r.json();dy=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));}setP('dx','ok');}
     catch{setP('dx','sk','Skipped');}
 
-    addP('cr',`Creating github.com/${repo}`);setP('cr','run','From dynasty-project-template…');
+    addP('cr',`Creating github.com/${ORG}/${inf.repo}`);setP('cr','run','From dynasty-project-template…');
     const tmpl=`${ORG}/dynasty-project-template`;
     const cr=await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
     if(!cr.ok&&cr.status!==422){const e=await cr.json();if(!e.message?.includes('already exists'))throw new Error(e.message);}
@@ -354,13 +918,13 @@ async function build(desc,inf){
 
     const files={
       'DESIGN.md':df.design_md,'CLAUDE.md':df.claude_md,
-      'AGENTS.md':`# AGENTS.md — ${inf.name}\nRead: DYNASTY-DESIGN.md → DESIGN.md → CLAUDE.md → SPEC.md → AGENT-SYSTEM.md\n## Git Config\n\`\`\`bash\ngit config user.email "polycarpohu@gmail.com"\ngit config user.name "pinohu"\n\`\`\`\n## Dynasty Bridge\nInbox: POST https://claude-inbox.audreysplace.place/message | Auth: Bearer ${FT}\n## Backend Deploy\n\`\`\`bash\ndocker-compose up -d\n\`\`\`\n## Safety: feature branches only, no prod DB writes without task spec\n`,
+      'AGENTS.md':`# AGENTS.md — ${inf.name}\nRead: DYNASTY-DESIGN.md → DESIGN.md → CLAUDE.md → SPEC.md → AGENT-SYSTEM.md\n## Git Config\ngit config user.email "polycarpohu@gmail.com"\ngit config user.name "pinohu"\n## Dynasty Bridge\nInbox: POST https://claude-inbox.audreysplace.place/message | Auth: Bearer ${FT}\n## Backend Deploy: docker-compose up -d\n## Safety: feature branches only, no prod DB writes without task spec\n`,
       'SPEC.md':dc.spec_md,'ROADMAP.md':dc.roadmap_md,'README.md':dc.readme_md,
       'MANUAL-ACTIONS.md':dc.manual_md,'.env.example':dc.env_ex,
       '.gitignore':'node_modules/\n.next/\nout/\ndist/\nbuild/\n.vercel/\n.env\n.env.local\n.env.*.local\n.DS_Store\n*.log\ncoverage/\n__pycache__/\n*.py[cod]\n.venv/\nvenv/\n*.tsbuildinfo\nnext-env.d.ts\n',
-      'docs/DATA-MODEL.md':dc.data_model,'docs/API-CONTRACTS.md':dc.api_contracts,
-      'docs/KB-OUTLINES.md':dc.kb_outlines,
-      'docs/DESIGN-DECISIONS.md':`# Design Decisions — ${inf.name}\n## ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})} — Project initialized\n**Type**: ${inf.type_label} · **Accent**: ${inf.accent} · **Model**: ${inf.revenue_model} at ${inf.price}\n---\n`,
+      'docs/DATA-MODEL.md':ds.data_model,'docs/API-CONTRACTS.md':ds.api_contracts,
+      'docs/KB-OUTLINES.md':ds.kb_outlines,
+      'docs/DESIGN-DECISIONS.md':`# Design Decisions — ${inf.name}\n## ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})} — Project initialized\nType: ${inf.type_label} · Accent: ${inf.accent} · Model: ${inf.revenue_model} at ${inf.price}\n---\n`,
       'BUSINESS-SYSTEM.md':bz.biz_system,'AGENT-SYSTEM.md':bz.agent_system,
       'REVENUE-MODEL.md':bz.revenue_model,'GTM-PLAYBOOK.md':bz.gtm_playbook,
       'FAILURE-MODES.md':bz.failure_modes,
@@ -373,18 +937,19 @@ async function build(desc,inf){
     addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
     for(let i=0;i<fl.length;i++){
       const[p,c]=fl[i];
-      await pushF(repo,p,c,`feat: dynasty scaffold — ${p}`);
+      if(!c||c.includes('[Generation incomplete]'))continue;
+      await pushF(`${ORG}/${inf.repo}`,p,c,`feat: dynasty scaffold — ${p}`);
       setP('pf','run',`${i+1}/${fl.length} — ${p}`);
     }
     setP('pf','ok',`${fl.length} files live`);
 
     const ftasks=inf.flint_svcs||[];
     if(ftasks.length){
-      addP('fl',`Tasking Flint (${ftasks.length} provisioning jobs)`);setP('fl','run');
+      addP('fl',`Tasking Flint (${ftasks.length} jobs)`);setP('fl','run');
       try{
         await fetch(FU,{method:'POST',headers:{'Authorization':`Bearer ${FT}`,'Content-Type':'application/json'},
           body:JSON.stringify({source:'dynasty-launcher',priority:'high',
-            task:`PROVISION + DEPLOY BUSINESS SYSTEM\nProject: ${inf.name}\nRepo: github.com/${repo}\nType: ${inf.type_label}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nTasks: ${ftasks.join(', ')}\n20i: c2387393b8125d868/c0471cadcfe5a7837\nGH token: ${GHT}\nReport each completion to outbox.`})});
+            task:`PROVISION + DEPLOY BUSINESS SYSTEM\nProject: ${inf.name}\nRepo: github.com/${ORG}/${inf.repo}\nType: ${inf.type_label}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nTasks: ${ftasks.join(', ')}\n20i: c2387393b8125d868/c0471cadcfe5a7837\nReport each completion to outbox.`})});
         setP('fl','ok',`${ftasks.length} tasks queued — Flint building autonomously`);
       }catch{setP('fl','sk','Flint unreachable — see MANUAL-ACTIONS.md');}
     }
