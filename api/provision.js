@@ -172,6 +172,108 @@ export default async function handler(req, res) {
 
     await new Promise(r => setTimeout(r, 2000)); // extra settle time
 
+    // 3a. Push @dynasty/contracts stub (monorepo package not available in standalone repo)
+    const CONTRACTS_STUB = `export function validateCanonicalNicheConfig<T>(config: T): T {
+  return config;
+}
+export type CanonicalNicheConfig = {
+  site: Record<string, unknown>;
+  branding: Record<string, unknown>;
+  seo: Record<string, unknown>;
+  niche: Record<string, unknown>;
+  navigation: Record<string, unknown>;
+  social: Record<string, unknown>;
+  features: Record<string, unknown>;
+  content: Record<string, unknown>;
+  monetization?: Record<string, unknown>;
+  directory?: Record<string, unknown>;
+};`;
+    await pushFile(GITHUB_TOKEN, ORG, project_slug,
+      'src/lib/dynasty-contracts.ts', CONTRACTS_STUB,
+      'fix: @dynasty/contracts stub for standalone deployment');
+    await new Promise(r => setTimeout(r, 400));
+
+    // 3b. Push patched vite.config.ts with @dynasty/contracts alias
+    const VITE_CONFIG = `import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
+import rssPlugin from "./vite-rss-plugin";
+
+// https://vitejs.dev/config/
+export default defineConfig(({ mode }) => ({
+  server: {
+    host: "::",
+    port: 8080,
+  },
+  plugins: [
+    react(),
+    rssPlugin(),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@dynasty/contracts": path.resolve(__dirname, "./src/lib/dynasty-contracts.ts"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined
+
+          if (id.includes("@supabase/") || id.includes("supabase-js")) return "vendor-supabase"
+          if (id.includes("@tanstack/")) return "vendor-query"
+          if (id.includes("react-router") || id.includes("@remix-run")) return "vendor-router"
+          if (id.includes("react-dom") || id.includes("react/jsx-runtime") || /node_modules[\\/](react)[\\/]/.test(id)) return "vendor-react"
+          if (id.includes("@radix-ui/")) return "vendor-radix"
+          if (id.includes("recharts") || id.includes("d3-")) return "vendor-charts"
+          if (id.includes("dompurify") || id.includes("marked")) return "vendor-content"
+          if (id.includes("jspdf")) return "vendor-jspdf"
+          if (id.includes("html2canvas")) return "vendor-html2canvas"
+          if (id.includes("canvg")) return "vendor-canvg"
+          if (id.includes("framer-motion")) return "vendor-motion"
+          if (id.includes("lucide-react")) return "vendor-icons"
+          if (id.includes("@hookform/") || id.includes("zod")) return "vendor-forms"
+          if (id.includes("date-fns")) return "vendor-dates"
+          if (id.includes("@floating-ui/")) return "vendor-floating"
+
+          return undefined
+        },
+        // Let Vite/Rollup handle all code splitting automatically
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
+      },
+    },
+    cssCodeSplit: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+        drop_debugger: mode === 'production',
+        passes: 2, // Multiple passes for better compression
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info'] : [],
+      },
+      mangle: {
+        safari10: true, // Safari 10 compatibility
+      },
+    },
+    // Performance budgets
+    chunkSizeWarningLimit: 700, // Warn if chunks exceed 700kb
+    reportCompressedSize: true,
+    // Enable source maps in production for debugging (optional)
+    sourcemap: mode === 'production' ? false : true,
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
+  },
+}));
+`;
+    await pushFile(GITHUB_TOKEN, ORG, project_slug,
+      'vite.config.ts', VITE_CONFIG,
+      'fix: add @dynasty/contracts alias for standalone deployment');
+    await new Promise(r => setTimeout(r, 400));
+
     // 3. Push niche.config.ts
     if (niche_config && niche_config.length > 200) {
       await pushFile(GITHUB_TOKEN, ORG, project_slug,
