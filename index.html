@@ -132,7 +132,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   <div id="prog-screen" style="display:none">
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
-      <p id="prog-sub">5 AI generation calls · 23 files · FastAPI backend + Docker · Flint provisioning</p>
+      <p id="prog-sub">6 AI generation calls · 23 files · FastAPI backend + Docker · Flint provisioning</p>
     </div>
     <div class="prog-list" id="prog-list"></div>
     <div class="eb" id="err-box" style="display:none"></div>
@@ -282,14 +282,25 @@ async function pushF(repo,path,content,msg){
   const r=await gh(`/repos/${repo}/contents/${path}`,'PUT',pl);
   if(!r.ok)throw new Error(`Push failed: ${path}`);
 }
-async function ai(prompt,max=5500){
+async function ai(prompt,max=7000){
   const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:max,messages:[{role:'user',content:prompt}]})});
   if(!r.ok)throw new Error(`AI API ${r.status}`);
   const d=await r.json();
+  if(d.error)throw new Error(d.error.message||'API error');
   const t=d.content?.find(b=>b.type==='text')?.text||'';
-  const m=t.match(/\{[\s\S]*\}/);
-  if(!m)throw new Error('No JSON in response');
-  return JSON.parse(m[0]);
+  // Extract JSON — find first { and last }
+  const start=t.indexOf('{');
+  const end=t.lastIndexOf('}');
+  if(start===-1)throw new Error('No JSON in response');
+  let raw=t.slice(start,end+1);
+  try{return JSON.parse(raw);}catch(e){
+    // Try to repair truncated JSON by removing incomplete last key
+    const lastComma=raw.lastIndexOf('","');
+    if(lastComma>0){
+      try{return JSON.parse(raw.slice(0,lastComma)+'"}}');}catch{}
+    }
+    throw new Error('JSON parse error — try again with a shorter description.');
+  }
 }
 
 function cx(desc,inf){return`Project: ${inf.name}\nDescription: ${desc}\nRepo: ${ORG}/${inf.repo}\nType: ${inf.type_label}\nSurface: ${inf.surface}\nAccent: ${inf.accent}\nFonts: ${inf.fonts}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nAcquisition: ${inf.acquisition}\nMVP: ${inf.mvp}`;}
@@ -303,11 +314,20 @@ async function build(desc,inf){
       setP('g1','ok',`${((df.design_md?.length||0)/1000).toFixed(1)}k chars`);
     }catch(e){setP('g1','er',e.message);throw e;}
 
-    addP('g2','Generating SPEC, ROADMAP, README, MANUAL-ACTIONS, data model, API contracts, KB','','⬡ Product Docs');setP('g2','run');
-    let dc;try{
-      dc=await ai(`Generate Dynasty Empire product docs. Return ONLY valid JSON.\n${cx(desc,inf)}\nReturn:{"spec_md":"# SPEC.md\\n## Vision\\n## Users [primary/secondary]\\n## Features [P0/P1/P2 with acceptance criteria]\\n## Data Model\\n## Integrations\\n## Metrics","roadmap_md":"# ROADMAP.md\\n## Phase 1 MVP — ${inf.mvp}\\n[12 tasks]\\n## Phase 2 [10 tasks]\\n## Phase 3 [8 tasks]\\n## Phase 4 Scale [6 tasks]","readme_md":"# ${inf.name}\\n## Overview\\n## Quick Start\\n## Architecture\\n## Deployment","manual_md":"# MANUAL-ACTIONS.md\\n${(inf.manual_svcs||[]).length?'Actions requiring human interaction:\\n'+(inf.manual_svcs||[]).map(k=>`### ${k}\\nWhy: [reason]\\nSteps:\\n1. [step]\\n2. [step]\\n3. [step]`).join('\\n\\n'):'No manual actions required for this configuration.'}","env_ex":"# .env.example\\n[all vars for ${(inf.stack||[]).join('/')} grouped by service with comments]","data_model":"# docs/DATA-MODEL.md\\n## Tables [columns/types/indexes/relations]\\n## Relationships\\n## Migrations","api_contracts":"# docs/API-CONTRACTS.md\\n## Auth\\n## Endpoints [method/path/request/response/example per resource]","kb_outlines":"# docs/KB-OUTLINES.md\\n## 10 Seed Articles [title/keyword/H2 outline/word count]"}`,5500);
-      setP('g2','ok','8 docs ready');
-    }catch(e){setP('g2','er',e.message);throw e;}
+    addP('g2a','Generating SPEC.md + ROADMAP.md + README.md + MANUAL-ACTIONS.md','','⬡ Product Docs');setP('g2a','run');
+    let dc1;try{
+      dc1=await ai(`Generate Dynasty Empire product docs. Be concise but complete. Return ONLY valid JSON, no markdown fences.\n${cx(desc,inf)}\nReturn exactly these 4 keys:{"spec_md":"# SPEC.md — ${inf.name}\\n## Product Vision (2 sentences)\\n## Target Users (primary + secondary)\\n## Core Features\\nP0 (must ship in MVP):\\n- [feature with acceptance criteria]\\n- [feature]\\n- [feature]\\nP1 (phase 2):\\n- [feature]\\n- [feature]\\nP2 (phase 3):\\n- [feature]\\n## Key Integrations\\n## Success Metrics","roadmap_md":"# ROADMAP.md — ${inf.name}\\n## Phase 1: MVP (${inf.mvp})\\n[10 specific tasks with owners]\\n## Phase 2: Core Features (week 3-4)\\n[8 tasks]\\n## Phase 3: Launch (week 5-6)\\n[6 tasks]\\n## Phase 4: Scale\\n[5 milestones]","readme_md":"# ${inf.name}\\n> [one line description]\\n## Overview\\n## Quick Start\\n\\`\\`\\`bash\\ngh repo clone ${ORG}/${inf.repo} && cd ${inf.repo}\\ncp .env.example .env.local\\n# fill env vars\\nclaude\\n\\`\\`\\`\\n## Architecture\\n## Deployment\\n\\`\\`\\`bash\\ndocker-compose up -d\\n\\`\\`\\`","manual_md":"# MANUAL-ACTIONS.md — ${inf.name}\\n${(inf.manual_svcs||[]).length?'## Actions Required\\n\\n'+(inf.manual_svcs||[]).map(k=>`### ${k}\\nWhy: [explain why this product needs it]\\nSteps:\\n1. [exact action]\\n2. [exact action]\\nResult: [what to do with output]`).join('\\n\\n'):'No manual actions selected.'}"}`,6000);
+      setP('g2a','ok','4 docs ready');
+    }catch(e){setP('g2a','er',e.message);throw e;}
+
+    addP('g2b','Generating .env.example + DATA-MODEL.md + API-CONTRACTS.md + KB-OUTLINES.md','');setP('g2b','run');
+    let dc2;try{
+      dc2=await ai(`Generate Dynasty Empire technical docs. Be concise. Return ONLY valid JSON, no markdown fences.\n${cx(desc,inf)}\nReturn exactly these 4 keys:{"env_ex":"# .env.example — ${inf.name}\\n# Copy to .env.local\\n\\n[all likely env vars for ${(inf.stack||[]).join('/')} stack, grouped by service with explanatory comments]","data_model":"# docs/DATA-MODEL.md — ${inf.name}\\n## Core Tables\\n[for each table: name, key columns with types, primary key, foreign keys, indexes]\\n## Key Relationships\\n## Migration Notes","api_contracts":"# docs/API-CONTRACTS.md — ${inf.name}\\n## Authentication\\nBearer JWT — POST /auth/login → {token}\\n## Endpoints\\n[for each resource group: GET/POST/PUT/DELETE with path, request body schema, response schema]","kb_outlines":"# docs/KB-OUTLINES.md — ${inf.name}\\n## 10 Seed Articles\\n[for each: Title / Target keyword / H2 outline (4-5 headers) / Word count target]"}`,5000);
+      setP('g2b','ok','4 technical docs ready');
+    }catch(e){setP('g2b','er',e.message);throw e;}
+    
+    // Merge both calls
+    const dc={...dc1,...dc2};
 
     addP('g3','Generating BUSINESS-SYSTEM + AGENT-SYSTEM + REVENUE-MODEL + GTM + FAILURE-MODES','','⬡ Business System');setP('g3','run');
     let bz;try{
