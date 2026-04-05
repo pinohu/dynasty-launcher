@@ -99,20 +99,10 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   <div class="logo">
     <div class="lm">⚡</div>
     <div><div class="lt">Dynasty Business System Launcher</div><div class="ls">Describe your project — everything else is inferred and built automatically</div></div>
-    <button class="lset" id="settings-btn">⚙ Token</button>
+    <button class="lset" id="settings-btn" title="Settings">⚙</button>
   </div>
 
-  <div class="tbanner" id="tbanner">
-    <h4>GitHub Settings</h4>
-    <div class="tinputs">
-      <input class="ti" type="password" id="gh-token" placeholder="GitHub token (ghp_...)">
-      <input class="ti" type="text" id="gh-org" placeholder="Org / username (e.g. pinohu)">
-      <button class="tsave" onclick="saveToken()">Save</button>
-    </div>
-    <div class="tnote">Stored in your browser only. Needs repo write permissions.</div>
-  </div>
-
-  <div id="input-screen">
+    <div id="input-screen">
     <div class="hero">
       <h1>What are you <span>building?</span></h1>
       <p>Describe your project in plain English. The system infers the type, tech stack, business model, acquisition channel, and pricing — then generates 23 files and provisions infrastructure automatically.</p>
@@ -156,27 +146,16 @@ const ORG_DEFAULT='pinohu',TMPL_DEFAULT='pinohu/dynasty-project-template';
 const FT='1ed943c21ef9e2f60fe1189241a246d769e4191051ad2c0c035282722cb4b030';
 const FU='https://claude-inbox.audreysplace.place/message';
 
-let GHT=localStorage.getItem('dynasty_gh_token')||'';
+// GitHub token is server-side — all calls go through /api/github proxy
 let ORG=localStorage.getItem('dynasty_gh_org')||ORG_DEFAULT;
 let INFERRED=null;
 let PRGS=[];
 
-// Token management
+// Settings — only org name needed now (token is server-side)
 document.getElementById('settings-btn').onclick=()=>{
-  const b=document.getElementById('tbanner');
-  b.style.display=b.style.display==='none'||!b.style.display?'block':'none';
-  document.getElementById('gh-token').value=GHT;
-  document.getElementById('gh-org').value=ORG;
+  const org=prompt('GitHub org/username (default: pinohu):',ORG);
+  if(org){ORG=org.trim();localStorage.setItem('dynasty_gh_org',ORG);}
 };
-function saveToken(){
-  const t=document.getElementById('gh-token').value.trim();
-  const o=document.getElementById('gh-org').value.trim()||ORG_DEFAULT;
-  if(t){GHT=t;ORG=o;localStorage.setItem('dynasty_gh_token',t);localStorage.setItem('dynasty_gh_org',o);}
-  document.getElementById('tbanner').style.display='none';
-  updateLaunchBtn();
-}
-// Show token banner if no token
-if(!GHT){document.getElementById('tbanner').style.display='block';}
 
 // Examples
 document.querySelectorAll('.ex').forEach(el=>el.addEventListener('click',()=>{
@@ -267,7 +246,6 @@ function showPreview(inf){
 
 // Launch
 document.getElementById('launch-btn').addEventListener('click',async()=>{
-  if(!GHT){document.getElementById('tbanner').style.display='block';document.getElementById('gh-token').focus();return;}
   if(!INFERRED)return;
   const desc=document.getElementById('project-desc').value.trim();
   document.getElementById('input-screen').style.display='none';
@@ -291,10 +269,10 @@ function renderProg(){
   }).join('');
 }
 
-// GitHub
+// GitHub — all calls proxied server-side (token stays secret)
 const sl=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 async function gh(path,method='GET',body=null){
-  return fetch(`https://api.github.com${path}`,{method,headers:{'Authorization':`token ${GHT}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},...(body?{body:JSON.stringify(body)}:{})});
+  return fetch(`/api/github?path=${encodeURIComponent(path)}`,{method,headers:{'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
 }
 async function pushF(repo,path,content,msg){
   const enc=btoa(unescape(encodeURIComponent(content)));
@@ -345,7 +323,7 @@ async function build(desc,inf){
 
     addP('dx','Fetching DYNASTY-DESIGN.md from master repo','','⬡ GitHub');setP('dx','run');
     let dy='';
-    try{const r=await fetch(`https://api.github.com/repos/${ORG}/DYNASTY/contents/DYNASTY-DESIGN.md`,{headers:{'Authorization':`token ${GHT}`}});if(r.ok){const d=await r.json();dy=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));}setP('dx','ok');}
+    try{const r=await gh(`/repos/${ORG}/DYNASTY/contents/DYNASTY-DESIGN.md`);if(r.ok){const d=await r.json();dy=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));}setP('dx','ok');}
     catch{setP('dx','sk','Skipped');}
 
     addP('cr',`Creating github.com/${repo}`);setP('cr','run','From dynasty-project-template…');
