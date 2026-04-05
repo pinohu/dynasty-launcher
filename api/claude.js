@@ -1,6 +1,5 @@
-// Serverless Function (not Edge) — allows up to 120s for AI generation
-// Edge Functions cap at 25s, causing 504 on slow AI calls
-export const maxDuration = 120;
+// Serverless Function — 300s timeout (Vercel Pro max) for AI generation calls
+export const maxDuration = 300;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
