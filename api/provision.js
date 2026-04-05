@@ -173,9 +173,18 @@ export default async function handler(req, res) {
     await new Promise(r => setTimeout(r, 2000)); // extra settle time
 
     // 3a. Push @dynasty/contracts stub (monorepo package not available in standalone repo)
-    const CONTRACTS_STUB = `export function validateCanonicalNicheConfig<T>(config: T): T {
+    const CONTRACTS_STUB = `// @dynasty/contracts standalone stub — no monorepo required
+
+export function validateCanonicalNicheConfig<T>(config: T): T {
   return config;
 }
+
+export function assertCanonicalNicheConfig(config: unknown): void {
+  if (!config || typeof config !== 'object') {
+    throw new Error('Invalid niche config: must be an object');
+  }
+}
+
 export type CanonicalNicheConfig = {
   site: Record<string, unknown>;
   branding: Record<string, unknown>;
