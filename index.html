@@ -561,249 +561,349 @@ ${cx(desc,inf)}
       setP('g3','ok','Technical docs ready');
     }catch(e){setP('g3','er',e.message);throw e;}
 
-    addP('g4','Generating BUSINESS-SYSTEM + AGENT-SYSTEM + REVENUE-MODEL + GTM + FAILURE-MODES','','⬡ Business System');setP('g4','run');
-    let bz;try{
-      bz=await ai(`CREATIVE AUTHORITY ARCHITECT: Generate complete deployable business system. No theory. No fluff. Real numbers. Return ONLY in delimiter format. No JSON. No preamble.
+    addP('g4a','Generating BUSINESS-SYSTEM + REVENUE-MODEL + GTM-PLAYBOOK','','⬡ Business System');setP('g4a','run');
+    let bz1;try{
+      bz1=await ai(`CREATIVE AUTHORITY ARCHITECT. Generate business strategy files. Return in delimiter format ONLY. No preamble.
 
 ${cx(desc,inf)}
 
 ---BEGIN:biz_system---
 # BUSINESS-SYSTEM.md — ${inf.name}
 ## 1. Strategy
-Niche: [one sentence]
+Niche: [one sentence — specific market segment]
 Offer: [one sentence — what you sell and to whom]
-Positioning: [one sentence — why you win vs alternatives]
-Why this wins:
-1. [Specific competitive advantage]
-2. [Specific competitive advantage]
-3. [Specific competitive advantage]
+Positioning: [one sentence — why you beat alternatives]
+Why this wins: [3 specific competitive advantages with evidence]
 
-## 2. Agent System — All 11 Agents
-[For each of the 11 agents (Intake, Idea Generator, Evaluator, Architect, MVP Builder, Proof Engine, GTM, Sales, Financial Model, Deal Structuring, Scale Plan):]
-### Agent: [Name]
-Purpose: [one sentence]
-Trigger: [what kicks this off]
-Inputs: [list]
-Outputs: [list]
-Tool Dependency Block:
-| Tool | Purpose | Where Used | Input | Output |
-[table — map to Dynasty tools: CallScaler/Insighto/SMS-iT/SEO Machine/Stripe/n8n/Flint/Claude]
-Success Criteria: [measurable]
-Fallback: [if primary tool fails]
+## 2. Agent System (All 11)
+Intake → Idea Generator → Evaluator → Architect → MVP Builder → Proof Engine → GTM → Sales → Financial Model → Deal Structuring → Scale Plan
+
+[For each agent:]
+### [Agent Name]
+Purpose / Trigger / Inputs / Outputs
+Tool Dependency: [specific Dynasty tool — CallScaler/Insighto/SMS-iT/SEO Machine/Stripe/n8n/Flint/Claude] → how it's used
+Success metric / Fallback
 
 ## 3. Revenue Model
-Pricing Tiers:
-| Tier | Price | Features | Target Customer |
-[3 tiers with exact prices]
+| Tier | Price | Features | Target |
+[3 pricing tiers with exact ${inf.price}-range pricing]
 
-Month 1-12 Projections:
-| Month | Customers | MRR | ARR |
-[12-row table with realistic ramp]
+Month 1-12 MRR projection:
+| Mo | Customers | MRR | ARR |
+[12 rows, realistic ramp from 0]
 
-Unit Economics:
-CAC: $[number] | LTV: $[number] | LTV:CAC: [ratio] | Payback: [months] | Churn: [%/month]
+CAC: $X | LTV: $X | LTV:CAC: X:1 | Payback: X mo | Churn: X%/mo
 
-## 4. MVP Scope — ${inf.mvp}
-Ships:
-[6-8 specific features only]
+## 4. MVP (${inf.mvp})
+Ships: [6 features with acceptance criteria]
+Excludes: [4 items explicitly cut]
+Done when: [binary statement]
 
-Does NOT ship:
-[4-5 things explicitly excluded]
+## 5. Financial Model
+| Month | Revenue | COGS | Margin | OpEx | EBITDA |
+[12 rows]
 
-Definition of Done: [binary, measurable statement]
+## 6. Deal Structure
+Tier 1: $X/mo — [features] — Stripe: [product name]
+Tier 2: $X/mo — [features] — Stripe: [product name]  
+Tier 3: $X/mo — [features] — Stripe: [product name]
+Annual: X% discount | Refund: [policy]
 
-## 5. GTM Plan — ${inf.acquisition}
-Week 1 (Days 1-7):
-[Day-by-day actions with exact daily targets]
-
-Weeks 2-4:
-[Weekly execution plan with KPIs]
-
-Messaging Framework:
-Hook: [exact copy]
-Pain: [exact copy]
-Solution: [exact copy]
-CTA: [exact copy]
-
-## 6. Financial Model (Month 1-12)
-| Month | Revenue | COGS | Gross Margin | OpEx | EBITDA |
-[12-row table]
-Key assumptions: [list]
-
-## 7. Deal Structure
-Tier 1: $[price]/mo — [features] — Stripe product: [name]
-Tier 2: $[price]/mo — [features] — Stripe product: [name]
-Tier 3: $[price]/mo — [features] — Stripe product: [name]
-Annual discount: [%] | Refund policy: [policy]
-
-## 8. Scale Plan
-Month 3: $[MRR] / [X] customers / Initiative: [key action]
-Month 6: $[MRR] / [X] customers / Initiative: [key action]
-Month 12: $[MRR] / [X] customers / Initiative: [key action]
-Month 24: $[MRR] / [X] customers / Initiative: [key action]
+## 7. Scale Plan
+Mo 3: $XMRR / X customers / [key initiative]
+Mo 6: $XMRR / X customers / [key initiative]
+Mo 12: $XMRR / X customers / [key initiative]
+Mo 24: $XMRR / X customers / [key initiative]
 ---END:biz_system---
-
----BEGIN:agent_system---
-# AGENT-SYSTEM.md — ${inf.name}
-## Agent Architecture Overview
-[Brief description of how the 11 agents work together for this specific product]
-
-## Dynasty Tool Stack
-[Map each agent to specific Dynasty tools: CallScaler=Sales agent, SEO Machine=GTM agent, Stripe=Deal Structuring, Insighto=Sales calls, n8n=Orchestration, Flint=MVP + Architect, Claude=Idea Generator + Evaluator]
-
-[Full detail for each agent with Tool Dependency Block table]
----END:agent_system---
 
 ---BEGIN:revenue_model---
 # REVENUE-MODEL.md — ${inf.name}
 ## Pricing Tiers
-[3 tiers with exact prices, included features, and target customer segment]
+[3 tiers: name / price / included features / target segment]
 
 ## Month 1-12 Projections
-[Table: Month / New Customers / Total Customers / MRR / ARR / Notes]
+| Month | New Customers | Total | MRR | ARR | Notes |
+[12 rows]
 
 ## Unit Economics
-[CAC / LTV / LTV:CAC ratio / Payback period / Monthly churn assumption / Annual churn]
+CAC / LTV / Ratio / Payback / Churn / Net Revenue Retention
 
-## Revenue Milestones
-$1K MRR: Month [X] — [X] customers
-$5K MRR: Month [X] — [X] customers
-$10K MRR: Month [X] — [X] customers
-$25K MRR: Month [X] — [X] customers
+## Milestones
+$1K MRR: Month X | $5K: Month X | $10K: Month X | $25K: Month X
 
-## Expense Model
-[Monthly breakdown: Hosting/Infrastructure / Tools/SaaS / Labor / Marketing / Total]
+## Monthly Expenses
+Hosting / Tools / Labor / Marketing / Total per month
 ---END:revenue_model---
 
 ---BEGIN:gtm_playbook---
 # GTM-PLAYBOOK.md — ${inf.name}
 ## Channel: ${inf.acquisition}
 
-## Week 1 Execution (Day-by-Day)
-[Day 1-7: exact action, target metric, how to measure]
+## Week 1 (Days 1-7)
+[Each day: action + target metric]
 
-## Weeks 2-4 (Weekly)
-[Week 2/3/4: focus area, weekly target, key activities]
+## Weeks 2-4
+[Weekly: focus + KPIs + key activities]
 
-## Messaging Framework
-Hook (attention): [exact copy — one sentence]
-Pain (problem): [exact copy — one to two sentences]
-Solution (offer): [exact copy — one sentence]
-CTA (action): [exact copy — one sentence]
+## Messaging
+Hook: [exact copy]
+Pain: [exact copy — 1-2 sentences]
+Solution: [exact copy — 1 sentence]
+CTA: [exact copy]
 
 ## Sales Script
-Opening: [word-for-word]
-Discovery questions: [3-5 questions]
-Pitch: [word-for-word, 30-60 seconds]
-Objection: "Too expensive" → [word-for-word response]
-Objection: "Not now" → [word-for-word response]
+Opening: [word-for-word, 15 seconds]
+Discovery: [3 key questions]
+Pitch: [word-for-word, 45 seconds]
+"Too expensive": [word-for-word response]
+"Not now": [word-for-word response]
 Close: [word-for-word]
 
-## Dynasty Comms Stack Usage
-CallScaler: [when to call, script outline]
-Insighto voice agent: [agent script for this product]
-SMS-iT sequence: [if applicable — message 1 / message 2 / message 3]
+## Dynasty Comms Stack
+CallScaler: [when + script outline for this product]
+Insighto voice agent: [script for automated calls]
+SMS-iT: [3-message follow-up sequence]
 
 ## KPIs
-Leading: [metric with weekly target]
-Leading: [metric with weekly target]
-Lagging: [metric with monthly target]
-Lagging: [metric with monthly target]
+[4 KPIs: 2 leading weekly + 2 lagging monthly, with targets]
 ---END:gtm_playbook---
+`, ['biz_system','revenue_model','gtm_playbook'], 7000);
+      setP('g4a','ok',`Business strategy ready`);
+    }catch(e){setP('g4a','er',e.message);throw e;}
+
+    addP('g4b','Generating AGENT-SYSTEM + FAILURE-MODES','');setP('g4b','run');
+    let bz2;try{
+      bz2=await ai(`DYNASTY EMPIRE AGENT SYSTEM + FAILURE MODES. Return in delimiter format ONLY. No preamble.
+
+${cx(desc,inf)}
+
+---BEGIN:agent_system---
+# AGENT-SYSTEM.md — ${inf.name}
+## Dynasty Tool Mapping
+Intake=launcher | Idea Generator=Claude | Evaluator=Claude | Architect=Claude Code | MVP=Flint | Proof Engine=n8n | GTM=SEO Machine+Trafft | Sales=CallScaler+Insighto+SMS-iT | Financial Model=Claude | Deal Structuring=Stripe | Scale Plan=SuiteDash+n8n
+
+## All 11 Agents
+[For each agent: Name / Purpose (1 sentence) / Trigger / Inputs / Outputs]
+
+Tool Dependency Block per agent:
+| Tool | Purpose | Input | Output |
+[table — use actual Dynasty tools listed above]
+
+Success criteria + Fallback if tool fails
+---END:agent_system---
 
 ---BEGIN:failure_modes---
 # FAILURE-MODES.md — ${inf.name}
-## Failure Scenarios
+## 10 Failure Scenarios
 
-### 1. JWT Token Expiry
-Detection: 401 responses after previously authenticated requests
-Fallback: Redirect to re-authentication, preserve user's current page in state
-Recovery: Implement token refresh endpoint with 7-day refresh window
-Circuit breaker: Auto-logout after 3 consecutive auth failures
+For each: **Detection** / **Immediate fallback** / **Recovery procedure** / **Circuit breaker**
 
-### 2. Database Connection Loss
-Detection: SQLAlchemy OperationalError, connection pool exhausted
-Fallback: Serve cached responses for read operations; queue writes
-Recovery: Exponential backoff reconnection (1s, 2s, 4s, 8s, max 30s)
-Circuit breaker: Open circuit after 5 failed connections in 60 seconds
-
-### 3. Stripe Webhook Failure
-Detection: Webhook endpoint returns non-200; Stripe retry queue fills
-Fallback: Poll Stripe API for payment status on next user request
-Recovery: Reprocess webhook from Stripe dashboard; idempotency keys prevent duplication
-Circuit breaker: Alert on 3+ consecutive webhook failures
-
-### 4. Rate Limit Hit
-Detection: slowapi raises RateLimitExceeded; 429 response
-Fallback: Return 429 with Retry-After header; client queues retry
-Recovery: Automatic — limits reset per window
-Circuit breaker: N/A — rate limits are protective by design
-
-### 5. Redis Unavailable
-Detection: redis.ConnectionError on cache operations
-Fallback: Bypass cache, serve from database directly
-Recovery: Reconnect with exponential backoff; rebuild cache on reconnect
-Circuit breaker: Disable caching after 10 consecutive failures
-
-### 6-10. [Third-party API timeout / Payment processing failure / File upload failure / Email delivery failure / Auth provider outage]
-[Each with: Detection / Fallback / Recovery / Circuit breaker]
+1. JWT Token Expiry: 401 responses → redirect to re-auth → token refresh endpoint → auto-logout after 3 failures
+2. Database Connection Loss: SQLAlchemy error → serve cached reads, queue writes → exponential backoff (1/2/4/8/30s) → open circuit after 5 failures/60s
+3. Stripe Webhook Failure: non-200 from endpoint → poll Stripe API for status → reprocess from dashboard, idempotency keys prevent duplication → alert on 3+ consecutive failures
+4. Rate Limit Hit: RateLimitExceeded → 429 with Retry-After header → auto-retry on client side → N/A (protective by design)
+5. Redis Unavailable: ConnectionError → bypass cache, serve from DB → reconnect with backoff → disable caching after 10 failures
+6. Third-party API Timeout: >5s response → return cached or degraded response → retry with exponential backoff → alert and fallback to manual process
+7. Payment Processing Failure: Stripe charge error → notify user, retry once → escalate to manual review → flag account for support
+8. File Upload Failure: storage error → retry upload, show user error → check disk/S3 quotas → alert on repeated failures
+9. Email Delivery Failure: bounce/failure from email provider → retry with secondary provider → log undeliverable, notify admin → alert on >5% bounce rate
+10. Auth Provider Outage: external auth returning errors → allow grace period with cached sessions → monitor status page, notify users → failover to backup auth if available
 
 ## Backup Strategy
-Database: Daily automated snapshots to S3, 30-day retention
-Redis: RDB persistence enabled, hourly snapshots
-Code: Git-based, tagged releases for every production deploy
+DB: Daily snapshots to S3, 30-day retention | Redis: RDB persistence, hourly | Code: tagged Git releases every production deploy
 
 ## Monitoring Alerts
-[Alert name / Threshold / Escalation path for each critical metric]
+[5 critical alerts with threshold and escalation path for this product type]
 ---END:failure_modes---
-`, ['biz_system','agent_system','revenue_model','gtm_playbook','failure_modes'], 8000);
-      setP('g4','ok','Business system files ready');
-    }catch(e){setP('g4','er',e.message);throw e;}
+`, ['agent_system','failure_modes'], 5000);
+      setP('g4b','ok',`Agent system + failure modes ready`);
+    }catch(e){setP('g4b','er',e.message);throw e;}
+
+    const bz={...bz1,...bz2};
+    // Merge bz1 + bz2 into bz
+   
 
     addP('g5','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend Code');setP('g5','run');
     let be;try{
-      be=await ai(`GENERATE PRODUCTION-READY FASTAPI BACKEND CODE. Return ONLY code in delimiter format below. Real Python code only — no pseudocode, no placeholder comments like 'add your logic here'.
+      be=await ai(`GENERATE PRODUCTION-READY FASTAPI BACKEND. Real Python code only. Delimiter format ONLY. No preamble.
 
-Project: ${inf.name} | Type: ${inf.type_label} | Stack: ${(inf.stack||[]).join(',')} | Revenue: ${inf.revenue_model} at ${inf.price}
+Project: ${inf.name} | Type: ${inf.type_label} | Revenue: ${inf.revenue_model} at ${inf.price}
+Stack: ${(inf.stack||[]).join(', ')}
 
 ---BEGIN:main_py---
 #!/usr/bin/env python3
 # ${inf.name} — FastAPI Backend
-# Generated by Dynasty Business System Launcher
 
-from fastapi import FastAPI, HTTPException, Depends, Request, status, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from sqlalchemy import create_engine, Column, String, DateTime, Boolean, Integer, Float, text
+from sqlalchemy import create_engine, Column, String, DateTime, Boolean, Integer, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from loguru import logger
-import stripe
-import redis
-import os
-import uuid
+import stripe, redis, os, uuid
 from datetime import datetime, timedelta
-from typing import Optional
 from pydantic import BaseModel, EmailStr
 from dotenv import load_dotenv
 
 load_dotenv()
 
-[Full ~200 line implementation for ${inf.type_label} including:]
-[- Database setup, Redis client, Stripe initialization, rate limiter]
-[- JWT: create_access_token, verify_token, get_current_user]
-[- Health check: GET /health]
-[- Auth: POST /auth/register, POST /auth/login]
-[- 4+ domain endpoints specific to ${inf.type_label}]
-[- Stripe webhook: POST /webhooks/stripe with signature verification]
-[- Checkout: POST /billing/checkout]
-[- Request logging middleware with loguru]
-[- CORS configuration]
-[- Startup/shutdown events]
+# Config
+DATABASE_URL = os.getenv("DATABASE_URL")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE = 30
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
+# DB setup
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# Redis
+r = redis.from_url(REDIS_URL, decode_responses=True)
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# App
+app = FastAPI(title="${inf.name} API", version="1.0.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+# Models
+class User(Base):
+    __tablename__ = "users"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    plan = Column(String, default="free")
+
+[Define 2-3 more domain-specific models for ${inf.type_label}]
+
+Base.metadata.create_all(bind=engine)
+
+# DB dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Auth helpers
+def create_access_token(data: dict):
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE)
+    return jwt.encode({**data, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_token(token: str, db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+# Pydantic schemas
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+# Logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"{request.method} {request.url.path}")
+    response = await call_next(request)
+    logger.info(f"Status: {response.status_code}")
+    return response
+
+# Health check
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "${inf.name}", "version": "1.0.0"}
+
+# Auth endpoints
+@app.post("/auth/register", response_model=Token)
+@limiter.limit("10/minute")
+async def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
+    existing = db.query(User).filter(User.email == user.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    db_user = User(email=user.email, hashed_password=pwd_context.hash(user.password))
+    db.add(db_user)
+    db.commit()
+    token = create_access_token({"sub": user.email})
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.post("/auth/login", response_model=Token)
+@limiter.limit("10/minute")
+async def login(request: Request, user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == user.email).first()
+    if not db_user or not pwd_context.verify(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_access_token({"sub": user.email})
+    return {"access_token": token, "token_type": "bearer"}
+
+[Implement 4 core domain endpoints specific to ${inf.type_label} — GET list, GET detail, POST create, PUT update]
+
+# Stripe webhook
+@app.post("/webhooks/stripe")
+async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature")
+    try:
+        event = stripe.Webhook.construct_event(payload, sig, os.getenv("STRIPE_WEBHOOK_SECRET"))
+    except (ValueError, stripe.error.SignatureVerificationError):
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        user = db.query(User).filter(User.email == session.get("customer_email")).first()
+        if user:
+            user.plan = "pro"
+            db.commit()
+    return {"received": True}
+
+# Checkout
+@app.post("/billing/checkout")
+@limiter.limit("10/minute")
+async def create_checkout(request: Request, current_user: User = Depends(verify_token)):
+    session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=[{"price": os.getenv("STRIPE_PRICE_ID"), "quantity": 1}],
+        mode="subscription",
+        customer_email=current_user.email,
+        success_url=os.getenv("NEXT_PUBLIC_APP_URL") + "/dashboard?upgraded=true",
+        cancel_url=os.getenv("NEXT_PUBLIC_APP_URL") + "/pricing",
+    )
+    return {"url": session.url}
+
+@app.on_event("startup")
+async def startup():
+    logger.info("${inf.name} API starting")
+
+@app.on_event("shutdown")
+async def shutdown():
+    logger.info("${inf.name} API shutting down")
 ---END:main_py---
 
 ---BEGIN:requirements---
@@ -820,7 +920,6 @@ loguru>=0.7.2
 python-dotenv>=1.0.0
 alembic>=1.12.1
 pydantic[email]>=2.5.0
-httpx>=0.25.0
 ---END:requirements---
 
 ---BEGIN:dockerfile---
@@ -835,73 +934,59 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s CMD curl -f http://localhost:8000/health || exit 1
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
 ---END:dockerfile---
 
 ---BEGIN:docker_compose---
 version: '3.9'
-
 services:
   app:
     build: ./backend
-    ports:
-      - "8000:8000"
+    ports: ["8000:8000"]
     environment:
-      - DATABASE_URL=postgresql://dynasty:dynasty_pass@db:5432/${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
-      - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=${SECRET_KEY}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      DATABASE_URL: postgresql://dynasty:dynasty_pass@db:5432/${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-changeme}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
     restart: unless-stopped
-
   db:
     image: postgres:15-alpine
     environment:
       POSTGRES_DB: ${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
       POSTGRES_USER: dynasty
       POSTGRES_PASSWORD: dynasty_pass
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    volumes: [postgres_data:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dynasty"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
-
   redis:
     image: redis:7-alpine
-    volumes:
-      - redis_data:/data
+    volumes: [redis_data:/data]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
-
   nginx:
     image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app
+    ports: ["80:80", "443:443"]
+    volumes: ["./nginx.conf:/etc/nginx/conf.d/default.conf"]
+    depends_on: [app]
     restart: unless-stopped
-
 volumes:
   postgres_data:
   redis_data:
 ---END:docker_compose---
-`, ['main_py','requirements','dockerfile','docker_compose'], 8000);
+`, ['main_py','requirements','dockerfile','docker_compose'], 7000);
       setP('g5','ok','Production backend code ready');
     }catch(e){setP('g5','er',e.message);throw e;}
 
