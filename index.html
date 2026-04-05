@@ -132,7 +132,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   <div id="prog-screen" style="display:none">
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
-      <p id="prog-sub">6 AI generation calls · 23 files · FastAPI backend + Docker · Flint provisioning</p>
+      <p id="prog-sub">AI generation · 23 files · FastAPI backend + Docker · site.yaml for authority types</p>
     </div>
     <div class="prog-list" id="prog-list"></div>
     <div class="eb" id="err-box" style="display:none"></div>
@@ -1230,15 +1230,31 @@ export const nicheConfig: NicheConfig = {
     };
     if(dy)files['DYNASTY-DESIGN.md']=dy;
 
-    const fl=Object.entries(files);
-    addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
+    // Authority types: push docs to DYNASTY-SITE-FACTORY/factory/niches/{slug}/
+    // Non-authority types: push to standalone repo
+    const pushTarget = isAuthority ? `${ORG}/DYNASTY-SITE-FACTORY` : `${ORG}/${inf.repo}`;
+    const pushPathPrefix = isAuthority ? `factory/niches/${inf.repo}/` : '';
+
+    // For authority types, limit to key docs (not backend code)
+    const authorityDocFiles = ['DESIGN.md','CLAUDE.md','SPEC.md','ROADMAP.md','BUSINESS-SYSTEM.md','REVENUE-MODEL.md','GTM-PLAYBOOK.md','FAILURE-MODES.md'];
+    const filesToPush = isAuthority
+      ? Object.entries(files).filter(([p]) => authorityDocFiles.includes(p))
+      : Object.entries(files);
+
+    // Add niche.config.ts for authority types (push to factory)
+    if(isAuthority && nc?.niche_config && nc.niche_config.length > 100) {
+      filesToPush.push(['niche.config.ts', nc.niche_config]);
+    }
+
+    const fl = filesToPush;
+    addP('pf',`Pushing ${fl.length} files${isAuthority?' to DYNASTY-SITE-FACTORY':''}`);setP('pf','run',`0/${fl.length}…`);
     for(let i=0;i<fl.length;i++){
       const[p,c]=fl[i];
       if(!c||c.includes('[Generation incomplete]'))continue;
-      await pushF(`${ORG}/${inf.repo}`,p,c,`feat: dynasty scaffold — ${p}`);
+      await pushF(pushTarget, pushPathPrefix + p, c, `feat: dynasty scaffold — ${p}`);
       setP('pf','run',`${i+1}/${fl.length} — ${p}`);
     }
-    setP('pf','ok',`${fl.length} files live`);
+    setP('pf','ok',`${fl.length} files live${isAuthority?' in factory':''}`);
 
     // ── Live tool provisioning ────────────────────────────────────────────
     const provisionSvcs = [];
@@ -1310,7 +1326,10 @@ function showDone(inf,repo,fc,ftasks,mtasks){
   document.getElementById('prog-screen').style.display='none';
   const d=document.getElementById('done-screen');
   d.style.display='block';
-  const repoUrl=`https://github.com/${repo}`;
+  const repoUrl=isAuthority
+      ? `https://github.com/${ORG}/DYNASTY-SITE-FACTORY/tree/main/factory/niches/${inf.repo}`
+      : `https://github.com/${repo}`;
+    const repoLabel=isAuthority?`DYNASTY-SITE-FACTORY/factory/niches/${inf.repo}`:`${ORG}/${inf.repo}`;
   const bizFiles=['BUSINESS-SYSTEM.md','AGENT-SYSTEM.md','REVENUE-MODEL.md','GTM-PLAYBOOK.md','FAILURE-MODES.md'];
   const beFiles=['backend/main.py','backend/requirements.txt','backend/Dockerfile','docker-compose.yml'];
   const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
@@ -1323,7 +1342,7 @@ function showDone(inf,repo,fc,ftasks,mtasks){
   <div class="bb-item"><div class="bb-l">MVP</div><div class="bb-v">${inf.mvp}</div></div>
   <div class="bb-item"><div class="bb-l">Accent</div><div class="bb-v"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${inf.accent};margin-right:4px;vertical-align:middle"></span>${inf.accent}</div></div>
 </div>
-<div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank">${repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div></div>
+<div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank">${repoLabel||repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div></div>
 <div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
 <div class="rc"><h3>Backend + Docker (${beFiles.length})</h3>${beFiles.map(f=>`<div class="lr"><span class="lb lb-be">Code</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}<div style="font-size:11px;color:var(--dim);margin-top:5px">FastAPI + PostgreSQL + Redis · <code style="font-family:monospace">docker-compose up -d</code></div></div>
 <div class="rc"><h3>Design System + Docs (${designFiles.length+docFiles.length})</h3>${[...designFiles,...docFiles].map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
