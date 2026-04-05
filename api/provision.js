@@ -292,9 +292,13 @@ export const getMonetizationConfig = () => nicheConfig.monetization ?? {
   enableLeads: false, enableAffiliate: false, enablePremium: false,
 };
 `;
-      const fullNicheConfig = niche_config.includes('getSiteConfig')
-        ? niche_config
-        : niche_config + REQUIRED_EXPORTS;
+      // Strip any existing get* export functions to avoid duplicates, then append canonical set
+      const strippedNicheConfig = niche_config
+        .split('\n')
+        .filter(line => !line.match(/^export const (getConfig|getSiteConfig|getBrandingConfig|getSEOConfig|getNicheConfig|getNavigationConfig|getSocialConfig|getFeaturesConfig|getDirectoryConfig|getContentConfig|getMonetizationConfig)\s*=/))
+        .join('\n')
+        .trimEnd();
+      const fullNicheConfig = strippedNicheConfig + REQUIRED_EXPORTS;
       await pushFile(GITHUB_TOKEN, ORG, project_slug,
         'src/config/niche.config.ts', fullNicheConfig,
         'feat: dynasty niche configuration');
