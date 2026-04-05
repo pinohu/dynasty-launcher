@@ -6,255 +6,438 @@
 <title>Dynasty Business System Launcher</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--gold:#C9A84C;--gdim:rgba(201,168,76,0.1);--gb:rgba(201,168,76,0.22);--ink:#0A0A0A;--panel:#181818;--card:#202020;--card2:#272727;--bdr:rgba(255,255,255,0.07);--bmd:rgba(255,255,255,0.13);--tx:#EEEDE8;--sec:#908D86;--dim:#525050;--grn:#3ECF8E;--pur:#635BFF;--red:#E5534B;--r:7px;--rl:11px}
-html,body{min-height:100vh;background:#0F0F0F;color:var(--tx);font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px}
-body{padding:2rem}
-.page{max-width:820px;margin:0 auto}
-.logo{display:flex;align-items:center;gap:10px;margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--bdr)}
-.logo-mark{width:32px;height:32px;background:var(--gdim);border:1px solid var(--gb);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px}
-.logo-text{font-size:14px;font-weight:600;color:var(--gold);letter-spacing:.3px}
-.logo-sub{font-size:11px;color:var(--dim);margin-top:1px}
-/* widget styles */
-.w{padding:0}
-.hd{font-size:19px;font-weight:600;margin-bottom:3px}
-.sub{font-size:13px;color:var(--sec);margin-bottom:1.4rem}
-.stepper{display:flex;align-items:center;margin-bottom:1.6rem}
-.st{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--dim)}
-.st.a{color:var(--gold)}.st.d{color:var(--sec)}
-.sn{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;border:1px solid var(--bdr);background:var(--panel);color:var(--dim);flex-shrink:0}
-.st.a .sn{border-color:var(--gold);color:var(--gold);background:var(--gdim)}.st.d .sn{border-color:var(--grn);color:var(--grn);background:rgba(62,207,142,0.08)}
-.sl{flex:1;height:1px;background:var(--bdr);margin:0 6px}
-.cat{font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--gold);opacity:.75;margin:1rem 0 6px}
-.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:5px;margin-bottom:2px}
-.tc{padding:10px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--card);cursor:pointer;transition:.15s;position:relative}
-.tc:hover{border-color:var(--bmd)}.tc.s{border-color:var(--gold);background:var(--gdim)}
-.tc .ic{font-size:16px;margin-bottom:4px;display:block;line-height:1}
-.tc .tl{font-size:12px;font-weight:500;line-height:1.3;margin-bottom:2px}.tc .td{font-size:11px;color:var(--dim);line-height:1.3}
-.tc .ad{width:5px;height:5px;border-radius:50%;position:absolute;top:8px;right:8px}
-.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-.fg{margin-bottom:8px}
-label{display:block;font-size:12px;font-weight:500;color:var(--sec);margin-bottom:4px}
-input[type=text],textarea{width:100%;padding:7px 10px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);color:var(--tx);font-size:13px;font-family:inherit;outline:none;transition:.15s}
-input[type=text]:focus,textarea:focus{border-color:var(--bmd);box-shadow:0 0 0 2px var(--gb)}
-textarea{resize:vertical;min-height:58px;line-height:1.5}
-.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
-.chip{padding:3px 9px;border:1px solid var(--bdr);border-radius:9999px;font-size:11px;cursor:pointer;color:var(--sec);transition:.12s;user-select:none}
-.chip:hover{border-color:var(--bmd);color:var(--tx)}.chip.on{border-color:var(--gold);color:var(--gold);background:var(--gdim)}
-.chip.on-pur{border-color:var(--pur);color:#9B97FF;background:rgba(99,91,255,0.1)}
-.chip.on-grn{border-color:var(--grn);color:var(--grn);background:rgba(62,207,142,0.08)}
-.sws{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
-.sw{width:22px;height:22px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:.15s}
-.sw.s{border-color:var(--tx);transform:scale(1.18)}
-.div{height:1px;background:var(--bdr);margin:1rem 0}
-.sec-l{font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--dim);margin-bottom:7px}
-.tb{margin-bottom:.8rem}
-.ttl{font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:6px}
-.tbg{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600}
-.ba{background:rgba(62,207,142,0.15);color:var(--grn)}.bf{background:rgba(99,91,255,0.15);color:#8B87FF}.bm{background:rgba(201,168,76,0.12);color:var(--gold)}
-.sr{display:flex;align-items:flex-start;gap:7px;padding:6px 9px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--card);margin-bottom:4px;cursor:pointer;transition:.12s}
-.sr:hover{border-color:var(--bmd)}.sr.al{cursor:default;opacity:.6}
-.sc{width:13px;height:13px;border-radius:3px;border:1px solid var(--bmd);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:8px;transition:.12s}
-.sc.ck{background:var(--pur);border-color:var(--pur)}.sc.ao{background:var(--grn);border-color:var(--grn)}
-.si{flex:1}.sl2{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.sn2{font-size:11px;color:var(--dim);margin-top:1px;line-height:1.3}
-.biz-panel{background:var(--card2);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem;margin-bottom:.75rem}
-.biz-head{font-size:12px;font-weight:600;color:var(--gold);margin-bottom:.75rem;display:flex;align-items:center;gap:6px}
-.biz-badge{padding:2px 7px;border-radius:4px;font-size:10px;background:var(--gdim);border:1px solid var(--gb);color:var(--gold)}
-.biz-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.65rem}
-.btn{width:100%;padding:10px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;background:var(--gold);color:var(--ink);margin-top:1rem;transition:.15s}
-.btn:hover{opacity:.9}.btn:disabled{opacity:.38;cursor:not-allowed}
-.bsm{padding:6px 12px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bmd);background:transparent;color:var(--sec);transition:.12s}
-.bsm:hover{color:var(--tx);border-color:var(--dim)}
-.pl{display:flex;flex-direction:column;gap:5px;margin-top:1rem}
-.pi{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--card)}
-.pi.rn{border-color:var(--gb);background:var(--gdim)}.pi.ok{border-color:rgba(62,207,142,0.15);background:rgba(62,207,142,0.04)}.pi.er{border-color:rgba(229,83,75,0.15);background:rgba(229,83,75,0.04)}.pi.sk{opacity:.5}
-.ico{width:17px;height:17px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;margin-top:1px}
-.iw{background:var(--panel);border:1px solid var(--bdr)}.ir{background:var(--gdim);border:1.5px solid var(--gold);animation:sp .8s linear infinite}
-.io{background:rgba(62,207,142,0.1);border:1px solid var(--grn);color:var(--grn)}.ie{background:rgba(229,83,75,0.07);border:1px solid var(--red);color:var(--red)}.ik{background:var(--panel);border:1px solid var(--bdr);color:var(--dim)}
+:root{--gold:#C9A84C;--gdim:rgba(201,168,76,0.08);--gb:rgba(201,168,76,0.2);--ink:#0A0A0A;--panel:#181818;--card:#1E1E1E;--card2:#252525;--bdr:rgba(255,255,255,0.07);--bmd:rgba(255,255,255,0.13);--tx:#EEEDE8;--sec:#908D86;--dim:#4A4845;--grn:#3ECF8E;--pur:#635BFF;--red:#E5534B;--r:8px;--rl:12px}
+html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px}
+.page{max-width:680px;margin:0 auto;padding:3rem 1.5rem 4rem}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:3rem}
+.lm{width:34px;height:34px;background:var(--gdim);border:1px solid var(--gb);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.lt{font-size:13px;font-weight:600;color:var(--gold)}.ls{font-size:11px;color:var(--dim);margin-top:1px}
+.lset{margin-left:auto;padding:5px 9px;background:transparent;border:1px solid var(--bdr);border-radius:6px;color:var(--dim);font-size:12px;cursor:pointer;transition:.15s}
+.lset:hover{color:var(--sec);border-color:var(--bmd)}
+/* token banner */
+.tbanner{display:none;background:var(--card);border:1px solid var(--gb);border-radius:var(--rl);padding:1rem;margin-bottom:2rem}
+.tbanner h4{font-size:12px;font-weight:600;color:var(--gold);margin-bottom:.65rem}
+.tinputs{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center}
+.ti{padding:7px 10px;background:var(--panel);border:1px solid var(--bdr);border-radius:var(--r);color:var(--tx);font-size:12px;font-family:'SF Mono',monospace;outline:none;width:100%}
+.ti:focus{border-color:var(--gb)}
+.tsave{padding:7px 14px;background:var(--gold);color:var(--ink);border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tnote{font-size:11px;color:var(--dim);margin-top:.5rem}
+/* hero */
+.hero{margin-bottom:2.5rem}
+.hero h1{font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-.5px;margin-bottom:.75rem}
+.hero h1 span{color:var(--gold)}
+.hero p{font-size:14px;color:var(--sec);line-height:1.6;max-width:520px}
+/* main input */
+.input-area{margin-bottom:1.5rem}
+.big-input{width:100%;padding:1rem 1.25rem;background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);color:var(--tx);font-size:15px;font-family:inherit;outline:none;resize:none;line-height:1.6;min-height:110px;transition:.15s}
+.big-input:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(201,168,76,0.06)}
+.big-input::placeholder{color:var(--dim)}
+.input-meta{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem}
+.char-hint{font-size:11px;color:var(--dim)}
+.examples{display:flex;gap:6px;flex-wrap:wrap}
+.ex{padding:3px 9px;border:1px solid var(--bdr);border-radius:9999px;font-size:11px;color:var(--dim);cursor:pointer;transition:.12s}
+.ex:hover{color:var(--gold);border-color:var(--gb)}
+/* inferred preview */
+.preview{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1.25rem;display:none}
+.preview h4{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--dim);margin-bottom:.75rem}
+.inf-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.inf-item{display:flex;flex-direction:column;gap:2px}
+.inf-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px}
+.inf-val{font-size:12px;font-weight:500;color:var(--tx)}
+.inf-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+/* launch btn */
+.launch{width:100%;padding:13px;border-radius:var(--rl);font-size:14px;font-weight:600;cursor:pointer;border:none;background:var(--gold);color:var(--ink);transition:.15s;letter-spacing:.1px}
+.launch:hover{opacity:.9}.launch:disabled{opacity:.32;cursor:not-allowed}
+/* progress */
+.prog-wrap{margin-top:1.75rem}
+.prog-head{margin-bottom:1rem}
+.prog-head h2{font-size:18px;font-weight:600;margin-bottom:3px}
+.prog-head p{font-size:13px;color:var(--sec)}
+.prog-list{display:flex;flex-direction:column;gap:5px}
+.pi{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--card)}
+.pi.rn{border-color:var(--gb);background:var(--gdim)}
+.pi.ok{border-color:rgba(62,207,142,0.15);background:rgba(62,207,142,0.04)}
+.pi.er{border-color:rgba(229,83,75,0.15);background:rgba(229,83,75,0.04)}
+.ico{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;margin-top:1px}
+.iw{background:var(--panel);border:1px solid var(--bdr)}
+.ir{background:var(--gdim);border:1.5px solid var(--gold);animation:sp .8s linear infinite}
+.io{background:rgba(62,207,142,0.1);border:1px solid var(--grn);color:var(--grn)}
+.ie{background:rgba(229,83,75,0.07);border:1px solid var(--red);color:var(--red)}
+.ik{background:var(--panel);border:1px solid var(--bdr);color:var(--dim)}
 @keyframes sp{to{transform:rotate(360deg)}}
-.pb{flex:1}.pl2{font-size:12px;font-weight:500}.pi.rn .pl2{color:var(--gold)}.pi.ok .pl2{color:var(--grn)}.pi.er .pl2{color:var(--red)}
-.ps{font-size:11px;color:var(--dim);margin-top:1px}.pi.rn .ps{color:var(--gold);opacity:.65}
-.pg{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--dim);margin:8px 0 4px;padding-left:2px}
+.pb{flex:1}.pl2{font-size:12px;font-weight:500}
+.pi.rn .pl2{color:var(--gold)}.pi.ok .pl2{color:var(--grn)}.pi.er .pl2{color:var(--red)}
+.ps{font-size:11px;color:var(--dim);margin-top:2px}.pi.rn .ps{color:var(--gold);opacity:.65}
+.pg{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--dim);margin:8px 0 3px;padding-left:2px}
+/* done */
+.done-wrap{margin-top:1.75rem}
+.done-head{margin-bottom:1.25rem}
+.done-head h2{font-size:18px;font-weight:600;margin-bottom:3px}
+.done-head p{font-size:13px;color:var(--sec)}
+.biz-bar{background:var(--gdim);border:1px solid var(--gb);border-radius:var(--r);padding:.75rem 1rem;margin-bottom:.75rem;display:flex;gap:20px;flex-wrap:wrap}
+.bb-item{display:flex;flex-direction:column;gap:2px}
+.bb-l{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px}
+.bb-v{font-size:12px;font-weight:600;color:var(--gold)}
 .rc{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem;margin-bottom:.6rem}
 .rc h3{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--sec);margin-bottom:8px}
-.lr{display:flex;align-items:center;gap:6px;margin-bottom:4px}.lr:last-child{margin-bottom:0}
-.lb{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;flex-shrink:0;white-space:nowrap}
-.lb-r{background:rgba(99,91,255,0.15);color:#8B87FF}.lb-f{background:rgba(62,207,142,0.09);color:var(--grn)}
-.lb-biz{background:var(--gdim);color:var(--gold)}.lb-be{background:rgba(229,83,75,0.1);color:#F07070}
-.lb-fl{background:rgba(99,91,255,0.1);color:#9B97FF}.lb-ma{background:rgba(201,168,76,0.1);color:var(--gold)}
-.lr a{font-size:11px;color:var(--sec);text-decoration:none;word-break:break-all}.lr a:hover{color:var(--tx);text-decoration:underline}
-.cmd{background:var(--panel);border:1px solid var(--bdr);border-radius:var(--r);padding:.6rem .9rem;font-family:'SF Mono',monospace;font-size:11px;color:var(--gold);margin-top:.6rem;word-break:break-all}
+.lr{display:flex;align-items:center;gap:7px;margin-bottom:4px}.lr:last-child{margin-bottom:0}
+.lb{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;flex-shrink:0}
+.lb-r{background:rgba(99,91,255,0.15);color:#8B87FF}
+.lb-f{background:rgba(62,207,142,0.09);color:var(--grn)}
+.lb-biz{background:var(--gdim);color:var(--gold)}
+.lb-be{background:rgba(229,83,75,0.09);color:#F07070}
+.lr a{font-size:12px;color:var(--sec);text-decoration:none;word-break:break-all}.lr a:hover{color:var(--tx);text-decoration:underline}
+.cmd{background:var(--panel);border:1px solid var(--bdr);border-radius:var(--r);padding:.6rem .9rem;font-family:'SF Mono',monospace;font-size:11px;color:var(--gold);margin-top:.65rem;word-break:break-all}
 .ml{display:flex;flex-direction:column;gap:3px}
-.mi{font-size:11px;color:var(--sec);display:flex;gap:6px;align-items:flex-start}.mi::before{content:'→';color:var(--gold);font-size:10px;flex-shrink:0;margin-top:1px}
+.mi{font-size:11px;color:var(--sec);display:flex;gap:6px}.mi::before{content:'→';color:var(--gold);font-size:10px;flex-shrink:0;margin-top:2px}
+.again{font-size:12px;color:var(--dim);cursor:pointer;text-decoration:underline;margin-top:.75rem;display:inline-block}
 .eb{background:rgba(229,83,75,0.07);border:1px solid rgba(229,83,75,0.15);border-radius:var(--r);padding:.65rem .9rem;font-size:12px;color:var(--red);margin-top:.65rem}
-.rl{font-size:12px;color:var(--dim);cursor:pointer;text-decoration:underline;margin-top:7px;display:inline-block}
-.biz-summary{background:var(--gdim);border:1px solid var(--gb);border-radius:var(--r);padding:.75rem;margin-bottom:.6rem;font-size:12px}
-.biz-summary .bs-row{display:flex;gap:16px;flex-wrap:wrap}
-.bs-item{display:flex;flex-direction:column;gap:2px}.bs-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}.bs-val{font-weight:600;color:var(--gold)}
 </style>
 </head>
 <body>
 <div class="page">
-  <div id="token-banner" style="display:none;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:13px">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="color:#C9A84C;font-weight:600;flex-shrink:0">⚙ GitHub Token</span>
-      <input type="password" id="gh-token-input" placeholder="ghp_..." style="flex:1;min-width:200px;padding:5px 9px;background:#1A1A1A;border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#EEEDE8;font-size:12px;outline:none;font-family:monospace">
-      <input type="text" id="gh-org-input" placeholder="GitHub org/user (e.g. pinohu)" style="width:180px;padding:5px 9px;background:#1A1A1A;border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#EEEDE8;font-size:12px;outline:none">
-      <button onclick="saveToken()" style="padding:5px 14px;background:#C9A84C;color:#0A0A0A;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Save</button>
-    </div>
-    <div style="font-size:11px;color:#525050;margin-top:5px">Token is stored in your browser only — never sent to our servers. Needs repo and write permissions.</div>
-  </div>
   <div class="logo">
-    <div class="logo-mark">⚡</div>
-    <div>
-      <div class="logo-text">Dynasty Business System Launcher</div>
-      <div class="logo-sub">22 project types · 23 files · complete deployable system</div>
-    </div>
+    <div class="lm">⚡</div>
+    <div><div class="lt">Dynasty Business System Launcher</div><div class="ls">Describe your project — everything else is inferred and built automatically</div></div>
+    <button class="lset" id="settings-btn">⚙ Token</button>
   </div>
-  <div class="w" id="root"></div>
+
+  <div class="tbanner" id="tbanner">
+    <h4>GitHub Settings</h4>
+    <div class="tinputs">
+      <input class="ti" type="password" id="gh-token" placeholder="GitHub token (ghp_...)">
+      <input class="ti" type="text" id="gh-org" placeholder="Org / username (e.g. pinohu)">
+      <button class="tsave" onclick="saveToken()">Save</button>
+    </div>
+    <div class="tnote">Stored in your browser only. Needs repo write permissions.</div>
+  </div>
+
+  <div id="input-screen">
+    <div class="hero">
+      <h1>What are you <span>building?</span></h1>
+      <p>Describe your project in plain English. The system infers the type, tech stack, business model, acquisition channel, and pricing — then generates 23 files and provisions infrastructure automatically.</p>
+    </div>
+
+    <div class="input-area">
+      <textarea class="big-input" id="project-desc" placeholder="e.g. A Pennsylvania government compliance platform that files annual reports and UCC documents for LLC owners across all 67 counties. Targeting small business owners who don't have time to deal with the state."></textarea>
+      <div class="input-meta">
+        <div class="char-hint" id="char-hint">Try to be specific about who it's for and what it does</div>
+        <div class="examples">
+          <span class="ex" data-ex="Freight load board and carrier directory for independent truckers in the Northeast. Carriers pay to list, shippers browse free.">Freight directory</span>
+          <span class="ex" data-ex="Autonomous AI agent that monitors government contract portals and texts qualified vendors when matching opportunities are posted. B2B SaaS for federal contractors.">Gov contract alerts</span>
+          <span class="ex" data-ex="Immigration lawyer directory for potential immigrants researching US visa options. Members pay monthly for profile and lead routing.">Immigration directory</span>
+          <span class="ex" data-ex="Done-for-you HVAC company website and lead generation system. One-time setup fee plus monthly retainer for ongoing SEO and lead routing.">HVAC authority site</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview" id="preview">
+      <h4>Inferred configuration — generating from this</h4>
+      <div class="inf-grid" id="inf-grid"></div>
+    </div>
+
+    <button class="launch" id="launch-btn" disabled>Describe your project above to begin</button>
+  </div>
+
+  <div id="prog-screen" style="display:none">
+    <div class="prog-head">
+      <h2 id="prog-title">Building system…</h2>
+      <p id="prog-sub">5 AI generation calls · 23 files · FastAPI backend + Docker · Flint provisioning</p>
+    </div>
+    <div class="prog-list" id="prog-list"></div>
+    <div class="eb" id="err-box" style="display:none"></div>
+  </div>
+
+  <div id="done-screen" style="display:none"></div>
 </div>
+
 <script>
-let GHT=localStorage.getItem('dynasty_gh_token')||'',ORG=localStorage.getItem('dynasty_gh_org')||'pinohu',TMPL=(localStorage.getItem('dynasty_gh_org')||'pinohu')+'/dynasty-project-template';
-const FU='https://claude-inbox.audreysplace.place/message',FT='1ed943c21ef9e2f60fe1189241a246d769e4191051ad2c0c035282722cb4b030';
+const ORG_DEFAULT='pinohu',TMPL_DEFAULT='pinohu/dynasty-project-template';
+const FT='1ed943c21ef9e2f60fe1189241a246d769e4191051ad2c0c035282722cb4b030';
+const FU='https://claude-inbox.audreysplace.place/message';
 
-const TYPES=[
-  {id:'gov-saas',cat:'SaaS & Portals',ic:'⚖',label:'Gov / Compliance SaaS',desc:'Federal/state procurement, bid management',a:'#635BFF',sf:'dual',fn:'Geist + Inter + Geist Mono',st:['Next.js 14','Clerk','Neon Postgres','Drizzle ORM','Stripe','Inngest','Vercel'],sv:['vercel','neon','clerk','stripe','inngest','flint-task']},
-  {id:'compliance',cat:'SaaS & Portals',ic:'📋',label:'Compliance Services Portal',desc:'PA CROP-style dual-surface platform',a:'#3ECF8E',sf:'dual',fn:'Inter + Source Code Pro',st:['Next.js 14','Neon Postgres','n8n','Vercel','20i'],sv:['vercel','neon','20i','callscaler','insighto','smsit','seo','flint-task']},
-  {id:'client-portal',cat:'SaaS & Portals',ic:'🏢',label:'Client Portal',desc:'SuiteDash-based client management',a:'#0075DE',sf:'dual',fn:'Inter',st:['SuiteDash','n8n'],sv:['suitedash','n8n-wf','callscaler','flint-task']},
-  {id:'dark-saas',cat:'SaaS & Portals',ic:'🖥',label:'Dark SaaS / Dev Tool',desc:'Linear/Supabase dark-native product',a:'#7170FF',sf:'dark',fn:'Inter + Berkeley Mono',st:['Next.js 14','Clerk','Neon Postgres','Vercel'],sv:['vercel','neon','clerk','flint-task']},
-  {id:'bd-dir',cat:'Directories',ic:'📁',label:'Brilliant Directories Site',desc:'ImmigrationSmarts pattern — niche member dir',a:'#0075DE',sf:'light',fn:'Inter',st:['Brilliant Directories'],sv:['bd-lic','seo','gsc','callscaler','stripe']},
-  {id:'member-dir',cat:'Directories',ic:'👥',label:'Custom Member Directory',desc:'Next.js-based listing platform',a:'#0075DE',sf:'light',fn:'Inter',st:['Next.js 14','Neon Postgres','Clerk','Stripe','Vercel'],sv:['vercel','neon','clerk','stripe','seo','gsc','flint-task']},
-  {id:'real-estate',cat:'Directories',ic:'🏠',label:'Real Estate Portal',desc:'Property listings with lead capture',a:'#0A72EF',sf:'light',fn:'Inter',st:['Next.js 14','Neon Postgres','Vercel'],sv:['vercel','neon','seo','gsc','callscaler','flint-task']},
-  {id:'job-board',cat:'Directories',ic:'💼',label:'Job Board',desc:'Employment listings with employer accounts',a:'#635BFF',sf:'light',fn:'Inter',st:['Next.js 14','Neon Postgres','Stripe','Vercel'],sv:['vercel','neon','stripe','seo','gsc','flint-task']},
-  {id:'auth-gen',cat:'Authority Sites',ic:'🏆',label:'General Authority Site',desc:'Blue ocean niche content + lead authority',a:'#C9A84C',sf:'light',fn:'Georgia + Inter',st:['WordPress','Brilliant Directories'],sv:['seo','gsc','bd-lic','callscaler','insighto']},
-  {id:'auth-pest',cat:'Authority Sites',ic:'🐛',label:'Pest Control Authority',desc:'Pest management service niche',a:'#3B6D11',sf:'light',fn:'Inter',st:['WordPress'],sv:['seo','gsc','callscaler','insighto','trafft']},
-  {id:'auth-imm',cat:'Authority Sites',ic:'🌍',label:'Immigration Authority',desc:'ImmigrationSmarts BD pattern',a:'#0075DE',sf:'light',fn:'Inter',st:['Brilliant Directories'],sv:['bd-lic','seo','gsc','stripe']},
-  {id:'auth-freight',cat:'Authority Sites',ic:'🚛',label:'Freight / Logistics',desc:'Freight directory + load board niche',a:'#E5532B',sf:'light',fn:'Inter',st:['Brilliant Directories','WordPress'],sv:['bd-lic','seo','gsc','callscaler','smsit']},
-  {id:'auth-legal',cat:'Authority Sites',ic:'⚖',label:'Legal / Notary Authority',desc:'Legal services and notary niche',a:'#1C1E54',sf:'light',fn:'Georgia + Inter',st:['WordPress'],sv:['seo','gsc','trafft','callscaler','insighto']},
-  {id:'auth-hvac',cat:'Authority Sites',ic:'🔧',label:'HVAC / Home Services',desc:'Home services authority + directory',a:'#0A72EF',sf:'light',fn:'Inter',st:['Brilliant Directories','WordPress'],sv:['bd-lic','seo','gsc','callscaler','insighto','trafft']},
-  {id:'auth-med',cat:'Authority Sites',ic:'🏥',label:'Medical / Healthcare',desc:'Healthcare services niche authority',a:'#0A72EF',sf:'light',fn:'Inter',st:['WordPress','Brilliant Directories'],sv:['bd-lic','seo','gsc','callscaler','trafft']},
-  {id:'n8n',cat:'Automation & Agents',ic:'⚡',label:'n8n Automation Repo',desc:'Workflow automation codebase',a:'#EA4B71',sf:'dark',fn:'Inter + ui-monospace',st:['n8n','Node/Express'],sv:['flint-task']},
-  {id:'flint-proj',cat:'Automation & Agents',ic:'🤖',label:'Flint Agent Project',desc:'Autonomous Flint agent build',a:'#3ECF8E',sf:'dark',fn:'Inter + ui-monospace',st:['Python/FastAPI','Groq'],sv:['flint-task']},
-  {id:'api-svc',cat:'Automation & Agents',ic:'🔌',label:'API / Microservice',desc:'Standalone backend service or data API',a:'#635BFF',sf:'dark',fn:'Inter + ui-monospace',st:['Node/Express','Neon Postgres','Vercel'],sv:['vercel','neon','flint-task']},
-  {id:'landing',cat:'Marketing & Content',ic:'🚀',label:'Landing Page System',desc:'Authority site portfolio landing page',a:'#C9A84C',sf:'light',fn:'Georgia + Inter',st:['Next.js 14','Vercel'],sv:['vercel','seo','gsc']},
-  {id:'wp-theme',cat:'Marketing & Content',ic:'🎨',label:'WordPress Theme / Plugin',desc:'Dynasty Developer pattern',a:'#21759B',sf:'light',fn:'Inter',st:['WordPress'],sv:['seo']},
-  {id:'portfolio',cat:'Marketing & Content',ic:'👤',label:'React Portfolio',desc:'Career portfolio and case studies',a:'#635BFF',sf:'dark',fn:'Inter',st:['Next.js 14','Vercel'],sv:['vercel','gsc']},
-  {id:'ecom',cat:'Marketing & Content',ic:'🛍',label:'E-commerce',desc:'Product storefront with checkout',a:'#0075DE',sf:'light',fn:'Inter',st:['Next.js 14','Stripe','Vercel'],sv:['vercel','stripe','seo','gsc','flint-task']},
-  {id:'custom',cat:'Custom',ic:'⚙',label:'Custom Build',desc:'Define your own project type',a:'#635BFF',sf:'light',fn:'Inter',st:[],sv:[]},
-];
+let GHT=localStorage.getItem('dynasty_gh_token')||'';
+let ORG=localStorage.getItem('dynasty_gh_org')||ORG_DEFAULT;
+let INFERRED=null;
+let PRGS=[];
 
-const STKS=['Next.js 14','React','Vue','Clerk','Supabase','Neon Postgres','Drizzle ORM','Stripe','Inngest','shadcn/ui','Tailwind CSS','Vercel','20i','n8n','Brilliant Directories','SuiteDash','WordPress','Python/FastAPI','Node/Express','Groq','Redis','Cloudflare','Trafft','CallScaler'];
-const SWS=['#635BFF','#3ECF8E','#0075DE','#C9A84C','#0A72EF','#E5532B','#EA4B71','#7170FF','#1C1E54','#3B6D11'];
-const CATS=[...new Set(TYPES.map(t=>t.cat))];
-const FS={vercel:{l:'Vercel project + domain config',n:'Flint provisions via Vercel API + links domain'},neon:{l:'Neon Postgres database',n:'Flint creates DB, drops connection string'},'20i':{l:'20i hosting package',n:'Flint provisions via 20i API'},'seo':{l:'Dynasty SEO Machine research',n:'Flint runs /research on niche + keyword cluster'},'flint-task':{l:'Flint autonomous build queue',n:'Flint builds immediately after repo ready'},inngest:{l:'Inngest app registration',n:'Flint registers app + provides env key'},'n8n-wf':{l:'n8n workflow stubs',n:'Flint creates standard Dynasty workflow templates'},'deploy-backend':{l:'Deploy FastAPI backend to Flint VM',n:'Flint deploys Docker stack on Proxmox VM'}};
-const MS={clerk:{l:'Clerk application setup',d:'dashboard.clerk.com → Create app → copy keys'},stripe:{l:'Stripe products + pricing tiers',d:'dashboard.stripe.com → Products → create tiers per REVENUE-MODEL.md'},'bd-lic':{l:'Brilliant Directories license assignment',d:'Assign from 100-license pool → configure subdomain'},suitedash:{l:'SuiteDash workspace config',d:'Assign from 136 Pinnacle licenses → configure portal'},callscaler:{l:'CallScaler number provisioning',d:'CallScaler dashboard → provision number → connect Insighto'},insighto:{l:'Insighto voice agent setup',d:'Insighto dashboard → create agent + script → link CallScaler'},smsit:{l:'SMS-iT A2P 10DLC campaign',d:'SMS-iT dashboard → register campaign → await approval'},trafft:{l:'Trafft booking calendar',d:'Trafft → create service + staff → embed widget'},gsc:{l:'Google Search Console property',d:'search.google.com → Add property → verify via DNS TXT'}};
-const BIZ_MODELS=[{id:'subscription',l:'Subscription',t:'Monthly recurring SaaS'},{id:'transactional',l:'Transactional',t:'Per-use / per-action'},{id:'marketplace',l:'Marketplace',t:'Commission on transactions'},{id:'dfy',l:'Done-For-You',t:'High-ticket service delivery'}];
-const BIZ_PRICES=['$97/mo','$297/mo','$497/mo','$997/mo','$1,997 one-time','$4,997 one-time','$9,997+ retainer'];
-const BIZ_ACQ=[{id:'organic-seo',l:'Organic SEO'},{id:'cold-email',l:'Cold Email'},{id:'cold-call-sms',l:'Cold Call + SMS'},{id:'paid-ads',l:'Paid Ads'},{id:'partnerships',l:'Partnerships'}];
-const BIZ_MVP=[{id:'72h',l:'72 Hours'},{id:'1w',l:'1 Week'},{id:'2w',l:'2 Weeks'},{id:'1m',l:'1 Month'}];
-
-let S={step:1,type:null,form:{name:'',domain:'',repo:'',desc:'',accent:'#635BFF',stack:[]},fs:{},ms:{},biz:{model:'subscription',price:'$497/mo',acq:'organic-seo',mvp:'72h'},prg:[],res:null,err:''};
-const sl=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-function initSvcs(t){const fs={},ms={};const sv=t?.sv||[];Object.keys(FS).forEach(k=>fs[k]=sv.includes(k));Object.keys(MS).forEach(k=>ms[k]=sv.includes(k));S.fs=fs;S.ms=ms;}
-function render(){document.getElementById('root').innerHTML=stp()+(S.step===1?s1():S.step===2?s2():S.step===3?s3():s4());bind();}
-function stp(){const ss=['Type','Configure','Provision','Done'];return`<div class="stepper">${ss.map((l,i)=>{const n=i+1,c=n<S.step?'d':n===S.step?'a':'',ic=n<S.step?'✓':n;return`<div class="st ${c}"><div class="sn">${ic}</div><span>${l}</span></div>${i<ss.length-1?'<div class="sl"></div>':''}`}).join('')}</div>`}
-function s1(){return`<div class="hd">Dynasty Business System Launcher</div><div class="sub">Select a project type. Generates a complete deployable system — design, code, backend, Docker, revenue model, GTM playbook, agent architecture, and deployment config.</div>${CATS.map(c=>`<div class="cat">${c}</div><div class="tg">${TYPES.filter(t=>t.cat===c).map(t=>`<div class="tc${S.type?.id===t.id?' s':''}" data-tid="${t.id}"><div class="ad" style="background:${t.a}"></div><span class="ic">${t.ic}</span><div class="tl">${t.label}</div><div class="td">${t.desc}</div></div>`).join('')}</div>`).join('')}<button class="btn" id="n1" ${!S.type?'disabled':''}>Configure ${S.type?.label||'selected type'} →</button>`}
-function s2(){const t=S.type,b=S.biz;return`<div class="hd">${t.ic} ${t.label}</div><div class="sub" style="margin-bottom:1rem">${t.desc} · <span style="color:${t.a}">${t.a}</span> · ${t.sf} · ${t.fn}</div><div class="sec-l">Project Details</div><div class="r2"><div class="fg"><label>Project name *</label><input type="text" id="fn" placeholder="e.g. PA CROP Services" value="${S.form.name}"></div><div class="fg"><label>Domain *</label><input type="text" id="fd" placeholder="e.g. pacropservices.com" value="${S.form.domain}"></div></div><div class="r2"><div class="fg"><label>GitHub repo name</label><input type="text" id="fr" placeholder="auto from name" value="${S.form.repo}"></div><div class="fg"><label>Accent color</label><div class="sws">${SWS.map(h=>`<div class="sw${S.form.accent===h?' s':''}" style="background:${h}" data-hex="${h}"></div>`).join('')}<input type="color" id="fc" value="${S.form.accent}" style="width:22px;height:22px;border:none;border-radius:4px;cursor:pointer;padding:0"></div></div></div><div class="fg"><label>What this product does <span style="font-weight:400;color:var(--dim)">(1-2 sentences — powers all AI generation)</span></label><textarea id="fde" placeholder="e.g. A Pennsylvania compliance platform that files annual reports, UCC filings, and business certificates on behalf of LLC owners.">${S.form.desc}</textarea></div><div class="fg"><label>Stack <span style="font-weight:400;color:var(--dim)">(pre-selected for type)</span></label><div class="chips">${STKS.map(s=>`<div class="chip${S.form.stack.includes(s)?' on':''}" data-stk="${s}">${s}</div>`).join('')}</div></div><div class="div"></div><div class="biz-panel"><div class="biz-head">💰 Business System Configuration <span class="biz-badge">Creative Authority Architect</span></div><div class="biz-row"><div class="fg" style="margin:0"><label>Revenue model</label><div class="chips">${BIZ_MODELS.map(m=>`<div class="chip${b.model===m.id?' on':''}" data-bm="${m.id}" title="${m.t}">${m.l}</div>`).join('')}</div></div><div class="fg" style="margin:0"><label>Price point</label><div class="chips">${BIZ_PRICES.map(p=>`<div class="chip${b.price===p?' on':''}" data-bp="${p}">${p}</div>`).join('')}</div></div></div><div class="biz-row" style="margin-top:.65rem"><div class="fg" style="margin:0"><label>Acquisition channel</label><div class="chips">${BIZ_ACQ.map(a=>`<div class="chip${b.acq===a.id?' on-pur':''}" data-ba="${a.id}">${a.l}</div>`).join('')}</div></div><div class="fg" style="margin:0"><label>MVP constraint</label><div class="chips">${BIZ_MVP.map(m=>`<div class="chip${b.mvp===m.id?' on-grn':''}" data-bv="${m.id}">${m.l}</div>`).join('')}</div></div></div></div><div class="div"></div><div class="sec-l">Provisioning</div><div class="tb"><div class="ttl"><span class="tbg ba">AUTO</span>Always included — 23 files total</div>${['Design system: DESIGN.md, CLAUDE.md, AGENTS.md, DYNASTY-DESIGN.md','Product docs: SPEC.md, ROADMAP.md, README.md, .env.example, MANUAL-ACTIONS.md, DATA-MODEL.md, API-CONTRACTS.md, KB-OUTLINES.md','Business system: BUSINESS-SYSTEM.md, AGENT-SYSTEM.md, REVENUE-MODEL.md, GTM-PLAYBOOK.md, FAILURE-MODES.md','Backend: backend/main.py (FastAPI), requirements.txt, Dockerfile, docker-compose.yml'].map(l=>`<div class="sr al"><div class="sc ao">✓</div><div class="si"><div class="sl2">${l}</div></div></div>`).join('')}</div><div class="tb"><div class="ttl"><span class="tbg bf">FLINT</span>Queued autonomously in background</div>${Object.entries(FS).map(([k,v])=>`<div class="sr" data-fs="${k}"><div class="sc${S.fs[k]?' ck':''}">✓</div><div class="si"><div class="sl2">${v.l}</div><div class="sn2">${v.n}</div></div></div>`).join('')}</div><div class="tb"><div class="ttl"><span class="tbg bm">MANUAL</span>Step-by-step instructions in MANUAL-ACTIONS.md</div>${Object.entries(MS).map(([k,v])=>`<div class="sr" data-ms="${k}"><div class="sc${S.ms[k]?' ck':''}">✓</div><div class="si"><div class="sl2">${v.l}</div><div class="sn2">${v.d}</div></div></div>`).join('')}</div><div style="display:flex;gap:8px"><button class="bsm" id="bk">← Back</button><button class="btn" id="go" style="margin-top:0;flex:1">Generate complete business system →</button></div>`}
-function s3(){return`<div class="hd">Building ${S.form.name||'project'}…</div><div class="sub">5 AI generation calls · 23 files · FastAPI + Docker · Flint tasking</div><div class="pl">${S.prg.map(p=>{const c=p.s==='run'?'rn':p.s==='ok'?'ok':p.s==='er'?'er':p.s==='sk'?'sk':'';const ic=p.s==='run'?'ir':p.s==='ok'?'io':p.s==='er'?'ie':p.s==='sk'?'ik':'iw';const sym=p.s==='ok'?'✓':p.s==='er'?'✕':p.s==='sk'?'—':'';const grp=p.g?`<div class="pg">${p.g}</div>`:'';return`${grp}<div class="pi ${c}"><div class="ico ${ic}">${sym}</div><div class="pb"><div class="pl2">${p.l}</div>${p.n?`<div class="ps">${p.n}</div>`:''}</div></div>`}).join('')}</div>${S.err?`<div class="eb">${S.err}<br><span class="rl" id="rst">Start over</span></div>`:''}`}
-function s4(){const d=S.res,repo=`https://github.com/${ORG}/${d.repo}`,b=S.biz;const fl=Object.entries(S.fs).filter(([,v])=>v).map(([k])=>FS[k]?.l);const ml=Object.entries(S.ms).filter(([,v])=>v).map(([k])=>MS[k]?.l);const bizFiles=['BUSINESS-SYSTEM.md','AGENT-SYSTEM.md','REVENUE-MODEL.md','GTM-PLAYBOOK.md','FAILURE-MODES.md'];const beFiles=['backend/main.py','backend/requirements.txt','backend/Dockerfile','docker-compose.yml'];const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];return`<div class="hd">✓ ${S.form.name} system is live</div><div class="sub">${d.fc} files pushed · ${fl.length} Flint tasks queued · ${ml.length} manual actions documented</div><div class="biz-summary"><div class="bs-row"><div class="bs-item"><span class="bs-label">Model</span><span class="bs-val">${BIZ_MODELS.find(m=>m.id===b.model)?.l}</span></div><div class="bs-item"><span class="bs-label">Price</span><span class="bs-val">${b.price}</span></div><div class="bs-item"><span class="bs-label">Channel</span><span class="bs-val">${BIZ_ACQ.find(a=>a.id===b.acq)?.l}</span></div><div class="bs-item"><span class="bs-label">MVP</span><span class="bs-val">${BIZ_MVP.find(m=>m.id===b.mvp)?.l}</span></div></div></div><div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repo}" target="_blank">${repo}</a></div><div class="cmd">gh repo clone ${ORG}/${d.repo} && cd ${d.repo} && claude</div></div><div class="rc"><h3>Design System (${designFiles.length})</h3>${designFiles.map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repo}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div><div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repo}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div><div class="rc"><h3>Backend + Infrastructure (${beFiles.length})</h3>${beFiles.map(f=>`<div class="lr"><span class="lb lb-be">Code</span><a href="${repo}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}<div style="font-size:11px;color:var(--dim);margin-top:6px">FastAPI + PostgreSQL + Redis + Docker</div></div><div class="rc"><h3>Product Docs (${docFiles.length})</h3>${docFiles.map(f=>`<div class="lr"><span class="lb lb-f">Doc</span><a href="${repo}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>${fl.length?`<div class="rc"><h3>Flint Queue (${fl.length})</h3><div class="ml">${fl.map(l=>`<div class="mi">${l}</div>`).join('')}</div></div>`:''}${ml.length?`<div class="rc"><h3>Manual Actions (${ml.length})</h3><div class="ml">${ml.map(l=>`<div class="mi">${l}</div>`).join('')}</div></div>`:''}<span class="rl" id="rst">Launch another system</span>`}
-function addP(id,l,n='',g=''){S.prg.push({id,l,n,s:'wait',g});function checkToken(){
-  const banner=document.getElementById('token-banner');
-  if(banner){
-    if(!GHT){banner.style.display='block';document.getElementById('gh-token-input').value='';document.getElementById('gh-org-input').value=ORG;}
-    else{banner.style.display='none';}
-  }
-}
+// Token management
+document.getElementById('settings-btn').onclick=()=>{
+  const b=document.getElementById('tbanner');
+  b.style.display=b.style.display==='none'||!b.style.display?'block':'none';
+  document.getElementById('gh-token').value=GHT;
+  document.getElementById('gh-org').value=ORG;
+};
 function saveToken(){
-  const t=document.getElementById('gh-token-input')?.value?.trim();
-  const o=document.getElementById('gh-org-input')?.value?.trim()||'pinohu';
-  if(t){
-    GHT=t;ORG=o;TMPL=o+'/dynasty-project-template';
-    localStorage.setItem('dynasty_gh_token',t);
-    localStorage.setItem('dynasty_gh_org',o);
-    document.getElementById('token-banner').style.display='none';
-    render();
+  const t=document.getElementById('gh-token').value.trim();
+  const o=document.getElementById('gh-org').value.trim()||ORG_DEFAULT;
+  if(t){GHT=t;ORG=o;localStorage.setItem('dynasty_gh_token',t);localStorage.setItem('dynasty_gh_org',o);}
+  document.getElementById('tbanner').style.display='none';
+  updateLaunchBtn();
+}
+// Show token banner if no token
+if(!GHT){document.getElementById('tbanner').style.display='block';}
+
+// Examples
+document.querySelectorAll('.ex').forEach(el=>el.addEventListener('click',()=>{
+  document.getElementById('project-desc').value=el.dataset.ex;
+  onDescInput();
+}));
+
+// Input handling
+let inferTimer;
+document.getElementById('project-desc').addEventListener('input',()=>{onDescInput();});
+
+function onDescInput(){
+  const desc=document.getElementById('project-desc').value.trim();
+  const btn=document.getElementById('launch-btn');
+  clearTimeout(inferTimer);
+  if(desc.length<20){
+    document.getElementById('preview').style.display='none';
+    btn.disabled=true;btn.textContent='Describe your project above to begin';
+    return;
+  }
+  btn.disabled=true;btn.textContent='Analyzing…';
+  inferTimer=setTimeout(()=>inferConfig(desc),800);
+}
+
+function updateLaunchBtn(){
+  const desc=document.getElementById('project-desc').value.trim();
+  const btn=document.getElementById('launch-btn');
+  if(INFERRED&&desc.length>=20){
+    btn.disabled=false;
+    btn.textContent=`Build "${INFERRED.name}" →`;
   }
 }
-// Settings icon in logo area
-document.addEventListener('DOMContentLoaded',function(){
-  const logo=document.querySelector('.logo');
-  if(logo){
-    const btn=document.createElement('button');
-    btn.innerHTML='⚙';btn.title='GitHub Settings';
-    btn.style.cssText='margin-left:auto;padding:5px 9px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#525050;font-size:13px;cursor:pointer';
-    btn.onclick=function(){const b=document.getElementById('token-banner');if(b){b.style.display=b.style.display==='none'?'block':'none';if(b.style.display==='block'){document.getElementById('gh-token-input').value=GHT;document.getElementById('gh-org-input').value=ORG;}}};
-    logo.appendChild(btn);
-  }
-  checkToken();
-});
-render();}
-function setP(id,s,n){const p=S.prg.find(x=>x.id===id);if(p){p.s=s;if(n!==undefined)p.n=n;}render();}
-async function gh(path,method='GET',body=null){return fetch(`https://api.github.com${path}`,{method,headers:{'Authorization':`token ${GHT}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},...(body?{body:JSON.stringify(body)}:{})});}
-async function pushF(repo,path,content,msg){const enc=btoa(unescape(encodeURIComponent(content)));const c=await gh(`/repos/${repo}/contents/${path}`);const pl={message:msg,content:enc};if(c.ok){const x=await c.json();pl.sha=x.sha;}const r=await gh(`/repos/${repo}/contents/${path}`,'PUT',pl);if(!r.ok)throw new Error(`Push failed: ${path}`);}
-// KEY CHANGE: calls /api/claude proxy instead of Anthropic directly
-async function ai(prompt,max=5500){const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:max,messages:[{role:'user',content:prompt}]})});if(!r.ok)throw new Error(`AI API ${r.status}`);const d=await r.json();const t=d.content?.find(b=>b.type==='text')?.text||'';const m=t.match(/\{[\s\S]*\}/);if(!m)throw new Error('No JSON in response');return JSON.parse(m[0]);}
-function cx(){const t=S.type,f=S.form,b=S.biz;return`Name: ${f.name}\nDomain: ${f.domain}\nType: ${t.label}\nSurface: ${t.sf}\nAccent: ${f.accent}\nFonts: ${t.fn}\nStack: ${f.stack.join(', ')||'TBD'}\nDescription: ${f.desc||t.desc}\nRevenue model: ${b.model}\nPrice point: ${b.price}\nAcquisition: ${b.acq}\nMVP constraint: ${b.mvp}`;}
-async function genDesign(){return ai(`Generate Dynasty Empire design files. Return ONLY valid JSON.\n${cx()}\nMaster: dynasty-black #0A0A0A, dynasty-gold #C9A84C, 8px spacing, shadow-border rgba(0,0,0,0.08) 0px 0px 0px 1px, WCAG AA.\nReturn:{"design_md":"# DESIGN.md — ${S.form.name}\\n> Inherits from: DYNASTY-DESIGN.md\\n\\n## 1. Visual Theme & Atmosphere\\n[3 specific paragraphs]\\nKey Characteristics:\\n- [8 technical bullets]\\n\\n## 2. Color Palette & Roles\\n[Full tables: surfaces, brand ${S.form.accent}, status system, dynasty-gold, borders, shadows]\\n\\n## 3. Typography\\nFont Stack + 14-row hierarchy table\\n\\n## 4. Component Stylings\\n[Buttons/cards/badges/inputs/nav — exact specs all states]\\n\\n## 5. Layout Principles\\n## 6. Depth & Elevation\\n## 7. Do's and Don'ts [12+]\\n## 8. Responsive Behavior\\n## 9. Agent Prompt Guide [5 full prompts + 7-point guide]","claude_md":"# CLAUDE.md — ${S.form.name}\\n## Project Overview\\n## Design Rules MANDATORY [10+ rules exact hex]\\n## Required States [6 per component]\\n## Architecture Rules [${S.form.stack.slice(0,4).join('/')}]\\n## Environment Variables\\n## Git Rules [git config user.email polycarpohu@gmail.com && user.name pinohu]\\n## Do Not [14 prohibitions]"}`,6000);}
-async function genDocs(){const ml=Object.entries(S.ms).filter(([,v])=>v).map(([k])=>`### ${MS[k]?.l}\nPurpose: [why needed]\nSteps:\n1. [exact action]\n2. [exact action]\n3. [exact action]\nOutput: [what to do with result]`).join('\n\n');return ai(`Generate Dynasty Empire product docs. Return ONLY valid JSON.\n${cx()}\nReturn:{"spec_md":"# SPEC.md — ${S.form.name}\\n## Vision\\n## Users\\n## Features [P0/P1/P2]\\n## Data Model\\n## Integrations\\n## Metrics","roadmap_md":"# ROADMAP.md\\n## Phase 1 MVP — ${BIZ_MVP.find(m=>m.id===S.biz.mvp)?.l}\\n[12 tasks]\\n## Phase 2 [10 tasks]\\n## Phase 3 [8 tasks]\\n## Phase 4 Scale [6 tasks]","readme_md":"# ${S.form.name}\\n## Overview\\n## Quick Start\\n## Architecture\\n## Deployment","manual_md":"# MANUAL-ACTIONS.md\\n${ml||'No manual actions selected.'}","env_ex":"# .env.example\\n[all vars for ${S.form.stack.join('/')} grouped by service]","data_model":"# docs/DATA-MODEL.md\\n## Tables [columns/types/indexes/relations]\\n## Key Relationships\\n## Migrations","api_contracts":"# docs/API-CONTRACTS.md\\n## Auth\\n## Endpoints [method/path/request/response/example]","kb_outlines":"# docs/KB-OUTLINES.md\\n## 10 Seed Articles [title/keyword/H2 outline/word count]"}`,5500);}
-async function genBizSystem(){const b=S.biz;return ai(`You are Creative Authority Architect. No theory. No fluff. Only deployable systems. Return ONLY valid JSON.\n${cx()}\nReturn:{"biz_system":"# BUSINESS-SYSTEM.md — ${S.form.name}\\n## 1. Strategy\\nNiche/Offer/Positioning/Why this wins [3 reasons]\\n## 2. Agent System\\n[All 11 agents: Intake/Idea Generator/Evaluator/Architect/MVP/Proof Engine/GTM/Sales/Financial Model/Deal Structuring/Scale Plan]\\n[Each: Purpose/Inputs/Outputs/Tool Dependency Block table/Trigger/Success Criteria/Fallback]\\n[Map: CallScaler=Sales, SEO Machine=GTM, Stripe=Deal, Insighto=Sales, n8n=Orchestration, Flint=MVP]\\n## 3. Revenue Model\\n[3 pricing tiers with exact prices]\\n[Month 1/3/6/12: customers × price = MRR table]\\n[CAC/LTV/LTV:CAC/payback/break-even month]\\n## 4. MVP — ${BIZ_MVP.find(m=>m.id===b.mvp)?.l}\\n[5-8 specific features only. What does NOT ship. Definition of done]\\n## 5. GTM — ${BIZ_ACQ.find(a=>a.id===b.acq)?.l}\\n[Day-by-day week 1. Weekly weeks 2-4. Outreach sequence. KPIs]\\n## 6. Financial Model\\n[Month 1-12: Revenue/COGS/Margin/OpEx/EBITDA table. Key assumptions]\\n## 7. Deal Structure\\n[3 tiers exact prices. Annual discount. Refund policy. Stripe product IDs to create]\\n## 8. Scale Plan\\n[Month 3/6/12/24 milestones with revenue + customer targets]","agent_system":"# AGENT-SYSTEM.md\\n[All 11 agents with Tool Dependency Block per agent]\\n| Tool | Purpose | Used In | Input | Output |\\n[Dynasty tool mappings]","revenue_model":"# REVENUE-MODEL.md\\n## Pricing Tiers [3 exact]\\n## Month 1-12 Projections [table]\\n## Unit Economics [CAC/LTV/payback/churn]\\n## Revenue Milestones [$1K/$5K/$10K/$25K MRR months]\\n## Expense Model","gtm_playbook":"# GTM-PLAYBOOK.md\\n## Channel: ${BIZ_ACQ.find(a=>a.id===b.acq)?.l}\\n## Week 1 Day-by-day [exact targets]\\n## Weeks 2-4 [weekly plan]\\n## Messaging [Hook/Pain/Solution/CTA — exact copy]\\n## Sales Script [Opening/Discovery/Pitch/Objections/Close — word for word]\\n## Comms Stack [CallScaler script / Insighto agent script / SMS-iT sequence]\\n## KPIs [leading + lagging with targets]","failure_modes":"# FAILURE-MODES.md\\n## 10 Failure Scenarios [JWT/DB/Stripe/RateLimit/Redis/3rd-party/Payment/Upload/Email/Auth]\\n[Each: Detection/Fallback/Recovery/Circuit breaker]\\n## Backup Strategy\\n## Monitoring Alerts"}`,6000);}
-async function genBackend(){return ai(`Generate production-ready FastAPI backend. Real runnable code only. Return ONLY valid JSON.\nProject: ${S.form.name} | Type: ${S.type.label} | Stack: ${S.form.stack.join(',')} | Revenue: ${S.biz.model} at ${S.biz.price}\nReturn:{"main_py":"#!/usr/bin/env python3\\n# ${S.form.name} — FastAPI Backend\\nfrom fastapi import FastAPI, HTTPException, Depends, Request, status\\nfrom fastapi.middleware.cors import CORSMiddleware\\nfrom slowapi import Limiter, _rate_limit_exceeded_handler\\nfrom slowapi.util import get_remote_address\\nfrom slowapi.errors import RateLimitExceeded\\nfrom sqlalchemy import create_engine, Column, String, DateTime, Boolean, text\\nfrom sqlalchemy.ext.declarative import declarative_base\\nfrom sqlalchemy.orm import sessionmaker, Session\\nfrom jose import JWTError, jwt\\nfrom passlib.context import CryptContext\\nfrom loguru import logger\\nimport stripe, redis, os, uuid\\nfrom datetime import datetime, timedelta\\nfrom pydantic import BaseModel, EmailStr\\n\\n[Full ~200 line implementation: DB setup, Redis, JWT auth functions, health check, auth endpoints POST /auth/register /auth/login, core domain endpoints for ${S.type.label} (4+), Stripe webhook POST /webhooks/stripe, billing endpoint POST /billing/checkout, rate limiting 100/min default 10/min auth, request logging middleware, error handler, CORS, startup/shutdown]","requirements":"fastapi>=0.104.1\\nuvicorn[standard]>=0.24.0\\nsqlalchemy>=2.0.23\\npsycopg2-binary>=2.9.9\\nredis>=5.0.1\\nslowapi>=0.1.9\\nstripe>=7.6.0\\npython-jose[cryptography]>=3.3.0\\npasslib[bcrypt]>=1.7.4\\nloguru>=0.7.2\\npython-dotenv>=1.0.0\\nalembic>=1.12.1\\npydantic[email]>=2.5.0","dockerfile":"FROM python:3.11-slim AS builder\\nWORKDIR /app\\nCOPY requirements.txt .\\nRUN pip install --no-cache-dir -r requirements.txt\\nFROM python:3.11-slim\\nWORKDIR /app\\nCOPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages\\nCOPY --from=builder /usr/local/bin /usr/local/bin\\nCOPY . .\\nEXPOSE 8000\\nHEALTHCHECK --interval=30s --timeout=10s CMD curl -f http://localhost:8000/health || exit 1\\nCMD [\\"uvicorn\\", \\"main:app\\", \\"--host\\", \\"0.0.0.0\\", \\"--port\\", \\"8000\\", \\"--workers\\", \\"2\\"]","docker_compose":"version: '3.9'\\nservices:\\n  app:\\n    build: ./backend\\n    ports: ['8000:8000']\\n    environment:\\n      - DATABASE_URL=postgresql://dynasty:dynasty_pass@db:5432/${sl(S.form.name)||'dynasty_db'}\\n      - REDIS_URL=redis://redis:6379/0\\n      - SECRET_KEY=\\${SECRET_KEY}\\n      - STRIPE_SECRET_KEY=\\${STRIPE_SECRET_KEY}\\n      - STRIPE_WEBHOOK_SECRET=\\${STRIPE_WEBHOOK_SECRET}\\n    depends_on: {db: {condition: service_healthy}, redis: {condition: service_healthy}}\\n    restart: unless-stopped\\n  db:\\n    image: postgres:15-alpine\\n    environment: {POSTGRES_DB: ${sl(S.form.name)||'dynasty_db'}, POSTGRES_USER: dynasty, POSTGRES_PASSWORD: dynasty_pass}\\n    volumes: [postgres_data:/var/lib/postgresql/data]\\n    healthcheck: {test: [\\"CMD-SHELL\\", \\"pg_isready -U dynasty\\"], interval: 10s, timeout: 5s, retries: 5}\\n    restart: unless-stopped\\n  redis:\\n    image: redis:7-alpine\\n    volumes: [redis_data:/data]\\n    healthcheck: {test: [\\"CMD\\", \\"redis-cli\\", \\"ping\\"], interval: 10s, timeout: 5s, retries: 5}\\n    restart: unless-stopped\\n  nginx:\\n    image: nginx:alpine\\n    ports: ['80:80', '443:443']\\n    volumes: ['./nginx.conf:/etc/nginx/conf.d/default.conf']\\n    depends_on: [app]\\n    restart: unless-stopped\\nvolumes: {postgres_data: {}, redis_data: {}}"}`,6500);}
-function staticAgents(){return`# AGENTS.md — ${S.form.name}\nRead before any code: DYNASTY-DESIGN.md → DESIGN.md → CLAUDE.md → SPEC.md → AGENT-SYSTEM.md\n## Git Config\n\`\`\`bash\ngit config user.email "polycarpohu@gmail.com"\ngit config user.name "pinohu"\n\`\`\`\n## Dynasty Bridge\n- Inbox: POST https://claude-inbox.audreysplace.place/message\n- Auth: Bearer ${FT}\n## Backend Deploy\n\`\`\`bash\ndocker-compose up -d\n\`\`\`\n## Safety: Push to feature branch only. No prod DB writes without task spec.\n`;}
-function staticGI(){return`node_modules/\n.next/\nout/\ndist/\nbuild/\n.vercel/\n.env\n.env.local\n.env.*.local\n.DS_Store\n*.log\ncoverage/\n__pycache__/\n*.py[cod]\n.venv/\nvenv/\n*.tsbuildinfo\nnext-env.d.ts\n`;}
-function staticDD(){return`# Design Decisions — ${S.form.name}\n## ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})} — Project initialized\n**Type**: ${S.type?.label} · **Accent**: ${S.form.accent} · **Model**: ${S.biz.model} at ${S.biz.price}\n---\n`;}
-async function launch(){
-  S.step=3;S.prg=[];S.err='';render();
-  const name=S.form.name,repo=S.form.repo||sl(name);S.form.repo=repo;
+
+async function inferConfig(desc){
   try{
-    addP('g1','Generating DESIGN.md + CLAUDE.md','Calling Claude AI…','⬡ Design System');setP('g1','run');
-    let df;try{df=await genDesign();setP('g1','ok',`${((df.design_md?.length||0)/1000).toFixed(1)}k chars`);}catch(e){setP('g1','er',e.message);throw e;}
-    addP('g2','Generating SPEC, ROADMAP, README, MANUAL-ACTIONS, data model, API contracts, KB','Calling Claude AI…','⬡ Product Docs');setP('g2','run');
-    let dc;try{dc=await genDocs();setP('g2','ok','8 docs ready');}catch(e){setP('g2','er',e.message);throw e;}
-    addP('g3','Generating BUSINESS-SYSTEM + AGENT-SYSTEM + REVENUE-MODEL + GTM + FAILURE-MODES','Calling Claude AI…','⬡ Business System');setP('g3','run');
-    let bz;try{bz=await genBizSystem();setP('g3','ok','5 business files ready');}catch(e){setP('g3','er',e.message);throw e;}
-    addP('g4','Generating FastAPI backend + Dockerfile + docker-compose','Calling Claude AI…','⬡ Backend');setP('g4','run');
-    let be;try{be=await genBackend();setP('g4','ok','Production backend code generated');}catch(e){setP('g4','er',e.message);throw e;}
-    addP('dx','Fetching DYNASTY-DESIGN.md from master','','⬡ GitHub');setP('dx','run');
-    let dy='';try{const r=await fetch(`https://api.github.com/repos/${ORG}/DYNASTY/contents/DYNASTY-DESIGN.md`,{headers:{'Authorization':`token ${GHT}`}});if(r.ok){const d=await r.json();dy=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));}setP('dx','ok');}catch{setP('dx','sk','Skipped');}
-    addP('cr',`Creating github.com/${ORG}/${repo}`);setP('cr','run');
-    const cr=await gh(`/repos/${TMPL}/generate`,'POST',{owner:ORG,name:repo,description:`${name} — Dynasty Empire business system`,private:true,include_all_branches:false});
+    const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,
+        messages:[{role:'user',content:`Analyze this project description and infer all configuration. Return ONLY valid JSON.
+
+Description: "${desc}"
+
+Return:
+{
+  "name": "Short project name (2-4 words)",
+  "repo": "kebab-case-repo-name",
+  "domain": "guessed-domain.com",
+  "type_id": "one of: gov-saas|compliance|client-portal|dark-saas|bd-dir|member-dir|real-estate|job-board|auth-gen|auth-pest|auth-imm|auth-freight|auth-legal|auth-hvac|auth-med|n8n|flint-proj|api-svc|landing|wp-theme|portfolio|ecom",
+  "type_label": "Human readable type",
+  "surface": "light or dark or dual",
+  "accent": "#hexcolor most appropriate for this product",
+  "stack": ["array", "of", "tech", "stack", "items"],
+  "revenue_model": "subscription or transactional or marketplace or dfy",
+  "price": "$X/mo or $X,XXX one-time — the right price for this market",
+  "acquisition": "organic-seo or cold-email or cold-call-sms or paid-ads or partnerships",
+  "mvp": "72h or 1w or 2w or 1m",
+  "fonts": "font recommendation",
+  "flint_svcs": ["vercel","neon","seo","flint-task"],
+  "manual_svcs": ["clerk","stripe","gsc"],
+  "reasoning": "2 sentences on why these choices fit the description"
+}`}]})});
+    const d=await r.json();
+    const txt=d.content?.find(b=>b.type==='text')?.text||'';
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(!m)return;
+    INFERRED=JSON.parse(m[0]);
+    showPreview(INFERRED);
+    updateLaunchBtn();
+  }catch(e){
+    document.getElementById('launch-btn').textContent='Describe your project above to begin';
+  }
+}
+
+function showPreview(inf){
+  const grid=document.getElementById('inf-grid');
+  grid.innerHTML=`
+    <div class="inf-item"><div class="inf-label">Project name</div><div class="inf-val">${inf.name}</div></div>
+    <div class="inf-item"><div class="inf-label">Type</div><div class="inf-val">${inf.type_label}</div></div>
+    <div class="inf-item"><div class="inf-label">Accent</div><div class="inf-val"><span class="inf-dot" style="background:${inf.accent}"></span>${inf.accent}</div></div>
+    <div class="inf-item"><div class="inf-label">Revenue</div><div class="inf-val">${inf.revenue_model} · ${inf.price}</div></div>
+    <div class="inf-item"><div class="inf-label">Stack</div><div class="inf-val">${(inf.stack||[]).slice(0,4).join(', ')}</div></div>
+    <div class="inf-item"><div class="inf-label">Acquisition</div><div class="inf-val">${inf.acquisition}</div></div>
+    <div class="inf-item"><div class="inf-label">MVP</div><div class="inf-val">${inf.mvp}</div></div>
+    <div class="inf-item"><div class="inf-label">Repo</div><div class="inf-val">${ORG}/${inf.repo}</div></div>
+  `;
+  if(inf.reasoning){grid.innerHTML+=`<div class="inf-item" style="grid-column:1/-1"><div class="inf-label">Why</div><div class="inf-val" style="color:var(--sec);font-size:11px;font-weight:400">${inf.reasoning}</div></div>`;}
+  document.getElementById('preview').style.display='block';
+}
+
+// Launch
+document.getElementById('launch-btn').addEventListener('click',async()=>{
+  if(!GHT){document.getElementById('tbanner').style.display='block';document.getElementById('gh-token').focus();return;}
+  if(!INFERRED)return;
+  const desc=document.getElementById('project-desc').value.trim();
+  document.getElementById('input-screen').style.display='none';
+  document.getElementById('prog-screen').style.display='block';
+  document.getElementById('prog-title').textContent=`Building ${INFERRED.name}…`;
+  PRGS=[];
+  renderProg();
+  await build(desc,INFERRED);
+});
+
+// Progress
+function addP(id,l,n='',g=''){PRGS.push({id,l,n,s:'wait',g});renderProg();}
+function setP(id,s,n){const p=PRGS.find(x=>x.id===id);if(p){p.s=s;if(n!==undefined)p.n=n;}renderProg();}
+function renderProg(){
+  document.getElementById('prog-list').innerHTML=PRGS.map(p=>{
+    const c=p.s==='run'?'rn':p.s==='ok'?'ok':p.s==='er'?'er':p.s==='sk'?'sk':'';
+    const ic=p.s==='run'?'ir':p.s==='ok'?'io':p.s==='er'?'ie':p.s==='sk'?'ik':'iw';
+    const sym=p.s==='ok'?'✓':p.s==='er'?'✕':p.s==='sk'?'—':'';
+    const g=p.g?`<div class="pg">${p.g}</div>`:'';
+    return`${g}<div class="pi ${c}"><div class="ico ${ic}">${sym}</div><div class="pb"><div class="pl2">${p.l}</div>${p.n?`<div class="ps">${p.n}</div>`:''}</div></div>`;
+  }).join('');
+}
+
+// GitHub
+const sl=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+async function gh(path,method='GET',body=null){
+  return fetch(`https://api.github.com${path}`,{method,headers:{'Authorization':`token ${GHT}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},...(body?{body:JSON.stringify(body)}:{})});
+}
+async function pushF(repo,path,content,msg){
+  const enc=btoa(unescape(encodeURIComponent(content)));
+  const c=await gh(`/repos/${repo}/contents/${path}`);
+  const pl={message:msg,content:enc};
+  if(c.ok){const x=await c.json();pl.sha=x.sha;}
+  const r=await gh(`/repos/${repo}/contents/${path}`,'PUT',pl);
+  if(!r.ok)throw new Error(`Push failed: ${path}`);
+}
+async function ai(prompt,max=5500){
+  const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:max,messages:[{role:'user',content:prompt}]})});
+  if(!r.ok)throw new Error(`AI API ${r.status}`);
+  const d=await r.json();
+  const t=d.content?.find(b=>b.type==='text')?.text||'';
+  const m=t.match(/\{[\s\S]*\}/);
+  if(!m)throw new Error('No JSON in response');
+  return JSON.parse(m[0]);
+}
+
+function cx(desc,inf){return`Project: ${inf.name}\nDescription: ${desc}\nRepo: ${ORG}/${inf.repo}\nType: ${inf.type_label}\nSurface: ${inf.surface}\nAccent: ${inf.accent}\nFonts: ${inf.fonts}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nAcquisition: ${inf.acquisition}\nMVP: ${inf.mvp}`;}
+
+async function build(desc,inf){
+  const repo=`${ORG}/${inf.repo}`;
+  try{
+    addP('g1','Generating DESIGN.md + CLAUDE.md','','⬡ Design System');setP('g1','run');
+    let df;try{
+      df=await ai(`Generate Dynasty Empire design files. Return ONLY valid JSON.\n${cx(desc,inf)}\nMaster tokens: dynasty-black #0A0A0A, dynasty-gold #C9A84C, 8px spacing, shadow-border rgba(0,0,0,0.08) 0px 0px 0px 1px, WCAG AA.\nReturn:{"design_md":"# DESIGN.md — ${inf.name}\\n> Inherits from: DYNASTY-DESIGN.md\\n## 1. Visual Theme & Atmosphere\\n[3 specific paragraphs — precise, evocative]\\nKey Characteristics: [8 technical bullets]\\n## 2. Color Palette & Roles\\n[Full tables: surfaces, brand ${inf.accent}, status system, dynasty-gold, borders/shadows]\\n## 3. Typography\\nFont Stack + 14-row hierarchy table (Role/Font/Size/Weight/LineHeight/LetterSpacing/Use)\\n## 4. Component Stylings\\n[Buttons all variants, cards, status badges pill 9999px labeled, inputs all states, nav]\\n## 5. Layout Principles\\n## 6. Depth & Elevation\\n## 7. Do's and Don'ts [12+ specific]\\n## 8. Responsive Behavior\\n## 9. Agent Prompt Guide [5 full prompts + 7-point guide]","claude_md":"# CLAUDE.md — ${inf.name}\\n## Project Overview [stack, repo ${repo}, domain]\\n## Design Rules MANDATORY [10+ rules exact hex, border technique, focus ring, fonts, status badge rule, what NOT to use]\\n## Required States [all 6 per component]\\n## Architecture Rules [file conventions, ${(inf.stack||[]).slice(0,3).join('/')} conventions, DB rules, auth]\\n## Environment Variables [all likely vars]\\n## Git Rules [git config user.email polycarpohu@gmail.com && user.name pinohu]\\n## Do Not [14 specific prohibitions]"}`,6000);
+      setP('g1','ok',`${((df.design_md?.length||0)/1000).toFixed(1)}k chars`);
+    }catch(e){setP('g1','er',e.message);throw e;}
+
+    addP('g2','Generating SPEC, ROADMAP, README, MANUAL-ACTIONS, data model, API contracts, KB','','⬡ Product Docs');setP('g2','run');
+    let dc;try{
+      dc=await ai(`Generate Dynasty Empire product docs. Return ONLY valid JSON.\n${cx(desc,inf)}\nReturn:{"spec_md":"# SPEC.md\\n## Vision\\n## Users [primary/secondary]\\n## Features [P0/P1/P2 with acceptance criteria]\\n## Data Model\\n## Integrations\\n## Metrics","roadmap_md":"# ROADMAP.md\\n## Phase 1 MVP — ${inf.mvp}\\n[12 tasks]\\n## Phase 2 [10 tasks]\\n## Phase 3 [8 tasks]\\n## Phase 4 Scale [6 tasks]","readme_md":"# ${inf.name}\\n## Overview\\n## Quick Start\\n## Architecture\\n## Deployment","manual_md":"# MANUAL-ACTIONS.md\\n${(inf.manual_svcs||[]).length?'Actions requiring human interaction:\\n'+(inf.manual_svcs||[]).map(k=>`### ${k}\\nWhy: [reason]\\nSteps:\\n1. [step]\\n2. [step]\\n3. [step]`).join('\\n\\n'):'No manual actions required for this configuration.'}","env_ex":"# .env.example\\n[all vars for ${(inf.stack||[]).join('/')} grouped by service with comments]","data_model":"# docs/DATA-MODEL.md\\n## Tables [columns/types/indexes/relations]\\n## Relationships\\n## Migrations","api_contracts":"# docs/API-CONTRACTS.md\\n## Auth\\n## Endpoints [method/path/request/response/example per resource]","kb_outlines":"# docs/KB-OUTLINES.md\\n## 10 Seed Articles [title/keyword/H2 outline/word count]"}`,5500);
+      setP('g2','ok','8 docs ready');
+    }catch(e){setP('g2','er',e.message);throw e;}
+
+    addP('g3','Generating BUSINESS-SYSTEM + AGENT-SYSTEM + REVENUE-MODEL + GTM + FAILURE-MODES','','⬡ Business System');setP('g3','run');
+    let bz;try{
+      bz=await ai(`Creative Authority Architect: generate complete deployable business system. No theory. No fluff. Real numbers. Return ONLY valid JSON.\n${cx(desc,inf)}\nReturn:{"biz_system":"# BUSINESS-SYSTEM.md — ${inf.name}\\n## 1. Strategy\\nNiche/Offer/Positioning/Why this wins [3 specific reasons]\\n## 2. Agent System\\n[All 11 agents: Intake/Idea Generator/Evaluator/Architect/MVP/Proof Engine/GTM/Sales/Financial Model/Deal Structuring/Scale Plan]\\n[Each: Purpose/Inputs/Outputs/Tool Dependency Block table/Trigger/Success Criteria/Fallback]\\n[Dynasty tools: CallScaler=Sales, SEO Machine=GTM, Stripe=Deal, Insighto=Sales, n8n=Orchestration, Flint=MVP/Architect]\\n## 3. Revenue Model\\n[3 pricing tiers with exact prices]\\n[Month 1/3/6/12: customers × ${inf.price} = MRR/ARR table]\\n[CAC/LTV/LTV:CAC/payback period/break-even month — real numbers]\\n## 4. MVP — ${inf.mvp}\\n[Exactly 6-8 features. What does NOT ship. Binary definition of done]\\n## 5. GTM — ${inf.acquisition}\\n[Day-by-day week 1 execution with exact targets. Weeks 2-4 weekly. KPIs with numbers]\\n## 6. Financial Model\\n[Month 1-12 table: Revenue/COGS/Gross Margin/OpEx/EBITDA. Key assumptions listed]\\n## 7. Deal Structure\\n[3 pricing tiers exact. Annual discount %. Refund policy. Stripe product names to create]\\n## 8. Scale Plan\\n[Month 3/6/12/24: revenue target + customer count + key initiative]","agent_system":"# AGENT-SYSTEM.md — ${inf.name}\\n[All 11 agents with Tool Dependency Block per agent]\\n| Tool | Purpose | Used In | Input | Output |\\n[Dynasty tool mappings explicit]","revenue_model":"# REVENUE-MODEL.md\\n## Pricing Tiers [3 exact]\\n## Month 1-12 Projections [table: customers/MRR/ARR]\\n## Unit Economics [CAC/LTV/payback/churn assumption]\\n## Milestones [$1K/$5K/$10K/$25K MRR — which month]\\n## Expense Model [hosting/tools/labor per month]","gtm_playbook":"# GTM-PLAYBOOK.md\\n## Channel: ${inf.acquisition}\\n## Week 1 Day-by-Day [exact daily targets and actions]\\n## Weeks 2-4 [weekly execution plan]\\n## Messaging [Hook/Pain/Solution/CTA — exact copy]\\n## Sales Script [Opening/Discovery/Pitch/Objections/Close — word for word]\\n## Dynasty Comms Stack [CallScaler script / Insighto agent script / SMS-iT sequence if applicable]\\n## KPIs [leading + lagging with specific numbers]","failure_modes":"# FAILURE-MODES.md\\n## 10 Failure Scenarios [JWT expiry/DB loss/Stripe webhook/Rate limit/Redis down/3rd-party timeout/Payment fail/Upload fail/Email fail/Auth outage]\\n[Each: Detection/Immediate fallback/Recovery/Circuit breaker pattern]\\n## Backup Strategy\\n## Monitoring Alerts [what to alert on, threshold, escalation]"}`,6000);
+      setP('g3','ok','5 business files ready');
+    }catch(e){setP('g3','er',e.message);throw e;}
+
+    addP('g4','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend');setP('g4','run');
+    let be;try{
+      be=await ai(`Generate production-ready FastAPI backend. Real runnable Python code only. Return ONLY valid JSON.\nProject: ${inf.name} | Type: ${inf.type_label} | Stack: ${(inf.stack||[]).join(',')} | Revenue: ${inf.revenue_model} at ${inf.price}\nReturn:{"main_py":"#!/usr/bin/env python3\\n# ${inf.name} — FastAPI Backend\\n[Full ~200 line implementation with real imports and real code:]\\n[FastAPI setup, CORS, SQLAlchemy+PostgreSQL, Redis client, Stripe init]\\n[JWT auth: create_access_token(), verify_token(), get_current_user()]\\n[slowapi rate limiter: 100/min default, 10/min on auth endpoints]\\n[loguru structured logging middleware]\\n[Error handler middleware]\\n[Health check GET /health]\\n[Auth endpoints: POST /auth/register, POST /auth/login]\\n[Core domain endpoints for ${inf.type_label} (at least 4 specific to this product type)]\\n[Stripe webhook POST /webhooks/stripe with sig verification]\\n[Checkout session POST /billing/checkout]\\n[Startup/shutdown events]","requirements":"fastapi>=0.104.1\\nuvicorn[standard]>=0.24.0\\nsqlalchemy>=2.0.23\\npsycopg2-binary>=2.9.9\\nredis>=5.0.1\\nslowapi>=0.1.9\\nstripe>=7.6.0\\npython-jose[cryptography]>=3.3.0\\npasslib[bcrypt]>=1.7.4\\nloguru>=0.7.2\\npython-dotenv>=1.0.0\\nalembic>=1.12.1\\npydantic[email]>=2.5.0","dockerfile":"FROM python:3.11-slim AS builder\\nWORKDIR /app\\nCOPY requirements.txt .\\nRUN pip install --no-cache-dir -r requirements.txt\\nFROM python:3.11-slim\\nWORKDIR /app\\nCOPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages\\nCOPY --from=builder /usr/local/bin /usr/local/bin\\nCOPY . .\\nEXPOSE 8000\\nHEALTHCHECK --interval=30s --timeout=10s CMD curl -f http://localhost:8000/health || exit 1\\nCMD [\\"uvicorn\\", \\"main:app\\", \\"--host\\", \\"0.0.0.0\\", \\"--port\\", \\"8000\\", \\"--workers\\", \\"2\\"]","docker_compose":"version: '3.9'\\nservices:\\n  app:\\n    build: ./backend\\n    ports: ['8000:8000']\\n    environment:\\n      - DATABASE_URL=postgresql://dynasty:dynasty_pass@db:5432/${sl(inf.repo||'dynasty')}\\n      - REDIS_URL=redis://redis:6379/0\\n      - SECRET_KEY=\\${SECRET_KEY}\\n      - STRIPE_SECRET_KEY=\\${STRIPE_SECRET_KEY}\\n      - STRIPE_WEBHOOK_SECRET=\\${STRIPE_WEBHOOK_SECRET}\\n    depends_on: {db: {condition: service_healthy}, redis: {condition: service_healthy}}\\n    restart: unless-stopped\\n  db:\\n    image: postgres:15-alpine\\n    environment: {POSTGRES_DB: ${sl(inf.repo||'dynasty')}, POSTGRES_USER: dynasty, POSTGRES_PASSWORD: dynasty_pass}\\n    volumes: [postgres_data:/var/lib/postgresql/data]\\n    healthcheck: {test: [\\"CMD-SHELL\\", \\"pg_isready -U dynasty\\"], interval: 10s, timeout: 5s, retries: 5}\\n    restart: unless-stopped\\n  redis:\\n    image: redis:7-alpine\\n    volumes: [redis_data:/data]\\n    healthcheck: {test: [\\"CMD\\", \\"redis-cli\\", \\"ping\\"], interval: 10s, timeout: 5s, retries: 5}\\n    restart: unless-stopped\\n  nginx:\\n    image: nginx:alpine\\n    ports: ['80:80','443:443']\\n    volumes: ['./nginx.conf:/etc/nginx/conf.d/default.conf']\\n    depends_on: [app]\\n    restart: unless-stopped\\nvolumes: {postgres_data: {}, redis_data: {}}"}`,6500);
+      setP('g4','ok','Production backend code ready');
+    }catch(e){setP('g4','er',e.message);throw e;}
+
+    addP('dx','Fetching DYNASTY-DESIGN.md from master repo','','⬡ GitHub');setP('dx','run');
+    let dy='';
+    try{const r=await fetch(`https://api.github.com/repos/${ORG}/DYNASTY/contents/DYNASTY-DESIGN.md`,{headers:{'Authorization':`token ${GHT}`}});if(r.ok){const d=await r.json();dy=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));}setP('dx','ok');}
+    catch{setP('dx','sk','Skipped');}
+
+    addP('cr',`Creating github.com/${repo}`);setP('cr','run','From dynasty-project-template…');
+    const tmpl=`${ORG}/dynasty-project-template`;
+    const cr=await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
     if(!cr.ok&&cr.status!==422){const e=await cr.json();if(!e.message?.includes('already exists'))throw new Error(e.message);}
     await new Promise(r=>setTimeout(r,3500));setP('cr','ok');
-    const files={'DESIGN.md':df.design_md,'CLAUDE.md':df.claude_md,'AGENTS.md':staticAgents(),'SPEC.md':dc.spec_md,'ROADMAP.md':dc.roadmap_md,'README.md':dc.readme_md,'MANUAL-ACTIONS.md':dc.manual_md,'.env.example':dc.env_ex,'.gitignore':staticGI(),'docs/DATA-MODEL.md':dc.data_model,'docs/API-CONTRACTS.md':dc.api_contracts,'docs/KB-OUTLINES.md':dc.kb_outlines,'docs/DESIGN-DECISIONS.md':staticDD(),'BUSINESS-SYSTEM.md':bz.biz_system,'AGENT-SYSTEM.md':bz.agent_system,'REVENUE-MODEL.md':bz.revenue_model,'GTM-PLAYBOOK.md':bz.gtm_playbook,'FAILURE-MODES.md':bz.failure_modes,'backend/main.py':be.main_py,'backend/requirements.txt':be.requirements,'backend/Dockerfile':be.dockerfile,'docker-compose.yml':be.docker_compose};
+
+    const files={
+      'DESIGN.md':df.design_md,'CLAUDE.md':df.claude_md,
+      'AGENTS.md':`# AGENTS.md — ${inf.name}\nRead: DYNASTY-DESIGN.md → DESIGN.md → CLAUDE.md → SPEC.md → AGENT-SYSTEM.md\n## Git Config\n\`\`\`bash\ngit config user.email "polycarpohu@gmail.com"\ngit config user.name "pinohu"\n\`\`\`\n## Dynasty Bridge\nInbox: POST https://claude-inbox.audreysplace.place/message | Auth: Bearer ${FT}\n## Backend Deploy\n\`\`\`bash\ndocker-compose up -d\n\`\`\`\n## Safety: feature branches only, no prod DB writes without task spec\n`,
+      'SPEC.md':dc.spec_md,'ROADMAP.md':dc.roadmap_md,'README.md':dc.readme_md,
+      'MANUAL-ACTIONS.md':dc.manual_md,'.env.example':dc.env_ex,
+      '.gitignore':'node_modules/\n.next/\nout/\ndist/\nbuild/\n.vercel/\n.env\n.env.local\n.env.*.local\n.DS_Store\n*.log\ncoverage/\n__pycache__/\n*.py[cod]\n.venv/\nvenv/\n*.tsbuildinfo\nnext-env.d.ts\n',
+      'docs/DATA-MODEL.md':dc.data_model,'docs/API-CONTRACTS.md':dc.api_contracts,
+      'docs/KB-OUTLINES.md':dc.kb_outlines,
+      'docs/DESIGN-DECISIONS.md':`# Design Decisions — ${inf.name}\n## ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})} — Project initialized\n**Type**: ${inf.type_label} · **Accent**: ${inf.accent} · **Model**: ${inf.revenue_model} at ${inf.price}\n---\n`,
+      'BUSINESS-SYSTEM.md':bz.biz_system,'AGENT-SYSTEM.md':bz.agent_system,
+      'REVENUE-MODEL.md':bz.revenue_model,'GTM-PLAYBOOK.md':bz.gtm_playbook,
+      'FAILURE-MODES.md':bz.failure_modes,
+      'backend/main.py':be.main_py,'backend/requirements.txt':be.requirements,
+      'backend/Dockerfile':be.dockerfile,'docker-compose.yml':be.docker_compose,
+    };
     if(dy)files['DYNASTY-DESIGN.md']=dy;
+
     const fl=Object.entries(files);
     addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
-    for(let i=0;i<fl.length;i++){const[p,c]=fl[i];await pushF(`${ORG}/${repo}`,p,c,`feat: dynasty scaffold — ${p}`);setP('pf','run',`${i+1}/${fl.length} — ${p}`);}
+    for(let i=0;i<fl.length;i++){
+      const[p,c]=fl[i];
+      await pushF(repo,p,c,`feat: dynasty scaffold — ${p}`);
+      setP('pf','run',`${i+1}/${fl.length} — ${p}`);
+    }
     setP('pf','ok',`${fl.length} files live`);
-    const ftasks=Object.entries(S.fs).filter(([,v])=>v).map(([k])=>k);
-    if(ftasks.length){addP('fl',`Tasking Flint (${ftasks.length} jobs)`);setP('fl','run');try{await fetch(FU,{method:'POST',headers:{'Authorization':`Bearer ${FT}`,'Content-Type':'application/json'},body:JSON.stringify({source:'dynasty-launcher',priority:'high',task:`PROVISION + DEPLOY\nProject: ${name}\nRepo: github.com/${ORG}/${repo}\nDomain: ${S.form.domain}\nType: ${S.type.label}\nStack: ${S.form.stack.join(', ')}\nRevenue: ${S.biz.model} at ${S.biz.price}\nTasks:\n${ftasks.map(k=>`- ${k}: ${FS[k]?.n}`).join('\n')}\n20i keys: c2387393b8125d868/c0471cadcfe5a7837\nGH token: ${GHT}\nReport each completion to outbox.`})});setP('fl','ok',`${ftasks.length} tasks queued`);}catch{setP('fl','sk','Flint unreachable');}}
-    S.res={repo,fc:fl.length};S.step=4;render();
-  }catch(e){S.err=e.message||'Unknown error';render();}
+
+    const ftasks=inf.flint_svcs||[];
+    if(ftasks.length){
+      addP('fl',`Tasking Flint (${ftasks.length} provisioning jobs)`);setP('fl','run');
+      try{
+        await fetch(FU,{method:'POST',headers:{'Authorization':`Bearer ${FT}`,'Content-Type':'application/json'},
+          body:JSON.stringify({source:'dynasty-launcher',priority:'high',
+            task:`PROVISION + DEPLOY BUSINESS SYSTEM\nProject: ${inf.name}\nRepo: github.com/${repo}\nType: ${inf.type_label}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nTasks: ${ftasks.join(', ')}\n20i: c2387393b8125d868/c0471cadcfe5a7837\nGH token: ${GHT}\nReport each completion to outbox.`})});
+        setP('fl','ok',`${ftasks.length} tasks queued — Flint building autonomously`);
+      }catch{setP('fl','sk','Flint unreachable — see MANUAL-ACTIONS.md');}
+    }
+
+    showDone(inf,repo,fl.length,ftasks,inf.manual_svcs||[]);
+  }catch(e){
+    const eb=document.getElementById('err-box');
+    eb.style.display='block';eb.textContent=e.message||'Unknown error';
+    const again=document.createElement('span');again.className='again';again.textContent='Start over';
+    again.onclick=reset;eb.appendChild(again);
+  }
 }
-function bind(){
-  document.querySelectorAll('[data-tid]').forEach(el=>el.addEventListener('click',()=>{S.type=TYPES.find(t=>t.id===el.dataset.tid);S.form.accent=S.type.a;S.form.stack=[...S.type.st];initSvcs(S.type);document.getElementById('n1')?.removeAttribute('disabled');document.querySelectorAll('.tc').forEach(c=>c.classList.remove('s'));el.classList.add('s');}));
-  document.getElementById('n1')?.addEventListener('click',()=>{if(S.type){S.step=2;render();}});
-  document.getElementById('bk')?.addEventListener('click',()=>{S.step=1;render();});
-  document.getElementById('fn')?.addEventListener('input',e=>{S.form.name=e.target.value;const r=document.getElementById('fr');if(r&&!S.form.repo)r.value=sl(e.target.value);});
-  document.getElementById('fd')?.addEventListener('input',e=>S.form.domain=e.target.value);
-  document.getElementById('fr')?.addEventListener('input',e=>S.form.repo=e.target.value);
-  document.getElementById('fde')?.addEventListener('input',e=>S.form.desc=e.target.value);
-  document.querySelectorAll('[data-hex]').forEach(el=>el.addEventListener('click',()=>{S.form.accent=el.dataset.hex;document.querySelectorAll('.sw').forEach(s=>s.classList.remove('s'));el.classList.add('s');}));
-  document.getElementById('fc')?.addEventListener('input',e=>{S.form.accent=e.target.value;document.querySelectorAll('.sw').forEach(s=>s.classList.remove('s'));});
-  document.querySelectorAll('[data-stk]').forEach(el=>el.addEventListener('click',()=>{const s=el.dataset.stk;S.form.stack=S.form.stack.includes(s)?S.form.stack.filter(x=>x!==s):[...S.form.stack,s];el.classList.toggle('on');}));
-  document.querySelectorAll('[data-bm]').forEach(el=>el.addEventListener('click',()=>{S.biz.model=el.dataset.bm;document.querySelectorAll('[data-bm]').forEach(x=>x.classList.remove('on'));el.classList.add('on');}));
-  document.querySelectorAll('[data-bp]').forEach(el=>el.addEventListener('click',()=>{S.biz.price=el.dataset.bp;document.querySelectorAll('[data-bp]').forEach(x=>x.classList.remove('on'));el.classList.add('on');}));
-  document.querySelectorAll('[data-ba]').forEach(el=>el.addEventListener('click',()=>{S.biz.acq=el.dataset.ba;document.querySelectorAll('[data-ba]').forEach(x=>x.classList.remove('on-pur'));el.classList.add('on-pur');}));
-  document.querySelectorAll('[data-bv]').forEach(el=>el.addEventListener('click',()=>{S.biz.mvp=el.dataset.bv;document.querySelectorAll('[data-bv]').forEach(x=>x.classList.remove('on-grn'));el.classList.add('on-grn');}));
-  document.querySelectorAll('[data-fs]').forEach(el=>el.addEventListener('click',()=>{const k=el.dataset.fs;S.fs[k]=!S.fs[k];el.querySelector('.sc').classList.toggle('ck',S.fs[k]);}));
-  document.querySelectorAll('[data-ms]').forEach(el=>el.addEventListener('click',()=>{const k=el.dataset.ms;S.ms[k]=!S.ms[k];el.querySelector('.sc').classList.toggle('ck',S.ms[k]);}));
-  document.getElementById('go')?.addEventListener('click',()=>{const n=document.getElementById('fn')?.value?.trim(),d=document.getElementById('fd')?.value?.trim(),r=document.getElementById('fr')?.value?.trim();if(!n||!d){alert('Project name and domain are required.');return;}S.form.name=n;S.form.domain=d;S.form.repo=r||sl(n);launch();});
-  document.getElementById('rst')?.addEventListener('click',()=>{S={step:1,type:null,form:{name:'',domain:'',repo:'',desc:'',accent:'#635BFF',stack:[]},fs:{},ms:{},biz:{model:'subscription',price:'$497/mo',acq:'organic-seo',mvp:'72h'},prg:[],res:null,err:''};render();});
+
+function showDone(inf,repo,fc,ftasks,mtasks){
+  document.getElementById('prog-screen').style.display='none';
+  const d=document.getElementById('done-screen');
+  d.style.display='block';
+  const repoUrl=`https://github.com/${repo}`;
+  const bizFiles=['BUSINESS-SYSTEM.md','AGENT-SYSTEM.md','REVENUE-MODEL.md','GTM-PLAYBOOK.md','FAILURE-MODES.md'];
+  const beFiles=['backend/main.py','backend/requirements.txt','backend/Dockerfile','docker-compose.yml'];
+  const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
+  const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];
+  d.innerHTML=`
+<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated and pushed · ${ftasks.length} Flint tasks running · ${mtasks.length} manual actions documented</p></div>
+<div class="biz-bar">
+  <div class="bb-item"><div class="bb-l">Revenue</div><div class="bb-v">${inf.revenue_model} · ${inf.price}</div></div>
+  <div class="bb-item"><div class="bb-l">Acquisition</div><div class="bb-v">${inf.acquisition}</div></div>
+  <div class="bb-item"><div class="bb-l">MVP</div><div class="bb-v">${inf.mvp}</div></div>
+  <div class="bb-item"><div class="bb-l">Accent</div><div class="bb-v"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${inf.accent};margin-right:4px;vertical-align:middle"></span>${inf.accent}</div></div>
+</div>
+<div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank">${repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div></div>
+<div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
+<div class="rc"><h3>Backend + Docker (${beFiles.length})</h3>${beFiles.map(f=>`<div class="lr"><span class="lb lb-be">Code</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}<div style="font-size:11px;color:var(--dim);margin-top:5px">FastAPI + PostgreSQL + Redis · <code style="font-family:monospace">docker-compose up -d</code></div></div>
+<div class="rc"><h3>Design System + Docs (${designFiles.length+docFiles.length})</h3>${[...designFiles,...docFiles].map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
+${ftasks.length?`<div class="rc"><h3>Flint Queue (${ftasks.length})</h3><div class="ml">${ftasks.map(t=>`<div class="mi">${t}</div>`).join('')}</div></div>`:''}
+${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see MANUAL-ACTIONS.md</h3><div class="ml">${mtasks.map(t=>`<div class="mi">${t}</div>`).join('')}</div></div>`:''}
+<span class="again" onclick="reset()">Build another →</span>`;
 }
-render();
+
+function reset(){
+  INFERRED=null;PRGS=[];
+  document.getElementById('input-screen').style.display='block';
+  document.getElementById('prog-screen').style.display='none';
+  document.getElementById('done-screen').style.display='none';
+  document.getElementById('done-screen').innerHTML='';
+  document.getElementById('project-desc').value='';
+  document.getElementById('preview').style.display='none';
+  document.getElementById('err-box').style.display='none';
+  document.getElementById('launch-btn').disabled=true;
+  document.getElementById('launch-btn').textContent='Describe your project above to begin';
+}
 </script>
 </body>
 </html>
