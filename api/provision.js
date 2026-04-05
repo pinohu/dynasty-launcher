@@ -274,10 +274,29 @@ export default defineConfig(({ mode }) => ({
       'fix: add @dynasty/contracts alias for standalone deployment');
     await new Promise(r => setTimeout(r, 400));
 
-    // 3. Push niche.config.ts
+    // 3. Push niche.config.ts (ensure all required ailurophobia exports are present)
     if (niche_config && niche_config.length > 200) {
+      const REQUIRED_EXPORTS = `
+// ── Required exports for ailurophobia engine ──────────────────────────────
+export const getConfig = (): NicheConfig => nicheConfig;
+export const getSiteConfig = () => nicheConfig.site;
+export const getBrandingConfig = () => nicheConfig.branding;
+export const getSEOConfig = () => nicheConfig.seo;
+export const getNicheConfig = () => nicheConfig.niche;
+export const getNavigationConfig = () => nicheConfig.navigation;
+export const getSocialConfig = () => nicheConfig.social;
+export const getFeaturesConfig = () => nicheConfig.features;
+export const getDirectoryConfig = () => nicheConfig.directory;
+export const getContentConfig = () => nicheConfig.content;
+export const getMonetizationConfig = () => nicheConfig.monetization ?? {
+  enableLeads: false, enableAffiliate: false, enablePremium: false,
+};
+`;
+      const fullNicheConfig = niche_config.includes('getSiteConfig')
+        ? niche_config
+        : niche_config + REQUIRED_EXPORTS;
       await pushFile(GITHUB_TOKEN, ORG, project_slug,
-        'src/config/niche.config.ts', niche_config,
+        'src/config/niche.config.ts', fullNicheConfig,
         'feat: dynasty niche configuration');
       await new Promise(r => setTimeout(r, 500));
     }
