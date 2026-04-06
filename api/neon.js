@@ -29,7 +29,10 @@ export default async function handler(req, res) {
 
   // ── CHECK / TEST KEY ─────────────────────────────────────────────────────
   if (action === 'check') {
-    if (!NEON_API_KEY) return res.json({ ok: false, has_key: false, error: 'No NEON_API_KEY env var or config.infrastructure.neon_api_key' });
+    const keyMissing = !NEON_API_KEY || NEON_API_KEY.startsWith('REPLACE');
+    if (keyMissing) return res.json({ ok: false, has_key: false,
+      error: 'NEON_API_KEY not set. Get from console.neon.tech → Account Settings → API Keys',
+      action: 'Add NEON_API_KEY env var to dynasty-launcher Vercel project' });
     const r = await neonRequest(NEON_API_KEY, 'GET', '/projects');
     if (r.ok) {
       return res.json({ ok: true, has_key: true, projects: r.data?.projects?.length || 0 });
