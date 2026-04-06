@@ -178,6 +178,36 @@ REQUIREMENTS:
         const articlesFile = `export interface Article {\n  slug: string;\n  title: string;\n  description: string;\n  content: string;\n  category: string;\n  author: string;\n  publishedAt: string;\n  updatedAt?: string;\n  readingTime: string;\n  tags: string[];\n  featured?: boolean;\n}\n\n${clean}\n\nexport const getArticle = (slug: string) => articles.find(a => a.slug === slug);\nexport const getArticlesByCategory = (cat: string) => articles.filter(a => a.category === cat);\nexport const getFeaturedArticles = () => articles.filter(a => a.featured);\nexport const getAllArticles = () => articles;\nexport const getAllCategories = (): string[] => [...new Set(articles.map(a => a.category))];\nexport const getArticlesByTag = (tag: string) => articles.filter(a => a.tags.includes(tag));\nexport const getRelatedArticles = (slug: string, limit = 3) => articles.filter(a => a.slug !== slug).slice(0, limit);\n`;
         await pushFile(GH_TOKEN,ORG,project_slug,'src/data/articles.ts',articlesFile,'feat: AI-generated blog articles');
         await new Promise(r=>setTimeout(r,300));
+
+        // 4a.5 SEO-optimize each article
+        try {
+          if (articlesFile && AI_KEY) {
+            const optimized = await aiGenerate(`You are an SEO expert. Review and optimize this TypeScript articles array for maximum search engine performance.
+
+NICHE KEYWORDS: ${keywords}
+
+ARTICLES FILE:
+${articlesFile.substring(0, 6000)}
+
+For each article:
+1. Ensure keyword density is 1.5-2.5% for the primary keyword
+2. Verify H2 → H3 heading hierarchy
+3. Add internal linking suggestions as HTML comments
+4. Improve meta descriptions to exactly 150-160 chars
+5. Ensure readability at Flesch-Kincaid grade 8-10
+6. Add structured data hints (FAQ schema opportunities within content)
+
+Return the COMPLETE improved articles TypeScript file (same format, same interface, same exports). Only change the content strings and descriptions. Keep all code structure identical.`, 8000);
+
+            if (optimized && optimized.includes('export const articles')) {
+              const optMatch = optimized.match(/export interface Article[\s\S]*/);
+              if (optMatch) {
+                await pushFile(GH_TOKEN,ORG,project_slug,'src/data/articles.ts', optMatch[0], 'feat: SEO-optimized articles');
+                await new Promise(r=>setTimeout(r,300));
+              }
+            }
+          }
+        } catch{}
       }
     } catch{}
 
@@ -335,6 +365,33 @@ Make businesses sound real with local addresses. Vary ratings 4.0-5.0.`, 6000);
       if (directoryData) {
         const dirHeader = `import { getConfig } from '../config/niche.config';\n\nexport interface DirectoryListing {\n  id: string; name: string; slug: string; category: string;\n  description: string; address?: string; city?: string; state?: string;\n  phone?: string; email?: string; website?: string;\n  rating: number; reviewCount: number; isVerified: boolean; isFeatured: boolean;\n  credentials?: string[]; specializations?: string[]; image?: string;\n}\n\nexport interface DirectoryReview {\n  id: string; listingId: string; reviewerName: string; rating: number;\n  text: string; date: string; isVerified: boolean;\n}\n\nexport interface DirectoryCategory {\n  name: string; slug: string; icon: string; description: string; count: number;\n}\n\n${directoryData}\n\nexport const getCategories = () => {\n  const config = getConfig();\n  return (config.directory?.categories || []).map(c => ({\n    ...c, description: \`Browse \${c.name.toLowerCase()} professionals\`, count: listings.filter(l => l.category === c.slug).length\n  }));\n};\nexport const getListingBySlug = (slug: string) => listings.find(l => l.slug === slug);\nexport const getListingsByCategory = (cat: string) => listings.filter(l => l.category === cat);\nexport const getFeaturedListings = () => listings.filter(l => l.isFeatured);\nexport const getListingReviews = (id: string) => (typeof reviews !== 'undefined' ? reviews : []).filter((r: DirectoryReview) => r.listingId === id);\nexport const searchListings = (q: string) => { const l = q.toLowerCase(); return listings.filter(x => x.name.toLowerCase().includes(l) || x.description.toLowerCase().includes(l)); };\n`;
         await pushFile(GH_TOKEN,ORG,project_slug,'src/data/directory.ts',dirHeader,'feat: AI-generated directory listings');
+        await new Promise(r=>setTimeout(r,300));
+      }
+    } catch{}
+
+    // 4f. Generate location pages for programmatic SEO
+    try {
+      const locationRaw = await aiGenerate(`Generate 10 location pages for "${niche_name}" services. Each location should be a real city/area where this niche operates.
+
+Return ONLY valid TypeScript:
+
+export const locations: Location[] = [
+  {
+    slug: "city-name-state",
+    city: "City Name",
+    state: "State",
+    description: "One sentence about this niche in this city (50-100 words, SEO-optimized).",
+    content: "<h2>About Service in City</h2><p>Detailed 150-200 word paragraph about the local market, demand, and why this service matters in this specific city. Include local landmarks, neighborhoods, or regional specifics.</p><h2>What to Look For</h2><p>Another 100-150 word paragraph with local buying advice.</p>"
+  },
+  // ... 9 more cities
+];
+
+Use REAL cities appropriate for the niche. Each description and content must be unique and locally specific.`, 6000);
+
+      if (locationRaw && locationRaw.includes('export const locations')) {
+        const locMatch = locationRaw.match(/export const locations[\s\S]*/)?.[0] || '';
+        const locFile = `export interface Location {\n  slug: string;\n  city: string;\n  state: string;\n  description: string;\n  content?: string;\n  coordinates?: { lat: number; lng: number };\n}\n\n${locMatch}\n`;
+        await pushFile(GH_TOKEN,ORG,project_slug,'src/data/locations.ts',locFile,'feat: AI-generated location pages for pSEO');
         await new Promise(r=>setTimeout(r,300));
       }
     } catch{}
