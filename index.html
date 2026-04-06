@@ -2624,6 +2624,7 @@ export const nicheConfig = {
 ---END:niche_config---
 `, ['niche_config'], 7000);
         if(nc.niche_config && nc.niche_config.length > 100){
+          window._nicheConfig = nc.niche_config;
           setP('niche','ok','niche.config.ts generated');
         } else {
           setP('niche','sk','Niche config generation incomplete — manual configuration needed');
@@ -2649,6 +2650,8 @@ export const nicheConfig = {
       ...feFiles,
     };
     if(dy)files['DYNASTY-DESIGN.md']=dy;
+    // Store all generated files globally for ZIP download
+    window._buildFiles = files;
 
     // ── Generate 1-Year Social Media Calendar (all build types) ──────────
     window._socialCalendarMd = '';
@@ -2964,32 +2967,39 @@ async function downloadAllFiles() {
   }
   const zip = new JSZip();
   const inf = INFERRED;
+  const files = window._buildFiles || {};
+  let fileCount = 0;
 
-  try {
-    const repo = `${ORG}/${inf.repo}`;
-    const contentsResp = await gh(`/repos/${repo}/contents/`);
-    if (contentsResp.ok) {
-      const contents = await contentsResp.json();
-      for (const item of contents) {
-        if (item.type === 'file') {
-          try {
-            const fileResp = await gh(`/repos/${repo}/contents/${item.path}`);
-            if (fileResp.ok) {
-              const fileData = await fileResp.json();
-              const content = atob(fileData.content.replace(/\n/g, ''));
-              zip.file(item.path, content);
-            }
-          } catch {}
-        }
-      }
+  // Add all generated files from build
+  for (const [path, content] of Object.entries(files)) {
+    if (content && typeof content === 'string' && content.length > 0) {
+      zip.file(path, content);
+      fileCount++;
     }
-  } catch {}
+  }
+
+  // Add social media calendar if generated
+  if (window._socialCalendarMd) {
+    zip.file('social-media/SOCIAL-MEDIA-CALENDAR.md', window._socialCalendarMd);
+    fileCount++;
+  }
+
+  // Add niche config if available
+  if (window._nicheConfig) {
+    zip.file('src/config/niche.config.ts', window._nicheConfig);
+    fileCount++;
+  }
+
+  if (fileCount === 0) {
+    alert('No files to download. The build may not have completed successfully.');
+    return;
+  }
 
   const blob = await zip.generateAsync({ type: 'blob' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${inf.repo}-dynasty-build.zip`;
+  a.download = (inf?.repo || 'dynasty-build') + '-dynasty-build.zip';
   a.click();
   URL.revokeObjectURL(url);
 }
