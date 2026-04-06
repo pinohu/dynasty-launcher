@@ -91,6 +91,16 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .ml{display:flex;flex-direction:column;gap:3px}
 .mi{font-size:11px;color:var(--sec);display:flex;gap:6px}.mi::before{content:'→';color:var(--gold);font-size:10px;flex-shrink:0;margin-top:2px}
 .again{font-size:12px;color:var(--dim);cursor:pointer;text-decoration:underline;margin-top:.75rem;display:inline-block}
+/* Build layout — progress + education side by side */
+.build-layout{display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start}
+@media(max-width:700px){.build-layout{grid-template-columns:1fr}}
+.edu-card{position:sticky;top:80px;background:var(--card);border:1px solid var(--gb);border-radius:var(--rl);padding:1.1rem;transition:all .4s ease}
+.edu-phase{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--gold);margin-bottom:6px}
+.edu-title{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:8px;line-height:1.3;transition:opacity .3s}
+.edu-body{font-size:11px;color:var(--sec);line-height:1.55;margin-bottom:10px;transition:opacity .3s}
+.edu-tip{font-size:10px;color:var(--dim);line-height:1.4;padding-top:8px;border-top:1px solid var(--bdr)}
+.edu-card.pulse{animation:eduPulse .5s ease}
+@keyframes eduPulse{0%{border-color:var(--gb)}50%{border-color:var(--gold);box-shadow:0 0 12px rgba(201,168,76,0.15)}100%{border-color:var(--gb)}}
 .eb{background:rgba(229,83,75,0.07);border:1px solid rgba(229,83,75,0.15);border-radius:var(--r);padding:.65rem .9rem;font-size:12px;color:var(--red);margin-top:.65rem}
 /* Mode selection */
 .mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
@@ -457,7 +467,15 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
         Cost so far: <span id="cost-val">$0.00</span>
       </div>
     </div>
-    <div class="prog-list" id="prog-list"></div>
+    <div class="build-layout">
+      <div class="prog-list" id="prog-list"></div>
+      <div class="edu-card" id="edu-card">
+        <div class="edu-phase" id="edu-phase">Getting Ready</div>
+        <div class="edu-title" id="edu-title">Your business system is being built</div>
+        <div class="edu-body" id="edu-body">The AI is analyzing your description and will generate a complete business system — design, strategy, code, and infrastructure — all customized to your specific niche.</div>
+        <div class="edu-tip" id="edu-tip">💡 Each file is production-ready and follows industry best practices.</div>
+      </div>
+    </div>
     <div class="eb" id="err-box" style="display:none"></div>
   </div>
 
@@ -1481,6 +1499,89 @@ async function aiRaw(prompt, max = 4000) {
 function cx(desc,inf){return`Project: ${inf.name}\nDescription: ${desc}\nRepo: ${ORG}/${inf.repo}\nType: ${inf.type_label}\nSurface: ${inf.surface}\nAccent: ${inf.accent}\nFonts: ${inf.fonts}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nAcquisition: ${inf.acquisition}\nMVP: ${inf.mvp}`;}
 
 // ── Processing Visuals ──────────────────────────────────────────────────
+// ── Educational Side Card ────────────────────────────────────────────────
+const EDU_CONTENT = {
+  g1: {
+    phase: '⬡ Design System',
+    title: 'Creating your visual identity',
+    body: 'The AI is generating a complete design system — color palette, typography hierarchy, component styles, spacing scale, and dark mode specification. This becomes the visual DNA of your entire product, ensuring every screen looks cohesive and professional.',
+    tip: '💡 DESIGN.md follows the awesome-design-md standard used by top design teams. CLAUDE.md tells AI assistants exactly how to build UI that matches your brand.'
+  },
+  g2: {
+    phase: '⬡ Product Docs',
+    title: 'Writing your product specification',
+    body: 'Your SPEC.md defines every feature, user story, and acceptance criterion. ROADMAP.md maps out 6 months of development. README.md gives anyone the quick-start guide to your codebase. These are the documents investors and developers need.',
+    tip: '💡 The manual actions file tells you exactly which services to configure by hand — Clerk auth, Stripe webhooks, Google Search Console.'
+  },
+  g3: {
+    phase: '⬡ Technical Docs',
+    title: 'Architecting your data model',
+    body: 'DATA-MODEL.md defines your database tables, relationships, and migration strategy. API-CONTRACTS.md specifies every endpoint — request format, response shape, error codes. KB-OUTLINES.md seeds your knowledge base with 10 SEO-ready articles.',
+    tip: '💡 These docs let any developer onboard to your codebase in hours instead of weeks.'
+  },
+  g4a: {
+    phase: '⬡ Business Strategy',
+    title: 'Building your business engine',
+    body: 'BUSINESS-SYSTEM.md is your complete operating manual — market positioning, 11-agent automation system, revenue projections, pricing tiers, and scale plan. REVENUE-MODEL.md shows month-by-month MRR growth. GTM-PLAYBOOK.md gives you day-by-day launch actions.',
+    tip: '💡 The business system includes actual sales scripts, email sequences, and KPI targets with specific numbers.'
+  },
+  g4b: {
+    phase: '⬡ Agent System',
+    title: 'Designing your AI workforce',
+    body: 'AGENT-SYSTEM.md specifies 11 autonomous agents — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. FAILURE-MODES.md anticipates 10 specific failure scenarios with recovery playbooks.',
+    tip: '💡 Every agent maps to a real Dynasty tool — CallScaler, Insighto, SMS-iT, Stripe, n8n — ready to wire up.'
+  },
+  g5: {
+    phase: '⬡ Backend Code',
+    title: 'Generating production-ready code',
+    body: 'A complete FastAPI Python backend with JWT authentication, rate limiting, CORS, Stripe webhooks, health checks, and database models. Includes Dockerfile for containerization and docker-compose for one-command deployment with PostgreSQL and Redis.',
+    tip: '💡 The backend is production-ready — not a prototype. It includes proper error handling, logging, and security headers.'
+  },
+  g7: {
+    phase: '⬡ Frontend',
+    title: 'Scaffolding your Next.js frontend',
+    body: 'A Next.js 14 App Router frontend with TypeScript, Tailwind CSS, responsive layout, dashboard, and landing page. The design system colors and fonts from DESIGN.md are already wired into the Tailwind config.',
+    tip: '💡 Full-stack deploy means your frontend goes live on Vercel immediately — real URL, real HTTPS, real CDN.'
+  },
+  pf: {
+    phase: '⬡ GitHub',
+    title: 'Pushing files to your repository',
+    body: 'Every generated file is being committed to your private GitHub repository. Once complete, you can clone it locally, invite collaborators, or hand it to a development team. The repo is ready for CI/CD.',
+    tip: '💡 Run "gh repo clone [repo] && cd [repo] && claude" to start building with AI assistance immediately.'
+  },
+  prov: {
+    phase: '⬡ Infrastructure',
+    title: 'Provisioning your tech stack',
+    body: 'Real infrastructure is being set up right now — Stripe for payments, Vercel for hosting, Neon for your database, Acumbamail for email marketing. These are production services, not sandboxes.',
+    tip: '💡 Your Stripe product and price are already created. Your Vercel project is linked to GitHub for auto-deploy on every push.'
+  },
+  deploy: {
+    phase: '⬡ Deployment',
+    title: 'Launching your authority site',
+    body: 'Your complete authority website is being deployed to Vercel right now. It includes AI-generated blog articles, FAQ content, testimonials, case studies, and a directory of real local businesses scraped from Google Maps.',
+    tip: '💡 The site will be live at your Vercel URL in about 90 seconds. Every page is SEO-optimized with Schema.org markup.'
+  },
+  niche: {
+    phase: '⬡ Niche Config',
+    title: 'Customizing for your market',
+    body: 'A complete niche configuration is being generated — SEO keywords, topic clusters, navigation structure, branding colors, author credentials, and directory categories. This single file drives every piece of content on your authority site.',
+    tip: '💡 One config file, 23 pages. Change niche.config.ts to instantly re-brand the entire site for a different market.'
+  }
+};
+
+function updateEduCard(phaseId) {
+  const card = document.getElementById('edu-card');
+  const content = EDU_CONTENT[phaseId];
+  if (!card || !content) return;
+  card.classList.remove('pulse');
+  void card.offsetWidth; // trigger reflow for animation restart
+  card.classList.add('pulse');
+  document.getElementById('edu-phase').textContent = content.phase;
+  document.getElementById('edu-title').textContent = content.title;
+  document.getElementById('edu-body').textContent = content.body;
+  document.getElementById('edu-tip').textContent = content.tip;
+}
+
 function showLoadingOverlay(text, sub) {
   let overlay = document.getElementById('loading-overlay');
   if (!overlay) {
@@ -1524,6 +1625,7 @@ function animateValue(el, start, end, duration, suffix = '') {
 async function build(desc,inf){
   const repo=`${ORG}/${inf.repo}`;
   try{
+    updateEduCard('g1');
     addP('g1','Generating DESIGN.md + CLAUDE.md','','⬡ Design System');setP('g1','run');
     updateGlobalProgress(1, 11, 'Phase 1 of 11 \u00b7 Design System');
     let df;try{
@@ -1623,6 +1725,7 @@ git config user.name "pinohu"
       setP('g1','ok',`${((df.design_md?.length||0)/1000).toFixed(1)}k chars`);
     }catch(e){setP('g1','er',e.message);throw e;}
 
+    updateEduCard('g2');
     addP('g2','Generating SPEC + ROADMAP + README + MANUAL-ACTIONS + .env','','⬡ Product Docs');setP('g2','run');
     updateGlobalProgress(2, 11, 'Phase 2 of 11 \u00b7 Product Docs');
     let dc;try{
@@ -1744,6 +1847,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
       setP('g2','ok',`${Object.values(dc).filter(v=>v).length} docs ready`);
     }catch(e){setP('g2','er',e.message);throw e;}
 
+    updateEduCard('g3');
     addP('g3','Generating DATA-MODEL + API-CONTRACTS + KB-OUTLINES','','⬡ Supporting Docs');setP('g3','run');
     updateGlobalProgress(3, 11, 'Phase 3 of 11 \u00b7 Technical Docs');
     let ds;try{
@@ -1802,6 +1906,7 @@ FRAMEWORK ANALYSES TO INCLUDE:
 ${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.replace(/_/g,' ').toUpperCase()}\n${v}`).join('\n\n')}
 ` : '';
 
+    updateEduCard('g4a');
     addP('g4a','Generating BUSINESS-SYSTEM + REVENUE-MODEL + GTM-PLAYBOOK','','⬡ Business System');setP('g4a','run');
     updateGlobalProgress(4, 11, 'Phase 4 of 11 \u00b7 Business Strategy');
     let bz1;try{
@@ -1914,6 +2019,7 @@ SMS-iT: [3-message follow-up sequence]
       setP('g4a','ok',`Business strategy ready`);
     }catch(e){setP('g4a','er',e.message);throw e;}
 
+    updateEduCard('g4b');
     addP('g4b','Generating AGENT-SYSTEM + FAILURE-MODES','');setP('g4b','run');
     updateGlobalProgress(5, 11, 'Phase 5 of 11 \u00b7 Agent System');
     let bz2;try{
@@ -1967,6 +2073,7 @@ DB: Daily snapshots to S3, 30-day retention | Redis: RDB persistence, hourly | C
     // Merge bz1 + bz2 into bz
    
 
+    updateEduCard('g5');
     addP('g5','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend Code');setP('g5','run');
     updateGlobalProgress(6, 11, 'Phase 6 of 11 \u00b7 Backend Code');
     let be;try{
@@ -2238,7 +2345,8 @@ volumes:
     // ── Phase 7: Frontend scaffold (full-stack deploy only) ────────────────
     let feFiles = {};
     if (V2_DEPLOY_TARGET === 'fullstack') {
-      addP('g7', 'Generating Next.js frontend scaffold', '', '⬡ Frontend');
+      updateEduCard('g7');
+    addP('g7', 'Generating Next.js frontend scaffold', '', '⬡ Frontend');
       setP('g7', 'run');
       try {
         const fe = await ai(`GENERATE NEXT.JS 14 APP ROUTER FRONTEND SCAFFOLD. Production-ready TypeScript code. Use the design system from the project config.
@@ -2352,7 +2460,8 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
     // ── Authority site: generate niche.config.ts ───────────────────────────
     let nc=null;
     if(isAuthority){
-      addP('niche','Generating niche.config.ts for authority site','');setP('niche','run');
+      updateEduCard('niche');
+    addP('niche','Generating niche.config.ts for authority site','');setP('niche','run');
       try{
         nc=await ai(`GENERATE a complete TypeScript niche configuration for an authority site. Return in delimiter format ONLY. No preamble.
 
@@ -2506,7 +2615,8 @@ export const nicheConfig = {
     // Non-authority types: push all files to standalone repo
     if (!isAuthority) {
       const fl = Object.entries(files);
-      addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
+      updateEduCard('pf');
+    addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
       updateGlobalProgress(8, 11, 'Phase 8 of 11 \u00b7 Pushing Files');
       for(let i=0;i<fl.length;i++){
         const[p,c]=fl[i];
@@ -2526,7 +2636,8 @@ export const nicheConfig = {
       const isStaticType=['static','portfolio','landing'].includes(inf?.type_id||'');
       const provLabel=isWP?'Provisioning on 20i (WordPress)':isStaticType?'Provisioning on 20i (Static)':'Provisioning — Vercel + Neon + Stripe';
       const provNote=isWP||isStaticType?'20i package + Stripe + Acumbamail':'Vercel project, Neon DB, Stripe product, Acumbamail list';
-      addP('prov',provLabel,provNote);setP('prov','run');
+      updateEduCard('prov');
+    addP('prov',provLabel,provNote);setP('prov','run');
       updateGlobalProgress(9, 11, 'Phase 9 of 11 \u00b7 Provisioning');
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
@@ -2545,7 +2656,8 @@ export const nicheConfig = {
 
     // ── Direct Vercel deploy (no Flint needed) ──────────────────────────────
     if(isAuthority){
-      addP('deploy','Deploying authority site to Vercel','Forking template → AI content generation → Google directory → auto-build');setP('deploy','run');
+      updateEduCard('deploy');
+    addP('deploy','Deploying authority site to Vercel','Forking template → AI content generation → Google directory → auto-build');setP('deploy','run');
       updateGlobalProgress(10, 11, 'Phase 10 of 11 \u00b7 Deploying');
       try{
         const deployResp=await fetch('/api/provision',{method:'POST',
