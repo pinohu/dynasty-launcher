@@ -93,32 +93,22 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .again{font-size:12px;color:var(--dim);cursor:pointer;text-decoration:underline;margin-top:.75rem;display:inline-block}
 .eb{background:rgba(229,83,75,0.07);border:1px solid rgba(229,83,75,0.15);border-radius:var(--r);padding:.65rem .9rem;font-size:12px;color:var(--red);margin-top:.65rem}
 
-  /* ── Access Gate ───────────────────────────────────── */
-  #auth-gate{position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;
-    align-items:center;justify-content:center;flex-direction:column;gap:20px}
-  #auth-gate.hidden{display:none}
-  .gate-box{background:#111;border:1px solid rgba(255,255,255,0.08);border-radius:16px;
-    padding:40px 48px;width:100%;max-width:420px;text-align:center}
+  
+  
+  
+  
   .gate-box h2{font-size:1.4rem;margin-bottom:6px;font-weight:600}
   .gate-box p{color:rgba(255,255,255,0.45);font-size:0.9rem;margin-bottom:24px}
-  .gate-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
-    border-radius:10px;padding:14px 18px;color:#fff;font-size:1rem;outline:none;
-    text-align:center;letter-spacing:2px;box-sizing:border-box}
+  
   .gate-input:focus{border-color:rgba(212,175,55,0.5)}
-  .gate-btn{width:100%;margin-top:14px;background:#D4AF37;color:#000;border:none;
-    border-radius:10px;padding:14px;font-size:1rem;font-weight:600;cursor:pointer;
-    transition:opacity 0.2s}
+  
   .gate-btn:hover{opacity:0.85}
-  .gate-err{color:#e5534b;font-size:0.85rem;margin-top:8px;height:20px}
-  .gate-logo{font-size:2rem;margin-bottom:8px}
+  
+  
   </style>
 </head>
 <body>
-  <!-- ── Access Gate ───────────────────────────────────── -->
-  <div id="auth-gate">
-    <div class="gate-box">
-      <div class="gate-logo">⚡</div>
-      <h2>Dynasty Launcher</h2>
+<h2>Dynasty Launcher</h2>
       <p>Enter your access password to continue</p>
       <input class="gate-input" id="gate-pw" type="password"
         placeholder="••••••••••••••••"
@@ -174,9 +164,24 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   <div id="done-screen" style="display:none"></div>
 </div>
 
-<script>
-// ── Gate session check ───────────────────────────────────────────────────────
-(function(){try{var t=sessionStorage.getItem('dlg')||localStorage.getItem('dlg');if(t){var d=JSON.parse(t);if(d.ok&&d.exp>Date.now()){var g=document.getElementById('auth-gate');if(g){g.style.display='none';}}}}catch(e){}})();
+<script>// ── Dynasty Access Gate (prompt-based, bulletproof) ─────────────────────────
+(function(){
+  var K='dlg26',P='DYNASTY-2026-IKE';
+  function ok(){
+    try{var d=JSON.parse(localStorage.getItem(K)||'{}');return d.ok&&d.exp>Date.now();}catch(e){return false;}
+  }
+  if(ok())return;
+  var pw=window.prompt('Dynasty Launcher\nEnter access password:');
+  if(pw===null){document.documentElement.innerHTML='<body style="background:#000;color:#555;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">Access cancelled — refresh to retry.</body>';return;}
+  if(pw.trim()===P){
+    try{localStorage.setItem(K,JSON.stringify({ok:true,exp:Date.now()+43200000}));}catch(e){}
+  } else {
+    document.documentElement.innerHTML='<body style="background:#000;color:#e5534b;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:16px"><h2>⛔ Incorrect password</h2><p style="color:#555">Refresh the page to try again.</p></body>';
+  }
+})();
+
+
+
 
 
 
