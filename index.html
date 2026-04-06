@@ -141,6 +141,42 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .fw-dive-header:hover{background:var(--gdim)}
 .fw-dive-body{padding:0 12px 12px;font-size:11px;color:var(--sec);line-height:1.6;display:none;white-space:pre-wrap}
 .fw-dive.open .fw-dive-body{display:block}
+/* Config screen */
+.cfg-head{margin-bottom:1.5rem}
+.cfg-head h2{font-size:20px;font-weight:600;margin-bottom:4px}
+.cfg-head p{font-size:13px;color:var(--sec)}
+.cfg-section{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--bdr)}
+.cfg-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin-bottom:4px}
+.cfg-desc{font-size:12px;color:var(--sec);margin-bottom:.75rem}
+/* Model grid */
+.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:6px;margin-bottom:.5rem}
+.model-chip{padding:7px 10px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);cursor:pointer;transition:.12s;text-align:center}
+.model-chip:hover{border-color:var(--gb)}
+.model-chip.selected{border-color:var(--gold);background:var(--gdim)}
+.model-chip.free{border-color:rgba(62,207,142,0.2)}
+.model-chip.free.selected{border-color:var(--grn);background:rgba(62,207,142,0.06)}
+.model-chip .mc-name{font-size:11px;font-weight:600;color:var(--tx)}
+.model-chip .mc-provider{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.3px}
+.model-chip .mc-cost{font-size:9px;color:var(--gold);margin-top:2px}
+.model-chip.free .mc-cost{color:var(--grn)}
+.model-cost{font-size:11px;color:var(--dim);margin-top:4px}
+.model-cost strong{color:var(--gold)}
+/* Advanced per-phase */
+.cfg-advanced{margin-top:.75rem}
+.cfg-advanced summary{font-size:11px;color:var(--dim);cursor:pointer}
+.phase-models{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.pm-row{display:flex;align-items:center;gap:6px}
+.pm-row label{font-size:10px;color:var(--sec);min-width:80px}
+.pm-row select{flex:1;padding:4px 6px;background:var(--panel);border:1px solid var(--bdr);border-radius:4px;color:var(--tx);font-size:10px}
+/* Deploy grid */
+.deploy-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.deploy-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem;cursor:pointer;transition:.15s}
+.deploy-card:hover{border-color:var(--gb)}
+.deploy-card.selected{border-color:var(--gold);background:var(--gdim)}
+.dc-icon{font-size:22px;margin-bottom:.5rem}
+.deploy-card h4{font-size:13px;font-weight:600;margin-bottom:.3rem}
+.deploy-card p{font-size:11px;color:var(--sec);line-height:1.4}
+.dc-extra{font-size:9px;color:var(--gold);margin-top:.4rem}
 </style>
 </head>
 <body>
@@ -247,6 +283,72 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
       <div class="scorecard" id="scorecard"></div>
       <div id="fw-deep-dives"></div>
       <button class="launch" onclick="advanceFromFrameworks()">Continue to configure →</button>
+    </div>
+  </div>
+
+  <div id="config-screen" style="display:none">
+    <div class="cfg-head">
+      <h2>Configure Build</h2>
+      <p>Choose your AI model, deployment target, and review settings before generating.</p>
+    </div>
+
+    <!-- Model Selection -->
+    <div class="cfg-section">
+      <h3 class="cfg-label">AI Model</h3>
+      <p class="cfg-desc">Select the model for all generation phases. Free models cost $0 but may produce lower quality.</p>
+      <div class="model-grid" id="model-grid"></div>
+      <div class="model-cost" id="model-cost">Estimated build cost: <strong>~$0.35</strong></div>
+
+      <details class="cfg-advanced">
+        <summary>Advanced: per-phase model assignment</summary>
+        <p class="cfg-desc" style="margin-top:8px">Assign different models to different generation phases. Heavier models for strategy, lighter for code.</p>
+        <div class="phase-models" id="phase-models"></div>
+      </details>
+    </div>
+
+    <!-- Deployment Target -->
+    <div class="cfg-section">
+      <h3 class="cfg-label">Deployment Target</h3>
+      <p class="cfg-desc">Choose what gets deployed. All options generate the full 23-file business system.</p>
+      <div class="deploy-grid" id="deploy-grid">
+        <div class="deploy-card selected" data-target="backend-only" onclick="selectDeploy(this,'backend-only')">
+          <div class="dc-icon">📦</div>
+          <h4>Backend + Docs</h4>
+          <p>GitHub repo with all files. No public URL. Build frontend yourself or with Claude Code.</p>
+        </div>
+        <div class="deploy-card" data-target="fullstack" onclick="selectDeploy(this,'fullstack')">
+          <div class="dc-icon">🌐</div>
+          <h4>Full-Stack Deploy</h4>
+          <p>Next.js frontend scaffolded + deployed to Vercel. Live public URL immediately.</p>
+          <div class="dc-extra">+12 frontend files · ~2 min extra</div>
+        </div>
+        <div class="deploy-card" data-target="authority" onclick="selectDeploy(this,'authority')">
+          <div class="dc-icon">📰</div>
+          <h4>Authority Site</h4>
+          <p>SEO-optimized content site via Ailurophobia engine. Blog + niche config + Vercel deploy.</p>
+        </div>
+        <div class="deploy-card" data-target="wordpress" onclick="selectDeploy(this,'wordpress')">
+          <div class="dc-icon">🔧</div>
+          <h4>WordPress on 20i</h4>
+          <p>WordPress package provisioned on 20i with Dynasty Developer theme.</p>
+        </div>
+        <div class="deploy-card" data-target="static" onclick="selectDeploy(this,'static')">
+          <div class="dc-icon">📄</div>
+          <h4>Static Landing Page</h4>
+          <p>Single HTML page deployed to Vercel or 20i. Lead capture, coming-soon, MVPs.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review -->
+    <div class="cfg-section" id="cfg-review">
+      <h3 class="cfg-label">Review</h3>
+      <div class="inf-grid" id="cfg-inf-grid"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:1rem">
+      <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="backToFrameworks()">← Back</button>
+      <button class="launch" style="flex:3" id="cfg-build-btn" onclick="startBuild()">Generate complete business system →</button>
     </div>
   </div>
 
@@ -448,9 +550,94 @@ function renderScorecard(sc) {
   `).join('');
 }
 
+async function populateModels() {
+  const data = await loadModels();
+  const grid = document.getElementById('model-grid');
+  if (!data.models) return;
+  grid.innerHTML = Object.entries(data.models)
+    .filter(([, m]) => m.available)
+    .sort((a, b) => a[1].free === b[1].free ? 0 : a[1].free ? -1 : 1)
+    .map(([id, m]) => `
+      <div class="model-chip ${m.free ? 'free' : ''} ${id === V2_MODEL ? 'selected' : ''}"
+           onclick="selectModel('${id}', this)" data-model="${id}" data-cost="${m.estimatedBuildCost}">
+        <div class="mc-name">${m.label}</div>
+        <div class="mc-provider">${m.provider}</div>
+        <div class="mc-cost">${m.free ? 'FREE' : m.estimatedBuildCost}</div>
+      </div>
+    `).join('');
+  populatePhaseModels(data.models);
+}
+
+function selectModel(id, el) {
+  V2_MODEL = id;
+  document.querySelectorAll('.model-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('model-cost').innerHTML = 'Estimated build cost: <strong>' + (el.dataset.cost || '~$0.00') + '</strong>';
+}
+
+function populatePhaseModels(models) {
+  const phases = [
+    { id: 'strategy', label: 'Strategy / Scorecard' },
+    { id: 'design', label: 'Design System' },
+    { id: 'docs', label: 'Product Docs' },
+    { id: 'business', label: 'Business System' },
+    { id: 'backend', label: 'Backend Code' },
+    { id: 'frontend', label: 'Frontend Code' },
+  ];
+  const opts = Object.entries(models).filter(([, m]) => m.available)
+    .map(([id, m]) => `<option value="${id}">${m.label}${m.free ? ' (free)' : ''}</option>`).join('');
+  document.getElementById('phase-models').innerHTML = phases.map(p => `
+    <div class="pm-row">
+      <label>${p.label}</label>
+      <select onchange="V2_MODEL_MAP['${p.id}']=this.value">
+        <option value="">Use default</option>
+        ${opts}
+      </select>
+    </div>
+  `).join('');
+}
+
+function selectDeploy(el, target) {
+  V2_DEPLOY_TARGET = target;
+  document.querySelectorAll('.deploy-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function backToFrameworks() {
+  document.getElementById('config-screen').style.display = 'none';
+  document.getElementById('framework-screen').style.display = 'block';
+}
+
+function showConfigScreen() {
+  populateModels();
+  const grid = document.getElementById('cfg-inf-grid');
+  if (INFERRED) {
+    grid.innerHTML = `
+      <div class="inf-item"><div class="inf-label">Project</div><div class="inf-val">${INFERRED.name}</div></div>
+      <div class="inf-item"><div class="inf-label">Type</div><div class="inf-val">${INFERRED.type_label}</div></div>
+      <div class="inf-item"><div class="inf-label">Revenue</div><div class="inf-val">${INFERRED.revenue_model} · ${INFERRED.price}</div></div>
+      <div class="inf-item"><div class="inf-label">Stack</div><div class="inf-val">${(INFERRED.stack || []).slice(0, 4).join(', ')}</div></div>
+      <div class="inf-item"><div class="inf-label">Frameworks</div><div class="inf-val">${V2_FRAMEWORKS.length} selected</div></div>
+      <div class="inf-item"><div class="inf-label">Viability</div><div class="inf-val">${V2_SCORECARD ? V2_SCORECARD.composite.toFixed(1) + '/10' : 'Not scored'}</div></div>
+    `;
+  }
+  document.getElementById('config-screen').style.display = 'block';
+}
+
 function advanceFromFrameworks() {
   document.getElementById('framework-screen').style.display = 'none';
-  document.getElementById('config-screen').style.display = 'block';
+  showConfigScreen();
+}
+
+async function startBuild() {
+  const desc = document.getElementById('project-desc').value.trim();
+  document.getElementById('config-screen').style.display = 'none';
+  document.getElementById('prog-screen').style.display = 'block';
+  document.getElementById('prog-title').textContent = `Building ${INFERRED.name}…`;
+  V2_BUILD_COST = 0;
+  PRGS = [];
+  renderProg();
+  await build(desc, INFERRED);
 }
 
 // Examples
@@ -1738,6 +1925,8 @@ function reset(){
   V2_SCORECARD=null;V2_BUILD_COST=0;
   document.getElementById('mode-screen').style.display='block';
   document.getElementById('input-screen').style.display='none';
+  document.getElementById('framework-screen').style.display='none';
+  document.getElementById('config-screen').style.display='none';
   document.getElementById('prog-screen').style.display='none';
   document.getElementById('done-screen').style.display='none';
   document.getElementById('done-screen').innerHTML='';
