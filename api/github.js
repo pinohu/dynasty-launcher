@@ -1,5 +1,11 @@
 // Serverless Function — proxies GitHub API using server-side GITHUB_TOKEN
+// Security: validates path prefix to prevent abuse
 export const maxDuration = 30;
+
+const ALLOWED_PATH_PREFIXES = [
+  '/repos/pinohu/',
+  '/user/repos',
+];
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,6 +18,13 @@ export default async function handler(req, res) {
   if (!ghToken) return res.status(500).json({ error: 'GITHUB_TOKEN not configured' });
 
   const ghPath = req.query.path || '';
+
+  // Validate path to prevent open relay abuse
+  const allowed = ALLOWED_PATH_PREFIXES.some(p => ghPath.startsWith(p));
+  if (!allowed) {
+    return res.status(403).json({ error: 'Path not allowed', path: ghPath });
+  }
+
   const method = req.method;
   const body = method !== 'GET' && method !== 'HEAD' ? JSON.stringify(req.body) : undefined;
 
