@@ -226,7 +226,7 @@ export default async function handler(req, res) {
           body:JSON.stringify({name:slug,framework:'nextjs',
             gitRepository:{type:'github',repo:`${ORG}/${slug}`}})});
         const pj=await pr.json(); vercelProjectId=pj.id||null;
-        results.vercel={project_id:vercelProjectId, url:`https://${slug}.vercel.app`};
+        results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`};
       }catch(e){results.vercel={error:e.message};}
     }
 
@@ -286,7 +286,7 @@ export default async function handler(req, res) {
           body:JSON.stringify({auth_token:config.comms.acumbamail,
             name:`${name} - Dynasty`,from_email:'hello@dynastyempire.com',from_name:'Dynasty Empire',country:'US'})
         }).then(r=>r.json());
-        results.acumbamail={list_id:r.id};
+        results.acumbamail={ok:true, list_id:r.id||r.list_id||r.result, raw:r};
       }catch(e){results.acumbamail={error:e.message};}
     }
 
