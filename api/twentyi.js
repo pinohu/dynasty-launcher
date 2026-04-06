@@ -9,8 +9,8 @@ function getAuth(config) {
   const general = config?.infrastructure?.twentyi_general;
   const oauth   = config?.infrastructure?.twentyi_oauth;
   if (!general) return null;
-  const combined = oauth ? `${general}+${oauth}` : `${general}:`;
-  return `Basic ${Buffer.from(combined).toString('base64')}`;
+  const combined = general;  // 20i uses Bearer base64(general_key)
+  return `Bearer ${Buffer.from(combined).toString('base64')}`;  // 20i Bearer auth
 }
 
 async function twentyiRequest(auth, method, path, body) {
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
     }
 
     const pkg = pkgResp.data;
-    const packageId = pkg?.id || pkg?.result?.id;
+    const packageId = pkg?.result || pkg?.id;
 
     // 2. Get FTP/SSH credentials if available
     let credentials = {};
