@@ -1917,7 +1917,7 @@ export const nicheConfig = {
 
     // ── Direct Vercel deploy (no Flint needed) ──────────────────────────────
     if(isAuthority){
-      addP('deploy','Deploying authority site to Vercel','Forking ailurophobia → pushing niche config → auto-build');setP('deploy','run');
+      addP('deploy','Deploying authority site to Vercel','Forking template → AI content generation → Google directory → auto-build');setP('deploy','run');
       try{
         const deployResp=await fetch('/api/provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
