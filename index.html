@@ -132,7 +132,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   <div id="prog-screen" style="display:none">
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
-      <p id="prog-sub">AI generation · 23 files · FastAPI backend · Direct Vercel deploy</p>
+      <p id="prog-sub">AI generation · 23 files · Vercel + Neon + Stripe · 20i for WordPress/Static</p>
     </div>
     <div class="prog-list" id="prog-list"></div>
     <div class="eb" id="err-box" style="display:none"></div>
@@ -1271,7 +1271,11 @@ export const nicheConfig: NicheConfig = {
     if((inf.manual_svcs||[]).includes('stripe')) provisionSvcs.push('stripe');
     if((inf.manual_svcs||[]).includes('callscaler')||true) provisionSvcs.push('acumbamail','pulsetic');
     if(provisionSvcs.length){
-      addP('prov',`Provisioning ${provisionSvcs.length} services directly`,'Using Dynasty tool stack — no manual steps');setP('prov','run');
+      const isWP=inf?.type_id==='wp-theme'||inf?.type_id==='wordpress';
+    const isStaticType=['static','portfolio'].includes(inf?.type_id||'');
+    const provLabel=isWP?'Provisioning on 20i (WordPress)':isStaticType?'Provisioning on 20i (Static)':'Provisioning — Vercel + Neon + Stripe';
+    const provNote=isWP||isStaticType?'20i package + DNS configured':'Vercel project, Neon DB, Stripe product, Acumbamail list';
+    addP('prov',provLabel,provNote);setP('prov','run');
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
