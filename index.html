@@ -2235,32 +2235,7 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
       return`${h} ${s}% ${l}%`;
     }
 
-    if(isAuthority){
-      addP('factory',`Adding to DYNASTY-SITE-FACTORY as factory/niches/${inf.repo}/`,'','⬡ Site Factory');setP('factory','run');
-      try{
-        const siteYaml=`niche: "${inf.name}"
-slug: "${inf.repo}"
-engine: "ailurophobia"
-domain: "${inf.domain}"
-blueprint: "authority"
-`;
-        const hslOverride=hexToHslStr(inf.accent);
-        const designYaml=`preset: "${designPreset}"
-brand:
-  name: "${inf.name}"
-tone:
-  adjectives: [${(inf.stack||[]).slice(0,3).map(s=>`"${s.toLowerCase()}"`).join(',')||'"trustworthy","local","expert"'}]
-  reading_level: "grade9"
-# HSL override from inferred accent
-hsl:
-  accent: "${hslOverride}"
-`;
-
-        await pushF(`${ORG}/DYNASTY-SITE-FACTORY`,`factory/niches/${inf.repo}/site.yaml`,siteYaml,`feat: add ${inf.name} niche config`);
-        await pushF(`${ORG}/DYNASTY-SITE-FACTORY`,`factory/niches/${inf.repo}/design.yaml`,designYaml,`feat: add ${inf.name} design config (preset: ${designPreset})`);
-        setP('factory','ok',`Site docs pushed — Vercel will build from niche.config.ts`);
-      }catch(e){setP('factory','er',e.message);}
-    }
+    // Authority sites: skip old DYNASTY-SITE-FACTORY path, use authority_deploy instead
 
     // Non-authority types create a standalone repo; authority types skip this
     const tmpl=`${ORG}/dynasty-project-template`;
@@ -2428,31 +2403,19 @@ export const nicheConfig = {
     };
     if(dy)files['DYNASTY-DESIGN.md']=dy;
 
-    // Authority types: push docs to DYNASTY-SITE-FACTORY/factory/niches/{slug}/
-    // Non-authority types: push to standalone repo
-    const pushTarget = isAuthority ? `${ORG}/DYNASTY-SITE-FACTORY` : `${ORG}/${inf.repo}`;
-    const pushPathPrefix = isAuthority ? `factory/niches/${inf.repo}/` : '';
-
-    // For authority types, limit to key docs (not backend code)
-    const authorityDocFiles = ['DESIGN.md','CLAUDE.md','SPEC.md','ROADMAP.md','BUSINESS-SYSTEM.md','REVENUE-MODEL.md','GTM-PLAYBOOK.md','FAILURE-MODES.md'];
-    let filesToPush = isAuthority
-      ? Object.entries(files).filter(([p]) => authorityDocFiles.includes(p))
-      : Object.entries(files);
-
-    // Add niche.config.ts for authority types (push to factory)
-    if(isAuthority && nc?.niche_config && nc.niche_config.length > 100) {
-      filesToPush.push(['niche.config.ts', nc.niche_config]);
+    // Authority sites: docs pushed by authority_deploy in provision.js
+    // Non-authority types: push all files to standalone repo
+    if (!isAuthority) {
+      const fl = Object.entries(files);
+      addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
+      for(let i=0;i<fl.length;i++){
+        const[p,c]=fl[i];
+        if(!c||c.includes('[Generation incomplete]'))continue;
+        await pushF(`${ORG}/${inf.repo}`, p, c, `feat: dynasty scaffold — ${p}`);
+        setP('pf','run',`${i+1}/${fl.length} — ${p}`);
+      }
+      setP('pf','ok',`${fl.length} files live`);
     }
-
-    const fl = filesToPush;
-    addP('pf',`Pushing ${fl.length} files${isAuthority?' to DYNASTY-SITE-FACTORY':''}`);setP('pf','run',`0/${fl.length}…`);
-    for(let i=0;i<fl.length;i++){
-      const[p,c]=fl[i];
-      if(!c||c.includes('[Generation incomplete]'))continue;
-      await pushF(pushTarget, pushPathPrefix + p, c, `feat: dynasty scaffold — ${p}`);
-      setP('pf','run',`${i+1}/${fl.length} — ${p}`);
-    }
-    setP('pf','ok',`${fl.length} files live${isAuthority?' in factory':''}`);
 
     // ── Live tool provisioning ────────────────────────────────────────────
     // ── Live tool provisioning (type-aware: 20i/Neon/Vercel/Stripe/Acumbamail) ─
