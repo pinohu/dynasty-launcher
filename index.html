@@ -2691,19 +2691,7 @@ p{font-size:13px;color:#908D86;margin-bottom:.75rem}
     <div class="card"><div class="label">Brand Color</div><div class="value"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${inf.accent};margin-right:6px;vertical-align:middle"></span>${inf.accent}</div></div>
   </div>
 
-  ${sc ? \`
-  <h2>Viability Scorecard</h2>
-  <div class="verdict \${sc.composite >= 8 ? 'strong' : sc.composite >= 6 ? 'viable' : 'weak'}">
-    <strong>\${sc.verdict}</strong> — Composite Score: \${sc.composite.toFixed(1)}/10
-  </div>
-  \${Object.entries(sc.scores).map(([k, v]) => \`
-    <div class="score-row">
-      <span class="name">\${k.replace(/_/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase())}</span>
-      <span class="num \${v.score >= 8 ? 'high' : v.score >= 6 ? 'mid' : 'low'}">\${v.score.toFixed(1)}/10</span>
-    </div>\`).join('')}
-  <p style="margin-top:1rem"><strong>Risk:</strong> \${sc.risk_summary}</p>
-  <p><strong>Opportunity:</strong> \${sc.opportunity_summary}</p>
-  \` : ''}
+  ${sc ? '<h2>Viability Scorecard</h2><div class="verdict ' + (sc.composite >= 8 ? 'strong' : sc.composite >= 6 ? 'viable' : 'weak') + '"><strong>' + sc.verdict + '</strong> — Composite Score: ' + sc.composite.toFixed(1) + '/10</div>' + Object.entries(sc.scores).map(([k, v]) => '<div class="score-row"><span class="name">' + k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + '</span><span class="num ' + (v.score >= 8 ? 'high' : v.score >= 6 ? 'mid' : 'low') + '">' + v.score.toFixed(1) + '/10</span></div>').join('') + '<p style="margin-top:1rem"><strong>Risk:</strong> ' + sc.risk_summary + '</p><p><strong>Opportunity:</strong> ' + sc.opportunity_summary + '</p>' : ''}
 
   <h2>Generated Files</h2>
   <ul class="file-list">
@@ -2722,14 +2710,7 @@ p{font-size:13px;color:#908D86;margin-bottom:.75rem}
     <li><span class="cat cat-doc">Config</span>.env.example, .gitignore, README.md</li>
   </ul>
 
-  \${provRes?.results ? \`
-  <h2>Infrastructure Provisioned</h2>
-  <div class="grid">
-    \${provRes.results.stripe ? '<div class="card"><div class="label">Payments</div><div class="value">Stripe product + price configured</div></div>' : ''}
-    \${provRes.results.vercel ? \`<div class="card"><div class="label">Hosting</div><div class="value">\${provRes.results.vercel.url || 'Vercel project created'}</div></div>\` : ''}
-    \${provRes.results.neon ? '<div class="card"><div class="label">Database</div><div class="value">Neon PostgreSQL provisioned</div></div>' : ''}
-    \${provRes.results.acumbamail ? '<div class="card"><div class="label">Email</div><div class="value">Acumbamail list created</div></div>' : ''}
-  </div>\` : ''}
+  ${provRes?.results ? '<h2>Infrastructure Provisioned</h2><div class="grid">' + (provRes.results.stripe ? '<div class="card"><div class="label">Payments</div><div class="value">Stripe product + price configured</div></div>' : '') + (provRes.results.vercel ? '<div class="card"><div class="label">Hosting</div><div class="value">' + (provRes.results.vercel.url || 'Vercel project created') + '</div></div>' : '') + (provRes.results.neon ? '<div class="card"><div class="label">Database</div><div class="value">Neon PostgreSQL provisioned</div></div>' : '') + (provRes.results.acumbamail ? '<div class="card"><div class="label">Email</div><div class="value">Acumbamail list created</div></div>' : '') + '</div>' : ''}
 
   <h2>Recommended Next Steps</h2>
   <ol style="font-size:13px;color:#908D86;padding-left:1.5rem">
