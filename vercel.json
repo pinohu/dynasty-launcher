@@ -2,18 +2,37 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/claude.js":    { "maxDuration": 300 },
-    "api/github.js":    { "maxDuration": 30  },
-    "api/provision.js": { "maxDuration": 60  },
-    "api/health.js":    { "maxDuration": 10  },
-    "api/validate.js":  { "maxDuration": 15  }
+    "api/claude.js": {
+      "maxDuration": 300
+    },
+    "api/github.js": {
+      "maxDuration": 30
+    },
+    "api/provision.js": {
+      "maxDuration": 60
+    },
+    "api/health.js": {
+      "maxDuration": 10
+    },
+    "api/validate.js": {
+      "maxDuration": 15
+    },
+    "api/ai.js": {
+      "maxDuration": 300
+    }
   },
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin",  "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" }
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        }
       ]
     }
   ]
