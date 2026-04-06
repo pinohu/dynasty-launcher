@@ -1569,6 +1569,72 @@ volumes:
       setP('g5','ok','Production backend code ready');
     }catch(e){setP('g5','er',e.message);throw e;}
 
+    // ── Phase 7: Frontend scaffold (full-stack deploy only) ────────────────
+    let feFiles = {};
+    if (V2_DEPLOY_TARGET === 'fullstack') {
+      addP('g7', 'Generating Next.js frontend scaffold', '', '⬡ Frontend');
+      setP('g7', 'run');
+      try {
+        const fe = await ai(`GENERATE NEXT.JS 14 APP ROUTER FRONTEND SCAFFOLD. Production-ready TypeScript code. Use the design system from the project config.
+
+${cx(desc, inf)}
+Design: surface=${inf.surface}, accent=${inf.accent}, fonts=${inf.fonts}
+
+Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
+
+---BEGIN:layout_tsx---
+// src/app/layout.tsx — Root layout with metadata, fonts, global styles
+// Use Tailwind CSS, import global stylesheet
+// Include proper <html> and <body> with dark/light mode support
+---END:layout_tsx---
+
+---BEGIN:page_tsx---
+// src/app/page.tsx — Landing page with hero, features, pricing, CTA
+// Professional design matching the accent color and surface mode
+// Include at least: hero section, 3 feature cards, pricing section, footer
+---END:page_tsx---
+
+---BEGIN:dashboard_tsx---
+// src/app/dashboard/page.tsx — Authenticated dashboard
+// Stats cards, recent activity list, quick actions
+---END:dashboard_tsx---
+
+---BEGIN:globals_css---
+// src/app/globals.css — Tailwind directives + CSS custom properties from DESIGN.md
+// Include the full color system as CSS variables
+---END:globals_css---
+
+---BEGIN:tailwind_config---
+// tailwind.config.ts — Extended with project colors and fonts
+---END:tailwind_config---
+
+---BEGIN:package_json---
+// package.json with all dependencies (next, react, tailwindcss, etc.)
+---END:package_json---
+
+---BEGIN:next_config---
+// next.config.js
+---END:next_config---
+
+---BEGIN:tsconfig---
+// tsconfig.json
+---END:tsconfig---
+`, ['layout_tsx', 'page_tsx', 'dashboard_tsx', 'globals_css', 'tailwind_config', 'package_json', 'next_config', 'tsconfig'], 8000, 'frontend');
+
+        feFiles = {
+          'src/app/layout.tsx': fe.layout_tsx,
+          'src/app/page.tsx': fe.page_tsx,
+          'src/app/dashboard/page.tsx': fe.dashboard_tsx,
+          'src/app/globals.css': fe.globals_css,
+          'tailwind.config.ts': fe.tailwind_config,
+          'package.json': fe.package_json,
+          'next.config.js': fe.next_config,
+          'tsconfig.json': fe.tsconfig,
+        };
+        setP('g7', 'ok', `${Object.keys(fe).filter(k => fe[k]).length} frontend files ready`);
+      } catch (e) { setP('g7', 'er', e.message); }
+    }
+
     addP('dx','Fetching DYNASTY-DESIGN.md from master repo','','⬡ GitHub');setP('dx','run');
     let dy='';
     try{const r=await gh(`/repos/${ORG}/DYNASTY/contents/DYNASTY-DESIGN.md`);if(r.ok){const d=await r.json();dy=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));}setP('dx','ok');}
@@ -1792,6 +1858,7 @@ export const nicheConfig: NicheConfig = {
       'FAILURE-MODES.md':bz.failure_modes,
       'backend/main.py':be.main_py,'backend/requirements.txt':be.requirements,
       'backend/Dockerfile':be.dockerfile,'docker-compose.yml':be.docker_compose,
+      ...feFiles,
     };
     if(dy)files['DYNASTY-DESIGN.md']=dy;
 
