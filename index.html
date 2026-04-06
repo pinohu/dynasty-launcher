@@ -94,7 +94,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .eb{background:rgba(229,83,75,0.07);border:1px solid rgba(229,83,75,0.15);border-radius:var(--r);padding:.65rem .9rem;font-size:12px;color:var(--red);margin-top:.65rem}
 
   /* ── Access Gate ───────────────────────────────────── */
-  #auth-gate{position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:none;
+  #auth-gate{position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;
     align-items:center;justify-content:center;flex-direction:column;gap:20px}
   #auth-gate.hidden{display:none}
   .gate-box{background:#111;border:1px solid rgba(255,255,255,0.08);border-radius:16px;
@@ -178,64 +178,51 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 // ── Access Gate ─────────────────────────────────────────────────────────────
 (function() {
   var AUTH_KEY = 'dlauth_v1';
-  var PW_CHECK = 'RFlOQVNUWS0yMDI2LUlLRQ=='; // base64 of the password
-
-  function getGate() { return document.getElementById('auth-gate'); }
-  function getBtn()  { return document.getElementById('gate-submit'); }
-  function getErr()  { return document.getElementById('gate-err'); }
-  function getPwIn() { return document.getElementById('gate-pw'); }
-
-  function isAuthed() {
-    try {
-      var stored = sessionStorage.getItem(AUTH_KEY) || localStorage.getItem(AUTH_KEY);
-      if (!stored) return false;
-      var d = JSON.parse(atob(stored));
-      return d.ok === true && d.exp > Date.now();
-    } catch(e) { return false; }
-  }
-
-  function setAuthed() {
-    var d = JSON.stringify({ ok: true, exp: Date.now() + 12*60*60*1000 });
-    var tok = btoa(d);
-    sessionStorage.setItem(AUTH_KEY, tok);
-    localStorage.setItem(AUTH_KEY, tok);
-  }
-
-  function showGate() {
-    var g = getGate();
-    if (g) g.style.display = 'flex';
-  }
+  // base64 of "DYNASTY-2026-IKE"
+  var PW_CHECK = 'RFlOQVNUWS0yMDI2LUlLRQ==';
 
   function hideGate() {
-    var g = getGate();
+    var g = document.getElementById('auth-gate');
     if (g) g.style.display = 'none';
   }
 
-  // Run after DOM ready
-  document.addEventListener('DOMContentLoaded', function() {
-    if (isAuthed()) {
-      hideGate();
-    } else {
-      showGate();
-    }
-  });
+  function isAuthed() {
+    try {
+      var tok = sessionStorage.getItem(AUTH_KEY) || localStorage.getItem(AUTH_KEY);
+      if (!tok) return false;
+      var obj = JSON.parse(atob(tok));
+      return obj && obj.ok === true && obj.exp > Date.now();
+    } catch(e) { return false; }
+  }
+
+  // If already authenticated, hide gate immediately (script runs after gate HTML)
+  if (isAuthed()) hideGate();
 
   window.checkGateAuth = function() {
-    var pw = getPwIn() ? getPwIn().value.trim() : '';
-    var errEl = getErr();
-    var btn = getBtn();
+    var pwEl = document.getElementById('gate-pw');
+    var errEl = document.getElementById('gate-err');
+    var pw = pwEl ? pwEl.value.trim() : '';
     if (errEl) errEl.textContent = '';
+
     if (!pw) {
       if (errEl) errEl.textContent = 'Please enter your password.';
       return;
     }
-    if (btoa(pw) === PW_CHECK) {
-      setAuthed();
+
+    var entered;
+    try { entered = btoa(unescape(encodeURIComponent(pw))); }
+    catch(e) { entered = btoa(pw); }
+
+    if (entered === PW_CHECK) {
+      // Save auth token (12 hour expiry)
+      var tok = btoa(JSON.stringify({ ok: true, exp: Date.now() + 43200000 }));
+      sessionStorage.setItem(AUTH_KEY, tok);
+      localStorage.setItem(AUTH_KEY, tok);
       hideGate();
-      if (getPwIn()) getPwIn().value = '';
+      if (pwEl) pwEl.value = '';
     } else {
       if (errEl) errEl.textContent = 'Incorrect password. Please try again.';
-      if (getPwIn()) { getPwIn().value = ''; getPwIn().focus(); }
+      if (pwEl) { pwEl.value = ''; pwEl.focus(); }
     }
   };
 
@@ -243,6 +230,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
     if (e.key === 'Enter') window.checkGateAuth();
   };
 })();
+
 
 
 const ORG_DEFAULT='pinohu',TMPL_DEFAULT='pinohu/dynasty-project-template';
