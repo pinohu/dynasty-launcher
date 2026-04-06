@@ -102,6 +102,28 @@ export default async function handler(req, res) {
       await new Promise(r=>setTimeout(r,400));
     }
 
+    // 3.5 Generate A/B test headline variants
+    try {
+      const headRaw = await aiGenerate(`Generate 3 A/B test headline variants for "${niche_name}".
+
+Return ONLY valid TypeScript:
+
+export const headlines = [
+  { id: "a", title: "Headline variant A — compelling and direct", subtitle: "Supporting subtitle A", views: 0, clicks: 0 },
+  { id: "b", title: "Headline variant B — benefit-focused", subtitle: "Supporting subtitle B", views: 0, clicks: 0 },
+  { id: "c", title: "Headline variant C — urgency/social proof", subtitle: "Supporting subtitle C", views: 0, clicks: 0 },
+];
+
+Each headline should be under 60 chars. Subtitles under 120 chars. Target primary keywords.`, 1500);
+
+      if (headRaw && headRaw.includes('export const headlines')) {
+        const headMatch = headRaw.match(/export const headlines[\s\S]*/)?.[0] || '';
+        const headFile = `export interface Headline {\n  id: string;\n  title: string;\n  subtitle: string;\n  views: number;\n  clicks: number;\n}\n\n${headMatch}\n`;
+        await pushFile(GH_TOKEN,ORG,project_slug,'src/data/headlines.ts',headFile,'feat: A/B test headline variants');
+        await new Promise(r=>setTimeout(r,300));
+      }
+    } catch{}
+
     // 7. Push theme CSS
     const css=theme_css||(accent_hex?generateThemeCss(accent_hex):null);
     if(css){await pushFile(GH_TOKEN,ORG,project_slug,'src/styles/theme.generated.css',css,'feat: dynasty theme');await new Promise(r=>setTimeout(r,400));}
@@ -369,6 +391,35 @@ Make businesses sound real with local addresses. Vary ratings 4.0-5.0.`, 6000);
       }
     } catch{}
 
+    // 4e.5 Generate competitor comparisons from directory data
+    try {
+      const compRaw = await aiGenerate(`Generate 3 service comparison tables for "${niche_name}". Compare different approaches, methods, or service tiers that a customer would evaluate.
+
+Return ONLY valid TypeScript:
+
+export const comparisons = [
+  {
+    slug: "comparison-slug",
+    title: "Option A vs Option B for ${niche_name}",
+    description: "Detailed comparison to help customers choose.",
+    columns: ["Feature", "Option A", "Option B"],
+    items: [
+      { feature: "Price Range", values: { "Option A": "$X-$Y", "Option B": "$X-$Y" } },
+      { feature: "Duration", values: { "Option A": "X weeks", "Option B": "X weeks" } },
+    ]
+  },
+];
+
+Make comparisons specific and useful for the niche.`, 4000);
+
+      if (compRaw && compRaw.includes('export const comparisons')) {
+        const compMatch = compRaw.match(/export const comparisons[\s\S]*/)?.[0] || '';
+        const compFile = `export interface ComparisonItem {\n  feature: string;\n  values: Record<string, string | boolean>;\n}\n\nexport interface Comparison {\n  slug: string;\n  title: string;\n  description: string;\n  columns: string[];\n  items: ComparisonItem[];\n}\n\n${compMatch}\n`;
+        await pushFile(GH_TOKEN,ORG,project_slug,'src/data/comparisons.ts',compFile,'feat: AI-generated comparison tables');
+        await new Promise(r=>setTimeout(r,300));
+      }
+    } catch{}
+
     // 4f. Generate location pages for programmatic SEO
     try {
       const locationRaw = await aiGenerate(`Generate 10 location pages for "${niche_name}" services. Each location should be a real city/area where this niche operates.
@@ -392,6 +443,31 @@ Use REAL cities appropriate for the niche. Each description and content must be 
         const locMatch = locationRaw.match(/export const locations[\s\S]*/)?.[0] || '';
         const locFile = `export interface Location {\n  slug: string;\n  city: string;\n  state: string;\n  description: string;\n  content?: string;\n  coordinates?: { lat: number; lng: number };\n}\n\n${locMatch}\n`;
         await pushFile(GH_TOKEN,ORG,project_slug,'src/data/locations.ts',locFile,'feat: AI-generated location pages for pSEO');
+        await new Promise(r=>setTimeout(r,300));
+      }
+    } catch{}
+
+    // 4g. Generate social media posts for each article
+    try {
+      const socialRaw = await aiGenerate(`Generate social media posts for 6 blog articles about "${niche_name}".
+
+For each article, create posts for LinkedIn, Twitter, and Instagram.
+
+Return ONLY valid TypeScript:
+
+export const socialPosts = [
+  { articleSlug: "article-slug", platform: "linkedin", content: "Professional 2-3 sentence LinkedIn post with hashtags. Include a call to action.", hashtags: ["#hashtag1", "#hashtag2"] },
+  { articleSlug: "article-slug", platform: "twitter", content: "Concise tweet under 280 chars with hashtags.", hashtags: ["#hashtag1"] },
+  { articleSlug: "article-slug", platform: "instagram", content: "Engaging caption with emojis and hashtags.", hashtags: ["#hashtag1", "#hashtag2", "#hashtag3"] },
+  // ... 15 more posts (3 per article x 6 articles)
+];
+
+Make each post unique, engaging, and niche-specific.`, 4000);
+
+      if (socialRaw && socialRaw.includes('export const socialPosts')) {
+        const socialMatch = socialRaw.match(/export const socialPosts[\s\S]*/)?.[0] || '';
+        const socialFile = `export interface SocialPost {\n  articleSlug: string;\n  platform: 'linkedin' | 'twitter' | 'instagram';\n  content: string;\n  hashtags: string[];\n}\n\n${socialMatch}\n`;
+        await pushFile(GH_TOKEN,ORG,project_slug,'src/data/socialPosts.ts',socialFile,'feat: AI-generated social media posts');
         await new Promise(r=>setTimeout(r,300));
       }
     } catch{}

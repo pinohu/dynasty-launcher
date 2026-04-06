@@ -214,6 +214,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .mc-status{font-size:8px;color:var(--dim)}
 .mc-score2{font-size:14px;font-weight:700;color:var(--gold);margin-top:4px}
 .mc-votes{font-size:9px;color:var(--grn);margin-top:2px}
+.mc-conf{font-size:8px;color:var(--sec);margin-top:2px}.mc-conf-bar{height:3px;background:var(--bdr);border-radius:2px;margin-top:2px;overflow:hidden}.mc-conf-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .3s}
 .pipe-cost{font-size:10px;color:var(--gold);text-align:right;margin-top:.5rem}
 /* Consensus result */
 .consensus-card{background:var(--card);border:2px solid var(--gold);border-radius:var(--rl);padding:1.25rem;margin:1rem 0}
@@ -812,6 +813,8 @@ function showPipelineUI() {
               <div class="mc-status" id="mcs-${m.id.replace(/[^a-z0-9]/g,'')}">⏳ Waiting</div>
               <div class="mc-score2" id="mcv-${m.id.replace(/[^a-z0-9]/g,'')}"></div>
               <div class="mc-votes" id="mcvt-${m.id.replace(/[^a-z0-9]/g,'')}"></div>
+              <div class="mc-conf" id="mcc-${m.id.replace(/[^a-z0-9]/g,'')}"></div>
+              <div class="mc-conf-bar"><div class="mc-conf-fill" id="mccb-${m.id.replace(/[^a-z0-9]/g,'')}" style="width:0%"></div></div>
             </div>
           `).join('')}
         </div>
@@ -831,15 +834,19 @@ function showPipelineUI() {
   `;
 }
 
-function updateModelStatus(modelId, status, score) {
+function updateModelStatus(modelId, status, score, confidence) {
   const key = modelId.replace(/[^a-z0-9]/g, '');
   const card = document.getElementById('mc-' + key);
   const statusEl = document.getElementById('mcs-' + key);
   const scoreEl = document.getElementById('mcv-' + key);
+  const confEl = document.getElementById('mcc-' + key);
+  const confBar = document.getElementById('mccb-' + key);
   if (!card) return;
   card.className = 'model-card ' + status;
   statusEl.textContent = status === 'running' ? '⟳ Analyzing...' : status === 'done' ? '✓ Done' : status === 'failed' ? '✕ Failed' : '⏳ Waiting';
   if (score !== undefined && scoreEl) scoreEl.textContent = score;
+  if (confidence !== undefined && confEl) { confEl.textContent = 'conf: ' + (confidence * 100).toFixed(0) + '%'; }
+  if (confidence !== undefined && confBar) { confBar.style.width = (confidence * 100) + '%'; }
   document.getElementById('pipe-cost').textContent = 'Running cost: $' + V2_BUILD_COST.toFixed(4);
 }
 
@@ -867,7 +874,8 @@ Return ONLY valid JSON (no markdown, no backticks):
   "predicted_composite_score": 8.5,
   "key_advantages": ["advantage 1", "advantage 2", "advantage 3"],
   "risks": ["risk 1", "risk 2"],
-  "reasoning": "3-4 paragraph detailed strategic reasoning explaining WHY this pivot is superior. Be specific about market dynamics, competitive positioning, and revenue potential."
+  "reasoning": "3-4 paragraph detailed strategic reasoning explaining WHY this pivot is superior. Be specific about market dynamics, competitive positioning, and revenue potential.",
+  "confidence": 0.0
 }
 
 Be bold. Be specific. No generic advice.`;
@@ -888,8 +896,9 @@ Be bold. Be specific. No generic advice.`;
       proposal._model = m.label;
       proposal._modelId = m.id;
       proposal._index = i;
+      proposal.confidence = parseFloat(proposal.confidence) || 0.7;
       phase1Results[i] = proposal;
-      updateModelStatus(m.id, 'done', proposal.predicted_composite_score?.toFixed(1));
+      updateModelStatus(m.id, 'done', proposal.predicted_composite_score?.toFixed(1), proposal.confidence);
       return proposal;
     } catch (e) {
       phase1Results[i] = { _model: m.label, _modelId: m.id, _index: i, _failed: true, error: e.message };
@@ -1026,7 +1035,8 @@ Return ONLY valid JSON:
   phase2Results.filter(r => r && !r._failed).forEach(review => {
     if (review.vote && votes[review.vote] !== undefined) {
       const reviewerModel = REVIEW_MODELS.find(m => m.label === review._model);
-      votes[review.vote] += (reviewerModel?.weight || 1.0);
+      const modelConfidence = phase1Results.find(p => p?._model === review._model)?.confidence || 0.7;
+      votes[review.vote] += (reviewerModel?.weight || 1.0) * modelConfidence;
     }
     if (review.ratings) {
       Object.entries(review.ratings).forEach(([model, rating]) => {
