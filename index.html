@@ -164,21 +164,32 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   <div id="done-screen" style="display:none"></div>
 </div>
 
-<script>// ── Dynasty Access Gate (prompt-based, bulletproof) ─────────────────────────
+<script>// ── Dynasty Access Gate — URL key check ─────────────────────────────────────
 (function(){
-  var K='dlg26',P='DYNASTY-2026-IKE';
-  function ok(){
-    try{var d=JSON.parse(localStorage.getItem(K)||'{}');return d.ok&&d.exp>Date.now();}catch(e){return false;}
+  var KEY = 'k', VAL = 'DYNASTY2026';
+  var params = new URLSearchParams(window.location.search);
+  // Also accept session token for repeat visits
+  var stored = sessionStorage.getItem('dlg_ok') || localStorage.getItem('dlg_ok');
+  if (stored === VAL) return; // already authed this session
+  if (params.get(KEY) === VAL) {
+    // Store for this session so bookmark without key still works
+    try { sessionStorage.setItem('dlg_ok', VAL); localStorage.setItem('dlg_ok', VAL); } catch(e){}
+    return;
   }
-  if(ok())return;
-  var pw=window.prompt('Dynasty Launcher\nEnter access password:');
-  if(pw===null){document.documentElement.innerHTML='<body style="background:#000;color:#555;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">Access cancelled — refresh to retry.</body>';return;}
-  if(pw.trim()===P){
-    try{localStorage.setItem(K,JSON.stringify({ok:true,exp:Date.now()+43200000}));}catch(e){}
-  } else {
-    document.documentElement.innerHTML='<body style="background:#000;color:#e5534b;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:16px"><h2>⛔ Incorrect password</h2><p style="color:#555">Refresh the page to try again.</p></body>';
-  }
+  // No valid key — show access denied and halt
+  document.documentElement.innerHTML = [
+    '<html><head><title>Dynasty Launcher</title>',
+    '<style>*{margin:0;padding:0;box-sizing:border-box}',
+    'body{background:#0a0a0a;color:#fff;display:flex;align-items:center;',
+    'justify-content:center;height:100vh;font-family:-apple-system,sans-serif;flex-direction:column;gap:16px}',
+    'h2{font-size:1.4rem;font-weight:600}p{color:rgba(255,255,255,0.4);font-size:0.9rem}</style></head>',
+    '<body><div style="font-size:2rem">⚡</div>',
+    '<h2>Dynasty Launcher</h2>',
+    '<p>Access requires the private URL.</p>',
+    '</body></html>'
+  ].join('');
 })();
+
 
 
 
