@@ -1116,9 +1116,16 @@ hsl:
 
     // Non-authority types create a standalone repo; authority types skip this
     const tmpl=`${ORG}/dynasty-project-template`;
-    const cr=isAuthority?{ok:true,status:200}:await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
-    if(!cr.ok&&cr.status!==422){const e=await cr.json();if(!e.message?.includes('already exists'))throw new Error(e.message);}
-    if(!isAuthority){await new Promise(r=>setTimeout(r,3500));}setP('cr','ok');
+    if(!isAuthority){
+      let cr=await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
+      if(!cr.ok&&cr.status!==422){
+        // Fallback: create empty repo if template generation fails
+        cr=await gh('/user/repos','POST',{name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,auto_init:true});
+        if(!cr.ok&&cr.status!==422){const e=await cr.json();if(!e.message?.includes('already exists'))throw new Error(e.message||'Repo creation failed');}
+      }
+      await new Promise(r=>setTimeout(r,3500));
+    }
+    setP('cr','ok');
 
     // ── Authority site: generate niche.config.ts ───────────────────────────
     let nc=null;
