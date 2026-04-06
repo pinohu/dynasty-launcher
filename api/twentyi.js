@@ -59,15 +59,12 @@ export default async function handler(req, res) {
 
     // Determine bundle — WordPress vs Static HTML
     const isWordPress = type === 'wp-theme' || type === 'wordpress';
-    const bundleId = isWordPress ? 38 : 37; // 38=WordPress, 37=Static/Web
+    const bundleId = isWordPress ? 88283 : 189904; // 88283=WordPress Launchpad, 189904=Linux Launchpad
 
     // 1. Create package
-    const pkgResp = await twentyiRequest(auth, 'POST', '/package', {
-      extra: {
-        packageBundleId: bundleId,
-        name: site_name,
-        domainName: domain
-      }
+    const pkgResp = await twentyiRequest(auth, 'POST', '/reseller/10455/addWeb', {
+      domain_name: domain,
+      type: bundleId
     });
 
     if (!pkgResp.ok) {
