@@ -228,7 +228,28 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .score-before{font-size:18px;font-weight:600;color:var(--red)}
 .score-arrow{color:var(--gold);font-size:14px}
 .score-after{font-size:18px;font-weight:600;color:var(--grn)}
+/* Processing visuals */
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,10,10,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:16px}
+.loading-spinner-ring{width:64px;height:64px;border:3px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:sp 1s linear infinite}
+.loading-text{font-size:14px;color:var(--gold);font-weight:500;animation:pulse 2s ease infinite}
+.loading-sub{font-size:11px;color:var(--dim);max-width:300px;text-align:center}
+/* Global progress bar */
+.global-progress{position:sticky;top:0;z-index:50;background:var(--panel);padding:8px 0;border-bottom:1px solid var(--bdr)}
+.global-progress-bar{height:4px;background:var(--bdr);border-radius:2px;overflow:hidden;margin:0 1.5rem}
+.global-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--grn));border-radius:2px;transition:width .5s ease;width:0%}
+.global-progress-text{font-size:10px;color:var(--dim);text-align:center;margin-top:4px}
+/* Thinking dots */
+.thinking-dots{display:inline-flex;gap:3px}.thinking-dots span{width:4px;height:4px;border-radius:50%;background:var(--gold);animation:bounce .6s ease infinite}.thinking-dots span:nth-child(2){animation-delay:.15s}.thinking-dots span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+/* Phase reveal animation */
+.phase-reveal{animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* Score dial */
+.score-dial{position:relative;width:80px;height:80px;margin:0 auto 12px}
+.score-dial-circle{width:100%;height:100%;border-radius:50%;background:conic-gradient(var(--gold) var(--dial-pct,0%),var(--bdr) 0%);display:flex;align-items:center;justify-content:center;transition:--dial-pct 1.5s ease}
+.score-dial-inner{width:60px;height:60px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--gold)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <div class="page">
@@ -425,6 +446,10 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   </div>
 
   <div id="prog-screen" style="display:none">
+    <div class="global-progress" id="global-progress" style="display:none">
+      <div class="global-progress-bar"><div class="global-progress-fill" id="gp-fill"></div></div>
+      <div class="global-progress-text" id="gp-text">Phase 1 of 11 · Estimated: ~3 min</div>
+    </div>
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
       <p id="prog-sub">AI generation · 23 docs · Vercel + Neon + Stripe · 20i for WordPress/Static</p>
@@ -535,6 +560,7 @@ async function scoreIdea() {
   if (!desc || !INFERRED) return;
   const btn = document.getElementById('score-btn');
   btn.disabled = true; btn.textContent = 'Analyzing with ' + V2_FRAMEWORKS.length + ' frameworks…';
+  showLoadingOverlay('Scoring viability...', `Analyzing with ${V2_FRAMEWORKS.length} frameworks: ${V2_FRAMEWORKS.join(', ')}`);
 
   const fwList = V2_FRAMEWORKS.map(f => ({
     'blue-ocean': 'Blue Ocean Hungry Market Framework (Dynasty original): Score market hunger 1-10, blue ocean index 1-10, competitive void analysis, demand signal validation',
@@ -580,11 +606,13 @@ All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base 
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('Invalid scorecard response');
     V2_SCORECARD = JSON.parse(m[0]);
+    hideLoadingOverlay();
     renderScorecard(V2_SCORECARD);
     document.getElementById('scorecard-wrap').style.display = 'block';
     btn.textContent = 'Score again ↻';
     btn.disabled = false;
   } catch (e) {
+    hideLoadingOverlay();
     btn.textContent = 'Scoring failed — try again';
     btn.disabled = false;
   }
@@ -1262,6 +1290,7 @@ async function loadInventory(){
 }
 async function inferConfig(desc){
   await loadInventory();
+  showLoadingOverlay('Analyzing your idea...', 'AI is inferring project type, tech stack, business model, and pricing');
   const toolContext=TOOL_INVENTORY?`
 Available Dynasty tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TOOL_INVENTORY.payments||[]).join(',')}) Comms(${(TOOL_INVENTORY.comms||[]).join(',')}) Infra(${(TOOL_INVENTORY.infrastructure||[]).join(',')}) SuiteDash(${TOOL_INVENTORY.suitedash_licenses} licenses) BD(${TOOL_INVENTORY.brilliant_licenses} licenses)`:'';
 
@@ -1295,9 +1324,11 @@ Return:
     const m=txt.match(/\{[\s\S]*\}/);
     if(!m)return;
     INFERRED=JSON.parse(m[0]);
+    hideLoadingOverlay();
     showPreview(INFERRED);
     updateLaunchBtn();
   }catch(e){
+    hideLoadingOverlay();
     document.getElementById('launch-btn').textContent='Describe your project above to begin';
   }
 }
@@ -1336,6 +1367,7 @@ document.getElementById('launch-btn').addEventListener('click',async()=>{
   document.getElementById('prog-title').textContent=`Building ${INFERRED.name}…`;
   PRGS=[];
   renderProg();
+  updateGlobalProgress(0, 11, 'Starting build pipeline...');
   await build(desc,INFERRED);
 });
 
@@ -1428,10 +1460,52 @@ async function aiRaw(prompt, max = 4000) {
 }
 function cx(desc,inf){return`Project: ${inf.name}\nDescription: ${desc}\nRepo: ${ORG}/${inf.repo}\nType: ${inf.type_label}\nSurface: ${inf.surface}\nAccent: ${inf.accent}\nFonts: ${inf.fonts}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nAcquisition: ${inf.acquisition}\nMVP: ${inf.mvp}`;}
 
+// ── Processing Visuals ──────────────────────────────────────────────────
+function showLoadingOverlay(text, sub) {
+  let overlay = document.getElementById('loading-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'loading-overlay';
+    overlay.className = 'loading-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `<div class="loading-spinner-ring"></div><div class="loading-text">${text}</div>${sub ? `<div class="loading-sub">${sub}</div>` : ''}`;
+  overlay.style.display = 'flex';
+}
+
+function hideLoadingOverlay() {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function updateGlobalProgress(phase, total, label) {
+  const gp = document.getElementById('global-progress');
+  if (gp) {
+    gp.style.display = 'block';
+    const pct = Math.round((phase / total) * 100);
+    document.getElementById('gp-fill').style.width = pct + '%';
+    document.getElementById('gp-text').textContent = label || `Phase ${phase} of ${total}`;
+  }
+}
+
+function animateValue(el, start, end, duration, suffix = '') {
+  const range = end - start;
+  const startTime = performance.now();
+  function update(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const value = start + range * progress;
+    el.textContent = (Number.isInteger(end) ? Math.round(value) : value.toFixed(1)) + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
 async function build(desc,inf){
   const repo=`${ORG}/${inf.repo}`;
   try{
     addP('g1','Generating DESIGN.md + CLAUDE.md','','⬡ Design System');setP('g1','run');
+    updateGlobalProgress(1, 11, 'Phase 1 of 11 \u00b7 Design System');
     let df;try{
       df=await ai(`GENERATE DYNASTY EMPIRE DESIGN FILES. No preamble. Return ONLY in the delimiter format below.
 
@@ -1530,6 +1604,7 @@ git config user.name "pinohu"
     }catch(e){setP('g1','er',e.message);throw e;}
 
     addP('g2','Generating SPEC + ROADMAP + README + MANUAL-ACTIONS + .env','','⬡ Product Docs');setP('g2','run');
+    updateGlobalProgress(2, 11, 'Phase 2 of 11 \u00b7 Product Docs');
     let dc;try{
       dc=await ai(`GENERATE PRODUCT DOCUMENTATION for a Dynasty Empire project. Return ONLY content in the delimiter format below. No JSON. No preamble. No explanation.
 
@@ -1650,6 +1725,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
     }catch(e){setP('g2','er',e.message);throw e;}
 
     addP('g3','Generating DATA-MODEL + API-CONTRACTS + KB-OUTLINES','','⬡ Supporting Docs');setP('g3','run');
+    updateGlobalProgress(3, 11, 'Phase 3 of 11 \u00b7 Technical Docs');
     let ds;try{
       ds=await ai(`GENERATE DYNASTY EMPIRE TECHNICAL DOCS. Return ONLY content in delimiter format below. No JSON. No preamble.
 
@@ -1707,6 +1783,7 @@ ${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.r
 ` : '';
 
     addP('g4a','Generating BUSINESS-SYSTEM + REVENUE-MODEL + GTM-PLAYBOOK','','⬡ Business System');setP('g4a','run');
+    updateGlobalProgress(4, 11, 'Phase 4 of 11 \u00b7 Business Strategy');
     let bz1;try{
       bz1=await ai(`CREATIVE AUTHORITY ARCHITECT. Generate business strategy files. Return in delimiter format ONLY. No preamble.
 
@@ -1818,6 +1895,7 @@ SMS-iT: [3-message follow-up sequence]
     }catch(e){setP('g4a','er',e.message);throw e;}
 
     addP('g4b','Generating AGENT-SYSTEM + FAILURE-MODES','');setP('g4b','run');
+    updateGlobalProgress(5, 11, 'Phase 5 of 11 \u00b7 Agent System');
     let bz2;try{
       bz2=await ai(`DYNASTY EMPIRE AGENT SYSTEM + FAILURE MODES. Return in delimiter format ONLY. No preamble.
 
@@ -1870,6 +1948,7 @@ DB: Daily snapshots to S3, 30-day retention | Redis: RDB persistence, hourly | C
    
 
     addP('g5','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend Code');setP('g5','run');
+    updateGlobalProgress(6, 11, 'Phase 6 of 11 \u00b7 Backend Code');
     let be;try{
       be=await ai(`GENERATE PRODUCTION-READY FASTAPI BACKEND. Real Python code only. Delimiter format ONLY. No preamble.
 
@@ -2408,6 +2487,7 @@ export const nicheConfig = {
     if (!isAuthority) {
       const fl = Object.entries(files);
       addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
+      updateGlobalProgress(8, 11, 'Phase 8 of 11 \u00b7 Pushing Files');
       for(let i=0;i<fl.length;i++){
         const[p,c]=fl[i];
         if(!c||c.includes('[Generation incomplete]'))continue;
@@ -2427,6 +2507,7 @@ export const nicheConfig = {
       const provLabel=isWP?'Provisioning on 20i (WordPress)':isStaticType?'Provisioning on 20i (Static)':'Provisioning — Vercel + Neon + Stripe';
       const provNote=isWP||isStaticType?'20i package + Stripe + Acumbamail':'Vercel project, Neon DB, Stripe product, Acumbamail list';
       addP('prov',provLabel,provNote);setP('prov','run');
+      updateGlobalProgress(9, 11, 'Phase 9 of 11 \u00b7 Provisioning');
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
@@ -2445,6 +2526,7 @@ export const nicheConfig = {
     // ── Direct Vercel deploy (no Flint needed) ──────────────────────────────
     if(isAuthority){
       addP('deploy','Deploying authority site to Vercel','Forking template → AI content generation → Google directory → auto-build');setP('deploy','run');
+      updateGlobalProgress(10, 11, 'Phase 10 of 11 \u00b7 Deploying');
       try{
         const deployResp=await fetch('/api/provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
@@ -2491,6 +2573,8 @@ export const nicheConfig = {
       }
     } catch {}
 
+    updateGlobalProgress(11, 11, 'Complete!');
+    document.getElementById('global-progress').style.display = 'none';
     showDone(inf,repo,fl.length,inf.manual_svcs||[]);
   }catch(e){
     const eb=document.getElementById('err-box');
@@ -2535,7 +2619,176 @@ ${provRes&&provRes.results?`<div class="rc"><h3>Infrastructure Provisioned</h3><
       ${provRes.manual_steps&&provRes.manual_steps.length?`<div class="lr"><span class="lb" style="background:#f59e0b;color:#000">Manual</span><span style="color:#f59e0b;font-size:12px">${provRes.manual_steps[0]}</span></div>`:''}
     </div></div>`:''}
 ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see MANUAL-ACTIONS.md</h3><div class="ml">${mtasks.map(t=>`<div class="mi">${t}</div>`).join('')}</div></div>`:''}
+<div style="display:flex;gap:8px;margin-top:1.25rem;flex-wrap:wrap">
+  <button class="launch" style="flex:1;min-width:200px" onclick="generateBuildReport()">📄 Download Report</button>
+  <button class="launch" style="flex:1;min-width:200px;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="downloadAllFiles()">📦 Download All Files</button>
+</div>
 <span class="again" onclick="reset()">Build another →</span>`;
+}
+
+function generateBuildReport() {
+  const inf = INFERRED;
+  const repo = `${ORG}/${inf.repo}`;
+  const now = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const sc = V2_SCORECARD;
+
+  const reportHtml = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>${inf.name} — Dynasty Build Report</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0A0A0A;color:#EEEDE8;line-height:1.6}
+.page{max-width:800px;margin:0 auto;padding:3rem 2rem}
+.cover{text-align:center;padding:4rem 0;border-bottom:2px solid #C9A84C;margin-bottom:3rem}
+.cover h1{font-size:2.5rem;font-weight:700;margin-bottom:.5rem}
+.cover .gold{color:#C9A84C}
+.cover .date{font-size:13px;color:#908D86;margin-top:1rem}
+.cover .badge{display:inline-block;padding:4px 12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:6px;font-size:11px;color:#C9A84C;font-weight:600;margin-top:1rem}
+h2{font-size:18px;font-weight:600;color:#C9A84C;margin:2rem 0 1rem;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.07)}
+h3{font-size:14px;font-weight:600;margin:1rem 0 .5rem}
+p{font-size:13px;color:#908D86;margin-bottom:.75rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1rem 0}
+.card{background:#1E1E1E;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:1rem}
+.card .label{font-size:10px;color:#4A4845;text-transform:uppercase;letter-spacing:.5px}
+.card .value{font-size:14px;font-weight:600;margin-top:2px}
+.score-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px}
+.score-row .name{color:#908D86}
+.score-row .num{font-weight:600;font-family:'SF Mono',monospace}
+.score-row .num.high{color:#3ECF8E}.score-row .num.mid{color:#C9A84C}.score-row .num.low{color:#E5534B}
+.file-list{list-style:none;padding:0}.file-list li{font-size:12px;padding:4px 0;color:#908D86;border-bottom:1px solid rgba(255,255,255,0.03)}
+.file-list li .cat{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-right:6px}
+.cat-biz{background:rgba(201,168,76,0.15);color:#C9A84C}
+.cat-code{background:rgba(229,83,75,0.09);color:#F07070}
+.cat-doc{background:rgba(62,207,142,0.09);color:#3ECF8E}
+.cat-infra{background:rgba(99,91,255,0.15);color:#8B87FF}
+.verdict{padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;margin:1rem 0}
+.verdict.strong{background:rgba(62,207,142,0.08);border:1px solid rgba(62,207,142,0.2);color:#3ECF8E}
+.verdict.viable{background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);color:#C9A84C}
+.verdict.weak{background:rgba(229,83,75,0.06);border:1px solid rgba(229,83,75,0.15);color:#E5534B}
+.footer{text-align:center;margin-top:3rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.07);font-size:11px;color:#4A4845}
+@media print{body{background:#fff;color:#222}.page{padding:1rem}h2{color:#8B7332}
+.card{border-color:#ddd}.score-row{border-color:#eee}.file-list li{border-color:#eee}
+.cover{border-color:#8B7332}.footer{border-color:#ddd}}
+</style></head><body>
+<div class="page">
+  <div class="cover">
+    <div style="font-size:32px;margin-bottom:12px">&#9889;</div>
+    <h1>${inf.name}</h1>
+    <p style="font-size:15px;color:#908D86">${inf.type_label}</p>
+    <div class="badge">Dynasty Empire Business System</div>
+    <div class="date">Generated on ${now}</div>
+    <div class="date">${V2_MODE === 'strategic' ? 'Strategic Build' : 'Quick Build'}${V2_FRAMEWORKS?.length > 1 ? ' · ' + V2_FRAMEWORKS.length + ' frameworks analyzed' : ''}</div>
+  </div>
+
+  <h2>Executive Summary</h2>
+  <p>${document.getElementById('project-desc')?.value || inf.name}</p>
+  <div class="grid">
+    <div class="card"><div class="label">Revenue Model</div><div class="value">${inf.revenue_model} · ${inf.price}</div></div>
+    <div class="card"><div class="label">Acquisition</div><div class="value">${inf.acquisition}</div></div>
+    <div class="card"><div class="label">MVP Timeline</div><div class="value">${inf.mvp}</div></div>
+    <div class="card"><div class="label">Tech Stack</div><div class="value">${(inf.stack||[]).slice(0,4).join(', ')}</div></div>
+    <div class="card"><div class="label">Domain</div><div class="value">${inf.domain}</div></div>
+    <div class="card"><div class="label">Brand Color</div><div class="value"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${inf.accent};margin-right:6px;vertical-align:middle"></span>${inf.accent}</div></div>
+  </div>
+
+  ${sc ? \`
+  <h2>Viability Scorecard</h2>
+  <div class="verdict \${sc.composite >= 8 ? 'strong' : sc.composite >= 6 ? 'viable' : 'weak'}">
+    <strong>\${sc.verdict}</strong> — Composite Score: \${sc.composite.toFixed(1)}/10
+  </div>
+  \${Object.entries(sc.scores).map(([k, v]) => \`
+    <div class="score-row">
+      <span class="name">\${k.replace(/_/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase())}</span>
+      <span class="num \${v.score >= 8 ? 'high' : v.score >= 6 ? 'mid' : 'low'}">\${v.score.toFixed(1)}/10</span>
+    </div>\`).join('')}
+  <p style="margin-top:1rem"><strong>Risk:</strong> \${sc.risk_summary}</p>
+  <p><strong>Opportunity:</strong> \${sc.opportunity_summary}</p>
+  \` : ''}
+
+  <h2>Generated Files</h2>
+  <ul class="file-list">
+    <li><span class="cat cat-doc">Design</span>DESIGN.md — Complete design system specification</li>
+    <li><span class="cat cat-doc">Guide</span>CLAUDE.md — AI integration guidelines</li>
+    <li><span class="cat cat-doc">Spec</span>SPEC.md — Product specification</li>
+    <li><span class="cat cat-doc">Plan</span>ROADMAP.md — 6-month development roadmap</li>
+    <li><span class="cat cat-biz">Strategy</span>BUSINESS-SYSTEM.md — Business model & strategy</li>
+    <li><span class="cat cat-biz">Revenue</span>REVENUE-MODEL.md — Pricing, packaging, projections</li>
+    <li><span class="cat cat-biz">GTM</span>GTM-PLAYBOOK.md — Go-to-market playbook</li>
+    <li><span class="cat cat-biz">Risk</span>FAILURE-MODES.md — Risk analysis & mitigations</li>
+    <li><span class="cat cat-biz">Agents</span>AGENT-SYSTEM.md — AI agent specifications</li>
+    <li><span class="cat cat-code">Backend</span>backend/main.py — FastAPI application</li>
+    <li><span class="cat cat-code">Docker</span>Dockerfile + docker-compose.yml</li>
+    <li><span class="cat cat-doc">Docs</span>DATA-MODEL.md, API-CONTRACTS.md, KB-OUTLINES.md</li>
+    <li><span class="cat cat-doc">Config</span>.env.example, .gitignore, README.md</li>
+  </ul>
+
+  \${provRes?.results ? \`
+  <h2>Infrastructure Provisioned</h2>
+  <div class="grid">
+    \${provRes.results.stripe ? '<div class="card"><div class="label">Payments</div><div class="value">Stripe product + price configured</div></div>' : ''}
+    \${provRes.results.vercel ? \`<div class="card"><div class="label">Hosting</div><div class="value">\${provRes.results.vercel.url || 'Vercel project created'}</div></div>\` : ''}
+    \${provRes.results.neon ? '<div class="card"><div class="label">Database</div><div class="value">Neon PostgreSQL provisioned</div></div>' : ''}
+    \${provRes.results.acumbamail ? '<div class="card"><div class="label">Email</div><div class="value">Acumbamail list created</div></div>' : ''}
+  </div>\` : ''}
+
+  <h2>Recommended Next Steps</h2>
+  <ol style="font-size:13px;color:#908D86;padding-left:1.5rem">
+    <li style="margin-bottom:8px">Clone the repository and review the generated codebase</li>
+    <li style="margin-bottom:8px">Complete manual setup actions listed in MANUAL-ACTIONS.md</li>
+    <li style="margin-bottom:8px">Configure environment variables from .env.example</li>
+    <li style="margin-bottom:8px">Run <code style="background:#181818;padding:2px 6px;border-radius:4px;font-size:11px">docker-compose up -d</code> to start the backend</li>
+    <li style="margin-bottom:8px">Set up monitoring and analytics</li>
+    <li style="margin-bottom:8px">Begin customer acquisition per GTM-PLAYBOOK.md</li>
+  </ol>
+
+  <div class="footer">
+    <div style="font-size:18px;margin-bottom:8px">&#9889;</div>
+    <div>Dynasty Empire Business System</div>
+    <div style="margin-top:4px">Generated by Dynasty Launcher · ${now}</div>
+  </div>
+</div>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(reportHtml);
+  win.document.close();
+}
+
+async function downloadAllFiles() {
+  if (typeof JSZip === 'undefined') {
+    alert('JSZip not loaded. Please try again.');
+    return;
+  }
+  const zip = new JSZip();
+  const inf = INFERRED;
+
+  try {
+    const repo = `${ORG}/${inf.repo}`;
+    const contentsResp = await gh(`/repos/${repo}/contents/`);
+    if (contentsResp.ok) {
+      const contents = await contentsResp.json();
+      for (const item of contents) {
+        if (item.type === 'file') {
+          try {
+            const fileResp = await gh(`/repos/${repo}/contents/${item.path}`);
+            if (fileResp.ok) {
+              const fileData = await fileResp.json();
+              const content = atob(fileData.content.replace(/\n/g, ''));
+              zip.file(item.path, content);
+            }
+          } catch {}
+        }
+      }
+    }
+  } catch {}
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${inf.repo}-dynasty-build.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function reset(){
