@@ -254,15 +254,22 @@ export const caseStudies = [
 
     // 4e. Generate directory listings (Outscraper Google Maps or AI fallback)
     try {
-      const OUTSCRAPER_KEY = process.env.OUTSCRAPER_API_KEY;
+      const OUTSCRAPER_KEYS = [process.env.OUTSCRAPER_API_KEY, process.env.OUTSCRAPER_API_KEY_2].filter(Boolean);
       let directoryData = '';
-      if (OUTSCRAPER_KEY) {
-        // Real business data from Outscraper Google Maps API
+      if (OUTSCRAPER_KEYS.length) {
+        // Real business data from Outscraper Google Maps API (with key failover)
         const location = domain?.replace('.vercel.app','').replace(/\./g,' ') || 'United States';
         const query = encodeURIComponent(`${niche_name} in ${location}`);
-        const pr = await fetch(`https://api.app.outscraper.com/google-maps-search?query=${query}&limit=20&language=en`, {
-          headers: { 'X-API-KEY': OUTSCRAPER_KEY }
-        });
+        let pr;
+        for (const key of OUTSCRAPER_KEYS) {
+          try {
+            pr = await fetch(`https://api.app.outscraper.com/google-maps-search?query=${query}&limit=20&language=en`, {
+              headers: { 'X-API-KEY': key }
+            });
+            if (pr.ok) break; // success, stop trying keys
+          } catch { continue; }
+        }
+        if (!pr?.ok) pr = { json: async () => [] };
         const pd = await pr.json();
         const results = Array.isArray(pd) ? pd.flat() : (pd.data || pd.results || []);
         if (results?.length) {
