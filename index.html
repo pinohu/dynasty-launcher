@@ -177,6 +177,56 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .deploy-card h4{font-size:13px;font-weight:600;margin-bottom:.3rem}
 .deploy-card p{font-size:11px;color:var(--sec);line-height:1.4}
 .dc-extra{font-size:9px;color:var(--gold);margin-top:.4rem}
+/* Post-scorecard actions */
+.sc-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:1.25rem 0}
+.sc-action{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1.1rem;cursor:pointer;transition:.15s;text-align:center}
+.sc-action:hover{border-color:var(--gb);background:var(--gdim)}
+.sc-action-premium{border-color:var(--gb);background:var(--gdim)}
+.sc-action-premium:hover{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.sc-act-icon{font-size:24px;margin-bottom:.5rem}
+.sc-action h4{font-size:13px;font-weight:600;margin-bottom:.3rem}
+.sc-action p{font-size:11px;color:var(--sec);line-height:1.4}
+.sc-act-cost{font-size:9px;color:var(--gold);margin-top:.4rem;font-weight:600}
+/* Refinement results */
+.ref-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.75rem 1rem;margin-bottom:6px;cursor:pointer;transition:.12s}
+.ref-card:hover{border-color:var(--gb)}
+.ref-card h5{font-size:12px;font-weight:600;margin-bottom:3px}
+.ref-card p{font-size:11px;color:var(--sec);line-height:1.4}
+.ref-impact{font-size:10px;color:var(--grn);font-weight:600;margin-top:4px}
+/* Pipeline visualization */
+.pipeline-vis{background:var(--card);border:1px solid var(--gb);border-radius:var(--rl);padding:1.25rem;margin:1rem 0}
+.pipe-title{font-size:13px;font-weight:600;color:var(--gold);margin-bottom:1rem;display:flex;align-items:center;gap:6px}
+.pipe-phase{margin-bottom:1rem}
+.pipe-phase-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center}
+.pipe-phase-status{font-size:9px;padding:2px 6px;border-radius:4px}
+.pipe-phase-status.waiting{background:var(--panel);color:var(--dim)}
+.pipe-phase-status.running{background:var(--gdim);color:var(--gold);animation:sp .8s linear infinite}
+.pipe-phase-status.done{background:rgba(62,207,142,0.08);color:var(--grn)}
+.model-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.model-card{background:var(--panel);border:1px solid var(--bdr);border-radius:var(--r);padding:8px;text-align:center;transition:.2s;min-height:90px}
+.model-card.running{border-color:var(--gb);animation:pulse 1.5s ease infinite}
+.model-card.done{border-color:var(--grn)}
+.model-card.failed{border-color:var(--red);opacity:.5}
+.model-card.winner{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold);background:var(--gdim)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.mc-icon2{font-size:16px;margin-bottom:4px}
+.mc-name2{font-size:9px;font-weight:600;color:var(--tx);margin-bottom:2px}
+.mc-status{font-size:8px;color:var(--dim)}
+.mc-score2{font-size:14px;font-weight:700;color:var(--gold);margin-top:4px}
+.mc-votes{font-size:9px;color:var(--grn);margin-top:2px}
+.pipe-cost{font-size:10px;color:var(--gold);text-align:right;margin-top:.5rem}
+/* Consensus result */
+.consensus-card{background:var(--card);border:2px solid var(--gold);border-radius:var(--rl);padding:1.25rem;margin:1rem 0}
+.consensus-title{font-size:14px;font-weight:600;color:var(--gold);margin-bottom:.75rem}
+.consensus-desc{font-size:13px;color:var(--tx);line-height:1.6;margin-bottom:.75rem}
+.consensus-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.consensus-meta-item{font-size:11px;color:var(--sec)}
+.consensus-meta-item strong{color:var(--tx)}
+.consensus-actions{display:flex;gap:8px}
+.score-compare{display:flex;align-items:center;gap:12px;margin:1rem 0;padding:10px;background:var(--panel);border-radius:var(--r)}
+.score-before{font-size:18px;font-weight:600;color:var(--red)}
+.score-arrow{color:var(--gold);font-size:14px}
+.score-after{font-size:18px;font-weight:600;color:var(--grn)}
 </style>
 </head>
 <body>
@@ -282,7 +332,28 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
     <div id="scorecard-wrap" style="display:none">
       <div class="scorecard" id="scorecard"></div>
       <div id="fw-deep-dives"></div>
-      <button class="launch" onclick="advanceFromFrameworks()">Continue to configure →</button>
+      <div class="sc-actions" id="sc-actions">
+        <div class="sc-action" onclick="buildAsIs()">
+          <div class="sc-act-icon">⚡</div>
+          <h4>Build as-is</h4>
+          <p>Proceed with this idea. Score doesn't stop the build.</p>
+        </div>
+        <div class="sc-action" onclick="getRefinements()">
+          <div class="sc-act-icon">🔧</div>
+          <h4>Get refinements</h4>
+          <p>AI suggests specific improvements to boost your score.</p>
+          <div class="sc-act-cost">~$0.02</div>
+        </div>
+        <div class="sc-action sc-action-premium" onclick="runPivotReview()">
+          <div class="sc-act-icon">🧠</div>
+          <h4>5-Model Pivot Review</h4>
+          <p>5 AI models analyze, cross-review, and find the strongest pivot. Multi-model consensus.</p>
+          <div class="sc-act-cost">~$0.15-0.35</div>
+        </div>
+      </div>
+      <div id="refinement-results" style="display:none"></div>
+      <div id="pipeline-screen" style="display:none"></div>
+      <button class="launch" onclick="advanceFromFrameworks()" style="margin-top:1rem">Continue to configure →</button>
     </div>
   </div>
 
@@ -630,6 +701,375 @@ function showConfigScreen() {
 function advanceFromFrameworks() {
   document.getElementById('framework-screen').style.display = 'none';
   showConfigScreen();
+}
+
+// ── Post-Scorecard Options ─────────────────────────────────────────────
+
+function buildAsIs() {
+  advanceFromFrameworks();
+}
+
+async function getRefinements() {
+  const btn = event.target.closest('.sc-action');
+  btn.style.opacity = '.5';
+  btn.style.pointerEvents = 'none';
+
+  const desc = document.getElementById('project-desc').value.trim();
+  const resultsDiv = document.getElementById('refinement-results');
+  resultsDiv.style.display = 'block';
+  resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--gold)">Generating refinement suggestions...</p>';
+
+  try {
+    const raw = await aiRaw(`You are a business optimization expert. The user has this business idea with a viability score of ${V2_SCORECARD.composite}/10.
+
+IDEA: ${desc}
+SCORECARD: ${JSON.stringify(V2_SCORECARD.scores, null, 2)}
+VERDICT: ${V2_SCORECARD.verdict}
+RISKS: ${V2_SCORECARD.risk_summary}
+
+Suggest 4 specific, actionable refinements that would improve the viability score. For each, predict the score improvement.
+
+Return ONLY valid JSON array:
+[
+  { "title": "Short title (5-8 words)", "description": "2-3 sentences explaining the refinement and why it helps.", "predicted_impact": "+1.2 composite", "target_dimension": "market_hunger" },
+  ...3 more
+]`, 2000);
+
+    const m = raw.match(/\[[\s\S]*\]/);
+    if (!m) throw new Error('Invalid response');
+    const refinements = JSON.parse(m[0]);
+
+    resultsDiv.innerHTML = '<h4 style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--tx)">Suggested Refinements</h4>' +
+      refinements.map((r, i) => `
+        <div class="ref-card" onclick="acceptRefinement(${i})">
+          <h5>${r.title}</h5>
+          <p>${r.description}</p>
+          <div class="ref-impact">Predicted: ${r.predicted_impact} (${r.target_dimension?.replace(/_/g,' ')})</div>
+        </div>
+      `).join('') +
+      '<p style="font-size:10px;color:var(--dim);margin-top:6px">Click a refinement to apply it to your idea and re-score.</p>';
+
+    window._refinements = refinements;
+  } catch (e) {
+    resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--red)">Failed to generate refinements. Try again.</p>';
+  }
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'auto';
+}
+
+async function acceptRefinement(idx) {
+  const r = window._refinements[idx];
+  if (!r) return;
+  const desc = document.getElementById('project-desc').value.trim();
+  document.getElementById('project-desc').value = desc + '\n\nREFINEMENT: ' + r.title + ' — ' + r.description;
+  INFERRED = null;
+  document.getElementById('refinement-results').innerHTML = '<p style="font-size:12px;color:var(--gold)">Re-inferring with refinement applied...</p>';
+  await inferConfig(document.getElementById('project-desc').value.trim());
+  document.getElementById('refinement-results').innerHTML = '<p style="font-size:12px;color:var(--grn)">✓ Refinement applied. Click "Score this idea" again to see the improvement.</p>';
+}
+
+// ── Multi-Model Pivot Review Pipeline ──────────────────────────────────
+
+const REVIEW_MODELS = [
+  { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4', icon: '🟣', color: '#A855F7' },
+  { id: 'gpt-4o', label: 'GPT-4o', icon: '🟢', color: '#22C55E' },
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', icon: '🔵', color: '#3B82F6' },
+  { id: 'deepseek-reasoner', label: 'DeepSeek R1', icon: '🟠', color: '#F97316' },
+  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', icon: '🟤', color: '#A16207' },
+];
+
+async function aiRawWithModel(prompt, modelId, max = 4000) {
+  const r = await fetch('/api/ai', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: modelId, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
+  });
+  if (!r.ok) throw new Error('AI API ' + r.status);
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message || 'AI error');
+  if (d._cost?.estimated_cost) V2_BUILD_COST += d._cost.estimated_cost;
+  const costEl = document.getElementById('build-cost');
+  if (costEl && V2_BUILD_COST > 0) {
+    costEl.style.display = 'block';
+    document.getElementById('cost-val').textContent = '$' + V2_BUILD_COST.toFixed(4);
+  }
+  return d.content?.find(b => b.type === 'text')?.text || '';
+}
+
+function showPipelineUI() {
+  const div = document.getElementById('pipeline-screen');
+  div.style.display = 'block';
+  document.getElementById('sc-actions').style.display = 'none';
+  div.innerHTML = `
+    <div class="pipeline-vis">
+      <div class="pipe-title">🧠 5-Model Pivot Review Pipeline</div>
+      <div class="pipe-phase" id="phase1">
+        <div class="pipe-phase-label">Phase 1: Independent Analysis <span class="pipe-phase-status waiting" id="p1-status">Waiting</span></div>
+        <div class="model-cards" id="phase1-cards">
+          ${REVIEW_MODELS.map(m => `
+            <div class="model-card" id="mc-${m.id.replace(/[^a-z0-9]/g,'')}">
+              <div class="mc-icon2">${m.icon}</div>
+              <div class="mc-name2">${m.label}</div>
+              <div class="mc-status" id="mcs-${m.id.replace(/[^a-z0-9]/g,'')}">⏳ Waiting</div>
+              <div class="mc-score2" id="mcv-${m.id.replace(/[^a-z0-9]/g,'')}"></div>
+              <div class="mc-votes" id="mcvt-${m.id.replace(/[^a-z0-9]/g,'')}"></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="pipe-phase" id="phase2">
+        <div class="pipe-phase-label">Phase 2: Cross-Review <span class="pipe-phase-status waiting" id="p2-status">Waiting</span></div>
+      </div>
+      <div class="pipe-phase" id="phase3">
+        <div class="pipe-phase-label">Phase 3: Consensus <span class="pipe-phase-status waiting" id="p3-status">Waiting</span></div>
+      </div>
+      <div class="pipe-cost" id="pipe-cost">Running cost: $0.00</div>
+    </div>
+    <div id="consensus-result"></div>
+  `;
+}
+
+function updateModelStatus(modelId, status, score) {
+  const key = modelId.replace(/[^a-z0-9]/g, '');
+  const card = document.getElementById('mc-' + key);
+  const statusEl = document.getElementById('mcs-' + key);
+  const scoreEl = document.getElementById('mcv-' + key);
+  if (!card) return;
+  card.className = 'model-card ' + status;
+  statusEl.textContent = status === 'running' ? '⟳ Analyzing...' : status === 'done' ? '✓ Done' : status === 'failed' ? '✕ Failed' : '⏳ Waiting';
+  if (score !== undefined && scoreEl) scoreEl.textContent = score;
+  document.getElementById('pipe-cost').textContent = 'Running cost: $' + V2_BUILD_COST.toFixed(4);
+}
+
+async function runPivotReview() {
+  showPipelineUI();
+  const desc = document.getElementById('project-desc').value.trim();
+  const scorecardJSON = JSON.stringify(V2_SCORECARD, null, 2);
+  const frameworkAnalyses = Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.replace(/_/g,' ').toUpperCase()}\n${v}`).join('\n\n');
+
+  const pivotPrompt = (modelLabel) => `You are ${modelLabel}, a world-class business strategist. A user described this business idea and received a viability score of ${V2_SCORECARD.composite}/10.
+
+ORIGINAL IDEA: ${desc}
+
+VIABILITY SCORECARD:
+${scorecardJSON}
+
+FRAMEWORK ANALYSES:
+${frameworkAnalyses}
+
+Your task: Propose ONE specific, actionable pivot that would score significantly higher. This should be a FUNDAMENTALLY better business — not just tweaks. Think: different market, different model, different positioning, or a completely reframed value proposition.
+
+Return ONLY valid JSON (no markdown, no backticks):
+{
+  "pivot_description": "2-3 sentence description of the pivoted business idea — specific and actionable",
+  "predicted_composite_score": 8.5,
+  "key_advantages": ["advantage 1", "advantage 2", "advantage 3"],
+  "risks": ["risk 1", "risk 2"],
+  "reasoning": "3-4 paragraph detailed strategic reasoning explaining WHY this pivot is superior. Be specific about market dynamics, competitive positioning, and revenue potential."
+}
+
+Be bold. Be specific. No generic advice.`;
+
+  // ── PHASE 1: Independent proposals (parallel) ─────────────────────────
+  document.getElementById('p1-status').className = 'pipe-phase-status running';
+  document.getElementById('p1-status').textContent = 'Running...';
+
+  REVIEW_MODELS.forEach(m => updateModelStatus(m.id, 'running'));
+
+  const phase1Results = [];
+  const phase1Promises = REVIEW_MODELS.map(async (m, i) => {
+    try {
+      const raw = await aiRawWithModel(pivotPrompt(m.label), m.id, 3000);
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('No JSON');
+      const proposal = JSON.parse(match[0]);
+      proposal._model = m.label;
+      proposal._modelId = m.id;
+      proposal._index = i;
+      phase1Results[i] = proposal;
+      updateModelStatus(m.id, 'done', proposal.predicted_composite_score?.toFixed(1));
+      return proposal;
+    } catch (e) {
+      phase1Results[i] = { _model: m.label, _modelId: m.id, _index: i, _failed: true, error: e.message };
+      updateModelStatus(m.id, 'failed');
+      return null;
+    }
+  });
+
+  await Promise.allSettled(phase1Promises);
+  document.getElementById('p1-status').className = 'pipe-phase-status done';
+  document.getElementById('p1-status').textContent = 'Done';
+
+  const validProposals = phase1Results.filter(p => p && !p._failed);
+  if (validProposals.length < 2) {
+    document.getElementById('consensus-result').innerHTML = '<p style="color:var(--red);font-size:12px;margin-top:1rem">Not enough models responded. Try again or build as-is.</p><button class="launch" style="margin-top:8px" onclick="buildAsIs()">Build as-is →</button>';
+    return;
+  }
+
+  // ── PHASE 2: Cross-review (parallel) ──────────────────────────────────
+  document.getElementById('p2-status').className = 'pipe-phase-status running';
+  document.getElementById('p2-status').textContent = 'Running...';
+
+  const proposalList = validProposals.map((p, i) => `PROPOSAL ${i+1} (by ${p._model}):\n${p.pivot_description}\nPredicted score: ${p.predicted_composite_score}\nAdvantages: ${(p.key_advantages||[]).join(', ')}\nRisks: ${(p.risks||[]).join(', ')}\nReasoning: ${p.reasoning}`).join('\n\n---\n\n');
+
+  const crossReviewPrompt = (modelLabel, myIndex) => `5 AI models independently analyzed a business idea (original score: ${V2_SCORECARD.composite}/10) and proposed pivots. You are ${modelLabel}. Evaluate ALL proposals objectively.
+
+ORIGINAL IDEA: ${desc}
+
+PROPOSALS:
+${proposalList}
+
+Your task:
+1. Vote for the BEST proposal (you CANNOT vote for your own — proposal #${myIndex + 1})
+2. Rate each proposal 1-10
+3. Suggest a synthesis combining the best elements
+
+Return ONLY valid JSON:
+{
+  "vote": "Model Name you vote for",
+  "ratings": {
+    ${validProposals.map(p => `"${p._model}": { "score": 8, "reasoning": "brief reasoning" }`).join(',\n    ')}
+  },
+  "synthesis": "A combined pivot taking the best of each proposal in 2-3 sentences."
+}`;
+
+  const phase2Results = [];
+  REVIEW_MODELS.forEach(m => updateModelStatus(m.id, 'running'));
+
+  const phase2Promises = REVIEW_MODELS.map(async (m, i) => {
+    try {
+      const raw = await aiRawWithModel(crossReviewPrompt(m.label, i), m.id, 2000);
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('No JSON');
+      const review = JSON.parse(match[0]);
+      review._model = m.label;
+      phase2Results[i] = review;
+      updateModelStatus(m.id, 'done');
+      return review;
+    } catch (e) {
+      phase2Results[i] = { _model: m.label, _failed: true };
+      updateModelStatus(m.id, 'failed');
+      return null;
+    }
+  });
+
+  await Promise.allSettled(phase2Promises);
+  document.getElementById('p2-status').className = 'pipe-phase-status done';
+  document.getElementById('p2-status').textContent = 'Done';
+
+  // ── PHASE 3: Consensus aggregation (client-side) ──────────────────────
+  document.getElementById('p3-status').className = 'pipe-phase-status running';
+  document.getElementById('p3-status').textContent = 'Aggregating...';
+
+  const votes = {};
+  const scores = {};
+  const syntheses = [];
+
+  validProposals.forEach(p => { votes[p._model] = 0; scores[p._model] = []; });
+
+  phase2Results.filter(r => r && !r._failed).forEach(review => {
+    if (review.vote && votes[review.vote] !== undefined) votes[review.vote]++;
+    if (review.ratings) {
+      Object.entries(review.ratings).forEach(([model, rating]) => {
+        if (scores[model]) scores[model].push(typeof rating === 'object' ? rating.score : rating);
+      });
+    }
+    if (review.synthesis) syntheses.push(review.synthesis);
+  });
+
+  // Determine winner
+  const ranked = validProposals.map(p => ({
+    ...p,
+    votes: votes[p._model] || 0,
+    avgScore: scores[p._model]?.length ? (scores[p._model].reduce((a,b) => a+b, 0) / scores[p._model].length) : 0
+  })).sort((a, b) => b.votes - a.votes || b.avgScore - a.avgScore);
+
+  const winner = ranked[0];
+  const runnerUp = ranked[1];
+
+  // Show votes on model cards
+  validProposals.forEach(p => {
+    const vtEl = document.getElementById('mcvt-' + p._modelId.replace(/[^a-z0-9]/g, ''));
+    if (vtEl) vtEl.textContent = `${votes[p._model] || 0} votes`;
+  });
+
+  // Highlight winner
+  if (winner) {
+    const winCard = document.getElementById('mc-' + winner._modelId.replace(/[^a-z0-9]/g, ''));
+    if (winCard) winCard.classList.add('winner');
+  }
+
+  document.getElementById('p3-status').className = 'pipe-phase-status done';
+  document.getElementById('p3-status').textContent = 'Done';
+
+  // ── Render consensus result ───────────────────────────────────────────
+  const bestSynthesis = syntheses[0] || winner?.pivot_description || '';
+
+  document.getElementById('consensus-result').innerHTML = `
+    <div class="consensus-card">
+      <div class="consensus-title">🏆 Consensus Recommendation</div>
+      <div class="consensus-desc">${winner?.pivot_description || 'No consensus reached'}</div>
+      <div class="consensus-meta">
+        <div class="consensus-meta-item"><strong>Proposed by:</strong> ${winner?._model}</div>
+        <div class="consensus-meta-item"><strong>Votes:</strong> ${winner?.votes || 0} / ${phase2Results.filter(r => r && !r._failed).length}</div>
+        <div class="consensus-meta-item"><strong>Avg rating:</strong> ${winner?.avgScore?.toFixed(1) || 'N/A'} / 10</div>
+        <div class="consensus-meta-item"><strong>Predicted score:</strong> ${winner?.predicted_composite_score?.toFixed(1) || 'N/A'} / 10</div>
+      </div>
+      ${winner?.key_advantages ? `<div style="margin-bottom:.75rem"><div style="font-size:11px;font-weight:600;margin-bottom:4px">Key Advantages:</div>${winner.key_advantages.map(a => `<div style="font-size:11px;color:var(--sec);display:flex;gap:4px"><span style="color:var(--grn)">✓</span> ${a}</div>`).join('')}</div>` : ''}
+      ${winner?.risks ? `<div style="margin-bottom:.75rem"><div style="font-size:11px;font-weight:600;margin-bottom:4px">Risks:</div>${winner.risks.map(r => `<div style="font-size:11px;color:var(--sec);display:flex;gap:4px"><span style="color:var(--red)">⚠</span> ${r}</div>`).join('')}</div>` : ''}
+      ${winner?.reasoning ? `<details style="margin-bottom:.75rem"><summary style="font-size:11px;color:var(--dim);cursor:pointer">Full reasoning ▼</summary><p style="font-size:11px;color:var(--sec);line-height:1.5;margin-top:6px;white-space:pre-wrap">${winner.reasoning}</p></details>` : ''}
+      ${syntheses.length ? `<details style="margin-bottom:.75rem"><summary style="font-size:11px;color:var(--dim);cursor:pointer">Model syntheses ▼</summary>${syntheses.map((s,i) => `<p style="font-size:11px;color:var(--sec);line-height:1.5;margin-top:6px;padding:6px;background:var(--panel);border-radius:4px">${s}</p>`).join('')}</details>` : ''}
+      <div class="score-compare">
+        <span class="score-before">${V2_SCORECARD.composite.toFixed(1)}</span>
+        <span class="score-arrow">→</span>
+        <span class="score-after">${winner?.predicted_composite_score?.toFixed(1) || '?'}</span>
+        <span style="font-size:10px;color:var(--dim);margin-left:8px">predicted improvement</span>
+      </div>
+      <div class="consensus-actions">
+        <button class="launch" style="flex:2" onclick="acceptPivot('${(winner?.pivot_description || '').replace(/'/g, "\\'")}')">Accept this pivot →</button>
+        <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="modifyPivot('${(winner?.pivot_description || '').replace(/'/g, "\\'")}')">Modify</button>
+        <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="buildAsIs()">Build original</button>
+      </div>
+    </div>
+    ${runnerUp ? `
+    <details style="margin-top:8px">
+      <summary style="font-size:11px;color:var(--dim);cursor:pointer">Runner-up: ${runnerUp._model} (${runnerUp.votes} votes, ${runnerUp.avgScore?.toFixed(1)}/10 avg) ▼</summary>
+      <div style="padding:8px;margin-top:4px;background:var(--panel);border-radius:var(--r)">
+        <p style="font-size:12px;color:var(--tx);margin-bottom:6px">${runnerUp.pivot_description}</p>
+        <p style="font-size:11px;color:var(--sec);line-height:1.5">${runnerUp.reasoning || ''}</p>
+        <button class="launch" style="margin-top:8px;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="acceptPivot('${(runnerUp.pivot_description || '').replace(/'/g, "\\'")}')">Accept runner-up instead →</button>
+      </div>
+    </details>` : ''}
+  `;
+}
+
+async function acceptPivot(pivotDesc) {
+  document.getElementById('project-desc').value = pivotDesc;
+  INFERRED = null;
+  V2_SCORECARD = null;
+  document.getElementById('pipeline-screen').style.display = 'none';
+  document.getElementById('scorecard-wrap').style.display = 'none';
+  document.getElementById('sc-actions').style.display = 'grid';
+  document.getElementById('framework-screen').style.display = 'none';
+  document.getElementById('input-screen').style.display = 'block';
+  document.getElementById('refinement-results').style.display = 'none';
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('launch-btn').textContent = 'Re-analyzing pivoted idea...';
+  document.getElementById('launch-btn').disabled = true;
+  await inferConfig(pivotDesc);
+}
+
+function modifyPivot(pivotDesc) {
+  const cr = document.getElementById('consensus-result');
+  cr.innerHTML = `
+    <div style="margin-top:1rem">
+      <h4 style="font-size:12px;font-weight:600;margin-bottom:6px">Modify the pivot before accepting:</h4>
+      <textarea id="pivot-edit" style="width:100%;min-height:80px;padding:10px;background:var(--panel);border:1px solid var(--bdr);border-radius:var(--r);color:var(--tx);font-size:13px;font-family:inherit;resize:vertical">${pivotDesc}</textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="launch" style="flex:1" onclick="acceptPivot(document.getElementById('pivot-edit').value)">Accept modified pivot →</button>
+        <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="buildAsIs()">Build original instead</button>
+      </div>
+    </div>
+  `;
 }
 
 async function startBuild() {
