@@ -70,8 +70,8 @@ export default async function handler(req, res) {
     const { project_slug, niche_name, niche_config, theme_css, accent_hex, domain } = req.body||{};
     if (!project_slug) return res.status(400).json({ok:false, error:'project_slug required'});
 
-    // 1. Fork ailurophobia
-    const forkResp = await fetch(`https://api.github.com/repos/${ORG}/ailurophobia/generate`, {
+    // 1. Fork dynasty-authority-template (clean niche-agnostic template)
+    const forkResp = await fetch(`https://api.github.com/repos/${ORG}/dynasty-authority-template/generate`, {
       method:'POST',
       headers:{'Authorization':`token ${GH_TOKEN}`,'Content-Type':'application/json',
                'Accept':'application/vnd.github.baptiste-preview+json'},
@@ -92,44 +92,7 @@ export default async function handler(req, res) {
     if(!ready) return res.status(500).json({ok:false, error:'Repo not ready after 45s'});
     await new Promise(r=>setTimeout(r,2000));
 
-    // 3. Patch package.json (tsx → npx tsx)
-    try {
-      const pr=await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/package.json`,
-        {headers:{'Authorization':`token ${GH_TOKEN}`}});
-      if(pr.ok){
-        const pd=await pr.json();
-        const pkg=JSON.parse(Buffer.from(pd.content,'base64').toString());
-        if(pkg.scripts?.build?.includes('tsx scripts/')&&!pkg.scripts.build.includes('npx tsx')){
-          pkg.scripts.build=pkg.scripts.build.replace('tsx scripts/','npx tsx scripts/');
-          await pushFile(GH_TOKEN,ORG,project_slug,'package.json',
-            JSON.stringify(pkg,null,2),'fix: npx tsx for Vercel compatibility');
-          await new Promise(r=>setTimeout(r,500));
-        }
-      }
-    } catch{}
-
-    // 4. Push @dynasty/contracts stub
-    const STUB=`// @dynasty/contracts standalone stub\nexport function validateCanonicalNicheConfig(c){return c;}\nexport function assertCanonicalNicheConfig(c){if(!c||typeof c!=='object')throw new Error('Invalid niche config');}\nexport const CanonicalNicheConfig={};`;
-    await pushFile(GH_TOKEN,ORG,project_slug,'src/lib/dynasty-contracts.ts',STUB,'fix: @dynasty/contracts stub');
-    await new Promise(r=>setTimeout(r,400));
-
-    // 5. Patch vite.config.ts alias
-    try {
-      const vr=await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/vite.config.ts`,
-        {headers:{'Authorization':`token ${GH_TOKEN}`}});
-      if(vr.ok){
-        const vd=await vr.json();
-        let vc=Buffer.from(vd.content,'base64').toString();
-        const OLD=`    alias: {\n      "@": path.resolve(__dirname, "./src"),\n    },`;
-        const NEW=`    alias: {\n      "@": path.resolve(__dirname, "./src"),\n      "@dynasty/contracts": path.resolve(__dirname, "./src/lib/dynasty-contracts.ts"),\n    },`;
-        if(vc.includes(OLD)){
-          await pushFile(GH_TOKEN,ORG,project_slug,'vite.config.ts',vc.replace(OLD,NEW),'fix: @dynasty/contracts alias');
-          await new Promise(r=>setTimeout(r,400));
-        }
-      }
-    } catch{}
-
-    // 6. Push niche.config.ts
+    // 3. Push niche.config.ts
     if(niche_config&&niche_config.length>200){
       const EXPORTS=`\nexport const getConfig=()=>nicheConfig;\nexport const getSiteConfig=()=>nicheConfig.site;\nexport const getBrandingConfig=()=>nicheConfig.branding;\nexport const getSEOConfig=()=>nicheConfig.seo;\nexport const getNicheConfig=()=>nicheConfig.niche;\nexport const getNavigationConfig=()=>nicheConfig.navigation;\nexport const getSocialConfig=()=>nicheConfig.social;\nexport const getFeaturesConfig=()=>nicheConfig.features;\nexport const getDirectoryConfig=()=>nicheConfig.directory;\nexport const getContentConfig=()=>nicheConfig.content;\nexport const getMonetizationConfig=()=>nicheConfig.monetization??{enableLeads:false,enableAffiliate:false,enablePremium:false};`;
       const GET_RE=/^export const (getConfig|getSiteConfig|getBrandingConfig|getSEOConfig|getNicheConfig|getNavigationConfig|getSocialConfig|getFeaturesConfig|getDirectoryConfig|getContentConfig|getMonetizationConfig)\s*=/m;
@@ -166,46 +129,7 @@ export default async function handler(req, res) {
       await new Promise(r=>setTimeout(r,400));
     } catch{}
 
-    // 7.3 Push empty blogArticles.ts + citations.ts (removes template phobia content)
-    try {
-      const emptyBlog = `/**\n * Blog articles for ${niche_name}.\n */\nimport { REFERENCES, formatCitation, type Citation } from './citations'\n\nexport interface BlogArticle {\n  slug: string; title: string; description: string; category: string;\n  date: string; readTime: string;\n  heroImage?: { url: string; alt: string; credit?: string; };\n  author: { name: string; role: string; bio: string; };\n  sections: { heading?: string; level?: 'h2' | 'h3'; content: string;\n    image?: { url: string; alt: string; caption?: string; }; }[];\n  references: string[]; relatedSlugs: string[];\n}\nexport function getArticleReferences(article: BlogArticle): Citation[] {\n  return article.references.map(id => REFERENCES.find(r => r.id === id)).filter(Boolean) as Citation[];\n}\nexport function formatArticleReferences(article: BlogArticle): string[] {\n  return getArticleReferences(article).map(r => formatCitation(r));\n}\nexport const BLOG_ARTICLES: BlogArticle[] = [];`;
-      await pushFile(GH_TOKEN,ORG,project_slug,'src/data/blogArticles.ts',emptyBlog,'feat: clean blog articles for niche');
-      await new Promise(r=>setTimeout(r,400));
-
-      const emptyCitations = `/**\n * Citations for ${niche_name}.\n */\nexport interface Citation {\n  id: string; authors: string; year: number; title: string;\n  journal: string; volume?: string; pages?: string; doi?: string; url?: string;\n}\nexport function formatCitation(c: Citation): string {\n  return \`\${c.authors} (\${c.year}). \${c.title}. \${c.journal}.\`;\n}\nexport const REFERENCES: Citation[] = [];`;
-      await pushFile(GH_TOKEN,ORG,project_slug,'src/data/citations.ts',emptyCitations,'feat: clean citations for niche');
-      await new Promise(r=>setTimeout(r,400));
-    } catch{}
-
-    // 7.4 Delete template content markdown files (ailurophobia-specific)
-    try {
-      const h = {'Authorization':`token ${GH_TOKEN}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};
-      const contentFiles = [
-        'src/content/pillar/understanding-ailurophobia.md',
-        'src/content/cluster/cbt-for-cat-phobia.md',
-        'src/content/cluster/exposure-therapy-techniques.md',
-        'src/content/cluster/when-to-seek-professional-help.md',
-        'src/content/guide/understand-your-fear.md',
-        'src/content/resource-hub/evidence-based-treatment-resources.md',
-      ];
-      const glossaryFiles = ['avoidance-behavior','classical-conditioning','cognitive-behavioral-therapy',
-        'fear-hierarchy','fight-or-flight-response','graded-exposure','in-vivo-exposure',
-        'safety-behaviors','specific-phobia','systematic-desensitization'];
-      const allFiles = [...contentFiles, ...glossaryFiles.map(g=>`src/content/glossary/${g}.md`)];
-      for (const f of allFiles) {
-        try {
-          const r = await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/${f}`,{headers:h});
-          if(r.ok){const d=await r.json();
-            await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/${f}`,{
-              method:'DELETE',headers:h,
-              body:JSON.stringify({message:`chore: remove template content ${f.split('/').pop()}`,sha:d.sha})});
-            await new Promise(r=>setTimeout(r,200));
-          }
-        } catch{}
-      }
-    } catch{}
-
-    // 8. Create Vercel project
+    // 5. Create Vercel project
     let projectId, vercel_url;
     try {
       const pr=await fetch(`https://api.vercel.com/v10/projects?teamId=${VERCEL_TEAM}`,{
