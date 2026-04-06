@@ -94,7 +94,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .eb{background:rgba(229,83,75,0.07);border:1px solid rgba(229,83,75,0.15);border-radius:var(--r);padding:.65rem .9rem;font-size:12px;color:var(--red);margin-top:.65rem}
 
   /* ── Access Gate ───────────────────────────────────── */
-  #auth-gate{position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:flex;
+  #auth-gate{position:fixed;inset:0;background:#0a0a0a;z-index:9999;display:none;
     align-items:center;justify-content:center;flex-direction:column;gap:20px}
   #auth-gate.hidden{display:none}
   .gate-box{background:#111;border:1px solid rgba(255,255,255,0.08);border-radius:16px;
@@ -123,8 +123,8 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
       <input class="gate-input" id="gate-pw" type="password"
         placeholder="••••••••••••••••"
         autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')checkGateAuth()"/>
-      <button class="gate-btn" onclick="checkGateAuth()">Access Launcher</button>
+        onkeydown="handleGateKeydown(event)"/>
+      <button class="gate-btn" id="gate-submit" onclick="checkGateAuth()">Access Launcher</button>
       <div class="gate-err" id="gate-err"></div>
     </div>
   </div>
@@ -175,62 +175,75 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 </div>
 
 <script>
-// ── Access Gate ───────────────────────────────────────────────────────────────
-(function(){
-  const SESSION_KEY = 'dynasty_auth_token';
-  const gate = document.getElementById('auth-gate');
+// ── Access Gate ─────────────────────────────────────────────────────────────
+(function() {
+  var AUTH_KEY = 'dlauth_v1';
+  var PW_CHECK = 'RFlOQVNUWS0yMDI2LUlLRQ=='; // base64 of the password
 
-  function isValidToken(token) {
-    if (!token) return false;
+  function getGate() { return document.getElementById('auth-gate'); }
+  function getBtn()  { return document.getElementById('gate-submit'); }
+  function getErr()  { return document.getElementById('gate-err'); }
+  function getPwIn() { return document.getElementById('gate-pw'); }
+
+  function isAuthed() {
     try {
-      const raw = atob(token);
-      const parts = raw.split(':');
-      if (parts[0] !== 'dynasty') return false;
-      const expiry = parseInt(parts[1]);
-      return expiry > Date.now();
-    } catch { return false; }
+      var stored = sessionStorage.getItem(AUTH_KEY) || localStorage.getItem(AUTH_KEY);
+      if (!stored) return false;
+      var d = JSON.parse(atob(stored));
+      return d.ok === true && d.exp > Date.now();
+    } catch(e) { return false; }
   }
 
-  // Check existing session
-  const stored = sessionStorage.getItem(SESSION_KEY);
-  if (isValidToken(stored)) {
-    gate.classList.add('hidden');
-  }
-  // Also check localStorage for longer persistence
-  const stored2 = localStorage.getItem(SESSION_KEY);
-  if (isValidToken(stored2)) {
-    gate.classList.add('hidden');
+  function setAuthed() {
+    var d = JSON.stringify({ ok: true, exp: Date.now() + 12*60*60*1000 });
+    var tok = btoa(d);
+    sessionStorage.setItem(AUTH_KEY, tok);
+    localStorage.setItem(AUTH_KEY, tok);
   }
 
-  window.checkGateAuth = async function() {
-    const pw = document.getElementById('gate-pw').value;
-    const errEl = document.getElementById('gate-err');
-    const btn = gate.querySelector('.gate-btn');
-    btn.textContent = 'Checking…'; btn.disabled = true;
-    errEl.textContent = '';
-    try {
-      const resp = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ password: pw })
-      });
-      const data = await resp.json();
-      if (data.ok) {
-        sessionStorage.setItem(SESSION_KEY, data.token);
-        localStorage.setItem(SESSION_KEY, data.token);
-        gate.classList.add('hidden');
-        document.getElementById('gate-pw').value = '';
-      } else {
-        errEl.textContent = 'Incorrect password. Try again.';
-        document.getElementById('gate-pw').value = '';
-        document.getElementById('gate-pw').focus();
-      }
-    } catch {
-      errEl.textContent = 'Connection error. Please refresh.';
+  function showGate() {
+    var g = getGate();
+    if (g) g.style.display = 'flex';
+  }
+
+  function hideGate() {
+    var g = getGate();
+    if (g) g.style.display = 'none';
+  }
+
+  // Run after DOM ready
+  document.addEventListener('DOMContentLoaded', function() {
+    if (isAuthed()) {
+      hideGate();
+    } else {
+      showGate();
     }
-    btn.textContent = 'Access Launcher'; btn.disabled = false;
+  });
+
+  window.checkGateAuth = function() {
+    var pw = getPwIn() ? getPwIn().value.trim() : '';
+    var errEl = getErr();
+    var btn = getBtn();
+    if (errEl) errEl.textContent = '';
+    if (!pw) {
+      if (errEl) errEl.textContent = 'Please enter your password.';
+      return;
+    }
+    if (btoa(pw) === PW_CHECK) {
+      setAuthed();
+      hideGate();
+      if (getPwIn()) getPwIn().value = '';
+    } else {
+      if (errEl) errEl.textContent = 'Incorrect password. Please try again.';
+      if (getPwIn()) { getPwIn().value = ''; getPwIn().focus(); }
+    }
+  };
+
+  window.handleGateKeydown = function(e) {
+    if (e.key === 'Enter') window.checkGateAuth();
   };
 })();
+
 
 const ORG_DEFAULT='pinohu',TMPL_DEFAULT='pinohu/dynasty-project-template';
 const FT='1ed943c21ef9e2f60fe1189241a246d769e4191051ad2c0c035282722cb4b030';
