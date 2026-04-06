@@ -436,14 +436,16 @@ export const getMonetizationConfig = () => nicheConfig.monetization ?? {
             body: JSON.stringify({ extra: { packageBundleId: bundleId, name: slug, domainName: domain } })
           });
           const pkgData = await pkgResp.json();
-          if (pkgResp.ok) {
+          const pkgCreated = pkgResp.ok && pkgData && !Array.isArray(pkgData) && (pkgData?.id || pkgData?.result?.id);
+          if (pkgCreated) {
             const pkgId = pkgData?.id || pkgData?.result?.id;
             results.twentyi = { package_id: pkgId, domain,
               control_panel: `https://my.20i.com/package/${pkgId}`,
               type: isWordPress ? 'WordPress' : 'Static' };
-          } else if (pkgResp.status === 401) {
+          } else if (pkgResp.status === 401 || (Array.isArray(pkgData) && pkgData.length === 0)) {
+            // 20i returns [] on auth failure (not always 401)
             results.twentyi = { manual: true, keys_expired: true,
-              action: '20i Reseller Panel → API Settings → Generate New Keys → update DYNASTY_TOOL_CONFIG.infrastructure.twentyi_general' };
+              action: '20i Reseller Panel → API Settings → Generate New Keys → update DYNASTY_TOOL_CONFIG.infrastructure.twentyi_general + twentyi_oauth' };
           } else {
             results.twentyi = { error: JSON.stringify(pkgData).slice(0,120) };
           }
@@ -468,12 +470,19 @@ export const getMonetizationConfig = () => nicheConfig.monetization ?? {
     if (config.infrastructure?.pulsetic) {
       const monitorUrl = needsTwentyi ? `https://${domain}` : `https://${slug}.vercel.app`;
       try {
-        const r = await fetch('https://api.pulsetic.com/api/public/monitors', {
+        const pulseResp = await fetch('https://api.pulsetic.com/api/public/monitors', {
           method: 'POST',
           headers: { 'Authorization': config.infrastructure.pulsetic, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: monitorUrl, name })
-        }).then(r => r.json());
-        results.pulsetic = { monitor_id: r.id || null };
+          body: JSON.stringify({ url: monitorUrl, friendly_name: name, type: 1, interval: 5 })
+        });
+        const pulseText = await pulseResp.text();
+        try {
+          const pulseData = JSON.parse(pulseText);
+          results.pulsetic = { monitor_id: pulseData?.monitor?.id || pulseData?.id || null, url: monitorUrl };
+        } catch {
+          // Pulsetic returned non-JSON (HTML error page) — skip silently
+          results.pulsetic = { ok: false, note: 'Pulsetic endpoint issue — add manually at pulsetic.com' };
+        }
       } catch (e) { results.pulsetic = { error: e.message }; }
     }
 
