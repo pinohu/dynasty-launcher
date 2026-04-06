@@ -1011,9 +1011,9 @@ services:
     environment:
       DATABASE_URL: postgresql://dynasty:dynasty_pass@db:5432/${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: $${SECRET_KEY:-changeme}
-      STRIPE_SECRET_KEY: $${STRIPE_SECRET_KEY}
-      STRIPE_WEBHOOK_SECRET: $${STRIPE_WEBHOOK_SECRET}
+      SECRET_KEY: \${SECRET_KEY:-changeme}
+      STRIPE_SECRET_KEY: \${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: \${STRIPE_WEBHOOK_SECRET}
     depends_on:
       db: {condition: service_healthy}
       redis: {condition: service_healthy}
