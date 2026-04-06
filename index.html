@@ -356,6 +356,9 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
       <p id="prog-sub">AI generation · 23 docs · Vercel + Neon + Stripe · 20i for WordPress/Static</p>
+      <div id="build-cost" style="font-size:11px;color:var(--gold);margin-top:4px;display:none">
+        Cost so far: <span id="cost-val">$0.00</span>
+      </div>
     </div>
     <div class="prog-list" id="prog-list"></div>
     <div class="eb" id="err-box" style="display:none"></div>
@@ -713,8 +716,8 @@ async function inferConfig(desc){
 Available Dynasty tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TOOL_INVENTORY.payments||[]).join(',')}) Comms(${(TOOL_INVENTORY.comms||[]).join(',')}) Infra(${(TOOL_INVENTORY.infrastructure||[]).join(',')}) SuiteDash(${TOOL_INVENTORY.suitedash_licenses} licenses) BD(${TOOL_INVENTORY.brilliant_licenses} licenses)`:'';
 
   try{
-    const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,
+    const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:V2_MODEL,max_tokens:1200,
         messages:[{role:'user',content:`Analyze this project description and infer all configuration. Return ONLY valid JSON.
 
 Description: "${desc}"${toolContext}
@@ -1985,7 +1988,7 @@ function showDone(inf,repo,fc,mtasks){
   const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
   const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];
   d.innerHTML=`
-<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated and pushed · ${provRes?.results?Object.keys(provRes.results).length+' services provisioned':'provisioning'} · ${mtasks.length} manual actions documented</p></div>
+<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated and pushed · ${provRes?.results?Object.keys(provRes.results).length+' services provisioned':'provisioning'} · ${mtasks.length} manual actions documented${V2_BUILD_COST > 0 ? ' · API cost: $' + V2_BUILD_COST.toFixed(4) : ' · API cost: $0.00 (free models)'}</p></div>
 <div class="biz-bar">
   <div class="bb-item"><div class="bb-l">Revenue</div><div class="bb-v">${inf.revenue_model} · ${inf.price}</div></div>
   <div class="bb-item"><div class="bb-l">Acquisition</div><div class="bb-v">${inf.acquisition}</div></div>
