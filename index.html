@@ -1258,10 +1258,12 @@ function onDescInput(){
   if(desc.length<10){
     document.getElementById('preview').style.display='none';
     btn.disabled=true;btn.textContent='Describe your project above to begin';
+    INFERRED=null;
     return;
   }
-  btn.disabled=false;btn.textContent=INFERRED?`Build "${INFERRED.name}" →`:'Build this project →';
-  inferTimer=setTimeout(()=>inferConfig(desc),800);
+  // Don't auto-infer — wait for user to click the button
+  btn.disabled=false;
+  btn.textContent=INFERRED?`Build "${INFERRED.name}" →`:'Analyze & Build →';
 }
 
 function updateLaunchBtn(){
@@ -1358,8 +1360,19 @@ function showPreview(inf){
 
 // Launch
 document.getElementById('launch-btn').addEventListener('click',async()=>{
-  if(!INFERRED)return;
   const desc=document.getElementById('project-desc').value.trim();
+  if(desc.length<10)return;
+
+  // If not yet inferred, run inference first
+  if(!INFERRED){
+    const btn=document.getElementById('launch-btn');
+    btn.disabled=true;btn.textContent='Analyzing your idea...';
+    await inferConfig(desc);
+    if(!INFERRED){btn.disabled=false;btn.textContent='Analyze & Build →';return;}
+    btn.disabled=false;btn.textContent='Build "'+INFERRED.name+'" →';
+    // Show preview and wait for second click to proceed
+    return;
+  }
 
   if (V2_MODE === 'strategic') {
     // Show framework screen
