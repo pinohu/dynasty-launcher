@@ -2575,7 +2575,7 @@ export const nicheConfig = {
 
     updateGlobalProgress(11, 11, 'Complete!');
     document.getElementById('global-progress').style.display = 'none';
-    showDone(inf,repo,fl.length,inf.manual_svcs||[]);
+    showDone(inf,repo,isAuthority ? 0 : Object.keys(files).length,inf.manual_svcs||[]);
   }catch(e){
     const eb=document.getElementById('err-box');
     eb.style.display='block';eb.textContent=e.message||'Unknown error';
