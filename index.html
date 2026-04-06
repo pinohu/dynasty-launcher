@@ -123,8 +123,8 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
       <input class="gate-input" id="gate-pw" type="password"
         placeholder="••••••••••••••••"
         autocomplete="current-password"
-        onkeydown="handleGateKeydown(event)"/>
-      <button class="gate-btn" id="gate-submit" onclick="checkGateAuth()">Access Launcher</button>
+        onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('gate-submit').click();}" />
+      <button class="gate-btn" id="gate-submit" onclick="(function(){var pw=document.getElementById('gate-pw').value.trim(),err=document.getElementById('gate-err'),correct='DYNASTY-2026-IKE';if(err)err.textContent='';if(!pw){if(err)err.textContent='Enter password.';return;}if(pw===correct){try{var t=JSON.stringify({ok:true,exp:Date.now()+43200000});sessionStorage.setItem('dlg',t);localStorage.setItem('dlg',t);}catch(e){}var g=document.getElementById('auth-gate');if(g){g.style.display='none';g.style.visibility='hidden';}document.getElementById('gate-pw').value='';}else{if(err)err.textContent='Incorrect password — try again.';document.getElementById('gate-pw').value='';document.getElementById('gate-pw').focus();}})()">Access Launcher</button>
       <div class="gate-err" id="gate-err"></div>
     </div>
   </div>
@@ -175,57 +175,9 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 </div>
 
 <script>
-// ── Dynasty Access Gate ─────────────────────────────────────────────────────
-var _dlgParts = ['DYNASTY', '2026', 'IKE'];
-var _dlgToken = 'dlauth2026';
+// ── Gate session check ───────────────────────────────────────────────────────
+(function(){try{var t=sessionStorage.getItem('dlg')||localStorage.getItem('dlg');if(t){var d=JSON.parse(t);if(d.ok&&d.exp>Date.now()){var g=document.getElementById('auth-gate');if(g){g.style.display='none';}}}}catch(e){}})();
 
-function _dlgIsOk() {
-  try {
-    var t = sessionStorage.getItem(_dlgToken) || localStorage.getItem(_dlgToken);
-    if (!t) return false;
-    var d = JSON.parse(t);
-    return d.ok && d.exp > Date.now();
-  } catch(e) { return false; }
-}
-
-function _dlgHide() {
-  var g = document.getElementById('auth-gate');
-  if (g) { g.style.display = 'none'; g.style.visibility = 'hidden'; }
-}
-
-function _dlgShow() {
-  var g = document.getElementById('auth-gate');
-  if (g) { g.style.display = 'flex'; g.style.visibility = 'visible'; }
-}
-
-window.checkGateAuth = function() {
-  var el = document.getElementById('gate-pw');
-  var err = document.getElementById('gate-err');
-  if (!el) return;
-  var pw = el.value.trim();
-  if (err) err.textContent = '';
-  var correct = _dlgParts[0] + '-' + _dlgParts[1] + '-' + _dlgParts[2];
-  if (pw === correct) {
-    try {
-      var tok = JSON.stringify({ ok: true, exp: Date.now() + 43200000 });
-      sessionStorage.setItem(_dlgToken, tok);
-      localStorage.setItem(_dlgToken, tok);
-    } catch(e) {}
-    _dlgHide();
-    el.value = '';
-  } else {
-    if (err) err.textContent = 'Incorrect password — try again.';
-    el.value = '';
-    el.focus();
-  }
-};
-
-window.handleGateKeydown = function(e) {
-  if (e && e.key === 'Enter') { e.preventDefault(); window.checkGateAuth(); }
-};
-
-// Check auth on load — gate is display:flex by default in CSS
-if (_dlgIsOk()) { _dlgHide(); }
 
 
 
