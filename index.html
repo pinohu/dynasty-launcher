@@ -97,25 +97,17 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   
   
   
-  .gate-box h2{font-size:1.4rem;margin-bottom:6px;font-weight:600}
-  .gate-box p{color:rgba(255,255,255,0.45);font-size:0.9rem;margin-bottom:24px}
   
-  .gate-input:focus{border-color:rgba(212,175,55,0.5)}
   
-  .gate-btn:hover{opacity:0.85}
+  
+  
+  
+  
   
   
   </style>
 </head>
 <body>
-<h2>Dynasty Launcher</h2>
-      <p>Enter your access password to continue</p>
-      <input class="gate-input" id="gate-pw" type="password"
-        placeholder="••••••••••••••••"
-        autocomplete="current-password"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('gate-submit').click();}" />
-      <button class="gate-btn" id="gate-submit" onclick="(function(){var pw=document.getElementById('gate-pw').value.trim(),err=document.getElementById('gate-err'),correct='DYNASTY-2026-IKE';if(err)err.textContent='';if(!pw){if(err)err.textContent='Enter password.';return;}if(pw===correct){try{var t=JSON.stringify({ok:true,exp:Date.now()+43200000});sessionStorage.setItem('dlg',t);localStorage.setItem('dlg',t);}catch(e){}var g=document.getElementById('auth-gate');if(g){g.style.display='none';g.style.visibility='hidden';}document.getElementById('gate-pw').value='';}else{if(err)err.textContent='Incorrect password — try again.';document.getElementById('gate-pw').value='';document.getElementById('gate-pw').focus();}})()">Access Launcher</button>
-      <div class="gate-err" id="gate-err"></div>
     </div>
   </div>
 <div class="page">
