@@ -1723,15 +1723,16 @@ Niche: ${desc}
 Domain: ${inf.domain}
 Accent color: ${inf.accent}
 
-The NicheConfig interface requires these exact fields:
+The config object requires these exact fields:
 site: { name, tagline, description, domain, foundedYear }
 branding: { primaryColor (HSL format), accentColor (HSL format) }
-seo: { defaultTitle, titleTemplate, defaultDescription, defaultImage, twitterHandle, keywords, author: { name, bio, credentials, email, socialLinks } }
+seo: { defaultTitle, titleTemplate, defaultDescription, defaultImage, keywords (12+), author: { name, bio, credentials (array), email } }
 niche: { name, primaryKeywords (10+), secondaryKeywords (15+), topicClusters (5 clusters each with title/slug/description/keywords/priority) }
-navigation: { main (5-7 links), cta, footer (3-4 sections) }
-social: { twitter, linkedin, facebook, instagram, youtube }
-features: { newsletter: true, darkMode: true, search: true, comments: false, analytics: true }
-content: { heroTitle, heroSubtitle, heroCTA: { primary, secondary }, aboutPage }
+navigation: { main (5-7 links with label+href), cta: { label, href }, footer (3-4 sections each with title + links array) }
+social: { twitter?, linkedin?, facebook?, instagram? }
+features: { newsletter: true, darkMode: true, search: true }
+directory: { enabled: true, name, description, categories (4-6 with name/slug/icon) }
+content: { heroTitle, heroSubtitle, heroCTA: { primary: { text, href }, secondary: { text, href } } }
 
 ---BEGIN:niche_config---
 /**
@@ -1740,9 +1741,7 @@ content: { heroTitle, heroSubtitle, heroCTA: { primary, secondary }, aboutPage }
  * Niche: ${desc.substring(0,100)}
  */
 
-import type { NicheConfig } from './niche.config.types';
-
-export const nicheConfig: NicheConfig = {
+export const nicheConfig = {
   site: {
     name: "${inf.name}",
     tagline: "[compelling tagline for this niche — 8-12 words]",
