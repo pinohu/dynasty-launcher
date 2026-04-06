@@ -225,8 +225,17 @@ export default async function handler(req, res) {
           method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
           body:JSON.stringify({name:slug,framework:'nextjs',
             gitRepository:{type:'github',repo:`${ORG}/${slug}`}})});
-        const pj=await pr.json(); vercelProjectId=pj.id||null;
-        results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`};
+        const pj=await pr.json();
+        if(pj.id){
+          vercelProjectId=pj.id;
+        } else {
+          // Project may already exist — fetch existing ID
+          const existing=await fetch(`https://api.vercel.com/v10/projects/${slug}?teamId=${VERCEL_TEAM}`,
+            {headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`}}).then(r=>r.json());
+          vercelProjectId=existing?.id||null;
+        }
+        results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
+          existing:!pj.id};
       }catch(e){results.vercel={error:e.message};}
     }
 
