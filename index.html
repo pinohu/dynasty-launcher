@@ -94,13 +94,27 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 /* Build layout — progress + education side by side */
 .build-layout{display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start}
 @media(max-width:700px){.build-layout{grid-template-columns:1fr}}
-.edu-card{position:sticky;top:80px;background:var(--card);border:1px solid var(--gb);border-radius:var(--rl);padding:1.1rem;transition:all .4s ease}
+.edu-card{position:sticky;top:80px;background:var(--card);border:1px solid var(--gb);border-radius:var(--rl);padding:1.1rem;transition:all .4s ease;overflow:hidden}
 .edu-phase{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--gold);margin-bottom:6px}
-.edu-title{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:8px;line-height:1.3;transition:opacity .3s}
-.edu-body{font-size:11px;color:var(--sec);line-height:1.55;margin-bottom:10px;transition:opacity .3s}
+.edu-title{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:8px;line-height:1.3}
+.edu-body{font-size:11px;color:var(--sec);line-height:1.55;margin-bottom:10px}
 .edu-tip{font-size:10px;color:var(--dim);line-height:1.4;padding-top:8px;border-top:1px solid var(--bdr)}
 .edu-card.pulse{animation:eduPulse .5s ease}
 @keyframes eduPulse{0%{border-color:var(--gb)}50%{border-color:var(--gold);box-shadow:0 0 12px rgba(201,168,76,0.15)}100%{border-color:var(--gb)}}
+/* Dynamic edu card elements */
+.edu-progress{height:3px;background:var(--bdr);border-radius:2px;margin:10px 0 6px;overflow:hidden}
+.edu-progress-fill{height:100%;background:var(--gold);border-radius:2px;animation:eduFill 12s ease-in-out infinite;width:0%}
+@keyframes eduFill{0%{width:5%}50%{width:85%}90%{width:95%}100%{width:5%}}
+.edu-facts{min-height:32px;margin-top:8px}
+.edu-fact{font-size:10px;color:var(--gold);opacity:0;animation:factFade 4s ease infinite;line-height:1.4}
+@keyframes factFade{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:translateY(0)}85%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-6px)}}
+.edu-spinner-mini{display:inline-flex;gap:2px;vertical-align:middle;margin-left:4px}
+.edu-spinner-mini span{width:3px;height:3px;border-radius:50%;background:var(--gold);animation:bounce .6s ease infinite}
+.edu-spinner-mini span:nth-child(2){animation-delay:.15s}
+.edu-spinner-mini span:nth-child(3){animation-delay:.3s}
+.edu-file-preview{margin-top:8px;padding:6px 8px;background:var(--panel);border-radius:var(--r);font-family:'SF Mono',monospace;font-size:9px;color:var(--dim);overflow:hidden;max-height:60px}
+.edu-file-preview .line{opacity:0;animation:lineReveal .3s ease forwards}
+@keyframes lineReveal{to{opacity:.6}}
 .eb{background:rgba(229,83,75,0.07);border:1px solid rgba(229,83,75,0.15);border-radius:var(--r);padding:.65rem .9rem;font-size:12px;color:var(--red);margin-top:.65rem}
 /* Mode selection */
 .mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
@@ -475,8 +489,11 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
       <div class="prog-list" id="prog-list"></div>
       <div class="edu-card" id="edu-card">
         <div class="edu-phase" id="edu-phase">Getting Ready</div>
-        <div class="edu-title" id="edu-title">Your business system is being built</div>
+        <div class="edu-title" id="edu-title">Your business system is being built<span class="edu-spinner-mini"><span></span><span></span><span></span></span></div>
         <div class="edu-body" id="edu-body">The AI is analyzing your description and will generate a complete business system — design, strategy, code, and infrastructure — all customized to your specific niche.</div>
+        <div class="edu-progress"><div class="edu-progress-fill" id="edu-progress-fill"></div></div>
+        <div class="edu-facts" id="edu-facts"></div>
+        <div class="edu-file-preview" id="edu-file-preview" style="display:none"></div>
         <div class="edu-tip" id="edu-tip">💡 Each file is production-ready and follows industry best practices.</div>
       </div>
     </div>
@@ -1538,87 +1555,156 @@ const EDU_CONTENT = {
     phase: '⬡ Design System',
     title: 'Creating your visual identity',
     body: 'The AI is generating a complete design system — color palette, typography hierarchy, component styles, spacing scale, and dark mode specification. This becomes the visual DNA of your entire product, ensuring every screen looks cohesive and professional.',
-    tip: '💡 DESIGN.md follows the awesome-design-md standard used by top design teams. CLAUDE.md tells AI assistants exactly how to build UI that matches your brand.'
+    tip: '💡 DESIGN.md follows the awesome-design-md standard used by top design teams. CLAUDE.md tells AI assistants exactly how to build UI that matches your brand.',
+    facts: ['Defining 12+ typography hierarchy levels...','Setting brand-tinted shadow colors (not generic black)...','Creating 6-state component specs: default, hover, focus, active, disabled, loading...','Building WCAG AA accessible color system...','Generating agent-ready prompt guide for consistent UI...'],
+    preview: ['## Color Palette & Roles','| Color | Hex | Role |','| Primary | #xxx | Brand accent |','| Surface | #1E1E1E | Card bg |','| Text | #EEEDE8 | Body copy |']
   },
   g2: {
     phase: '⬡ Product Docs',
     title: 'Writing your product specification',
     body: 'Your SPEC.md defines every feature, user story, and acceptance criterion. ROADMAP.md maps out 6 months of development. README.md gives anyone the quick-start guide to your codebase. These are the documents investors and developers need.',
-    tip: '💡 The manual actions file tells you exactly which services to configure by hand — Clerk auth, Stripe webhooks, Google Search Console.'
+    tip: '💡 The manual actions file tells you exactly which services to configure by hand — Clerk auth, Stripe webhooks, Google Search Console.',
+    facts: ['Defining MVP features with acceptance criteria...','Writing 6-month development roadmap...','Generating environment variable template...','Creating deployment instructions...'],
+    preview: ['# SPEC.md','## P0 — MVP Features','- User authentication','- Dashboard with KPIs','- Stripe subscription','- Admin panel']
   },
   g3: {
     phase: '⬡ Technical Docs',
     title: 'Architecting your data model',
     body: 'DATA-MODEL.md defines your database tables, relationships, and migration strategy. API-CONTRACTS.md specifies every endpoint — request format, response shape, error codes. KB-OUTLINES.md seeds your knowledge base with 10 SEO-ready articles.',
-    tip: '💡 These docs let any developer onboard to your codebase in hours instead of weeks.'
+    tip: '💡 These docs let any developer onboard to your codebase in hours instead of weeks.',
+    facts: ['Mapping database tables and relationships...','Defining REST API endpoint contracts...','Generating 10 SEO-ready knowledge base article outlines...','Setting up error code standards...'],
+    preview: ['## Core Endpoints','POST /auth/register','POST /auth/login','GET  /api/v1/resources','PUT  /api/v1/resources/:id']
   },
   g4a: {
     phase: '⬡ Business Strategy',
     title: 'Building your business engine',
     body: 'BUSINESS-SYSTEM.md is your complete operating manual — market positioning, 11-agent automation system, revenue projections, pricing tiers, and scale plan. REVENUE-MODEL.md shows month-by-month MRR growth. GTM-PLAYBOOK.md gives you day-by-day launch actions.',
-    tip: '💡 The business system includes actual sales scripts, email sequences, and KPI targets with specific numbers.'
+    tip: '💡 The business system includes actual sales scripts, email sequences, and KPI targets with specific numbers.',
+    facts: ['Building 12-month MRR projection model...','Writing word-for-word sales scripts...','Mapping 11-agent automation workflow...','Calculating unit economics: CAC, LTV, payback period...','Designing 3-tier pricing with feature gates...'],
+    preview: ['## Revenue Model','| Month | MRR | Customers |','| 1     | $0  | 0         |','| 3     | $2.9K | 30      |','| 12    | $29K  | 300     |']
   },
   g4b: {
     phase: '⬡ Agent System',
     title: 'Designing your AI workforce',
     body: 'AGENT-SYSTEM.md specifies 11 autonomous agents — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. FAILURE-MODES.md anticipates 10 specific failure scenarios with recovery playbooks.',
-    tip: '💡 Every agent maps to a real Dynasty tool — CallScaler, Insighto, SMS-iT, Stripe, n8n — ready to wire up.'
+    tip: '💡 Every agent maps to a real Dynasty tool — CallScaler, Insighto, SMS-iT, Stripe, n8n — ready to wire up.',
+    facts: ['Configuring intake → evaluation → decision pipeline...','Setting up circuit breakers for each failure mode...','Defining agent triggers, inputs, and outputs...','Mapping tool dependencies for 11 autonomous agents...'],
+    preview: ['## Agent: Lead Intake','Trigger: New form submission','Tool: CallScaler + Insighto','Output: Qualified lead object','Fallback: Manual review queue']
   },
   g5: {
     phase: '⬡ Backend Code',
     title: 'Generating production-ready code',
     body: 'A complete FastAPI Python backend with JWT authentication, rate limiting, CORS, Stripe webhooks, health checks, and database models. Includes Dockerfile for containerization and docker-compose for one-command deployment with PostgreSQL and Redis.',
-    tip: '💡 The backend is production-ready — not a prototype. It includes proper error handling, logging, and security headers.'
+    tip: '💡 The backend is production-ready — not a prototype. It includes proper error handling, logging, and security headers.',
+    facts: ['Writing JWT authentication with token refresh...','Setting up rate limiting (10 req/min on auth)...','Configuring CORS, logging, and health checks...','Building Stripe webhook handler...','Creating multi-stage Dockerfile (builder → slim)...'],
+    preview: ['from fastapi import FastAPI','app = FastAPI(title="API")','@app.post("/auth/register")','@app.get("/health")','# docker-compose up -d']
   },
   g7: {
     phase: '⬡ Frontend',
     title: 'Scaffolding your Next.js frontend',
     body: 'A Next.js 14 App Router frontend with TypeScript, Tailwind CSS, responsive layout, dashboard, and landing page. The design system colors and fonts from DESIGN.md are already wired into the Tailwind config.',
-    tip: '💡 Full-stack deploy means your frontend goes live on Vercel immediately — real URL, real HTTPS, real CDN.'
+    tip: '💡 Full-stack deploy means your frontend goes live on Vercel immediately — real URL, real HTTPS, real CDN.',
+    facts: ['Generating responsive landing page with hero section...','Building authenticated dashboard with stat cards...','Wiring Tailwind config to your brand colors...','Setting up TypeScript with strict mode...'],
+    preview: ['// src/app/page.tsx','export default function Home() {','  return (','    <Hero title={config.hero}','     cta={config.cta} />']
   },
   pf: {
     phase: '⬡ GitHub',
     title: 'Pushing files to your repository',
     body: 'Every generated file is being committed to your private GitHub repository. Once complete, you can clone it locally, invite collaborators, or hand it to a development team. The repo is ready for CI/CD.',
-    tip: '💡 Run "gh repo clone [repo] && cd [repo] && claude" to start building with AI assistance immediately.'
+    tip: '💡 Run "gh repo clone [repo] && cd [repo] && claude" to start building with AI assistance immediately.',
+    facts: ['Committing design system files...','Pushing business strategy documents...','Uploading backend code and Docker configs...','Adding documentation and config files...'],
+    preview: ['feat: DESIGN.md ✓','feat: SPEC.md ✓','feat: BUSINESS-SYSTEM.md ✓','feat: backend/main.py ✓','feat: docker-compose.yml ✓']
   },
   prov: {
     phase: '⬡ Infrastructure',
     title: 'Provisioning your tech stack',
     body: 'Real infrastructure is being set up right now — Stripe for payments, Vercel for hosting, Neon for your database, Acumbamail for email marketing. These are production services, not sandboxes.',
-    tip: '💡 Your Stripe product and price are already created. Your Vercel project is linked to GitHub for auto-deploy on every push.'
+    tip: '💡 Your Stripe product and price are already created. Your Vercel project is linked to GitHub for auto-deploy on every push.',
+    facts: ['Creating Stripe product and monthly price...','Setting up Vercel project with GitHub auto-deploy...','Provisioning Neon PostgreSQL database...','Creating Acumbamail email marketing list...','Configuring uptime monitoring...'],
+    preview: ['✓ Stripe: product created','✓ Vercel: project linked','✓ Neon: database ready','✓ Email: list configured','⟳ Pulsetic: monitoring...']
   },
   deploy: {
     phase: '⬡ Deployment',
     title: 'Launching your authority site',
     body: 'Your complete authority website is being deployed to Vercel right now. It includes AI-generated blog articles, FAQ content, testimonials, case studies, and a directory of real local businesses scraped from Google Maps.',
-    tip: '💡 The site will be live at your Vercel URL in about 90 seconds. Every page is SEO-optimized with Schema.org markup.'
+    tip: '💡 The site will be live at your Vercel URL in about 90 seconds. Every page is SEO-optimized with Schema.org markup.',
+    facts: ['Forking authority site template (80 files)...','AI writing 6 blog articles (800-1200 words each)...','Generating 15 FAQ items with detailed answers...','Creating 6 customer testimonials...','Scraping 20 real businesses from Google Maps...','Building 10 location-specific landing pages...','Generating social media calendar (260 posts)...'],
+    preview: ['→ Forking template...','→ Pushing niche config...','→ AI generating content...','→ Outscraper scraping...','→ Vercel deploying...']
   },
   social: {
     phase: '⬡ Social Media',
     title: 'Creating your 1-year content calendar',
     body: 'A complete social media strategy is being generated — 260+ posts across LinkedIn, Twitter/X, Instagram, Facebook, and TikTok. Each post is optimized for its platform with the right length, hashtags, and format.',
-    tip: '💡 The calendar exports as CSV for direct import into Buffer, Hootsuite, Later, or any scheduling tool. One year of content, ready to post.'
+    tip: '💡 The calendar exports as CSV for direct import into Buffer, Hootsuite, Later, or any scheduling tool. One year of content, ready to post.',
+    facts: ['Writing LinkedIn thought leadership posts...','Crafting Twitter/X hooks under 280 chars...','Creating Instagram captions with hashtag strategy...','Scripting TikTok hooks (Hook→Content→CTA)...','Generating Facebook engagement questions...'],
+    preview: ['[LinkedIn] Week 1','Industry insight post...','#niche #authority #expert','','[Twitter] Week 1','Punchy hook under 280 chars']
   },
   niche: {
     phase: '⬡ Niche Config',
     title: 'Customizing for your market',
     body: 'A complete niche configuration is being generated — SEO keywords, topic clusters, navigation structure, branding colors, author credentials, and directory categories. This single file drives every piece of content on your authority site.',
-    tip: '💡 One config file, 23 pages. Change niche.config.ts to instantly re-brand the entire site for a different market.'
+    tip: '💡 One config file, 23 pages. Change niche.config.ts to instantly re-brand the entire site for a different market.',
+    facts: ['Generating 12+ primary SEO keywords...','Building 5 topic cluster structures...','Setting up navigation with 5-7 main links...','Configuring directory categories...','Creating HSL color system from accent color...'],
+    preview: ['site: {','  name: "Your Business"','  tagline: "Your tagline"','  domain: "yourdomain.com"','}']
   }
 };
+
+let _eduFactInterval = null;
 
 function updateEduCard(phaseId) {
   const card = document.getElementById('edu-card');
   const content = EDU_CONTENT[phaseId];
   if (!card || !content) return;
+
+  // Pulse animation
   card.classList.remove('pulse');
-  void card.offsetWidth; // trigger reflow for animation restart
+  void card.offsetWidth;
   card.classList.add('pulse');
+
+  // Update static content
   document.getElementById('edu-phase').textContent = content.phase;
-  document.getElementById('edu-title').textContent = content.title;
+  document.getElementById('edu-title').innerHTML = content.title + '<span class="edu-spinner-mini"><span></span><span></span><span></span></span>';
   document.getElementById('edu-body').textContent = content.body;
   document.getElementById('edu-tip').textContent = content.tip;
+
+  // Reset progress bar animation
+  const fill = document.getElementById('edu-progress-fill');
+  if (fill) { fill.style.animation = 'none'; void fill.offsetWidth; fill.style.animation = 'eduFill 12s ease-in-out infinite'; }
+
+  // Rotating facts
+  if (_eduFactInterval) clearInterval(_eduFactInterval);
+  const facts = content.facts || [];
+  if (facts.length > 0) {
+    let factIdx = 0;
+    const factsEl = document.getElementById('edu-facts');
+    const showFact = () => {
+      factsEl.innerHTML = '<div class="edu-fact" style="animation-delay:0s">' + facts[factIdx % facts.length] + '</div>';
+      factIdx++;
+    };
+    showFact();
+    _eduFactInterval = setInterval(showFact, 4000);
+  } else {
+    document.getElementById('edu-facts').innerHTML = '';
+  }
+
+  // Simulated file preview
+  const preview = document.getElementById('edu-file-preview');
+  if (content.preview && preview) {
+    preview.style.display = 'block';
+    preview.innerHTML = '';
+    const lines = content.preview;
+    lines.forEach((line, i) => {
+      setTimeout(() => {
+        const div = document.createElement('div');
+        div.className = 'line';
+        div.style.animationDelay = (i * 0.15) + 's';
+        div.textContent = line;
+        preview.appendChild(div);
+      }, i * 300);
+    });
+  } else if (preview) {
+    preview.style.display = 'none';
+  }
 }
 
 function showLoadingOverlay(text, sub) {
