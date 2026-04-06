@@ -871,39 +871,49 @@ async function build(desc,inf){
 ${cx(desc,inf)}
 Master tokens: dynasty-black #0A0A0A, dynasty-gold #C9A84C, 8px spacing, shadow-border rgba(0,0,0,0.08) 0px 0px 0px 1px, WCAG AA required.
 
+Generate following the awesome-design-md format (VoltAgent/awesome-design-md). Each section must be specific, evocative, and technically precise — not generic. Include exact hex values, rgba shadows, font weights, letter-spacing values, and border-radius tokens. The Visual Theme section should read like a design critic's review of the product — specific enough that an AI agent can recreate the aesthetic from description alone.
+
+IMPORTANT DESIGN SYSTEM RULES (from awesome-design-md best practices):
+- Shadow colors should use brand-tinted rgba values (like Stripe's rgba(50,50,93,0.25)), not generic black
+- Headlines should use negative letter-spacing at display sizes (progressive tightening)
+- Border philosophy should be explicitly stated (whisper-weight like Notion, or pronounced like IBM)
+- Every interactive component needs 6 states: default, hover, focus, active, disabled, loading
+- Color roles must distinguish between: page background, card surface, primary text, secondary text, muted text, primary accent, accent hover, accent light, borders, shadows, focus ring
+- Status system must define: verified/active, pending, expired/error, draft, admin — each with bg/text/border hex
+
 ---BEGIN:design_md---
 # DESIGN.md — ${inf.name}
 > Inherits from: DYNASTY-DESIGN.md
 
 ## 1. Visual Theme & Atmosphere
-[3 specific paragraphs — precise and evocative, never generic. Describe the product's visual identity, surface treatment, and typographic signature.]
+[3 evocative paragraphs with precise technical descriptions — like a design critic's review]
 Key Characteristics:
 - [8 precise technical bullets with exact values]
 
 ## 2. Color Palette & Roles
 | Color | Hex | Role |
-[Complete table: page background, card surface, primary text, secondary text, muted text, primary accent ${inf.accent}, accent hover, accent light, borders, shadows, focus ring]
+[Complete table: page background, card surface, primary text, secondary text, muted text, primary accent ${inf.accent}, accent hover, accent light, borders, shadows (brand-tinted rgba), focus ring]
 [Status system table: verified/pending/expired/draft/admin with bg/text/border hex for each]
 [Dynasty Gold #C9A84C — premium tier markers only]
 
 ## 3. Typography Rules
 Font Stack:
 | Role | Font | Fallback |
-[Font stack table]
+[Font stack table with OpenType features]
 
 Hierarchy:
-| Role | Font | Size | Weight | Line Height | Letter Spacing | Use |
-[14+ rows covering all content levels]
+| Role | Font | Size | Weight | Line Height | Letter Spacing | Features | Use |
+[14+ rows — display sizes use negative letter-spacing (progressive tightening)]
 
 ## 4. Component Stylings
-[Exact specs for: Primary button, Secondary button, Destructive button, Standard card, Featured card, Status badges (always pill 9999px + text label), Form inputs (all 6 states), Navigation]
+[Exact specs for: Primary button (all 6 states), Secondary button, Destructive button, Standard card, Featured card, Status badges (always pill 9999px + text label), Form inputs (default/hover/focus/active/disabled/loading), Navigation]
 
 ## 5. Layout Principles
-[Page structure, spacing scale, whitespace philosophy]
+[Page structure, spacing scale (8px base), grid system, whitespace philosophy]
 
 ## 6. Depth & Elevation
-| Level | Treatment | Use |
-[6 levels from flat to modal]
+| Level | Shadow Value | Use |
+[6 levels from flat to modal with exact brand-tinted rgba shadow values]
 
 ## 7. Do's and Don'ts
 Do: [12 specific rules for this product]
@@ -1118,11 +1128,23 @@ ${cx(desc,inf)}
       setP('g3','ok','Technical docs ready');
     }catch(e){setP('g3','er',e.message);throw e;}
 
+    const scorecardContext = V2_SCORECARD ? `
+DYNASTY VIABILITY SCORECARD (embed this at the top of BUSINESS-SYSTEM.md):
+Composite Score: ${V2_SCORECARD.composite}/10 — ${V2_SCORECARD.verdict}
+${Object.entries(V2_SCORECARD.scores).map(([k,v]) => `${k}: ${v.score}/10 — ${v.rationale}`).join('\n')}
+Risk: ${V2_SCORECARD.risk_summary}
+Opportunity: ${V2_SCORECARD.opportunity_summary}
+
+FRAMEWORK ANALYSES TO INCLUDE:
+${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.replace(/_/g,' ').toUpperCase()}\n${v}`).join('\n\n')}
+` : '';
+
     addP('g4a','Generating BUSINESS-SYSTEM + REVENUE-MODEL + GTM-PLAYBOOK','','⬡ Business System');setP('g4a','run');
     let bz1;try{
       bz1=await ai(`CREATIVE AUTHORITY ARCHITECT. Generate business strategy files. Return in delimiter format ONLY. No preamble.
 
 ${cx(desc,inf)}
+${scorecardContext}
 
 ---BEGIN:biz_system---
 # BUSINESS-SYSTEM.md — ${inf.name}
