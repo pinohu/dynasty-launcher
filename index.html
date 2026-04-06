@@ -175,61 +175,58 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 </div>
 
 <script>
-// ── Access Gate ─────────────────────────────────────────────────────────────
-(function() {
-  var AUTH_KEY = 'dlauth_v1';
-  // base64 of "DYNASTY-2026-IKE"
-  var PW_CHECK = 'RFlOQVNUWS0yMDI2LUlLRQ==';
+// ── Dynasty Access Gate ─────────────────────────────────────────────────────
+var _dlgParts = ['DYNASTY', '2026', 'IKE'];
+var _dlgToken = 'dlauth2026';
 
-  function hideGate() {
-    var g = document.getElementById('auth-gate');
-    if (g) g.style.display = 'none';
-  }
+function _dlgIsOk() {
+  try {
+    var t = sessionStorage.getItem(_dlgToken) || localStorage.getItem(_dlgToken);
+    if (!t) return false;
+    var d = JSON.parse(t);
+    return d.ok && d.exp > Date.now();
+  } catch(e) { return false; }
+}
 
-  function isAuthed() {
+function _dlgHide() {
+  var g = document.getElementById('auth-gate');
+  if (g) { g.style.display = 'none'; g.style.visibility = 'hidden'; }
+}
+
+function _dlgShow() {
+  var g = document.getElementById('auth-gate');
+  if (g) { g.style.display = 'flex'; g.style.visibility = 'visible'; }
+}
+
+window.checkGateAuth = function() {
+  var el = document.getElementById('gate-pw');
+  var err = document.getElementById('gate-err');
+  if (!el) return;
+  var pw = el.value.trim();
+  if (err) err.textContent = '';
+  var correct = _dlgParts[0] + '-' + _dlgParts[1] + '-' + _dlgParts[2];
+  if (pw === correct) {
     try {
-      var tok = sessionStorage.getItem(AUTH_KEY) || localStorage.getItem(AUTH_KEY);
-      if (!tok) return false;
-      var obj = JSON.parse(atob(tok));
-      return obj && obj.ok === true && obj.exp > Date.now();
-    } catch(e) { return false; }
+      var tok = JSON.stringify({ ok: true, exp: Date.now() + 43200000 });
+      sessionStorage.setItem(_dlgToken, tok);
+      localStorage.setItem(_dlgToken, tok);
+    } catch(e) {}
+    _dlgHide();
+    el.value = '';
+  } else {
+    if (err) err.textContent = 'Incorrect password — try again.';
+    el.value = '';
+    el.focus();
   }
+};
 
-  // If already authenticated, hide gate immediately (script runs after gate HTML)
-  if (isAuthed()) hideGate();
+window.handleGateKeydown = function(e) {
+  if (e && e.key === 'Enter') { e.preventDefault(); window.checkGateAuth(); }
+};
 
-  window.checkGateAuth = function() {
-    var pwEl = document.getElementById('gate-pw');
-    var errEl = document.getElementById('gate-err');
-    var pw = pwEl ? pwEl.value.trim() : '';
-    if (errEl) errEl.textContent = '';
+// Check auth on load — gate is display:flex by default in CSS
+if (_dlgIsOk()) { _dlgHide(); }
 
-    if (!pw) {
-      if (errEl) errEl.textContent = 'Please enter your password.';
-      return;
-    }
-
-    var entered;
-    try { entered = btoa(unescape(encodeURIComponent(pw))); }
-    catch(e) { entered = btoa(pw); }
-
-    if (entered === PW_CHECK) {
-      // Save auth token (12 hour expiry)
-      var tok = btoa(JSON.stringify({ ok: true, exp: Date.now() + 43200000 }));
-      sessionStorage.setItem(AUTH_KEY, tok);
-      localStorage.setItem(AUTH_KEY, tok);
-      hideGate();
-      if (pwEl) pwEl.value = '';
-    } else {
-      if (errEl) errEl.textContent = 'Incorrect password. Please try again.';
-      if (pwEl) { pwEl.value = ''; pwEl.focus(); }
-    }
-  };
-
-  window.handleGateKeydown = function(e) {
-    if (e.key === 'Enter') window.checkGateAuth();
-  };
-})();
 
 
 
