@@ -198,8 +198,12 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .sc-action p{font-size:11px;color:var(--sec);line-height:1.4}
 .sc-act-cost{font-size:9px;color:var(--gold);margin-top:.4rem;font-weight:600}
 /* Refinement results */
-.ref-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.75rem 1rem;margin-bottom:6px;cursor:pointer;transition:.12s}
+.ref-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:.75rem 1rem;margin-bottom:6px;cursor:pointer;transition:.12s;display:flex;gap:10px;align-items:flex-start}
 .ref-card:hover{border-color:var(--gb)}
+.ref-card.selected{border-color:var(--gold);background:var(--gdim)}
+.ref-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--bdr);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;transition:.12s}
+.ref-card.selected .ref-check{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.ref-content{flex:1}
 .ref-card h5{font-size:12px;font-weight:600;margin-bottom:3px}
 .ref-card p{font-size:11px;color:var(--sec);line-height:1.4}
 .ref-impact{font-size:10px;color:var(--grn);font-weight:600;margin-top:4px}
@@ -786,17 +790,24 @@ Return ONLY valid JSON array:
     if (!m) throw new Error('Invalid response');
     const refinements = JSON.parse(m[0]);
 
-    resultsDiv.innerHTML = '<h4 style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--tx)">Suggested Refinements</h4>' +
+    window._refinements = refinements;
+    window._selectedRefinements = new Set();
+
+    resultsDiv.innerHTML = '<h4 style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--tx)">Suggested Refinements — select all that apply</h4>' +
       refinements.map((r, i) => `
-        <div class="ref-card" onclick="acceptRefinement(${i})">
-          <h5>${r.title}</h5>
-          <p>${r.description}</p>
-          <div class="ref-impact">Predicted: ${r.predicted_impact} (${r.target_dimension?.replace(/_/g,' ')})</div>
+        <div class="ref-card" id="ref-card-${i}" onclick="toggleRefinement(${i})">
+          <div class="ref-check" id="ref-check-${i}">✓</div>
+          <div class="ref-content">
+            <h5>${r.title}</h5>
+            <p>${r.description}</p>
+            <div class="ref-impact">Predicted: ${r.predicted_impact} (${r.target_dimension?.replace(/_/g,' ')})</div>
+          </div>
         </div>
       `).join('') +
-      '<p style="font-size:10px;color:var(--dim);margin-top:6px">Click a refinement to apply it to your idea and re-score.</p>';
-
-    window._refinements = refinements;
+      '<div style="display:flex;gap:8px;margin-top:10px">' +
+      '<button class="launch" style="flex:1" id="apply-refinements-btn" onclick="applySelectedRefinements()" disabled>Select refinements above</button>' +
+      '<button class="launch" style="flex:0 0 auto;background:transparent;border:1px solid var(--bdr);color:var(--dim);padding:0 16px" onclick="selectAllRefinements()">Select all</button>' +
+      '</div>';
   } catch (e) {
     resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--red)">Failed to generate refinements. Try again.</p>';
   }
@@ -804,15 +815,37 @@ Return ONLY valid JSON array:
   btn.style.pointerEvents = 'auto';
 }
 
-async function acceptRefinement(idx) {
-  const r = window._refinements[idx];
-  if (!r) return;
+function toggleRefinement(idx) {
+  const card = document.getElementById('ref-card-' + idx);
+  if (window._selectedRefinements.has(idx)) {
+    window._selectedRefinements.delete(idx);
+    card.classList.remove('selected');
+  } else {
+    window._selectedRefinements.add(idx);
+    card.classList.add('selected');
+  }
+  const btn = document.getElementById('apply-refinements-btn');
+  const count = window._selectedRefinements.size;
+  btn.disabled = count === 0;
+  btn.textContent = count === 0 ? 'Select refinements above' : 'Apply ' + count + ' refinement' + (count > 1 ? 's' : '') + ' →';
+}
+
+function selectAllRefinements() {
+  window._refinements.forEach((_, i) => {
+    if (!window._selectedRefinements.has(i)) toggleRefinement(i);
+  });
+}
+
+async function applySelectedRefinements() {
+  const selected = Array.from(window._selectedRefinements).map(i => window._refinements[i]).filter(Boolean);
+  if (selected.length === 0) return;
   const desc = document.getElementById('project-desc').value.trim();
-  document.getElementById('project-desc').value = desc + '\n\nREFINEMENT: ' + r.title + ' — ' + r.description;
+  const additions = selected.map(r => 'REFINEMENT: ' + r.title + ' — ' + r.description).join('\n\n');
+  document.getElementById('project-desc').value = desc + '\n\n' + additions;
   INFERRED = null;
-  document.getElementById('refinement-results').innerHTML = '<p style="font-size:12px;color:var(--gold)">Re-inferring with refinement applied...</p>';
+  document.getElementById('refinement-results').innerHTML = '<p style="font-size:12px;color:var(--gold)">Re-inferring with ' + selected.length + ' refinement' + (selected.length > 1 ? 's' : '') + ' applied...</p>';
   await inferConfig(document.getElementById('project-desc').value.trim());
-  document.getElementById('refinement-results').innerHTML = '<p style="font-size:12px;color:var(--grn)">✓ Refinement applied. Click "Score this idea" again to see the improvement.</p>';
+  document.getElementById('refinement-results').innerHTML = '<p style="font-size:12px;color:var(--grn)">✓ ' + selected.length + ' refinement' + (selected.length > 1 ? 's' : '') + ' applied. Click "Score this idea" again to see the improvement.</p>';
 }
 
 // ── Multi-Model Pivot Review Pipeline ──────────────────────────────────
