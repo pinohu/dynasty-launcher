@@ -1130,9 +1130,10 @@ hsl:
     if(!isAuthority){await new Promise(r=>setTimeout(r,3500));}setP('cr','ok');
 
     // ── Authority site: generate niche.config.ts ───────────────────────────
+    let nc=null;
     if(isAuthority){
       addP('niche','Generating niche.config.ts for authority site','');setP('niche','run');
-      let nc;try{
+      try{
         nc=await ai(`GENERATE a complete TypeScript niche configuration for an authority site. Return in delimiter format ONLY. No preamble.
 
 Project: ${inf.name}
