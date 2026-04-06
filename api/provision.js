@@ -472,6 +472,134 @@ Make each post unique, engaging, and niche-specific.`, 4000);
       }
     } catch{}
 
+    // 4h. Generate 1-year social media calendar (260 posts across 5 platforms)
+    try {
+      const socialCalendarPosts = [];
+      const platforms = ['linkedin', 'twitter', 'instagram', 'facebook', 'tiktok'];
+      const quarters = [
+        { name: 'Q1', weeks: '1-13', theme: 'Foundation & Brand Awareness', focus: 'Introduce the brand, share educational content, establish authority' },
+        { name: 'Q2', weeks: '14-26', theme: 'Authority Building & Engagement', focus: 'Deep-dive content, case studies, community building, customer stories' },
+        { name: 'Q3', weeks: '27-39', theme: 'Growth & Promotions', focus: 'Special offers, partnerships, expanded reach, seasonal content' },
+        { name: 'Q4', weeks: '40-52', theme: 'Year-End & Planning', focus: 'Reviews, testimonials, holiday campaigns, next-year teasers' }
+      ];
+
+      for (const q of quarters) {
+        const calRaw = await aiGenerate(`Generate a social media content calendar for "${niche_name}" — ${q.name} (weeks ${q.weeks}).
+Theme: ${q.theme}
+Focus: ${q.focus}
+Keywords: ${keywords}
+
+Generate 65 posts (5 platforms × 13 weeks). For EACH week, create 1 post per platform.
+
+Platform rules:
+- LinkedIn: Professional, 150-300 words, industry insights, 3-5 hashtags
+- Twitter/X: Under 280 chars, punchy, 2-3 hashtags, include a hook
+- Instagram: Visual-first caption, emojis, 10-15 hashtags, storytelling
+- Facebook: Conversational, 100-200 words, question-based engagement, 3-5 hashtags
+- TikTok: Script format (Hook → Content → CTA), trend-aware, 5-8 hashtags
+
+Content mix per week: tip, stat/fact, behind-the-scenes, testimonial, how-to, promotion, engagement question, industry news, case study, seasonal — rotate themes.
+
+Return ONLY a valid JSON array (no markdown, no backticks):
+[
+  {"week":1,"platform":"linkedin","content":"Post content here...","hashtags":["#tag1","#tag2"],"mediaType":"text","callToAction":"Learn more at our website","theme":"educational"},
+  {"week":1,"platform":"twitter","content":"Short punchy tweet...","hashtags":["#tag1"],"mediaType":"text","callToAction":"","theme":"tip"},
+  ...continue for all 65 posts
+]`, 8000);
+
+        try {
+          const match = calRaw.match(/\[[\s\S]*\]/);
+          if (match) {
+            const posts = JSON.parse(match[0]);
+            // Adjust week numbers for quarter offset
+            const weekOffset = parseInt(q.weeks.split('-')[0]) - 1;
+            posts.forEach(p => { p.week = p.week + weekOffset; });
+            socialCalendarPosts.push(...posts);
+          }
+        } catch {}
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      if (socialCalendarPosts.length > 50) {
+        // Push TypeScript data file
+        const tsFile = `export interface SocialCalendarPost {\n  week: number;\n  platform: 'linkedin' | 'twitter' | 'instagram' | 'facebook' | 'tiktok';\n  content: string;\n  hashtags: string[];\n  mediaType: string;\n  callToAction: string;\n  theme: string;\n}\n\nexport const socialCalendar: SocialCalendarPost[] = ${JSON.stringify(socialCalendarPosts, null, 2)};\n\nexport const getPostsByPlatform = (p: string) => socialCalendar.filter(post => post.platform === p);\nexport const getPostsByWeek = (w: number) => socialCalendar.filter(post => post.week === w);\nexport const getPostsByTheme = (t: string) => socialCalendar.filter(post => post.theme === t);\n`;
+        await pushFile(GH_TOKEN, ORG, project_slug, 'src/data/socialCalendar.ts', tsFile, 'feat: 1-year social media calendar (260+ posts)');
+        await new Promise(r => setTimeout(r, 300));
+
+        // Generate CSV (universal scheduler import format)
+        const startDate = new Date();
+        const csvRows = ['Date,Time,Platform,Content,Hashtags,MediaType,CTA,Theme,Status'];
+        socialCalendarPosts.forEach(p => {
+          const postDate = new Date(startDate);
+          postDate.setDate(postDate.getDate() + (p.week - 1) * 7 + platforms.indexOf(p.platform));
+          const dateStr = postDate.toISOString().split('T')[0];
+          const content = p.content.replace(/"/g, '""');
+          const tags = (p.hashtags || []).join(' ');
+          csvRows.push(`"${dateStr}","09:00","${p.platform}","${content}","${tags}","${p.mediaType}","${p.callToAction || ''}","${p.theme}","scheduled"`);
+        });
+        await pushFile(GH_TOKEN, ORG, project_slug, 'social-media/calendar.csv', csvRows.join('\n'), 'feat: social media calendar CSV');
+        await new Promise(r => setTimeout(r, 200));
+
+        // Generate JSON
+        await pushFile(GH_TOKEN, ORG, project_slug, 'social-media/calendar.json', JSON.stringify(socialCalendarPosts, null, 2), 'feat: social media calendar JSON');
+        await new Promise(r => setTimeout(r, 200));
+
+        // Generate Hootsuite CSV format
+        const hootRows = ['Date,Time,Message,Link'];
+        socialCalendarPosts.forEach(p => {
+          const postDate = new Date(startDate);
+          postDate.setDate(postDate.getDate() + (p.week - 1) * 7 + platforms.indexOf(p.platform));
+          const dateStr = `${postDate.getMonth()+1}/${postDate.getDate()}/${postDate.getFullYear()}`;
+          const msg = p.content.replace(/"/g, '""') + ' ' + (p.hashtags || []).join(' ');
+          hootRows.push(`"${dateStr}","09:00 AM","${msg}",""`);
+        });
+        await pushFile(GH_TOKEN, ORG, project_slug, 'social-media/hootsuite-import.csv', hootRows.join('\n'), 'feat: Hootsuite import CSV');
+        await new Promise(r => setTimeout(r, 200));
+
+        // Generate Buffer CSV format
+        const bufferRows = ['Text,Link,Scheduled At'];
+        socialCalendarPosts.forEach(p => {
+          const postDate = new Date(startDate);
+          postDate.setDate(postDate.getDate() + (p.week - 1) * 7 + platforms.indexOf(p.platform));
+          const text = p.content.replace(/"/g, '""') + ' ' + (p.hashtags || []).join(' ');
+          bufferRows.push(`"${text}","","${postDate.toISOString()}"`);
+        });
+        await pushFile(GH_TOKEN, ORG, project_slug, 'social-media/buffer-import.csv', bufferRows.join('\n'), 'feat: Buffer import CSV');
+        await new Promise(r => setTimeout(r, 200));
+
+        // Generate TXT (simple text format)
+        let txtContent = `# ${niche_name} — 1-Year Social Media Calendar\n# Generated by Dynasty Launcher\n# ${socialCalendarPosts.length} posts across 5 platforms\n\n`;
+        for (let w = 1; w <= 52; w++) {
+          const weekPosts = socialCalendarPosts.filter(p => p.week === w);
+          if (weekPosts.length === 0) continue;
+          txtContent += `═══════════════════════════════════════════\n`;
+          txtContent += `WEEK ${w}\n`;
+          txtContent += `═══════════════════════════════════════════\n\n`;
+          weekPosts.forEach(p => {
+            txtContent += `[${p.platform.toUpperCase()}] (${p.theme})\n`;
+            txtContent += `${p.content}\n`;
+            txtContent += `Hashtags: ${(p.hashtags || []).join(' ')}\n`;
+            if (p.callToAction) txtContent += `CTA: ${p.callToAction}\n`;
+            txtContent += `\n`;
+          });
+        }
+        await pushFile(GH_TOKEN, ORG, project_slug, 'social-media/calendar.txt', txtContent, 'feat: social media calendar TXT');
+        await new Promise(r => setTimeout(r, 200));
+
+        // Generate Markdown table
+        let mdContent = `# ${niche_name} — Social Media Calendar\n\n`;
+        mdContent += `> ${socialCalendarPosts.length} posts across 5 platforms for 52 weeks\n\n`;
+        mdContent += `| Week | Platform | Theme | Content | Hashtags |\n`;
+        mdContent += `|------|----------|-------|---------|----------|\n`;
+        socialCalendarPosts.slice(0, 100).forEach(p => {
+          const short = p.content.substring(0, 80).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+          mdContent += `| ${p.week} | ${p.platform} | ${p.theme} | ${short}... | ${(p.hashtags || []).slice(0, 3).join(' ')} |\n`;
+        });
+        if (socialCalendarPosts.length > 100) mdContent += `\n*...and ${socialCalendarPosts.length - 100} more posts. See calendar.csv for the complete calendar.*\n`;
+        await pushFile(GH_TOKEN, ORG, project_slug, 'social-media/SOCIAL-MEDIA-CALENDAR.md', mdContent, 'feat: social media calendar markdown');
+      }
+    } catch {}
+
     // 7.2 Push updated index.html
     try {
       const descMatch = (niche_config||'').match(/description:\s*["']([^"']+)["']/);
