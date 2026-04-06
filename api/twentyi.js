@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
     // Determine bundle — WordPress vs Static HTML
     const isWordPress = type === 'wp-theme' || type === 'wordpress';
-    const bundleId = isWordPress ? 88283 : 189904; // 88283=WordPress Launchpad, 189904=Linux Launchpad
+    const bundleId = isWordPress ? 88291 : 80359; // 88291=WordPress Pinnacle, 80359=Linux Pinnacle
 
     // 1. Create package
     const pkgResp = await twentyiRequest(auth, 'POST', '/reseller/10455/addWeb', {
