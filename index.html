@@ -1382,7 +1382,7 @@ export const nicheConfig: NicheConfig = {
       }
     } catch {}
 
-    showDone(inf,repo,fl.length,ftasks,inf.manual_svcs||[]);
+    showDone(inf,repo,fl.length,[],inf.manual_svcs||[]);
   }catch(e){
     const eb=document.getElementById('err-box');
     eb.style.display='block';eb.textContent=e.message||'Unknown error';
