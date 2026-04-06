@@ -252,32 +252,40 @@ export const caseStudies = [
       }
     } catch{}
 
-    // 4e. Generate directory listings (Google Places or AI fallback)
+    // 4e. Generate directory listings (Outscraper Google Maps or AI fallback)
     try {
-      const PLACES_KEY = process.env.GOOGLE_PLACES_API_KEY;
+      const OUTSCRAPER_KEY = process.env.OUTSCRAPER_API_KEY;
       let directoryData = '';
-      if (PLACES_KEY) {
-        // Real Google Places data
-        const query = encodeURIComponent(`${niche_name} near ${domain?.replace('.vercel.app','').replace(/\./g,' ') || 'United States'}`);
-        const pr = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${PLACES_KEY}`);
+      if (OUTSCRAPER_KEY) {
+        // Real business data from Outscraper Google Maps API
+        const location = domain?.replace('.vercel.app','').replace(/\./g,' ') || 'United States';
+        const query = encodeURIComponent(`${niche_name} in ${location}`);
+        const pr = await fetch(`https://api.app.outscraper.com/google-maps-search?query=${query}&limit=20&language=en`, {
+          headers: { 'X-API-KEY': OUTSCRAPER_KEY }
+        });
         const pd = await pr.json();
-        if (pd.results?.length) {
-          const listings = pd.results.slice(0,20).map((p,i) => ({
-            id: p.place_id || `listing-${i}`,
-            name: p.name,
-            slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),
+        const results = Array.isArray(pd) ? pd.flat() : (pd.data || pd.results || []);
+        if (results?.length) {
+          const listings = results.slice(0,20).map((p,i) => ({
+            id: p.place_id || p.google_id || `listing-${i+1}`,
+            name: p.name || p.title || '',
+            slug: (p.name||p.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),
             category: 'general',
-            description: `${p.name} — Professional ${niche_name.toLowerCase()} services. ${p.formatted_address || ''}`,
-            address: p.formatted_address || '',
-            city: (p.formatted_address||'').split(',')[0]?.trim() || '',
-            state: (p.formatted_address||'').split(',')[1]?.trim() || '',
+            description: p.description || p.about || `${p.name} — Professional ${niche_name.toLowerCase()} services in ${p.city || location}.`,
+            address: p.full_address || p.address || '',
+            city: p.city || '',
+            state: p.state || '',
+            phone: p.phone || '',
+            email: p.email || '',
+            website: p.site || p.website || '',
             rating: p.rating || 4.0,
-            reviewCount: p.user_ratings_total || 0,
+            reviewCount: p.reviews || p.reviews_count || 0,
             isVerified: true,
             isFeatured: (p.rating||0) >= 4.5,
-            specializations: [niche_name],
+            credentials: p.type ? [p.type] : [],
+            specializations: p.subtypes || [niche_name],
           }));
-          directoryData = `export const listings: DirectoryListing[] = ${JSON.stringify(listings, null, 2)};\n`;
+          directoryData = `export const listings: DirectoryListing[] = ${JSON.stringify(listings, null, 2)};\n\nexport const reviews: DirectoryReview[] = [];\n`;
         }
       }
       if (!directoryData) {
