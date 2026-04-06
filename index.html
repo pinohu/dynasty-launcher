@@ -92,24 +92,9 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .mi{font-size:11px;color:var(--sec);display:flex;gap:6px}.mi::before{content:'→';color:var(--gold);font-size:10px;flex-shrink:0;margin-top:2px}
 .again{font-size:12px;color:var(--dim);cursor:pointer;text-decoration:underline;margin-top:.75rem;display:inline-block}
 .eb{background:rgba(229,83,75,0.07);border:1px solid rgba(229,83,75,0.15);border-radius:var(--r);padding:.65rem .9rem;font-size:12px;color:var(--red);margin-top:.65rem}
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  </style>
+</style>
 </head>
 <body>
-    </div>
-  </div>
 <div class="page">
   <div class="logo">
     <div class="lm">⚡</div>
@@ -198,6 +183,9 @@ const FU='https://claude-inbox.audreysplace.place/message';
 let ORG=localStorage.getItem('dynasty_gh_org')||ORG_DEFAULT;
 let INFERRED=null;
 let PRGS=[];
+let isAuthority=false;
+let LAUNCH_URL=null;
+let provRes=null;
 
 // Settings — only org name needed now (token is server-side)
 document.getElementById('settings-btn').onclick=()=>{
@@ -1020,9 +1008,9 @@ services:
     environment:
       DATABASE_URL: postgresql://dynasty:dynasty_pass@db:5432/${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: \${SECRET_KEY:-changeme}
-      STRIPE_SECRET_KEY: \${STRIPE_SECRET_KEY}
-      STRIPE_WEBHOOK_SECRET: \${STRIPE_WEBHOOK_SECRET}
+      SECRET_KEY: $${SECRET_KEY:-changeme}
+      STRIPE_SECRET_KEY: $${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: $${STRIPE_WEBHOOK_SECRET}
     depends_on:
       db: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -1071,7 +1059,7 @@ volumes:
     addP('cr',`Creating github.com/${ORG}/${inf.repo}`);setP('cr','run','From dynasty-project-template…');
     // Authority site types push into DYNASTY-SITE-FACTORY instead of creating a standalone repo
     const authorityTypes=['auth-gen','auth-pest','auth-imm','auth-freight','auth-legal','auth-hvac','auth-med','landing'];
-    const isAuthority=authorityTypes.includes(inf.type_id||'');
+    isAuthority=authorityTypes.includes(inf.type_id||'');
 
     // Preset mapping based on project type
     const presetMap={
@@ -1289,7 +1277,7 @@ export const nicheConfig: NicheConfig = {
 
     // For authority types, limit to key docs (not backend code)
     const authorityDocFiles = ['DESIGN.md','CLAUDE.md','SPEC.md','ROADMAP.md','BUSINESS-SYSTEM.md','REVENUE-MODEL.md','GTM-PLAYBOOK.md','FAILURE-MODES.md'];
-    const filesToPush = isAuthority
+    let filesToPush = isAuthority
       ? Object.entries(files).filter(([p]) => authorityDocFiles.includes(p))
       : Object.entries(files);
 
@@ -1310,7 +1298,7 @@ export const nicheConfig: NicheConfig = {
 
     // ── Live tool provisioning ────────────────────────────────────────────
     // ── Live tool provisioning (type-aware: 20i/Neon/Vercel/Stripe/Acumbamail) ─
-    let provRes=null;
+    provRes=null;
     const provisionSvcs=['stripe','acumbamail'];
     {
       const isWP=inf?.type_id==='wp-theme'||inf?.type_id==='wordpress';
@@ -1382,7 +1370,7 @@ export const nicheConfig: NicheConfig = {
       }
     } catch {}
 
-    showDone(inf,repo,fl.length,[],inf.manual_svcs||[]);
+    showDone(inf,repo,fl.length,inf.manual_svcs||[]);
   }catch(e){
     const eb=document.getElementById('err-box');
     eb.style.display='block';eb.textContent=e.message||'Unknown error';
@@ -1391,7 +1379,7 @@ export const nicheConfig: NicheConfig = {
   }
 }
 
-function showDone(inf,repo,fc,ftasks,mtasks){
+function showDone(inf,repo,fc,mtasks){
   document.getElementById('prog-screen').style.display='none';
   const d=document.getElementById('done-screen');
   d.style.display='block';
@@ -1430,7 +1418,7 @@ ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see M
 }
 
 function reset(){
-  INFERRED=null;PRGS=[];
+  INFERRED=null;PRGS=[];isAuthority=false;LAUNCH_URL=null;provRes=null;
   document.getElementById('input-screen').style.display='block';
   document.getElementById('prog-screen').style.display='none';
   document.getElementById('done-screen').style.display='none';
