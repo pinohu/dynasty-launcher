@@ -609,16 +609,46 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       await new Promise(r=>setTimeout(r,400));
     } catch{}
 
-    // 5. Create Vercel project
+    // 5. Create Vercel project linked to GitHub repo
     let projectId, vercel_url;
     try {
+      // First try creating with git repository link
       const pr=await fetch(`https://api.vercel.com/v10/projects?teamId=${VERCEL_TEAM}`,{
         method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
         body:JSON.stringify({name:project_slug,framework:'vite',
           gitRepository:{type:'github',repo:`${ORG}/${project_slug}`},
           buildCommand:'npm run build',outputDirectory:'dist'})
       });
-      const pj=await pr.json(); projectId=pj.id; vercel_url=`https://${project_slug}.vercel.app`;
+      const pj=await pr.json();
+      if(pj.id){
+        projectId=pj.id;
+        vercel_url=`https://${project_slug}.vercel.app`;
+      } else if(pj.error?.code==='repo_not_found'||pj.error?.code==='not_found'){
+        // Repo not visible to Vercel yet — create project without git link, then link after
+        await new Promise(r=>setTimeout(r,3000));
+        const pr2=await fetch(`https://api.vercel.com/v10/projects?teamId=${VERCEL_TEAM}`,{
+          method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
+          body:JSON.stringify({name:project_slug,framework:'vite',buildCommand:'npm run build',outputDirectory:'dist'})
+        });
+        const pj2=await pr2.json();
+        projectId=pj2.id;
+        vercel_url=`https://${project_slug}.vercel.app`;
+        // Try to link git repo after project creation
+        if(projectId){
+          try{
+            await fetch(`https://api.vercel.com/v10/projects/${projectId}/link?teamId=${VERCEL_TEAM}`,{
+              method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
+              body:JSON.stringify({type:'github',repo:`${ORG}/${project_slug}`,productionBranch:'main'})
+            });
+          }catch{}
+        }
+      } else {
+        // Project may already exist — fetch existing
+        const existing=await fetch(`https://api.vercel.com/v10/projects/${project_slug}?teamId=${VERCEL_TEAM}`,
+          {headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`}}).then(r=>r.json());
+        projectId=existing?.id||null;
+        vercel_url=`https://${project_slug}.vercel.app`;
+      }
     } catch{}
 
     // 9. Set env vars (including Supabase for app to boot)
@@ -636,7 +666,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         body:JSON.stringify(envVars)});}catch{}
     }
 
-    // 10. Trigger build via commit push
+    // 10. Trigger build — push commit AND create Vercel deployment as fallback
     try{
       const tc=Buffer.from(`# ${niche_name}\nDynasty Empire authority site\n${new Date().toISOString()}\n`).toString('base64');
       const th={'Authorization':`token ${GH_TOKEN}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};
@@ -646,6 +676,19 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         method:'PUT',headers:th,
         body:JSON.stringify({message:`chore: trigger Vercel build — ${niche_name}`,content:tc,...(ts?{sha:ts}:{})})});
     }catch{}
+
+    // 10b. Fallback: trigger Vercel deployment via API if git-based deploy doesn't fire
+    if(projectId){
+      try{
+        await new Promise(r=>setTimeout(r,2000));
+        await fetch(`https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM}`,{
+          method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
+          body:JSON.stringify({name:project_slug,project:projectId,
+            gitSource:{type:'github',org:ORG,repo:project_slug,ref:'main'},
+            target:'production'})
+        });
+      }catch{}
+    }
 
     return res.json({ok:true,
       repo_url:`https://github.com/${ORG}/${project_slug}`,
