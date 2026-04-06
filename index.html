@@ -92,6 +92,20 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .mi{font-size:11px;color:var(--sec);display:flex;gap:6px}.mi::before{content:'→';color:var(--gold);font-size:10px;flex-shrink:0;margin-top:2px}
 .again{font-size:12px;color:var(--dim);cursor:pointer;text-decoration:underline;margin-top:.75rem;display:inline-block}
 .eb{background:rgba(229,83,75,0.07);border:1px solid rgba(229,83,75,0.15);border-radius:var(--r);padding:.65rem .9rem;font-size:12px;color:var(--red);margin-top:.65rem}
+/* Mode selection */
+.mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
+.mode-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1.5rem;cursor:pointer;transition:.15s;position:relative}
+.mode-card:hover{border-color:var(--gb);background:var(--gdim)}
+.mode-card.selected{border-color:var(--gold);background:var(--gdim);box-shadow:0 0 0 1px var(--gold)}
+.mc-icon{font-size:28px;margin-bottom:.75rem}
+.mode-card h3{font-size:16px;font-weight:600;margin-bottom:.5rem}
+.mode-card p{font-size:12px;color:var(--sec);line-height:1.5}
+.mc-tag{font-size:10px;color:var(--gold);margin-top:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+/* View toggle */
+.view-toggle{display:flex;align-items:center;gap:8px;margin-bottom:1.5rem}
+.vt-label{font-size:11px;color:var(--dim)}
+.vt-btn{padding:5px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r);color:var(--sec);font-size:11px;cursor:pointer;transition:.12s}
+.vt-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gdim)}
 </style>
 </head>
 <body>
@@ -102,7 +116,35 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
     <button class="lset" id="settings-btn" title="Settings">⚙</button>
   </div>
 
-    <div id="input-screen">
+  <div id="mode-screen">
+    <div class="hero">
+      <h1>Dynasty Business <span>System Launcher</span></h1>
+      <p>Describe a business idea. Get 23 production files, infrastructure provisioning, and a deployable system — powered by your choice of AI models and strategy frameworks.</p>
+    </div>
+
+    <div class="mode-cards">
+      <div class="mode-card" id="mode-quick" onclick="selectMode('quick')">
+        <div class="mc-icon">⚡</div>
+        <h3>Quick Build</h3>
+        <p>One prompt → AI infers everything → 23 files generated and deployed. Same as v1.</p>
+        <div class="mc-tag">~3 minutes</div>
+      </div>
+      <div class="mode-card" id="mode-strategic" onclick="selectMode('strategic')">
+        <div class="mc-icon">🏛️</div>
+        <h3>Strategic Build</h3>
+        <p>Choose AI models, apply business frameworks (Porter's 5 Forces, 7 Powers, Blue Ocean), get a viability score, configure deployment target — then build.</p>
+        <div class="mc-tag">~8 minutes · deeper analysis</div>
+      </div>
+    </div>
+
+    <div class="view-toggle">
+      <span class="vt-label">Layout:</span>
+      <button class="vt-btn active" id="vt-wizard" onclick="selectView('wizard')">Step-by-step wizard</button>
+      <button class="vt-btn" id="vt-scroll" onclick="selectView('scroll')">Single page scroll</button>
+    </div>
+  </div>
+
+    <div id="input-screen" style="display:none">
     <div class="hero">
       <h1>What are you <span>building?</span></h1>
       <p>Describe your project in plain English. The system infers the type, tech stack, business model, acquisition channel, and pricing — then generates 23 files and provisions infrastructure automatically.</p>
@@ -203,6 +245,23 @@ document.getElementById('settings-btn').onclick=()=>{
   const org=prompt('GitHub org/username (default: pinohu):',ORG);
   if(org){ORG=org.trim();localStorage.setItem('dynasty_gh_org',ORG);}
 };
+
+// Mode / View selection
+function selectMode(mode) {
+  V2_MODE = mode;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('mode-' + mode).classList.add('selected');
+  setTimeout(() => {
+    document.getElementById('mode-screen').style.display = 'none';
+    document.getElementById('input-screen').style.display = 'block';
+  }, 300);
+}
+
+function selectView(view) {
+  V2_VIEW = view;
+  document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('vt-' + view).classList.add('active');
+}
 
 // Examples
 document.querySelectorAll('.ex').forEach(el=>el.addEventListener('click',()=>{
@@ -1477,7 +1536,9 @@ ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see M
 
 function reset(){
   INFERRED=null;PRGS=[];isAuthority=false;LAUNCH_URL=null;provRes=null;
-  document.getElementById('input-screen').style.display='block';
+  V2_SCORECARD=null;V2_BUILD_COST=0;
+  document.getElementById('mode-screen').style.display='block';
+  document.getElementById('input-screen').style.display='none';
   document.getElementById('prog-screen').style.display='none';
   document.getElementById('done-screen').style.display='none';
   document.getElementById('done-screen').innerHTML='';
@@ -1486,6 +1547,7 @@ function reset(){
   document.getElementById('err-box').style.display='none';
   document.getElementById('launch-btn').disabled=true;
   document.getElementById('launch-btn').textContent='Describe your project above to begin';
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
 }
 </script>
 </body>
