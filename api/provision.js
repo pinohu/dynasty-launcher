@@ -223,8 +223,7 @@ export default async function handler(req, res) {
       try{
         const pr=await fetch(`https://api.vercel.com/v10/projects?teamId=${VERCEL_TEAM}`,{
           method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
-          body:JSON.stringify({name:slug,framework:'nextjs',
-            gitRepository:{type:'github',repo:`${ORG}/${slug}`}})});
+          body:JSON.stringify({name:slug,framework:'nextjs'})});
         const pj=await pr.json();
         if(pj.id){
           vercelProjectId=pj.id;
@@ -246,8 +245,9 @@ export default async function handler(req, res) {
           `https://api.vercel.com/v1/storage/stores/${NEON_STORE}/connections?teamId=${VERCEL_TEAM}`,
           {method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
            body:JSON.stringify({projectId:vercelProjectId,environments:['production','preview','development']})});
-        const lt=await lr.text(); const ld=lt?JSON.parse(lt):{};
-        if(lr.ok||ld?.error?.code==='store_project_connection_not_unique'){
+        const lt=await lr.text();
+        let ld={}; try{ld=lt?JSON.parse(lt):{};}catch{}
+        if(lr.ok||lr.status===201||ld?.error?.code==='store_project_connection_not_unique'){
           results.neon={ok:true, store:'neon-chestnut-field',
             note:'DATABASE_URL + POSTGRES_URL auto-set on Vercel project',
             dashboard:`https://vercel.com/polycarpohu-gmailcoms-projects/stores/${NEON_STORE}`};
