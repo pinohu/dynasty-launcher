@@ -202,6 +202,9 @@ document.querySelectorAll('.ex').forEach(el=>el.addEventListener('click',()=>{
 // Input handling
 let inferTimer;
 document.getElementById('project-desc').addEventListener('input',()=>{onDescInput();});
+document.getElementById('project-desc').addEventListener('paste',()=>{setTimeout(onDescInput,0);});
+// Handle browser back/forward cache or pre-filled text
+if(document.getElementById('project-desc').value.trim().length>=10){onDescInput();}
 
 function onDescInput(){
   const desc=document.getElementById('project-desc').value.trim();
