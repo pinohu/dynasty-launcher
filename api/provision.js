@@ -436,219 +436,36 @@ export const getMonetizationConfig = () => nicheConfig.monetization ?? {
     const { project_slug, project_name, region } = body;
     if (!project_slug) return res.status(400).json({ ok: false, error: 'project_slug required' });
 
-    const neonKey = config.infrastructure?.neon_api_key || process.env.NEON_API_KEY;
-
-    if (!neonKey || neonKey.includes('REPLACE')) {
-      // Graceful fallback — no API key yet
-      return res.json({
-        ok: false,
-        manual: true,
-        note: 'Neon API key not set — add neon_api_key to DYNASTY_TOOL_CONFIG',
-        manual_steps: [
-          '1. Go to console.neon.tech → Account Settings → API Keys → Create Key',
-          `2. Add to DYNASTY_TOOL_CONFIG: infrastructure.neon_api_key = "neon_..."`,
-          `3. Create project manually: "${project_name || project_slug}" in us-east-2`,
-          '4. Paste DATABASE_URL into Vercel project env vars',
-          '5. Call /api/db-init once deployed to create tables'
-        ],
-        neon_dashboard: 'https://console.neon.tech/app/projects',
-        vercel_dashboard: `https://vercel.com/polycarpohu-gmailcoms-projects/${project_slug}/settings/environment-variables`
-      });
-    }
-
-    try {
-      const dbName = `dynasty_${project_slug.replace(/-/g, '_').slice(0, 40)}`;
-      const neon = await provisionNeonDb(neonKey, dbName, region || 'aws-us-east-2');
-
-      // Set DATABASE_URL on the Vercel project if project exists
-      let vercelEnvSet = false;
-      if (neon.database_url) {
-        try {
-          // Find the Vercel project by slug
-          const vpR = await fetch(`https://api.vercel.com/v9/projects/${project_slug}?teamId=${VERCEL_TEAM}`, {
-            headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` }
-          });
-          if (vpR.ok) {
-            const vp = await vpR.json();
-            const envVars = [
-              { key: 'DATABASE_URL', value: neon.database_url, type: 'encrypted' },
-              { key: 'DATABASE_URL_POOLED', value: neon.pooled_url, type: 'encrypted' }
-            ].map(v => ({ ...v, target: ['production', 'preview', 'development'] }));
-            const envR = await fetch(`https://api.vercel.com/v10/projects/${vp.id}/env?teamId=${VERCEL_TEAM}`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify(envVars)
-            });
-            vercelEnvSet = envR.ok;
-          }
-        } catch {}
-      }
-
-      return res.json({
-        ok: true,
-        ...neon,
-        vercel_env_set: vercelEnvSet,
-        note: 'Neon DB created. Run /api/db-init after deploy to create tables.'
-      });
-    } catch (e) {
-      return res.json({ ok: false, error: e.message });
-    }
-  }
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // MAIN PROVISION (Stripe + Acumbamail + Vercel + Pulsetic) ────────────────
-  // ════════════════════════════════════════════════════════════════════════════
-  if (action === 'provision') {
-    const results = {};
-    const { inf, svcs = [] } = body;
-    const slug = inf?.repo || 'dynasty-project';
-    const name = inf?.name || 'Dynasty Project';
-    const type = inf?.type_id || '';
-    const is20i = ['wp-theme', 'wordpress', 'static', 'portfolio'].includes(type);
-    const isNeon = ['gov-saas', 'dark-saas', 'compliance', 'client-portal',
-                    'member-dir', 'bd-dir', 'real-estate', 'job-board',
-                    'n8n', 'api-svc', 'ecom', 'custom', 'flint-proj'].includes(type);
-
-    // ── Stripe product ────────────────────────────────────────────────────
-    if (svcs.includes('stripe') || inf?.price_cents) {
+    // ── NEON DB via Vercel storage integration (auto-provisions DB + all env vars) ───────────────────
+    if (needsNeon && vercelProjectId) {
+      const NEON_STORE_ID = process.env.NEON_STORE_ID || 'store_dlRpluZOBH0L34D3';
       try {
-        const SK = config.payments?.stripe_live;
-        if (SK?.startsWith('sk_live')) {
-          const auth = `Basic ${Buffer.from(`${SK}:`).toString('base64')}`;
-          const prod = await fetch('https://api.stripe.com/v1/products', {
-            method: 'POST',
-            headers: { 'Authorization': auth, 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `name=${encodeURIComponent(name)}&description=${encodeURIComponent(`Dynasty: ${slug}`)}`
-          }).then(r => r.json());
-          if (prod.id) {
-            const price = await fetch('https://api.stripe.com/v1/prices', {
-              method: 'POST',
-              headers: { 'Authorization': auth, 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: `product=${prod.id}&currency=usd&unit_amount=${inf?.price_cents || 9700}&recurring[interval]=month`
-            }).then(r => r.json());
-            results.stripe = { product_id: prod.id, price_id: price.id };
-          }
+        const linkResp = await fetch(
+          `https://api.vercel.com/v1/storage/stores/${NEON_STORE_ID}/connections?teamId=${VERCEL_TEAM}`,
+          { method: 'POST',
+            headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: vercelProjectId,
+              environments: ['production','preview','development'] }) }
+        );
+        const linkText = await linkResp.text();
+        const linkData = linkText ? JSON.parse(linkText) : {};
+        if (linkResp.ok || linkData?.error?.code === 'store_project_connection_not_unique') {
+          results.neon = {
+            ok: true, store_id: NEON_STORE_ID, vercel_project_id: vercelProjectId,
+            note: 'Neon DB auto-provisioned — DATABASE_URL + POSTGRES_URL now on Vercel project',
+            dashboard: `https://vercel.com/polycarpohu-gmailcoms-projects/stores/${NEON_STORE_ID}`
+          };
+        } else {
+          results.neon = { manual: true,
+            error: linkData?.error?.message || JSON.stringify(linkData).slice(0,80),
+            action: 'Vercel dashboard → Storage → neon-chestnut-field → Connect Project'
+          };
         }
-      } catch (e) { results.stripe = { error: e.message }; }
+      } catch (e) { results.neon = { manual: true, error: e.message }; }
+    } else if (needsNeon) {
+      results.neon = { manual: true,
+        action: 'Vercel project needed first — re-run provision after Vercel project is created'
+      };
     }
 
-    // ── Vercel project (non-20i, non-authority types) ──────────────────────
-    if (!is20i && (svcs.includes('vercel') || isNeon)) {
-      try {
-        const projR = await fetch(`https://api.vercel.com/v10/projects?teamId=${VERCEL_TEAM}`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: slug, framework: inf?.framework || 'nextjs' })
-        });
-        const proj = await projR.json();
-        results.vercel = { project_id: proj.id, url: `https://${slug}.vercel.app` };
-      } catch (e) { results.vercel = { error: e.message }; }
-    }
-
-    // ── 20i hosting (WordPress / Static) ──────────────────────────────────
-    if (is20i && inf?.domain) {
-      const auth = get20iAuth(config);
-      if (auth) {
-        const isWordPress = type === 'wp-theme' || type === 'wordpress';
-        const typeId = isWordPress ? TWENTYI_TYPES.wordpress : TWENTYI_TYPES.static;
-        try {
-          const pkgR = await twentyiReq(auth, 'POST', `/reseller/10455/addWeb`, {
-            domain_name: inf.domain,
-            type: typeId
-          });
-          if (pkgR.ok) {
-            const packageId = pkgR.data?.result || pkgR.data?.id;
-            results.twentyi = {
-              ok: true,
-              package_id: packageId,
-              control_panel: `https://my.20i.com/package/${packageId}`,
-              type: isWordPress ? 'WordPress' : 'Static'
-            };
-          } else {
-            results.twentyi = {
-              ok: false,
-              error: `${pkgR.status}: ${JSON.stringify(pkgR.data).slice(0, 100)}`,
-              keys_expired: pkgR.status === 401,
-              manual_steps: [`Manually create 20i hosting for ${inf.domain}`]
-            };
-          }
-        } catch (e) { results.twentyi = { ok: false, error: e.message }; }
-      } else {
-        results.twentyi = {
-          ok: false, manual: true,
-          error: 'No 20i API key in DYNASTY_TOOL_CONFIG',
-          manual_steps: [`Add hosting manually for ${inf.domain}`]
-        };
-      }
-    }
-
-    // ── Neon DB (SaaS / portal / directory projects) ─────────────────────
-    if (isNeon) {
-      const neonKey = config.infrastructure?.neon_api_key || process.env.NEON_API_KEY;
-      if (neonKey && !neonKey.includes('REPLACE')) {
-        try {
-          const dbName = `dynasty_${slug.replace(/-/g, '_').slice(0, 40)}`;
-          const neon = await provisionNeonDb(neonKey, dbName);
-          results.neon = { ok: true, ...neon };
-          // Auto-set DATABASE_URL in Vercel project
-          if (neon.database_url && results.vercel?.project_id) {
-            const envVars = [
-              { key: 'DATABASE_URL', value: neon.database_url, type: 'encrypted' },
-              { key: 'DATABASE_URL_POOLED', value: neon.pooled_url || neon.database_url, type: 'encrypted' }
-            ].map(v => ({ ...v, target: ['production', 'preview', 'development'] }));
-            await fetch(`https://api.vercel.com/v10/projects/${results.vercel.project_id}/env?teamId=${VERCEL_TEAM}`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify(envVars)
-            });
-          }
-        } catch (e) { results.neon = { ok: false, error: e.message }; }
-      } else {
-        results.neon = {
-          ok: false, manual: true,
-          note: 'Add neon_api_key to DYNASTY_TOOL_CONFIG to auto-provision',
-          manual_steps: ['console.neon.tech → New Project → paste DATABASE_URL into Vercel env vars']
-        };
-      }
-    }
-
-    // ── Acumbamail list ────────────────────────────────────────────────────
-    if (svcs.includes('acumbamail') && config.comms?.acumbamail) {
-      try {
-        const r = await fetch('https://acumbamail.com/api/1/createList/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            auth_token: config.comms.acumbamail,
-            name: `${name} - Dynasty`,
-            from_email: 'hello@dynastyempire.com',
-            from_name: 'Dynasty Empire',
-            country: 'US'
-          })
-        }).then(r => r.json());
-        results.acumbamail = { list_id: r.id };
-      } catch (e) { results.acumbamail = { error: e.message }; }
-    }
-
-    // ── Pulsetic monitor ──────────────────────────────────────────────────
-    if (config.infrastructure?.pulsetic) {
-      const monitorUrl = results.vercel?.url || results.twentyi?.ok
-        ? `https://${inf?.domain || slug + '.vercel.app'}`
-        : null;
-      if (monitorUrl) {
-        try {
-          const r = await fetch('https://api.pulsetic.com/api/public/monitors', {
-            method: 'POST',
-            headers: { 'Authorization': config.infrastructure.pulsetic, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: monitorUrl, name })
-          }).then(r => r.json());
-          results.pulsetic = { monitor_id: r.id };
-        } catch (e) { results.pulsetic = { error: e.message }; }
-      }
-    }
-
-    return res.json({ ok: true, results });
-  }
-
-  return res.status(400).json({ ok: false, error: `Unknown action: ${action}` });
-}
+    
