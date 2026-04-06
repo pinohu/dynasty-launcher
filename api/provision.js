@@ -143,6 +143,68 @@ export default async function handler(req, res) {
     const css=theme_css||(accent_hex?generateThemeCss(accent_hex):null);
     if(css){await pushFile(GH_TOKEN,ORG,project_slug,'src/styles/theme.generated.css',css,'feat: dynasty theme');await new Promise(r=>setTimeout(r,400));}
 
+    // 7.1 Push updated manifest.json
+    try {
+      const manifestJson = JSON.stringify({
+        name: niche_name, short_name: niche_name,
+        description: `${niche_name} — Professional services and expert resources`,
+        start_url: '/', display: 'standalone',
+        background_color: '#0a0a0a', theme_color: accent_hex || '#0c6b8a',
+        orientation: 'portrait-primary',
+        icons: [{ src: '/og-image.svg', sizes: 'any', type: 'image/svg+xml' }]
+      }, null, 2);
+      await pushFile(GH_TOKEN,ORG,project_slug,'public/manifest.json',manifestJson,'feat: niche manifest.json');
+      await new Promise(r=>setTimeout(r,400));
+    } catch{}
+
+    // 7.2 Push updated index.html
+    try {
+      const descMatch = (niche_config||'').match(/description:\s*["']([^"']+)["']/);
+      const siteDesc = descMatch?.[1] || `${niche_name} — Authority site`;
+      const indexHtml = `<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5" />\n    <meta name="theme-color" content="${accent_hex||'#0c6b8a'}" media="(prefers-color-scheme: light)" />\n    <meta name="theme-color" content="${accent_hex||'#0a4f66'}" media="(prefers-color-scheme: dark)" />\n    <meta name="mobile-web-app-capable" content="yes" />\n    <meta name="apple-mobile-web-app-capable" content="yes" />\n    <title>${niche_name}</title>\n    <meta name="description" content="${siteDesc}" />\n    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />\n    <link rel="manifest" href="/manifest.json" />\n    <link rel="icon" type="image/svg+xml" href="/og-image.svg" />\n    <link rel="apple-touch-icon" href="/og-image.svg" />\n    <link rel="alternate" type="application/rss+xml" title="${niche_name} RSS Feed" href="/rss.xml" />\n    <link rel="preconnect" href="https://fonts.googleapis.com" />\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n  </head>\n  <body>\n    <div id="root"></div>\n    <script type="module" src="/src/main.tsx"></script>\n  </body>\n</html>`;
+      await pushFile(GH_TOKEN,ORG,project_slug,'index.html',indexHtml,'feat: niche index.html');
+      await new Promise(r=>setTimeout(r,400));
+    } catch{}
+
+    // 7.3 Push empty blogArticles.ts + citations.ts (removes template phobia content)
+    try {
+      const emptyBlog = `/**\n * Blog articles for ${niche_name}.\n */\nimport { REFERENCES, formatCitation, type Citation } from './citations'\n\nexport interface BlogArticle {\n  slug: string; title: string; description: string; category: string;\n  date: string; readTime: string;\n  heroImage?: { url: string; alt: string; credit?: string; };\n  author: { name: string; role: string; bio: string; };\n  sections: { heading?: string; level?: 'h2' | 'h3'; content: string;\n    image?: { url: string; alt: string; caption?: string; }; }[];\n  references: string[]; relatedSlugs: string[];\n}\nexport function getArticleReferences(article: BlogArticle): Citation[] {\n  return article.references.map(id => REFERENCES.find(r => r.id === id)).filter(Boolean) as Citation[];\n}\nexport function formatArticleReferences(article: BlogArticle): string[] {\n  return getArticleReferences(article).map(r => formatCitation(r));\n}\nexport const BLOG_ARTICLES: BlogArticle[] = [];`;
+      await pushFile(GH_TOKEN,ORG,project_slug,'src/data/blogArticles.ts',emptyBlog,'feat: clean blog articles for niche');
+      await new Promise(r=>setTimeout(r,400));
+
+      const emptyCitations = `/**\n * Citations for ${niche_name}.\n */\nexport interface Citation {\n  id: string; authors: string; year: number; title: string;\n  journal: string; volume?: string; pages?: string; doi?: string; url?: string;\n}\nexport function formatCitation(c: Citation): string {\n  return \`\${c.authors} (\${c.year}). \${c.title}. \${c.journal}.\`;\n}\nexport const REFERENCES: Citation[] = [];`;
+      await pushFile(GH_TOKEN,ORG,project_slug,'src/data/citations.ts',emptyCitations,'feat: clean citations for niche');
+      await new Promise(r=>setTimeout(r,400));
+    } catch{}
+
+    // 7.4 Delete template content markdown files (ailurophobia-specific)
+    try {
+      const h = {'Authorization':`token ${GH_TOKEN}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};
+      const contentFiles = [
+        'src/content/pillar/understanding-ailurophobia.md',
+        'src/content/cluster/cbt-for-cat-phobia.md',
+        'src/content/cluster/exposure-therapy-techniques.md',
+        'src/content/cluster/when-to-seek-professional-help.md',
+        'src/content/guide/understand-your-fear.md',
+        'src/content/resource-hub/evidence-based-treatment-resources.md',
+      ];
+      const glossaryFiles = ['avoidance-behavior','classical-conditioning','cognitive-behavioral-therapy',
+        'fear-hierarchy','fight-or-flight-response','graded-exposure','in-vivo-exposure',
+        'safety-behaviors','specific-phobia','systematic-desensitization'];
+      const allFiles = [...contentFiles, ...glossaryFiles.map(g=>`src/content/glossary/${g}.md`)];
+      for (const f of allFiles) {
+        try {
+          const r = await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/${f}`,{headers:h});
+          if(r.ok){const d=await r.json();
+            await fetch(`https://api.github.com/repos/${ORG}/${project_slug}/contents/${f}`,{
+              method:'DELETE',headers:h,
+              body:JSON.stringify({message:`chore: remove template content ${f.split('/').pop()}`,sha:d.sha})});
+            await new Promise(r=>setTimeout(r,200));
+          }
+        } catch{}
+      }
+    } catch{}
+
     // 8. Create Vercel project
     let projectId, vercel_url;
     try {
@@ -155,12 +217,15 @@ export default async function handler(req, res) {
       const pj=await pr.json(); projectId=pj.id; vercel_url=`https://${project_slug}.vercel.app`;
     } catch{}
 
-    // 9. Set env vars
+    // 9. Set env vars (including Supabase for app to boot)
     if(projectId){
       const envVars=[
         {key:'VITE_SITE_SLUG',value:project_slug,type:'plain'},
         {key:'VITE_SITE_NAME',value:niche_name,type:'plain'},
-        ...(process.env.ANTHROPIC_API_KEY?[{key:'ANTHROPIC_API_KEY',value:process.env.ANTHROPIC_API_KEY,type:'encrypted'}]:[])
+        ...(process.env.ANTHROPIC_API_KEY?[{key:'ANTHROPIC_API_KEY',value:process.env.ANTHROPIC_API_KEY,type:'encrypted'}]:[]),
+        ...(process.env.VITE_SUPABASE_URL?[{key:'VITE_SUPABASE_URL',value:process.env.VITE_SUPABASE_URL,type:'plain'}]:[]),
+        ...(process.env.VITE_SUPABASE_PUBLISHABLE_KEY?[{key:'VITE_SUPABASE_PUBLISHABLE_KEY',value:process.env.VITE_SUPABASE_PUBLISHABLE_KEY,type:'plain'}]:[]),
+        ...(process.env.VITE_SUPABASE_PROJECT_ID?[{key:'VITE_SUPABASE_PROJECT_ID',value:process.env.VITE_SUPABASE_PROJECT_ID,type:'plain'}]:[]),
       ].map(v=>({...v,target:['production','preview','development']}));
       try{await fetch(`https://api.vercel.com/v10/projects/${projectId}/env?teamId=${VERCEL_TEAM}`,{
         method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
