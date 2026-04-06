@@ -106,6 +106,41 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .vt-label{font-size:11px;color:var(--dim)}
 .vt-btn{padding:5px 12px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r);color:var(--sec);font-size:11px;cursor:pointer;transition:.12s}
 .vt-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gdim)}
+/* Framework selection */
+.fw-head{margin-bottom:1.25rem}
+.fw-head h2{font-size:20px;font-weight:600;margin-bottom:4px}
+.fw-head p{font-size:13px;color:var(--sec)}
+.fw-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.fw-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem 1.1rem;cursor:pointer;transition:.15s;position:relative}
+.fw-card:hover{border-color:var(--gb)}
+.fw-card.selected{border-color:var(--gold);background:var(--gdim)}
+.fw-card.locked{cursor:default;opacity:.9}
+.fw-check{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;transition:.12s}
+.fw-card.selected .fw-check{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.fw-card h4{font-size:13px;font-weight:600;margin-bottom:.4rem}
+.fw-card p{font-size:11px;color:var(--sec);line-height:1.45}
+.fw-tag{font-size:9px;color:var(--gold);margin-top:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+/* Scorecard */
+.scorecard{background:var(--card);border:1px solid var(--gb);border-radius:var(--rl);padding:1.25rem;margin:1.25rem 0}
+.sc-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);margin-bottom:.75rem}
+.sc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdr)}
+.sc-row:last-child{border:none}
+.sc-label{font-size:12px;color:var(--sec)}
+.sc-score{font-size:13px;font-weight:600;font-family:'SF Mono',monospace}
+.sc-score.high{color:var(--grn)}.sc-score.mid{color:var(--gold)}.sc-score.low{color:var(--red)}
+.sc-composite{display:flex;justify-content:space-between;align-items:center;padding:10px 0;margin-top:6px;border-top:2px solid var(--gb)}
+.sc-composite .sc-label{font-size:14px;font-weight:600;color:var(--tx)}
+.sc-composite .sc-score{font-size:18px}
+.sc-verdict{margin-top:.75rem;padding:8px 12px;border-radius:var(--r);font-size:12px;font-weight:500}
+.sc-verdict.strong{background:rgba(62,207,142,0.08);border:1px solid rgba(62,207,142,0.2);color:var(--grn)}
+.sc-verdict.viable{background:var(--gdim);border:1px solid var(--gb);color:var(--gold)}
+.sc-verdict.weak{background:rgba(229,83,75,0.06);border:1px solid rgba(229,83,75,0.15);color:var(--red)}
+/* Deep dives */
+.fw-dive{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+.fw-dive-header{padding:10px 12px;font-size:12px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.fw-dive-header:hover{background:var(--gdim)}
+.fw-dive-body{padding:0 12px 12px;font-size:11px;color:var(--sec);line-height:1.6;display:none;white-space:pre-wrap}
+.fw-dive.open .fw-dive-body{display:block}
 </style>
 </head>
 <body>
@@ -169,6 +204,50 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
     </div>
 
     <button class="launch" id="launch-btn" disabled>Describe your project above to begin</button>
+  </div>
+
+  <div id="framework-screen" style="display:none">
+    <div class="fw-head">
+      <h2>Strategy Frameworks</h2>
+      <p>Select frameworks to analyze your idea against. Blue Ocean Hungry Market is always applied. Each adds depth to BUSINESS-SYSTEM.md.</p>
+    </div>
+
+    <div class="fw-grid" id="fw-grid">
+      <div class="fw-card selected locked" data-fw="blue-ocean">
+        <div class="fw-check">✓</div>
+        <h4>🌊 Blue Ocean Hungry Market</h4>
+        <p>Dynasty original. Market hunger score, blue ocean index, competitive void analysis, demand signal validation.</p>
+        <div class="fw-tag">Always applied</div>
+      </div>
+      <div class="fw-card" data-fw="porters" onclick="toggleFramework(this,'porters')">
+        <div class="fw-check">✓</div>
+        <h4>🏗️ Porter's 5 Forces</h4>
+        <p>Supplier power, buyer power, rivalry, substitution threat, new entry threat. Industry attractiveness composite.</p>
+      </div>
+      <div class="fw-card" data-fw="seven-powers" onclick="toggleFramework(this,'seven-powers')">
+        <div class="fw-check">✓</div>
+        <h4>⚡ 7 Powers (Helmer)</h4>
+        <p>Scale economies, network effects, counter-positioning, switching costs, branding, cornered resource, process power.</p>
+      </div>
+      <div class="fw-card" data-fw="jtbd" onclick="toggleFramework(this,'jtbd')">
+        <div class="fw-check">✓</div>
+        <h4>🎯 Jobs-to-Be-Done</h4>
+        <p>Functional, social, emotional jobs. Over-served vs under-served analysis. Switching triggers and hiring criteria.</p>
+      </div>
+      <div class="fw-card" data-fw="lean-canvas" onclick="toggleFramework(this,'lean-canvas')">
+        <div class="fw-check">✓</div>
+        <h4>📋 Lean Canvas</h4>
+        <p>Problem, solution, key metrics, unfair advantage, channels, customer segments, cost structure, revenue streams.</p>
+      </div>
+    </div>
+
+    <button class="launch" id="score-btn" onclick="scoreIdea()">Score this idea →</button>
+
+    <div id="scorecard-wrap" style="display:none">
+      <div class="scorecard" id="scorecard"></div>
+      <div id="fw-deep-dives"></div>
+      <button class="launch" onclick="advanceFromFrameworks()">Continue to configure →</button>
+    </div>
   </div>
 
   <div id="prog-screen" style="display:none">
@@ -261,6 +340,117 @@ function selectView(view) {
   V2_VIEW = view;
   document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('vt-' + view).classList.add('active');
+}
+
+// Framework toggling + scorecard
+function toggleFramework(el, fw) {
+  if (el.classList.contains('locked')) return;
+  el.classList.toggle('selected');
+  if (el.classList.contains('selected')) {
+    if (!V2_FRAMEWORKS.includes(fw)) V2_FRAMEWORKS.push(fw);
+  } else {
+    V2_FRAMEWORKS = V2_FRAMEWORKS.filter(f => f !== fw);
+  }
+}
+
+async function scoreIdea() {
+  const desc = document.getElementById('project-desc').value.trim();
+  if (!desc || !INFERRED) return;
+  const btn = document.getElementById('score-btn');
+  btn.disabled = true; btn.textContent = 'Analyzing with ' + V2_FRAMEWORKS.length + ' frameworks…';
+
+  const fwList = V2_FRAMEWORKS.map(f => ({
+    'blue-ocean': 'Blue Ocean Hungry Market Framework (Dynasty original): Score market hunger 1-10, blue ocean index 1-10, competitive void analysis, demand signal validation',
+    'porters': "Porter's 5 Forces: Score each force 1-5 (supplier power, buyer power, competitive rivalry, threat of substitution, threat of new entry). Compute industry attractiveness composite.",
+    'seven-powers': '7 Powers (Hamilton Helmer): Evaluate which of the 7 powers this business can realistically achieve (Scale Economies, Network Effects, Counter-Positioning, Switching Costs, Branding, Cornered Resource, Process Power). For each, state achievable/unlikely + timeline.',
+    'jtbd': 'Jobs-to-Be-Done: Identify the core functional, social, and emotional jobs. Analyze which jobs are over-served vs under-served in the current market. Identify switching triggers.',
+    'lean-canvas': 'Lean Canvas: Fill out all 9 blocks — Problem (top 3), Solution, Key Metrics, Unfair Advantage, Channels, Customer Segments, Cost Structure, Revenue Streams.'
+  }[f])).join('\n\n');
+
+  try {
+    const raw = await aiRaw(`You are a world-class business strategist. Analyze this business idea using the specified frameworks and return a viability scorecard.
+
+PROJECT: ${desc}
+INFERRED CONFIG: ${JSON.stringify(INFERRED, null, 2)}
+
+FRAMEWORKS TO APPLY:
+${fwList}
+
+Return ONLY valid JSON (no markdown, no backticks, no preamble):
+{
+  "scores": {
+    "market_hunger": { "score": 0.0, "rationale": "..." },
+    "blue_ocean_index": { "score": 0.0, "rationale": "..." },
+    "competitive_moat": { "score": 0.0, "rationale": "..." },
+    "revenue_confidence": { "score": 0.0, "rationale": "..." },
+    "mvp_feasibility": { "score": 0.0, "rationale": "..." }
+  },
+  "composite": 0.0,
+  "verdict": "STRONG BUILD CANDIDATE or VIABLE WITH CAVEATS or NEEDS REFINEMENT",
+  "risk_summary": "1-2 sentences",
+  "opportunity_summary": "1-2 sentences",
+  "framework_analyses": {
+    "blue_ocean": "3-4 paragraph analysis..."
+    ${V2_FRAMEWORKS.includes('porters') ? ',"porters": "3-4 paragraph analysis with scored table..."' : ''}
+    ${V2_FRAMEWORKS.includes('seven-powers') ? ',"seven_powers": "3-4 paragraph analysis per power..."' : ''}
+    ${V2_FRAMEWORKS.includes('jtbd') ? ',"jtbd": "3-4 paragraph JTBD analysis..."' : ''}
+    ${V2_FRAMEWORKS.includes('lean-canvas') ? ',"lean_canvas": "Complete 9-block lean canvas..."' : ''}
+  }
+}
+
+All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base composite on weighted average (market_hunger 25%, blue_ocean 20%, moat 20%, revenue 20%, feasibility 15%).`, 6000);
+
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('Invalid scorecard response');
+    V2_SCORECARD = JSON.parse(m[0]);
+    renderScorecard(V2_SCORECARD);
+    document.getElementById('scorecard-wrap').style.display = 'block';
+    btn.textContent = 'Score again ↻';
+    btn.disabled = false;
+  } catch (e) {
+    btn.textContent = 'Scoring failed — try again';
+    btn.disabled = false;
+  }
+}
+
+function renderScorecard(sc) {
+  const s = sc.scores;
+  const cls = n => n >= 8 ? 'high' : n >= 6 ? 'mid' : 'low';
+  const vcls = sc.composite >= 8 ? 'strong' : sc.composite >= 6 ? 'viable' : 'weak';
+
+  document.getElementById('scorecard').innerHTML = `
+    <div class="sc-title">Dynasty Viability Scorecard</div>
+    ${Object.entries(s).map(([k, v]) => `
+      <div class="sc-row">
+        <span class="sc-label">${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+        <span class="sc-score ${cls(v.score)}">${v.score.toFixed(1)} / 10</span>
+      </div>`).join('')}
+    <div class="sc-composite">
+      <span class="sc-label">Composite Score</span>
+      <span class="sc-score ${cls(sc.composite)}">${sc.composite.toFixed(1)} / 10</span>
+    </div>
+    <div class="sc-verdict ${vcls}">
+      <strong>${sc.verdict}</strong><br>
+      <span style="opacity:.8">Risk: ${sc.risk_summary}</span><br>
+      <span style="opacity:.8">Opportunity: ${sc.opportunity_summary}</span>
+    </div>
+  `;
+
+  const dives = document.getElementById('fw-deep-dives');
+  dives.innerHTML = Object.entries(sc.framework_analyses || {}).map(([k, v]) => `
+    <div class="fw-dive" onclick="this.classList.toggle('open')">
+      <div class="fw-dive-header">
+        <span>${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} Analysis</span>
+        <span style="color:var(--dim);font-size:10px">▼</span>
+      </div>
+      <div class="fw-dive-body">${v}</div>
+    </div>
+  `).join('');
+}
+
+function advanceFromFrameworks() {
+  document.getElementById('framework-screen').style.display = 'none';
+  document.getElementById('config-screen').style.display = 'block';
 }
 
 // Examples
@@ -392,6 +582,15 @@ function showPreview(inf){
 document.getElementById('launch-btn').addEventListener('click',async()=>{
   if(!INFERRED)return;
   const desc=document.getElementById('project-desc').value.trim();
+
+  if (V2_MODE === 'strategic') {
+    // Show framework screen
+    document.getElementById('input-screen').style.display = 'none';
+    document.getElementById('framework-screen').style.display = 'block';
+    return;
+  }
+
+  // Quick build — go straight to build
   document.getElementById('input-screen').style.display='none';
   document.getElementById('prog-screen').style.display='block';
   document.getElementById('prog-title').textContent=`Building ${INFERRED.name}…`;
