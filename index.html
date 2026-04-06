@@ -132,7 +132,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   <div id="prog-screen" style="display:none">
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
-      <p id="prog-sub">AI generation · 23 files · Vercel + Neon + Stripe · 20i for WordPress/Static</p>
+      <p id="prog-sub">AI generation · 23 docs · Vercel + Neon + Stripe · 20i for WordPress/Static</p>
     </div>
     <div class="prog-list" id="prog-list"></div>
     <div class="eb" id="err-box" style="display:none"></div>
@@ -235,7 +235,6 @@ Return:
   "acquisition": "organic-seo or cold-email or cold-call-sms or paid-ads or partnerships",
   "mvp": "72h or 1w or 2w or 1m",
   "fonts": "font recommendation",
-  "flint_svcs": ["vercel","neon","seo","flint-task"],
   "manual_svcs": ["clerk","stripe","gsc"],
   "reasoning": "2 sentences on why these choices fit the description"
 }`}]})});
@@ -1069,7 +1068,7 @@ hsl:
 
         await pushF(`${ORG}/DYNASTY-SITE-FACTORY`,`factory/niches/${inf.repo}/site.yaml`,siteYaml,`feat: add ${inf.name} niche config`);
         await pushF(`${ORG}/DYNASTY-SITE-FACTORY`,`factory/niches/${inf.repo}/design.yaml`,designYaml,`feat: add ${inf.name} design config (preset: ${designPreset})`);
-        setP('factory','ok',`Added to factory — Flint will run: npm run build:niche -- ${inf.repo}`);
+        setP('factory','ok',`Site docs pushed — Vercel will build from niche.config.ts`);
       }catch(e){setP('factory','er',e.message);}
     }
 
@@ -1266,31 +1265,28 @@ export const nicheConfig: NicheConfig = {
     setP('pf','ok',`${fl.length} files live${isAuthority?' in factory':''}`);
 
     // ── Live tool provisioning ────────────────────────────────────────────
-    const provisionSvcs = [];
-    if((inf.flint_svcs||[]).includes('vercel')) provisionSvcs.push('vercel');
-    if((inf.manual_svcs||[]).includes('stripe')) provisionSvcs.push('stripe');
-    if((inf.manual_svcs||[]).includes('callscaler')||true) provisionSvcs.push('acumbamail','pulsetic');
-    if(provisionSvcs.length){
+    // ── Live tool provisioning (type-aware: 20i/Neon/Vercel/Stripe/Acumbamail) ─
+    let provRes=null;
+    const provisionSvcs=['stripe','acumbamail'];
+    {
       const isWP=inf?.type_id==='wp-theme'||inf?.type_id==='wordpress';
-    const isStaticType=['static','portfolio'].includes(inf?.type_id||'');
-    const provLabel=isWP?'Provisioning on 20i (WordPress)':isStaticType?'Provisioning on 20i (Static)':'Provisioning — Vercel + Neon + Stripe';
-    const provNote=isWP||isStaticType?'20i package + DNS configured':'Vercel project, Neon DB, Stripe product, Acumbamail list';
-    addP('prov',provLabel,provNote);setP('prov','run');
+      const isStaticType=['static','portfolio','landing'].includes(inf?.type_id||'');
+      const provLabel=isWP?'Provisioning on 20i (WordPress)':isStaticType?'Provisioning on 20i (Static)':'Provisioning — Vercel + Neon + Stripe';
+      const provNote=isWP||isStaticType?'20i package + Stripe + Acumbamail':'Vercel project, Neon DB, Stripe product, Acumbamail list';
+      addP('prov',provLabel,provNote);setP('prov','run');
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            project_name:inf.name,
-            project_slug:inf.repo,
-            description:desc,
-            services:provisionSvcs
-          })});
-        const pd=await pr.json();
-        if(pd.success){
-          const done=Object.entries(pd.results).filter(([,v])=>v.success).map(([k])=>k);
-          setP('prov','ok',`Provisioned: ${done.join(', ')||'setup complete'}`);
-        } else {setP('prov','sk','Partial — some services logged to MANUAL-ACTIONS.md');}
-      }catch{setP('prov','sk','Provision API offline — queuing to Flint');}
+          body:JSON.stringify({ inf, svcs:provisionSvcs })});
+        const pd=await pr.json(); provRes=pd;
+        if(pd.ok){
+          const done=Object.entries(pd.results||{})
+            .filter(([,v])=>v.ok||v.package_id||v.price_id||v.queued)
+            .map(([k])=>k);
+          const manualCount=(pd.manual_steps||[]).length;
+          setP('prov','ok',`${done.join(', ')||'setup complete'}${manualCount?' ('+manualCount+' manual)':''}`);
+        }else{setP('prov','sk','Partial — check manual_steps in API response');}
+      }catch{setP('prov','sk','Provision API offline — check dashboard and retry');}
     }
 
     // ── Direct Vercel deploy (no Flint needed) ──────────────────────────────
@@ -1366,7 +1362,7 @@ function showDone(inf,repo,fc,ftasks,mtasks){
   const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
   const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];
   d.innerHTML=`
-<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated and pushed · ${ftasks.length} Flint tasks running · ${mtasks.length} manual actions documented</p></div>
+<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated and pushed · ${provRes?.results?Object.keys(provRes.results).length+' services provisioned':'provisioning'} · ${mtasks.length} manual actions documented</p></div>
 <div class="biz-bar">
   <div class="bb-item"><div class="bb-l">Revenue</div><div class="bb-v">${inf.revenue_model} · ${inf.price}</div></div>
   <div class="bb-item"><div class="bb-l">Acquisition</div><div class="bb-v">${inf.acquisition}</div></div>
@@ -1377,7 +1373,15 @@ function showDone(inf,repo,fc,ftasks,mtasks){
 <div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
 <div class="rc"><h3>Backend + Docker (${beFiles.length})</h3>${beFiles.map(f=>`<div class="lr"><span class="lb lb-be">Code</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}<div style="font-size:11px;color:var(--dim);margin-top:5px">FastAPI + PostgreSQL + Redis · <code style="font-family:monospace">docker-compose up -d</code></div></div>
 <div class="rc"><h3>Design System + Docs (${designFiles.length+docFiles.length})</h3>${[...designFiles,...docFiles].map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
-${ftasks.length?`<div class="rc"><h3>Flint Queue (${ftasks.length})</h3><div class="ml">${ftasks.map(t=>`<div class="mi">${t}</div>`).join('')}</div></div>`:''}
+${provRes&&provRes.results?`<div class="rc"><h3>Infrastructure Provisioned</h3><div class="rl">
+      ${provRes.results.stripe?`<div class="lr"><span class="lb lb-g">Stripe</span><span>Product + price created</span></div>`:''}
+      ${provRes.results.vercel?`<div class="lr"><span class="lb lb-g">Vercel</span><a href="${provRes.results.vercel.url||'#'}" target="_blank">${provRes.results.vercel.url||'project created'}</a></div>`:''}
+      ${provRes.results.neon?`<div class="lr"><span class="lb lb-g">Neon DB</span><span>${provRes.results.neon.note||provRes.results.neon.action||'linked'}</span></div>`:''}
+      ${provRes.results.twentyi?`<div class="lr"><span class="lb lb-g">20i</span><a href="${provRes.results.twentyi.control_panel||'https://my.20i.com'}" target="_blank">${provRes.results.twentyi.type||'Package'} #${provRes.results.twentyi.package_id||''}</a></div>`:''}
+      ${provRes.results.acumbamail?`<div class="lr"><span class="lb lb-g">Email</span><span>Acumbamail list created</span></div>`:''}
+      ${provRes.results.pulsetic?`<div class="lr"><span class="lb lb-g">Monitor</span><span>${provRes.results.pulsetic.note||'Queued'}</span></div>`:''}
+      ${provRes.manual_steps&&provRes.manual_steps.length?`<div class="lr"><span class="lb" style="background:#f59e0b;color:#000">Manual</span><span style="color:#f59e0b;font-size:12px">${provRes.manual_steps[0]}</span></div>`:''}
+    </div></div>`:''}
 ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see MANUAL-ACTIONS.md</h3><div class="ml">${mtasks.map(t=>`<div class="mi">${t}</div>`).join('')}</div></div>`:''}
 <span class="again" onclick="reset()">Build another →</span>`;
 }
