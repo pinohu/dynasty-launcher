@@ -771,11 +771,11 @@ async function acceptRefinement(idx) {
 // ── Multi-Model Pivot Review Pipeline ──────────────────────────────────
 
 const REVIEW_MODELS = [
-  { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4', icon: '🟣', color: '#A855F7' },
-  { id: 'gpt-4o', label: 'GPT-4o', icon: '🟢', color: '#22C55E' },
-  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', icon: '🔵', color: '#3B82F6' },
-  { id: 'deepseek-reasoner', label: 'DeepSeek R1', icon: '🟠', color: '#F97316' },
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', icon: '🟤', color: '#A16207' },
+  { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4', icon: '🟣', color: '#A855F7', weight: 1.5 },
+  { id: 'gpt-4o', label: 'GPT-4o', icon: '🟢', color: '#22C55E', weight: 1.3 },
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', icon: '🔵', color: '#3B82F6', weight: 1.2 },
+  { id: 'deepseek-reasoner', label: 'DeepSeek R1', icon: '🟠', color: '#F97316', weight: 1.0 },
+  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', icon: '🟤', color: '#A16207', weight: 0.8 },
 ];
 
 async function aiRawWithModel(prompt, modelId, max = 4000) {
@@ -821,6 +821,9 @@ function showPipelineUI() {
       </div>
       <div class="pipe-phase" id="phase3">
         <div class="pipe-phase-label">Phase 3: Consensus <span class="pipe-phase-status waiting" id="p3-status">Waiting</span></div>
+      </div>
+      <div class="pipe-phase" id="phase4">
+        <div class="pipe-phase-label">Phase 4: Devil's Advocate <span class="pipe-phase-status waiting" id="p4-status">Waiting</span></div>
       </div>
       <div class="pipe-cost" id="pipe-cost">Running cost: $0.00</div>
     </div>
@@ -953,8 +956,62 @@ Return ONLY valid JSON:
   });
 
   await Promise.allSettled(phase2Promises);
+
+  // Check consensus strength — iterate if needed (max 3 rounds)
+  let consensusStrength = 0;
+  let iterationCount = 1;
+  const maxIterations = 3;
+
+  // Count who got the most votes
+  const tempVotes = {};
+  validProposals.forEach(p => tempVotes[p._model] = 0);
+  phase2Results.filter(r => r && !r._failed).forEach(r => {
+    if (r.vote && tempVotes[r.vote] !== undefined) {
+      const w = REVIEW_MODELS.find(m => m.label === r._model)?.weight || 1;
+      tempVotes[r.vote] += w;
+    }
+  });
+  const totalWeight = REVIEW_MODELS.reduce((s, m) => s + m.weight, 0);
+  const maxVoteWeight = Math.max(...Object.values(tempVotes));
+  consensusStrength = maxVoteWeight / totalWeight;
+
+  while (consensusStrength < 0.6 && iterationCount < maxIterations) {
+    iterationCount++;
+    document.getElementById('p2-status').textContent = `Round ${iterationCount}/${maxIterations} — consensus: ${(consensusStrength * 100).toFixed(0)}%`;
+
+    // Re-run cross-review with previous results as context
+    const prevContext = phase2Results.filter(r => r && !r._failed).map(r => `${r._model} voted for ${r.vote}. Synthesis: ${r.synthesis || 'none'}`).join('\n');
+
+    const iterPromises = REVIEW_MODELS.map(async (m, i) => {
+      try {
+        const raw = await aiRawWithModel(
+          crossReviewPrompt(m.label, i) + `\n\nPREVIOUS ROUND RESULTS:\n${prevContext}\n\nReconsider your vote based on the group's reasoning. You may change your vote if persuaded.`,
+          m.id, 2000
+        );
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('No JSON');
+        const review = JSON.parse(match[0]);
+        review._model = m.label;
+        phase2Results[i] = review;
+        return review;
+      } catch { return phase2Results[i]; }
+    });
+
+    await Promise.allSettled(iterPromises);
+
+    // Recompute consensus
+    Object.keys(tempVotes).forEach(k => tempVotes[k] = 0);
+    phase2Results.filter(r => r && !r._failed).forEach(r => {
+      if (r.vote && tempVotes[r.vote] !== undefined) {
+        const w = REVIEW_MODELS.find(m => m.label === r._model)?.weight || 1;
+        tempVotes[r.vote] += w;
+      }
+    });
+    consensusStrength = Math.max(...Object.values(tempVotes)) / totalWeight;
+  }
+
   document.getElementById('p2-status').className = 'pipe-phase-status done';
-  document.getElementById('p2-status').textContent = 'Done';
+  document.getElementById('p2-status').textContent = `Done (${iterationCount} round${iterationCount > 1 ? 's' : ''}, ${(consensusStrength * 100).toFixed(0)}% consensus)`;
 
   // ── PHASE 3: Consensus aggregation (client-side) ──────────────────────
   document.getElementById('p3-status').className = 'pipe-phase-status running';
@@ -967,7 +1024,10 @@ Return ONLY valid JSON:
   validProposals.forEach(p => { votes[p._model] = 0; scores[p._model] = []; });
 
   phase2Results.filter(r => r && !r._failed).forEach(review => {
-    if (review.vote && votes[review.vote] !== undefined) votes[review.vote]++;
+    if (review.vote && votes[review.vote] !== undefined) {
+      const reviewerModel = REVIEW_MODELS.find(m => m.label === review._model);
+      votes[review.vote] += (reviewerModel?.weight || 1.0);
+    }
     if (review.ratings) {
       Object.entries(review.ratings).forEach(([model, rating]) => {
         if (scores[model]) scores[model].push(typeof rating === 'object' ? rating.score : rating);
@@ -989,7 +1049,7 @@ Return ONLY valid JSON:
   // Show votes on model cards
   validProposals.forEach(p => {
     const vtEl = document.getElementById('mcvt-' + p._modelId.replace(/[^a-z0-9]/g, ''));
-    if (vtEl) vtEl.textContent = `${votes[p._model] || 0} votes`;
+    if (vtEl) vtEl.textContent = `${(votes[p._model] || 0).toFixed(1)} pts`;
   });
 
   // Highlight winner
@@ -1000,6 +1060,40 @@ Return ONLY valid JSON:
 
   document.getElementById('p3-status').className = 'pipe-phase-status done';
   document.getElementById('p3-status').textContent = 'Done';
+
+  // ── PHASE 4: Devil's Advocate ───────────────────────────────────────
+  document.getElementById('p4-status').className = 'pipe-phase-status running';
+  document.getElementById('p4-status').textContent = 'Attacking...';
+
+  let devilsCritique = '';
+  try {
+    devilsCritique = await aiRawWithModel(
+      `You are a ruthless venture capital partner who has watched 10,000 startups fail. You have ZERO tolerance for optimism bias. Your job: DESTROY this business idea. Find every fatal flaw.
+
+THE PROPOSED BUSINESS:
+${winner?.pivot_description || desc}
+
+PREDICTED SCORE: ${winner?.predicted_composite_score || V2_SCORECARD.composite}/10
+ADVANTAGES CLAIMED: ${(winner?.key_advantages || []).join(', ')}
+
+Your task: Write a devastating critique. Cover:
+1. Why the market analysis is WRONG
+2. Why the competitive moat will FAIL
+3. Why the revenue projections are FANTASY
+4. What the founders are NOT seeing
+5. The ONE thing that will kill this business
+
+Be specific. Use numbers. Reference real market dynamics. No encouragement. Pure destruction.
+
+Return 4-5 paragraphs of brutal, specific critique.`,
+      'claude-opus-4-20250514', 2000
+    );
+  } catch {
+    devilsCritique = 'Devil\'s advocate analysis unavailable.';
+  }
+
+  document.getElementById('p4-status').className = 'pipe-phase-status done';
+  document.getElementById('p4-status').textContent = 'Done';
 
   // ── Render consensus result ───────────────────────────────────────────
   const bestSynthesis = syntheses[0] || winner?.pivot_description || '';
@@ -1030,6 +1124,12 @@ Return ONLY valid JSON:
         <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="buildAsIs()">Build original</button>
       </div>
     </div>
+    ${devilsCritique ? `
+    <div style="background:rgba(229,83,75,0.06);border:2px solid rgba(229,83,75,0.3);border-radius:var(--rl);padding:1.25rem;margin:1rem 0">
+      <div style="font-size:14px;font-weight:600;color:var(--red);margin-bottom:.75rem">😈 Devil's Advocate</div>
+      <div style="font-size:12px;color:var(--sec);line-height:1.7;white-space:pre-wrap">${devilsCritique}</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:.75rem;font-style:italic">Powered by Claude Opus 4 — the harshest critic available</div>
+    </div>` : ''}
     ${runnerUp ? `
     <details style="margin-top:8px">
       <summary style="font-size:11px;color:var(--dim);cursor:pointer">Runner-up: ${runnerUp._model} (${runnerUp.votes} votes, ${runnerUp.avgScore?.toFixed(1)}/10 avg) ▼</summary>
