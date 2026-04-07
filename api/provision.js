@@ -754,26 +754,40 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         }
 
         // ── TRIGGER INITIAL DEPLOYMENT from the GitHub repo ──────────────────
+        // Wait for GitHub to finish processing the pushed files
         if(vercelProjectId){
-          try{
-            const depResp=await fetch(`https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM}`,{
-              method:'POST',
-              headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
-              body:JSON.stringify({
-                name:slug,
-                project:vercelProjectId,
-                target:'production',
-                gitSource:{type:'github',org:ORG,repo:slug,ref:'main'}
-              })
-            });
-            const dep=await depResp.json();
+          await new Promise(r => setTimeout(r, 5000)); // 5s delay for GitHub propagation
+          let deployOk = false;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try{
+              const depResp=await fetch(`https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM}`,{
+                method:'POST',
+                headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
+                body:JSON.stringify({
+                  name:slug,
+                  project:vercelProjectId,
+                  target:'production',
+                  gitSource:{type:'github',org:ORG,repo:slug,ref:'main'}
+                })
+              });
+              const dep=await depResp.json();
+              if (dep.id || dep.url || dep.readyState) {
+                results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
+                  deployment_url:dep.url||null, deployment_state:dep.readyState||'triggered',
+                  existing:!pj.id, attempt: attempt+1};
+                deployOk = true;
+                break;
+              }
+              // If no deployment ID, wait and retry
+              if (attempt < 2) await new Promise(r => setTimeout(r, 5000));
+            }catch(depErr){
+              if (attempt < 2) await new Promise(r => setTimeout(r, 5000));
+            }
+          }
+          if (!deployOk) {
             results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
-              deployment_url:dep.url||null, deployment_state:dep.readyState||'triggered',
-              existing:!pj.id};
-          }catch(depErr){
-            results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
-              deployment_error:depErr.message, existing:!pj.id,
-              note:'Project created + linked but initial deploy failed — will auto-deploy on next push'};
+              deployment_error:'Deploy failed after 3 attempts', existing:!pj.id,
+              note:'Project created but deploy failed — push any commit to trigger auto-deploy'};
           }
         } else {
           results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
