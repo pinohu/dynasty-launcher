@@ -3879,121 +3879,316 @@ git config user.name "pinohu"
     addP('g2','Generating SPEC + ROADMAP + README + MANUAL-ACTIONS + .env','','⬡ Product Docs');setP('g2','run');
     updateGlobalProgress(2, 12, 'Phase 2 of 12 \u00b7 Product Docs');
     let dc;try{
-      dc=await ai(`GENERATE PRODUCT DOCUMENTATION for a Dynasty Empire project. Return ONLY content in the delimiter format below. No JSON. No preamble. No explanation.
+      dc=await ai(`You are a senior product strategist at a world-class consulting firm. Generate board-ready product documentation. Write with precision and authority. Use numbered sections, professional tables, and specific measurable criteria. No AI clichés. No hedging. Every feature has acceptance criteria. Every metric has a target. Cross-reference other Dynasty documents. Return ONLY in delimiter format. No preamble.
 
 ${cx(desc,inf)}
 
 ---BEGIN:spec_md---
-# SPEC.md — ${inf.name}
-## Product Vision
-[2 paragraphs: what this product does, who it serves, and why it wins in this market]
+# Product Requirements Document — ${inf.name}
 
-## Target Users
-### Primary: [Persona name]
-[Description, key pain point, how this product solves it]
-### Secondary: [Persona name]
-[Description]
+> Dynasty Empire Product Specification | ${new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})}
 
-## Core Features
-### P0 — Included in ${inf.mvp} MVP
-[List 6-8 features, each with: Feature name / What it does / Acceptance criteria]
+---
 
-### P1 — Phase 2
-[4-5 features with brief description]
+## Executive Summary
+[3-4 sentences: What this product is, the specific market gap it fills, the target revenue within 12 months, and why now is the right time to build it. Reference competitive landscape from BUSINESS-SYSTEM.md.]
 
-### P2 — Future
-[3-4 features]
+---
 
-## Data Model Overview
-[Key entities and their relationships in plain language]
+## 1. Product Vision & Strategy
 
-## Key Integrations
-[Each integration with its role in the product]
+### 1.1 Vision Statement
+[1 crisp paragraph: The world this product creates. Specific, not aspirational — "Reduces [X process] from [Y hours] to [Z minutes] for [target segment]"]
 
-## Success Metrics
-[5 specific KPIs with target values and measurement method]
+### 1.2 Strategic Context
+[1 paragraph: How this product fits within Dynasty Empire's portfolio. Reference market research data if available.]
+
+---
+
+## 2. Target Users
+
+### 2.1 Primary Persona: [Name, Title]
+| Attribute | Detail |
+|---|---|
+| **Demographics** | [Age range, job title, company size, industry] |
+| **Goals** | [Top 3 professional goals] |
+| **Frustrations** | [Top 3 pain points with current solutions] |
+| **Quote** | "[A sentence this persona would say about their problem]" |
+| **Success Metric** | [How they measure if a tool is working — e.g., "time saved per week"] |
+
+### 2.2 Secondary Persona: [Name, Title]
+[Same table format]
+
+### 2.3 Anti-Persona (Who This Is NOT For)
+[1 paragraph: Explicitly define who should NOT use this product and why. Prevents scope creep.]
+
+---
+
+## 3. Feature Specification
+
+### 3.1 P0 — MVP (${inf.mvp})
+
+| # | Feature | User Story | Acceptance Criteria | Effort | Dependencies |
+|---|---|---|---|---|---|
+| 1 | [Name] | As a [persona], I want [action] so that [outcome] | Given [context], When [action], Then [result] | [S/M/L/XL] | [None / Feature #] |
+| 2 | | | | | |
+| 3 | | | | | |
+| 4 | | | | | |
+| 5 | | | | | |
+| 6 | | | | | |
+[6-8 features]
+
+### 3.2 P1 — Growth Phase
+| # | Feature | Value Proposition | Estimated Effort | Target Release |
+|---|---|---|---|---|
+[4-5 features with business justification]
+
+### 3.3 P2 — Scale Phase
+[3-4 future features with strategic rationale]
+
+### 3.4 Explicitly Out of Scope
+| Item | Reason for Exclusion | Reconsider When |
+|---|---|---|
+[4-5 items explicitly cut, with reasoning and trigger for reconsideration]
+
+---
+
+## 4. Non-Functional Requirements
+| Requirement | Target | Measurement |
+|---|---|---|
+| Page Load Time | <2 seconds (p95) | Lighthouse / Web Vitals |
+| API Response Time | <500ms (p95) | Application monitoring |
+| Uptime | 99.5% | Pulsetic |
+| Accessibility | WCAG 2.1 AA | axe-core audit |
+| Browser Support | Chrome, Firefox, Safari, Edge (latest 2) | Manual + Playwright |
+| Mobile Responsive | Full functionality at 375px+ | Visual regression tests |
+| Data Encryption | AES-256 at rest, TLS 1.3 in transit | Security audit |
+
+---
+
+## 5. Data Model Overview
+[Key entities described in plain language with relationships — "A User belongs to one Organization. An Organization has many Projects. Each Project contains Tasks..." Reference docs/DATA-MODEL.md for full schema.]
+
+---
+
+## 6. Integration Map
+| Service | Purpose | Priority | API Type | Env Var |
+|---|---|---|---|---|
+[All integrations with clear role and configuration reference]
+
+---
+
+## 7. Success Metrics
+| KPI | Target (3mo) | Target (12mo) | Measurement | Owner |
+|---|---|---|---|---|
+| [Activation metric] | [X] | [Y] | [How measured] | Product |
+| [Retention metric] | [X]% | [Y]% | | Product |
+| [Revenue metric] | $[X] | $[Y] | Stripe | Business |
+| [Engagement metric] | [X] | [Y] | PostHog | Product |
+| [Quality metric] | [X] | [Y] | | Engineering |
 ---END:spec_md---
 
 ---BEGIN:roadmap_md---
-# ROADMAP.md — ${inf.name}
+# Development Roadmap — ${inf.name}
+
+> Dynasty Empire Engineering Plan | ${new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})}
+
+---
+
 ## Phase 1: MVP — ${inf.mvp}
-[12 specific tasks, each actionable by a single developer]
+**Goal:** Ship core value proposition to first 10 customers
+**Done when:** [Binary success gate]
 
-## Phase 2: Core Features (Weeks 3-4)
-[10 specific tasks]
+| # | Task | Description | Effort | Depends On | Owner |
+|---|---|---|---|---|---|
+| 1.1 | [Task] | [Specific deliverable] | [S/M/L/XL] | — | Engineering |
+[12 tasks with dependencies mapped]
 
-## Phase 3: Polish + Launch (Weeks 5-6)
-[8 tasks focused on reliability, performance, and GTM]
+**Phase 1 Exit Criteria:**
+- [ ] All P0 features pass acceptance criteria
+- [ ] CI/CD pipeline green
+- [ ] Production deployment verified
+- [ ] First customer onboarded
+
+---
+
+## Phase 2: Core Features (Weeks 3-6)
+**Goal:** [Specific goal with metric]
+**Gate:** Phase 1 exit criteria met + [X] active users
+
+| # | Task | Description | Effort | Business Impact |
+|---|---|---|---|---|
+[10 tasks with business justification]
+
+---
+
+## Phase 3: Growth & Polish (Weeks 7-10)
+**Goal:** Production hardening + growth features
+**Gate:** Phase 2 complete + $[X] MRR
+
+| # | Task | Category | Effort |
+|---|---|---|---|
+[8 tasks — reliability, performance, analytics, GTM integration]
+
+---
 
 ## Phase 4: Scale (Post-launch)
-[6 strategic growth initiatives]
+**Goal:** 10x growth infrastructure
+**Gate:** $[X] MRR + [N] active customers
+
+| # | Initiative | Expected Impact | Investment |
+|---|---|---|---|
+[6 strategic initiatives]
+
+---
+
+## Resource Requirements
+| Phase | Engineering | Design | Business | Duration |
+|---|---|---|---|---|
+| Phase 1 | [X] FTE | [X] FTE | [X] FTE | [X] weeks |
+[Per phase]
+
+## Technology Decision Log
+| Decision | Options Considered | Chosen | Rationale |
+|---|---|---|---|
+[5-8 key technical decisions made during architecture phase — reference Architecture Blueprint]
 ---END:roadmap_md---
 
 ---BEGIN:readme_md---
 # ${inf.name}
 
-> [One-line value proposition]
+> [One compelling line — benefit-driven, specific]
 
-## Overview
-[3 paragraphs: what it does, technology approach, Dynasty Empire context]
+[![Deploy](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)](https://${inf.repo}.vercel.app)
+[![Built with Dynasty](https://img.shields.io/badge/Built%20with-Dynasty%20Launcher-C9A84C)](https://dynasty-launcher.vercel.app)
 
-## Quick Start
-Clone and run:
-  gh repo clone ${ORG}/${inf.repo}
-  cd ${inf.repo}
-  cp .env.example .env.local
+---
 
-Fill in env vars, then:
-  docker-compose up -d
-  npm install && npm run dev
+## The Problem
+[2-3 sentences: The specific pain this solves. Use numbers — "X professionals spend Y hours/week on Z"]
+
+## The Solution
+[2-3 sentences: What this product does differently. Specific outcome — "Reduces X from Y hours to Z minutes"]
 
 ## Architecture
-[Brief description of the system components and how they interact]
+[Text-based architecture description:]
+\`\`\`
+Client (Next.js) → API Routes → Business Logic → Database (Neon Postgres)
+        ↓                              ↓
+   Clerk Auth              Stripe Payments
+        ↓                              ↓
+   Dashboard ←────── Analytics (PostHog)
+\`\`\`
+
+## Quick Start
+
+\`\`\`bash
+# Clone and setup
+gh repo clone ${ORG}/${inf.repo}
+cd ${inf.repo}
+cp .env.example .env.local
+# Fill in environment variables (see .env.example for descriptions)
+
+# Start backend
+docker-compose up -d
+
+# Start frontend
+npm install && npm run dev
+\`\`\`
+
+**Or use an AI coding agent:**
+\`\`\`bash
+gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude  # Claude Code
+gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && pi      # Pi Agent
+\`\`\`
+
+## Key Documents
+| Document | Purpose |
+|---|---|
+| [SPEC.md](./SPEC.md) | Product requirements and feature spec |
+| [DESIGN.md](./DESIGN.md) | Visual design system and component specs |
+| [ROADMAP.md](./ROADMAP.md) | Development phases and timeline |
+| [BUSINESS-SYSTEM.md](./BUSINESS-SYSTEM.md) | Strategic business architecture |
+| [docs/API-CONTRACTS.md](./docs/API-CONTRACTS.md) | API endpoint specifications |
+| [docs/DATA-MODEL.md](./docs/DATA-MODEL.md) | Database schema documentation |
+
+## Tech Stack
+[Concise list: Framework, Auth, Database, Payments, Hosting, UI Library, Monitoring]
 
 ## Deployment
-[Production deployment steps]
+[Production deployment steps — Vercel CLI or git push]
+
+## Contributing
+See [AGENTS.md](./AGENTS.md) for coding conventions and [CLAUDE.md](./CLAUDE.md) for AI agent instructions.
+
+---
+
+*Built by [Dynasty Empire](https://dynastyempire.com) · Generated by [Dynasty Launcher](https://dynasty-launcher.vercel.app)*
 ---END:readme_md---
 
 ---BEGIN:manual_md---
-# MANUAL-ACTIONS.md — ${inf.name}
-These actions require human interaction in a browser or dashboard.
+# Manual Configuration Guide — ${inf.name}
 
-${(inf.manual_svcs||[]).length > 0 ? (inf.manual_svcs||[]).map(k => `## ${k}
-Why this product needs it: [specific reason]
+> Complete these steps after deployment to activate all services.
 
-Steps:
-1. [Exact URL and action]
-2. [Exact action]
-3. [Exact action]
+---
 
-Output: [Where to put the result — .env variable name, config location, etc.]`).join('\n\n') : 'No manual actions required for this configuration.'}
+${(inf.manual_svcs||[]).length > 0 ? (inf.manual_svcs||[]).map((k, i) => `## ${i + 1}. ${k.charAt(0).toUpperCase() + k.slice(1)} Configuration
+
+**Why needed:** [Specific reason this service requires manual setup for ${inf.name}]
+
+**Time required:** ~[X] minutes
+
+### Steps:
+| # | Action | URL / Location | Expected Result |
+|---|---|---|---|
+| 1 | [Navigate to...] | [Exact URL] | [What you should see] |
+| 2 | [Click/Configure...] | [Dashboard section] | [Expected outcome] |
+| 3 | [Copy value to...] | .env.local → [VAR_NAME] | [Verification] |
+
+**Verification:** [How to confirm this is working — "Visit /api/health and confirm [service] returns 'connected'"]
+
+---`).join('\n\n') : '✅ No manual actions required — all services were fully automated during provisioning.'}
 ---END:manual_md---
 
 ---BEGIN:env_ex---
-# .env.example — ${inf.name}
-# Copy to .env.local and fill in all values
+# ═══════════════════════════════════════════════════════════════
+# Environment Configuration — ${inf.name}
+# ═══════════════════════════════════════════════════════════════
+# Copy this file to .env.local and fill in all values.
+# Never commit .env.local — it contains secrets.
+# See MANUAL-ACTIONS.md for where to find each value.
+# ═══════════════════════════════════════════════════════════════
 
-# ── Database ──────────────────────────────────
+# ── Database (Neon Postgres) ─────────────────────────────────
+# Find at: https://console.neon.tech → Project → Connection Details
 DATABASE_URL=postgresql://user:password@host:5432/dbname
+# POSTGRES_URL is the same — some ORMs prefer this name
+POSTGRES_URL=postgresql://user:password@host:5432/dbname
 
-# ── Authentication ────────────────────────────
-# [relevant auth vars for ${(inf.stack||[]).filter(s=>['Clerk','Supabase'].includes(s)).join(', ')||'your auth provider'}]
+# ── Authentication ───────────────────────────────────────────
+# Find at: https://dashboard.clerk.com → API Keys
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
 
-# ── Payments ──────────────────────────────────
-# [Stripe or other payment vars if applicable]
+# ── Payments (Stripe) ────────────────────────────────────────
+# Find at: https://dashboard.stripe.com/apikeys
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
-# ── Infrastructure ────────────────────────────
-# [Vercel, Redis, CDN vars as needed]
-
-# ── Third-party Services ──────────────────────
-# [All external API keys with comments on where to find them]
-
-# ── Application ───────────────────────────────
-SECRET_KEY=generate-with-openssl-rand-hex-32
-NODE_ENV=development
+# ── Infrastructure ───────────────────────────────────────────
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
+
+# ── Third-party Services ─────────────────────────────────────
+# [List each service this project needs with dashboard URL comment]
+
+# ── Application Secrets ──────────────────────────────────────
+# Generate: openssl rand -hex 32
+SECRET_KEY=generate-me
 ---END:env_ex---
-`, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 8000);
+`, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 12000);
       setP('g2','ok',`${Object.values(dc).filter(v=>v).length} docs ready`);
       await compactPhase('spec', dc);
     }catch(e){setP('g2','er',e.message);throw e;}
@@ -4002,47 +4197,208 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
     addP('g3','Generating DATA-MODEL + API-CONTRACTS + KB-OUTLINES','','⬡ Supporting Docs');setP('g3','run');
     updateGlobalProgress(3, 12, 'Phase 3 of 12 \u00b7 Technical Docs');
     let ds;try{
-      ds=await ai(`GENERATE DYNASTY EMPIRE TECHNICAL DOCS. Return ONLY content in delimiter format below. No JSON. No preamble.
+      ds=await ai(`You are a senior software architect writing technical documentation for an engineering team. Every table must have real column names and types. Every API endpoint must have request/response schemas. No placeholders. Reference the Architecture Blueprint decisions. Return ONLY in delimiter format. No preamble.
 
 ${cx(desc,inf)}
 
 ---BEGIN:data_model---
-# DATA-MODEL.md — ${inf.name}
-## Overview
-[Brief description of the data architecture]
+# Data Architecture Specification — ${inf.name}
 
-## Core Tables
-[For each table: Table name / Columns with types / Indexes / Relationships]
+> Dynasty Empire Data Layer | ${new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})}
 
-## Key Relationships
-[Entity relationship descriptions in plain language]
+---
 
-## Migration Strategy
-[How to handle schema changes in production]
+## 1. Architecture Overview
+[1 paragraph: Database choice rationale (Neon Postgres), ORM (Drizzle), connection pooling strategy, and how the data model supports the business requirements in SPEC.md.]
+
+---
+
+## 2. Entity Specifications
+
+[For EACH entity (6-10 entities):]
+
+### 2.[N] [entity_name] Table
+**Purpose:** [1 sentence — what business concept this represents]
+
+| Column | Type | Nullable | Default | Constraints | Description |
+|---|---|---|---|---|---|
+| id | uuid | NO | gen_random_uuid() | PRIMARY KEY | Unique identifier |
+| created_at | timestamptz | NO | now() | | Record creation time |
+| updated_at | timestamptz | NO | now() | | Last modification time |
+[All columns with real names, types, and constraints]
+
+**Indexes:**
+- \`idx_[table]_[column]\` on ([column]) — [reason: "frequently queried by this field"]
+[List all needed indexes with rationale]
+
+**Relationships:**
+- belongs_to [other_entity] via [foreign_key]
+- has_many [other_entity] (cascade delete: [yes/no])
+
+---
+
+## 3. Entity Relationship Summary
+
+| From | Relationship | To | Cardinality | Cascade |
+|---|---|---|---|---|
+[All relationships in one table]
+
+---
+
+## 4. Query Patterns
+| Query | Frequency | Tables | Index Used | Estimated Latency |
+|---|---|---|---|---|
+| [Common query description] | [High/Med/Low] | [Tables touched] | [Index name] | <[X]ms |
+[5-8 common query patterns the application will need]
+
+---
+
+## 5. Migration Strategy
+- **Tool:** Drizzle Kit (\`drizzle-kit generate\` + \`drizzle-kit push\`)
+- **Zero-downtime:** Add columns as nullable first, backfill, then add constraints
+- **Rollback:** Keep previous migration files; use \`drizzle-kit drop\` if needed
+- **Seeding:** \`scripts/seed.ts\` for development data
+
+---
+
+## 6. Data Retention & Privacy
+| Data Type | Retention Period | Deletion Method | GDPR Relevant |
+|---|---|---|---|
+| User PII | Until account deletion + 30 days | Hard delete | ✅ |
+| Transaction records | 7 years (tax compliance) | Anonymize after retention | ✅ |
+| Session data | 30 days | Auto-expire | ❌ |
+| Audit logs | 1 year | Archive to cold storage | ❌ |
 ---END:data_model---
 
 ---BEGIN:api_contracts---
-# API-CONTRACTS.md — ${inf.name}
-## Authentication
-[Auth method, token format, how to include in requests]
+# API Specification — ${inf.name}
 
-## Core Endpoints
-[For each resource group: Method / Path / Request body / Response schema / Example]
+> Dynasty Empire API Reference | ${new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})}
 
-## Error Codes
-[Standard error response format and common codes]
+---
 
-## Rate Limits
-[Rate limit policies per endpoint group]
+## 1. Authentication
+| Method | Type | Location | Format |
+|---|---|---|---|
+| Primary | Bearer Token (Clerk JWT) | Authorization header | \`Bearer <token>\` |
+| API Key | Static key | X-API-Key header | \`CROP-ADMIN-...\` (admin only) |
+
+**Token refresh:** Clerk handles automatically via session management.
+**Unauthorized response:** \`401 { "error": "unauthorized", "message": "..." }\`
+
+---
+
+## 2. Response Format
+All responses follow this structure:
+\`\`\`json
+// Success
+{ "data": {...}, "meta": { "page": 1, "total": 100 } }
+// Error
+{ "error": "error_code", "message": "Human-readable message", "details": {...} }
+\`\`\`
+
+---
+
+## 3. Core Endpoints
+
+[For EACH resource group (4-6 groups, 3-5 endpoints each):]
+
+### 3.[N] [Resource Name]
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | /api/v1/[resource] | Required | List all (paginated) |
+| GET | /api/v1/[resource]/:id | Required | Get by ID |
+| POST | /api/v1/[resource] | Required | Create new |
+| PUT | /api/v1/[resource]/:id | Required | Update |
+| DELETE | /api/v1/[resource]/:id | Admin | Soft delete |
+
+**Query Parameters (GET list):**
+| Param | Type | Default | Description |
+|---|---|---|---|
+| page | integer | 1 | Page number |
+| limit | integer | 20 | Items per page (max 100) |
+| sort | string | created_at | Sort field |
+| order | string | desc | asc or desc |
+| search | string | — | Full-text search |
+
+**Request Body (POST/PUT):**
+| Field | Type | Required | Validation |
+|---|---|---|---|
+[Fields with types and validation rules]
+
+**Response (200):**
+| Field | Type | Description |
+|---|---|---|
+[Response fields]
+
+---
+
+## 4. Webhook Events (if applicable)
+| Event | Trigger | Payload |
+|---|---|---|
+| [event.name] | [When this fires] | [Key fields in payload] |
+
+---
+
+## 5. Rate Limiting
+| Endpoint Group | Limit | Window | Exceeded Response |
+|---|---|---|---|
+| Public endpoints | 60 requests | 1 minute | 429 + Retry-After header |
+| Authenticated | 300 requests | 1 minute | 429 |
+| Admin | 1000 requests | 1 minute | 429 |
+
+---
+
+## 6. Versioning
+- Current version: v1
+- Version in URL path: \`/api/v1/...\`
+- Breaking changes increment version number
+- Previous versions supported for 6 months after deprecation
 ---END:api_contracts---
 
 ---BEGIN:kb_outlines---
-# KB-OUTLINES.md — ${inf.name}
-## Knowledge Base Article Plan
-[10 seed articles, each with:]
-[Title / Target keyword / H2 outline (3-5 sections) / Target word count / Internal link opportunities]
+# Content Strategy & Knowledge Base — ${inf.name}
+
+> Dynasty Empire Content Plan | ${new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})}
+
+---
+
+## Content Strategy Overview
+[1 paragraph: SEO-first content approach targeting [primary keyword cluster]. Goal: establish topical authority in [niche] within 6 months. Reference NeuronWriter keyword data if available.]
+
+---
+
+## Knowledge Base Articles (25 Outlines)
+
+[For EACH of 25 articles:]
+
+### [N]. [Article Title — keyword-optimized]
+**Target Keyword:** [primary keyword] | **Difficulty:** [Low/Med/High] | **Search Volume:** [est. monthly]
+**Word Count Target:** [800-2000 depending on topic]
+**Intent:** [Informational / Commercial / Transactional]
+
+**Outline:**
+1. [H2: Introduction/Definition — 150 words]
+2. [H2: Core concept — 300 words]
+3. [H2: How-to / Implementation — 400 words]
+4. [H2: Common mistakes / FAQ — 200 words]
+5. [H2: Conclusion + CTA — 100 words]
+
+**Internal Links:** → [Article #X], [Article #Y]
+**CTA:** [Specific conversion action relevant to this topic]
+
+---
+
+[Group articles into 5 topic clusters of 5 articles each. Each cluster has a pillar page + 4 supporting articles.]
+
+### Topic Cluster Map
+| Cluster | Pillar Article | Supporting Articles | Business Goal |
+|---|---|---|---|
+| [Cluster 1 name] | Article #[N] | #[N], #[N], #[N], #[N] | [Awareness/Conversion/Retention] |
+[5 clusters]
 ---END:kb_outlines---
-`, ['data_model','api_contracts','kb_outlines'], 6000);
+`, ['data_model','api_contracts','kb_outlines'], 10000);
       setP('g3','ok','Technical docs ready');
     }catch(e){setP('g3','er',e.message);throw e;}
 
@@ -4061,112 +4417,412 @@ ${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.r
     addP('g4a','Generating BUSINESS-SYSTEM + REVENUE-MODEL + GTM-PLAYBOOK','','⬡ Business System');setP('g4a','run');
     updateGlobalProgress(4, 12, 'Phase 4 of 12 \u00b7 Business Strategy');
     let bz1;try{
-      bz1=await ai(`CREATIVE AUTHORITY ARCHITECT. Generate business strategy files. Return in delimiter format ONLY. No preamble.
+      bz1=await ai(`You are a senior partner at a top-tier strategy firm (McKinsey/BCG/Bain caliber) preparing a board-ready strategic analysis. Write with authority, precision, and data density. Every claim must cite specific numbers. No hedging. No filler. No AI clichés ("certainly", "it's worth noting", "let's dive in"). Active voice. Numbered sections. Tables with real data. Cross-reference other Dynasty documents by name.
 
 ${cx(desc,inf)}
 ${scorecardContext}
 
+Return in delimiter format ONLY. No preamble. No JSON. No backticks.
+
 ---BEGIN:biz_system---
-# BUSINESS-SYSTEM.md — ${inf.name}
-## 1. Strategy
-Niche: [one sentence — specific market segment]
-Offer: [one sentence — what you sell and to whom]
-Positioning: [one sentence — why you beat alternatives]
-Why this wins: [3 specific competitive advantages with evidence]
+# Strategic Business Architecture — ${inf.name}
 
-## 2. Agent System (All 11)
-Intake → Idea Generator → Evaluator → Architect → MVP Builder → Proof Engine → GTM → Sales → Financial Model → Deal Structuring → Scale Plan
+> **Prepared by:** Dynasty Business Intelligence Engine
+> **Date:** ${new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})}
+> **Confidence Level:** [High/Medium based on data availability]
+> **Data Sources:** [List: Exa.ai competitive intelligence, NeuronWriter SEO data, Framework analyses, Market research]
 
-[For each agent:]
-### [Agent Name]
-Purpose / Trigger / Inputs / Outputs
-Tool Dependency: [specific Dynasty tool — CallScaler/Insighto/SMS-iT/SEO Machine/Stripe/n8n/Flint/Claude] → how it's used
-Success metric / Fallback
+---
 
-## 3. Revenue Model
-| Tier | Price | Features | Target |
-[3 pricing tiers with exact ${inf.price}-range pricing]
+## Executive Summary
 
-Month 1-12 MRR projection:
-| Mo | Customers | MRR | ARR |
-[12 rows, realistic ramp from 0]
+**Finding 1:** [Bold, specific insight with a dollar figure or percentage — e.g., "The addressable market for X in Y segment is $Z, growing at N% annually"]
+**Finding 2:** [Second bold insight about competitive positioning]
+**Finding 3:** [Third bold insight about unit economics viability]
+**Strategic Recommendation:** [One decisive sentence — what to build, for whom, priced how]
 
-CAC: $X | LTV: $X | LTV:CAC: X:1 | Payback: X mo | Churn: X%/mo
+---
 
-## 4. MVP (${inf.mvp})
-Ships: [6 features with acceptance criteria]
-Excludes: [4 items explicitly cut]
-Done when: [binary statement]
+## 1. Strategic Positioning
 
-## 5. Financial Model
-| Month | Revenue | COGS | Margin | OpEx | EBITDA |
-[12 rows]
+### 1.1 Market Definition
+[2 substantial paragraphs defining the specific market segment. Include TAM estimate with methodology. Reference real competitors by name if available from research data. Cite any framework analysis results.]
 
-## 6. Deal Structure
-Tier 1: $X/mo — [features] — Stripe: [product name]
-Tier 2: $X/mo — [features] — Stripe: [product name]  
-Tier 3: $X/mo — [features] — Stripe: [product name]
-Annual: X% discount | Refund: [policy]
+### 1.2 Competitive Landscape
 
-## 7. Scale Plan
-Mo 3: $XMRR / X customers / [key initiative]
-Mo 6: $XMRR / X customers / [key initiative]
-Mo 12: $XMRR / X customers / [key initiative]
-Mo 24: $XMRR / X customers / [key initiative]
+| Competitor | Est. Market Share | Key Strength | Key Weakness | Our Differentiator |
+|---|---|---|---|---|
+[3-5 real competitors from research data. If no research data, use informed estimates with "est." prefix]
+
+### 1.3 Positioning Statement
+> For **[target segment with size estimate]** who **[specific pain point]**, ${inf.name} is a **[category]** that **[primary benefit with measurable outcome]**. Unlike **[primary competitor]**, we **[key differentiator backed by architectural advantage]**.
+
+### 1.4 Competitive Moat Assessment
+| Moat Type | Strength (1-5) | Timeline to Build | Evidence |
+|---|---|---|---|
+[Network effects, switching costs, data advantages, brand, regulatory, etc. — from 7 Powers analysis if available]
+
+---
+
+## 2. Value Architecture
+
+### 2.1 Customer Jobs Analysis
+| Job Type | Description | Priority | Current Solution | Our Approach |
+|---|---|---|---|---|
+| Functional | [Core task they need done] | P0 | [How they do it today] | [How we do it better] |
+| Social | [How they want to appear to peers] | P1 | | |
+| Emotional | [How they want to feel] | P2 | | |
+
+### 2.2 Pain-Solution Mapping
+| Pain Point | Severity (1-5) | Frequency | Current Workaround | Our Solution | Impact |
+|---|---|---|---|---|---|
+[5 pain points with measurable impact — "saves X hours/week" or "reduces cost by Y%"]
+
+---
+
+## 3. Revenue Architecture
+
+### 3.1 Pricing Strategy & Rationale
+[1 paragraph explaining pricing philosophy — value-based, competitor-anchored, or cost-plus. Reference competitor pricing from research data.]
+
+| Tier | Name | Monthly | Annual (${'{'}20% off${'}'}) | Target Segment | Key Differentiator |
+|---|---|---|---|---|---|
+| Starter | [Name] | $[price] | $[price] | [Segment] | [What they get] |
+| Professional | [Name] | $[price] | $[price] | [Segment] | [+What] |
+| Enterprise | [Name] | $[price] | $[price] | [Segment] | [+What] |
+
+**Pricing rationale:** "[Tier 2] at $[X]/mo positions us [below/at/above] [competitor] ($[Y]/mo) while delivering [Z additional value]. Willingness-to-pay research suggests the optimal range for this segment is $[A]-$[B]."
+
+### 3.2 12-Month Financial Projection
+
+| Month | New Cust. | Total Cust. | MRR | ARR | Gross Margin | EBITDA | Key Event |
+|---|---|---|---|---|---|---|---|
+| 1 | [N] | [N] | $[X] | $[X] | [%] | -$[X] | MVP launch |
+| 2 | | | | | | | |
+| 3 | | | | | | | [Milestone] |
+[...through month 12 with realistic S-curve growth]
+
+### 3.3 Unit Economics
+
+| Metric | Value | Industry Benchmark | Assessment |
+|---|---|---|---|
+| Customer Acquisition Cost (CAC) | $[X] | Median: $[Y] | [✅ Below / ⚠️ At / ❌ Above] |
+| Lifetime Value (LTV) | $[X] | | |
+| LTV:CAC Ratio | [X]:1 | Healthy: >3:1 | [✅/⚠️/❌] |
+| Payback Period | [X] months | Best-in-class: [Y]mo | |
+| Monthly Churn | [X]% | SaaS median: 5% | |
+| Net Revenue Retention | [X]% | Best-in-class: >120% | |
+| Gross Margin | [X]% | SaaS median: 70% | |
+
+### 3.4 Sensitivity Analysis
+
+| Scenario | Monthly Churn | CAC | MRR Month 12 | Break-Even |
+|---|---|---|---|---|
+| 🟢 Best Case | [X-1]% | $[X-20%] | $[X+30%] | Month [N] |
+| 🟡 Base Case | [X]% | $[X] | $[X] | Month [N] |
+| 🔴 Worst Case | [X+2]% | $[X+40%] | $[X-40%] | Month [N] or never |
+
+---
+
+## 4. MVP Specification (${inf.mvp})
+
+### Ships (P0 Features)
+| # | Feature | User Story | Acceptance Criteria | Effort |
+|---|---|---|---|---|
+[6-8 features in "As a [user], I want [action] so that [outcome]" format with Given/When/Then acceptance criteria]
+
+### Explicitly Excluded
+[4 items cut from MVP with reasoning — "Deferred to Phase 2 because X"]
+
+### Done Definition
+"MVP is complete when [binary, measurable statement]."
+
+---
+
+## 5. Risk Matrix
+
+| # | Risk | Probability | Impact | Score | Mitigation | Owner |
+|---|---|---|---|---|---|---|
+| 1 | [Market risk] | [H/M/L] | [H/M/L] | [1-9] | [Specific action] | [Role] |
+[8-10 risks across market, technical, financial, operational categories. Sorted by score descending.]
+
+---
+
+## 6. Scale Plan
+
+| Milestone | Timeline | Revenue | Customers | Key Initiative | Success Gate |
+|---|---|---|---|---|---|
+| Launch | Month 1 | $[X] MRR | [N] | MVP + first 10 customers | [Metric] |
+| Product-Market Fit | Month 3 | $[X] MRR | [N] | [Initiative] | [Metric] |
+| Growth | Month 6 | $[X] MRR | [N] | [Initiative] | [Metric] |
+| Scale | Month 12 | $[X] MRR | [N] | [Initiative] | [Metric] |
+| Expansion | Month 24 | $[X] MRR | [N] | [Initiative] | [Metric] |
+
+---
+
+## Appendix A: Key Assumptions
+| # | Assumption | Confidence | Impact if Wrong | Validation Method |
+|---|---|---|---|---|
+[8 explicit assumptions underlying the model]
+
+## Appendix B: Methodology
+This analysis was generated using Dynasty Business Intelligence Engine applying [N] strategic frameworks ([list applied frameworks]) to [M] real-time data sources. Competitive data sourced via Exa.ai semantic search. SEO demand signals from NeuronWriter. All financial projections use a bottoms-up model validated against industry benchmarks.
 ---END:biz_system---
 
 ---BEGIN:revenue_model---
-# REVENUE-MODEL.md — ${inf.name}
-## Pricing Tiers
-[3 tiers: name / price / included features / target segment]
+# Financial Model & Revenue Projections — ${inf.name}
 
-## Month 1-12 Projections
-| Month | New Customers | Total | MRR | ARR | Notes |
-[12 rows]
+> Dynasty Empire Financial Analysis | ${new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})}
 
-## Unit Economics
-CAC / LTV / Ratio / Payback / Churn / Net Revenue Retention
+---
 
-## Milestones
-$1K MRR: Month X | $5K: Month X | $10K: Month X | $25K: Month X
+## Investment Thesis
+[1 compelling paragraph: Why this business generates outsized returns. Reference the specific market gap, pricing power, and unit economics that make this work. This paragraph alone should convince an investor to keep reading.]
 
-## Monthly Expenses
-Hosting / Tools / Labor / Marketing / Total per month
+---
+
+## 1. Pricing Architecture
+
+### 1.1 Tier Structure
+| Tier | Name | Monthly | Annual | Target Segment | Included | Excluded |
+|---|---|---|---|---|---|---|
+[3 tiers with specific features per tier. Show what upgrades between tiers.]
+
+### 1.2 Pricing Rationale
+"[Tier 2] is priced at $[X]/mo based on: (1) Competitor [Name] charges $[Y] for comparable features, (2) customer interviews indicate willingness-to-pay of $[A]-$[B], (3) at this price point, LTV:CAC exceeds 3:1 by month [N]."
+
+---
+
+## 2. Revenue Projections
+
+### 2.1 Monthly Forecast (Year 1)
+| Month | New Customers | Churned | Net New | Total Active | Avg Revenue/Cust | MRR | ARR | Notes |
+|---|---|---|---|---|---|---|---|---|
+[12 rows with realistic acquisition curve, churn applied, and milestone annotations]
+
+### 2.2 Revenue Composition
+| Stream | % of Revenue | Monthly at Scale | Margin | Notes |
+|---|---|---|---|---|
+| Subscription (Tier 1) | [X]% | $[X] | [X]% | |
+| Subscription (Tier 2) | [X]% | $[X] | [X]% | Highest margin |
+| Subscription (Tier 3) | [X]% | $[X] | [X]% | |
+| Add-ons / Usage | [X]% | $[X] | [X]% | |
+
+---
+
+## 3. Unit Economics Deep Dive
+
+### 3.1 Customer Acquisition Cost
+| Channel | Spend/Month | Leads | Conversion | Customers | CAC |
+|---|---|---|---|---|---|
+| ${inf.acquisition} | $[X] | [N] | [X]% | [N] | $[X] |
+| [Secondary channel] | $[X] | [N] | [X]% | [N] | $[X] |
+| **Blended** | **$[X]** | **[N]** | **[X]%** | **[N]** | **$[X]** |
+
+### 3.2 Lifetime Value
+- Average monthly revenue per customer: $[X]
+- Gross margin: [X]%
+- Monthly churn rate: [X]%
+- Average customer lifetime: [X] months (1/churn)
+- **LTV = $[X] × [X]% × [X] months = $[X]**
+- **LTV:CAC = [X]:1** [✅ Healthy / ⚠️ Monitor / ❌ Unsustainable]
+
+### 3.3 Payback Period
+- Monthly gross profit per customer: $[X]
+- CAC: $[X]
+- **Payback = [X] months** [Target: <12 months]
+
+---
+
+## 4. Expense Model
+
+| Category | Month 1 | Month 6 | Month 12 | Notes |
+|---|---|---|---|---|
+| Hosting (Vercel/Neon) | $[X] | $[X] | $[X] | Scales with users |
+| SaaS Tools | $[X] | $[X] | $[X] | Fixed until [threshold] |
+| Marketing/Acquisition | $[X] | $[X] | $[X] | [X]% of MRR |
+| Labor/Contractors | $[X] | $[X] | $[X] | First hire at $[X]K MRR |
+| **Total Monthly Burn** | **$[X]** | **$[X]** | **$[X]** | |
+| **EBITDA** | **-$[X]** | **$[X]** | **$[X]** | Break-even: Month [N] |
+
+---
+
+## 5. Milestones & Funding Requirements
+
+| Milestone | MRR Target | Timeline | Cash Needed | Use of Funds |
+|---|---|---|---|---|
+| $1K MRR | $1,000 | Month [X] | $[X] | Product + first customers |
+| $5K MRR | $5,000 | Month [X] | $[X] | Scale acquisition channel |
+| $10K MRR | $10,000 | Month [X] | $[X] | First hire |
+| $25K MRR | $25,000 | Month [X] | | Self-sustaining |
+
+---
+
+## 6. Key Risks to Financial Model
+| Risk | Impact on Revenue | Probability | Mitigation |
+|---|---|---|---|
+[5 specific financial risks with quantified impact]
+
+---
+
+## Appendix: Assumptions Table
+| # | Assumption | Value Used | Range | Source |
+|---|---|---|---|---|
+[Every numeric assumption listed with its source and sensitivity range]
 ---END:revenue_model---
 
 ---BEGIN:gtm_playbook---
-# GTM-PLAYBOOK.md — ${inf.name}
-## Channel: ${inf.acquisition}
+# Go-to-Market Execution Plan — ${inf.name}
 
-## Week 1 (Days 1-7)
-[Each day: action + target metric]
+> Dynasty Empire GTM Strategy | ${new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'})}
 
-## Weeks 2-4
-[Weekly: focus + KPIs + key activities]
+---
 
-## Messaging
-Hook: [exact copy]
-Pain: [exact copy — 1-2 sentences]
-Solution: [exact copy — 1 sentence]
-CTA: [exact copy]
+## GTM Thesis
+[1 paragraph: WHY this acquisition channel wins for this specific product. Reference the target audience's behavior, the channel's cost structure, and the expected conversion funnel. Be specific — "LinkedIn outbound wins because [target persona] spends [X] hours/week on LinkedIn and responds to [type of message] at [X]% rate."]
 
-## Sales Script
-Opening: [word-for-word, 15 seconds]
-Discovery: [3 key questions]
-Pitch: [word-for-word, 45 seconds]
-"Too expensive": [word-for-word response]
-"Not now": [word-for-word response]
-Close: [word-for-word]
+---
 
-## Dynasty Comms Stack
-CallScaler: [when + script outline for this product]
-Insighto voice agent: [script for automated calls]
-SMS-iT: [3-message follow-up sequence]
+## 1. Acquisition Funnel Model
 
-## KPIs
-[4 KPIs: 2 leading weekly + 2 lagging monthly, with targets]
+| Stage | Volume | Conversion | Source |
+|---|---|---|---|
+| Impressions/Reach | [N]/month | — | ${inf.acquisition} |
+| Clicks/Visits | [N] | [X]% CTR | |
+| Leads (email/signup) | [N] | [X]% | |
+| Qualified Leads | [N] | [X]% | |
+| Trials/Demos | [N] | [X]% | |
+| Paid Customers | [N] | [X]% | |
+| **CAC** | **$[X]** | | Monthly spend / customers |
+
+---
+
+## 2. Channel Strategy
+
+### 2.1 Primary: ${inf.acquisition}
+**Why this channel:** [2-3 sentences with data — audience size, cost benchmarks, competitor usage]
+**Budget:** $[X]/month
+**Expected output:** [N] customers/month at $[X] CAC
+
+### 2.2 Secondary Channels
+| Channel | Role | Budget | Expected CAC | Timeline |
+|---|---|---|---|---|
+| [Channel 2] | [Growth/Retention/Brand] | $[X] | $[X] | Month [N] |
+| [Channel 3] | [Growth/Retention/Brand] | $[X] | $[X] | Month [N] |
+
+---
+
+## 3. 90-Day Sprint Plan
+
+### Week 1: Foundation
+| Day | Action | Deliverable | Success Metric |
+|---|---|---|---|
+| Mon | [Specific action] | [Output] | [Metric] |
+| Tue | | | |
+| Wed | | | |
+| Thu | | | |
+| Fri | | | |
+
+### Weeks 2-4: Launch Sprint
+| Week | Focus | Key Activities | Target KPI |
+|---|---|---|---|
+| 2 | [Focus area] | [3 activities] | [Metric] |
+| 3 | | | |
+| 4 | | | |
+
+### Weeks 5-8: Optimization
+[Weekly objectives with A/B test plan and iteration criteria]
+
+### Weeks 9-12: Scale
+[Growth targets with channel expansion plan]
+
+---
+
+## 4. Messaging Framework
+
+### 4.1 Core Narrative
+**The Problem (10 words):** [Crisp problem statement]
+**The Solution (10 words):** [Clear value prop]
+**The Proof (10 words):** [Credibility signal — speed, cost, results]
+
+### 4.2 Copy Assets
+**Homepage Hero:**
+> Headline: [8 words max, benefit-driven]
+> Subheadline: [15 words max, specific outcome]
+> CTA: [Action verb + outcome — e.g., "Start saving 10 hours/week →"]
+
+**Email Subject Lines (5 tested variants):**
+1. [Curiosity hook]
+2. [Pain point]
+3. [Social proof]
+4. [Urgency]
+5. [Direct benefit]
+
+**Cold Outreach Template:**
+Subject: [Subject]
+"Hi [Name], [1 sentence personalized observation]. [1 sentence problem statement]. [1 sentence how we solve it differently]. [1 sentence social proof or data]. Worth a 15-minute call? [CTA]"
+
+---
+
+## 5. Sales Playbook
+
+### 5.1 Qualification Framework (BANT)
+| Criteria | Question | Good Answer | Disqualifier |
+|---|---|---|---|
+| Budget | "[Question]" | [Answer] | [Red flag] |
+| Authority | "[Question]" | | |
+| Need | "[Question]" | | |
+| Timeline | "[Question]" | | |
+
+### 5.2 Objection Handling
+| Objection | Response Strategy | Key Phrase |
+|---|---|---|
+| "Too expensive" | [Reframe to ROI] | "[Exact words]" |
+| "Not the right time" | [Create urgency with data] | "[Exact words]" |
+| "We already have a solution" | [Differentiate on specific feature] | "[Exact words]" |
+| "Need to think about it" | [Offer low-commitment next step] | "[Exact words]" |
+| "Can you send more info?" | [Redirect to meeting] | "[Exact words]" |
+
+---
+
+## 6. Comms Stack Configuration
+
+### CallScaler
+- **Trigger:** [When to use outbound calls]
+- **Script:** [30-second opener + 3 discovery questions + pitch]
+- **Follow-up:** [Voicemail script + SMS follow-up timing]
+
+### Insighto Voice Agent
+- **Inbound script:** [Auto-answer flow for inquiries]
+- **Qualification logic:** [Route to human vs self-serve based on criteria]
+
+### SMS-iT Sequences
+| Message | Timing | Content | Goal |
+|---|---|---|---|
+| 1 | Immediate | [Welcome/confirmation] | Set expectation |
+| 2 | +24 hours | [Value-add content] | Build trust |
+| 3 | +72 hours | [Soft CTA] | Convert |
+
+---
+
+## 7. KPI Dashboard
+
+### Leading Indicators (Weekly)
+| KPI | Target | Measurement | Alert Threshold |
+|---|---|---|---|
+| [Metric 1] | [Target] | [How measured] | [When to worry] |
+| [Metric 2] | [Target] | | |
+
+### Lagging Indicators (Monthly)
+| KPI | Target | Measurement | Benchmark |
+|---|---|---|---|
+| MRR | $[X] | Stripe dashboard | [Industry benchmark] |
+| [Metric 2] | [Target] | | |
+
+### North Star Metric
+**[Metric]** — because [1 sentence explaining why this metric captures the full health of the business]
 ---END:gtm_playbook---
-`, ['biz_system','revenue_model','gtm_playbook'], 7000);
+`, ['biz_system','revenue_model','gtm_playbook'], 12000);
       setP('g4a','ok',`Business strategy ready`);
       await compactPhase('business', bz1);
     }catch(e){setP('g4a','er',e.message);throw e;}
@@ -4176,49 +4832,143 @@ SMS-iT: [3-message follow-up sequence]
     addP('g4b','Generating AGENT-SYSTEM + FAILURE-MODES','');setP('g4b','run');
     updateGlobalProgress(5, 12, 'Phase 5 of 12 \u00b7 Agent System');
     let bz2;try{
-      bz2=await ai(`DYNASTY EMPIRE AGENT SYSTEM + FAILURE MODES. Return in delimiter format ONLY. No preamble.
+      bz2=await ai(`You are a systems architect presenting to a CTO. Write with technical authority and operational precision. Every component must have measurable success criteria. No filler. No generic descriptions. Return in delimiter format ONLY. No preamble.
 
 ${cx(desc,inf)}
 
 ---BEGIN:agent_system---
-# AGENT-SYSTEM.md — ${inf.name}
-## Dynasty Tool Mapping
-Intake=launcher | Idea Generator=Claude | Evaluator=Claude | Architect=Claude Code | MVP=Flint | Proof Engine=n8n | GTM=SEO Machine+Trafft | Sales=CallScaler+Insighto+SMS-iT | Financial Model=Claude | Deal Structuring=Stripe | Scale Plan=SuiteDash+n8n
+# AI Operations Architecture — ${inf.name}
 
-## All 11 Agents
-[For each agent: Name / Purpose (1 sentence) / Trigger / Inputs / Outputs]
+> Dynasty Empire Automation Blueprint | ${new Date().toLocaleDateString("en-US", {year:"numeric", month:"long", day:"numeric"})}
 
-Tool Dependency Block per agent:
-| Tool | Purpose | Input | Output |
-[table — use actual Dynasty tools listed above]
+---
 
-Success criteria + Fallback if tool fails
+## Automation Philosophy
+[1 paragraph: What is automated vs human-controlled. The principle guiding decisions. Reference specific Dynasty stack tools.]
+
+---
+
+## 1. Agent Orchestration Map
+
+### System Data Flow
+User Input → Intake Agent → Idea Generator → Evaluator → [if viable] → Architect → MVP Builder → Proof Engine → GTM Agent → Sales Agent → Financial Model → Deal Structuring → Scale Plan
+
+---
+
+## 2. Agent Specifications
+
+[For EACH of the 11 agents provide a full specification table:]
+
+### 2.[N] [Agent Name] Agent
+| Attribute | Detail |
+|---|---|
+| **Purpose** | [1 sentence — specific, measurable outcome] |
+| **Trigger** | [Exact condition that activates this agent] |
+| **Input** | [Specific data structures or files consumed] |
+| **Output** | [Specific deliverables produced] |
+| **Tool** | [Dynasty tool: CallScaler/Insighto/SMS-iT/SEO Machine/Stripe/n8n/Flint/Claude] |
+| **Success Metric** | [Quantifiable — "converts >X% of leads" or "generates files in <Y seconds"] |
+| **Fallback** | [What happens when the primary tool fails] |
+| **Est. Cost/Run** | [Estimated API/tool cost per execution] |
+
+---
+
+## 3. Tool Dependency Matrix
+| Agent | Primary Tool | Backup | If Both Fail |
+|---|---|---|---|
+[Row for each of 11 agents]
+
+---
+
+## 4. Human-in-the-Loop Decision Points
+| Decision | Automation Level | Human Required When |
+|---|---|---|
+[5-8 key decision points classified as Fully Automated / Semi-Automated / Human-Only]
+
+---
+
+## 5. Monitoring & Observability
+| Signal | Target | Alert Threshold | Dashboard |
+|---|---|---|---|
+| Agent success rate | >95% | <90% | PostHog |
+| Avg processing time | <30s | >60s | Application logs |
+| Error rate | <2% | >5% | Pulsetic |
+| Cost per run | <$0.50 | >$1.00 | Stripe usage |
 ---END:agent_system---
 
 ---BEGIN:failure_modes---
-# FAILURE-MODES.md — ${inf.name}
-## 10 Failure Scenarios
+# Risk & Resilience Framework — ${inf.name}
 
-For each: **Detection** / **Immediate fallback** / **Recovery procedure** / **Circuit breaker**
+> Dynasty Empire Operational Resilience | ${new Date().toLocaleDateString("en-US", {year:"numeric", month:"long", day:"numeric"})}
 
-1. JWT Token Expiry: 401 responses → redirect to re-auth → token refresh endpoint → auto-logout after 3 failures
-2. Database Connection Loss: SQLAlchemy error → serve cached reads, queue writes → exponential backoff (1/2/4/8/30s) → open circuit after 5 failures/60s
-3. Stripe Webhook Failure: non-200 from endpoint → poll Stripe API for status → reprocess from dashboard, idempotency keys prevent duplication → alert on 3+ consecutive failures
-4. Rate Limit Hit: RateLimitExceeded → 429 with Retry-After header → auto-retry on client side → N/A (protective by design)
-5. Redis Unavailable: ConnectionError → bypass cache, serve from DB → reconnect with backoff → disable caching after 10 failures
-6. Third-party API Timeout: >5s response → return cached or degraded response → retry with exponential backoff → alert and fallback to manual process
-7. Payment Processing Failure: Stripe charge error → notify user, retry once → escalate to manual review → flag account for support
-8. File Upload Failure: storage error → retry upload, show user error → check disk/S3 quotas → alert on repeated failures
-9. Email Delivery Failure: bounce/failure from email provider → retry with secondary provider → log undeliverable, notify admin → alert on >5% bounce rate
-10. Auth Provider Outage: external auth returning errors → allow grace period with cached sessions → monitor status page, notify users → failover to backup auth if available
+---
 
-## Backup Strategy
-DB: Daily snapshots to S3, 30-day retention | Redis: RDB persistence, hourly | Code: tagged Git releases every production deploy
+## Resilience Philosophy
+[1 paragraph: Graceful degradation over hard failure. Blast radius containment. Observability-first. Specific patterns used in this system.]
 
-## Monitoring Alerts
-[5 critical alerts with threshold and escalation path for this product type]
+---
+
+## 1. Severity Classification
+| Level | Name | Definition | Response SLA | Escalation |
+|---|---|---|---|---|
+| P0 | Critical | Service completely unavailable | 15 min | All hands + CTO |
+| P1 | Major | Core feature degraded | 1 hour | On-call engineer |
+| P2 | Minor | Non-core feature broken | 4 hours | Next available |
+| P3 | Low | Cosmetic or edge case | Next sprint | Backlog |
+
+---
+
+## 2. Failure Scenarios & Runbooks
+
+[For EACH of 10 failures:]
+
+### 2.[N] [Failure Name]
+**Severity:** P[0-3] | **Detection:** [Specific monitor/log/metric] | **Blast Radius:** [What breaks]
+
+**Runbook:**
+1. **Detect:** [What triggers the alert — specific metric + threshold]
+2. **Triage:** [First 5 min — what to check, who to page]
+3. **Mitigate:** [Immediate action to reduce user impact]
+4. **Resolve:** [Root cause fix with specific technical steps]
+5. **Verify:** [Health check confirming resolution]
+6. **Post-mortem:** What happened → Timeline → Root cause → Action items
+
+Scenarios to cover: JWT/Auth failure, Database connection loss, Stripe webhook failure, Rate limiting, Redis unavailable, Third-party API timeout, Payment processing failure, File/storage failure, Email delivery failure, Auth provider outage.
+
+---
+
+## 3. Resilience Patterns
+| Pattern | Implementation | Applied To |
+|---|---|---|
+| Circuit Breaker | Open after 5 failures in 60s, half-open after 30s | External APIs |
+| Retry + Backoff | Exponential: 1s → 2s → 4s → 8s → 30s max | Database, APIs |
+| Bulkhead | Separate connection pools per service | DB, Redis |
+| Graceful Degradation | Cached reads when source unavailable | All read paths |
+| Idempotency | Keys on all mutations | Payments, webhooks |
+| Health Checks | /health endpoint checking all dependencies | All services |
+
+---
+
+## 4. Monitoring & Alerting
+| Signal | Tool | Threshold | Action |
+|---|---|---|---|
+| Uptime | Pulsetic (5-min) | <99.5% | Page on-call |
+| Error rate | PostHog | >2% requests | Slack alert |
+| p95 latency | App metrics | >2000ms | Investigate |
+| DB connections | Neon dashboard | >80% pool | Scale |
+| Webhook failures | Stripe dashboard | 3+ consecutive | Page on-call |
+
+---
+
+## 5. Backup Strategy
+| System | Method | Frequency | Retention | Recovery Time |
+|---|---|---|---|---|
+| Database | Neon point-in-time recovery | Continuous | 7 days | <5 minutes |
+| Redis | RDB snapshots | Hourly | 24 hours | <2 minutes |
+| Code | Git tagged releases | Every deploy | Infinite | <1 minute (rollback) |
+| Secrets | Vercel encrypted env vars | On change | Versioned | Immediate |
 ---END:failure_modes---
-`, ['agent_system','failure_modes'], 5000);
+`, ['agent_system','failure_modes'], 10000);
       setP('g4b','ok',`Agent system + failure modes ready`);
     }catch(e){setP('g4b','er',e.message);throw e;}
 
