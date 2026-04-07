@@ -1188,7 +1188,7 @@ Generate a complete architecture blueprint. Return ONLY valid JSON (no markdown,
 }
 
 Be specific. Real table names. Real field names. Real API paths. This is the contract.`,
-      'claude-opus-4-20250514', 8000
+      'claude-sonnet-4-20250514', 8000
     );
 
     const match = bp.match(/\{[\s\S]*\}/);
@@ -1295,7 +1295,7 @@ Generate the design contract. Return ONLY valid JSON:
 }
 
 Be pixel-precise. Real hex values. Real font names (from Google Fonts). This contract is law.`,
-      'claude-opus-4-20250514', 5000
+      'claude-haiku-4-5-20251001', 5000
     );
 
     const match = dc.match(/\{[\s\S]*\}/);
@@ -2871,7 +2871,7 @@ Your task: Write a devastating critique. Cover:
 Be specific. Use numbers. Reference real market dynamics. No encouragement. Pure destruction.
 
 Return 4-5 paragraphs of brutal, specific critique.`,
-      'claude-opus-4-20250514', 2000
+      'claude-sonnet-4-20250514', 2000
     );
   } catch {
     devilsCritique = 'Devil\'s advocate analysis unavailable.';
@@ -3098,7 +3098,7 @@ Rules:
 ${round >= maxRounds ? 'This is the FINAL round. Give your honest final assessment: is this business viable? What is the single biggest remaining risk?' : ''}
 
 Return 3-4 paragraphs. If the idea has become genuinely strong, your critique should be shorter and more targeted.`,
-        'claude-opus-4-20250514', 2000
+        'claude-sonnet-4-20250514', 2000
       );
     } catch {
       newCritique = 'Devil\'s advocate unavailable for this round.';
@@ -3781,9 +3781,29 @@ async function parseDelimited(text,keys){
   return result;
 }
 async function ai(prompt, keys, max = 8000, phaseId = null) {
-  // Smart Model Routing (Improvement 2) — route to optimal model per phase
-  const model = phaseId ? await routeModel(phaseId) : ((phaseId && V2_MODEL_MAP[phaseId]) || V2_MODEL);
-  const fallbackModels = [model, 'claude-sonnet-4-20250514', 'gpt-4o', 'gemini-2.0-flash-001'];
+  // Cost-optimized model selection per phase
+  const PHASE_MODELS = {
+    'g1': 'claude-haiku-4-5-20251001',     // Design system — structured template fill
+    'g2': 'claude-haiku-4-5-20251001',     // Product docs — detailed prompts compensate
+    'g3': 'claude-haiku-4-5-20251001',     // Tech docs — structured specs
+    'g4a': 'claude-sonnet-4-20250514',     // Business strategy — needs analytical depth
+    'g4b': 'claude-haiku-4-5-20251001',    // Agent system — structured fill
+    'g5': 'claude-sonnet-4-20250514',      // Backend code — code quality matters
+    'g7': 'claude-haiku-4-5-20251001',     // Frontend — structured code
+  };
+  
+  let model;
+  if (phaseId && V2_MODEL_MAP[phaseId]) {
+    model = V2_MODEL_MAP[phaseId]; // User override always wins
+  } else if (phaseId && PHASE_MODELS[phaseId]) {
+    model = PHASE_MODELS[phaseId]; // Cost-optimized default
+  } else if (phaseId) {
+    model = await routeModel(phaseId);
+  } else {
+    model = V2_MODEL;
+  }
+  
+  const fallbackModels = [model, 'claude-haiku-4-5-20251001', 'gemini-2.5-flash', 'gemini-2.0-flash'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
@@ -3841,9 +3861,15 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
   throw new Error('All AI models failed — check API keys and rate limits');
 }
 
-async function aiRaw(prompt, max = 4000) {
-  const model = V2_MODEL_MAP['strategy'] || V2_MODEL;
-  const fallbackModels = [model, 'claude-sonnet-4-20250514', 'gpt-4o'];
+async function aiRaw(prompt, max = 4000, costTier = 'standard') {
+  // Cost-optimized model selection
+  const COST_MODELS = {
+    premium: V2_MODEL_MAP['strategy'] || V2_MODEL, // User-selected model for critical phases
+    standard: 'claude-haiku-4-5-20251001',          // Cheap but capable for document generation
+    budget: 'gemini-2.0-flash',                     // Free for boilerplate and bonus content
+  };
+  const model = COST_MODELS[costTier] || COST_MODELS.standard;
+  const fallbackModels = [model, 'claude-haiku-4-5-20251001', 'gemini-2.0-flash', 'llama-3.3-70b-versatile'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
@@ -4561,7 +4587,7 @@ NODE_ENV=development
 # Generate: openssl rand -hex 32
 SECRET_KEY=generate-me
 ---END:env_ex---
-`, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 12000);
+`, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 10000);
       setP('g2','ok',`${Object.values(dc).filter(v=>v).length} docs ready`);
       await compactPhase('spec', dc);
     }catch(e){setP('g2','er',e.message);throw e;}
@@ -4771,7 +4797,7 @@ All responses follow this structure:
 | [Cluster 1 name] | Article #[N] | #[N], #[N], #[N], #[N] | [Awareness/Conversion/Retention] |
 [5 clusters]
 ---END:kb_outlines---
-`, ['data_model','api_contracts','kb_outlines'], 10000);
+`, ['data_model','api_contracts','kb_outlines'], 8000);
       setP('g3','ok','Technical docs ready');
     }catch(e){setP('g3','er',e.message);throw e;}
 
@@ -5195,7 +5221,7 @@ Subject: [Subject]
 ### North Star Metric
 **[Metric]** — because [1 sentence explaining why this metric captures the full health of the business]
 ---END:gtm_playbook---
-`, ['biz_system','revenue_model','gtm_playbook'], 12000);
+`, ['biz_system','revenue_model','gtm_playbook'], 10000);
       setP('g4a','ok',`Business strategy ready`);
       await compactPhase('business', bz1);
     }catch(e){setP('g4a','er',e.message);throw e;}
@@ -5341,7 +5367,7 @@ Scenarios to cover: JWT/Auth failure, Database connection loss, Stripe webhook f
 | Code | Git tagged releases | Every deploy | Infinite | <1 minute (rollback) |
 | Secrets | Vercel encrypted env vars | On change | Versioned | Immediate |
 ---END:failure_modes---
-`, ['agent_system','failure_modes'], 10000);
+`, ['agent_system','failure_modes'], 8000);
       setP('g4b','ok',`Agent system + failure modes ready`);
     }catch(e){setP('g4b','er',e.message);throw e;}
 
@@ -6049,7 +6075,7 @@ Return ONLY a markdown table with ALL 7 columns:
 ...20 rows
 
 Image Prompt column: Describe a specific image that could be generated with AI (Midjourney/DALL-E) or sourced from stock. Be specific about style, composition, colors, and mood. Match the brand accent color ${inf.accent} where possible.`;
-      const socialRaw = await aiRaw(socialPrompt, 5000);
+      const socialRaw = await aiRaw(socialPrompt, 5000, 'budget');
       if (socialRaw && socialRaw.includes('|')) {
         window._socialCalendarMd = `# ${inf.name} — Social Media Calendar\n\n> Generated by Dynasty Launcher\n\n${socialRaw}`;
         files['social-media/SOCIAL-MEDIA-CALENDAR.md'] = socialCalendarMd;
@@ -6101,7 +6127,7 @@ Format each section with:
 
 Revenue: ${inf.revenue_model} at ${inf.price}
 Stack: ${(inf.stack||[]).join(', ')}
-MVP Timeline: ${inf.mvp}`, 3000);
+MVP Timeline: ${inf.mvp}`, 3000, 'budget');
       
       if (videoScript && videoScript.length > 200) {
         files['VIDEO-SCRIPT.md'] = `# Video Walkthrough Script — ${inf.name}\n\n> 5-minute Loom-style product demo script\n> Generated by Dynasty Launcher\n\n${videoScript}`;
@@ -6135,7 +6161,7 @@ Elevator Pitch: [text]
 ## Variant B: [strategy name]
 [same format]
 
-Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price} | Audience: ${inf.acquisition}`, 2000);
+Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price} | Audience: ${inf.acquisition}`, 2000, 'budget');
       
       if (abRaw && abRaw.includes('Variant')) {
         files['AB-MESSAGING.md'] = `# A/B Messaging Variants — ${inf.name}\n\n> Test both variants. Run the winner. Generated by Dynasty Launcher.\n\n${abRaw}`;
@@ -6164,7 +6190,7 @@ This is the content for a pitch deck — each section is one slide. Write as a f
 Revenue: ${inf.revenue_model} at ${inf.price} | Acquisition: ${inf.acquisition} | MVP: ${inf.mvp}
 ${V2_SCORECARD ? 'Viability Score: ' + V2_SCORECARD.composite.toFixed(1) + '/10 — ' + V2_SCORECARD.verdict : ''}
 
-Format each section with ## heading and concise, data-rich content. No filler.`, 4000);
+Format each section with ## heading and concise, data-rich content. No filler.`, 4000, 'standard');
       if (pitchRaw?.length > 300) {
         files['PITCH-DECK.md'] = `# Investor Pitch Summary — ${inf.name}\n\n> Seed-stage pitch content · ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n> Generated by Dynasty Business Intelligence Engine\n\n${pitchRaw}`;
         setP('pitch', 'ok', 'PITCH-DECK.md ready');
@@ -6184,7 +6210,7 @@ Include: Acceptance of terms, Description of service, User accounts, Payment ter
 ## Privacy Policy
 Include: Information collected (account data, usage data, cookies), How information is used, Third-party services (Stripe for payments, analytics), Data retention, User rights (access, deletion, portability), GDPR/CCPA compliance notes, Children's privacy (13+), Contact info placeholder.
 
-Write in professional legal language but keep it readable. Use numbered sections. Include [COMPANY NAME], [CONTACT EMAIL], and [EFFECTIVE DATE] as placeholders.`, 4000);
+Write in professional legal language but keep it readable. Use numbered sections. Include [COMPANY NAME], [CONTACT EMAIL], and [EFFECTIVE DATE] as placeholders.`, 4000, 'budget');
       if (legalRaw?.length > 500) {
         files['docs/LEGAL-TEMPLATES.md'] = `# Legal Templates — ${inf.name}\n\n> ⚠️ DISCLAIMER: These are starter templates. Have them reviewed by legal counsel before publishing.\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${legalRaw}`;
         setP('legal', 'ok', 'ToS + Privacy Policy ready');
@@ -6276,7 +6302,7 @@ Email sequence:
 4. Pro tip — power user feature (+7 days)
 5. Check-in + upgrade nudge (+14 days)
 
-Product: ${inf.name} | Price: ${inf.price} | Revenue: ${inf.revenue_model}`, 3000);
+Product: ${inf.name} | Price: ${inf.price} | Revenue: ${inf.revenue_model}`, 3000, 'budget');
       if (emailRaw?.length > 300) {
         files['docs/EMAIL-SEQUENCES.md'] = `# Email Onboarding Sequence — ${inf.name}\n\n> 5-email welcome drip for new customers\n> Import to Acumbamail, Mailchimp, ConvertKit, or any ESP\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${emailRaw}`;
         setP('emails', 'ok', '5-email sequence ready');
@@ -6318,7 +6344,7 @@ Include:
 ## After 10 Interviews
 [Decision framework: when to proceed, when to pivot, when to kill]
 
-Product: ${inf.name} | Target: ${inf.acquisition} | Price: ${inf.price}`, 3000);
+Product: ${inf.name} | Target: ${inf.acquisition} | Price: ${inf.price}`, 3000, 'budget');
       if (discRaw?.length > 300) {
         files['docs/CUSTOMER-DISCOVERY.md'] = `# Customer Discovery Script — ${inf.name}\n\n> Interview guide for your first 10 customers\n> Validate product-market fit before scaling\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${discRaw}`;
         setP('discovery', 'ok', 'Interview script + scoring rubric ready');
@@ -6353,7 +6379,7 @@ Describe a 2×2 matrix with two axes that best differentiate the market. Place e
 ## Key Takeaways
 [3 bullet points: what to copy from competitors, what to avoid, and where the unserved gap is]
 
-Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000);
+Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'standard');
         if (compRaw?.length > 300) {
           files['docs/COMPETITIVE-ANALYSIS.md'] = `# Competitive Teardown — ${inf.name}\n\n> Competitive intelligence from Exa.ai research\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${compRaw}`;
           setP('compete', 'ok', `${RESEARCH_DATA.competitors.slice(0,5).length} competitors analyzed`);
