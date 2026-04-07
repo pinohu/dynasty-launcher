@@ -4332,7 +4332,7 @@ Return ONLY a markdown table:
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ inf, svcs:provisionSvcs })});
+          body:JSON.stringify({ inf: {...inf, deploy_target: V2_DEPLOY_TARGET}, svcs:provisionSvcs })});
         const pd=await pr.json(); provRes=pd;
         if(pd.ok){
           const done=Object.entries(pd.results||{})

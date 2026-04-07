@@ -731,11 +731,16 @@ Return ONLY a valid JSON array (no markdown, no backticks):
 
     // ── VERCEL PROJECT (SaaS/directory/compliance — not WordPress/static) ─────
     let vercelProjectId=null;
+    const deployTarget = inf.deploy_target || 'backend-only';
+    const isFullstack = deployTarget === 'fullstack';
+    const vercelFramework = isFullstack ? 'nextjs' : null; // null = static/no-build for backend-only
+
     if(!needsTwentyi){
       try{
         const pr=await fetch(`https://api.vercel.com/v10/projects?teamId=${VERCEL_TEAM}`,{
           method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
-          body:JSON.stringify({name:slug,framework:'nextjs',
+          body:JSON.stringify({name:slug,
+            ...(vercelFramework ? {framework:vercelFramework} : {}),
             gitRepository:{type:'github',repo:`${ORG}/${slug}`}
           })});
         const pj=await pr.json();
