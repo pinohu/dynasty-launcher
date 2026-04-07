@@ -324,6 +324,39 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .plan-tag{font-size:0.68rem;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);padding:2px 7px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);display:inline-block}
 .plan-tag-dim{color:rgba(255,255,255,0.4);border-color:rgba(255,255,255,0.05)}
 .plan-execute{display:flex;gap:10px;margin-top:16px;animation:fadeIn .3s ease}
+/* ── Input Methods ────────────────────────────────────────────────────────── */
+.input-methods{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.im-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--bdr);border-radius:8px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;transition:.15s;font-family:inherit}
+.im-btn:hover{border-color:rgba(201,168,76,0.3);color:var(--gold);background:rgba(201,168,76,0.04)}
+.im-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.08)}
+.im-btn .im-icon{font-size:14px}
+.im-btn.recording{border-color:rgba(229,83,75,0.5);color:var(--red);background:rgba(229,83,75,0.08);animation:pulse-rec 1.5s ease infinite}
+@keyframes pulse-rec{0%,100%{box-shadow:0 0 0 0 rgba(229,83,75,0.3)}50%{box-shadow:0 0 0 6px rgba(229,83,75,0)}}
+.im-panel{display:none;padding:12px;background:var(--panel);border:1px solid var(--bdr);border-radius:10px;margin:8px 0;animation:fadeIn .2s ease}
+.im-panel.visible{display:block}
+.im-url-input{width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--bdr);border-radius:8px;color:#fff;font-size:13px;font-family:inherit;outline:none}
+.im-url-input:focus{border-color:rgba(201,168,76,0.4)}
+.im-url-input::placeholder{color:rgba(255,255,255,0.2)}
+.im-upload-zone{border:2px dashed var(--bdr);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:.15s}
+.im-upload-zone:hover,.im-upload-zone.dragover{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.02)}
+.im-upload-zone input{display:none}
+.im-upload-label{font-size:12px;color:rgba(255,255,255,0.4)}
+.im-upload-label strong{color:var(--gold)}
+.im-file-info{font-size:11px;color:var(--grn);margin-top:6px}
+.im-templates{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:8px}
+.im-tpl{padding:12px;background:var(--card);border:1px solid var(--bdr);border-radius:8px;cursor:pointer;transition:.15s}
+.im-tpl:hover{border-color:rgba(201,168,76,0.3);background:rgba(201,168,76,0.03)}
+.im-tpl-icon{font-size:20px;margin-bottom:4px}
+.im-tpl-name{font-size:12px;font-weight:600;color:#fff;margin-bottom:2px}
+.im-tpl-desc{font-size:10px;color:rgba(255,255,255,0.35);line-height:1.3}
+.im-convo{padding:12px;max-height:300px;overflow-y:auto}
+.im-msg{padding:8px 10px;border-radius:8px;margin-bottom:6px;font-size:12px;line-height:1.5;max-width:85%}
+.im-msg.ai{background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);color:var(--sec)}
+.im-msg.user{background:rgba(255,255,255,0.05);border:1px solid var(--bdr);color:#fff;margin-left:auto}
+.im-convo-input{display:flex;gap:6px;margin-top:8px}
+.im-convo-input input{flex:1;padding:8px 12px;background:var(--card);border:1px solid var(--bdr);border-radius:8px;color:#fff;font-size:12px;font-family:inherit;outline:none}
+.im-convo-input button{padding:8px 16px;background:var(--gold);color:#0A0A0A;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}
+.im-status{font-size:10px;color:var(--dim);margin-top:6px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -371,6 +404,72 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 
     <div class="input-area">
       <textarea class="big-input" id="project-desc" placeholder="e.g. A Pennsylvania government compliance platform that files annual reports and UCC documents for LLC owners across all 67 counties. Targeting small business owners who don't have time to deal with the state."></textarea>
+
+      <!-- ── Input Methods ─────────────────────────────────────────────────── -->
+      <div class="input-methods">
+        <button class="im-btn" id="im-voice" onclick="toggleVoiceInput()"><span class="im-icon">🎤</span> Voice</button>
+        <button class="im-btn" id="im-url" onclick="togglePanel('url')"><span class="im-icon">🔗</span> Competitor URL</button>
+        <button class="im-btn" id="im-image" onclick="togglePanel('image')"><span class="im-icon">📸</span> Image/Screenshot</button>
+        <button class="im-btn" id="im-doc" onclick="togglePanel('doc')"><span class="im-icon">📄</span> Document</button>
+        <button class="im-btn" id="im-convo-btn" onclick="togglePanel('convo')"><span class="im-icon">💬</span> Talk to AI</button>
+        <button class="im-btn" id="im-tpl" onclick="togglePanel('templates')"><span class="im-icon">📋</span> Templates</button>
+      </div>
+
+      <!-- Voice status -->
+      <div id="im-voice-status" class="im-status" style="display:none"></div>
+
+      <!-- URL Panel -->
+      <div class="im-panel" id="im-panel-url">
+        <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px">Analyze a competitor or inspiration</div>
+        <div style="display:flex;gap:6px">
+          <input class="im-url-input" id="im-url-input" placeholder="https://competitor.com" />
+          <button class="im-btn" style="white-space:nowrap" onclick="analyzeURL()">Analyze →</button>
+        </div>
+        <div id="im-url-status" class="im-status"></div>
+      </div>
+
+      <!-- Image Upload Panel -->
+      <div class="im-panel" id="im-panel-image">
+        <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px">Upload a screenshot, sketch, or whiteboard photo</div>
+        <div class="im-upload-zone" id="im-image-zone" onclick="document.getElementById('im-image-file').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleImageUpload(event.dataTransfer.files[0])">
+          <input type="file" id="im-image-file" accept="image/*" onchange="handleImageUpload(this.files[0])" />
+          <div class="im-upload-label"><strong>Click or drag</strong> an image here<br>PNG, JPG, GIF, WebP — napkin sketches welcome</div>
+        </div>
+        <div id="im-image-status" class="im-status"></div>
+      </div>
+
+      <!-- Document Upload Panel -->
+      <div class="im-panel" id="im-panel-doc">
+        <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px">Upload a business plan, pitch deck, or research doc</div>
+        <div class="im-upload-zone" id="im-doc-zone" onclick="document.getElementById('im-doc-file').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');handleDocUpload(event.dataTransfer.files[0])">
+          <input type="file" id="im-doc-file" accept=".pdf,.txt,.md,.doc,.docx" onchange="handleDocUpload(this.files[0])" />
+          <div class="im-upload-label"><strong>Click or drag</strong> a document here<br>PDF, TXT, Markdown, Word</div>
+        </div>
+        <div id="im-doc-status" class="im-status"></div>
+      </div>
+
+      <!-- Voice Conversation Panel -->
+      <div class="im-panel" id="im-panel-convo">
+        <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px">Shape your idea through conversation</div>
+        <div class="im-convo" id="im-convo-log">
+          <div class="im-msg ai">Tell me what you're thinking about building. Even half-formed ideas work — I'll ask questions to shape it into a solid project description.</div>
+        </div>
+        <div class="im-convo-input">
+          <input id="im-convo-text" placeholder="Type or use 🎤 voice..." onkeydown="if(event.key==='Enter')sendConvoMsg()" />
+          <button onclick="toggleConvoVoice()" id="im-convo-mic">🎤</button>
+          <button onclick="sendConvoMsg()">Send</button>
+        </div>
+        <div style="margin-top:8px;text-align:right">
+          <button class="im-btn" onclick="acceptConvoResult()" style="background:rgba(201,168,76,0.08);border-color:rgba(201,168,76,0.3);color:var(--gold)">✓ Use this as my project idea</button>
+        </div>
+      </div>
+
+      <!-- Template Gallery Panel -->
+      <div class="im-panel" id="im-panel-templates">
+        <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:8px">Start from a proven template</div>
+        <div class="im-templates" id="im-tpl-grid"></div>
+      </div>
+
       <div class="input-meta">
         <div class="char-hint" id="char-hint">Try to be specific about who it's for and what it does</div>
         <div class="examples">
@@ -2316,6 +2415,355 @@ async function proceedToBuild(desc) {
   // ── Record to Memory (Improvement 5) ────────────────────────────────────
   await recordBuild(INFERRED, { files: PRGS.filter(p => p.st === 'ok').map(p => p.id) }, errors);
 }
+
+// ── INPUT METHODS ────────────────────────────────────────────────────────────
+// 6 ways to input ideas beyond typing
+
+// ── 1. Voice Input (Web Speech API — free, browser-native) ──────────────────
+let voiceRecognition = null;
+let voiceActive = false;
+
+function toggleVoiceInput() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Voice input is not supported in this browser. Try Chrome or Edge.');
+    return;
+  }
+  if (voiceActive) { stopVoice(); return; }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  voiceRecognition = new SpeechRecognition();
+  voiceRecognition.continuous = true;
+  voiceRecognition.interimResults = true;
+  voiceRecognition.lang = 'en-US';
+
+  const btn = document.getElementById('im-voice');
+  const status = document.getElementById('im-voice-status');
+  const textarea = document.getElementById('project-desc');
+  const startText = textarea.value;
+
+  voiceRecognition.onstart = () => {
+    voiceActive = true;
+    btn.classList.add('recording');
+    btn.innerHTML = '<span class="im-icon">⏹</span> Stop';
+    status.style.display = 'block';
+    status.textContent = '🔴 Listening... speak your idea';
+  };
+
+  voiceRecognition.onresult = (e) => {
+    let final = '', interim = '';
+    for (let i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    textarea.value = (startText ? startText + ' ' : '') + final + interim;
+    status.textContent = `🔴 Listening... ${final.length > 0 ? final.split(' ').length + ' words captured' : 'speak your idea'}`;
+    onDescInput();
+  };
+
+  voiceRecognition.onerror = (e) => {
+    status.textContent = `Error: ${e.error}`;
+    stopVoice();
+  };
+
+  voiceRecognition.onend = () => { if (voiceActive) voiceRecognition.start(); };
+  voiceRecognition.start();
+}
+
+function stopVoice() {
+  voiceActive = false;
+  if (voiceRecognition) voiceRecognition.stop();
+  const btn = document.getElementById('im-voice');
+  btn.classList.remove('recording');
+  btn.innerHTML = '<span class="im-icon">🎤</span> Voice';
+  document.getElementById('im-voice-status').textContent = '✓ Voice input complete';
+  setTimeout(() => { document.getElementById('im-voice-status').style.display = 'none'; }, 3000);
+  onDescInput();
+}
+
+// ── 2. URL/Competitor Analysis ───────────────────────────────────────────────
+async function analyzeURL() {
+  const url = document.getElementById('im-url-input').value.trim();
+  if (!url) return;
+  const status = document.getElementById('im-url-status');
+  status.textContent = '⏳ Fetching and analyzing...';
+
+  try {
+    // Fetch the page content via our AI proxy
+    const raw = await aiRaw(`Analyze this website URL and extract the business model for someone who wants to build something similar but better.
+
+URL: ${url}
+
+Based on the URL (and your knowledge of common business patterns), describe:
+1. What the business does (2-3 sentences)
+2. Who their customers are
+3. Their likely revenue model
+4. Their key features
+5. Their weaknesses or gaps
+
+Then write a 3-4 sentence project description for a BETTER version of this business, incorporating improvements that address their weaknesses. Write it as if a founder is describing their new project.
+
+Return ONLY the project description paragraph — no headers, no analysis, just the improved business idea.`, 1500);
+
+    if (raw) {
+      document.getElementById('project-desc').value = raw;
+      status.textContent = `✓ Analyzed — idea generated from ${url}`;
+      onDescInput();
+    }
+  } catch (e) {
+    status.textContent = `Error: ${e.message}`;
+  }
+}
+
+// ── 3. Image/Screenshot Upload (Claude Vision) ──────────────────────────────
+async function handleImageUpload(file) {
+  if (!file) return;
+  const status = document.getElementById('im-image-status');
+  status.textContent = `⏳ Analyzing ${file.name}...`;
+
+  try {
+    const base64 = await fileToBase64(file);
+    const mediaType = file.type || 'image/png';
+
+    const r = await fetch('/api/ai', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: `This is a screenshot, sketch, or whiteboard photo of a business idea or product concept. Extract the business idea from this image and write a clear 3-5 sentence project description suitable for a project generator. Include: what it does, who it's for, and how it makes money. If it's a rough sketch, interpret the intent. Write ONLY the project description.` }
+          ]
+        }]
+      })
+    });
+
+    const d = await r.json();
+    const text = d.content?.find(b => b.type === 'text')?.text || '';
+    if (text) {
+      document.getElementById('project-desc').value = text;
+      status.textContent = `✓ Extracted idea from ${file.name}`;
+      onDescInput();
+    } else {
+      status.textContent = 'Could not extract idea from image';
+    }
+  } catch (e) {
+    status.textContent = `Error: ${e.message}`;
+  }
+}
+
+// ── 4. Document Upload (PDF/TXT extraction) ─────────────────────────────────
+async function handleDocUpload(file) {
+  if (!file) return;
+  const status = document.getElementById('im-doc-status');
+  status.textContent = `⏳ Reading ${file.name}...`;
+
+  try {
+    let text = '';
+    if (file.type === 'application/pdf') {
+      // For PDFs, send as base64 to Claude
+      const base64 = await fileToBase64(file);
+      const r = await fetch('/api/ai', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 1500,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+              { type: 'text', text: `This is a business plan, pitch deck, or research document. Extract the core business idea and write a clear 3-5 sentence project description suitable for a project generator. Include: what it does, who it's for, how it makes money, and what technology stack would be appropriate. Write ONLY the project description.` }
+            ]
+          }]
+        })
+      });
+      const d = await r.json();
+      text = d.content?.find(b => b.type === 'text')?.text || '';
+    } else {
+      // For text files, read directly then summarize
+      const rawText = await file.text();
+      const truncated = rawText.slice(0, 8000);
+      text = await aiRaw(`This is a document about a business idea. Extract the core concept and write a clear 3-5 sentence project description suitable for a project generator. Include: what it does, who it's for, and how it makes money. Write ONLY the project description.
+
+DOCUMENT CONTENT:
+${truncated}`, 1500);
+    }
+
+    if (text) {
+      document.getElementById('project-desc').value = text;
+      status.textContent = `✓ Extracted idea from ${file.name}`;
+      onDescInput();
+    } else {
+      status.textContent = 'Could not extract idea from document';
+    }
+  } catch (e) {
+    status.textContent = `Error: ${e.message}`;
+  }
+}
+
+// ── 5. Voice Conversation (interactive AI Q&A) ──────────────────────────────
+let convoHistory = [];
+let convoVoiceActive = false;
+
+async function sendConvoMsg() {
+  const input = document.getElementById('im-convo-text');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const log = document.getElementById('im-convo-log');
+  log.innerHTML += `<div class="im-msg user">${msg}</div>`;
+  convoHistory.push({ role: 'user', content: msg });
+
+  log.innerHTML += `<div class="im-msg ai" id="convo-thinking"><div class="thinking-dots"><span></span><span></span><span></span></div></div>`;
+  log.scrollTop = log.scrollHeight;
+
+  try {
+    const systemPrompt = `You are helping someone shape a business idea for a project generator. Ask focused questions to understand:
+1. What problem they're solving
+2. Who their target customer is
+3. How it makes money
+4. What makes it different
+
+Ask ONE question at a time. Be conversational and encouraging. After 3-5 exchanges when you have enough info, summarize the idea as a clear project description (3-5 sentences) and say "Here's your project description:" followed by the summary.`;
+
+    const r = await fetch('/api/ai', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 500,
+        system: systemPrompt,
+        messages: convoHistory,
+      })
+    });
+    const d = await r.json();
+    const reply = d.content?.find(b => b.type === 'text')?.text || 'Could you tell me more?';
+    convoHistory.push({ role: 'assistant', content: reply });
+
+    document.getElementById('convo-thinking').outerHTML = `<div class="im-msg ai">${reply.replace(/\n/g, '<br>')}</div>`;
+    log.scrollTop = log.scrollHeight;
+
+    // Auto-detect when AI has produced a project description
+    if (reply.includes('project description:') || reply.includes('Project Description:') || reply.includes('Here\'s your')) {
+      const descMatch = reply.match(/(?:description:|Description:)([\s\S]*?)$/i);
+      if (descMatch) {
+        document.getElementById('project-desc').value = descMatch[1].trim();
+        onDescInput();
+      }
+    }
+  } catch (e) {
+    document.getElementById('convo-thinking').outerHTML = `<div class="im-msg ai" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+function acceptConvoResult() {
+  // Find the last AI message that looks like a project description
+  const lastAiMsg = convoHistory.filter(m => m.role === 'assistant').pop();
+  if (lastAiMsg) {
+    const desc = lastAiMsg.content.replace(/^.*(?:description:|Description:)/i, '').trim();
+    document.getElementById('project-desc').value = desc || lastAiMsg.content;
+    onDescInput();
+    togglePanel('convo'); // close panel
+  }
+}
+
+function toggleConvoVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const mic = document.getElementById('im-convo-mic');
+
+  if (convoVoiceActive) {
+    convoVoiceActive = false;
+    if (window._convoRec) window._convoRec.stop();
+    mic.textContent = '🎤';
+    return;
+  }
+
+  const rec = new SpeechRecognition();
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.lang = 'en-US';
+  window._convoRec = rec;
+  convoVoiceActive = true;
+  mic.textContent = '⏹';
+
+  rec.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    document.getElementById('im-convo-text').value = text;
+    sendConvoMsg();
+    mic.textContent = '🎤';
+    convoVoiceActive = false;
+  };
+  rec.onend = () => { mic.textContent = '🎤'; convoVoiceActive = false; };
+  rec.onerror = () => { mic.textContent = '🎤'; convoVoiceActive = false; };
+  rec.start();
+}
+
+// ── 6. Template Gallery ──────────────────────────────────────────────────────
+const TEMPLATES = [
+  { icon: '🏢', name: 'SaaS Platform', desc: 'Subscription software with auth, billing, dashboards', prompt: 'A SaaS platform that helps [target users] to [solve problem]. Monthly subscription with free trial, tiered pricing, and a self-serve onboarding flow.' },
+  { icon: '📒', name: 'Directory / Marketplace', desc: 'Listings, search, reviews, lead routing', prompt: 'A niche directory for [industry] professionals. Members pay monthly to list, customers search and get matched to providers. Revenue from listing fees and lead routing.' },
+  { icon: '🏛️', name: 'Government Compliance', desc: 'Filing, tracking, automated submissions', prompt: 'A government compliance platform that automates [specific filings] for [business type] across [jurisdiction]. Saves hours of manual paperwork.' },
+  { icon: '🏠', name: 'Real Estate Tool', desc: 'Property analysis, CRM, deal tracking', prompt: 'A real estate investment tool that helps investors analyze properties, track deals, and manage portfolios. Features: deal calculator, CRM, document management.' },
+  { icon: '🤖', name: 'AI Agent Service', desc: 'Autonomous task execution with human oversight', prompt: 'An AI agent service that autonomously handles [task type] for [business type]. Monitored by human operators, charged per task completed.' },
+  { icon: '📰', name: 'Authority Site', desc: 'Content, SEO, lead gen, affiliate revenue', prompt: 'An authority website for [niche] that ranks for high-intent keywords, captures leads, and monetizes through affiliate partnerships and premium listings.' },
+  { icon: '🛒', name: 'E-commerce Store', desc: 'Products, cart, payments, fulfillment', prompt: 'An e-commerce store selling [product type] to [target audience]. Dropshipping/print-on-demand fulfillment, Stripe payments, email marketing.' },
+  { icon: '📊', name: 'Analytics Dashboard', desc: 'Data viz, reporting, alerts, integrations', prompt: 'A analytics dashboard that aggregates data from [sources] and gives [user type] actionable insights. Real-time alerts, custom reports, API integrations.' },
+  { icon: '🎓', name: 'Online Course / LMS', desc: 'Lessons, quizzes, certificates, payments', prompt: 'An online learning platform teaching [subject] to [audience]. Video lessons, quizzes, certificates, community forum. One-time or subscription pricing.' },
+  { icon: '📱', name: 'Mobile App Backend', desc: 'API, auth, push notifications, analytics', prompt: 'A mobile app backend for [app concept]. REST API, user auth, push notifications, analytics, and admin dashboard. The app helps [users] to [action].' },
+  { icon: '🔧', name: 'Client Portal', desc: 'Projects, invoicing, comms, file sharing', prompt: 'A client portal for [service business] that manages projects, invoicing, communication, and file sharing. Clients log in to see progress and pay invoices.' },
+  { icon: '⚡', name: 'Automation Service', desc: 'n8n workflows, API integrations, monitoring', prompt: 'An automation service that connects [System A] to [System B] for [business type]. Eliminates manual data entry, runs scheduled workflows, alerts on failures.' },
+];
+
+function initTemplateGrid() {
+  const grid = document.getElementById('im-tpl-grid');
+  if (!grid) return;
+  grid.innerHTML = TEMPLATES.map((t, i) => `
+    <div class="im-tpl" onclick="selectTemplate(${i})">
+      <div class="im-tpl-icon">${t.icon}</div>
+      <div class="im-tpl-name">${t.name}</div>
+      <div class="im-tpl-desc">${t.desc}</div>
+    </div>
+  `).join('');
+}
+
+function selectTemplate(idx) {
+  const t = TEMPLATES[idx];
+  if (!t) return;
+  document.getElementById('project-desc').value = t.prompt;
+  togglePanel('templates');
+  onDescInput();
+  // Focus textarea so user can customize the bracketed parts
+  document.getElementById('project-desc').focus();
+}
+
+// ── Panel Toggle ─────────────────────────────────────────────────────────────
+function togglePanel(name) {
+  const panel = document.getElementById(`im-panel-${name}`);
+  if (!panel) return;
+  const wasVisible = panel.classList.contains('visible');
+  // Close all panels
+  document.querySelectorAll('.im-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.im-btn').forEach(b => b.classList.remove('active'));
+  // Toggle the clicked one
+  if (!wasVisible) {
+    panel.classList.add('visible');
+    const btn = document.getElementById(`im-${name === 'templates' ? 'tpl' : name === 'convo' ? 'convo-btn' : name}`);
+    if (btn) btn.classList.add('active');
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Init template grid on load
+setTimeout(initTemplateGrid, 100);
 
 // Examples
 document.querySelectorAll('.ex').forEach(el=>el.addEventListener('click',()=>{
