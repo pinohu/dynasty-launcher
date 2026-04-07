@@ -31,6 +31,12 @@
     },
     "api/research.js": {
       "maxDuration": 60
+    },
+    "api/auth.js": {
+      "maxDuration": 30
+    },
+    "api/checkout.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
