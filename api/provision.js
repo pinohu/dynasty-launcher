@@ -762,6 +762,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
               body:JSON.stringify({
                 name:slug,
                 project:vercelProjectId,
+                target:'production',
                 gitSource:{type:'github',org:ORG,repo:slug,ref:'main'}
               })
             });
