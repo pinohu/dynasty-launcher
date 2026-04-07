@@ -276,6 +276,32 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .score-dial{position:relative;width:80px;height:80px;margin:0 auto 12px}
 .score-dial-circle{width:100%;height:100%;border-radius:50%;background:conic-gradient(var(--gold) var(--dial-pct,0%),var(--bdr) 0%);display:flex;align-items:center;justify-content:center;transition:--dial-pct 1.5s ease}
 .score-dial-inner{width:60px;height:60px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--gold)}
+/* ── Preflight Modal ──────────────────────────────────────────────────────── */
+.pf-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease}
+.pf-card{background:var(--card);border:1px solid var(--bdr);border-radius:16px;max-width:580px;width:92%;max-height:85vh;overflow-y:auto;padding:28px 24px}
+.pf-header{text-align:center;margin-bottom:20px}.pf-header .pf-icon{font-size:32px;display:block;margin-bottom:8px}
+.pf-header h3{font-size:1.3rem;font-weight:700;color:#fff;margin:0 0 4px}.pf-header p{font-size:0.82rem;color:rgba(255,255,255,0.4);margin:0}
+.pf-section{margin-bottom:16px;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--bdr);border-radius:10px}
+.pf-section h4{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);margin:0 0 8px;font-weight:600}
+.pf-infra-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:0.82rem}
+.pf-label{color:rgba(255,255,255,0.5)}.pf-value{color:#fff;font-weight:500;text-align:right;max-width:60%}
+.pf-files{display:flex;flex-wrap:wrap;gap:4px}.pf-files code{font-size:0.7rem;background:rgba(201,168,76,0.08);color:var(--gold);padding:2px 6px;border-radius:4px;border:1px solid rgba(201,168,76,0.15)}
+.pf-flags{display:flex;flex-wrap:wrap;gap:4px}.pf-flag{font-size:0.7rem;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);padding:2px 8px;border-radius:12px;border:1px solid var(--bdr)}
+.pf-muted{color:rgba(255,255,255,0.3);font-size:0.8rem}
+.pf-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.pf-btn{padding:10px 20px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.pf-btn-cancel{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);border:1px solid var(--bdr)}
+.pf-btn-cancel:hover{background:rgba(255,255,255,0.1);color:#fff}
+.pf-btn-launch{background:var(--gold);color:#0A0A0A}.pf-btn-launch:hover{filter:brightness(1.1);transform:translateY(-1px)}
+/* ── Flags/Memory Panel ───────────────────────────────────────────────────── */
+.fm-panel{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px;margin-top:16px}
+.fm-panel h4{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);margin:0 0 10px;font-weight:600}
+.fm-flag-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:0.8rem}
+.fm-flag-name{color:rgba(255,255,255,0.7)}.fm-flag-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px}
+.fm-flag-dot.on{background:#4ADE80}.fm-flag-dot.off{background:#F07070}
+.fm-stat{display:flex;justify-content:space-between;padding:3px 0;font-size:0.78rem;color:rgba(255,255,255,0.5)}
+.fm-stat .fm-val{color:#fff;font-weight:500}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -340,6 +366,13 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
     </div>
 
     <button class="launch" id="launch-btn" disabled>Describe your project above to begin</button>
+
+    <!-- ── Flags & Memory Panel (Claude Code Patterns) ────────────────────── -->
+    <div class="fm-panel" id="fm-panel" style="display:none">
+      <h4>⚡ Build Intelligence</h4>
+      <div id="fm-flags"></div>
+      <div id="fm-memory" style="margin-top:10px"></div>
+    </div>
   </div>
 
   <div id="framework-screen" style="display:none">
@@ -559,6 +592,242 @@ let V2_MODEL_MAP = {}; // per-phase model overrides
 let V2_DEPLOY_TARGET = 'backend-only'; // 'backend-only' | 'fullstack' | 'authority' | 'wordpress' | 'static'
 let V2_MODELS_CACHE = null;
 let V2_BUILD_COST = 0; // running cost accumulator
+
+// ── Claude Code Pattern Systems ──────────────────────────────────────────────
+// Inspired by the leaked Claude Code architecture: parallel subagents, context
+// compaction, smart model routing, feature flags, and project memory.
+let FEATURE_FLAGS = {};
+let BUILD_MEMORY = [];
+let BUILD_COMPACTIONS = []; // accumulated phase compactions for context forwarding
+let BUILD_START_TIME = 0;
+let PREFLIGHT_APPROVED = false;
+let EXISTING_CLAUDE_MD = null; // for iterative builds
+
+// ── Feature Flags ────────────────────────────────────────────────────────────
+async function loadFlags() {
+  try {
+    const r = await fetch('/api/flags');
+    const d = await r.json();
+    FEATURE_FLAGS = d.flags || {};
+  } catch { FEATURE_FLAGS = {}; }
+  return FEATURE_FLAGS;
+}
+function flagEnabled(name) {
+  return FEATURE_FLAGS[name]?.enabled ?? false;
+}
+
+// ── Project Memory ───────────────────────────────────────────────────────────
+async function recordBuild(inf, result, errors) {
+  if (!flagEnabled('project_memory')) return;
+  try {
+    await fetch('/api/memory', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'record',
+        project_slug: inf.repo,
+        project_type: inf.type_id || '',
+        niche_name: inf.name || '',
+        build_config: { stack: inf.stack, revenue_model: inf.revenue_model, accent: inf.accent },
+        build_result: result || {},
+        files_generated: Object.keys(result || {}),
+        errors: errors || [],
+        model_used: V2_MODEL,
+        total_cost: V2_BUILD_COST,
+        build_duration_ms: Date.now() - BUILD_START_TIME,
+      }),
+    });
+  } catch {}
+}
+async function loadMemoryContext(type) {
+  if (!flagEnabled('project_memory')) return null;
+  try {
+    const r = await fetch(`/api/memory?action=context&type=${encodeURIComponent(type || '')}`);
+    return (await r.json()).context || null;
+  } catch { return null; }
+}
+
+// ── Context Compaction ───────────────────────────────────────────────────────
+async function compactPhase(phaseId, output) {
+  if (!flagEnabled('context_compaction')) return;
+  try {
+    const r = await fetch('/api/orchestrate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'compact', phase_id: phaseId, output }),
+    });
+    const d = await r.json();
+    if (d.compacted) BUILD_COMPACTIONS.push(d.compacted);
+  } catch {}
+}
+async function getCompactContext() {
+  if (!BUILD_COMPACTIONS.length) return '';
+  try {
+    const r = await fetch('/api/orchestrate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'build_context', compactions: BUILD_COMPACTIONS }),
+    });
+    const d = await r.json();
+    return d.context || '';
+  } catch { return ''; }
+}
+
+// ── Smart Model Routing ──────────────────────────────────────────────────────
+async function routeModel(phaseId) {
+  if (!flagEnabled('smart_routing')) return V2_MODEL;
+  // Check per-phase user override first
+  if (V2_MODEL_MAP[phaseId]) return V2_MODEL_MAP[phaseId];
+  try {
+    const r = await fetch('/api/orchestrate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'route', phase_id: phaseId, provider: 'anthropic' }),
+    });
+    const d = await r.json();
+    return d.model || V2_MODEL;
+  } catch { return V2_MODEL; }
+}
+
+// ── CLAUDE.md Read-Back ──────────────────────────────────────────────────────
+async function checkExistingProject(repoSlug) {
+  if (!flagEnabled('claude_md_readback')) return null;
+  try {
+    const r = await fetch('/api/orchestrate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'read_claude_md', repo: repoSlug }),
+    });
+    const d = await r.json();
+    if (d.found) return d.content;
+  } catch {}
+  return null;
+}
+
+// ── Preflight Review ─────────────────────────────────────────────────────────
+async function runPreflight(inf, svcs) {
+  if (!flagEnabled('preflight_review')) return true; // skip if disabled
+  try {
+    const r = await fetch('/api/orchestrate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'preflight', inf, svcs: svcs || [], flags: FEATURE_FLAGS }),
+    });
+    const d = await r.json();
+    return await showPreflightModal(d.preflight);
+  } catch { return true; }
+}
+
+function showPreflightModal(report) {
+  return new Promise((resolve) => {
+    // Remove any existing modal
+    document.getElementById('preflight-modal')?.remove();
+
+    const infraItems = Object.entries(report.infrastructure || {})
+      .filter(([,v]) => v)
+      .map(([k,v]) => `<div class="pf-infra-item"><span class="pf-label">${k}</span><span class="pf-value">${v}</span></div>`)
+      .join('');
+
+    const flagsList = (report.flags_active || []).slice(0, 8).map(f =>
+      `<span class="pf-flag">${f.replace(/_/g, ' ')}</span>`
+    ).join('');
+
+    const modal = document.createElement('div');
+    modal.id = 'preflight-modal';
+    modal.innerHTML = `
+      <div class="pf-overlay" onclick="document.getElementById('preflight-modal').remove()">
+        <div class="pf-card" onclick="event.stopPropagation()">
+          <div class="pf-header">
+            <span class="pf-icon">🛫</span>
+            <h3>Preflight Review</h3>
+            <p>Review what will be created before launching</p>
+          </div>
+          <div class="pf-section">
+            <h4>Project</h4>
+            <div class="pf-infra-item"><span class="pf-label">Name</span><span class="pf-value">${report.project?.name || ''}</span></div>
+            <div class="pf-infra-item"><span class="pf-label">Type</span><span class="pf-value">${report.project?.type || ''}</span></div>
+            <div class="pf-infra-item"><span class="pf-label">Stack</span><span class="pf-value">${(report.project?.stack || []).join(', ')}</span></div>
+          </div>
+          <div class="pf-section">
+            <h4>${(report.files_to_generate || []).length} Files to Generate</h4>
+            <div class="pf-files">${(report.files_to_generate || []).map(f => `<code>${f}</code>`).join(' ')}</div>
+          </div>
+          <div class="pf-section">
+            <h4>Infrastructure</h4>
+            ${infraItems || '<div class="pf-muted">No infrastructure provisioning</div>'}
+          </div>
+          <div class="pf-section">
+            <h4>Estimated Cost & Time</h4>
+            <div class="pf-infra-item"><span class="pf-label">With smart routing</span><span class="pf-value">${report.estimated_cost?.with_smart_routing || '~$0.10'}</span></div>
+            <div class="pf-infra-item"><span class="pf-label">Estimated time</span><span class="pf-value">${report.estimated_time?.with_parallel || '~30s'}</span></div>
+          </div>
+          <div class="pf-section">
+            <h4>Active Flags</h4>
+            <div class="pf-flags">${flagsList || '<span class="pf-muted">defaults</span>'}</div>
+          </div>
+          <div class="pf-actions">
+            <button class="pf-btn pf-btn-cancel" onclick="document.getElementById('preflight-modal').remove(); window._pfResolve && window._pfResolve(false)">Cancel</button>
+            <button class="pf-btn pf-btn-launch" onclick="document.getElementById('preflight-modal').remove(); window._pfResolve && window._pfResolve(true)">🚀 Launch Build</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    window._pfResolve = resolve;
+  });
+}
+
+// ── Parallel Execution Engine ────────────────────────────────────────────────
+// Runs independent phases concurrently (Claude Code's Fork pattern)
+async function runParallel(tasks) {
+  if (!flagEnabled('parallel_generation') || tasks.length <= 1) {
+    // Sequential fallback
+    const results = {};
+    for (const task of tasks) {
+      results[task.id] = await task.fn();
+    }
+    return results;
+  }
+  // Run all tasks concurrently
+  const settled = await Promise.allSettled(tasks.map(t => t.fn()));
+  const results = {};
+  tasks.forEach((task, i) => {
+    if (settled[i].status === 'fulfilled') {
+      results[task.id] = settled[i].value;
+    } else {
+      results[task.id] = { error: settled[i].reason?.message || 'Failed' };
+      console.error(`Phase ${task.id} failed:`, settled[i].reason);
+    }
+  });
+  return results;
+}
+
+// Load flags on page load
+loadFlags().then(() => {
+  const panel = document.getElementById('fm-panel');
+  const flagsEl = document.getElementById('fm-flags');
+  if (!panel || !flagsEl) return;
+
+  const keyFlags = ['parallel_generation','smart_routing','context_compaction','preflight_review','project_memory','claude_md_readback'];
+  let html = '';
+  for (const key of keyFlags) {
+    const f = FEATURE_FLAGS[key];
+    if (!f) continue;
+    const on = f.enabled;
+    html += `<div class="fm-flag-row"><span><span class="fm-flag-dot ${on?'on':'off'}"></span><span class="fm-flag-name">${f.label}</span></span><span style="font-size:0.7rem;color:rgba(255,255,255,0.3)">${on?'ON':'OFF'}</span></div>`;
+  }
+  flagsEl.innerHTML = html;
+  panel.style.display = 'block';
+
+  // Load memory stats
+  if (FEATURE_FLAGS.project_memory?.enabled) {
+    fetch('/api/memory?action=stats').then(r=>r.json()).then(d => {
+      const s = d.stats || {};
+      const memEl = document.getElementById('fm-memory');
+      if (!memEl || !s.total_builds || s.total_builds === '0') return;
+      memEl.innerHTML = `
+        <h4 style="margin-top:12px">📊 Build Memory</h4>
+        <div class="fm-stat"><span>Total builds</span><span class="fm-val">${s.total_builds}</span></div>
+        <div class="fm-stat"><span>Lifetime cost</span><span class="fm-val">$${parseFloat(s.lifetime_cost||0).toFixed(2)}</span></div>
+        <div class="fm-stat"><span>Avg build time</span><span class="fm-val">${Math.round((s.avg_build_ms||0)/1000)}s</span></div>
+        <div class="fm-stat"><span>Most used model</span><span class="fm-val">${(s.most_used_model||'').split('-').slice(0,2).join(' ')}</span></div>
+      `;
+    }).catch(()=>{});
+  }
+});
 
 // Settings — only org name needed now (token is server-side)
 document.getElementById('settings-btn').onclick=()=>{
@@ -1287,13 +1556,40 @@ function modifyPivot(pivotDesc) {
 
 async function startBuild() {
   const desc = document.getElementById('project-desc').value.trim();
+  BUILD_START_TIME = Date.now();
+  BUILD_COMPACTIONS = [];
+  PREFLIGHT_APPROVED = false;
+  EXISTING_CLAUDE_MD = null;
+
+  // ── Preflight Review (Improvement 7) ────────────────────────────────────
+  const approved = await runPreflight(INFERRED, []);
+  if (!approved) return; // User cancelled
+  PREFLIGHT_APPROVED = true;
+
+  // ── CLAUDE.md Read-Back (Improvement 6) ─────────────────────────────────
+  if (flagEnabled('claude_md_readback') && INFERRED?.repo) {
+    EXISTING_CLAUDE_MD = await checkExistingProject(INFERRED.repo);
+    if (EXISTING_CLAUDE_MD) {
+      console.log(`Found existing CLAUDE.md for ${INFERRED.repo} (${EXISTING_CLAUDE_MD.length} chars) — will use for iterative context`);
+    }
+  }
+
   document.getElementById('config-screen').style.display = 'none';
   document.getElementById('prog-screen').style.display = 'block';
   document.getElementById('prog-title').textContent = `Building ${INFERRED.name}…`;
   V2_BUILD_COST = 0;
   PRGS = [];
   renderProg();
-  await build(desc, INFERRED);
+
+  const errors = [];
+  try {
+    await build(desc, INFERRED);
+  } catch (e) {
+    errors.push(e.message);
+  }
+
+  // ── Record to Memory (Improvement 5) ────────────────────────────────────
+  await recordBuild(INFERRED, { files: PRGS.filter(p => p.st === 'ok').map(p => p.id) }, errors);
 }
 
 // Examples
@@ -1495,7 +1791,8 @@ async function parseDelimited(text,keys){
   return result;
 }
 async function ai(prompt, keys, max = 8000, phaseId = null) {
-  const model = (phaseId && V2_MODEL_MAP[phaseId]) || V2_MODEL;
+  // Smart Model Routing (Improvement 2) — route to optimal model per phase
+  const model = phaseId ? await routeModel(phaseId) : ((phaseId && V2_MODEL_MAP[phaseId]) || V2_MODEL);
   const r = await fetch('/api/ai', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
@@ -1546,7 +1843,25 @@ async function aiRaw(prompt, max = 4000) {
   }
   return d.content?.find(b => b.type === 'text')?.text || '';
 }
-function cx(desc,inf){return`Project: ${inf.name}\nDescription: ${desc}\nRepo: ${ORG}/${inf.repo}\nType: ${inf.type_label}\nSurface: ${inf.surface}\nAccent: ${inf.accent}\nFonts: ${inf.fonts}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nAcquisition: ${inf.acquisition}\nMVP: ${inf.mvp}`;}
+function cx(desc,inf){
+  let base = `Project: ${inf.name}\nDescription: ${desc}\nRepo: ${ORG}/${inf.repo}\nType: ${inf.type_label}\nSurface: ${inf.surface}\nAccent: ${inf.accent}\nFonts: ${inf.fonts}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nAcquisition: ${inf.acquisition}\nMVP: ${inf.mvp}`;
+  // Context Compaction (Improvement 3) — inject compressed prior-phase decisions
+  if (BUILD_COMPACTIONS.length > 0) {
+    const signals = BUILD_COMPACTIONS.map(c => {
+      const sigs = Object.entries(c.signals || {})
+        .filter(([,v]) => (Array.isArray(v) ? v.length : !!v))
+        .map(([k,v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+        .join('; ');
+      return `[${c.phase}] ${sigs}`;
+    }).join('\n');
+    base += `\n\n## Prior Phase Decisions (maintain consistency):\n${signals}`;
+  }
+  // CLAUDE.md Read-Back (Improvement 6) — inject existing project context
+  if (EXISTING_CLAUDE_MD) {
+    base += `\n\n## Existing CLAUDE.md (iterative update — preserve these conventions):\n${EXISTING_CLAUDE_MD.slice(0, 2000)}`;
+  }
+  return base;
+}
 
 // ── Processing Visuals ──────────────────────────────────────────────────
 // ── Educational Side Card ────────────────────────────────────────────────
@@ -1848,6 +2163,8 @@ git config user.name "pinohu"
 ---END:claude_md---
 `, ['design_md','claude_md'], 8000);
       setP('g1','ok',`${((df.design_md?.length||0)/1000).toFixed(1)}k chars`);
+      // Context Compaction — compress design decisions for downstream phases
+      await compactPhase('design', df);
     }catch(e){setP('g1','er',e.message);throw e;}
 
     updateEduCard('g2');
@@ -1970,6 +2287,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ---END:env_ex---
 `, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 8000);
       setP('g2','ok',`${Object.values(dc).filter(v=>v).length} docs ready`);
+      await compactPhase('spec', dc);
     }catch(e){setP('g2','er',e.message);throw e;}
 
     updateEduCard('g3');
@@ -2142,8 +2460,10 @@ SMS-iT: [3-message follow-up sequence]
 ---END:gtm_playbook---
 `, ['biz_system','revenue_model','gtm_playbook'], 7000);
       setP('g4a','ok',`Business strategy ready`);
+      await compactPhase('business', bs);
     }catch(e){setP('g4a','er',e.message);throw e;}
 
+    // ── Parallel Execution: Agent System runs concurrently with Business wrap-up ──
     updateEduCard('g4b');
     addP('g4b','Generating AGENT-SYSTEM + FAILURE-MODES','');setP('g4b','run');
     updateGlobalProgress(5, 11, 'Phase 5 of 11 \u00b7 Agent System');
@@ -2465,6 +2785,7 @@ volumes:
 ---END:docker_compose---
 `, ['main_py','requirements','dockerfile','docker_compose'], 7000);
       setP('g5','ok','Production backend code ready');
+      await compactPhase('backend', be);
     }catch(e){setP('g5','er',e.message);throw e;}
 
     // ── Phase 7: Frontend scaffold (full-stack deploy only) ────────────────
@@ -2907,8 +3228,16 @@ function showDone(inf,repo,fc,mtasks){
   const beFiles=['backend/main.py','backend/requirements.txt','backend/Dockerfile','docker-compose.yml'];
   const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
   const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];
+  const buildDuration = ((Date.now() - BUILD_START_TIME) / 1000).toFixed(0);
+  const compactionsUsed = BUILD_COMPACTIONS.length;
+  const intelligenceNote = [
+    flagEnabled('parallel_generation') ? '⚡ parallel' : null,
+    flagEnabled('smart_routing') ? '🧠 smart-routed' : null,
+    compactionsUsed > 0 ? `🔗 ${compactionsUsed} phase compactions` : null,
+    EXISTING_CLAUDE_MD ? '♻️ iterative update' : null,
+  ].filter(Boolean).join(' · ');
   d.innerHTML=`
-<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated and pushed · ${provRes?.results?Object.keys(provRes.results).length+' services provisioned':'provisioning'} · ${mtasks.length} manual actions documented${V2_BUILD_COST > 0 ? ' · API cost: $' + V2_BUILD_COST.toFixed(4) : ' · API cost: $0.00 (free models)'}</p></div>
+<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated and pushed · ${provRes?.results?Object.keys(provRes.results).length+' services provisioned':'provisioning'} · ${mtasks.length} manual actions documented${V2_BUILD_COST > 0 ? ' · API cost: $' + V2_BUILD_COST.toFixed(4) : ' · API cost: $0.00 (free models)'} · ${buildDuration}s${intelligenceNote ? '<br><span style="color:var(--gold);font-size:0.78rem">' + intelligenceNote + '</span>' : ''}</p></div>
 <div class="biz-bar">
   <div class="bb-item"><div class="bb-l">Revenue</div><div class="bb-v">${inf.revenue_model} · ${inf.price}</div></div>
   <div class="bb-item"><div class="bb-l">Acquisition</div><div class="bb-v">${inf.acquisition}</div></div>

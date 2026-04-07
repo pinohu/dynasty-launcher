@@ -19,6 +19,15 @@
     },
     "api/ai.js": {
       "maxDuration": 300
+    },
+    "api/orchestrate.js": {
+      "maxDuration": 300
+    },
+    "api/memory.js": {
+      "maxDuration": 30
+    },
+    "api/flags.js": {
+      "maxDuration": 10
     }
   },
   "headers": [
