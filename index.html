@@ -1523,9 +1523,66 @@ loadFlags().then(() => {
 
 // Settings — only org name needed now (token is server-side)
 document.getElementById('settings-btn').onclick=()=>{
-  const org=prompt('GitHub org/username (default: pinohu):',ORG);
-  if(org){ORG=org.trim();localStorage.setItem('dynasty_gh_org',ORG);}
+  const existingModal = document.getElementById('settings-modal');
+  if (existingModal) { existingModal.remove(); return; }
+  
+  const webhookUrl = localStorage.getItem('dynasty_webhook_url') || '';
+  const whiteLabel = localStorage.getItem('dynasty_white_label') === 'true';
+  const customDomain = localStorage.getItem('dynasty_custom_domain') || '';
+
+  const modal = document.createElement('div');
+  modal.id = 'settings-modal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999';
+  modal.innerHTML = `
+    <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;max-width:500px;width:90%">
+      <h3 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:1rem">⚙ Settings</h3>
+      
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">GitHub Organization</label>
+        <input id="set-org" class="ti" value="${ORG}" style="width:100%" />
+      </div>
+      
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Webhook URL <span style="color:var(--dim);font-weight:400">(POST on build completion)</span></label>
+        <input id="set-webhook" class="ti" value="${webhookUrl}" placeholder="https://your-server.com/webhook" style="width:100%" />
+      </div>
+      
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Custom Domain <span style="color:var(--dim);font-weight:400">(added to Vercel projects)</span></label>
+        <input id="set-domain" class="ti" value="${customDomain}" placeholder="app.yourdomain.com" style="width:100%" />
+      </div>
+      
+      <div style="margin-bottom:16px;display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="set-whitelabel" ${whiteLabel ? 'checked' : ''} style="accent-color:var(--gold)" />
+        <label for="set-whitelabel" style="font-size:11px;color:var(--sec)">White-label mode <span style="color:var(--dim)">(removes Dynasty branding from generated files)</span></label>
+      </div>
+      
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="document.getElementById('settings-modal').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r);color:var(--sec);font-size:12px;cursor:pointer">Cancel</button>
+        <button onclick="saveSettings()" class="tsave">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
 };
+
+function saveSettings() {
+  const org = document.getElementById('set-org')?.value?.trim();
+  const webhook = document.getElementById('set-webhook')?.value?.trim();
+  const domain = document.getElementById('set-domain')?.value?.trim();
+  const whiteLabel = document.getElementById('set-whitelabel')?.checked;
+  
+  if (org) { ORG = org; localStorage.setItem('dynasty_gh_org', ORG); }
+  if (webhook !== undefined) localStorage.setItem('dynasty_webhook_url', webhook);
+  if (domain !== undefined) localStorage.setItem('dynasty_custom_domain', domain);
+  localStorage.setItem('dynasty_white_label', whiteLabel ? 'true' : 'false');
+  
+  document.getElementById('settings-modal')?.remove();
+}
+
+// White-label helper
+function isWhiteLabel() { return localStorage.getItem('dynasty_white_label') === 'true'; }
+function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 
 // Mode / View selection
 function selectMode(mode) {
@@ -3753,7 +3810,18 @@ function updateGlobalProgress(phase, total, label) {
     gp.style.display = 'block';
     const pct = Math.round((phase / total) * 100);
     document.getElementById('gp-fill').style.width = pct + '%';
-    document.getElementById('gp-text').textContent = label || `Phase ${phase} of ${total}`;
+    
+    // Estimated time remaining
+    const elapsed = (Date.now() - BUILD_START_TIME) / 1000;
+    let eta = '';
+    if (phase > 1 && phase < total) {
+      const perPhase = elapsed / phase;
+      const remaining = Math.round(perPhase * (total - phase));
+      eta = remaining > 60 ? ` · ~${Math.round(remaining/60)}m remaining` : ` · ~${remaining}s remaining`;
+    } else if (phase >= total) {
+      eta = ' · Complete!';
+    }
+    document.getElementById('gp-text').textContent = (label || `Phase ${phase} of ${total}`) + eta;
   }
 }
 
@@ -5706,6 +5774,84 @@ Image Prompt column: Describe a specific image that could be generated with AI (
       }
     } catch(e) { setP('social','sk', e.message); }
 
+    // ── Generate Video Walkthrough Script ───────────────────────────────
+    try {
+      addP('video', 'Generating video walkthrough script', '', '⬡ Video Script'); setP('video', 'run');
+      updateGlobalProgress(7.5, 12, 'Phase 7.5 · Video Walkthrough Script');
+      const videoScript = await aiRaw(`Generate a 5-minute Loom-style video walkthrough script for "${inf.name}" (${inf.type_label}).
+
+The narrator is the founder showing the product to a potential customer or investor.
+
+Structure:
+1. INTRO (30 seconds): Hook + who this is for + what problem it solves
+2. PRODUCT DEMO (2 minutes): Walk through 3 key features. For each: what you see on screen, what to click, what happens
+3. ARCHITECTURE (1 minute): Brief overview of the tech stack and why it's reliable
+4. BUSINESS MODEL (1 minute): Pricing, who pays, why it's worth it
+5. CTA (30 seconds): Where to sign up, what happens next, any special offer
+
+Format each section with:
+**[SCREEN: description of what's visible]**
+**[NARRATION]:** "Exact words to say..."
+**[ACTION]:** Click/scroll/hover description
+
+Revenue: ${inf.revenue_model} at ${inf.price}
+Stack: ${(inf.stack||[]).join(', ')}
+MVP Timeline: ${inf.mvp}`, 3000);
+      
+      if (videoScript && videoScript.length > 200) {
+        files['VIDEO-SCRIPT.md'] = `# Video Walkthrough Script — ${inf.name}\n\n> 5-minute Loom-style product demo script\n> Generated by Dynasty Launcher\n\n${videoScript}`;
+        setP('video', 'ok', 'VIDEO-SCRIPT.md ready');
+      } else { setP('video', 'sk', 'Script generation skipped'); }
+    } catch(e) { setP('video', 'sk', e.message); }
+
+    // ── Generate A/B GTM Messaging Variants ─────────────────────────────
+    try {
+      addP('ab', 'Generating A/B messaging variants', '', '⬡ A/B Test'); setP('ab', 'run');
+      const abRaw = await aiRaw(`Generate 2 distinct messaging variants for "${inf.name}" (${inf.type_label}).
+
+For EACH variant (A and B), provide:
+1. Headline (8 words max, benefit-driven)
+2. Subheadline (15 words max, specific outcome)
+3. CTA button text (3-5 words, action verb + outcome)
+4. Email subject line for cold outreach
+5. One-sentence elevator pitch
+
+Variant A should be DIRECT and BENEFIT-FOCUSED (e.g., "Save 10 hours a week on X")
+Variant B should be CURIOSITY-DRIVEN and PROVOCATIVE (e.g., "What if X was never a problem again?")
+
+Format:
+## Variant A: [strategy name]
+Headline: [text]
+Subheadline: [text]
+CTA: [text]
+Email Subject: [text]
+Elevator Pitch: [text]
+
+## Variant B: [strategy name]
+[same format]
+
+Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price} | Audience: ${inf.acquisition}`, 2000);
+      
+      if (abRaw && abRaw.includes('Variant')) {
+        files['AB-MESSAGING.md'] = `# A/B Messaging Variants — ${inf.name}\n\n> Test both variants. Run the winner. Generated by Dynasty Launcher.\n\n${abRaw}`;
+        setP('ab', 'ok', '2 messaging variants ready');
+      } else { setP('ab', 'sk', 'A/B generation skipped'); }
+    } catch(e) { setP('ab', 'sk', e.message); }
+
+    // ── Apply white-label if configured ─────────────────────────────────
+    if (typeof isWhiteLabel === 'function' && isWhiteLabel()) {
+      // Strip Dynasty branding from generated files
+      for (const [path, content] of Object.entries(files)) {
+        if (typeof content === 'string') {
+          files[path] = content
+            .replace(/Dynasty Empire/g, ORG)
+            .replace(/Dynasty Launcher/g, 'Business Launcher')
+            .replace(/dynasty-launcher\.vercel\.app/g, '')
+            .replace(/Dynasty/g, ORG);
+        }
+      }
+    }
+
     // Authority sites: docs pushed by authority_deploy in provision.js
     // Non-authority types: push all files to standalone repo
     if (!isAuthority) {
@@ -5769,6 +5915,16 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       }
 
       const fl = Object.entries(files);
+      
+      // File review — show what's about to be pushed
+      addP('review', `📋 ${fl.length} files ready for push`);
+      setP('review', 'run', fl.filter(([,c])=>c&&!c.includes('[Generation incomplete]')).map(([p,c])=>{
+        const words = Math.round((c||'').split(/\s+/).length);
+        return `${p} (${words.toLocaleString()} words)`;
+      }).slice(0,8).join(' · ') + (fl.length > 8 ? ` · +${fl.length-8} more` : ''));
+      await new Promise(r => setTimeout(r, 1500)); // Brief pause to show review
+      setP('review', 'ok', `${fl.filter(([,c])=>c&&!c.includes('[Generation incomplete]')).length} files verified · ${Math.round(fl.reduce((sum,[,c])=>(c||'').length+sum,0)/5).toLocaleString()} words total`);
+
       updateEduCard('pf');
     addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
       updateGlobalProgress(8, 12, 'Phase 8 of 12 \u00b7 Pushing Files');
@@ -5779,6 +5935,17 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
         setP('pf','run',`${i+1}/${fl.length} — ${p}`);
       }
       setP('pf','ok',`${fl.length} files live`);
+
+      // ── Push shareable report HTML to repo ────────────────────────────
+      try {
+        const reportTitle = inf.name;
+        const reportDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const sc = V2_SCORECARD;
+        const scoreHtml = sc ? `<div style="margin:1rem 0;padding:12px;border-radius:8px;background:${sc.composite>=8?'rgba(62,207,142,0.06)':sc.composite>=6?'rgba(201,168,76,0.06)':'rgba(229,83,75,0.05)'}"><strong>${sc.verdict}</strong> — Score: ${sc.composite.toFixed(1)}/10</div>` : '';
+        const filesTable = Object.keys(window._buildFiles || {}).map(f => `<li>${f}</li>`).join('');
+        const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>${reportTitle} — Build Report</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0A0A0A;color:#EEEDE8;padding:2rem;max-width:700px;margin:0 auto;line-height:1.6}h1{font-size:1.8rem;margin-bottom:.5rem}h2{color:#C9A84C;font-size:1rem;margin:1.5rem 0 .5rem;border-bottom:1px solid #222;padding-bottom:4px}.meta{color:#666;font-size:13px}.card{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:1rem;margin:8px 0}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}ul{padding-left:1.2rem;font-size:13px;color:#888}li{margin:3px 0}</style></head><body><h1>${reportTitle}</h1><p class="meta">${inf.type_label} · ${inf.revenue_model} · ${inf.price} · ${reportDate}</p>${scoreHtml}<h2>Generated Files (${Object.keys(window._buildFiles||{}).length})</h2><ul>${filesTable}</ul><h2>Quick Start</h2><pre style="background:#111;padding:12px;border-radius:6px;font-size:12px;color:#C9A84C">gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</pre><p style="margin-top:2rem;text-align:center;color:#333;font-size:11px">${isWhiteLabel() ? '' : 'Built with Dynasty Launcher · '}${reportDate}</p></body></html>`;
+        await pushF(`${ORG}/${inf.repo}`, 'REPORT.html', reportHtml, 'docs: shareable build report');
+      } catch {}
     }
 
     // ── Live tool provisioning ────────────────────────────────────────────
@@ -5796,7 +5963,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ inf: {...inf, deploy_target: V2_DEPLOY_TARGET}, svcs:provisionSvcs })});
+          body:JSON.stringify({ inf: {...inf, deploy_target: V2_DEPLOY_TARGET}, svcs:provisionSvcs, custom_domain: localStorage.getItem('dynasty_custom_domain') || null })});
         const pd=await pr.json(); provRes=pd;
         if(pd.ok){
           const done=Object.entries(pd.results||{})
@@ -6074,10 +6241,111 @@ ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see M
 </div>
 
 <div style="display:flex;gap:8px;margin-top:1.25rem;flex-wrap:wrap">
-  <button class="launch" style="flex:1;min-width:200px" onclick="generateBuildReport()">📄 Download Report <span style="font-size:10px;opacity:.6">(print to PDF)</span></button>
-  <button class="launch" style="flex:1;min-width:200px;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="downloadAllFiles()">📦 Download All Files</button>
+  <button class="launch" style="flex:1;min-width:140px" onclick="generateBuildReport()">📄 Report <span style="font-size:10px;opacity:.6">(PDF)</span></button>
+  <button class="launch" style="flex:1;min-width:140px;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="downloadAllFiles()">📦 All Files</button>
+  <a href="${repoUrl}/blob/main/REPORT.html" target="_blank" class="launch" style="flex:1;min-width:140px;background:transparent;border:1px solid var(--gb);color:var(--gold);text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">🔗 Share Report</a>
 </div>
-<span class="again" onclick="reset()">Build another →</span>`;
+${window._buildFiles?.['VIDEO-SCRIPT.md'] ? '<div style="margin-top:8px;font-size:11px;color:var(--dim)">📹 <a href="' + repoUrl + '/blob/main/VIDEO-SCRIPT.md" target="_blank" style="color:var(--sec)">VIDEO-SCRIPT.md</a> · 5-min Loom walkthrough script</div>' : ''}
+${window._buildFiles?.['AB-MESSAGING.md'] ? '<div style="font-size:11px;color:var(--dim)">🎯 <a href="' + repoUrl + '/blob/main/AB-MESSAGING.md" target="_blank" style="color:var(--sec)">AB-MESSAGING.md</a> · 2 headline/CTA variants to test</div>' : ''}
+<span class="again" onclick="reset()">Build another →</span>
+${window._buildHistory?.length > 1 ? '<span class="again" onclick="showBuildComparison()" style="margin-left:12px">Compare builds →</span>' : ''}`;
+
+  // ── Fire webhook on completion ──
+  sendWebhook(inf, repo, fc, provRes);
+  
+  // ── Save build to history for comparison ──
+  saveBuildHistory(inf, repo, fc);
+}
+
+// ── Webhook: POST build results to configured URL ──────────────
+function sendWebhook(inf, repo, fc, provRes) {
+  const url = localStorage.getItem('dynasty_webhook_url');
+  if (!url) return;
+  try {
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event: 'build_complete',
+        project: inf.name,
+        repo: `${ORG}/${inf.repo}`,
+        type: inf.type_id,
+        revenue_model: inf.revenue_model,
+        price: inf.price,
+        files_count: fc,
+        composite_score: V2_SCORECARD?.composite || null,
+        verdict: V2_SCORECARD?.verdict || null,
+        frameworks: V2_FRAMEWORKS || [],
+        api_cost: V2_BUILD_COST || 0,
+        duration_seconds: Math.round((Date.now() - BUILD_START_TIME) / 1000),
+        live_url: provRes?.results?.vercel?.url || null,
+        infrastructure: provRes?.results ? Object.keys(provRes.results) : [],
+        timestamp: new Date().toISOString()
+      })
+    }).catch(() => {}); // fire-and-forget
+  } catch {}
+}
+
+// ── Build History: store for comparison ─────────────────────────
+if (!window._buildHistory) {
+  try { window._buildHistory = JSON.parse(localStorage.getItem('dynasty_build_history') || '[]'); } catch { window._buildHistory = []; }
+}
+
+function saveBuildHistory(inf, repo, fc) {
+  const entry = {
+    id: Date.now(),
+    name: inf.name,
+    repo: `${ORG}/${inf.repo}`,
+    type: inf.type_id,
+    category: typeof V2_CATEGORY !== 'undefined' ? V2_CATEGORY : inf.type_id,
+    revenue_model: inf.revenue_model,
+    price: inf.price,
+    composite_score: V2_SCORECARD?.composite || null,
+    verdict: V2_SCORECARD?.verdict || null,
+    files_count: fc,
+    words: window._buildFiles ? Math.round(Object.values(window._buildFiles).join('').length / 5) : 0,
+    cost: V2_BUILD_COST || 0,
+    duration: Math.round((Date.now() - BUILD_START_TIME) / 1000),
+    live_url: provRes?.results?.vercel?.url || null,
+    date: new Date().toISOString()
+  };
+  window._buildHistory.push(entry);
+  // Keep last 20 builds
+  if (window._buildHistory.length > 20) window._buildHistory = window._buildHistory.slice(-20);
+  localStorage.setItem('dynasty_build_history', JSON.stringify(window._buildHistory));
+}
+
+// ── Compare Builds: side-by-side modal ──────────────────────────
+function showBuildComparison() {
+  const hist = window._buildHistory || [];
+  if (hist.length < 2) { alert('Need at least 2 builds to compare.'); return; }
+  const a = hist[hist.length - 2];
+  const b = hist[hist.length - 1];
+  const row = (label, va, vb) => `<tr><td style="color:var(--dim);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;width:120px">${label}</td><td style="font-size:12px">${va}</td><td style="font-size:12px">${vb}</td></tr>`;
+  const scoreColor = (s) => !s ? 'var(--dim)' : s >= 8 ? 'var(--grn)' : s >= 6 ? 'var(--gold)' : 'var(--red)';
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999';
+  modal.innerHTML = `<div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;max-width:650px;width:95%;max-height:80vh;overflow-y:auto">
+    <h3 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:1rem">📊 Build Comparison</h3>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;padding:6px;font-size:10px;color:var(--dim)"></th><th style="text-align:left;padding:6px;font-size:11px;color:var(--sec)">${a.name}</th><th style="text-align:left;padding:6px;font-size:11px;color:var(--sec)">${b.name}</th></tr></thead>
+      <tbody>
+        ${row('Type', a.category, b.category)}
+        ${row('Revenue', a.revenue_model + ' · ' + a.price, b.revenue_model + ' · ' + b.price)}
+        ${row('Score', a.composite_score ? '<span style="color:' + scoreColor(a.composite_score) + ';font-weight:700">' + a.composite_score.toFixed(1) + '/10</span>' : '—', b.composite_score ? '<span style="color:' + scoreColor(b.composite_score) + ';font-weight:700">' + b.composite_score.toFixed(1) + '/10</span>' : '—')}
+        ${row('Verdict', a.verdict || '—', b.verdict || '—')}
+        ${row('Files', a.files_count, b.files_count)}
+        ${row('Words', a.words?.toLocaleString() || '—', b.words?.toLocaleString() || '—')}
+        ${row('Cost', '$' + (a.cost || 0).toFixed(4), '$' + (b.cost || 0).toFixed(4))}
+        ${row('Duration', a.duration + 's', b.duration + 's')}
+        ${row('URL', a.live_url ? '<a href="' + a.live_url + '" target="_blank" style="color:var(--gold)">' + a.live_url.replace('https://','') + '</a>' : '—', b.live_url ? '<a href="' + b.live_url + '" target="_blank" style="color:var(--gold)">' + b.live_url.replace('https://','') + '</a>' : '—')}
+      </tbody>
+    </table>
+    <div style="text-align:right;margin-top:1rem"><button onclick="this.closest('div[style]').parentElement.remove()" style="padding:7px 14px;background:var(--gold);color:var(--ink);border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer">Close</button></div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
 }
 
 function generateBuildReport() {
@@ -6312,11 +6580,16 @@ table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
   <div id="meta">${metaSection}</div>
 
   <div class="footer">
-    <div class="dynasty">DYNASTY EMPIRE</div>
+    <div class="dynasty">${isWhiteLabel() ? ORG.toUpperCase() : 'DYNASTY EMPIRE'}</div>
     <div class="sub">Strategic Business System Report · Generated ${now}</div>
-    <div class="sub" style="margin-top:4px">dynasty-launcher.vercel.app · Confidential</div>
+    <div class="sub" style="margin-top:4px">${isWhiteLabel() ? '' : 'dynasty-launcher.vercel.app · '}Confidential</div>
+  </div>
+
+  <div style="position:fixed;bottom:20px;right:20px;display:flex;gap:8px" class="no-print">
+    <button onclick="window.print()" style="padding:10px 18px;background:#C9A84C;color:#0A0A0A;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3)">📄 Save as PDF</button>
   </div>
 </div>
+<style>.no-print{z-index:999}@media print{.no-print{display:none!important}}</style>
 </body></html>`;
 
   const win = window.open('', '_blank');

@@ -797,6 +797,24 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       }catch(e){results.vercel={error:e.message};}
     }
 
+    // ── CUSTOM DOMAIN (if configured in settings) ──
+    if(vercelProjectId && req.body?.custom_domain) {
+      try {
+        const domainResp = await fetch(`https://api.vercel.com/v10/projects/${vercelProjectId}/domains?teamId=${VERCEL_TEAM}`, {
+          method: 'POST',
+          headers: {'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json'},
+          body: JSON.stringify({ name: req.body.custom_domain })
+        });
+        const domainData = await domainResp.json();
+        if (domainResp.ok) {
+          results.custom_domain = { ok: true, domain: req.body.custom_domain, configured: true };
+        } else {
+          results.custom_domain = { manual: true, domain: req.body.custom_domain, 
+            action: `Add DNS record: ${domainData?.error?.message || 'CNAME → cname.vercel-dns.com'}` };
+        }
+      } catch(e) { results.custom_domain = { manual: true, error: e.message }; }
+    }
+
     // ── NEON DB via Vercel storage integration (auto-sets DATABASE_URL etc.) ──
     if(needsNeon&&vercelProjectId){
       try{
