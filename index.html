@@ -367,54 +367,120 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .fw-syn-label.agree{color:var(--grn)}.fw-syn-label.contra{color:var(--red)}.fw-syn-label.blind{color:var(--gold)}
 .fw-syn-item{font-size:11px;color:var(--sec);line-height:1.5;padding:2px 0}
 
-/* ═══ LANDING PAGE ═══ */
-#landing{max-width:100%;margin:0;padding:0}
-.lp-section{max-width:1100px;margin:0 auto;padding:5rem 2rem}
-.lp-hero{text-align:center;padding:6rem 2rem 4rem;position:relative;overflow:hidden}
-.lp-hero::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(201,168,76,0.08) 0%,transparent 70%);pointer-events:none}
-.lp-hero h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:1rem;background:linear-gradient(135deg,#fff 0%,#C9A84C 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.lp-hero .sub{font-size:clamp(1rem,2vw,1.25rem);color:#908D86;max-width:600px;margin:0 auto 2rem;line-height:1.6}
+/* ═══ LANDING PAGE — Enterprise Grade ═══ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Instrument+Serif&display=swap');
+
+#landing{max-width:100%;margin:0;padding:0;font-family:'Outfit',sans-serif}
+
+/* ── Sticky Nav ── */
+.lp-nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:rgba(10,10,10,0.75);border-bottom:1px solid rgba(255,255,255,0.05);transition:background .3s}
+.lp-nav.scrolled{background:rgba(10,10,10,0.95);box-shadow:0 1px 20px rgba(0,0,0,0.3)}
+.lp-nav-logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:.3px;text-decoration:none}
+.lp-nav-logo span{font-family:'Instrument Serif',serif;font-size:18px}
+.lp-nav-links{display:flex;gap:32px;align-items:center}
+.lp-nav-links a{font-size:13px;color:var(--sec);text-decoration:none;font-weight:500;transition:color .2s;position:relative}
+.lp-nav-links a:hover{color:var(--tx)}
+.lp-nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:var(--gold);transition:width .25s}
+.lp-nav-links a:hover::after{width:100%}
+.lp-nav-actions{display:flex;gap:12px;align-items:center}
+.lp-nav-signin{font-size:13px;color:var(--sec);text-decoration:none;font-weight:500;cursor:pointer;background:none;border:none;padding:0}
+.lp-nav-signin:hover{color:var(--tx)}
+.lp-nav-cta{padding:8px 20px;background:var(--gold);color:#0A0A0A;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif}
+.lp-nav-cta:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(201,168,76,0.3)}
+.lp-hamburger{display:none;background:none;border:none;color:var(--sec);font-size:20px;cursor:pointer}
+@media(max-width:768px){.lp-nav-links{display:none}.lp-hamburger{display:block}}
+
+/* ── Hero ── */
+.lp-hero{text-align:center;padding:10rem 2rem 5rem;position:relative;overflow:hidden}
+.lp-hero::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle,rgba(201,168,76,0.06) 0%,rgba(201,168,76,0.02) 30%,transparent 70%);pointer-events:none;animation:heroGlow 8s ease-in-out infinite alternate}
+@keyframes heroGlow{0%{opacity:.6;transform:translateX(-50%) scale(1)}100%{opacity:1;transform:translateX(-50%) scale(1.1)}}
+.lp-hero .overline{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;font-size:11px;font-weight:600;color:var(--gold);background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.12);margin-bottom:2rem;letter-spacing:.5px}
+.lp-hero .overline .dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.lp-hero h1{font-family:'Instrument Serif',serif;font-size:clamp(2.5rem,6vw,4.5rem);font-weight:400;letter-spacing:-2px;line-height:1.05;margin-bottom:1.5rem;color:var(--tx)}
+.lp-hero h1 em{font-style:normal;background:linear-gradient(135deg,#C9A84C,#F0D78C,#C9A84C);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.lp-hero .sub{font-size:clamp(1rem,2vw,1.2rem);color:var(--sec);max-width:560px;margin:0 auto 2.5rem;line-height:1.7;font-weight:300}
 .lp-hero .ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.lp-btn{padding:14px 32px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
-.lp-btn-primary{background:var(--gold);color:#0A0A0A;border:none}.lp-btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(201,168,76,0.25)}
-.lp-btn-secondary{background:transparent;color:var(--sec);border:1px solid var(--bdr)}.lp-btn-secondary:hover{border-color:var(--gold);color:var(--gold)}
-.lp-badge{display:inline-block;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:600;color:var(--gold);background:var(--gdim);border:1px solid var(--gb);margin-bottom:1.5rem;letter-spacing:.5px}
-.lp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:16px;overflow:hidden;margin:3rem auto;max-width:700px}
-.lp-stat{background:var(--panel);padding:1.5rem;text-align:center}
-.lp-stat .num{font-size:2rem;font-weight:800;color:var(--gold);letter-spacing:-1px}
-.lp-stat .label{font-size:11px;color:var(--dim);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
-.lp-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:2rem}
-.lp-feature{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:1.5rem;transition:border-color .2s}
-.lp-feature:hover{border-color:rgba(201,168,76,0.3)}
-.lp-feature .icon{font-size:24px;margin-bottom:10px}
-.lp-feature h3{font-size:15px;font-weight:700;margin-bottom:6px}
-.lp-feature p{font-size:12px;color:var(--sec);line-height:1.5}
-.lp-sh{text-align:center;margin-bottom:1rem}.lp-sh h2{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;letter-spacing:-1px}.lp-sh p{color:var(--sec);margin-top:.5rem;font-size:14px}
-.lp-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-top:2rem;counter-reset:step}
-.lp-step{position:relative;padding:1.5rem;background:var(--card);border:1px solid var(--bdr);border-radius:14px;counter-increment:step}
-.lp-step::before{content:counter(step);position:absolute;top:-12px;left:20px;width:28px;height:28px;background:var(--gold);color:#0A0A0A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
-.lp-step h3{font-size:14px;font-weight:700;margin:8px 0 4px}.lp-step p{font-size:12px;color:var(--sec);line-height:1.5}
-.lp-pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:2rem;max-width:900px;margin-left:auto;margin-right:auto}
-.lp-plan{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:2rem;position:relative;transition:border-color .2s}
-.lp-plan.featured{border-color:var(--gold);box-shadow:0 0 40px rgba(201,168,76,0.08)}
-.lp-plan .pop{position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:4px 14px;background:var(--gold);color:#0A0A0A;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.lp-plan .price{font-size:2.5rem;font-weight:800;margin:1rem 0 .5rem}.lp-plan .price span{font-size:14px;font-weight:400;color:var(--dim)}
-.lp-plan .desc{font-size:12px;color:var(--sec);margin-bottom:1.2rem}
-.lp-plan ul{list-style:none;padding:0;margin-bottom:1.5rem}.lp-plan li{font-size:12px;color:var(--sec);padding:5px 0;padding-left:20px;position:relative}
-.lp-plan li::before{content:'✓';position:absolute;left:0;color:var(--grn);font-weight:700;font-size:11px}
+.lp-btn{padding:14px 32px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif}
+.lp-btn-primary{background:var(--gold);color:#0A0A0A;border:none}.lp-btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(201,168,76,0.25)}
+.lp-btn-ghost{background:transparent;color:var(--sec);border:1px solid var(--bdr)}.lp-btn-ghost:hover{border-color:rgba(255,255,255,0.2);color:var(--tx)}
+.lp-hero-visual{margin-top:4rem;position:relative}
+.lp-hero-visual img,.lp-hero-visual .mock{max-width:900px;width:100%;border-radius:16px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 40px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.03)}
+
+/* ── Stats ── */
+.lp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.04);border:1px solid var(--bdr);border-radius:16px;overflow:hidden;margin:0 auto;max-width:800px}
+.lp-stat{background:var(--ink);padding:2rem 1.5rem;text-align:center}
+.lp-stat .num{font-family:'Instrument Serif',serif;font-size:2.5rem;color:var(--tx);letter-spacing:-1px}
+.lp-stat .label{font-size:11px;color:var(--dim);margin-top:4px;text-transform:uppercase;letter-spacing:.8px;font-weight:500}
+@media(max-width:640px){.lp-stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ── Section ── */
+.lp-section{max-width:1100px;margin:0 auto;padding:6rem 2rem}
+.lp-sh{text-align:center;margin-bottom:3rem}
+.lp-sh .tag{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin-bottom:.75rem}
+.lp-sh h2{font-family:'Instrument Serif',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:400;letter-spacing:-1px;color:var(--tx)}
+.lp-sh p{color:var(--sec);margin-top:.75rem;font-size:15px;max-width:500px;margin-left:auto;margin-right:auto;font-weight:300}
+
+/* ── Bento Grid ── */
+.lp-bento{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.lp-bento-card{background:var(--panel);border:1px solid var(--bdr);border-radius:16px;padding:2rem;transition:all .3s;position:relative;overflow:hidden}
+.lp-bento-card:hover{border-color:rgba(201,168,76,0.2);transform:translateY(-2px)}
+.lp-bento-card.wide{grid-column:span 2}
+.lp-bento-card .icon{font-size:28px;margin-bottom:1rem}
+.lp-bento-card h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.lp-bento-card p{font-size:13px;color:var(--sec);line-height:1.6;font-weight:300}
+.lp-bento-card .price-tag{font-size:11px;color:var(--dim);margin-top:8px;font-weight:500}
+@media(max-width:768px){.lp-bento{grid-template-columns:1fr}.lp-bento-card.wide{grid-column:span 1}}
+
+/* ── Steps ── */
+.lp-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;counter-reset:step}
+.lp-step{position:relative;padding:2rem;counter-increment:step}
+.lp-step::before{content:counter(step);font-family:'Instrument Serif',serif;font-size:4rem;color:rgba(201,168,76,0.1);position:absolute;top:0;left:1.5rem;line-height:1}
+.lp-step h3{font-size:15px;font-weight:700;margin:1.5rem 0 .5rem}.lp-step p{font-size:13px;color:var(--sec);line-height:1.6;font-weight:300}
+@media(max-width:768px){.lp-steps{grid-template-columns:1fr}}
+
+/* ── Pricing ── */
+.lp-pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:960px;margin:0 auto}
+.lp-plan{background:var(--panel);border:1px solid var(--bdr);border-radius:16px;padding:2.5rem 2rem;position:relative;transition:all .3s}
+.lp-plan.featured{border-color:var(--gold);background:linear-gradient(180deg,rgba(201,168,76,0.04),var(--panel) 40%)}
+.lp-plan .pop{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:4px 16px;background:var(--gold);color:#0A0A0A;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.lp-plan h3{font-size:14px;font-weight:600;color:var(--sec)}.lp-plan .price{font-family:'Instrument Serif',serif;font-size:3rem;margin:.75rem 0 .25rem;color:var(--tx)}
+.lp-plan .price span{font-family:'Outfit',sans-serif;font-size:14px;font-weight:400;color:var(--dim)}
+.lp-plan .desc{font-size:12px;color:var(--dim);margin-bottom:1.5rem;font-weight:300}
+.lp-plan ul{list-style:none;padding:0;margin-bottom:2rem}
+.lp-plan li{font-size:12px;color:var(--sec);padding:6px 0;padding-left:22px;position:relative;font-weight:400}
+.lp-plan li::before{content:'✓';position:absolute;left:0;color:var(--grn);font-weight:700;font-size:12px}
 .lp-plan .lp-btn{width:100%;justify-content:center;font-size:13px;padding:12px}
-.lp-faq{max-width:700px;margin:2rem auto 0}
-.lp-faq-item{border-bottom:1px solid var(--bdr);padding:16px 0;cursor:pointer}
-.lp-faq-item h3{font-size:14px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
-.lp-faq-item h3::after{content:'+';font-size:18px;color:var(--dim);transition:transform .2s}
+@media(max-width:768px){.lp-pricing{grid-template-columns:1fr}}
+
+/* ── FAQ ── */
+.lp-faq{max-width:680px;margin:0 auto}
+.lp-faq-item{border-bottom:1px solid rgba(255,255,255,0.05);padding:20px 0}
+.lp-faq-item h3{font-size:14px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:var(--tx)}
+.lp-faq-item h3::after{content:'+';font-size:20px;color:var(--dim);transition:all .25s;font-weight:300}
 .lp-faq-item.open h3::after{transform:rotate(45deg);color:var(--gold)}
-.lp-faq-item .answer{max-height:0;overflow:hidden;transition:max-height .3s ease;font-size:13px;color:var(--sec);line-height:1.6}
-.lp-faq-item.open .answer{max-height:300px;padding-top:8px}
-.lp-footer{text-align:center;padding:3rem 2rem;border-top:1px solid var(--bdr)}
-.lp-footer .brand{font-size:18px;font-weight:700;color:var(--gold);letter-spacing:1px}
-.lp-footer .links{margin-top:12px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
-.lp-footer .links a{font-size:12px;color:var(--dim);text-decoration:none}.lp-footer .links a:hover{color:var(--gold)}
-@media(max-width:640px){.lp-section{padding:3rem 1.25rem}.lp-hero{padding:4rem 1.25rem 2rem}.lp-features,.lp-steps,.lp-pricing{grid-template-columns:1fr}}
+.lp-faq-item .answer{max-height:0;overflow:hidden;transition:max-height .3s ease;font-size:13px;color:var(--sec);line-height:1.7;font-weight:300}
+.lp-faq-item.open .answer{max-height:300px;padding-top:12px}
+
+/* ── CTA Banner ── */
+.lp-cta-banner{text-align:center;padding:5rem 2rem;position:relative;overflow:hidden}
+.lp-cta-banner::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,0.03),transparent 50%,rgba(201,168,76,0.02));border:1px solid rgba(201,168,76,0.08);border-radius:24px;margin:0 2rem}
+.lp-cta-banner h2{font-family:'Instrument Serif',serif;font-size:clamp(1.8rem,3.5vw,2.5rem);font-weight:400;letter-spacing:-.5px;margin-bottom:.75rem;position:relative}
+.lp-cta-banner p{color:var(--sec);font-size:15px;margin-bottom:2rem;position:relative;font-weight:300}
+
+/* ── Footer ── */
+.lp-footer{border-top:1px solid var(--bdr);padding:4rem 2rem 2rem;max-width:1100px;margin:0 auto}
+.lp-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:40px;margin-bottom:3rem}
+.lp-footer-brand{font-size:15px;font-weight:700;color:var(--gold);letter-spacing:.3px}
+.lp-footer-brand p{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.5;font-weight:300;max-width:280px}
+.lp-footer-col h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:16px}
+.lp-footer-col a{display:block;font-size:13px;color:var(--sec);text-decoration:none;padding:4px 0;font-weight:400;transition:color .2s}
+.lp-footer-col a:hover{color:var(--gold)}
+.lp-footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.04)}
+.lp-footer-bottom p{font-size:11px;color:var(--dim)}
+.lp-footer-social{display:flex;gap:16px}
+.lp-footer-social a{color:var(--dim);text-decoration:none;font-size:14px;transition:color .2s}.lp-footer-social a:hover{color:var(--gold)}
+@media(max-width:768px){.lp-footer-grid{grid-template-columns:1fr 1fr;gap:24px}.lp-footer-bottom{flex-direction:column;gap:12px;text-align:center}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
@@ -430,64 +496,92 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   </div>
 
 
-  <!-- ═══ LANDING PAGE ═══ -->
+  <!-- ═══ LANDING PAGE — Enterprise Grade ═══ -->
   <div id="landing" style="display:block">
+
+    <!-- Sticky Navigation -->
+    <nav class="lp-nav" id="lp-nav">
+      <a href="#" class="lp-nav-logo" onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
+        <span>⚡</span> Dynasty Launcher
+      </a>
+      <div class="lp-nav-links" id="nav-links">
+        <a href="#features" onclick="event.preventDefault();document.getElementById('features').scrollIntoView({behavior:'smooth'})">Features</a>
+        <a href="#how" onclick="event.preventDefault();document.getElementById('how').scrollIntoView({behavior:'smooth'})">How It Works</a>
+        <a href="#lp-pricing" onclick="event.preventDefault();document.getElementById('lp-pricing').scrollIntoView({behavior:'smooth'})">Pricing</a>
+        <a href="#faq" onclick="event.preventDefault();document.getElementById('faq').scrollIntoView({behavior:'smooth'})">FAQ</a>
+      </div>
+      <div class="lp-nav-actions">
+        <button class="lp-nav-signin" onclick="CLERK_INSTANCE?CLERK_INSTANCE.openSignIn():enterBuilder()">Sign In</button>
+        <button class="lp-nav-cta" onclick="enterBuilder()">Start Free →</button>
+      </div>
+      <button class="lp-hamburger" onclick="document.getElementById('nav-links').style.display=document.getElementById('nav-links').style.display==='flex'?'none':'flex'">☰</button>
+    </nav>
+
+    <!-- Hero -->
     <div class="lp-hero">
-      <div class="lp-badge">🚀 POWERED BY 23 AI MODELS ACROSS 7 PROVIDERS</div>
-      <h1>Turn a Business Idea Into a Deployed Company in 12 Minutes</h1>
-      <p class="sub">One text prompt generates 30+ production files, provisions infrastructure, and deploys a live application — backed by consulting-grade strategic analysis.</p>
+      <div class="overline"><span class="dot"></span> NOW GENERATING 30+ FILES PER BUILD</div>
+      <h1>Turn a Business Idea Into<br/>a <em>Deployed Company</em></h1>
+      <p class="sub">One text prompt. 30+ production files. Live infrastructure. Strategic analysis across 8 business frameworks. In under 12 minutes.</p>
       <div class="ctas">
         <button class="lp-btn lp-btn-primary" onclick="enterBuilder()">Start Building Free →</button>
-        <a href="#lp-pricing" class="lp-btn lp-btn-secondary">View Pricing</a>
+        <a href="#how" class="lp-btn lp-btn-ghost" onclick="event.preventDefault();document.getElementById('how').scrollIntoView({behavior:'smooth'})">See How It Works</a>
       </div>
     </div>
 
-    <div class="lp-stats">
-      <div class="lp-stat"><div class="num">30+</div><div class="label">Files Generated</div></div>
-      <div class="lp-stat"><div class="num">8</div><div class="label">Strategy Frameworks</div></div>
-      <div class="lp-stat"><div class="num">$104K</div><div class="label">Agency Equivalent</div></div>
-      <div class="lp-stat"><div class="num">$0.35</div><div class="label">Avg Build Cost</div></div>
+    <!-- Stats -->
+    <div class="lp-section" style="padding-top:0">
+      <div class="lp-stats">
+        <div class="lp-stat"><div class="num">30+</div><div class="label">Files per build</div></div>
+        <div class="lp-stat"><div class="num">8</div><div class="label">Strategy frameworks</div></div>
+        <div class="lp-stat"><div class="num">$104K</div><div class="label">Agency equivalent</div></div>
+        <div class="lp-stat"><div class="num">~$0</div><div class="label">Build cost</div></div>
+      </div>
     </div>
 
-    <div class="lp-section">
+    <!-- Features Bento Grid -->
+    <div class="lp-section" id="features">
       <div class="lp-sh">
-        <h2>Everything You Need to Launch</h2>
-        <p>Every build produces deliverables that rival a $100K consulting engagement</p>
+        <div class="tag">What You Get</div>
+        <h2>Every Deliverable a Consulting Firm Would Produce</h2>
+        <p>Each build generates strategy, code, design, infrastructure, and content — ready to deploy.</p>
       </div>
-      <div class="lp-features">
-        <div class="lp-feature"><div class="icon">🏛️</div><h3>Strategic Business Architecture</h3><p>Executive summary, competitive landscape, positioning statement, moat assessment, risk matrix, and 12-month financial projections. Agency equivalent: $8K–15K.</p></div>
-        <div class="lp-feature"><div class="icon">💰</div><h3>Financial Model & Projections</h3><p>Investment thesis, pricing rationale, CAC by channel, LTV derivation, sensitivity analysis (best/base/worst), expense model, and funding milestones.</p></div>
-        <div class="lp-feature"><div class="icon">🎯</div><h3>Go-to-Market Playbook</h3><p>90-day sprint plan, funnel math with conversion rates, BANT sales qualification, 5 objection handlers, email sequences, and KPI dashboard.</p></div>
-        <div class="lp-feature"><div class="icon">📋</div><h3>Product Requirements</h3><p>Rich user personas, user stories with acceptance criteria, non-functional requirements, prioritized feature roadmap, and technology decision log.</p></div>
-        <div class="lp-feature"><div class="icon">⚙️</div><h3>Production Backend Code</h3><p>FastAPI with JWT auth, Stripe webhooks, rate limiting, health checks, request ID tracking, Docker + docker-compose, CI/CD pipeline.</p></div>
-        <div class="lp-feature"><div class="icon">🎨</div><h3>Design System</h3><p>Complete visual DNA: 12+ color tokens, typography hierarchy, 6-state component specs, responsive breakpoints, and AI agent prompt guide.</p></div>
-        <div class="lp-feature"><div class="icon">📊</div><h3>8 Framework Analyses</h3><p>Blue Ocean, Porter's 5 Forces, 7 Powers, JTBD, Lean Canvas, TAM/SAM/SOM, Unit Economics, Competitive Positioning — with inline SVG visualizations.</p></div>
-        <div class="lp-feature"><div class="icon">🚀</div><h3>Live Infrastructure</h3><p>GitHub repo, Vercel deployment, Neon PostgreSQL, Stripe billing, email marketing list, uptime monitoring, n8n automation — all provisioned automatically.</p></div>
-        <div class="lp-feature"><div class="icon">📱</div><h3>1-Year Social Calendar</h3><p>260 posts across 5 platforms with AI image prompts, optimal posting times, and CSV/JSON export for Buffer, Hootsuite, or any scheduler.</p></div>
-        <div class="lp-feature"><div class="icon">📹</div><h3>Bonus Deliverables</h3><p>Investor pitch deck, legal templates, email onboarding drip, customer discovery script, competitive teardown, A/B messaging variants, video walkthrough script.</p></div>
-      </div>
-    </div>
-
-    <div class="lp-section">
-      <div class="lp-sh">
-        <h2>How It Works</h2>
-        <p>Three steps. Twelve minutes. A complete business system.</p>
-      </div>
-      <div class="lp-steps">
-        <div class="lp-step"><h3>Describe Your Idea</h3><p>Type a plain-English business description. The AI infers your market, pricing, tech stack, revenue model, and competitive positioning.</p></div>
-        <div class="lp-step"><h3>Choose Your Depth</h3><p>Quick Build (~3 min) for speed, or Strategic Build (~12 min) for full framework analysis with 8 business strategy models and viability scoring.</p></div>
-        <div class="lp-step"><h3>Deploy & Launch</h3><p>30+ files are generated and pushed to GitHub. Infrastructure is provisioned. Your project goes live with a real URL, database, and payment processing.</p></div>
+      <div class="lp-bento">
+        <div class="lp-bento-card wide"><div class="icon">🏛️</div><h3>Strategic Business Architecture</h3><p>Executive summary, competitive landscape table, positioning statement, moat assessment, 12-month financial projections with sensitivity analysis, and a risk matrix scored by probability × impact.</p><div class="price-tag">Agency equivalent: $8,000–15,000</div></div>
+        <div class="lp-bento-card"><div class="icon">💰</div><h3>Financial Model</h3><p>Investment thesis, CAC by channel, LTV derivation, expense model, funding milestones, and a full assumptions table with sources.</p><div class="price-tag">$3,000–8,000</div></div>
+        <div class="lp-bento-card"><div class="icon">🎯</div><h3>GTM Playbook</h3><p>90-day sprint plan with funnel math, BANT sales qualification, 5 objection handlers, and a complete comms stack.</p><div class="price-tag">$5,000–12,000</div></div>
+        <div class="lp-bento-card wide"><div class="icon">⚙️</div><h3>Production Backend + Infrastructure</h3><p>FastAPI with JWT auth, Stripe webhooks, rate limiting, health checks, Docker containers, CI/CD pipeline. Plus: live Vercel deployment, Neon PostgreSQL, Stripe billing, uptime monitoring — all provisioned automatically.</p><div class="price-tag">Developer equivalent: $5,000–15,000</div></div>
+        <div class="lp-bento-card"><div class="icon">📋</div><h3>Product Requirements</h3><p>Rich personas, user stories with Given/When/Then acceptance criteria, non-functional requirements, and a prioritized roadmap.</p><div class="price-tag">$4,000–10,000</div></div>
+        <div class="lp-bento-card"><div class="icon">🎨</div><h3>Design System</h3><p>12+ color tokens, typography hierarchy, 6-state component specs, responsive breakpoints, and an AI agent prompt guide.</p><div class="price-tag">$2,000–5,000</div></div>
+        <div class="lp-bento-card"><div class="icon">📊</div><h3>8 Framework Analyses</h3><p>Blue Ocean, Porter's 5 Forces, 7 Powers, JTBD, Lean Canvas, TAM/SAM/SOM, Unit Economics, Competitive Positioning — with SVG visualizations.</p><div class="price-tag">$3,000–8,000</div></div>
+        <div class="lp-bento-card"><div class="icon">📹</div><h3>Bonus Deliverables</h3><p>Investor pitch deck, legal templates (ToS + Privacy), email onboarding sequence, customer discovery script, competitive teardown, A/B messaging variants, video walkthrough script, 260-post social calendar.</p><div class="price-tag">$11,500–31,000</div></div>
       </div>
     </div>
 
+    <!-- How It Works -->
+    <div class="lp-section" id="how" style="background:rgba(255,255,255,0.015);border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);max-width:100%;padding-left:0;padding-right:0">
+      <div style="max-width:1100px;margin:0 auto;padding:0 2rem">
+        <div class="lp-sh">
+          <div class="tag">How It Works</div>
+          <h2>Three Steps. Twelve Minutes.</h2>
+        </div>
+        <div class="lp-steps">
+          <div class="lp-step"><h3>Describe Your Idea</h3><p>Type a plain-English business description. The AI infers your market, pricing, tech stack, revenue model, and competitive positioning automatically.</p></div>
+          <div class="lp-step"><h3>Choose Your Depth</h3><p>Quick Build for speed (~3 min), or Strategic Build for full framework analysis with 8 business models and viability scoring (~12 min).</p></div>
+          <div class="lp-step"><h3>Deploy & Launch</h3><p>30+ files generated and pushed to GitHub. Infrastructure provisioned. Your project goes live with a real URL, database, and payment processing.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing -->
     <div class="lp-section" id="lp-pricing">
       <div class="lp-sh">
-        <h2>Simple Pricing</h2>
-        <p>Start free. Scale when you're ready.</p>
+        <div class="tag">Pricing</div>
+        <h2>Start Free. Scale When Ready.</h2>
+        <p>No credit card required for your first build.</p>
       </div>
       <div class="lp-pricing">
         <div class="lp-plan">
-          <h3 style="font-size:16px;font-weight:700">Free Trial</h3>
+          <h3>Free Trial</h3>
           <div class="price">$0</div>
           <div class="desc">Your first build is on us</div>
           <ul>
@@ -497,19 +591,18 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
             <li>Quick Build mode</li>
             <li>All templates included</li>
           </ul>
-          <button class="lp-btn lp-btn-secondary" onclick="enterBuilder()" style="width:100%;justify-content:center">Start Free Build →</button>
+          <button class="lp-btn lp-btn-ghost" onclick="enterBuilder()" style="width:100%;justify-content:center">Start Free Build →</button>
         </div>
         <div class="lp-plan featured">
           <div class="pop">Most Popular</div>
-          <h3 style="font-size:16px;font-weight:700">Per Build</h3>
+          <h3>Per Build</h3>
           <div class="price">$29<span>/build</span></div>
           <div class="desc">Pay only when you build</div>
           <ul>
             <li>Everything in Free, plus:</li>
-            <li>Strategic Build mode (8 frameworks)</li>
+            <li>Strategic Build (8 frameworks)</li>
             <li>Viability scoring & synthesis</li>
-            <li>Framework visualizations (SVG)</li>
-            <li>Pre-build market research (Exa.ai)</li>
+            <li>Pre-build market research</li>
             <li>Investor pitch deck</li>
             <li>Legal templates</li>
             <li>Priority model routing</li>
@@ -517,7 +610,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
           <button class="lp-btn lp-btn-primary" onclick="startCheckout('single')" style="width:100%;justify-content:center">Buy a Build — $29 →</button>
         </div>
         <div class="lp-plan">
-          <h3 style="font-size:16px;font-weight:700">Unlimited</h3>
+          <h3>Unlimited</h3>
           <div class="price">$99<span>/month</span></div>
           <div class="desc">Build as many as you want</div>
           <ul>
@@ -529,41 +622,78 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
             <li>Custom domain per project</li>
             <li>Priority support</li>
           </ul>
-          <button class="lp-btn lp-btn-primary" onclick="startCheckout('unlimited')" style="width:100%;justify-content:center;background:transparent;color:var(--gold);border:1px solid var(--gold)">Subscribe — $99/mo →</button>
+          <button class="lp-btn lp-btn-ghost" onclick="startCheckout('unlimited')" style="width:100%;justify-content:center;border-color:var(--gold);color:var(--gold)">Subscribe — $99/mo →</button>
         </div>
       </div>
     </div>
 
-    <div class="lp-section">
+    <!-- FAQ -->
+    <div class="lp-section" id="faq">
       <div class="lp-sh">
-        <h2>Frequently Asked Questions</h2>
+        <div class="tag">FAQ</div>
+        <h2>Common Questions</h2>
       </div>
       <div class="lp-faq">
-        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>Is the generated code actually production-ready?</h3><div class="answer">Yes. The backend uses FastAPI with proper JWT auth, rate limiting, structured error handling, request ID tracking, and health checks. The frontend uses Next.js 14 with TypeScript strict mode. Infrastructure includes CI/CD via GitHub Actions, Docker containers, and production Vercel deployments with security headers.</div></div>
-        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>What AI models are used?</h3><div class="answer">The platform uses up to 23 models across 7 providers: Claude (Opus, Sonnet, Haiku), GPT-4o, Gemini, Groq (Llama, Mixtral), and more. Smart routing sends complex strategy work to premium models and routine generation to cost-effective ones.</div></div>
-        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>Do I own the generated code and content?</h3><div class="answer">100%. Every file is pushed to your private GitHub repository. You own all generated code, strategy documents, and content. No attribution required.</div></div>
-        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>What infrastructure gets provisioned?</h3><div class="answer">Depending on your project type: GitHub repository (private, from world-class templates), Vercel hosting with production deployment, Neon PostgreSQL database, Stripe billing (product + price), Acumbamail email list, Pulsetic uptime monitoring, and n8n automation workflows.</div></div>
-        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>Can I use my own AI API keys?</h3><div class="answer">Currently the platform uses Dynasty's API keys. Self-hosted API key support is on the roadmap. You can always fork the open-source repository and configure your own keys.</div></div>
-        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>What happens after the build?</h3><div class="answer">Clone the repo and use Claude Code or Pi Agent to continue building. The generated AGENTS.md and CLAUDE.md files give the AI full context about your project. Run \`docker-compose up -d\` for the backend, complete the manual actions in MANUAL-ACTIONS.md, and start customer acquisition per GTM-PLAYBOOK.md.</div></div>
-        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>What's the refund policy?</h3><div class="answer">If your build fails or doesn't generate the expected files, contact us for a full refund. We stand behind the quality of every build.</div></div>
+        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>Is the generated code actually production-ready?</h3><div class="answer">Yes. The backend uses FastAPI with JWT auth, rate limiting, structured error handling, request ID tracking, and health checks. Frontend uses Next.js 14 with TypeScript strict mode. Infrastructure includes CI/CD via GitHub Actions, Docker containers, and production Vercel deployments with security headers.</div></div>
+        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>What AI models power the generation?</h3><div class="answer">The platform uses models across 7 providers: Anthropic (Claude), OpenAI (GPT-4o), Google (Gemini), Groq (Llama), DeepSeek, Mistral, and OpenRouter. Smart routing sends complex strategy work to premium models and routine generation to cost-effective ones.</div></div>
+        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>Do I own the generated code and content?</h3><div class="answer">100%. Every file is pushed to your private GitHub repository. You own all generated code, strategy documents, and content with no attribution required.</div></div>
+        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>What infrastructure gets provisioned?</h3><div class="answer">Depending on your project type: GitHub repository (from world-class templates), Vercel hosting with production deployment, Neon PostgreSQL database, Stripe billing, Acumbamail email list, Pulsetic uptime monitoring, and n8n automation workflows — all automatically.</div></div>
+        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>How is this different from a boilerplate or template?</h3><div class="answer">Templates give you generic code. Dynasty Launcher generates a complete business system — strategy documents, financial models, go-to-market playbooks, and custom code — all tailored to YOUR specific business idea, market, and competitive landscape. Every build is unique.</div></div>
+        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>What happens after the build?</h3><div class="answer">Clone the repo and use Claude Code or Pi Agent to continue building. The generated AGENTS.md and CLAUDE.md files give the AI full context about your project. Run docker-compose up for the backend, complete MANUAL-ACTIONS.md, and start customer acquisition per GTM-PLAYBOOK.md.</div></div>
+        <div class="lp-faq-item" onclick="this.classList.toggle('open')"><h3>What's the refund policy?</h3><div class="answer">If your build fails or doesn't generate the expected files, contact us for a full refund. We stand behind every build.</div></div>
       </div>
     </div>
 
-    <div class="lp-section" style="text-align:center">
-      <h2 style="font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;letter-spacing:-1px">Ready to Launch?</h2>
-      <p style="color:var(--sec);margin:1rem 0 2rem;font-size:15px">Your first build is free. No credit card required.</p>
-      <button class="lp-btn lp-btn-primary" onclick="enterBuilder()" style="font-size:16px;padding:16px 40px">Start Building Free →</button>
+    <!-- CTA Banner -->
+    <div class="lp-section">
+      <div class="lp-cta-banner">
+        <h2>Ready to Launch?</h2>
+        <p>Your first build is free. No credit card required.</p>
+        <button class="lp-btn lp-btn-primary" onclick="enterBuilder()" style="font-size:16px;padding:16px 40px;position:relative">Start Building Free →</button>
+      </div>
     </div>
 
+    <!-- Footer -->
     <div class="lp-footer">
-      <div class="brand">DYNASTY EMPIRE</div>
-      <div class="links">
-        <a href="#" onclick="event.preventDefault();CLERK_INSTANCE?.openSignIn()">Sign In</a>
-        <a href="https://github.com/pinohu/dynasty-launcher" target="_blank">GitHub</a>
-        <a href="#lp-pricing">Pricing</a>
-        <a href="mailto:ikeohu@dynastyempire.com">Contact</a>
+      <div class="lp-footer-grid">
+        <div>
+          <div class="lp-footer-brand">⚡ Dynasty Launcher</div>
+          <p>Turn business ideas into deployed companies in 12 minutes. Powered by multi-model AI generation and automated infrastructure provisioning.</p>
+        </div>
+        <div class="lp-footer-col">
+          <h4>Product</h4>
+          <a href="#features" onclick="event.preventDefault();document.getElementById('features').scrollIntoView({behavior:'smooth'})">Features</a>
+          <a href="#lp-pricing" onclick="event.preventDefault();document.getElementById('lp-pricing').scrollIntoView({behavior:'smooth'})">Pricing</a>
+          <a href="#how" onclick="event.preventDefault();document.getElementById('how').scrollIntoView({behavior:'smooth'})">How It Works</a>
+          <a href="#faq" onclick="event.preventDefault();document.getElementById('faq').scrollIntoView({behavior:'smooth'})">FAQ</a>
+        </div>
+        <div class="lp-footer-col">
+          <h4>Resources</h4>
+          <a href="https://github.com/pinohu/dynasty-launcher" target="_blank">GitHub</a>
+          <a href="https://github.com/pinohu/dynasty-launcher/blob/main/README.md" target="_blank">Documentation</a>
+          <a href="#" onclick="event.preventDefault();enterBuilder()">Launch Builder</a>
+        </div>
+        <div class="lp-footer-col">
+          <h4>Company</h4>
+          <a href="https://dynastyempire.com" target="_blank">Dynasty Empire</a>
+          <a href="mailto:ikeohu@dynastyempire.com">Contact</a>
+          <a href="https://linkedin.com/in/ikeohu" target="_blank">LinkedIn</a>
+        </div>
+        <div class="lp-footer-col">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#" onclick="event.preventDefault();CLERK_INSTANCE?CLERK_INSTANCE.openSignIn():enterBuilder()">Sign In</a>
+        </div>
       </div>
-      <p style="font-size:10px;color:var(--dim);margin-top:1rem">© 2026 Dynasty Empire LLC. All rights reserved.</p>
+      <div class="lp-footer-bottom">
+        <p>© 2026 Dynasty Empire LLC. All rights reserved.</p>
+        <div class="lp-footer-social">
+          <a href="https://github.com/pinohu" target="_blank" title="GitHub">GH</a>
+          <a href="https://linkedin.com/in/ikeohu" target="_blank" title="LinkedIn">LI</a>
+          <a href="https://twitter.com/ikeohu" target="_blank" title="X/Twitter">X</a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -7437,6 +7567,12 @@ function reset(){
   document.getElementById('launch-btn').textContent='Describe your project above to begin';
   document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
 }
+
+// ── Nav scroll effect ──
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('lp-nav');
+  if (nav) nav.classList.toggle('scrolled', window.scrollY > 50);
+});
 </script>
 </body>
 </html>
