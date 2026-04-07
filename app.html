@@ -6058,6 +6058,109 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         }
         setP('g7', 'ok', `${Object.keys(fe).filter(k => fe[k]).length} frontend files ready`);
       } catch (e) { setP('g7', 'er', e.message); }
+
+      // ── Generate template component overrides (project-specific) ──────────
+      // The SaaS boilerplate template has generic components (Hero, Features, etc.)
+      // We MUST override ALL of them with project-specific content.
+      try {
+        addP('g7b', 'Customizing all template components', '', '⬡ Template Override');
+        setP('g7b', 'run');
+        const tmplOverride = await ai(`Generate project-specific React components for a Next.js SaaS template. These REPLACE the generic boilerplate components.
+
+PROJECT: ${inf.name}
+DESCRIPTION: ${desc}
+TYPE: ${inf.type_label}
+PRICE: ${inf.price || '$49/month'}
+REVENUE: ${inf.revenue_model || 'subscription'}
+ACCENT COLOR: ${inf.accent || '#3B82F6'}
+
+CRITICAL RULES:
+1. Each component must be SELF-CONTAINED — no external template imports
+2. Use Tailwind CSS only. No imports from @/templates or @/features
+3. Use lucide-react for icons (NOT heroicons)
+4. Only import what you USE. TypeScript strict mode is enabled.
+5. Every component must export a named const (not default export)
+6. All content must be specific to "${inf.name}" — NO generic "SaaS Template" text
+
+Generate using ---BEGIN:key--- / ---END:key--- delimiters:
+
+---BEGIN:hero_tsx---
+// src/templates/Hero.tsx — Project hero section
+// Must include: headline about ${inf.name}, value proposition, 2 CTA buttons
+// Use the project description for subheadline text
+// Export: export const Hero = () => (...)
+---END:hero_tsx---
+
+---BEGIN:features_tsx---
+// src/templates/Features.tsx — 3-6 feature cards specific to ${inf.name}
+// Each feature: icon (lucide-react), title, description
+// Export: export const Features = () => (...)
+---END:features_tsx---
+
+---BEGIN:pricing_tsx---
+// src/templates/Pricing.tsx — Pricing section with ${inf.price || '2-3 tiers'}
+// Include feature lists per tier, CTA buttons
+// Export: export const Pricing = () => (...)
+---END:pricing_tsx---
+
+---BEGIN:faq_tsx---
+// src/templates/FAQ.tsx — 4-6 FAQ items specific to ${inf.name}
+// Accordion-style with question/answer pairs
+// Export: export const FAQ = () => (...)
+---END:faq_tsx---
+
+---BEGIN:cta_tsx---
+// src/templates/CTA.tsx — Call-to-action banner
+// Headline + subtext + button specific to ${inf.name}
+// Export: export const CTA = () => (...)
+---END:cta_tsx---
+
+---BEGIN:footer_tsx---
+// src/templates/Footer.tsx — Site footer
+// Company: ${inf.name}, links: Product, Docs, Pricing, Contact
+// Export: export const Footer = () => (...)
+---END:footer_tsx---
+
+---BEGIN:navbar_tsx---
+// src/templates/Navbar.tsx — Navigation bar
+// Logo: ${inf.name}, links: Features, Pricing, Docs, Sign In, Get Started
+// Export: export const Navbar = () => (...)
+---END:navbar_tsx---
+
+---BEGIN:en_json---
+// src/locales/en.json — Full English translation overrides
+// Replace ALL "SaaS Template" and "SaaS Boilerplate" text with ${inf.name}
+// Must be valid JSON with these top-level keys:
+// Index, Navbar, Hero, Features, Pricing, PricingPlan, FAQ, CTA, Footer,
+// Dashboard, DashboardIndex, SignIn, SignUp, DashboardLayout
+---END:en_json---
+`, ['hero_tsx', 'features_tsx', 'pricing_tsx', 'faq_tsx', 'cta_tsx', 'footer_tsx', 'navbar_tsx', 'en_json'], 8000, 'frontend');
+
+        // Apply template overrides
+        if (tmplOverride.hero_tsx) feFiles['src/templates/Hero.tsx'] = tmplOverride.hero_tsx;
+        if (tmplOverride.features_tsx) feFiles['src/templates/Features.tsx'] = tmplOverride.features_tsx;
+        if (tmplOverride.pricing_tsx) feFiles['src/templates/Pricing.tsx'] = tmplOverride.pricing_tsx;
+        if (tmplOverride.faq_tsx) feFiles['src/templates/FAQ.tsx'] = tmplOverride.faq_tsx;
+        if (tmplOverride.cta_tsx) feFiles['src/templates/CTA.tsx'] = tmplOverride.cta_tsx;
+        if (tmplOverride.footer_tsx) feFiles['src/templates/Footer.tsx'] = tmplOverride.footer_tsx;
+        if (tmplOverride.navbar_tsx) feFiles['src/templates/Navbar.tsx'] = tmplOverride.navbar_tsx;
+        // Nullify boilerplate components
+        feFiles['src/templates/DemoBanner.tsx'] = 'export const DemoBanner = () => null;\n';
+        feFiles['src/templates/Sponsors.tsx'] = 'export const Sponsors = () => null;\n';
+        feFiles['src/templates/Logo.tsx'] = `export const Logo = () => <span className="text-xl font-bold">${inf.name.replace(/'/g, "\\'")}</span>;\n`;
+        feFiles['src/components/DemoBadge.tsx'] = 'export const DemoBadge = () => null;\n';
+        // Nullify sponsor/boilerplate components
+        feFiles['src/features/sponsors/SponsorLogos.tsx'] = 'export const SponsorLogos = () => null;\n';
+        feFiles['src/features/landing/LogoCloud.tsx'] = `export const LogoCloud = ({ children }: { children?: React.ReactNode; text?: string }) => null;\nimport React from 'react';\n`;
+        feFiles['src/features/landing/StickyBanner.tsx'] = `import React from 'react';\nexport const StickyBanner = ({ children }: { children?: React.ReactNode }) => null;\n`;
+        // Translation override
+        if (tmplOverride.en_json) {
+          feFiles['src/locales/en.json'] = tmplOverride.en_json;
+          // Also generate fr.json as a copy (better than leaving boilerplate French)
+          feFiles['src/locales/fr.json'] = tmplOverride.en_json;
+        }
+        setP('g7b', 'ok', `${Object.keys(tmplOverride).filter(k => tmplOverride[k]).length + 4} template components customized`);
+      } catch (e) { setP('g7b', 'sk', e.message); }
     }
 
     addP('dx','Fetching DYNASTY-DESIGN.md from master repo','','⬡ GitHub');setP('dx','run');
