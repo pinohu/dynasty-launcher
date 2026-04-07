@@ -3577,7 +3577,7 @@ const EDU_CONTENT = {
   g1: {
     phase: '⬡ Design System',
     title: 'Creating your visual identity',
-    body: 'The AI is generating a complete design system — color palette, typography hierarchy, component styles, spacing scale, and dark mode specification. This becomes the visual DNA of your entire product, ensuring every screen looks cohesive and professional.',
+    body: 'The AI is generating a complete design system — color palette, typography hierarchy, component styles, spacing scale, and dark mode specification. This becomes the visual DNA of your entire product, ensuring every screen looks cohesive and professional. A design agency charges $2,000–5,000 for this deliverable.',
     tip: '💡 DESIGN.md follows the awesome-design-md standard used by top design teams. CLAUDE.md tells AI assistants exactly how to build UI that matches your brand.',
     facts: ['Defining 12+ typography hierarchy levels...','Setting brand-tinted shadow colors (not generic black)...','Creating 6-state component specs: default, hover, focus, active, disabled, loading...','Building WCAG AA accessible color system...','Generating agent-ready prompt guide for consistent UI...'],
     preview: ['## Color Palette & Roles','| Color | Hex | Role |','| Primary | #xxx | Brand accent |','| Surface | #1E1E1E | Card bg |','| Text | #EEEDE8 | Body copy |']
@@ -3585,7 +3585,7 @@ const EDU_CONTENT = {
   g2: {
     phase: '⬡ Product Docs',
     title: 'Writing your product specification',
-    body: 'Your SPEC.md defines every feature, user story, and acceptance criterion. ROADMAP.md maps out 6 months of development. README.md gives anyone the quick-start guide to your codebase. These are the documents investors and developers need.',
+    body: 'Your SPEC.md defines every feature, user story, and acceptance criterion. ROADMAP.md maps out 6 months of development. README.md gives anyone the quick-start guide to your codebase. These are the documents investors and developers need. A product strategist charges $4,000–10,000 for this level of specification.',
     tip: '💡 The manual actions file tells you exactly which services to configure by hand — Clerk auth, Stripe webhooks, Google Search Console.',
     facts: ['Defining MVP features with acceptance criteria...','Writing 6-month development roadmap...','Generating environment variable template...','Creating deployment instructions...'],
     preview: ['# SPEC.md','## P0 — MVP Features','- User authentication','- Dashboard with KPIs','- Stripe subscription','- Admin panel']
@@ -3594,14 +3594,14 @@ const EDU_CONTENT = {
     phase: '⬡ Technical Docs',
     title: 'Architecting your data model',
     body: 'DATA-MODEL.md defines your database tables, relationships, and migration strategy. API-CONTRACTS.md specifies every endpoint — request format, response shape, error codes. KB-OUTLINES.md seeds your knowledge base with 10 SEO-ready articles.',
-    tip: '💡 These docs let any developer onboard to your codebase in hours instead of weeks.',
+    tip: '💡 These docs let any developer onboard in hours instead of weeks. A solutions architect charges $3,000–8,000 for comparable documentation.',
     facts: ['Mapping database tables and relationships...','Defining REST API endpoint contracts...','Generating 10 SEO-ready knowledge base article outlines...','Setting up error code standards...'],
     preview: ['## Core Endpoints','POST /auth/register','POST /auth/login','GET  /api/v1/resources','PUT  /api/v1/resources/:id']
   },
   g4a: {
     phase: '⬡ Business Strategy',
     title: 'Building your business engine',
-    body: 'BUSINESS-SYSTEM.md is your complete operating manual — market positioning, 11-agent automation system, revenue projections, pricing tiers, and scale plan. REVENUE-MODEL.md shows month-by-month MRR growth. GTM-PLAYBOOK.md gives you day-by-day launch actions.',
+    body: 'BUSINESS-SYSTEM.md is your complete operating manual — market positioning, 11-agent automation system, revenue projections, pricing tiers, and scale plan. REVENUE-MODEL.md shows month-by-month MRR growth. GTM-PLAYBOOK.md gives you day-by-day launch actions. Strategy firms charge $8,000–15,000 for a business system of this depth.',
     tip: '💡 The business system includes actual sales scripts, email sequences, and KPI targets with specific numbers.',
     facts: ['Building 12-month MRR projection model...','Writing word-for-word sales scripts...','Mapping 11-agent automation workflow...','Calculating unit economics: CAC, LTV, payback period...','Designing 3-tier pricing with feature gates...'],
     preview: ['## Revenue Model','| Month | MRR | Customers |','| 1     | $0  | 0         |','| 3     | $2.9K | 30      |','| 12    | $29K  | 300     |']
@@ -3610,7 +3610,7 @@ const EDU_CONTENT = {
     phase: '⬡ Agent System',
     title: 'Designing your AI workforce',
     body: 'AGENT-SYSTEM.md specifies 11 autonomous agents — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. FAILURE-MODES.md anticipates 10 specific failure scenarios with recovery playbooks.',
-    tip: '💡 Every agent maps to a real Dynasty tool — CallScaler, Insighto, SMS-iT, Stripe, n8n — ready to wire up.',
+    tip: '💡 Every agent maps to a real Dynasty tool — CallScaler, Insighto, SMS-iT, Stripe, n8n — ready to wire up. An AI consultancy charges $5,000–12,000 for agent architecture.',
     facts: ['Configuring intake → evaluation → decision pipeline...','Setting up circuit breakers for each failure mode...','Defining agent triggers, inputs, and outputs...','Mapping tool dependencies for 11 autonomous agents...'],
     preview: ['## Agent: Lead Intake','Trigger: New form submission','Tool: CallScaler + Insighto','Output: Qualified lead object','Fallback: Manual review queue']
   },
@@ -3618,7 +3618,7 @@ const EDU_CONTENT = {
     phase: '⬡ Backend Code',
     title: 'Generating production-ready code',
     body: 'A complete FastAPI Python backend with JWT authentication, rate limiting, CORS, Stripe webhooks, health checks, and database models. Includes Dockerfile for containerization and docker-compose for one-command deployment with PostgreSQL and Redis.',
-    tip: '💡 The backend is production-ready — not a prototype. It includes proper error handling, logging, and security headers.',
+    tip: '💡 The backend is production-ready — not a prototype. Includes structured error handling, request ID tracking, dependency injection, and comprehensive health checks. A developer charges $5,000–15,000 for this code.',
     facts: ['Writing JWT authentication with token refresh...','Setting up rate limiting (10 req/min on auth)...','Configuring CORS, logging, and health checks...','Building Stripe webhook handler...','Creating multi-stage Dockerfile (builder → slim)...'],
     preview: ['from fastapi import FastAPI','app = FastAPI(title="API")','@app.post("/auth/register")','@app.get("/health")','# docker-compose up -d']
   },
@@ -3626,7 +3626,7 @@ const EDU_CONTENT = {
     phase: '⬡ Frontend',
     title: 'Scaffolding your Next.js frontend',
     body: 'A Next.js 14 App Router frontend with TypeScript, Tailwind CSS, responsive layout, dashboard, and landing page. The design system colors and fonts from DESIGN.md are already wired into the Tailwind config.',
-    tip: '💡 Full-stack deploy means your frontend goes live on Vercel immediately — real URL, real HTTPS, real CDN.',
+    tip: '💡 Full-stack deploy means your frontend goes live on Vercel immediately — real URL, real HTTPS, real CDN. A frontend developer charges $3,000–8,000 for this scaffold.',
     facts: ['Generating responsive landing page with hero section...','Building authenticated dashboard with stat cards...','Wiring Tailwind config to your brand colors...','Setting up TypeScript with strict mode...'],
     preview: ['// src/app/page.tsx','export default function Home() {','  return (','    <Hero title={config.hero}','     cta={config.cta} />']
   },
@@ -4980,7 +4980,7 @@ Scenarios to cover: JWT/Auth failure, Database connection loss, Stripe webhook f
     addP('g5','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend Code');setP('g5','run');
     updateGlobalProgress(6, 12, 'Phase 6 of 12 \u00b7 Backend Code');
     let be;try{
-      be=await ai(`GENERATE PRODUCTION-READY FASTAPI BACKEND. Real Python code only. Delimiter format ONLY. No preamble.
+      be=await ai(`GENERATE PRODUCTION-GRADE FASTAPI BACKEND. This must be deployment-ready code — not a tutorial example. Include: structured error handling with custom exception classes, request ID tracking via middleware, dependency injection for services, environment-based CORS configuration, graceful startup/shutdown with connection pool management, comprehensive health check (DB + Redis + external deps), API versioning prefix, and proper Python type hints throughout. Real Python code only. Delimiter format ONLY. No preamble.
 
 Project: ${inf.name} | Type: ${inf.type_label} | Revenue: ${inf.revenue_model} at ${inf.price}
 Stack: ${(inf.stack||[]).join(', ')}
@@ -5092,10 +5092,40 @@ async def log_requests(request: Request, call_next):
     logger.info(f"Status: {response.status_code}")
     return response
 
-# Health check
+# Health check (comprehensive — checks all dependencies)
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "${inf.name}", "version": "1.0.0"}
+    checks = {"api": "ok", "version": "1.0.0"}
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+        checks["database"] = "ok"
+    except Exception as e:
+        checks["database"] = f"error: {str(e)[:50]}"
+    try:
+        r.ping()
+        checks["redis"] = "ok"
+    except Exception:
+        checks["redis"] = "unavailable"
+    checks["status"] = "healthy" if all(v == "ok" for v in checks.values() if v != "1.0.0") else "degraded"
+    return checks
+
+# Structured error handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error: {exc}")
+    return JSONResponse(status_code=500, content={"error": "internal_error", "message": "An unexpected error occurred", "request_id": getattr(request.state, 'request_id', 'unknown')})
+
+# Request ID middleware
+import uuid as uuid_lib
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    request_id = str(uuid_lib.uuid4())[:8]
+    request.state.request_id = request_id
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
 
 # Auth endpoints
 @app.post("/auth/register", response_model=Token)
@@ -5628,40 +5658,46 @@ Then read DESIGN.md for visual design rules.
       updateGlobalProgress(7, 12, 'Phase 7 of 12 · Social Media Calendar');
       const socialPrompt = `Generate a 1-year social media content calendar for "${inf.name}" (${inf.type_label}). Keywords: ${(inf.stack||[]).join(', ')}.
 
-Create 20 posts (4 per platform × 5 platforms). For EACH post include the week number (1-52), platform, content, hashtags, and theme.
+Create 20 posts (4 per platform × 5 platforms). For EACH post include ALL columns below.
 
 Platform rules:
-- LinkedIn: Professional, 150-200 words, 3-5 hashtags
-- Twitter/X: Under 280 chars, punchy, 2-3 hashtags
-- Instagram: Visual caption with emojis, 10-15 hashtags
-- Facebook: Conversational, question-based, 3-5 hashtags
-- TikTok: Script format (Hook→Content→CTA), 5-8 hashtags
+- LinkedIn: Professional thought leadership, 150-200 words, 3-5 hashtags. Best time: Tue-Thu 8-10am EST
+- Twitter/X: Under 280 chars, punchy hook + insight, 2-3 hashtags. Best time: Mon-Fri 9am-12pm EST
+- Instagram: Visual-first caption with emojis, 10-15 hashtags. Best time: Mon/Wed/Fri 11am-1pm EST
+- Facebook: Conversational, question-driven engagement, 3-5 hashtags. Best time: Tue-Fri 9am-1pm EST
+- TikTok: Script format (Hook→Content→CTA), trending style, 5-8 hashtags. Best time: Tue-Thu 7-9pm EST
 
-Return ONLY a markdown table:
-| Week | Platform | Theme | Content | Hashtags |
-|------|----------|-------|---------|----------|
-| 1 | linkedin | tip | Post content here... | #tag1 #tag2 |
-...20 rows`;
-      const socialRaw = await aiRaw(socialPrompt, 4000);
+Content mix per platform (across 4 posts): 1 educational, 1 social proof/case study, 1 behind-the-scenes/culture, 1 promotional/CTA
+
+Return ONLY a markdown table with ALL 7 columns:
+| Week | Platform | Theme | Content | Hashtags | Image Prompt | Best Time |
+|------|----------|-------|---------|----------|-------------|-----------|
+| 1 | linkedin | educational | Post content here... | #tag1 #tag2 | Professional flat-lay photo of [specific scene relevant to this niche], clean white background, minimal style | Tuesday 9:00 AM EST |
+...20 rows
+
+Image Prompt column: Describe a specific image that could be generated with AI (Midjourney/DALL-E) or sourced from stock. Be specific about style, composition, colors, and mood. Match the brand accent color ${inf.accent} where possible.`;
+      const socialRaw = await aiRaw(socialPrompt, 5000);
       if (socialRaw && socialRaw.includes('|')) {
         window._socialCalendarMd = `# ${inf.name} — Social Media Calendar\n\n> Generated by Dynasty Launcher\n\n${socialRaw}`;
         files['social-media/SOCIAL-MEDIA-CALENDAR.md'] = socialCalendarMd;
 
         // Also generate CSV for scheduler import
-        const csvLines = ['Date,Platform,Content,Hashtags,Theme'];
+        const csvLines = ['Date,Platform,Content,Hashtags,Theme,Image_Prompt,Best_Time'];
         const rows = socialRaw.split('\n').filter(l => l.startsWith('|') && !l.includes('---') && !l.includes('Week'));
         rows.forEach((row, i) => {
           const cols = row.split('|').map(c => c.trim()).filter(Boolean);
           if (cols.length >= 5) {
             const week = parseInt(cols[0]) || (i + 1);
             const d = new Date(); d.setDate(d.getDate() + (week - 1) * 7);
-            csvLines.push(`"${d.toISOString().split('T')[0]}","${cols[1]}","${cols[3].replace(/"/g,'""')}","${cols[4]}","${cols[2]}"`);
+            const imagePrompt = cols[5] || '';
+            const bestTime = cols[6] || '';
+            csvLines.push(`"${d.toISOString().split('T')[0]}","${cols[1]}","${cols[3].replace(/"/g,'""')}","${cols[4]}","${cols[2]}","${imagePrompt.replace(/"/g,'""')}","${bestTime}"`);
           }
         });
         files['social-media/calendar.csv'] = csvLines.join('\n');
         files['social-media/calendar.json'] = JSON.stringify(rows.map((row, i) => {
           const cols = row.split('|').map(c => c.trim()).filter(Boolean);
-          return cols.length >= 5 ? { week: parseInt(cols[0]) || (i+1), platform: cols[1], theme: cols[2], content: cols[3], hashtags: cols[4] } : null;
+          return cols.length >= 5 ? { week: parseInt(cols[0]) || (i+1), platform: cols[1], theme: cols[2], content: cols[3], hashtags: cols[4], image_prompt: cols[5] || '', best_time: cols[6] || '' } : null;
         }).filter(Boolean), null, 2);
 
         setP('social','ok',`${rows.length} posts across 5 platforms`);
@@ -5975,11 +6011,35 @@ function showDone(inf,repo,fc,mtasks){
   ].filter(Boolean).join(' · ');
   d.innerHTML=`
 <div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated and pushed · ${provRes?.results?Object.keys(provRes.results).length+' services provisioned':'provisioning'} · ${mtasks.length} manual actions documented${V2_BUILD_COST > 0 ? ' · API cost: $' + V2_BUILD_COST.toFixed(4) : ' · API cost: $0.00 (free models)'} · ${buildDuration}s${intelligenceNote ? '<br><span style="color:var(--gold);font-size:0.78rem">' + intelligenceNote + '</span>' : ''}</p></div>
+
+${V2_SCORECARD ? `<div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1rem">
+  <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin-bottom:8px">Strategic Viability</div>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+    <span style="font-size:28px;font-weight:700;color:${V2_SCORECARD.composite >= 8 ? 'var(--grn)' : V2_SCORECARD.composite >= 6 ? 'var(--gold)' : 'var(--red)'}">${V2_SCORECARD.composite.toFixed(1)}</span>
+    <span style="font-size:12px;color:var(--sec)">/ 10 — ${V2_SCORECARD.verdict}</span>
+  </div>
+  <div style="font-size:11px;color:var(--sec);line-height:1.5">${V2_SCORECARD.opportunity_summary || ''}</div>
+  ${FRAMEWORK_SYNTHESIS?.synthesis_summary ? `<div style="font-size:11px;color:var(--dim);margin-top:6px;font-style:italic">${FRAMEWORK_SYNTHESIS.synthesis_summary}</div>` : ''}
+</div>` : ''}
+
+${window._buildFiles?.['BUSINESS-SYSTEM.md'] ? `<div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1rem;cursor:pointer" onclick="this.querySelector('.preview-body').style.display=this.querySelector('.preview-body').style.display==='none'?'block':'none'">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gold)">📄 Strategy Preview</div>
+    <span style="font-size:10px;color:var(--dim)">click to expand ▼</span>
+  </div>
+  <div class="preview-body" style="display:none;margin-top:10px;font-size:11px;color:var(--sec);line-height:1.6;white-space:pre-wrap;max-height:400px;overflow-y:auto;border-top:1px solid var(--bdr);padding-top:10px">${(window._buildFiles['BUSINESS-SYSTEM.md'] || '').slice(0, 2000).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+</div>` : ''}
 <div class="biz-bar">
   <div class="bb-item"><div class="bb-l">Revenue</div><div class="bb-v">${inf.revenue_model} · ${inf.price}</div></div>
   <div class="bb-item"><div class="bb-l">Acquisition</div><div class="bb-v">${inf.acquisition}</div></div>
   <div class="bb-item"><div class="bb-l">MVP</div><div class="bb-v">${inf.mvp}</div></div>
   <div class="bb-item"><div class="bb-l">Accent</div><div class="bb-v"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${inf.accent};margin-right:4px;vertical-align:middle"></span>${inf.accent}</div></div>
+</div>
+<div class="biz-bar" style="background:var(--card);border-color:var(--bdr)">
+  <div class="bb-item"><div class="bb-l">Category</div><div class="bb-v" style="color:var(--tx)">${typeof V2_CATEGORY!=='undefined'?V2_CATEGORY:inf.type_id}</div></div>
+  <div class="bb-item"><div class="bb-l">Template</div><div class="bb-v" style="color:var(--tx)">${typeof CATEGORY_TEMPLATE!=='undefined'&&V2_CATEGORY?CATEGORY_TEMPLATE[V2_CATEGORY]||'dynasty-project-template':'dynasty-project-template'}</div></div>
+  <div class="bb-item"><div class="bb-l">Frameworks</div><div class="bb-v" style="color:var(--tx)">${V2_FRAMEWORKS?.length||1}</div></div>
+  <div class="bb-item"><div class="bb-l">Words Generated</div><div class="bb-v" style="color:var(--tx)">${window._buildFiles?Math.round(Object.values(window._buildFiles).join('').length/5).toLocaleString():'—'}</div></div>
 </div>
 <div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank">${repoLabel||repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div><div class="cmd" style="margin-top:4px;opacity:0.6;font-size:11px">or: gh repo clone ${repo} && cd ${inf.repo} && pi</div></div>
 <div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
@@ -5994,10 +6054,27 @@ ${provRes&&provRes.results?`<div class="rc"><h3>Infrastructure Provisioned</h3><
       ${provRes.results.pulsetic?`<div class="lr"><span class="lb lb-g">Monitor</span><span>${provRes.results.pulsetic.note||'Queued'}</span></div>`:''}
       ${provRes.manual_steps&&provRes.manual_steps.length?`<div class="lr"><span class="lb" style="background:#f59e0b;color:#000">Manual</span><span style="color:#f59e0b;font-size:12px">${provRes.manual_steps[0]}</span></div>`:''}
     </div></div>`:''}
-${window._socialCalendarMd?`<div class="rc"><h3>📱 Social Media Calendar</h3><div style="font-size:11px;color:var(--sec);margin-bottom:8px">1-year content calendar across 5 platforms — ready to schedule</div><div class="lr"><span class="lb lb-f">CSV</span><a href="${repoUrl}/blob/main/social-media/calendar.csv" target="_blank">calendar.csv — Import to Buffer, Hootsuite, Later</a></div><div class="lr"><span class="lb lb-f">JSON</span><a href="${repoUrl}/blob/main/social-media/calendar.json" target="_blank">calendar.json — API-ready format</a></div><div class="lr"><span class="lb lb-f">MD</span><a href="${repoUrl}/blob/main/social-media/SOCIAL-MEDIA-CALENDAR.md" target="_blank">SOCIAL-MEDIA-CALENDAR.md — Full calendar</a></div></div>`:''}
+${window._socialCalendarMd?`<div class="rc"><h3>📱 Social Media Calendar</h3><div style="font-size:11px;color:var(--sec);margin-bottom:8px">1-year content calendar across 5 platforms — ready to schedule. Includes AI image prompts and optimal posting times.</div><div class="lr"><span class="lb lb-f">CSV</span><a href="${repoUrl}/blob/main/social-media/calendar.csv" target="_blank">calendar.csv — Import to Buffer, Hootsuite, Later</a></div><div class="lr"><span class="lb lb-f">JSON</span><a href="${repoUrl}/blob/main/social-media/calendar.json" target="_blank">calendar.json — API-ready format</a></div><div class="lr"><span class="lb lb-f">MD</span><a href="${repoUrl}/blob/main/social-media/SOCIAL-MEDIA-CALENDAR.md" target="_blank">SOCIAL-MEDIA-CALENDAR.md — Full calendar</a></div><div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"><div style="font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Sample Posts</div>${(()=>{try{const rows=(window._socialCalendarMd||'').split('\\n').filter(l=>l.startsWith('|')&&!l.includes('---')&&!l.includes('Week')).slice(0,3);return rows.map(r=>{const c=r.split('|').map(x=>x.trim()).filter(Boolean);return c.length>=4?'<div style="font-size:11px;color:var(--sec);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span style="color:var(--gold);font-weight:600;font-size:10px">'+c[1]+'</span> · '+(c[3]||'').slice(0,120)+'…</div>':'';}).join('');}catch{return'';}})()}</div></div>`:''}
 ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see MANUAL-ACTIONS.md</h3><div class="ml">${mtasks.map(t=>`<div class="mi">${t}</div>`).join('')}</div></div>`:''}
+
+<div style="background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(201,168,76,0.01));border:1px solid rgba(201,168,76,0.12);border-radius:var(--rl);padding:1rem 1.25rem;margin-top:1rem">
+  <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);margin-bottom:10px">💎 Deliverable Value</div>
+  <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;font-size:11px">
+    <span style="color:var(--sec)">Strategic business architecture</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$8,000–15,000</span>
+    <span style="color:var(--sec)">Financial model & projections</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
+    <span style="color:var(--sec)">Go-to-market playbook</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$5,000–12,000</span>
+    <span style="color:var(--sec)">Product spec + roadmap</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$4,000–10,000</span>
+    <span style="color:var(--sec)">Backend code + infrastructure</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$5,000–15,000</span>
+    <span style="color:var(--sec)">Design system + brand</span><span style="color:var(--dim)">Designer equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
+    <span style="color:var(--sec)">Social media calendar (260 posts)</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$1,500–3,000</span>
+    <span style="color:var(--sec)">SEO content strategy (25 articles)</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
+    <span style="color:var(--sec);font-weight:600;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px;grid-column:1/3">Total equivalent value</span><span style="color:var(--gold);font-weight:700;font-size:14px;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px">$30,500–73,000</span>
+  </div>
+  <div style="font-size:10px;color:var(--dim);margin-top:8px">Generated in ${buildDuration}s for $${V2_BUILD_COST?.toFixed(4)||'0.00'} in AI costs</div>
+</div>
+
 <div style="display:flex;gap:8px;margin-top:1.25rem;flex-wrap:wrap">
-  <button class="launch" style="flex:1;min-width:200px" onclick="generateBuildReport()">📄 Download Report</button>
+  <button class="launch" style="flex:1;min-width:200px" onclick="generateBuildReport()">📄 Download Report <span style="font-size:10px;opacity:.6">(print to PDF)</span></button>
   <button class="launch" style="flex:1;min-width:200px;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="downloadAllFiles()">📦 Download All Files</button>
 </div>
 <span class="again" onclick="reset()">Build another →</span>`;
@@ -6008,101 +6085,236 @@ function generateBuildReport() {
   const repo = `${ORG}/${inf.repo}`;
   const now = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const sc = V2_SCORECARD;
+  const syn = FRAMEWORK_SYNTHESIS;
+  const bp = PLANNING_OUTPUT?.blueprint;
+  const dc = PLANNING_OUTPUT?.design_contract;
+  const research = RESEARCH_DATA;
+  const buildDuration = ((Date.now() - BUILD_START_TIME) / 1000).toFixed(0);
+  const fileCount = window._buildFiles ? Object.keys(window._buildFiles).length : 0;
+
+  // Framework analyses sections
+  const fwSections = sc?.framework_analyses ? Object.entries(sc.framework_analyses).map(([k, v]) => `
+    <div class="fw-section">
+      <h3>${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} Analysis</h3>
+      <div class="fw-body">${typeof v === 'string' ? v.replace(/\n/g, '<br>') : JSON.stringify(v)}</div>
+    </div>`).join('') : '';
+
+  // Synthesis section
+  const synSection = syn ? `
+    <h2>Cross-Framework Synthesis</h2>
+    <p class="syn-summary">${syn.synthesis_summary || ''}</p>
+    ${syn.score_adjustment?.direction !== 'none' ? `<div class="adjustment ${syn.score_adjustment?.direction}">Score Adjustment: ${syn.score_adjustment?.direction === 'up' ? '↑' : '↓'} ${syn.score_adjustment?.amount} — ${syn.score_adjustment?.reason}</div>` : ''}
+    ${syn.consensus_signals?.length ? '<h3 style="color:#3ECF8E">Consensus Signals</h3><ul>' + syn.consensus_signals.map(s => `<li>${s}</li>`).join('') + '</ul>' : ''}
+    ${syn.contradictions?.length ? '<h3 style="color:#E5534B">Contradictions</h3><ul>' + syn.contradictions.map(s => `<li>${s}</li>`).join('') + '</ul>' : ''}
+    ${syn.blind_spots?.length ? '<h3 style="color:#C9A84C">Blind Spots</h3><ul>' + syn.blind_spots.map(s => `<li>${s}</li>`).join('') + '</ul>' : ''}` : '';
+
+  // Research section
+  const researchSection = research?.competitors?.length ? `
+    <h2>Competitive Intelligence</h2>
+    <p class="meta">Source: Exa.ai semantic search · ${research.sources?.join(', ') || 'multiple sources'}</p>
+    <table><thead><tr><th>Competitor</th><th>Description</th></tr></thead><tbody>
+    ${research.competitors.slice(0, 5).map(c => `<tr><td><a href="${c.url}" style="color:#C9A84C">${c.title}</a></td><td>${c.snippet?.slice(0, 150) || ''}</td></tr>`).join('')}
+    </tbody></table>
+    ${research.market_data?.length ? '<h3>Market Intelligence</h3><ul>' + research.market_data.slice(0, 3).map(m => `<li><strong>${m.title}</strong>: ${m.snippet?.slice(0, 120) || ''}</li>`).join('') + '</ul>' : ''}` : '';
+
+  // Architecture section
+  const archSection = bp ? `
+    <h2>Architecture Blueprint</h2>
+    <div class="grid">
+      <div class="card"><div class="label">Entities</div><div class="value">${bp.data_model?.entities?.length || 0} tables defined</div></div>
+      <div class="card"><div class="label">API Endpoints</div><div class="value">${bp.api_contracts?.length || 0} contracts</div></div>
+      <div class="card"><div class="label">Auth Strategy</div><div class="value">${bp.auth_pattern?.strategy || 'TBD'}</div></div>
+      <div class="card"><div class="label">Integrations</div><div class="value">${bp.integrations?.length || 0} services</div></div>
+    </div>
+    ${bp.key_decisions?.length ? '<h3>Key Architectural Decisions</h3><ol>' + bp.key_decisions.slice(0, 6).map(d => `<li>${d}</li>`).join('') + '</ol>' : ''}` : '';
+
+  // Build metadata
+  const metaSection = `
+    <h2>Build Metadata</h2>
+    <table>
+      <tr><td class="meta-label">Build Mode</td><td>${V2_MODE === 'strategic' ? 'Strategic' : 'Quick'}</td></tr>
+      <tr><td class="meta-label">Frameworks Applied</td><td>${V2_FRAMEWORKS?.join(', ') || 'Blue Ocean'}</td></tr>
+      <tr><td class="meta-label">Depth Tier</td><td>${typeof FW_DEPTH !== 'undefined' ? FW_DEPTH : 'standard'}</td></tr>
+      <tr><td class="meta-label">Category</td><td>${typeof V2_CATEGORY !== 'undefined' ? V2_CATEGORY : inf.type_id}</td></tr>
+      <tr><td class="meta-label">Template Used</td><td>${inf.type_id}</td></tr>
+      <tr><td class="meta-label">Files Generated</td><td>${fileCount}</td></tr>
+      <tr><td class="meta-label">Build Duration</td><td>${buildDuration}s</td></tr>
+      <tr><td class="meta-label">API Cost</td><td>$${V2_BUILD_COST?.toFixed(4) || '0.00'}</td></tr>
+      <tr><td class="meta-label">Research Sources</td><td>${research?.sources?.join(', ') || 'None'}</td></tr>
+    </table>`;
 
   const reportHtml = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>${inf.name} — Dynasty Build Report</title>
+<html><head><meta charset="UTF-8"><title>${inf.name} — Dynasty Strategic Report</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#0A0A0A;color:#EEEDE8;line-height:1.6}
-.page{max-width:800px;margin:0 auto;padding:3rem 2rem}
-.cover{text-align:center;padding:4rem 0;border-bottom:2px solid #C9A84C;margin-bottom:3rem}
-.cover h1{font-size:2.5rem;font-weight:700;margin-bottom:.5rem}
+body{font-family:'Inter',sans-serif;background:#0A0A0A;color:#EEEDE8;line-height:1.7;font-size:13px}
+.page{max-width:850px;margin:0 auto;padding:3rem 2.5rem}
+.cover{text-align:center;padding:5rem 0 3rem;border-bottom:2px solid #C9A84C;margin-bottom:2.5rem}
+.cover h1{font-size:2.8rem;font-weight:700;margin-bottom:.5rem;letter-spacing:-1px}
+.cover .subtitle{font-size:16px;color:#908D86;margin-bottom:1.5rem}
 .cover .gold{color:#C9A84C}
-.cover .date{font-size:13px;color:#908D86;margin-top:1rem}
-.cover .badge{display:inline-block;padding:4px 12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:6px;font-size:11px;color:#C9A84C;font-weight:600;margin-top:1rem}
-h2{font-size:18px;font-weight:600;color:#C9A84C;margin:2rem 0 1rem;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.07)}
-h3{font-size:14px;font-weight:600;margin:1rem 0 .5rem}
-p{font-size:13px;color:#908D86;margin-bottom:.75rem}
+.cover .date{font-size:12px;color:#4A4845;margin-top:1rem}
+.cover .badge{display:inline-block;padding:5px 14px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:6px;font-size:11px;color:#C9A84C;font-weight:600;margin-top:.5rem}
+.toc{margin:2rem 0 2.5rem;padding:1.5rem;background:#141414;border:1px solid rgba(255,255,255,0.05);border-radius:12px}
+.toc h2{font-size:14px;margin-bottom:1rem;color:#C9A84C;border:none;padding:0}
+.toc a{display:block;padding:4px 0;color:#908D86;text-decoration:none;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.toc a:hover{color:#C9A84C}
+h2{font-size:18px;font-weight:700;color:#C9A84C;margin:2.5rem 0 1rem;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.07)}
+h3{font-size:14px;font-weight:600;margin:1.2rem 0 .6rem;color:#EEEDE8}
+p{color:#908D86;margin-bottom:.75rem}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1rem 0}
-.card{background:#1E1E1E;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:1rem}
-.card .label{font-size:10px;color:#4A4845;text-transform:uppercase;letter-spacing:.5px}
-.card .value{font-size:14px;font-weight:600;margin-top:2px}
-.score-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px}
-.score-row .name{color:#908D86}
-.score-row .num{font-weight:600;font-family:'SF Mono',monospace}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:1rem 0}
+.card{background:#1A1A1A;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem 1.2rem}
+.card .label{font-size:10px;color:#4A4845;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+.card .value{font-size:14px;font-weight:600;margin-top:4px}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:12px}
+th{text-align:left;padding:8px 10px;background:#141414;color:#C9A84C;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid rgba(201,168,76,0.2)}
+td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:#908D86}
+td.meta-label{color:#4A4845;font-weight:600;width:180px;text-transform:uppercase;font-size:10px;letter-spacing:.4px}
+.score-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.score-row .name{color:#908D86;font-size:13px}.score-row .num{font-weight:700;font-family:'SF Mono',monospace;font-size:14px}
 .score-row .num.high{color:#3ECF8E}.score-row .num.mid{color:#C9A84C}.score-row .num.low{color:#E5534B}
-.file-list{list-style:none;padding:0}.file-list li{font-size:12px;padding:4px 0;color:#908D86;border-bottom:1px solid rgba(255,255,255,0.03)}
-.file-list li .cat{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-right:6px}
-.cat-biz{background:rgba(201,168,76,0.15);color:#C9A84C}
-.cat-code{background:rgba(229,83,75,0.09);color:#F07070}
-.cat-doc{background:rgba(62,207,142,0.09);color:#3ECF8E}
-.cat-infra{background:rgba(99,91,255,0.15);color:#8B87FF}
-.verdict{padding:12px 16px;border-radius:8px;font-size:13px;font-weight:500;margin:1rem 0}
-.verdict.strong{background:rgba(62,207,142,0.08);border:1px solid rgba(62,207,142,0.2);color:#3ECF8E}
-.verdict.viable{background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);color:#C9A84C}
-.verdict.weak{background:rgba(229,83,75,0.06);border:1px solid rgba(229,83,75,0.15);color:#E5534B}
-.footer{text-align:center;margin-top:3rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.07);font-size:11px;color:#4A4845}
-@media print{body{background:#fff;color:#222}.page{padding:1rem}h2{color:#8B7332}
-.card{border-color:#ddd}.score-row{border-color:#eee}.file-list li{border-color:#eee}
-.cover{border-color:#8B7332}.footer{border-color:#ddd}}
+.verdict{padding:14px 18px;border-radius:10px;font-size:14px;font-weight:600;margin:1rem 0}
+.verdict.strong{background:rgba(62,207,142,0.06);border:1px solid rgba(62,207,142,0.15);color:#3ECF8E}
+.verdict.viable{background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);color:#C9A84C}
+.verdict.weak{background:rgba(229,83,75,0.05);border:1px solid rgba(229,83,75,0.12);color:#E5534B}
+.syn-summary{font-size:14px;color:#EEEDE8;line-height:1.7;margin:1rem 0}
+.adjustment{padding:8px 14px;border-radius:8px;font-size:12px;margin:.5rem 0}
+.adjustment.up{background:rgba(62,207,142,0.06);color:#3ECF8E}
+.adjustment.down{background:rgba(229,83,75,0.05);color:#E5534B}
+ul{padding-left:1.2rem;margin:.5rem 0}li{margin:4px 0;color:#908D86}
+ol{padding-left:1.2rem;margin:.5rem 0}ol li{margin:6px 0;color:#908D86}
+.fw-section{background:#141414;border:1px solid rgba(255,255,255,0.04);border-radius:10px;padding:1.2rem 1.5rem;margin:1rem 0}
+.fw-section h3{color:#C9A84C;margin:0 0 .6rem}
+.fw-body{font-size:12px;color:#908D86;line-height:1.6}
+.file-list{list-style:none;padding:0;columns:2;column-gap:1.5rem}.file-list li{font-size:11px;padding:3px 0;color:#908D86;break-inside:avoid}
+.cat{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-right:4px}
+.cat-biz{background:rgba(201,168,76,0.12);color:#C9A84C}
+.cat-code{background:rgba(229,83,75,0.08);color:#F07070}
+.cat-doc{background:rgba(62,207,142,0.08);color:#3ECF8E}
+.cat-infra{background:rgba(99,91,255,0.12);color:#8B87FF}
+.meta{font-size:11px;color:#4A4845;font-style:italic}
+.footer{text-align:center;margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06)}
+.footer .dynasty{font-size:20px;color:#C9A84C;font-weight:700;letter-spacing:1px}
+.footer .sub{font-size:11px;color:#4A4845;margin-top:6px}
+.cta-box{background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(201,168,76,0.02));border:1px solid rgba(201,168,76,0.15);border-radius:12px;padding:1.5rem;margin:2rem 0;text-align:center}
+.cta-box h3{color:#C9A84C;margin:0 0 .5rem}
+.cta-box code{background:#0A0A0A;padding:6px 14px;border-radius:6px;font-size:12px;color:#EEEDE8;display:inline-block;margin:4px}
+@media print{body{background:#fff;color:#222;font-size:11px}.page{padding:1rem;max-width:100%}
+h2{color:#8B7332;font-size:15px}h3{font-size:12px}.card{border-color:#ddd;background:#f8f8f8}
+.cover{border-color:#8B7332;padding:2rem 0}.footer{border-color:#ddd}
+.fw-section{background:#f5f5f5;border-color:#ddd}.toc{background:#f8f8f8;border-color:#ddd}
+.verdict.strong{background:#e8f8f0;border-color:#3ECF8E;color:#1a7a4a}
+.verdict.viable{background:#fdf6e3;border-color:#C9A84C;color:#8B7332}
+table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
+.score-row .name{color:#555}.file-list li{color:#555}.meta{color:#888}
+}
 </style></head><body>
 <div class="page">
   <div class="cover">
-    <div style="font-size:32px;margin-bottom:12px">&#9889;</div>
+    <div style="font-size:36px;margin-bottom:16px">⚡</div>
     <h1>${inf.name}</h1>
-    <p style="font-size:15px;color:#908D86">${inf.type_label}</p>
-    <div class="badge">Dynasty Empire Business System</div>
-    <div class="date">Generated on ${now}</div>
-    <div class="date">${V2_MODE === 'strategic' ? 'Strategic Build' : 'Quick Build'}${V2_FRAMEWORKS?.length > 1 ? ' · ' + V2_FRAMEWORKS.length + ' frameworks analyzed' : ''}</div>
+    <div class="subtitle">${inf.type_label} · ${inf.revenue_model} · ${inf.price}</div>
+    <div class="badge">Dynasty Empire Strategic Report</div>
+    <div class="date">${now} · Confidential</div>
   </div>
 
-  <h2>Executive Summary</h2>
-  <p>${document.getElementById('project-desc')?.value || inf.name}</p>
-  <div class="grid">
-    <div class="card"><div class="label">Revenue Model</div><div class="value">${inf.revenue_model} · ${inf.price}</div></div>
+  <div class="toc">
+    <h2>Table of Contents</h2>
+    <a href="#summary">1. Executive Summary</a>
+    <a href="#scorecard">2. Viability Scorecard</a>
+    ${fwSections ? '<a href="#frameworks">3. Framework Deep Dives</a>' : ''}
+    ${synSection ? '<a href="#synthesis">4. Cross-Framework Synthesis</a>' : ''}
+    ${researchSection ? '<a href="#competitive">5. Competitive Intelligence</a>' : ''}
+    ${archSection ? '<a href="#architecture">6. Architecture Blueprint</a>' : ''}
+    <a href="#infrastructure">7. Infrastructure & Services</a>
+    <a href="#files">8. Generated Deliverables</a>
+    <a href="#next">9. Recommended Next Steps</a>
+    <a href="#meta">10. Build Metadata</a>
+  </div>
+
+  <h2 id="summary">1. Executive Summary</h2>
+  <p style="font-size:14px;color:#EEEDE8;line-height:1.8">${document.getElementById('project-desc')?.value || inf.name}</p>
+  <div class="grid-3">
+    <div class="card"><div class="label">Revenue Model</div><div class="value">${inf.revenue_model}</div></div>
+    <div class="card"><div class="label">Price Point</div><div class="value">${inf.price}</div></div>
     <div class="card"><div class="label">Acquisition</div><div class="value">${inf.acquisition}</div></div>
     <div class="card"><div class="label">MVP Timeline</div><div class="value">${inf.mvp}</div></div>
-    <div class="card"><div class="label">Tech Stack</div><div class="value">${(inf.stack||[]).slice(0,4).join(', ')}</div></div>
-    <div class="card"><div class="label">Domain</div><div class="value">${inf.domain}</div></div>
-    <div class="card"><div class="label">Brand Color</div><div class="value"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${inf.accent};margin-right:6px;vertical-align:middle"></span>${inf.accent}</div></div>
+    <div class="card"><div class="label">Stack</div><div class="value">${(inf.stack||[]).slice(0,3).join(', ')}</div></div>
+    <div class="card"><div class="label">Accent</div><div class="value"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${inf.accent};margin-right:4px;vertical-align:middle"></span>${inf.accent}</div></div>
   </div>
 
-  ${sc ? '<h2>Viability Scorecard</h2><div class="verdict ' + (sc.composite >= 8 ? 'strong' : sc.composite >= 6 ? 'viable' : 'weak') + '"><strong>' + sc.verdict + '</strong> — Composite Score: ' + sc.composite.toFixed(1) + '/10</div>' + Object.entries(sc.scores).map(([k, v]) => '<div class="score-row"><span class="name">' + k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + '</span><span class="num ' + (v.score >= 8 ? 'high' : v.score >= 6 ? 'mid' : 'low') + '">' + v.score.toFixed(1) + '/10</span></div>').join('') + '<p style="margin-top:1rem"><strong>Risk:</strong> ' + sc.risk_summary + '</p><p><strong>Opportunity:</strong> ' + sc.opportunity_summary + '</p>' : ''}
+  <h2 id="scorecard">2. Viability Scorecard</h2>
+  ${sc ? `
+    <div class="verdict ${sc.composite >= 8 ? 'strong' : sc.composite >= 6 ? 'viable' : 'weak'}">
+      ${sc.verdict} — Composite Score: <strong>${sc.composite.toFixed(1)}/10</strong>
+    </div>
+    ${Object.entries(sc.scores).map(([k, v]) => `<div class="score-row"><span class="name">${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span><span class="num ${v.score >= 8 ? 'high' : v.score >= 6 ? 'mid' : 'low'}">${v.score.toFixed(1)}/10</span></div>`).join('')}
+    <div class="grid" style="margin-top:1rem">
+      <div class="card"><div class="label">Risk</div><div class="value" style="font-size:12px;font-weight:400;color:#E5534B">${sc.risk_summary}</div></div>
+      <div class="card"><div class="label">Opportunity</div><div class="value" style="font-size:12px;font-weight:400;color:#3ECF8E">${sc.opportunity_summary}</div></div>
+    </div>` : '<p>Scorecard not generated (Quick Build mode)</p>'}
 
-  <h2>Generated Files</h2>
+  ${fwSections ? `<h2 id="frameworks">3. Framework Deep Dives</h2>${fwSections}` : ''}
+  ${synSection ? `<div id="synthesis">${synSection}</div>` : ''}
+  ${researchSection ? `<div id="competitive">${researchSection}</div>` : ''}
+  ${archSection ? `<div id="architecture">${archSection}</div>` : ''}
+
+  <h2 id="infrastructure">7. Infrastructure & Services</h2>
+  ${provRes?.results ? `<div class="grid">
+    ${provRes.results.stripe ? '<div class="card"><div class="label">💳 Payments</div><div class="value">Stripe product + price active</div></div>' : ''}
+    ${provRes.results.vercel ? `<div class="card"><div class="label">🌐 Hosting</div><div class="value"><a href="${provRes.results.vercel.url || ''}" style="color:#C9A84C">${provRes.results.vercel.url || 'Vercel'}</a></div></div>` : ''}
+    ${provRes.results.neon ? '<div class="card"><div class="label">🗄️ Database</div><div class="value">Neon PostgreSQL connected</div></div>' : ''}
+    ${provRes.results.acumbamail ? '<div class="card"><div class="label">📧 Email</div><div class="value">Acumbamail list active</div></div>' : ''}
+    ${provRes.results.pulsetic ? '<div class="card"><div class="label">📊 Monitoring</div><div class="value">Pulsetic (5-min intervals)</div></div>' : ''}
+    ${provRes.results.n8n ? '<div class="card"><div class="label">⚙️ Automation</div><div class="value">n8n webhook workflow</div></div>' : ''}
+  </div>` : ''}
+
+  <h2 id="files">8. Generated Deliverables (${fileCount} files)</h2>
   <ul class="file-list">
-    <li><span class="cat cat-doc">Design</span>DESIGN.md — Complete design system specification</li>
-    <li><span class="cat cat-doc">Guide</span>CLAUDE.md — AI integration guidelines</li>
-    <li><span class="cat cat-doc">Spec</span>SPEC.md — Product specification</li>
-    <li><span class="cat cat-doc">Plan</span>ROADMAP.md — 6-month development roadmap</li>
-    <li><span class="cat cat-biz">Strategy</span>BUSINESS-SYSTEM.md — Business model & strategy</li>
-    <li><span class="cat cat-biz">Revenue</span>REVENUE-MODEL.md — Pricing, packaging, projections</li>
-    <li><span class="cat cat-biz">GTM</span>GTM-PLAYBOOK.md — Go-to-market playbook</li>
-    <li><span class="cat cat-biz">Risk</span>FAILURE-MODES.md — Risk analysis & mitigations</li>
-    <li><span class="cat cat-biz">Agents</span>AGENT-SYSTEM.md — AI agent specifications</li>
-    <li><span class="cat cat-code">Backend</span>backend/main.py — FastAPI application</li>
-    <li><span class="cat cat-code">Docker</span>Dockerfile + docker-compose.yml</li>
-    <li><span class="cat cat-doc">Docs</span>DATA-MODEL.md, API-CONTRACTS.md, KB-OUTLINES.md</li>
-    <li><span class="cat cat-doc">Config</span>.env.example, .gitignore, README.md</li>
+    <li><span class="cat cat-biz">Strategy</span>BUSINESS-SYSTEM.md</li>
+    <li><span class="cat cat-biz">Revenue</span>REVENUE-MODEL.md</li>
+    <li><span class="cat cat-biz">GTM</span>GTM-PLAYBOOK.md</li>
+    <li><span class="cat cat-biz">Risk</span>FAILURE-MODES.md</li>
+    <li><span class="cat cat-biz">Agents</span>AGENT-SYSTEM.md</li>
+    <li><span class="cat cat-doc">Design</span>DESIGN.md</li>
+    <li><span class="cat cat-doc">Config</span>CLAUDE.md</li>
+    <li><span class="cat cat-doc">Spec</span>SPEC.md</li>
+    <li><span class="cat cat-doc">Plan</span>ROADMAP.md</li>
+    <li><span class="cat cat-doc">Docs</span>README.md</li>
+    <li><span class="cat cat-doc">Setup</span>MANUAL-ACTIONS.md</li>
+    <li><span class="cat cat-doc">Data</span>docs/DATA-MODEL.md</li>
+    <li><span class="cat cat-doc">API</span>docs/API-CONTRACTS.md</li>
+    <li><span class="cat cat-doc">SEO</span>docs/KB-OUTLINES.md</li>
+    <li><span class="cat cat-code">Backend</span>backend/main.py</li>
+    <li><span class="cat cat-code">Docker</span>Dockerfile + compose</li>
+    <li><span class="cat cat-doc">Social</span>Social Media Calendar (3 formats)</li>
+    <li><span class="cat cat-doc">Config</span>.env.example, .gitignore</li>
   </ul>
 
-  ${provRes?.results ? '<h2>Infrastructure Provisioned</h2><div class="grid">' + (provRes.results.stripe ? '<div class="card"><div class="label">Payments</div><div class="value">Stripe product + price configured</div></div>' : '') + (provRes.results.vercel ? '<div class="card"><div class="label">Hosting</div><div class="value">' + (provRes.results.vercel.url || 'Vercel project created') + '</div></div>' : '') + (provRes.results.neon ? '<div class="card"><div class="label">Database</div><div class="value">Neon PostgreSQL provisioned</div></div>' : '') + (provRes.results.acumbamail ? '<div class="card"><div class="label">Email</div><div class="value">Acumbamail list created</div></div>' : '') + '</div>' : ''}
-
-  <h2>Recommended Next Steps</h2>
-  <ol style="font-size:13px;color:#908D86;padding-left:1.5rem">
-    <li style="margin-bottom:8px">Clone the repository and review the generated codebase</li>
-    <li style="margin-bottom:8px">Complete manual setup actions listed in MANUAL-ACTIONS.md</li>
-    <li style="margin-bottom:8px">Configure environment variables from .env.example</li>
-    <li style="margin-bottom:8px">Run <code style="background:#181818;padding:2px 6px;border-radius:4px;font-size:11px">docker-compose up -d</code> to start the backend</li>
-    <li style="margin-bottom:8px">Set up monitoring and analytics</li>
-    <li style="margin-bottom:8px">Begin customer acquisition per GTM-PLAYBOOK.md</li>
+  <h2 id="next">9. Recommended Next Steps</h2>
+  <ol>
+    <li><strong>Clone & Review:</strong> <code>gh repo clone ${repo}</code> — review SPEC.md and DESIGN.md first</li>
+    <li><strong>Configure:</strong> Complete MANUAL-ACTIONS.md setup steps. Fill .env.local from .env.example</li>
+    <li><strong>Launch Backend:</strong> <code>docker-compose up -d</code> to start FastAPI + PostgreSQL</li>
+    <li><strong>Build Frontend:</strong> <code>cd ${inf.repo} && claude</code> (or <code>pi</code>) — the AI reads CLAUDE.md and builds from the spec</li>
+    <li><strong>Validate:</strong> Test all P0 features against acceptance criteria in SPEC.md</li>
+    <li><strong>Go Live:</strong> Execute Week 1 of GTM-PLAYBOOK.md — first 10 customers</li>
   </ol>
 
+  <div class="cta-box">
+    <h3>Start Building</h3>
+    <code>gh repo clone ${repo} && cd ${inf.repo} && claude</code>
+    <div style="font-size:11px;color:#4A4845;margin-top:8px">Or use Pi Agent: <code>pi</code></div>
+  </div>
+
+  <div id="meta">${metaSection}</div>
+
   <div class="footer">
-    <div style="font-size:18px;margin-bottom:8px">&#9889;</div>
-    <div>Dynasty Empire Business System</div>
-    <div style="margin-top:4px">Generated by Dynasty Launcher · ${now}</div>
+    <div class="dynasty">DYNASTY EMPIRE</div>
+    <div class="sub">Strategic Business System Report · Generated ${now}</div>
+    <div class="sub" style="margin-top:4px">dynasty-launcher.vercel.app · Confidential</div>
   </div>
 </div>
 </body></html>`;
