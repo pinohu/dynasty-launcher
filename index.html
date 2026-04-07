@@ -417,12 +417,14 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 @media(max-width:640px){.lp-section{padding:3rem 1.25rem}.lp-hero{padding:4rem 1.25rem 2rem}.lp-features,.lp-steps,.lp-pricing{grid-template-columns:1fr}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 </head>
 <body>
 <div class="page">
   <div class="logo" id="builder-header" style="display:none">
     <div class="lm">⚡</div>
     <div><div class="lt">Dynasty Business System Launcher</div><div class="ls">Describe your project — everything else is inferred and built automatically</div></div>
+    <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:60px">Sign In</button>
     <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">📊</button>
     <button class="lset" id="settings-btn" title="Settings">⚙</button>
   </div>
@@ -556,6 +558,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
     <div class="lp-footer">
       <div class="brand">DYNASTY EMPIRE</div>
       <div class="links">
+        <a href="#" onclick="event.preventDefault();CLERK_INSTANCE?.openSignIn()">Sign In</a>
         <a href="https://github.com/pinohu/dynasty-launcher" target="_blank">GitHub</a>
         <a href="#lp-pricing">Pricing</a>
         <a href="mailto:ikeohu@dynastyempire.com">Contact</a>
@@ -1053,6 +1056,84 @@ const FU='https://claude-inbox.audreysplace.place/message';
 
 // GitHub token is server-side — all calls go through /api/github proxy
 let ORG=localStorage.getItem('dynasty_gh_org')||ORG_DEFAULT;
+
+// ── Clerk Authentication ──────────────────────────────────────────────────────
+let CLERK_INSTANCE = null;
+let CLERK_USER = null;
+
+async function initClerk() {
+  try {
+    const configResp = await fetch('/api/auth?action=config');
+    const config = await configResp.json();
+    if (!config.ok || !config.publishableKey) {
+      console.warn('Clerk not configured — running in open access mode');
+      return;
+    }
+    
+    const clerk = new window.Clerk(config.publishableKey);
+    await clerk.load();
+    CLERK_INSTANCE = clerk;
+    
+    if (clerk.user) {
+      CLERK_USER = clerk.user;
+      updateAuthUI();
+    }
+    
+    // Listen for auth state changes
+    clerk.addListener((event) => {
+      CLERK_USER = clerk.user;
+      updateAuthUI();
+    });
+  } catch (e) {
+    console.warn('Clerk init failed:', e.message, '— running in open access mode');
+  }
+}
+
+function updateAuthUI() {
+  const authBtn = document.getElementById('auth-btn');
+  if (!authBtn) return;
+  
+  if (CLERK_USER) {
+    const name = CLERK_USER.firstName || CLERK_USER.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'User';
+    const avatar = CLERK_USER.imageUrl;
+    authBtn.innerHTML = avatar 
+      ? `<img src="${avatar}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle" /> ${name}`
+      : name;
+    authBtn.onclick = () => CLERK_INSTANCE?.openUserProfile();
+  } else {
+    authBtn.innerHTML = 'Sign In';
+    authBtn.onclick = () => CLERK_INSTANCE?.openSignIn();
+  }
+}
+
+async function requireAuth() {
+  if (!CLERK_INSTANCE) return true; // No Clerk = open access
+  if (CLERK_USER) return true; // Already signed in
+  
+  // Show sign-in modal
+  return new Promise((resolve) => {
+    CLERK_INSTANCE.openSignIn({
+      afterSignInUrl: window.location.href,
+      afterSignUpUrl: window.location.href,
+    });
+    
+    // Poll for auth completion
+    const check = setInterval(() => {
+      if (CLERK_INSTANCE.user) {
+        clearInterval(check);
+        CLERK_USER = CLERK_INSTANCE.user;
+        updateAuthUI();
+        resolve(true);
+      }
+    }, 500);
+    
+    // Timeout after 5 minutes
+    setTimeout(() => { clearInterval(check); resolve(false); }, 300000);
+  });
+}
+
+// Initialize Clerk on page load
+initClerk();
 // ── Safe JSON Parser (repairs truncated AI responses) ─────────────────────────
 function safeJsonParse(str) {
   // First try direct parse
@@ -1772,7 +1853,11 @@ function isWhiteLabel() { return localStorage.getItem('dynasty_white_label') ===
 function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 
 // ── Builder Entry + Payment Flow ────────────────────────────────────
-function enterBuilder() {
+async function enterBuilder() {
+  // Require authentication before entering builder
+  const authed = await requireAuth();
+  if (!authed) return;
+  
   document.getElementById('landing').style.display = 'none';
   document.getElementById('builder-header').style.display = 'flex';
   document.getElementById('mode-screen').style.display = 'block';
@@ -1827,6 +1912,18 @@ function getBuildsRemaining() {
 function recordBuildUsed() {
   const used = parseInt(localStorage.getItem('dynasty_builds_used') || '0');
   localStorage.setItem('dynasty_builds_used', (used + 1).toString());
+  
+  // Also update Clerk user metadata if signed in
+  if (CLERK_USER?.id) {
+    fetch('/api/auth?action=update_user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: CLERK_USER.id,
+        metadata: { builds_used: used + 1, last_build: new Date().toISOString(), plan: 'free' }
+      })
+    }).catch(() => {}); // fire and forget
+  }
 }
 
 // Mode / View selection
