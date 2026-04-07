@@ -1188,7 +1188,7 @@ Generate a complete architecture blueprint. Return ONLY valid JSON (no markdown,
 }
 
 Be specific. Real table names. Real field names. Real API paths. This is the contract.`,
-      'claude-sonnet-4-20250514', 8000
+      'llama-3.3-70b-versatile', 8000
     );
 
     const match = bp.match(/\{[\s\S]*\}/);
@@ -1295,7 +1295,7 @@ Generate the design contract. Return ONLY valid JSON:
 }
 
 Be pixel-precise. Real hex values. Real font names (from Google Fonts). This contract is law.`,
-      'claude-haiku-4-5-20251001', 5000
+      'gemini-2.0-flash', 5000
     );
 
     const match = dc.match(/\{[\s\S]*\}/);
@@ -2531,7 +2531,7 @@ async function initReviewModels() {
 }
 
 async function aiRawWithModel(prompt, modelId, max = 4000) {
-  const fallbackModels = [modelId, 'claude-sonnet-4-20250514', 'gpt-4o'];
+  const fallbackModels = [modelId, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
     try {
@@ -2871,7 +2871,7 @@ Your task: Write a devastating critique. Cover:
 Be specific. Use numbers. Reference real market dynamics. No encouragement. Pure destruction.
 
 Return 4-5 paragraphs of brutal, specific critique.`,
-      'claude-sonnet-4-20250514', 2000
+      'llama-3.3-70b-versatile', 2000
     );
   } catch {
     devilsCritique = 'Devil\'s advocate analysis unavailable.';
@@ -3098,7 +3098,7 @@ Rules:
 ${round >= maxRounds ? 'This is the FINAL round. Give your honest final assessment: is this business viable? What is the single biggest remaining risk?' : ''}
 
 Return 3-4 paragraphs. If the idea has become genuinely strong, your critique should be shorter and more targeted.`,
-        'claude-sonnet-4-20250514', 2000
+        'llama-3.3-70b-versatile', 2000
       );
     } catch {
       newCritique = 'Devil\'s advocate unavailable for this round.';
@@ -3780,16 +3780,50 @@ async function parseDelimited(text,keys){
   }
   return result;
 }
+// ── Quality Validation: ensures free model output meets consulting-grade thresholds ──
+function validateOutputQuality(result, keys, maxTokens) {
+  if (!result || typeof result !== 'object') return false;
+  
+  const minCharsPerKey = Math.max(200, maxTokens / 4); // Each section should be at least 25% of token budget in chars
+  let totalChars = 0;
+  let emptyKeys = 0;
+  let shortKeys = 0;
+  
+  for (const key of keys) {
+    const val = result[key] || '';
+    totalChars += val.length;
+    if (!val || val.length < 50) emptyKeys++;
+    else if (val.length < minCharsPerKey * 0.3) shortKeys++; // Less than 30% of expected length
+    
+    // Check for placeholder text (signs of lazy generation)
+    if (val.includes('[TODO]') || val.includes('[TBD]') || val.includes('[Insert') || val.includes('[Fill in')) {
+      shortKeys++; // Penalize placeholder text
+    }
+  }
+  
+  // Quality passes if:
+  // 1. No more than 1 empty key
+  // 2. No more than 30% of keys are short
+  // 3. Total output is at least 40% of expected (maxTokens * 3 chars/token)
+  const expectedMinChars = maxTokens * 1.2; // ~1.2 chars per token minimum
+  if (emptyKeys > 1) return false;
+  if (shortKeys > keys.length * 0.3) return false;
+  if (totalChars < expectedMinChars) return false;
+  
+  return true;
+}
+
 async function ai(prompt, keys, max = 8000, phaseId = null) {
   // Cost-optimized model selection per phase
+  // 100x Cost Mode: FREE models first, quality-validated with paid fallback
   const PHASE_MODELS = {
-    'g1': 'claude-haiku-4-5-20251001',     // Design system — structured template fill
-    'g2': 'claude-haiku-4-5-20251001',     // Product docs — detailed prompts compensate
-    'g3': 'claude-haiku-4-5-20251001',     // Tech docs — structured specs
-    'g4a': 'claude-sonnet-4-20250514',     // Business strategy — needs analytical depth
-    'g4b': 'claude-haiku-4-5-20251001',    // Agent system — structured fill
-    'g5': 'claude-sonnet-4-20250514',      // Backend code — code quality matters
-    'g7': 'claude-haiku-4-5-20251001',     // Frontend — structured code
+    'g1': 'gemini-2.0-flash',              // Design system — FREE (structured template)
+    'g2': 'llama-3.3-70b-versatile',       // Product docs — FREE (Groq, excellent quality)
+    'g3': 'gemini-2.0-flash',              // Tech docs — FREE (structured specs)
+    'g4a': 'llama-3.3-70b-versatile',      // Business strategy — FREE (Groq Llama 70B is excellent for analysis)
+    'g4b': 'gemini-2.0-flash',             // Agent system — FREE
+    'g5': 'llama-3.3-70b-versatile',       // Backend code — FREE (Llama 70B writes good Python)
+    'g7': 'gemini-2.0-flash',              // Frontend — FREE
   };
   
   let model;
@@ -3803,15 +3837,27 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
     model = V2_MODEL;
   }
   
-  const fallbackModels = [model, 'claude-haiku-4-5-20251001', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
     try {
       if (attempt > 0) console.warn(`AI fallback: trying ${useModel} (attempt ${attempt + 1})`);
+      // Quality primer: help free models follow delimiter format perfectly
+      const isFreeModel = useModel.includes('llama') || useModel.includes('gemini') || useModel.includes('mixtral') || useModel.includes('gemma');
+      const qualityPrimer = isFreeModel ? `CRITICAL FORMATTING RULES:
+1. Use EXACTLY the ---BEGIN:key--- and ---END:key--- delimiters shown below
+2. Fill EVERY section with substantial, specific content (500+ words per section minimum)
+3. Use real numbers, real names, real data — never use [placeholder] or [TBD]
+4. Write as a senior consultant presenting to a board of directors
+5. Include tables with | pipes | and data in every row
+6. No preamble, no "Here is the content", no markdown backticks wrapping the output
+7. Start your response DIRECTLY with the first ---BEGIN: delimiter
+
+` : '';
       const r = await fetch('/api/ai', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: useModel, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
+        body: JSON.stringify({ model: useModel, max_tokens: max, messages: [{ role: 'user', content: qualityPrimer + prompt }] })
       });
       if (r.status === 429) {
         // Rate limited — wait and try next model
@@ -3848,7 +3894,29 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
         await new Promise(r => setTimeout(r, 2000));
         continue;
       }
-      return parseDelimited(t, keys);
+      const result = parseDelimited(t, keys);
+      // ── Quality Validation: check output meets minimum thresholds ──
+      const qualityOk = validateOutputQuality(result, keys, max);
+      if (qualityOk) return result;
+      
+      // Quality check failed — retry with Haiku (cheap but reliable)
+      console.warn(`Quality check failed on ${useModel}, retrying with Haiku...`);
+      try {
+        const qr = await fetch('/api/ai', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: max, messages: [{ role: 'user', content: prompt }] })
+        });
+        if (qr.ok) {
+          const qd = await qr.json();
+          if (qd._cost?.estimated_cost) V2_BUILD_COST += qd._cost.estimated_cost;
+          const qt = qd.content?.find(b => b.type === 'text')?.text || '';
+          if (qt) {
+            const qResult = parseDelimited(qt, keys);
+            if (validateOutputQuality(qResult, keys, max)) return qResult;
+          }
+        }
+      } catch {}
+      return result; // Return original even if quality is low (better than nothing)
     } catch(e) {
       if (attempt < fallbackModels.length - 1) {
         console.warn(`Error on ${useModel}: ${e.message}, falling back...`);
@@ -3863,13 +3931,14 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
 
 async function aiRaw(prompt, max = 4000, costTier = 'standard') {
   // Cost-optimized model selection
+  // 100x Cost Mode: FREE → FREE → cheap fallback
   const COST_MODELS = {
-    premium: V2_MODEL_MAP['strategy'] || V2_MODEL, // User-selected model for critical phases
-    standard: 'claude-haiku-4-5-20251001',          // Cheap but capable for document generation
-    budget: 'gemini-2.0-flash',                     // Free for boilerplate and bonus content
+    premium: 'llama-3.3-70b-versatile',             // FREE (Groq) — best free model for analysis
+    standard: 'gemini-2.0-flash',                    // FREE (Google) — fast and capable
+    budget: 'gemini-2.0-flash',                      // FREE (Google) — for boilerplate
   };
   const model = COST_MODELS[costTier] || COST_MODELS.standard;
-  const fallbackModels = [model, 'claude-haiku-4-5-20251001', 'gemini-2.0-flash', 'llama-3.3-70b-versatile'];
+  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
@@ -3893,7 +3962,8 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
         document.getElementById('cost-val').textContent = '$' + V2_BUILD_COST.toFixed(4);
       }
       const t = d.content?.find(b => b.type === 'text')?.text || '';
-      if (t) return t;
+      if (t && t.length > 100) return t; // Quality gate: must be >100 chars
+      if (t && t.length > 0 && attempt >= fallbackModels.length - 1) return t; // Last resort: accept anything
       if (attempt < fallbackModels.length - 1) { await new Promise(r => setTimeout(r, 2000)); continue; }
       return '';
     } catch(e) {
