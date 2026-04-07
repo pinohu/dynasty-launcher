@@ -6942,53 +6942,69 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
         }
       }
 
-      // ── 7. Remove template branding (SaaS Boilerplate badges, sponsor logos) ──
-      // SaaS boilerplate templates include "Demo of SaaS Boilerplate" badges
-      // and links to nextjs-boilerplate.com — these must be stripped.
-      const brandingFiles = {
+      // ── 7. COMPLETE TEMPLATE CLEANUP — one pass, everything fixed ──────────
+      // Nullify ALL boilerplate components
+      const nullComponents = {
         'src/components/DemoBadge.tsx': 'export const DemoBadge = () => null;\n',
         'src/templates/DemoBanner.tsx': 'export const DemoBanner = () => null;\n',
+        'src/templates/Sponsors.tsx': 'export const Sponsors = () => null;\n',
+        'src/features/sponsors/SponsorLogos.tsx': 'export const SponsorLogos = () => null;\n',
+        'src/features/landing/LogoCloud.tsx': "import React from 'react';\nexport const LogoCloud = ({ children, text }: { children?: React.ReactNode; text?: string }) => null;\n",
+        'src/features/landing/StickyBanner.tsx': "import React from 'react';\nexport const StickyBanner = ({ children }: { children?: React.ReactNode }) => null;\n",
       };
-      for (const [fpath, replacement] of Object.entries(brandingFiles)) {
-        files[fpath] = replacement;
-      }
-      // Strip boilerplate references from ALL generated files
-      for (const [fpath, content] of Object.entries(files)) {
-        if (typeof content === 'string' && (
-          content.includes('nextjs-boilerplate.com') ||
-          content.includes('SaaS Boilerplate') ||
-          content.includes('Demo of SaaS')
-        )) {
-          files[fpath] = content
-            .replace(/https?:\/\/[^\s"']*nextjs-boilerplate\.com[^\s"']*/g, '#')
-            .replace(/Demo of SaaS Boilerplate/g, inf.name || 'Dashboard')
-            .replace(/SaaS Boilerplate/g, inf.name || 'Platform')
-            .replace(/SaaS Template/g, inf.name || 'Platform');
-        }
-      }
+      for (const [fp, code] of Object.entries(nullComponents)) files[fp] = code;
 
-      // ── 8. Override template i18n translations with project-specific text ──
-      // The SaaS boilerplate has en.json/fr.json with "SaaS Template" everywhere
-      const translationOverrides = {
-        'meta_title': `${inf.name} - ${inf.type_label || 'Platform'}`,
-        'meta_description': desc.slice(0, 160),
-        'title': `The <important>${inf.name}</important> platform to ${(desc.match(/that\s+(.{20,80}?)[\.\,]/)||[])[1] || 'solve your problem with ease'}.`,
-        'description': desc.slice(0, 200),
-        'primary_button': 'Get Started',
-        'secondary_button': 'Learn More',
-        'section_title': `Unlock the Full Potential of ${inf.name}`,
-        'section_description': desc.slice(0, 150),
+      // Fix AppConfig.ts
+      files['src/utils/AppConfig.ts'] = (files['src/utils/AppConfig.ts'] || '').replace(/name:\s*['"]SaaS Template['"]/, `name: '${(inf.name||'App').replace(/'/g, "\\'")}'`) || files['src/utils/AppConfig.ts'];
+
+      // Fix Logo component
+      files['src/templates/Logo.tsx'] = `export const Logo = () => <span className="text-xl font-bold">${(inf.name||'App').replace(/'/g, "\\'")}</span>;\n`;
+
+      // Comprehensive translation override — ALL 27 keys
+      const projDesc = desc.slice(0, 200);
+      const fullTranslation = {
+        Index: { meta_title: `${inf.name} - ${inf.type_label||'Platform'}`, meta_description: projDesc },
+        Navbar: { sign_in: 'Sign In', sign_up: 'Get Started', product: 'Product', docs: 'Docs', blog: 'Blog', community: 'Support', company: 'About' },
+        Hero: { follow_twitter: `${inf.name} — ${inf.type_label||''}`, title: `The <important>${inf.name}</important> — ${projDesc.slice(0, 80)}.`, description: projDesc, primary_button: 'Get Started', secondary_button: 'Learn More' },
+        Sponsors: { title: 'Powered By' },
+        Features: { section_subtitle: 'Features', section_title: `Why Choose ${inf.name}`, section_description: projDesc.slice(0, 150), feature1_title: 'Fast & Reliable', feature2_title: 'Secure', feature3_title: 'Scalable', feature4_title: 'TypeScript', feature5_title: 'Dashboard', feature6_title: 'API Access', feature_description: projDesc.slice(0, 120) },
+        Pricing: { section_subtitle: 'Pricing', section_title: 'Simple, Transparent Pricing', section_description: 'Start free, scale as you grow.', button_text: 'Get Started' },
+        PricingPlan: { free_plan_name: 'Free', premium_plan_name: 'Pro', enterprise_plan_name: 'Enterprise', free_plan_description: 'For individuals', premium_plan_description: 'For growing teams', enterprise_plan_description: 'For large organizations', feature_team_member: '{number} Team Members', feature_website: '{number} Projects', feature_storage: '{number} GB Storage', feature_transfer: '{number} TB Transfer', feature_email_support: 'Email Support', plan_interval_month: 'month', plan_interval_year: 'year', next_renew_date: 'Your subscription renews on {date}' },
+        FAQ: { question: `What does ${inf.name} do?`, answer: projDesc },
+        CTA: { title: 'Ready to get started?', description: `Start using ${inf.name} today. No credit card required.`, button_text: 'Start Free Trial' },
+        Footer: { product: 'Product', docs: 'Docs', blog: 'Blog', community: 'Support', company: 'About', terms_of_service: 'Terms of Service', privacy_policy: 'Privacy Policy', footer_text: '© {year} {name}. All rights reserved.' },
+        ProtectFallback: { not_enough_permission: 'You do not have permission to perform this action' },
+        SignIn: { meta_title: 'Sign in', meta_description: `Sign in to your ${inf.name} account.` },
+        SignUp: { meta_title: 'Sign up', meta_description: `Create your ${inf.name} account.` },
+        DashboardLayout: { home: 'Home', todos: 'Tasks', members: 'Members', billing: 'Billing', settings: 'Settings' },
+        Dashboard: { meta_title: `${inf.name} Dashboard`, meta_description: `Manage your ${inf.name} account.` },
+        DashboardIndex: { title_bar: 'Dashboard', title_bar_description: `Welcome to ${inf.name}`, message_state_title: 'Get started', message_state_description: `Set up your ${inf.name} account to get started.`, message_state_button: 'View Docs', message_state_alternative: '', max_message: '' },
+        UserProfile: { title_bar: 'User Profile', title_bar_description: 'Manage your profile' },
+        OrganizationProfile: { title_bar: 'Organization', title_bar_description: 'Manage your organization' },
+        Billing: { title_bar: 'Billing', title_bar_description: 'Manage billing and subscription', current_section_title: 'Current Plan', current_section_description: 'Adjust your plan', manage_subscription_button: 'Manage Subscription' },
+        BillingOptions: { current_plan: 'Current Plan', upgrade_plan: 'Get Started' },
+        CheckoutConfirmation: { title_bar: 'Payment Confirmation', message_state_title: 'Payment successful', message_state_description: 'Your payment has been processed. Thank you!', message_state_button: 'Go to Billing' },
+        DataTable: { no_results: 'No results.' },
+        Todos: { title_bar: 'Tasks', title_bar_description: 'Manage your tasks', add_todo_button: 'New task' },
+        TodoTableColumns: { open_menu: 'Open menu', edit: 'Edit', delete: 'Delete', title_header: 'Title', message_header: 'Description', created_at_header: 'Created' },
+        AddTodo: { title_bar: 'Add Task', add_todo_section_title: 'Create a new task', add_todo_section_description: 'Fill in the details below' },
+        EditTodo: { title_bar: 'Edit Task', edit_todo_section_title: 'Modify task', edit_todo_section_description: 'Update the details below' },
+        TodoForm: { title_label: 'Title', title_description: 'Enter a title.', message_title: 'Description', message_description: 'Enter a description.', submit_button: 'Submit' },
       };
-      for (const locale of ['src/locales/en.json', 'src/locales/fr.json']) {
-        if (files[locale]) {
-          try {
-            const tr = JSON.parse(files[locale]);
-            if (tr.Index) Object.assign(tr.Index, { meta_title: translationOverrides.meta_title, meta_description: translationOverrides.meta_description });
-            if (tr.Hero) Object.assign(tr.Hero, { title: translationOverrides.title, description: translationOverrides.description, primary_button: translationOverrides.primary_button, secondary_button: translationOverrides.secondary_button });
-            if (tr.Features) Object.assign(tr.Features, { section_title: translationOverrides.section_title, section_description: translationOverrides.section_description });
-            if (tr.Dashboard) Object.assign(tr.Dashboard, { meta_title: `${inf.name} Dashboard` });
-            files[locale] = JSON.stringify(tr, null, 2);
-          } catch {}
+      files['src/locales/en.json'] = JSON.stringify(fullTranslation, null, 2);
+      files['src/locales/fr.json'] = JSON.stringify(fullTranslation, null, 2);
+
+      // Global find-and-replace across ALL files — catch anything the above missed
+      for (const [fpath, content] of Object.entries(files)) {
+        if (typeof content !== 'string') continue;
+        let c = content;
+        if (c.includes('nextjs-boilerplate.com') || c.includes('SaaS Boilerplate') || c.includes('SaaS Template') || c.includes('Ixartz')) {
+          c = c.replace(/https?:\/\/[^\s"')\]]*nextjs-boilerplate[^\s"')\]]*/g, '#');
+          c = c.replace(/SaaS Boilerplate/g, inf.name || 'Platform');
+          c = c.replace(/SaaS Template/g, inf.name || 'Platform');
+          c = c.replace(/@?Ixartz/g, inf.name || 'Platform');
+          c = c.replace(/Demo of SaaS[^"']*/g, inf.name || 'Platform');
+          files[fpath] = c;
         }
       }
     })();
