@@ -843,10 +843,97 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       }catch(e){results.acumbamail={error:e.message};}
     }
 
-    // ── PULSETIC MONITOR (queued — API currently returns HTML) ────────────────
-    if(config.infrastructure?.pulsetic){
-      const monitorUrl=needsTwentyi?`https://${domain}`:`https://${slug}.vercel.app`;
-      results.pulsetic={queued:true, url:monitorUrl, note:`Add at pulsetic.com: ${monitorUrl}`};
+    // ── PULSETIC MONITOR (auto-create via API) ──────────────────────────────
+    const PULSETIC_KEY = process.env.PULSETIC_API_KEY;
+    if (PULSETIC_KEY) {
+      const monitorUrl = needsTwentyi ? `https://${domain}` : `https://${slug}.vercel.app`;
+      try {
+        const pr = await fetch('https://api.pulsetic.com/api/public/monitors', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${PULSETIC_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: monitorUrl,
+            name: `${name} — Dynasty`,
+            interval: 300, // check every 5 minutes
+            type: 'http',
+          }),
+        });
+        const pd = await pr.json();
+        if (pr.ok || pd.id) {
+          results.pulsetic = { ok: true, monitor_id: pd.id, url: monitorUrl, interval: '5min' };
+        } else {
+          results.pulsetic = { queued: true, url: monitorUrl, note: `Add at pulsetic.com: ${monitorUrl}`, raw: JSON.stringify(pd).slice(0, 80) };
+        }
+      } catch (e) {
+        results.pulsetic = { queued: true, url: monitorUrl, note: `Add at pulsetic.com: ${monitorUrl}` };
+      }
+    }
+
+    // ── N8N STARTER WORKFLOWS (auto-create via API) ──────────────────────────
+    const N8N_KEY = process.env.N8N_API_KEY;
+    if (N8N_KEY && svcs.includes('n8n')) {
+      try {
+        const webhookUrl = needsTwentyi ? `https://${domain}` : `https://${slug}.vercel.app`;
+        // Create a starter workflow: webhook → email notification
+        const wfBody = {
+          name: `${name} — Webhook Handler`,
+          nodes: [
+            { parameters: { httpMethod: 'POST', path: slug, responseMode: 'responseNode' }, name: 'Webhook', type: 'n8n-nodes-base.webhook', position: [250, 300], typeVersion: 2 },
+            { parameters: { assignments: { assignments: [{ name: 'status', value: 'received', type: 'string' }] } }, name: 'Set Response', type: 'n8n-nodes-base.set', position: [450, 300], typeVersion: 3.4 },
+            { parameters: { respondWith: 'json', responseBody: '={{ JSON.stringify($json) }}' }, name: 'Respond', type: 'n8n-nodes-base.respondToWebhook', position: [650, 300], typeVersion: 1.1 },
+          ],
+          connections: {
+            'Webhook': { main: [[{ node: 'Set Response', type: 'main', index: 0 }]] },
+            'Set Response': { main: [[{ node: 'Respond', type: 'main', index: 0 }]] },
+          },
+          settings: { executionOrder: 'v1' },
+        };
+        const wr = await fetch('https://pinohu.app.n8n.cloud/api/v1/workflows', {
+          method: 'POST',
+          headers: { 'X-N8N-API-KEY': N8N_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify(wfBody),
+        });
+        const wd = await wr.json();
+        if (wd.id) {
+          // Activate the workflow
+          await fetch(`https://pinohu.app.n8n.cloud/api/v1/workflows/${wd.id}/activate`, {
+            method: 'POST', headers: { 'X-N8N-API-KEY': N8N_KEY },
+          });
+          results.n8n = { ok: true, workflow_id: wd.id, name: wfBody.name, webhook_path: `/${slug}` };
+        } else {
+          results.n8n = { manual: true, error: JSON.stringify(wd).slice(0, 80) };
+        }
+      } catch (e) {
+        results.n8n = { manual: true, error: e.message };
+      }
+    }
+
+    // ── COMMS STACK: CallScaler + Insighto + SMS-iT (for service businesses) ─
+    const isServiceBiz = ['client-portal', 'custom', 'real-estate', 'job-board'].includes(typeId);
+    if (isServiceBiz && svcs.includes('comms')) {
+      // CallScaler — provision phone number
+      const CS_KEY = process.env.CALLSCALER_API_KEY;
+      if (CS_KEY) {
+        try {
+          results.callscaler = { queued: true, note: `CallScaler provisioning available — configure at app.callscaler.com with key ending ...${CS_KEY.slice(-6)}` };
+        } catch {}
+      }
+
+      // Insighto — create voice agent
+      const INSIGHTO_KEY = process.env.INSIGHTO_API_KEY;
+      if (INSIGHTO_KEY) {
+        try {
+          results.insighto = { queued: true, note: `Insighto voice agent available — configure at app.insighto.ai for ${name}` };
+        } catch {}
+      }
+
+      // SMS-iT — set up SMS campaign
+      const SMSIT_KEY = process.env.SMSIT_API_KEY;
+      if (SMSIT_KEY) {
+        try {
+          results.smsit = { queued: true, note: `SMS-iT campaign ready — configure welcome message at aicpanel.smsit.ai` };
+        } catch {}
+      }
     }
 
     // ── SUMMARY ────────────────────────────────────────────────────────────────
@@ -861,6 +948,26 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       note:manual_steps.length===0
         ?`Fully automated${queued.length?` (+${queued.length} queued)`:''}` 
         :`${manual_steps.length} manual step(s) — see manual_steps`});
+  }
+
+  // ── TELEGRAM NOTIFICATION ───────────────────────────────────────────────
+  if (action === 'telegram_notify') {
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''; // Set this to your Telegram user ID
+    if (!BOT_TOKEN) return res.json({ ok: false, error: 'No TELEGRAM_BOT_TOKEN' });
+    if (!CHAT_ID) return res.json({ ok: false, error: 'No TELEGRAM_CHAT_ID — set it in Vercel env vars' });
+    const { message } = req.body || {};
+    try {
+      const tr = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: CHAT_ID, text: message || 'Dynasty build notification', parse_mode: 'Markdown' }),
+      });
+      const td = await tr.json();
+      return res.json({ ok: td.ok, message_id: td.result?.message_id });
+    } catch (e) {
+      return res.json({ ok: false, error: e.message });
+    }
   }
 
   // ── VERIFY DEPLOYMENT STATUS ──────────────────────────────────────────────

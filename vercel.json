@@ -28,6 +28,9 @@
     },
     "api/flags.js": {
       "maxDuration": 10
+    },
+    "api/research.js": {
+      "maxDuration": 60
     }
   },
   "headers": [

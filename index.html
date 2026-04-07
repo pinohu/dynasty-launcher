@@ -1430,12 +1430,56 @@ function toggleFramework(el, fw) {
   }
 }
 
+// ── Pre-Build Research (Exa.ai + NeuronWriter + Outscraper) ─────────────────
+let RESEARCH_DATA = null;
+
+async function runPreBuildResearch(niche, location) {
+  try {
+    const r = await fetch('/api/research', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'full_research', niche, location: location || 'United States' }),
+    });
+    const d = await r.json();
+    if (d.sources?.length) {
+      RESEARCH_DATA = d;
+      console.log(`Research: ${d.sources.join(', ')} — ${d.competitors?.length || 0} competitors, ${d.summary_tokens || 0} tokens`);
+    }
+    return d;
+  } catch (e) {
+    console.warn('Research failed:', e.message);
+    return null;
+  }
+}
+
+// ── Telegram Build Notification ──────────────────────────────────────────────
+async function sendTelegramNotification(message) {
+  try {
+    const r = await fetch('/api/provision', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'telegram_notify', message }),
+    });
+    return (await r.json()).ok;
+  } catch { return false; }
+}
+
+// ── PostHog Analytics Snippet (injected into generated landing pages) ────────
+function getPostHogSnippet() {
+  return `<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_por7UBqX7fRWPXACWt386vLfVc4fpDVffFy3tHsxvErk',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only'})</script>`;
+}
+
 async function scoreIdea() {
   const desc = document.getElementById('project-desc').value.trim();
   if (!desc || !INFERRED) return;
   const btn = document.getElementById('score-btn');
-  btn.disabled = true; btn.textContent = 'Analyzing with ' + V2_FRAMEWORKS.length + ' frameworks…';
-  showLoadingOverlay('Scoring viability...', `Analyzing with ${V2_FRAMEWORKS.length} frameworks: ${V2_FRAMEWORKS.join(', ')}`);
+  btn.disabled = true; btn.textContent = 'Researching market data…';
+  showLoadingOverlay('Researching market...', 'Pulling competitor data, market size, and SEO signals from Exa.ai + NeuronWriter');
+
+  // Run pre-build research to get real market data
+  const research = await runPreBuildResearch(INFERRED.name || desc.slice(0, 50), INFERRED.location || 'United States');
+  const researchContext = research?.summary || '';
+
+  btn.textContent = 'Analyzing with ' + V2_FRAMEWORKS.length + ' frameworks…';
+  showLoadingOverlay('Scoring viability...', `Analyzing with ${V2_FRAMEWORKS.length} frameworks${research?.sources?.length ? ' + ' + research.sources.join(', ') + ' data' : ''}`);
 
   const fwList = V2_FRAMEWORKS.map(f => ({
     'blue-ocean': 'Blue Ocean Hungry Market Framework (Dynasty original): Score market hunger 1-10, blue ocean index 1-10, competitive void analysis, demand signal validation',
@@ -1450,6 +1494,7 @@ async function scoreIdea() {
 
 PROJECT: ${desc}
 INFERRED CONFIG: ${JSON.stringify(INFERRED, null, 2)}
+${researchContext ? `\nREAL MARKET DATA (from live research — use these numbers, cite them):\n${researchContext}` : ''}
 
 FRAMEWORKS TO APPLY:
 ${fwList}
@@ -2414,6 +2459,19 @@ async function proceedToBuild(desc) {
 
   // ── Record to Memory (Improvement 5) ────────────────────────────────────
   await recordBuild(INFERRED, { files: PRGS.filter(p => p.st === 'ok').map(p => p.id) }, errors);
+
+  // ── Telegram Build Notification ────────────────────────────────────────
+  const buildDur = ((Date.now() - BUILD_START_TIME) / 1000).toFixed(0);
+  const okCount = PRGS.filter(p => p.st === 'ok').length;
+  const errCount = errors.length;
+  await sendTelegramNotification(
+    `🏗 Dynasty Build Complete\n\n` +
+    `📦 ${INFERRED.name}\n` +
+    `✅ ${okCount} phases completed${errCount ? ` · ❌ ${errCount} errors` : ''}\n` +
+    `💰 $${V2_BUILD_COST.toFixed(4)} · ⏱ ${buildDur}s\n` +
+    `🔗 https://github.com/${ORG}/${INFERRED.repo}\n` +
+    `🌐 https://${INFERRED.repo}.vercel.app`
+  );
 }
 
 // ── INPUT METHODS ────────────────────────────────────────────────────────────
@@ -3050,6 +3108,10 @@ function cx(desc,inf){
   // CLAUDE.md Read-Back (Improvement 6) — inject existing project context
   if (EXISTING_CLAUDE_MD) {
     base += `\n\n## Existing CLAUDE.md (iterative update — preserve these conventions):\n${EXISTING_CLAUDE_MD.slice(0, 2000)}`;
+  }
+  // Research data (real market intelligence from Exa.ai, NeuronWriter, Outscraper)
+  if (RESEARCH_DATA?.summary) {
+    base += `\n\n${RESEARCH_DATA.summary.slice(0, 1500)}`;
   }
   return base;
 }
@@ -4327,7 +4389,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
 <a class="secondary" href="https://github.com/${ORG}/${inf.repo}/blob/main/SPEC.md">SPEC</a>
 </div>
 <div class="footer">Built by Dynasty Launcher · gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</div>
-</div></body></html>`;
+</div>${getPostHogSnippet()}</body></html>`;
       }
 
       const fl = Object.entries(files);
