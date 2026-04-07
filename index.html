@@ -1604,13 +1604,34 @@ async function applySelectedRefinements() {
 
 // ── Multi-Model Pivot Review Pipeline ──────────────────────────────────
 
-const REVIEW_MODELS = [
+// Review models — ranked by preference. Pipeline filters to only those with working keys.
+const REVIEW_MODELS_POOL = [
   { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4', icon: '🟣', color: '#A855F7', weight: 1.5 },
   { id: 'gpt-4o', label: 'GPT-4o', icon: '🟢', color: '#22C55E', weight: 1.3 },
   { id: 'deepseek-chat', label: 'DeepSeek V3', icon: '🟠', color: '#F97316', weight: 1.1 },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', icon: '🔷', color: '#4285F4', weight: 1.0 },
   { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', icon: '🟤', color: '#A16207', weight: 0.9 },
   { id: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B', icon: '🔵', color: '#3B82F6', weight: 0.8 },
+  { id: 'mistral-large-latest', label: 'Mistral Large', icon: '🟡', color: '#FACC15', weight: 1.0 },
+  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', icon: '💎', color: '#34A853', weight: 0.7 },
 ];
+let REVIEW_MODELS = REVIEW_MODELS_POOL.slice(0, 5); // default fallback
+
+// Dynamically filter to only models with working API keys
+async function initReviewModels() {
+  try {
+    const data = await loadModels();
+    const available = data.models || {};
+    const working = REVIEW_MODELS_POOL.filter(m => available[m.id]?.available);
+    if (working.length >= 3) {
+      REVIEW_MODELS = working.slice(0, 5); // cap at 5 best available
+      console.log(`Review pipeline: ${REVIEW_MODELS.length} models available — ${REVIEW_MODELS.map(m => m.label).join(', ')}`);
+    } else {
+      console.warn(`Only ${working.length} models have keys — using pool of ${REVIEW_MODELS_POOL.length} (some may fail)`);
+    }
+  } catch {}
+  return REVIEW_MODELS;
+}
 
 async function aiRawWithModel(prompt, modelId, max = 4000) {
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -1692,6 +1713,7 @@ function updateModelStatus(modelId, status, score, confidence) {
 
 async function runPivotReview() {
   showPipelineUI();
+  await initReviewModels(); // Filter to models with working API keys
   const desc = document.getElementById('project-desc').value.trim();
   const scorecardJSON = JSON.stringify(V2_SCORECARD, null, 2);
   const frameworkAnalyses = Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.replace(/_/g,' ').toUpperCase()}\n${v}`).join('\n\n');
@@ -1820,7 +1842,11 @@ Return ONLY valid JSON:
       tempVotes[r.vote] += w;
     }
   });
-  const totalWeight = REVIEW_MODELS.reduce((s, m) => s + m.weight, 0);
+  const successfulVoters = phase2Results.filter(r => r && !r._failed);
+  const totalWeight = successfulVoters.reduce((s, r) => {
+    const m = REVIEW_MODELS.find(model => model.label === r._model);
+    return s + (m?.weight || 1);
+  }, 0) || 1; // avoid division by zero
   const maxVoteWeight = Math.max(...Object.values(tempVotes));
   consensusStrength = maxVoteWeight / totalWeight;
 
@@ -1856,7 +1882,10 @@ Return ONLY valid JSON:
         tempVotes[r.vote] += w;
       }
     });
-    consensusStrength = Math.max(...Object.values(tempVotes)) / totalWeight;
+    consensusStrength = Math.max(...Object.values(tempVotes)) / (phase2Results.filter(r => r && !r._failed).reduce((s, r) => {
+      const m = REVIEW_MODELS.find(model => model.label === r._model);
+      return s + (m?.weight || 1);
+    }, 0) || 1);
   }
 
   document.getElementById('p2-status').className = 'pipe-phase-status done';
