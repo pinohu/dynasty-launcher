@@ -866,6 +866,36 @@ const FU='https://claude-inbox.audreysplace.place/message';
 
 // GitHub token is server-side — all calls go through /api/github proxy
 let ORG=localStorage.getItem('dynasty_gh_org')||ORG_DEFAULT;
+// ── Safe JSON Parser (repairs truncated AI responses) ─────────────────────────
+function safeJsonParse(str) {
+  // First try direct parse
+  try { return JSON.parse(str); } catch {}
+  // Trim trailing comma
+  let s = str.replace(/,\s*$/, '');
+  // Close unclosed brackets/braces
+  const openBrackets = (s.match(/\[/g)||[]).length - (s.match(/\]/g)||[]).length;
+  const openBraces = (s.match(/\{/g)||[]).length - (s.match(/\}/g)||[]).length;
+  for (let i = 0; i < openBrackets; i++) s += ']';
+  for (let i = 0; i < openBraces; i++) s += '}';
+  try { return JSON.parse(s); } catch {}
+  // More aggressive: remove last incomplete property + close
+  s = str.replace(/,\s*"[^"]*"?\s*:?\s*[\[{]?[^}\]]*$/, '');
+  const ob = (s.match(/\[/g)||[]).length - (s.match(/\]/g)||[]).length;
+  const cb = (s.match(/\{/g)||[]).length - (s.match(/\}/g)||[]).length;
+  for (let i = 0; i < ob; i++) s += ']';
+  for (let i = 0; i < cb; i++) s += '}';
+  try { return JSON.parse(s); } catch {}
+  // Last resort: extract first complete top-level object
+  let depth = 0; let start = str.indexOf('{');
+  if (start === -1) return null;
+  for (let i = start; i < str.length; i++) {
+    if (str[i] === '{') depth++;
+    if (str[i] === '}') depth--;
+    if (depth === 0) { try { return JSON.parse(str.slice(start, i + 1)); } catch { return null; } }
+  }
+  return null;
+}
+
 let INFERRED=null;
 let PRGS=[];
 let isAuthority=false;
@@ -934,63 +964,50 @@ REPO: ${ORG}/${inf.repo}${refinementContext}${existingContext}`;
 
 ${baseContext}
 
-Generate a complete architecture blueprint. Return ONLY valid JSON:
+Generate a complete architecture blueprint. Return ONLY valid JSON (no markdown, no backticks). Keep arrays concise — max 8 entities, max 15 API endpoints, max 5 integrations, max 8 key decisions. This ensures the JSON fits within limits.
+
 {
   "data_model": {
     "entities": [
       {"name": "EntityName", "table": "snake_case_table", "fields": [
-        {"name": "field_name", "type": "string|int|uuid|datetime|boolean|jsonb|decimal|text|enum", "required": true, "description": "What this field does", "constraints": "unique, indexed, etc"}
-      ], "relationships": ["EntityName has_many OtherEntity", ...]}
+        {"name": "field_name", "type": "string|int|uuid|datetime|boolean|jsonb|decimal|text|enum", "required": true, "description": "What this field does"}
+      ], "relationships": ["EntityName has_many OtherEntity"]}
     ]
   },
   "api_contracts": [
-    {"method": "GET|POST|PUT|DELETE", "path": "/api/v1/resource", "auth": "required|optional|public", "request_body": "description or null", "response": "description", "status_codes": [200, 400, 401, 404]}
+    {"method": "GET|POST|PUT|DELETE", "path": "/api/v1/resource", "auth": "required|optional|public", "response": "description"}
   ],
   "auth_pattern": {
     "strategy": "JWT|Clerk|NextAuth|API Key",
     "roles": ["admin", "user", "guest"],
-    "token_location": "header|cookie",
-    "refresh_strategy": "description"
+    "token_location": "header|cookie"
   },
   "naming_conventions": {
-    "files": "kebab-case for files, PascalCase for components",
-    "variables": "camelCase",
-    "db_tables": "snake_case plural",
-    "db_columns": "snake_case",
-    "api_routes": "/api/v1/kebab-case",
-    "env_vars": "SCREAMING_SNAKE_CASE",
-    "css_classes": "kebab-case or Tailwind"
+    "files": "kebab-case", "variables": "camelCase", "db_tables": "snake_case plural",
+    "api_routes": "/api/v1/kebab-case", "env_vars": "SCREAMING_SNAKE_CASE"
   },
   "integrations": [
-    {"service": "ServiceName", "purpose": "What it does", "env_var": "ENV_VAR_NAME", "sdk_or_api": "npm package or REST"}
+    {"service": "ServiceName", "purpose": "What it does", "env_var": "ENV_VAR_NAME"}
   ],
   "infrastructure": {
-    "hosting": "Vercel|20i|Docker",
-    "database": "Neon Postgres|SQLite|none",
-    "cache": "Redis|none",
-    "cdn": "Vercel Edge|Cloudflare|none",
-    "monitoring": "Pulsetic|none"
+    "hosting": "Vercel|20i|Docker", "database": "Neon Postgres|SQLite|none",
+    "cache": "Redis|none", "monitoring": "Pulsetic|none"
   },
   "security": {
-    "input_validation": "Zod|Pydantic|manual",
-    "rate_limiting": "strategy",
-    "cors_policy": "description",
-    "sensitive_data": "how PII/secrets are handled"
+    "input_validation": "Zod|Pydantic|manual", "rate_limiting": "strategy",
+    "cors_policy": "description"
   },
-  "key_decisions": [
-    "Decision 1: Why we chose X over Y",
-    "Decision 2: ...",
-    "up to 10 key architectural decisions"
-  ]
+  "key_decisions": ["Decision 1: Why we chose X over Y", "...up to 8"]
 }
 
-Be extremely specific. Real table names. Real field names. Real API paths. This is the contract — no placeholders.`,
-      'claude-opus-4-20250514', 6000
+Be specific. Real table names. Real field names. Real API paths. This is the contract.`,
+      'claude-opus-4-20250514', 8000
     );
 
     const match = bp.match(/\{[\s\S]*\}/);
     if (match) {
-      PLANNING_OUTPUT.blueprint = JSON.parse(match[0]);
+      PLANNING_OUTPUT.blueprint = safeJsonParse(match[0]);
+      if (!PLANNING_OUTPUT.blueprint) throw new Error('Blueprint JSON repair failed');
       updatePlanPhase(1, 'done', `${PLANNING_OUTPUT.blueprint.data_model?.entities?.length || 0} entities, ${PLANNING_OUTPUT.blueprint.api_contracts?.length || 0} endpoints`);
       renderBlueprintPreview(PLANNING_OUTPUT.blueprint);
 
@@ -1096,7 +1113,7 @@ Be pixel-precise. Real hex values. Real font names (from Google Fonts). This con
 
     const match = dc.match(/\{[\s\S]*\}/);
     if (match) {
-      PLANNING_OUTPUT.design_contract = JSON.parse(match[0]);
+      PLANNING_OUTPUT.design_contract = safeJsonParse(match[0]); if (!PLANNING_OUTPUT.design_contract) throw new Error("Design contract JSON repair failed");
       const pageCount = PLANNING_OUTPUT.design_contract.pages?.length || 0;
       updatePlanPhase(2, 'done', `${Object.keys(PLANNING_OUTPUT.design_contract.color_tokens || {}).length} tokens, ${pageCount} pages`);
       renderDesignPreview(PLANNING_OUTPUT.design_contract);
@@ -1179,7 +1196,7 @@ Return ONLY valid JSON:
 
     const match = plan.match(/\{[\s\S]*\}/);
     if (match) {
-      PLANNING_OUTPUT.build_plan = JSON.parse(match[0]);
+      PLANNING_OUTPUT.build_plan = safeJsonParse(match[0]); if (!PLANNING_OUTPUT.build_plan) throw new Error("Build plan JSON repair failed");
       const phaseCount = PLANNING_OUTPUT.build_plan.phases?.length || 0;
       updatePlanPhase(3, 'done', `${phaseCount} phases, ${PLANNING_OUTPUT.build_plan.estimated_time_parallel || '~35s'} estimated`);
       renderBuildPlanPreview(PLANNING_OUTPUT.build_plan);
@@ -1678,7 +1695,7 @@ Return ONLY valid JSON:
 
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) return null;
-    FRAMEWORK_SYNTHESIS = JSON.parse(m[0]);
+    FRAMEWORK_SYNTHESIS = safeJsonParse(m[0]);
     return FRAMEWORK_SYNTHESIS;
   } catch { return null; }
 }
@@ -1756,7 +1773,7 @@ All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base 
 
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('Invalid scorecard response');
-    V2_SCORECARD = JSON.parse(m[0]);
+    V2_SCORECARD = safeJsonParse(m[0]); if (!V2_SCORECARD) throw new Error("Scorecard JSON repair failed");
     hideLoadingOverlay();
     renderScorecard(V2_SCORECARD);
     document.getElementById('scorecard-wrap').style.display = 'block';
@@ -3347,7 +3364,7 @@ Return:
     const txt=d.content?.find(b=>b.type==='text')?.text||'';
     const m=txt.match(/\{[\s\S]*\}/);
     if(!m)return;
-    INFERRED=JSON.parse(m[0]);
+    INFERRED=safeJsonParse(m[0]); if (!INFERRED) throw new Error("Inference JSON repair failed");
     hideLoadingOverlay();
     showPreview(INFERRED);
     updateLaunchBtn();
