@@ -1013,6 +1013,13 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     const { project_id, repo, org } = req.body || {};
     if (!project_id || !repo) return res.status(400).json({ error: 'project_id and repo required' });
     try {
+      // Ensure framework is null (not nextjs) to prevent build errors on static/backend projects
+      await fetch(`https://api.vercel.com/v9/projects/${project_id}?teamId=${VERCEL_TEAM}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ framework: null })
+      });
+
       const dr = await fetch(`https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
