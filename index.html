@@ -43,14 +43,14 @@ nav.scrolled{background:rgba(9,9,11,.95)}
 .btn-g{padding:14px 36px;background:transparent;color:var(--sub);border:1px solid var(--bdr);border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;transition:all .25s;font-family:inherit;text-decoration:none;display:inline-block;text-align:center}
 .btn-g:hover{color:var(--tx);border-color:rgba(255,255,255,.15)}
 .demo-wrap{max-width:960px;margin:0 auto;padding:0 24px}
-.demo{background:#222230;border:1px solid rgba(255,255,255,.18);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.08)}
-.demo-bar{height:36px;background:#2A2A35;border-bottom:1px solid rgba(255,255,255,.15);display:flex;align-items:center;padding:0 14px;gap:8px}
+.demo{background:#2A2A38;border:1px solid rgba(255,255,255,.15);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.08)}
+.demo-bar{height:36px;background:#333340;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;padding:0 14px;gap:8px}
 .demo-dot{width:10px;height:10px;border-radius:50%;background:var(--dim)}
 .demo-dot:first-child{background:#F87171}.demo-dot:nth-child(2){background:#FBBF24}.demo-dot:nth-child(3){background:#34D399}
 .demo-body{padding:28px 32px;display:grid;grid-template-columns:1fr 280px;gap:24px;min-height:280px}
 .demo-main h3{font-size:11px;font-weight:600;color:var(--gold);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px}
 .demo-phases{display:flex;flex-direction:column;gap:8px}
-.demo-phase{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--sub);padding:6px 10px;border-radius:6px;background:rgba(255,255,255,.02)}
+.demo-phase{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--sub);padding:6px 10px;border-radius:6px;background:rgba(255,255,255,.05)}
 .demo-phase .ck{color:var(--grn);font-weight:700;font-size:14px}
 .demo-phase .sp{color:var(--gold);animation:spin 1s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -60,20 +60,20 @@ nav.scrolled{background:rgba(9,9,11,.95)}
 .demo-file span{color:var(--gold);margin-right:6px;font-size:10px}
 .trust{max-width:800px;margin:0 auto;padding:40px 24px 0;text-align:center}
 .trust p{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;font-weight:500;margin-bottom:24px}
-.trust-logos{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;align-items:center;opacity:.4}
+.trust-logos{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;align-items:center;opacity:.6}
 .trust-logos span{font-size:14px;font-weight:600;color:var(--sub);letter-spacing:.5px}
 .stats{max-width:860px;margin:0 auto;padding:48px 24px}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid rgba(255,255,255,.15);border-radius:16px;overflow:hidden;background:#1A1A22}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid rgba(255,255,255,.12);border-radius:16px;overflow:hidden;background:#222230}
 .stat{padding:32px 24px;text-align:center;border-right:1px solid rgba(255,255,255,.12)}
 .stat:last-child{border-right:none}
 .stat .num{font-family:'Playfair Display',serif;font-size:40px;font-weight:400;letter-spacing:-.02em}
 .stat .label{font-size:12px;color:var(--dim);margin-top:4px;text-transform:uppercase;letter-spacing:1px;font-weight:500}
 section{max-width:1080px;margin:0 auto;padding:72px 24px}
-.sl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:12px;text-align:center}
-.st{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);font-weight:400;text-align:center;letter-spacing:-.02em;margin-bottom:12px}
+.sl{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:12px;text-align:center}
+.st{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);font-weight:400;text-align:center;letter-spacing:-.02em;margin-bottom:12px;color:#FAFAF9}
 .ss{font-size:16px;color:var(--sub);text-align:center;max-width:500px;margin:0 auto 48px;font-weight:300}
 .compare{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;max-width:800px;margin:0 auto}
-.cc{background:#222230;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:32px}
+.cc{background:#2A2A38;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:32px}
 .cc h3{font-size:15px;font-weight:600;margin-bottom:16px}
 .cc.bad{opacity:.6}.cc.bad h3{color:#F87171}
 .cc.good{border-color:rgba(201,168,76,.2)}.cc.good h3{color:var(--grn)}
@@ -81,7 +81,7 @@ section{max-width:1080px;margin:0 auto;padding:72px 24px}
 .ci strong{color:var(--tx);font-weight:500}
 .cv{font-family:'Playfair Display',serif;font-size:24px;color:var(--dim)}
 .features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.ft{background:#222230;border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:28px 24px;transition:border-color .3s}
+.ft{background:#2A2A38;border:1px solid rgba(255,255,255,.12);border-left:3px solid var(--gold);border-radius:14px;padding:28px 24px;transition:all .3s}
 .ft:hover{border-color:rgba(201,168,76,.2)}
 .ft.w{grid-column:span 2}
 .ft-i{font-size:24px;margin-bottom:14px}
@@ -94,7 +94,7 @@ section{max-width:1080px;margin:0 auto;padding:72px 24px}
 .stp h3{font-size:16px;font-weight:600;margin:24px 0 8px}
 .stp p{font-size:14px;color:var(--sub);line-height:1.6;font-weight:300}
 .pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:920px;margin:0 auto}
-.pl{background:#222230;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:36px 28px;position:relative}
+.pl{background:#2A2A38;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:36px 28px;position:relative}
 .pl.pop{border-color:var(--gold);background:linear-gradient(180deg,rgba(201,168,76,.03),var(--card) 30%)}
 .pl .bdg{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:4px 16px;background:var(--gold);color:var(--ink);border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
 .pl h3{font-size:14px;color:var(--sub);font-weight:500}
