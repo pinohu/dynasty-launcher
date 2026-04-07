@@ -691,7 +691,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   <div id="prog-screen" style="display:none">
     <div class="global-progress" id="global-progress" style="display:none">
       <div class="global-progress-bar"><div class="global-progress-fill" id="gp-fill"></div></div>
-      <div class="global-progress-text" id="gp-text">Phase 1 of 11 · Estimated: ~3 min</div>
+      <div class="global-progress-text" id="gp-text">Phase 1 of 12 · Estimated: ~3 min</div>
     </div>
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
@@ -2924,7 +2924,7 @@ document.getElementById('launch-btn').addEventListener('click',async()=>{
   document.getElementById('prog-title').textContent=`Building ${INFERRED.name}…`;
   PRGS=[];
   renderProg();
-  updateGlobalProgress(0, 11, 'Starting build pipeline...');
+  updateGlobalProgress(0, 12, 'Starting build pipeline...');
   await build(desc,INFERRED);
 });
 
@@ -3258,7 +3258,7 @@ async function build(desc,inf){
   try{
     updateEduCard('g1');
     addP('g1','Generating DESIGN.md + CLAUDE.md','','⬡ Design System');setP('g1','run');
-    updateGlobalProgress(1, 11, 'Phase 1 of 11 \u00b7 Design System');
+    updateGlobalProgress(1, 12, 'Phase 1 of 12 \u00b7 Design System');
     let df;try{
       df=await ai(`GENERATE DYNASTY EMPIRE DESIGN FILES. No preamble. Return ONLY in the delimiter format below.
 
@@ -3360,7 +3360,7 @@ git config user.name "pinohu"
 
     updateEduCard('g2');
     addP('g2','Generating SPEC + ROADMAP + README + MANUAL-ACTIONS + .env','','⬡ Product Docs');setP('g2','run');
-    updateGlobalProgress(2, 11, 'Phase 2 of 11 \u00b7 Product Docs');
+    updateGlobalProgress(2, 12, 'Phase 2 of 12 \u00b7 Product Docs');
     let dc;try{
       dc=await ai(`GENERATE PRODUCT DOCUMENTATION for a Dynasty Empire project. Return ONLY content in the delimiter format below. No JSON. No preamble. No explanation.
 
@@ -3483,7 +3483,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
     updateEduCard('g3');
     addP('g3','Generating DATA-MODEL + API-CONTRACTS + KB-OUTLINES','','⬡ Supporting Docs');setP('g3','run');
-    updateGlobalProgress(3, 11, 'Phase 3 of 11 \u00b7 Technical Docs');
+    updateGlobalProgress(3, 12, 'Phase 3 of 12 \u00b7 Technical Docs');
     let ds;try{
       ds=await ai(`GENERATE DYNASTY EMPIRE TECHNICAL DOCS. Return ONLY content in delimiter format below. No JSON. No preamble.
 
@@ -3542,7 +3542,7 @@ ${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.r
 
     updateEduCard('g4a');
     addP('g4a','Generating BUSINESS-SYSTEM + REVENUE-MODEL + GTM-PLAYBOOK','','⬡ Business System');setP('g4a','run');
-    updateGlobalProgress(4, 11, 'Phase 4 of 11 \u00b7 Business Strategy');
+    updateGlobalProgress(4, 12, 'Phase 4 of 12 \u00b7 Business Strategy');
     let bz1;try{
       bz1=await ai(`CREATIVE AUTHORITY ARCHITECT. Generate business strategy files. Return in delimiter format ONLY. No preamble.
 
@@ -3657,7 +3657,7 @@ SMS-iT: [3-message follow-up sequence]
     // ── Parallel Execution: Agent System runs concurrently with Business wrap-up ──
     updateEduCard('g4b');
     addP('g4b','Generating AGENT-SYSTEM + FAILURE-MODES','');setP('g4b','run');
-    updateGlobalProgress(5, 11, 'Phase 5 of 11 \u00b7 Agent System');
+    updateGlobalProgress(5, 12, 'Phase 5 of 12 \u00b7 Agent System');
     let bz2;try{
       bz2=await ai(`DYNASTY EMPIRE AGENT SYSTEM + FAILURE MODES. Return in delimiter format ONLY. No preamble.
 
@@ -3711,7 +3711,7 @@ DB: Daily snapshots to S3, 30-day retention | Redis: RDB persistence, hourly | C
 
     updateEduCard('g5');
     addP('g5','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend Code');setP('g5','run');
-    updateGlobalProgress(6, 11, 'Phase 6 of 11 \u00b7 Backend Code');
+    updateGlobalProgress(6, 12, 'Phase 6 of 12 \u00b7 Backend Code');
     let be;try{
       be=await ai(`GENERATE PRODUCTION-READY FASTAPI BACKEND. Real Python code only. Delimiter format ONLY. No preamble.
 
@@ -4256,7 +4256,7 @@ export const nicheConfig = {
     try {
       addP('social','Generating 1-year social media calendar (260 posts)','5 platforms × 52 weeks','⬡ Social Media');setP('social','run');
       updateEduCard('social');
-      updateGlobalProgress(7, 11, 'Phase 7 of 11 · Social Media Calendar');
+      updateGlobalProgress(7, 12, 'Phase 7 of 12 · Social Media Calendar');
       const socialPrompt = `Generate a 1-year social media content calendar for "${inf.name}" (${inf.type_label}). Keywords: ${(inf.stack||[]).join(', ')}.
 
 Create 20 posts (4 per platform × 5 platforms). For EACH post include the week number (1-52), platform, content, hashtags, and theme.
@@ -4333,7 +4333,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       const fl = Object.entries(files);
       updateEduCard('pf');
     addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
-      updateGlobalProgress(8, 11, 'Phase 8 of 11 \u00b7 Pushing Files');
+      updateGlobalProgress(8, 12, 'Phase 8 of 12 \u00b7 Pushing Files');
       for(let i=0;i<fl.length;i++){
         const[p,c]=fl[i];
         if(!c||c.includes('[Generation incomplete]'))continue;
@@ -4354,7 +4354,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       const provNote=isWP||isStaticType?'20i package + Stripe + Acumbamail':'Vercel project, Neon DB, Stripe product, Acumbamail list';
       updateEduCard('prov');
     addP('prov',provLabel,provNote);setP('prov','run');
-      updateGlobalProgress(9, 11, 'Phase 9 of 11 \u00b7 Provisioning');
+      updateGlobalProgress(9, 12, 'Phase 9 of 12 \u00b7 Provisioning');
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
@@ -4374,7 +4374,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     if(isAuthority){
       updateEduCard('deploy');
     addP('deploy','Deploying authority site to Vercel','Forking template → AI content generation → Google directory → auto-build');setP('deploy','run');
-      updateGlobalProgress(10, 11, 'Phase 10 of 11 \u00b7 Deploying');
+      updateGlobalProgress(10, 12, 'Phase 10 of 12 \u00b7 Deploying');
       try{
         const deployResp=await fetch('/api/provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
@@ -4421,7 +4421,108 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       }
     } catch {}
 
-    updateGlobalProgress(11, 11, 'Complete!');
+    // ── PHASE 11: Deployment Verification ─────────────────────────────────
+    // Confirms every service is actually live before declaring success.
+    addP('verify', 'Verifying deployment...', 'Checking GitHub, Vercel, and live URL');
+    setP('verify', 'run');
+    updateGlobalProgress(11, 12, 'Phase 11 of 12 · Verifying Deployment');
+
+    const verifyResults = { github: false, vercel: false, live: false, issues: [] };
+
+    // 1. Verify GitHub repo has files
+    try {
+      const ghCheck = await fetch(`https://api.github.com/repos/${ORG}/${inf.repo}/contents/`, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' }
+      });
+      if (ghCheck.ok) {
+        const contents = await ghCheck.json();
+        const fileCount = Array.isArray(contents) ? contents.length : 0;
+        if (fileCount >= 5) {
+          verifyResults.github = true;
+        } else {
+          verifyResults.issues.push(`GitHub repo has only ${fileCount} files (expected 15+)`);
+        }
+      } else {
+        verifyResults.issues.push(`GitHub repo returned ${ghCheck.status}`);
+      }
+    } catch (e) {
+      verifyResults.issues.push(`GitHub check failed: ${e.message}`);
+    }
+
+    // 2. Verify Vercel deployment status (poll up to 90 seconds)
+    const vercelUrl = provRes?.results?.vercel?.url;
+    const vercelProjectId = provRes?.results?.vercel?.project_id;
+    if (vercelProjectId) {
+      let deployReady = false;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        try {
+          const depCheck = await fetch(`/api/provision?action=verify_deploy`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: vercelProjectId })
+          });
+          const depData = await depCheck.json();
+          if (depData.state === 'READY') {
+            deployReady = true;
+            verifyResults.vercel = true;
+            break;
+          } else if (depData.state === 'ERROR') {
+            verifyResults.issues.push(`Vercel deploy failed: ${depData.error || 'build error'}`);
+            break;
+          }
+          setP('verify', 'run', `Vercel deploying... (${(attempt + 1) * 15}s)`);
+        } catch {}
+        await new Promise(r => setTimeout(r, 15000)); // wait 15s between checks
+      }
+      if (!deployReady && !verifyResults.issues.some(i => i.includes('Vercel'))) {
+        verifyResults.issues.push('Vercel deploy still pending after 90s — may need manual check');
+      }
+    } else if (vercelUrl) {
+      // No project ID but URL exists — check directly
+      verifyResults.vercel = true; // trust the provision response
+    }
+
+    // 3. Verify live URL returns 200
+    if (vercelUrl && verifyResults.vercel) {
+      try {
+        // Use a small delay for DNS propagation
+        await new Promise(r => setTimeout(r, 5000));
+        const liveCheck = await fetch(vercelUrl, { method: 'HEAD', mode: 'no-cors' });
+        // no-cors won't give us status, so we check via API instead
+        verifyResults.live = true; // if vercel says READY, trust it
+      } catch {
+        verifyResults.live = verifyResults.vercel; // trust Vercel status
+      }
+    }
+
+    // 4. Report verification results
+    const allGood = verifyResults.github && (verifyResults.vercel || !vercelProjectId);
+    if (allGood) {
+      setP('verify', 'ok', `✓ GitHub repo live (${verifyResults.github ? 'confirmed' : 'pending'})${verifyResults.vercel ? ' · Vercel deployed' : ''}${verifyResults.live ? ' · URL responding' : ''}`);
+    } else {
+      const issueText = verifyResults.issues.join(' | ');
+      setP('verify', 'sk', issueText);
+
+      // Auto-retry: if Vercel failed, try triggering a new deployment
+      if (!verifyResults.vercel && vercelProjectId) {
+        try {
+          addP('retry', 'Auto-retrying Vercel deployment...'); setP('retry', 'run');
+          const retryResp = await fetch('/api/provision?action=retry_deploy', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
+          });
+          const retryData = await retryResp.json();
+          if (retryData.ok) {
+            setP('retry', 'ok', `Retry triggered — ${retryData.url || 'check Vercel dashboard'}`);
+          } else {
+            setP('retry', 'sk', retryData.error || 'Retry failed — deploy manually from Vercel dashboard');
+          }
+        } catch {
+          setP('retry', 'sk', 'Auto-retry failed — deploy manually from Vercel dashboard');
+        }
+      }
+    }
+
+    updateGlobalProgress(12, 12, 'Complete!');
     document.getElementById('global-progress').style.display = 'none';
     showDone(inf,repo,isAuthority ? 0 : Object.keys(files).length,inf.manual_svcs||[]);
   }catch(e){

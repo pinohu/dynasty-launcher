@@ -863,5 +863,54 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         :`${manual_steps.length} manual step(s) — see manual_steps`});
   }
 
+  // ── VERIFY DEPLOYMENT STATUS ──────────────────────────────────────────────
+  if (action === 'verify_deploy') {
+    const { project_id } = req.body || {};
+    if (!project_id) return res.status(400).json({ error: 'project_id required' });
+    try {
+      const dr = await fetch(
+        `https://api.vercel.com/v6/deployments?projectId=${project_id}&teamId=${VERCEL_TEAM}&limit=1&target=production`,
+        { headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` } }
+      );
+      const dd = await dr.json();
+      const dep = dd.deployments?.[0];
+      if (!dep) return res.json({ state: 'NOT_FOUND', error: 'No deployments found' });
+      return res.json({
+        state: dep.state || dep.readyState,
+        url: dep.url ? `https://${dep.url}` : null,
+        error: dep.state === 'ERROR' ? 'Build failed — check Vercel dashboard' : null,
+        created: dep.created,
+      });
+    } catch (e) {
+      return res.json({ state: 'UNKNOWN', error: e.message });
+    }
+  }
+
+  // ── RETRY DEPLOYMENT ──────────────────────────────────────────────────────
+  if (action === 'retry_deploy') {
+    const { project_id, repo, org } = req.body || {};
+    if (!project_id || !repo) return res.status(400).json({ error: 'project_id and repo required' });
+    try {
+      const dr = await fetch(`https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: repo,
+          project: project_id,
+          target: 'production',
+          gitSource: { type: 'github', org: org || ORG, repo, ref: 'main' }
+        })
+      });
+      const dd = await dr.json();
+      return res.json({
+        ok: true,
+        state: dd.readyState,
+        url: dd.url ? `https://${dd.url}` : null,
+      });
+    } catch (e) {
+      return res.json({ ok: false, error: e.message });
+    }
+  }
+
   return res.status(400).json({ok:false, error:`Unknown action: ${action}`});
 }
