@@ -745,8 +745,43 @@ Return ONLY a valid JSON array (no markdown, no backticks):
             {headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`}}).then(r=>r.json());
           vercelProjectId=existing?.id||null;
         }
-        results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
-          existing:!pj.id};
+
+        // ── LINK GITHUB REPO to Vercel project (enables auto-deploy on push) ──
+        if(vercelProjectId){
+          try{
+            await fetch(`https://api.vercel.com/v9/projects/${vercelProjectId}?teamId=${VERCEL_TEAM}`,{
+              method:'PATCH',
+              headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
+              body:JSON.stringify({
+                gitRepository:{type:'github',repo:`${ORG}/${slug}`}
+              })
+            });
+          }catch(linkErr){console.error('Git link failed:',linkErr.message);}
+
+          // ── TRIGGER INITIAL DEPLOYMENT from the GitHub repo ──────────────────
+          try{
+            const depResp=await fetch(`https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM}`,{
+              method:'POST',
+              headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
+              body:JSON.stringify({
+                name:slug,
+                project:vercelProjectId,
+                gitSource:{type:'github',org:ORG,repo:slug,ref:'main'}
+              })
+            });
+            const dep=await depResp.json();
+            results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
+              deployment_url:dep.url||null, deployment_state:dep.readyState||'triggered',
+              existing:!pj.id};
+          }catch(depErr){
+            results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
+              deployment_error:depErr.message, existing:!pj.id,
+              note:'Project created + linked but initial deploy failed — will auto-deploy on next push'};
+          }
+        } else {
+          results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
+            existing:!pj.id};
+        }
       }catch(e){results.vercel={error:e.message};}
     }
 
