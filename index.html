@@ -1735,9 +1735,164 @@ function renderScorecard(sc) {
         <span>${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} Analysis</span>
         <span style="color:var(--dim);font-size:10px">▼</span>
       </div>
-      <div class="fw-dive-body">${v}</div>
+      <div class="fw-dive-body">
+        ${generateFrameworkVisual(k, v, sc.scores)}
+        <div style="margin-top:10px">${v}</div>
+      </div>
     </div>
   `).join('');
+}
+
+// ── Visual Framework Outputs (SVG) ───────────────────────────────────────────
+function generateFrameworkVisual(framework, analysis, scores) {
+  const gold = '#C9A84C'; const grn = '#3ECF8E'; const red = '#E5534B';
+  const dim = '#4A4845'; const card = '#1E1E1E'; const tx = '#EEEDE8';
+
+  if (framework === 'blue_ocean') {
+    // Strategy Canvas — radar-style comparison
+    const s = scores;
+    const mh = s?.market_hunger?.score || 5; const bo = s?.blue_ocean_index?.score || 5;
+    const cm = s?.competitive_moat?.score || 5; const rc = s?.revenue_confidence?.score || 5;
+    const mf = s?.mvp_feasibility?.score || 5;
+    return `<svg viewBox="0 0 300 180" style="width:100%;max-width:300px;margin:8px auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="300" height="180" rx="8" fill="${card}" stroke="${dim}" stroke-width="0.5"/>
+      <text x="150" y="18" text-anchor="middle" fill="${gold}" font-size="9" font-weight="600">Blue Ocean Strategy Canvas</text>
+      ${['Hunger','Blue Ocean','Moat','Revenue','Feasibility'].map((label, i) => {
+        const x = 30 + i * 60; const val = [mh,bo,cm,rc,mf][i];
+        const h = val * 13; const barColor = val >= 7 ? grn : val >= 5 ? gold : red;
+        return `<rect x="${x}" y="${160 - h}" width="40" height="${h}" rx="3" fill="${barColor}" opacity="0.7"/>
+          <text x="${x + 20}" y="174" text-anchor="middle" fill="${dim}" font-size="7">${label}</text>
+          <text x="${x + 20}" y="${155 - h}" text-anchor="middle" fill="${tx}" font-size="9" font-weight="600">${val.toFixed(1)}</text>`;
+      }).join('')}
+    </svg>`;
+  }
+
+  if (framework === 'porters') {
+    // Pentagon diagram
+    const forces = ['Suppliers','Buyers','Rivalry','Substitutes','New Entry'];
+    const cx = 150; const cy = 95; const r = 55;
+    return `<svg viewBox="0 0 300 190" style="width:100%;max-width:300px;margin:8px auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="300" height="190" rx="8" fill="${card}" stroke="${dim}" stroke-width="0.5"/>
+      <text x="150" y="18" text-anchor="middle" fill="${gold}" font-size="9" font-weight="600">Porter's 5 Forces</text>
+      ${forces.map((f, i) => {
+        const angle = (i * 72 - 90) * Math.PI / 180;
+        const x = cx + r * Math.cos(angle); const y = cy + r * Math.sin(angle);
+        const lx = cx + (r + 25) * Math.cos(angle); const ly = cy + (r + 25) * Math.sin(angle);
+        return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${gold}" stroke-width="1.5" opacity="0.4"/>
+          <circle cx="${x}" cy="${y}" r="12" fill="${gold}" opacity="0.15" stroke="${gold}" stroke-width="1"/>
+          <text x="${lx}" y="${ly + 3}" text-anchor="middle" fill="${tx}" font-size="7">${f}</text>`;
+      }).join('')}
+      <circle cx="${cx}" cy="${cy}" r="18" fill="${gold}" opacity="0.1" stroke="${gold}" stroke-width="1"/>
+      <text x="${cx}" y="${cy + 3}" text-anchor="middle" fill="${gold}" font-size="7" font-weight="600">Industry</text>
+    </svg>`;
+  }
+
+  if (framework === 'seven_powers') {
+    // Radar chart with 7 axes
+    const powers = ['Scale','Network','Counter-Pos','Switching','Brand','Resource','Process'];
+    const cx = 150; const cy = 100; const r = 55;
+    return `<svg viewBox="0 0 300 200" style="width:100%;max-width:300px;margin:8px auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="300" height="200" rx="8" fill="${card}" stroke="${dim}" stroke-width="0.5"/>
+      <text x="150" y="18" text-anchor="middle" fill="${gold}" font-size="9" font-weight="600">7 Powers Radar</text>
+      ${[0.33, 0.66, 1].map(s => {
+        const pts = powers.map((_, i) => {
+          const angle = (i * 360 / 7 - 90) * Math.PI / 180;
+          return `${cx + r * s * Math.cos(angle)},${cy + r * s * Math.sin(angle)}`;
+        }).join(' ');
+        return `<polygon points="${pts}" fill="none" stroke="${dim}" stroke-width="0.5"/>`;
+      }).join('')}
+      ${powers.map((p, i) => {
+        const angle = (i * 360 / 7 - 90) * Math.PI / 180;
+        const lx = cx + (r + 20) * Math.cos(angle); const ly = cy + (r + 20) * Math.sin(angle);
+        return `<line x1="${cx}" y1="${cy}" x2="${cx + r * Math.cos(angle)}" y2="${cy + r * Math.sin(angle)}" stroke="${dim}" stroke-width="0.3"/>
+          <text x="${lx}" y="${ly + 3}" text-anchor="middle" fill="${tx}" font-size="6">${p}</text>`;
+      }).join('')}
+    </svg>`;
+  }
+
+  if (framework === 'lean_canvas') {
+    // 9-block grid
+    const blocks = ['Problem','Solution','Key Metrics','Unfair Advantage','Channels','Segments','Cost Structure','Revenue Streams','Value Prop'];
+    return `<svg viewBox="0 0 300 200" style="width:100%;max-width:300px;margin:8px auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="300" height="200" rx="8" fill="${card}" stroke="${dim}" stroke-width="0.5"/>
+      <text x="150" y="16" text-anchor="middle" fill="${gold}" font-size="9" font-weight="600">Lean Canvas</text>
+      ${blocks.map((b, i) => {
+        const col = i % 3; const row = Math.floor(i / 3);
+        const x = 5 + col * 97; const y = 22 + row * 58;
+        return `<rect x="${x}" y="${y}" width="93" height="54" rx="4" fill="rgba(201,168,76,0.04)" stroke="${dim}" stroke-width="0.5"/>
+          <text x="${x + 46}" y="${y + 14}" text-anchor="middle" fill="${gold}" font-size="7" font-weight="600">${b}</text>`;
+      }).join('')}
+    </svg>`;
+  }
+
+  if (framework === 'tam_sam_som') {
+    // Concentric circles
+    return `<svg viewBox="0 0 300 180" style="width:100%;max-width:300px;margin:8px auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="300" height="180" rx="8" fill="${card}" stroke="${dim}" stroke-width="0.5"/>
+      <text x="150" y="18" text-anchor="middle" fill="${gold}" font-size="9" font-weight="600">Market Sizing</text>
+      <circle cx="150" cy="100" r="65" fill="rgba(201,168,76,0.06)" stroke="${gold}" stroke-width="1" opacity="0.5"/>
+      <text x="150" y="42" text-anchor="middle" fill="${dim}" font-size="8">TAM</text>
+      <circle cx="150" cy="105" r="42" fill="rgba(62,207,142,0.08)" stroke="${grn}" stroke-width="1" opacity="0.6"/>
+      <text x="150" y="70" text-anchor="middle" fill="${dim}" font-size="8">SAM</text>
+      <circle cx="150" cy="110" r="20" fill="rgba(62,207,142,0.15)" stroke="${grn}" stroke-width="1.5"/>
+      <text x="150" y="113" text-anchor="middle" fill="${grn}" font-size="8" font-weight="600">SOM</text>
+    </svg>`;
+  }
+
+  if (framework === 'unit_economics') {
+    // LTV:CAC bar
+    const ratio = 3; // placeholder
+    return `<svg viewBox="0 0 300 120" style="width:100%;max-width:300px;margin:8px auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="300" height="120" rx="8" fill="${card}" stroke="${dim}" stroke-width="0.5"/>
+      <text x="150" y="18" text-anchor="middle" fill="${gold}" font-size="9" font-weight="600">Unit Economics</text>
+      <text x="20" y="45" fill="${tx}" font-size="8">CAC</text>
+      <rect x="50" y="35" width="80" height="16" rx="3" fill="${red}" opacity="0.6"/>
+      <text x="20" y="72" fill="${tx}" font-size="8">LTV</text>
+      <rect x="50" y="62" width="200" height="16" rx="3" fill="${grn}" opacity="0.6"/>
+      <text x="150" y="100" text-anchor="middle" fill="${gold}" font-size="10" font-weight="700">LTV:CAC = ${ratio}:1</text>
+      <text x="150" y="112" text-anchor="middle" fill="${ratio >= 3 ? grn : red}" font-size="8">${ratio >= 3 ? '✓ Sustainable' : '⚠ Below 3:1 threshold'}</text>
+    </svg>`;
+  }
+
+  if (framework === 'competitive_matrix') {
+    // 2x2 scatter plot
+    return `<svg viewBox="0 0 300 200" style="width:100%;max-width:300px;margin:8px auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="300" height="200" rx="8" fill="${card}" stroke="${dim}" stroke-width="0.5"/>
+      <text x="150" y="18" text-anchor="middle" fill="${gold}" font-size="9" font-weight="600">Competitive Positioning</text>
+      <line x1="40" y1="30" x2="40" y2="175" stroke="${dim}" stroke-width="1"/>
+      <line x1="40" y1="175" x2="280" y2="175" stroke="${dim}" stroke-width="1"/>
+      <line x1="40" y1="102" x2="280" y2="102" stroke="${dim}" stroke-width="0.3" stroke-dasharray="4"/>
+      <line x1="160" y1="30" x2="160" y2="175" stroke="${dim}" stroke-width="0.3" stroke-dasharray="4"/>
+      <text x="160" y="192" text-anchor="middle" fill="${dim}" font-size="7">Feature Depth →</text>
+      <text x="15" y="102" text-anchor="middle" fill="${dim}" font-size="7" transform="rotate(-90,15,102)">Price →</text>
+      <circle cx="220" cy="60" r="8" fill="${gold}" opacity="0.8"/>
+      <text x="220" y="50" text-anchor="middle" fill="${gold}" font-size="7" font-weight="600">YOU</text>
+      <circle cx="100" cy="80" r="6" fill="${dim}" opacity="0.5"/>
+      <circle cx="200" cy="140" r="6" fill="${dim}" opacity="0.5"/>
+      <circle cx="80" cy="150" r="6" fill="${dim}" opacity="0.5"/>
+    </svg>`;
+  }
+
+  if (framework === 'jtbd') {
+    // Forces of progress diagram
+    return `<svg viewBox="0 0 300 160" style="width:100%;max-width:300px;margin:8px auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="300" height="160" rx="8" fill="${card}" stroke="${dim}" stroke-width="0.5"/>
+      <text x="150" y="18" text-anchor="middle" fill="${gold}" font-size="9" font-weight="600">Forces of Progress</text>
+      <text x="75" y="45" text-anchor="middle" fill="${grn}" font-size="8" font-weight="600">Push</text>
+      <text x="75" y="58" text-anchor="middle" fill="${dim}" font-size="7">Current pain</text>
+      <text x="225" y="45" text-anchor="middle" fill="${grn}" font-size="8" font-weight="600">Pull</text>
+      <text x="225" y="58" text-anchor="middle" fill="${dim}" font-size="7">Better future</text>
+      <text x="75" y="115" text-anchor="middle" fill="${red}" font-size="8" font-weight="600">Anxiety</text>
+      <text x="75" y="128" text-anchor="middle" fill="${dim}" font-size="7">Fear of change</text>
+      <text x="225" y="115" text-anchor="middle" fill="${red}" font-size="8" font-weight="600">Habit</text>
+      <text x="225" y="128" text-anchor="middle" fill="${dim}" font-size="7">Current comfort</text>
+      <line x1="150" y1="35" x2="150" y2="140" stroke="${dim}" stroke-width="0.5"/>
+      <line x1="30" y1="80" x2="270" y2="80" stroke="${dim}" stroke-width="0.5"/>
+      <text x="150" y="78" text-anchor="middle" fill="${gold}" font-size="8" font-weight="700">SWITCH</text>
+    </svg>`;
+  }
+
+  return ''; // no visual for this framework
 }
 
 async function populateModels() {
@@ -4552,8 +4707,40 @@ Return ONLY a markdown table:
     // Non-authority types: push all files to standalone repo
     if (!isAuthority) {
       // For backend-only builds, generate a landing page so Vercel serves something
-      if (V2_DEPLOY_TARGET !== 'fullstack' && !files['index.html']) {
-        files['index.html'] = `<!DOCTYPE html>
+      if (V2_DEPLOY_TARGET !== 'fullstack' && V2_DEPLOY_TARGET !== 'authority' && !files['index.html']) {
+        if (V2_DEPLOY_TARGET === 'static') {
+          // Generate a proper lead-capture landing page via AI
+          addP('static-page', 'Generating static landing page', '', '⬡ Landing Page'); setP('static-page', 'run');
+          try {
+            const lpHtml = await aiRaw(`Generate a complete, production-ready single-page HTML landing page.
+
+PROJECT: ${inf.name}
+DESCRIPTION: ${desc}
+ACCENT COLOR: ${inf.accent}
+REVENUE MODEL: ${inf.revenue_model} at ${inf.price}
+
+Requirements:
+- Self-contained single HTML file (inline CSS, no external dependencies except Google Fonts)
+- Dark theme with accent color ${inf.accent}
+- Sections: Hero with headline + subheadline + CTA button, 3 Benefits/Features, How It Works (3 steps), Pricing, FAQ (4 items), Email signup form, Footer
+- Modern design: subtle gradients, card-based layout, responsive (mobile-first)
+- Email form should use formsubmit.co or just a mailto: link
+- Include meta tags for SEO (title, description, og:image placeholder)
+- Include the PostHog analytics snippet at the bottom: ${getPostHogSnippet().replace(/</g, '&lt;').slice(0, 50)}... (just add a comment placeholder for analytics)
+
+Return ONLY the complete HTML. No markdown, no backticks, no explanation. Start with <!DOCTYPE html>.`, 8000);
+            if (lpHtml && lpHtml.includes('<!DOCTYPE') || lpHtml.includes('<html')) {
+              files['index.html'] = lpHtml;
+              setP('static-page', 'ok', 'Landing page generated');
+            } else {
+              setP('static-page', 'sk', 'Fallback to placeholder');
+            }
+          } catch (e) { setP('static-page', 'sk', e.message); }
+        }
+
+        // Generic placeholder for backend-only (not static, not fullstack, not authority)
+        if (!files['index.html']) {
+          files['index.html'] = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${inf.name}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;background:#0A0A0A;color:#EEEDE8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
@@ -4575,6 +4762,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
 </div>
 <div class="footer">Built by Dynasty Launcher · gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</div>
 </div>${getPostHogSnippet()}</body></html>`;
+        }
       }
 
       const fl = Object.entries(files);
@@ -4595,8 +4783,8 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     provRes=null;
     const provisionSvcs=['stripe','acumbamail'];
     {
-      const isWP=inf?.type_id==='wp-theme'||inf?.type_id==='wordpress';
-      const isStaticType=['static','portfolio','landing'].includes(inf?.type_id||'');
+      const isWP=inf?.type_id==='wp-theme'||inf?.type_id==='wordpress'||V2_DEPLOY_TARGET==='wordpress';
+      const isStaticType=['static','portfolio','landing'].includes(inf?.type_id||'')||V2_DEPLOY_TARGET==='static';
       const provLabel=isWP?'Provisioning on 20i (WordPress)':isStaticType?'Provisioning on 20i (Static)':'Provisioning — Vercel + Neon + Stripe';
       const provNote=isWP||isStaticType?'20i package + Stripe + Acumbamail':'Vercel project, Neon DB, Stripe product, Acumbamail list';
       updateEduCard('prov');

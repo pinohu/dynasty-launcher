@@ -704,8 +704,9 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     const typeId=inf.type_id||'', domain=inf.domain||`${slug}.vercel.app`;
     const results={};
 
-    const isWP      = ['wp-theme','wordpress'].includes(typeId);
-    const isStatic  = ['static','portfolio','landing'].includes(typeId);
+    const deployTarget = inf.deploy_target || '';
+    const isWP      = ['wp-theme','wordpress'].includes(typeId) || deployTarget === 'wordpress';
+    const isStatic  = ['static','portfolio','landing'].includes(typeId) || deployTarget === 'static';
     const needsTwentyi = isWP||isStatic;
     const needsNeon    = ['gov-saas','dark-saas','compliance','client-portal','member-dir',
                           'bd-dir','real-estate','job-board','n8n','api-svc','ecom',
