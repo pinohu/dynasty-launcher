@@ -302,6 +302,28 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .fm-stat{display:flex;justify-content:space-between;padding:3px 0;font-size:0.78rem;color:rgba(255,255,255,0.5)}
 .fm-stat .fm-val{color:#fff;font-weight:500}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+/* ── Planning Screen ──────────────────────────────────────────────────────── */
+.plan-header{text-align:center;margin-bottom:24px}.plan-header h2{font-size:1.4rem;font-weight:700;margin:0 0 4px}.plan-header p{font-size:0.82rem;color:rgba(255,255,255,0.4);margin:0}
+.plan-phases{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+.plan-phase{border:1px solid var(--bdr);border-radius:12px;padding:16px;transition:all .3s ease;background:var(--card)}
+.plan-phase.plan-running{border-color:rgba(201,168,76,0.4);box-shadow:0 0 20px rgba(201,168,76,0.05)}
+.plan-phase.plan-done{border-color:rgba(74,222,128,0.3)}
+.plan-phase.plan-error{border-color:rgba(229,83,75,0.3)}
+.plan-phase-header{display:flex;align-items:center;gap:12px}
+.plan-phase-num{width:28px;height:28px;border-radius:50%;background:rgba(201,168,76,0.1);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.plan-done .plan-phase-num{background:rgba(74,222,128,0.1);color:var(--grn)}
+.plan-error .plan-phase-num{background:rgba(229,83,75,0.1);color:var(--red)}
+.plan-phase-info{flex:1;min-width:0}
+.plan-phase-title{font-size:0.9rem;font-weight:600;color:#fff}
+.plan-phase-desc{font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:1px}
+.plan-phase-model{font-size:0.68rem;color:var(--gold);background:rgba(201,168,76,0.08);padding:2px 8px;border-radius:8px;border:1px solid rgba(201,168,76,0.15);white-space:nowrap}
+.plan-phase-status{font-size:0.72rem;color:var(--dim);white-space:nowrap}
+.plan-phase-detail{font-size:0.72rem;color:var(--dim);margin-top:6px}
+.plan-preview{margin-top:10px;padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);display:none}
+.plan-done .plan-preview,.plan-error .plan-preview{display:block}
+.plan-tag{font-size:0.68rem;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);padding:2px 7px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);display:inline-block}
+.plan-tag-dim{color:rgba(255,255,255,0.4);border-color:rgba(255,255,255,0.05)}
+.plan-execute{display:flex;gap:10px;margin-top:16px;animation:fadeIn .3s ease}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -506,6 +528,67 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
     </div>
   </div>
 
+  <!-- ── Planning Screen ──────────────────────────────────────────────────── -->
+  <div id="planning-screen" style="display:none">
+    <div class="plan-header">
+      <h2>🧠 Planning Cycles</h2>
+      <p>Generating binding contracts before build — every file will conform to these decisions</p>
+      <div id="plan-cost" style="font-size:11px;color:var(--gold);margin-top:4px;display:none">Planning cost: <span id="plan-cost-val">$0.00</span></div>
+    </div>
+
+    <div class="plan-phases">
+      <!-- Cycle 1: Architecture Blueprint -->
+      <div class="plan-phase plan-waiting" id="plan-phase-1">
+        <div class="plan-phase-header">
+          <div class="plan-phase-num">1</div>
+          <div class="plan-phase-info">
+            <div class="plan-phase-title">Architecture Blueprint</div>
+            <div class="plan-phase-desc">Data model · API contracts · Auth · Naming conventions · Integrations</div>
+          </div>
+          <div class="plan-phase-model">Claude Opus</div>
+          <div id="plan-status-1" class="plan-phase-status">Waiting</div>
+        </div>
+        <div id="plan-detail-1" class="plan-phase-detail"></div>
+        <div id="plan-preview-1" class="plan-preview"></div>
+      </div>
+
+      <!-- Cycle 2: Design Contract -->
+      <div class="plan-phase plan-waiting" id="plan-phase-2">
+        <div class="plan-phase-header">
+          <div class="plan-phase-num">2</div>
+          <div class="plan-phase-info">
+            <div class="plan-phase-title">Design Contract</div>
+            <div class="plan-phase-desc">Color tokens · Typography · Components · Page inventory · Responsive</div>
+          </div>
+          <div class="plan-phase-model">Claude Opus</div>
+          <div id="plan-status-2" class="plan-phase-status">Waiting</div>
+        </div>
+        <div id="plan-detail-2" class="plan-phase-detail"></div>
+        <div id="plan-preview-2" class="plan-preview"></div>
+      </div>
+
+      <!-- Cycle 3: Build Plan -->
+      <div class="plan-phase plan-waiting" id="plan-phase-3">
+        <div class="plan-phase-header">
+          <div class="plan-phase-num">3</div>
+          <div class="plan-phase-info">
+            <div class="plan-phase-title">Build Execution Plan</div>
+            <div class="plan-phase-desc">Phase ordering · Parallel groups · Cost estimate · Quality gates</div>
+          </div>
+          <div class="plan-phase-model">Claude Sonnet</div>
+          <div id="plan-status-3" class="plan-phase-status">Waiting</div>
+        </div>
+        <div id="plan-detail-3" class="plan-phase-detail"></div>
+        <div id="plan-preview-3" class="plan-preview"></div>
+      </div>
+    </div>
+
+    <div id="plan-execute-btn" class="plan-execute" style="display:none">
+      <button class="launch" style="flex:3" onclick="executeBuildFromPlan()">🚀 Execute Build Plan →</button>
+      <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="skipPlanAndBuild()">Skip to raw build</button>
+    </div>
+  </div>
+
   <div id="prog-screen" style="display:none">
     <div class="global-progress" id="global-progress" style="display:none">
       <div class="global-progress-bar"><div class="global-progress-fill" id="gp-fill"></div></div>
@@ -602,6 +685,391 @@ let BUILD_COMPACTIONS = []; // accumulated phase compactions for context forward
 let BUILD_START_TIME = 0;
 let PREFLIGHT_APPROVED = false;
 let EXISTING_CLAUDE_MD = null; // for iterative builds
+let PLANNING_OUTPUT = null; // comprehensive planning from 3 cycles
+let PLANNING_ENABLED = true; // can be toggled off for quick builds
+
+// ── Comprehensive Planning Cycles ────────────────────────────────────────────
+// Runs 3 planning cycles before build, inspired by Claude Code's ULTRAPLAN.
+// Output becomes the binding contract that every generation phase must follow.
+async function runPlanningCycles(desc, inf) {
+  PLANNING_OUTPUT = { blueprint: null, design_contract: null, build_plan: null };
+
+  const planScreen = document.getElementById('planning-screen');
+  if (!planScreen) return PLANNING_OUTPUT;
+  planScreen.style.display = 'block';
+  document.getElementById('config-screen').style.display = 'none';
+
+  const refinementContext = window._refineState?.rounds?.length
+    ? `\n\nADVERSARIAL REFINEMENT HISTORY (${window._refineState.rounds.length} rounds):\n` +
+      window._refineState.rounds.map((r, i) => `Round ${i+1}: ${r.refinedIdea}\nCritique survived: ${r.critique?.slice(0, 200)}...`).join('\n\n')
+    : '';
+
+  const existingContext = EXISTING_CLAUDE_MD
+    ? `\n\nEXISTING PROJECT CONTEXT (iterative update — preserve conventions):\n${EXISTING_CLAUDE_MD.slice(0, 1500)}`
+    : '';
+
+  const baseContext = `PROJECT: ${inf.name}
+DESCRIPTION: ${desc}
+TYPE: ${inf.type_label} (${inf.type_id})
+STACK: ${(inf.stack || []).join(', ')}
+REVENUE: ${inf.revenue_model} at ${inf.price}
+ACQUISITION: ${inf.acquisition}
+MVP SCOPE: ${inf.mvp}
+ACCENT: ${inf.accent}
+FONTS: ${inf.fonts}
+REPO: ${ORG}/${inf.repo}${refinementContext}${existingContext}`;
+
+  // ── CYCLE 1: Architecture Blueprint (Opus) ─────────────────────────────
+  updatePlanPhase(1, 'running', 'Generating architecture blueprint...');
+  try {
+    const bp = await aiRawWithModel(
+      `You are a principal software architect creating the BINDING TECHNICAL CONTRACT for a project. Every file generated after this must conform to these decisions. Be extremely specific — no ambiguity.
+
+${baseContext}
+
+Generate a complete architecture blueprint. Return ONLY valid JSON:
+{
+  "data_model": {
+    "entities": [
+      {"name": "EntityName", "table": "snake_case_table", "fields": [
+        {"name": "field_name", "type": "string|int|uuid|datetime|boolean|jsonb|decimal|text|enum", "required": true, "description": "What this field does", "constraints": "unique, indexed, etc"}
+      ], "relationships": ["EntityName has_many OtherEntity", ...]}
+    ]
+  },
+  "api_contracts": [
+    {"method": "GET|POST|PUT|DELETE", "path": "/api/v1/resource", "auth": "required|optional|public", "request_body": "description or null", "response": "description", "status_codes": [200, 400, 401, 404]}
+  ],
+  "auth_pattern": {
+    "strategy": "JWT|Clerk|NextAuth|API Key",
+    "roles": ["admin", "user", "guest"],
+    "token_location": "header|cookie",
+    "refresh_strategy": "description"
+  },
+  "naming_conventions": {
+    "files": "kebab-case for files, PascalCase for components",
+    "variables": "camelCase",
+    "db_tables": "snake_case plural",
+    "db_columns": "snake_case",
+    "api_routes": "/api/v1/kebab-case",
+    "env_vars": "SCREAMING_SNAKE_CASE",
+    "css_classes": "kebab-case or Tailwind"
+  },
+  "integrations": [
+    {"service": "ServiceName", "purpose": "What it does", "env_var": "ENV_VAR_NAME", "sdk_or_api": "npm package or REST"}
+  ],
+  "infrastructure": {
+    "hosting": "Vercel|20i|Docker",
+    "database": "Neon Postgres|SQLite|none",
+    "cache": "Redis|none",
+    "cdn": "Vercel Edge|Cloudflare|none",
+    "monitoring": "Pulsetic|none"
+  },
+  "security": {
+    "input_validation": "Zod|Pydantic|manual",
+    "rate_limiting": "strategy",
+    "cors_policy": "description",
+    "sensitive_data": "how PII/secrets are handled"
+  },
+  "key_decisions": [
+    "Decision 1: Why we chose X over Y",
+    "Decision 2: ...",
+    "up to 10 key architectural decisions"
+  ]
+}
+
+Be extremely specific. Real table names. Real field names. Real API paths. This is the contract — no placeholders.`,
+      'claude-opus-4-20250514', 6000
+    );
+
+    const match = bp.match(/\{[\s\S]*\}/);
+    if (match) {
+      PLANNING_OUTPUT.blueprint = JSON.parse(match[0]);
+      updatePlanPhase(1, 'done', `${PLANNING_OUTPUT.blueprint.data_model?.entities?.length || 0} entities, ${PLANNING_OUTPUT.blueprint.api_contracts?.length || 0} endpoints`);
+      renderBlueprintPreview(PLANNING_OUTPUT.blueprint);
+
+      // Seed compaction with blueprint
+      BUILD_COMPACTIONS.push({
+        phase: 'blueprint',
+        timestamp: new Date().toISOString(),
+        signals: {
+          entities: PLANNING_OUTPUT.blueprint.data_model?.entities?.map(e => e.name) || [],
+          api_routes: PLANNING_OUTPUT.blueprint.api_contracts?.map(e => `${e.method} ${e.path}`).slice(0, 15) || [],
+          auth: PLANNING_OUTPUT.blueprint.auth_pattern?.strategy || '',
+          naming: JSON.stringify(PLANNING_OUTPUT.blueprint.naming_conventions || {}).slice(0, 200),
+          integrations: PLANNING_OUTPUT.blueprint.integrations?.map(i => i.service) || [],
+          key_decisions: PLANNING_OUTPUT.blueprint.key_decisions?.slice(0, 5) || [],
+        }
+      });
+    }
+  } catch (e) {
+    updatePlanPhase(1, 'error', e.message);
+    console.error('Blueprint failed:', e);
+  }
+
+  // ── CYCLE 2: Design Contract (Opus) ────────────────────────────────────
+  updatePlanPhase(2, 'running', 'Generating design contract...');
+  try {
+    const entityNames = PLANNING_OUTPUT.blueprint?.data_model?.entities?.map(e => e.name).join(', ') || 'entities TBD';
+    const dc = await aiRawWithModel(
+      `You are a senior design systems architect. Create the BINDING DESIGN CONTRACT for this project. Every UI component must conform to these tokens. Be pixel-precise.
+
+${baseContext}
+
+ARCHITECTURE (from blueprint):
+- Entities: ${entityNames}
+- Auth: ${PLANNING_OUTPUT.blueprint?.auth_pattern?.strategy || 'TBD'}
+- Stack: ${(inf.stack || []).join(', ')}
+
+Generate the design contract. Return ONLY valid JSON:
+{
+  "color_tokens": {
+    "background": "#hex", "surface": "#hex", "surface_elevated": "#hex",
+    "text_primary": "#hex", "text_secondary": "#hex", "text_muted": "#hex",
+    "accent": "${inf.accent}", "accent_hover": "#hex", "accent_light": "#hex",
+    "border": "#hex", "border_focus": "#hex",
+    "shadow_color": "rgba(r,g,b,a) — brand-tinted, not black",
+    "success": "#hex", "warning": "#hex", "error": "#hex", "info": "#hex",
+    "status_verified_bg": "#hex", "status_verified_text": "#hex",
+    "status_pending_bg": "#hex", "status_pending_text": "#hex",
+    "status_error_bg": "#hex", "status_error_text": "#hex"
+  },
+  "typography": {
+    "font_display": "Font Name",
+    "font_body": "Font Name",
+    "font_mono": "Font Name",
+    "scale": [
+      {"role": "display-xl", "size": "48px", "weight": 800, "line_height": 1.1, "letter_spacing": "-0.03em", "use": "Hero headings"},
+      {"role": "h1", "size": "36px", "weight": 700, "line_height": 1.2, "letter_spacing": "-0.02em", "use": "Page titles"},
+      {"role": "h2", "size": "24px", "weight": 600, "line_height": 1.3, "letter_spacing": "-0.01em", "use": "Section headings"},
+      {"role": "h3", "size": "18px", "weight": 600, "line_height": 1.4, "letter_spacing": "0", "use": "Card titles"},
+      {"role": "body", "size": "15px", "weight": 400, "line_height": 1.6, "letter_spacing": "0", "use": "Body text"},
+      {"role": "small", "size": "13px", "weight": 400, "line_height": 1.5, "letter_spacing": "0.01em", "use": "Captions, meta"},
+      {"role": "label", "size": "11px", "weight": 600, "line_height": 1.3, "letter_spacing": "0.06em", "use": "Form labels, badges"}
+    ]
+  },
+  "spacing": {
+    "base": 8,
+    "scale": [0, 4, 8, 12, 16, 24, 32, 48, 64, 96],
+    "page_max_width": "1200px",
+    "content_padding": "24px",
+    "card_padding": "20px",
+    "section_gap": "48px"
+  },
+  "components": {
+    "border_radius": {"small": "6px", "medium": "10px", "large": "16px", "pill": "9999px"},
+    "shadows": [
+      {"level": "sm", "value": "0 1px 2px rgba(...)", "use": "Cards, inputs"},
+      {"level": "md", "value": "0 4px 12px rgba(...)", "use": "Dropdowns, popovers"},
+      {"level": "lg", "value": "0 12px 32px rgba(...)", "use": "Modals, dialogs"}
+    ],
+    "button_styles": {
+      "primary": {"bg": "#hex", "text": "#hex", "hover_bg": "#hex", "border_radius": "Xpx", "padding": "Xpx Xpx", "font_weight": 600},
+      "secondary": {"bg": "transparent", "text": "#hex", "border": "1px solid #hex"},
+      "destructive": {"bg": "#hex", "text": "#hex"}
+    },
+    "input_styles": {
+      "bg": "#hex", "border": "1px solid #hex", "border_focus": "1px solid #hex",
+      "border_radius": "Xpx", "padding": "Xpx Xpx", "font_size": "Xpx"
+    }
+  },
+  "pages": [
+    {"name": "PageName", "route": "/path", "layout": "brief wireframe description — what sections appear and in what order", "key_components": ["ComponentA", "ComponentB"]},
+    "... list every page in the MVP"
+  ],
+  "responsive": {
+    "breakpoints": {"sm": "640px", "md": "768px", "lg": "1024px", "xl": "1280px"},
+    "mobile_strategy": "description of how layout collapses"
+  },
+  "dark_mode": true
+}
+
+Be pixel-precise. Real hex values. Real font names (from Google Fonts). This contract is law.`,
+      'claude-opus-4-20250514', 5000
+    );
+
+    const match = dc.match(/\{[\s\S]*\}/);
+    if (match) {
+      PLANNING_OUTPUT.design_contract = JSON.parse(match[0]);
+      const pageCount = PLANNING_OUTPUT.design_contract.pages?.length || 0;
+      updatePlanPhase(2, 'done', `${Object.keys(PLANNING_OUTPUT.design_contract.color_tokens || {}).length} tokens, ${pageCount} pages`);
+      renderDesignPreview(PLANNING_OUTPUT.design_contract);
+
+      BUILD_COMPACTIONS.push({
+        phase: 'design_contract',
+        timestamp: new Date().toISOString(),
+        signals: {
+          colors: Object.entries(PLANNING_OUTPUT.design_contract.color_tokens || {}).slice(0, 8).map(([k,v]) => `${k}:${v}`),
+          fonts: [PLANNING_OUTPUT.design_contract.typography?.font_display, PLANNING_OUTPUT.design_contract.typography?.font_body].filter(Boolean),
+          pages: PLANNING_OUTPUT.design_contract.pages?.map(p => `${p.name} (${p.route})`).slice(0, 10) || [],
+          has_dark_mode: !!PLANNING_OUTPUT.design_contract.dark_mode,
+        }
+      });
+    }
+  } catch (e) {
+    updatePlanPhase(2, 'error', e.message);
+    console.error('Design contract failed:', e);
+  }
+
+  // ── CYCLE 3: Build Plan (Sonnet) ───────────────────────────────────────
+  updatePlanPhase(3, 'running', 'Generating build execution plan...');
+  try {
+    const entityCount = PLANNING_OUTPUT.blueprint?.data_model?.entities?.length || 0;
+    const endpointCount = PLANNING_OUTPUT.blueprint?.api_contracts?.length || 0;
+    const pageCount = PLANNING_OUTPUT.design_contract?.pages?.length || 0;
+
+    const plan = await aiRawWithModel(
+      `You are a technical project manager creating a BUILD EXECUTION PLAN. Given the architecture blueprint and design contract, produce an ordered build plan.
+
+${baseContext}
+
+ARCHITECTURE BLUEPRINT SUMMARY:
+- ${entityCount} entities: ${PLANNING_OUTPUT.blueprint?.data_model?.entities?.map(e => e.name).join(', ') || 'TBD'}
+- ${endpointCount} API endpoints
+- Auth: ${PLANNING_OUTPUT.blueprint?.auth_pattern?.strategy || 'TBD'}
+- Integrations: ${PLANNING_OUTPUT.blueprint?.integrations?.map(i => i.service).join(', ') || 'none'}
+
+DESIGN CONTRACT SUMMARY:
+- Fonts: ${PLANNING_OUTPUT.design_contract?.typography?.font_display || 'TBD'} + ${PLANNING_OUTPUT.design_contract?.typography?.font_body || 'TBD'}
+- ${pageCount} pages
+- Dark mode: ${PLANNING_OUTPUT.design_contract?.dark_mode ? 'yes' : 'no'}
+
+Return ONLY valid JSON:
+{
+  "phases": [
+    {
+      "phase_number": 1,
+      "name": "Phase Name",
+      "files_to_generate": ["file1.md", "file2.py"],
+      "model_recommendation": "opus|sonnet|haiku — and why",
+      "estimated_tokens": 8000,
+      "depends_on": [],
+      "can_parallelize_with": [2, 3],
+      "critical_context_from_planning": "What from the blueprint/design contract this phase MUST reference"
+    }
+  ],
+  "file_dependency_graph": {
+    "CLAUDE.md": ["DESIGN.md"],
+    "backend/main.py": ["DATA-MODEL.md", "API-CONTRACTS.md"],
+    "description of which files depend on which"
+  },
+  "estimated_total_tokens": 50000,
+  "estimated_cost": "$0.XX",
+  "estimated_time_sequential": "90 seconds",
+  "estimated_time_parallel": "35 seconds",
+  "parallel_groups": [
+    {"group": 1, "phases": [1], "reason": "Must run first — design system"},
+    {"group": 2, "phases": [2, 3, 4], "reason": "Independent — can run concurrently"},
+    "etc"
+  ],
+  "risk_factors": ["Risk 1", "Risk 2"],
+  "quality_gates": [
+    {"after_phase": 1, "check": "Verify color tokens match design contract"},
+    "etc"
+  ]
+}`,
+      'claude-sonnet-4-20250514', 4000
+    );
+
+    const match = plan.match(/\{[\s\S]*\}/);
+    if (match) {
+      PLANNING_OUTPUT.build_plan = JSON.parse(match[0]);
+      const phaseCount = PLANNING_OUTPUT.build_plan.phases?.length || 0;
+      updatePlanPhase(3, 'done', `${phaseCount} phases, ${PLANNING_OUTPUT.build_plan.estimated_time_parallel || '~35s'} estimated`);
+      renderBuildPlanPreview(PLANNING_OUTPUT.build_plan);
+
+      BUILD_COMPACTIONS.push({
+        phase: 'build_plan',
+        timestamp: new Date().toISOString(),
+        signals: {
+          total_phases: phaseCount,
+          parallel_groups: PLANNING_OUTPUT.build_plan.parallel_groups?.length || 0,
+          estimated_cost: PLANNING_OUTPUT.build_plan.estimated_cost || 'unknown',
+        }
+      });
+    }
+  } catch (e) {
+    updatePlanPhase(3, 'error', e.message);
+    console.error('Build plan failed:', e);
+  }
+
+  // Show the "Execute Build" button
+  const execBtn = document.getElementById('plan-execute-btn');
+  if (execBtn) execBtn.style.display = 'flex';
+
+  return PLANNING_OUTPUT;
+}
+
+// ── Planning UI Helpers ──────────────────────────────────────────────────────
+function updatePlanPhase(num, status, detail) {
+  const el = document.getElementById(`plan-phase-${num}`);
+  const statusEl = document.getElementById(`plan-status-${num}`);
+  const detailEl = document.getElementById(`plan-detail-${num}`);
+  if (!el) return;
+  el.className = `plan-phase plan-${status}`;
+  if (statusEl) {
+    const labels = { running: '⏳ Running...', done: '✓ Complete', error: '✗ Failed' };
+    statusEl.textContent = labels[status] || status;
+    statusEl.style.color = status === 'done' ? 'var(--grn)' : status === 'error' ? 'var(--red)' : 'var(--gold)';
+  }
+  if (detailEl && detail) detailEl.textContent = detail;
+}
+
+function renderBlueprintPreview(bp) {
+  const el = document.getElementById('plan-preview-1');
+  if (!el || !bp) return;
+  const entities = (bp.data_model?.entities || []).map(e =>
+    `<span class="plan-tag">${e.name} <span style="color:var(--dim)">(${e.fields?.length || 0})</span></span>`
+  ).join(' ');
+  const routes = (bp.api_contracts || []).slice(0, 8).map(r =>
+    `<span class="plan-tag plan-tag-dim">${r.method} ${r.path}</span>`
+  ).join(' ');
+  const decisions = (bp.key_decisions || []).slice(0, 4).map(d =>
+    `<div style="font-size:10px;color:var(--sec);padding:2px 0">• ${d}</div>`
+  ).join('');
+  el.innerHTML = `
+    <div style="margin-bottom:6px"><span style="font-size:10px;font-weight:600;color:var(--dim)">ENTITIES</span><div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">${entities}</div></div>
+    <div style="margin-bottom:6px"><span style="font-size:10px;font-weight:600;color:var(--dim)">API ROUTES</span><div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">${routes}${(bp.api_contracts||[]).length > 8 ? `<span class="plan-tag plan-tag-dim">+${bp.api_contracts.length - 8} more</span>` : ''}</div></div>
+    <details><summary style="font-size:10px;color:var(--dim);cursor:pointer">Key decisions ▼</summary>${decisions}</details>
+  `;
+}
+
+function renderDesignPreview(dc) {
+  const el = document.getElementById('plan-preview-2');
+  if (!el || !dc) return;
+  const swatches = Object.entries(dc.color_tokens || {}).slice(0, 10).map(([k,v]) =>
+    typeof v === 'string' && v.startsWith('#')
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--sec)"><span style="width:10px;height:10px;border-radius:3px;background:${v};border:1px solid rgba(255,255,255,0.1)"></span>${k}</span>`
+      : ''
+  ).filter(Boolean).join(' ');
+  const pages = (dc.pages || []).map(p =>
+    `<span class="plan-tag">${p.name} <span style="color:var(--dim)">${p.route}</span></span>`
+  ).join(' ');
+  el.innerHTML = `
+    <div style="margin-bottom:6px"><span style="font-size:10px;font-weight:600;color:var(--dim)">PALETTE</span><div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:6px">${swatches}</div></div>
+    <div style="margin-bottom:6px"><span style="font-size:10px;font-weight:600;color:var(--dim)">FONTS</span><span style="font-size:10px;color:var(--sec);margin-left:6px">${dc.typography?.font_display || '?'} + ${dc.typography?.font_body || '?'}</span></div>
+    <div><span style="font-size:10px;font-weight:600;color:var(--dim)">PAGES</span><div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:3px">${pages}</div></div>
+  `;
+}
+
+function renderBuildPlanPreview(plan) {
+  const el = document.getElementById('plan-preview-3');
+  if (!el || !plan) return;
+  const groups = (plan.parallel_groups || []).map(g =>
+    `<div style="font-size:10px;color:var(--sec);padding:2px 0"><span style="color:var(--gold)">Group ${g.group}:</span> Phases ${Array.isArray(g.phases) ? g.phases.join(',') : g.phases} — ${g.reason}</div>`
+  ).join('');
+  const gates = (plan.quality_gates || []).slice(0, 3).map(g =>
+    `<div style="font-size:10px;color:var(--sec);padding:1px 0">✓ ${g.check}</div>`
+  ).join('');
+  el.innerHTML = `
+    <div style="display:flex;gap:16px;margin-bottom:6px;flex-wrap:wrap">
+      <div><span style="font-size:10px;font-weight:600;color:var(--dim)">COST</span><div style="font-size:12px;color:var(--gold);font-weight:600">${plan.estimated_cost || '~$0.15'}</div></div>
+      <div><span style="font-size:10px;font-weight:600;color:var(--dim)">TIME (parallel)</span><div style="font-size:12px;color:var(--grn);font-weight:600">${plan.estimated_time_parallel || '~35s'}</div></div>
+      <div><span style="font-size:10px;font-weight:600;color:var(--dim)">TIME (sequential)</span><div style="font-size:12px;color:var(--sec)">${plan.estimated_time_sequential || '~90s'}</div></div>
+    </div>
+    <div style="margin-bottom:6px"><span style="font-size:10px;font-weight:600;color:var(--dim)">PARALLEL GROUPS</span>${groups}</div>
+    ${gates ? `<div><span style="font-size:10px;font-weight:600;color:var(--dim)">QUALITY GATES</span>${gates}</div>` : ''}
+  `;
+}
 
 // ── Feature Flags ────────────────────────────────────────────────────────────
 async function loadFlags() {
@@ -1743,6 +2211,7 @@ async function startBuild() {
   BUILD_COMPACTIONS = [];
   PREFLIGHT_APPROVED = false;
   EXISTING_CLAUDE_MD = null;
+  PLANNING_OUTPUT = null;
 
   // ── Preflight Review (Improvement 7) ────────────────────────────────────
   const approved = await runPreflight(INFERRED, []);
@@ -1757,7 +2226,37 @@ async function startBuild() {
     }
   }
 
-  document.getElementById('config-screen').style.display = 'none';
+  // ── Planning Cycles (ULTRAPLAN pattern) ─────────────────────────────────
+  // Run 3 planning cycles to create binding contracts before generation
+  if (PLANNING_ENABLED && flagEnabled('context_compaction')) {
+    document.getElementById('config-screen').style.display = 'none';
+    await runPlanningCycles(desc, INFERRED);
+    // Don't auto-proceed — wait for user to click "Execute Build Plan"
+    return;
+  }
+
+  // If planning is disabled, go straight to build
+  proceedToBuild(desc);
+}
+
+// Called by "Execute Build Plan" button after planning completes
+async function executeBuildFromPlan() {
+  const desc = document.getElementById('project-desc').value.trim();
+  document.getElementById('planning-screen').style.display = 'none';
+  await proceedToBuild(desc);
+}
+
+// Called by "Skip to raw build" button
+async function skipPlanAndBuild() {
+  const desc = document.getElementById('project-desc').value.trim();
+  BUILD_COMPACTIONS = []; // Clear any partial planning
+  PLANNING_OUTPUT = null;
+  document.getElementById('planning-screen').style.display = 'none';
+  await proceedToBuild(desc);
+}
+
+// The actual build execution (previously the body of startBuild)
+async function proceedToBuild(desc) {
   document.getElementById('prog-screen').style.display = 'block';
   document.getElementById('prog-title').textContent = `Building ${INFERRED.name}…`;
   V2_BUILD_COST = 0;
@@ -2028,16 +2527,34 @@ async function aiRaw(prompt, max = 4000) {
 }
 function cx(desc,inf){
   let base = `Project: ${inf.name}\nDescription: ${desc}\nRepo: ${ORG}/${inf.repo}\nType: ${inf.type_label}\nSurface: ${inf.surface}\nAccent: ${inf.accent}\nFonts: ${inf.fonts}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nAcquisition: ${inf.acquisition}\nMVP: ${inf.mvp}`;
+
+  // ── Planning Output (BINDING CONTRACT — must follow) ────────────────────
+  if (PLANNING_OUTPUT?.blueprint) {
+    const bp = PLANNING_OUTPUT.blueprint;
+    const entities = (bp.data_model?.entities || []).map(e => `${e.name}(${e.fields?.map(f=>f.name).join(',')})`).join('; ');
+    const routes = (bp.api_contracts || []).slice(0, 12).map(r => `${r.method} ${r.path}`).join(', ');
+    const naming = bp.naming_conventions || {};
+    base += `\n\n## ARCHITECTURE BLUEPRINT (BINDING — follow exactly):\nEntities: ${entities}\nAPI Routes: ${routes}\nAuth: ${bp.auth_pattern?.strategy || 'TBD'} with roles [${(bp.auth_pattern?.roles||[]).join(', ')}]\nNaming: files=${naming.files||'kebab-case'}, vars=${naming.variables||'camelCase'}, tables=${naming.db_tables||'snake_case'}, routes=${naming.api_routes||'/api/v1/'}\nIntegrations: ${(bp.integrations||[]).map(i=>`${i.service}(${i.env_var})`).join(', ')}`;
+    if (bp.key_decisions?.length) base += `\nKey decisions: ${bp.key_decisions.slice(0,5).join(' | ')}`;
+  }
+  if (PLANNING_OUTPUT?.design_contract) {
+    const dc = PLANNING_OUTPUT.design_contract;
+    const ct = dc.color_tokens || {};
+    const tp = dc.typography || {};
+    base += `\n\n## DESIGN CONTRACT (BINDING — use these exact values):\nColors: bg=${ct.background}, surface=${ct.surface}, text=${ct.text_primary}, accent=${ct.accent}, border=${ct.border}, shadow=${ct.shadow_color}\nFonts: display=${tp.font_display}, body=${tp.font_body}, mono=${tp.font_mono}\nRadius: sm=${dc.components?.border_radius?.small}, md=${dc.components?.border_radius?.medium}, lg=${dc.components?.border_radius?.large}\nDark mode: ${dc.dark_mode ? 'yes' : 'no'}`;
+    if (dc.pages?.length) base += `\nPages: ${dc.pages.map(p=>`${p.name}(${p.route})`).join(', ')}`;
+  }
+
   // Context Compaction (Improvement 3) — inject compressed prior-phase decisions
   if (BUILD_COMPACTIONS.length > 0) {
-    const signals = BUILD_COMPACTIONS.map(c => {
+    const signals = BUILD_COMPACTIONS.filter(c => c.phase !== 'blueprint' && c.phase !== 'design_contract').map(c => {
       const sigs = Object.entries(c.signals || {})
         .filter(([,v]) => (Array.isArray(v) ? v.length : !!v))
         .map(([k,v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
         .join('; ');
       return `[${c.phase}] ${sigs}`;
     }).join('\n');
-    base += `\n\n## Prior Phase Decisions (maintain consistency):\n${signals}`;
+    if (signals) base += `\n\n## Prior Phase Decisions (maintain consistency):\n${signals}`;
   }
   // CLAUDE.md Read-Back (Improvement 6) — inject existing project context
   if (EXISTING_CLAUDE_MD) {
