@@ -5975,6 +5975,20 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
           'tsconfig.json': fe.tsconfig,
         };
 
+        // ── Template compatibility: also write to [locale] paths ──────────
+        // SaaS boilerplate templates use i18n routing: /[locale]/(unauth)/page.tsx
+        // If we only write to src/app/page.tsx, the middleware redirects to the
+        // locale path and serves the template's default content instead.
+        // Writing to BOTH paths ensures Dynasty content appears regardless of routing.
+        if (fe.page_tsx) {
+          // Strip i18n-incompatible imports (getTranslations etc.) — Dynasty pages are self-contained
+          const cleanPage = fe.page_tsx;
+          feFiles['src/app/[locale]/(unauth)/page.tsx'] = cleanPage;
+        }
+        if (fe.dashboard_tsx) {
+          feFiles['src/app/[locale]/(auth)/dashboard/page.tsx'] = fe.dashboard_tsx;
+        }
+
         // ── Post-generation build safety checks ──────────────────────────────
         // Fix 1: Ensure globals.css has Tailwind directives
         if (feFiles['src/app/globals.css'] && !feFiles['src/app/globals.css'].includes('@tailwind base')) {
@@ -5985,7 +5999,7 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
           feFiles['src/app/globals.css'] = '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n@layer base {\n  :root {\n    --background: 0 0% 100%;\n    --foreground: 222.2 84% 4.9%;\n  }\n  .dark {\n    --background: 222.2 84% 4.9%;\n    --foreground: 210 40% 98%;\n  }\n}\n';
         }
         // Fix 3: Replace @heroicons/react with lucide-react in all TSX files
-        for (const fpath of ['src/app/page.tsx', 'src/app/dashboard/page.tsx', 'src/app/layout.tsx']) {
+        for (const fpath of ['src/app/page.tsx', 'src/app/dashboard/page.tsx', 'src/app/layout.tsx', 'src/app/[locale]/(unauth)/page.tsx', 'src/app/[locale]/(auth)/dashboard/page.tsx']) {
           if (feFiles[fpath] && feFiles[fpath].includes('@heroicons/react')) {
             // Common heroicons v1→lucide mappings
             const iconMap = {
