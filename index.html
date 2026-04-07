@@ -3160,7 +3160,7 @@ SMS-iT: [3-message follow-up sequence]
 ---END:gtm_playbook---
 `, ['biz_system','revenue_model','gtm_playbook'], 7000);
       setP('g4a','ok',`Business strategy ready`);
-      await compactPhase('business', bs);
+      await compactPhase('business', bz1);
     }catch(e){setP('g4a','er',e.message);throw e;}
 
     // ── Parallel Execution: Agent System runs concurrently with Business wrap-up ──
