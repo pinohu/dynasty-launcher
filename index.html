@@ -609,16 +609,6 @@ html,body{overflow-x:hidden}
 <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 </head>
 <body>
-<div class="page">
-  <div class="logo" id="builder-header" style="display:none">
-    <div class="lm">⚡</div>
-    <div><div class="lt">Dynasty Business System Launcher</div><div class="ls">Describe your project — everything else is inferred and built automatically</div></div>
-    <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:60px">Sign In</button>
-    <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">📊</button>
-    <button class="lset" id="settings-btn" title="Settings">⚙</button>
-  </div>
-
-
   <!-- ═══ LANDING PAGE — Enterprise Grade ═══ -->
   <div id="landing" style="display:block;overflow-x:hidden">
 
@@ -819,6 +809,17 @@ html,body{overflow-x:hidden}
       </div>
     </div>
   </div>
+
+
+<div class="page" style="display:none">
+  <div class="logo" id="builder-header" style="display:none">
+    <div class="lm">⚡</div>
+    <div><div class="lt">Dynasty Business System Launcher</div><div class="ls">Describe your project — everything else is inferred and built automatically</div></div>
+    <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:60px">Sign In</button>
+    <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">📊</button>
+    <button class="lset" id="settings-btn" title="Settings">⚙</button>
+  </div>
+
 
   <div id="mode-screen" style="display:none">
     <div class="hero">
@@ -2112,6 +2113,7 @@ async function enterBuilder() {
   if (!authed) return;
   
   document.getElementById('landing').style.display = 'none';
+  document.querySelector('.page').style.display = 'block';
   document.getElementById('builder-header').style.display = 'flex';
   document.getElementById('mode-screen').style.display = 'block';
 }
