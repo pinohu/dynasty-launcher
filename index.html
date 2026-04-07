@@ -4301,7 +4301,7 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
     addP('cr',`Creating github.com/${ORG}/${inf.repo}`);setP('cr','run','From dynasty-project-template…');
     // Authority site types push into DYNASTY-SITE-FACTORY instead of creating a standalone repo
     const authorityTypes=['auth-gen','auth-pest','auth-imm','auth-freight','auth-legal','auth-hvac','auth-med','landing'];
-    isAuthority=authorityTypes.includes(inf.type_id||'');
+    isAuthority = authorityTypes.includes(inf.type_id||'') || V2_DEPLOY_TARGET === 'authority';
 
     // Preset mapping based on project type
     const presetMap={
