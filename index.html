@@ -193,7 +193,8 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .pm-row label{font-size:10px;color:var(--sec);min-width:80px}
 .pm-row select{flex:1;padding:4px 6px;background:var(--panel);border:1px solid var(--bdr);border-radius:4px;color:var(--tx);font-size:10px}
 /* Deploy grid */
-.deploy-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.deploy-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+@media(max-width:600px){.deploy-grid{grid-template-columns:1fr 1fr}}
 .deploy-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem;cursor:pointer;transition:.15s}
 .deploy-card:hover{border-color:var(--gb)}
 .deploy-card.selected{border-color:var(--gold);background:var(--gdim)}
@@ -627,37 +628,98 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
       </details>
     </div>
 
-    <!-- Deployment Target -->
+    <!-- Project Category + Deployment Target -->
     <div class="cfg-section">
-      <h3 class="cfg-label">Deployment Target</h3>
-      <p class="cfg-desc">Choose what gets deployed. All options generate the full 23-file business system.</p>
-      <div class="deploy-grid" id="deploy-grid">
-        <div class="deploy-card selected" data-target="backend-only" onclick="selectDeploy(this,'backend-only')">
-          <div class="dc-icon">📦</div>
-          <h4>Backend + Docs</h4>
-          <p>GitHub repo with all files. No public URL. Build frontend yourself or with Claude Code.</p>
+      <h3 class="cfg-label">What are you building?</h3>
+      <p class="cfg-desc">Pick the closest category. This selects the best template and infrastructure — the AI handles the rest.</p>
+
+      <div class="deploy-grid" id="category-grid">
+
+        <!-- SaaS & Platforms -->
+        <div class="deploy-card" data-target="fullstack" data-category="saas" onclick="selectCategory(this,'fullstack','saas')">
+          <div class="dc-icon">🚀</div>
+          <h4>SaaS Platform</h4>
+          <p>Auth, billing, dashboard, multi-tenancy. Full-stack on Vercel.</p>
+          <div class="dc-extra" style="color:var(--grn)">Clerk · Stripe · Neon · shadcn</div>
         </div>
-        <div class="deploy-card" data-target="fullstack" onclick="selectDeploy(this,'fullstack')">
-          <div class="dc-icon">🌐</div>
-          <h4>Full-Stack Deploy</h4>
-          <p>Next.js frontend scaffolded + deployed to Vercel. Live public URL immediately.</p>
-          <div class="dc-extra">+12 frontend files · ~2 min extra</div>
+
+        <div class="deploy-card" data-target="fullstack" data-category="enterprise" onclick="selectCategory(this,'fullstack','enterprise')">
+          <div class="dc-icon">🏢</div>
+          <h4>Enterprise SaaS</h4>
+          <p>SSO/SAML, audit logs, webhooks, team management.</p>
+          <div class="dc-extra" style="color:var(--grn)">NextAuth · Prisma · RBAC</div>
         </div>
-        <div class="deploy-card" data-target="authority" onclick="selectDeploy(this,'authority')">
+
+        <div class="deploy-card" data-target="fullstack" data-category="ai" onclick="selectCategory(this,'fullstack','ai')">
+          <div class="dc-icon">🤖</div>
+          <h4>AI Application</h4>
+          <p>Agent framework, chat UI, or AI dashboard with LLM integration.</p>
+          <div class="dc-extra" style="color:var(--grn)">OpenAI · Anthropic · RAG</div>
+        </div>
+
+        <div class="deploy-card" data-target="fullstack" data-category="dashboard" onclick="selectCategory(this,'fullstack','dashboard')">
+          <div class="dc-icon">📊</div>
+          <h4>Dashboard / Portal</h4>
+          <p>Admin panel, client portal, CRM, or analytics dashboard.</p>
+          <div class="dc-extra" style="color:var(--grn)">Tables · Charts · RBAC · Cmd+K</div>
+        </div>
+
+        <div class="deploy-card" data-target="fullstack" data-category="service" onclick="selectCategory(this,'fullstack','service')">
+          <div class="dc-icon">👥</div>
+          <h4>Service Business</h4>
+          <p>Booking, scheduling, lead gen, or client management tool.</p>
+          <div class="dc-extra" style="color:var(--grn)">Calendar · Forms · Email</div>
+        </div>
+
+        <div class="deploy-card" data-target="fullstack" data-category="directory" onclick="selectCategory(this,'fullstack','directory')">
+          <div class="dc-icon">🏪</div>
+          <h4>Directory / Marketplace</h4>
+          <p>Listings, search, member profiles, reviews, job board.</p>
+          <div class="dc-extra" style="color:var(--grn)">Search · Profiles · Tiers</div>
+        </div>
+
+        <div class="deploy-card" data-target="fullstack" data-category="ecom" onclick="selectCategory(this,'fullstack','ecom')">
+          <div class="dc-icon">🛒</div>
+          <h4>E-Commerce</h4>
+          <p>Products, cart, payments, inventory, order management.</p>
+          <div class="dc-extra" style="color:var(--grn)">Stripe · Products · Cart</div>
+        </div>
+
+        <div class="deploy-card" data-target="authority" data-category="authority" onclick="selectCategory(this,'authority','authority')">
           <div class="dc-icon">📰</div>
-          <h4>Authority Site</h4>
-          <p>SEO-optimized content site via Ailurophobia engine. Blog + niche config + Vercel deploy.</p>
+          <h4>Authority / Content Site</h4>
+          <p>SEO-optimized blog, articles, FAQ, directory, location pages.</p>
+          <div class="dc-extra" style="color:var(--grn)">Blog · SEO · Social Calendar</div>
         </div>
-        <div class="deploy-card" data-target="wordpress" onclick="selectDeploy(this,'wordpress')">
-          <div class="dc-icon">🔧</div>
-          <h4>WordPress on 20i</h4>
-          <p>WordPress package provisioned on 20i with Dynasty Developer theme.</p>
-        </div>
-        <div class="deploy-card" data-target="static" onclick="selectDeploy(this,'static')">
+
+        <div class="deploy-card" data-target="static" data-category="landing" onclick="selectCategory(this,'static','landing')">
           <div class="dc-icon">📄</div>
-          <h4>Static Landing Page</h4>
-          <p>Single HTML page deployed to Vercel or 20i. Lead capture, coming-soon, MVPs.</p>
+          <h4>Landing Page</h4>
+          <p>Single-page lead capture, waitlist, or coming-soon page.</p>
+          <div class="dc-extra" style="color:var(--dim)">AI-generated HTML · instant</div>
         </div>
+
+        <div class="deploy-card" data-target="wordpress" data-category="wordpress" onclick="selectCategory(this,'wordpress','wordpress')">
+          <div class="dc-icon">🔧</div>
+          <h4>WordPress Site</h4>
+          <p>WordPress on 20i hosting with Dynasty Developer theme.</p>
+          <div class="dc-extra" style="color:var(--dim)">20i · WP Pinnacle</div>
+        </div>
+
+        <div class="deploy-card" data-target="backend-only" data-category="backend" onclick="selectCategory(this,'backend-only','backend')">
+          <div class="dc-icon">📦</div>
+          <h4>Backend + Docs Only</h4>
+          <p>FastAPI backend, Docker, full docs. Build frontend yourself.</p>
+          <div class="dc-extra" style="color:var(--dim)">Python · Docker · Claude Code</div>
+        </div>
+
+        <div class="deploy-card" data-target="backend-only" data-category="suitedash" onclick="selectCategory(this,'backend-only','suitedash')">
+          <div class="dc-icon">⚙️</div>
+          <h4>SuiteDash Niche Pack</h4>
+          <p>Client portal niche pack deployed on your SuiteDash license.</p>
+          <div class="dc-extra" style="color:var(--dim)">136 Pinnacle licenses</div>
+        </div>
+
       </div>
     </div>
 
@@ -1952,6 +2014,31 @@ function populatePhaseModels(models) {
     </div>
   `).join('');
 }
+
+let V2_CATEGORY = 'backend'; // saas|enterprise|ai|dashboard|service|directory|ecom|authority|landing|wordpress|backend|suitedash
+
+function selectCategory(el, target, category) {
+  V2_DEPLOY_TARGET = target;
+  V2_CATEGORY = category;
+  document.querySelectorAll('#category-grid .deploy-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// Category → type_id override map (forces correct type when AI is ambiguous)
+const CATEGORY_TYPE_HINTS = {
+  'saas':       ['dark-saas','gov-saas','compliance'],
+  'enterprise': ['enterprise-saas'],
+  'ai':         ['ai-platform','ai-chat','ai-dashboard'],
+  'dashboard':  ['client-portal','ai-dashboard','crm'],
+  'service':    ['booking-service','signing-service','lead-gen','crm'],
+  'directory':  ['bd-dir','member-dir','job-board'],
+  'ecom':       ['ecom'],
+  'authority':  ['auth-gen','auth-pest','auth-imm','auth-freight','auth-legal','auth-hvac','auth-med'],
+  'landing':    ['landing'],
+  'wordpress':  ['wp-theme'],
+  'backend':    ['api-svc','dark-saas','custom'],
+  'suitedash':  ['suitedash-niche'],
+};
 
 function selectDeploy(el, target) {
   V2_DEPLOY_TARGET = target;
@@ -4495,48 +4582,37 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
     // Authority sites: skip old DYNASTY-SITE-FACTORY path, use authority_deploy instead
 
     // ── SMART TEMPLATE MAPPING ────────────────────────────────────────────
-    // Maps type_id to the best template repo. World-class open-source forks
-    // give Claude Code a massive head start vs generating from scratch.
-    const TEMPLATE_MAP = {
-      // SaaS (Clerk + Drizzle + Neon + Stripe + multi-tenancy + i18n)
-      'dark-saas':       'dynasty-saas-template',
-      'gov-saas':        'dynasty-saas-template',
-      'compliance':      'dynasty-saas-template',
-      // Enterprise SaaS (SSO/SAML + audit logs + team management)
-      'enterprise-saas': 'dynasty-enterprise-template',
-      // Dashboards (shadcn + CRUD tables + charts + RBAC + Cmd+K)
-      'client-portal':   'dynasty-dashboard-template',
-      'ai-dashboard':    'dynasty-dashboard-template',
-      'crm':             'dynasty-dashboard-template',
-      // AI platforms (agent framework + backend + RAG)
-      'ai-platform':     'aiinfos',
-      // AI chat (ChatGPT-style dashboard + LLM integration)
-      'ai-chat':         'dynasty-ai-chat-template',
-      // Lead generation (Next.js + Prisma lead capture/nurture)
-      'lead-gen':        'dynasty-saas-template',
-      // Booking / Signing (appointment + calendar)
-      'booking-service': 'dynasty-nextjs-template',
-      'signing-service': 'dynasty-nextjs-template',
-      // Directories & marketplaces
-      'bd-dir':          'dynasty-nextjs-template',
-      'member-dir':      'dynasty-nextjs-template',
-      'job-board':       'dynasty-nextjs-template',
-      // E-commerce
-      'ecom':            'dynasty-saas-template',
-      // Real estate
-      'real-estate':     'dynasty-dashboard-template',
-      // Default fullstack
-      'api-svc':         'dynasty-nextjs-template',
-      'n8n':             'dynasty-project-template',
-      'flint-proj':      'dynasty-project-template',
+    // Category-first: V2_CATEGORY (user selection) → specific template
+    // Falls back to type_id if category is generic
+    const CATEGORY_TEMPLATE = {
+      'saas':       'dynasty-saas-template',
+      'enterprise': 'dynasty-enterprise-template',
+      'ai':         'dynasty-ai-chat-template',
+      'dashboard':  'dynasty-dashboard-template',
+      'service':    'dynasty-nextjs-template',
+      'directory':  'dynasty-nextjs-template',
+      'ecom':       'dynasty-saas-template',
+      'authority':  'dynasty-authority-template',
+      'landing':    'dynasty-project-template',
+      'wordpress':  'dynasty-project-template',
+      'backend':    'dynasty-project-template',
+      'suitedash':  'dynasty-project-template',
     };
 
-    // Select template: deploy-target override → type_id map → default
+    // Type_id refinement (overrides category when more specific)
+    const TYPE_TEMPLATE = {
+      'ai-platform':     'aiinfos',
+      'ai-dashboard':    'dynasty-dashboard-template',
+      'enterprise-saas': 'dynasty-enterprise-template',
+      'crm':             'dynasty-dashboard-template',
+      'real-estate':     'dynasty-dashboard-template',
+    };
+
     let tmplName;
-    if (V2_DEPLOY_TARGET === 'fullstack') {
-      tmplName = TEMPLATE_MAP[inf.type_id] || 'dynasty-nextjs-template';
+    if (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority') {
+      tmplName = TYPE_TEMPLATE[inf.type_id] || CATEGORY_TEMPLATE[V2_CATEGORY] || 'dynasty-nextjs-template';
     } else {
-      tmplName = 'dynasty-project-template'; // backend-only gets lightweight template
+      tmplName = 'dynasty-project-template';
     }
     const tmpl = `${ORG}/${tmplName}`;
 
@@ -5236,7 +5312,8 @@ async function downloadAllFiles() {
 
 function reset(){
   INFERRED=null;PRGS=[];isAuthority=false;LAUNCH_URL=null;provRes=null;
-  V2_SCORECARD=null;V2_BUILD_COST=0;
+  V2_SCORECARD=null;V2_BUILD_COST=0;V2_DEPLOY_TARGET='backend-only';V2_CATEGORY='backend';
+  RESEARCH_DATA=null;FRAMEWORK_SYNTHESIS=null;
   document.getElementById('mode-screen').style.display='block';
   document.getElementById('input-screen').style.display='none';
   document.getElementById('framework-screen').style.display='none';
