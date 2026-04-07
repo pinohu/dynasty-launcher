@@ -6838,6 +6838,56 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
           }
         }
       }
+
+      // ── 7. Remove template branding (SaaS Boilerplate badges, sponsor logos) ──
+      // SaaS boilerplate templates include "Demo of SaaS Boilerplate" badges
+      // and links to nextjs-boilerplate.com — these must be stripped.
+      const brandingFiles = {
+        'src/components/DemoBadge.tsx': 'export const DemoBadge = () => null;\n',
+        'src/templates/DemoBanner.tsx': 'export const DemoBanner = () => null;\n',
+      };
+      for (const [fpath, replacement] of Object.entries(brandingFiles)) {
+        files[fpath] = replacement;
+      }
+      // Strip boilerplate references from ALL generated files
+      for (const [fpath, content] of Object.entries(files)) {
+        if (typeof content === 'string' && (
+          content.includes('nextjs-boilerplate.com') ||
+          content.includes('SaaS Boilerplate') ||
+          content.includes('Demo of SaaS')
+        )) {
+          files[fpath] = content
+            .replace(/https?:\/\/[^\s"']*nextjs-boilerplate\.com[^\s"']*/g, '#')
+            .replace(/Demo of SaaS Boilerplate/g, inf.name || 'Dashboard')
+            .replace(/SaaS Boilerplate/g, inf.name || 'Platform')
+            .replace(/SaaS Template/g, inf.name || 'Platform');
+        }
+      }
+
+      // ── 8. Override template i18n translations with project-specific text ──
+      // The SaaS boilerplate has en.json/fr.json with "SaaS Template" everywhere
+      const translationOverrides = {
+        'meta_title': `${inf.name} - ${inf.type_label || 'Platform'}`,
+        'meta_description': desc.slice(0, 160),
+        'title': `The <important>${inf.name}</important> platform to ${(desc.match(/that\s+(.{20,80}?)[\.\,]/)||[])[1] || 'solve your problem with ease'}.`,
+        'description': desc.slice(0, 200),
+        'primary_button': 'Get Started',
+        'secondary_button': 'Learn More',
+        'section_title': `Unlock the Full Potential of ${inf.name}`,
+        'section_description': desc.slice(0, 150),
+      };
+      for (const locale of ['src/locales/en.json', 'src/locales/fr.json']) {
+        if (files[locale]) {
+          try {
+            const tr = JSON.parse(files[locale]);
+            if (tr.Index) Object.assign(tr.Index, { meta_title: translationOverrides.meta_title, meta_description: translationOverrides.meta_description });
+            if (tr.Hero) Object.assign(tr.Hero, { title: translationOverrides.title, description: translationOverrides.description, primary_button: translationOverrides.primary_button, secondary_button: translationOverrides.secondary_button });
+            if (tr.Features) Object.assign(tr.Features, { section_title: translationOverrides.section_title, section_description: translationOverrides.section_description });
+            if (tr.Dashboard) Object.assign(tr.Dashboard, { meta_title: `${inf.name} Dashboard` });
+            files[locale] = JSON.stringify(tr, null, 2);
+          } catch {}
+        }
+      }
     })();
 
     // Authority sites: docs pushed by authority_deploy in provision.js
