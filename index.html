@@ -3617,7 +3617,7 @@ const EDU_CONTENT = {
     phase: '⬡ GitHub',
     title: 'Pushing files to your repository',
     body: 'Every generated file is being committed to your private GitHub repository. Once complete, you can clone it locally, invite collaborators, or hand it to a development team. The repo is ready for CI/CD.',
-    tip: '💡 Run "gh repo clone [repo] && cd [repo] && claude" to start building with AI assistance immediately.',
+    tip: '💡 Run "gh repo clone [repo] && cd [repo] && claude" (or pi) to start building with AI assistance.',
     facts: ['Committing design system files...','Pushing business strategy documents...','Uploading backend code and Docker configs...','Adding documentation and config files...'],
     preview: ['feat: DESIGN.md ✓','feat: SPEC.md ✓','feat: BUSINESS-SYSTEM.md ✓','feat: backend/main.py ✓','feat: docker-compose.yml ✓']
   },
@@ -4773,7 +4773,69 @@ export const nicheConfig = {
     const files={
       'DESIGN.md':df.design_md,'CLAUDE.md':df.claude_md,
       ...(isAuthority&&nc?.niche_config?{'src/config/niche.config.ts':nc.niche_config}:{}),
-      'AGENTS.md':`# AGENTS.md — ${inf.name}\nRead: DYNASTY-DESIGN.md → DESIGN.md → CLAUDE.md → SPEC.md → AGENT-SYSTEM.md\n## Git Config\ngit config user.email "polycarpohu@gmail.com"\ngit config user.name "pinohu"\n## Dynasty Bridge\nInbox: POST https://claude-inbox.audreysplace.place/message | Auth: Bearer ${FT}\n## Backend Deploy: docker-compose up -d\n## Safety: feature branches only, no prod DB writes without task spec\n`,
+      'AGENTS.md':`# AGENTS.md — ${inf.name}
+## Quick Start
+Read files in this order: DYNASTY-DESIGN.md → DESIGN.md → CLAUDE.md → SPEC.md → AGENT-SYSTEM.md
+
+## Compatible Agents
+- **Claude Code**: \`gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude\`
+- **Pi Agent**: \`gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && pi\`
+- Pi users: \`pi install npm:@mariozechner/pi-coding-agent\` if not installed
+
+## Git Config
+\`\`\`
+git config user.email "polycarpohu@gmail.com"
+git config user.name "pinohu"
+\`\`\`
+
+## Dynasty Bridge
+Inbox: POST https://claude-inbox.audreysplace.place/message | Auth: Bearer ${FT}
+
+## Backend
+\`docker-compose up -d\`
+
+## Safety
+- Feature branches only
+- No prod DB writes without task spec
+- Run tests before pushing
+
+## Skills (Pi Agent)
+This project includes a \`.pi/\` directory with Dynasty-specific skills.
+Pi will auto-load project instructions from this AGENTS.md on startup.
+`,
+      // Pi Agent project config — makes Pi read the same context as Claude Code
+      '.pi/agent/AGENTS.md':`# Pi Agent Config — ${inf.name}
+# This file is auto-loaded by Pi Agent at startup.
+# It mirrors the root AGENTS.md for Pi compatibility.
+
+Read CLAUDE.md first. It contains all project conventions.
+Then read SPEC.md for the feature spec.
+Then read DESIGN.md for visual design rules.
+
+## Project Type: ${inf.type_label} (${inf.type_id})
+## Stack: ${(inf.stack||[]).join(', ')}
+## Revenue: ${inf.revenue_model} at ${inf.price}
+
+## Key Files
+- BUSINESS-SYSTEM.md — Business strategy and competitive positioning
+- REVENUE-MODEL.md — Revenue projections and unit economics
+- GTM-PLAYBOOK.md — Go-to-market strategy and channels
+- AGENT-SYSTEM.md — AI agent architecture and workflows
+- backend/main.py — FastAPI backend entry point
+- docs/API-CONTRACTS.md — API endpoint specifications
+- docs/DATA-MODEL.md — Database schema and relationships
+
+## Tools Available
+- read, write, edit, bash (Pi defaults)
+- Docker: \`docker-compose up -d\` for backend
+- Vercel: \`vercel --prod\` for frontend deploys
+
+## Dynasty Conventions
+- All colors from DESIGN.md (never hardcode)
+- TypeScript strict mode
+- Server components by default
+- Conventional commits (feat:, fix:, docs:)
+`,
       'SPEC.md':dc.spec_md,'ROADMAP.md':dc.roadmap_md,'README.md':dc.readme_md,
       'MANUAL-ACTIONS.md':dc.manual_md,'.env.example':dc.env_ex,
       '.gitignore':'node_modules/\n.next/\nout/\ndist/\nbuild/\n.vercel/\n.env\n.env.local\n.env.*.local\n.DS_Store\n*.log\ncoverage/\n__pycache__/\n*.py[cod]\n.venv/\nvenv/\n*.tsbuildinfo\nnext-env.d.ts\n',
@@ -4892,13 +4954,13 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
 <body><div class="card">
 <div class="badge">Dynasty Empire</div>
 <h1>${inf.name}</h1>
-<p>Backend-only deployment. Clone the repo and run with Docker to start the server locally, or use Claude Code to build the full-stack frontend.</p>
+<p>Backend-only deployment. Clone the repo and start building with Claude Code or Pi Agent.</p>
 <div class="links">
 <a class="primary" href="https://github.com/${ORG}/${inf.repo}">View on GitHub</a>
 <a class="secondary" href="https://github.com/${ORG}/${inf.repo}/blob/main/README.md">README</a>
 <a class="secondary" href="https://github.com/${ORG}/${inf.repo}/blob/main/SPEC.md">SPEC</a>
 </div>
-<div class="footer">Built by Dynasty Launcher · gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</div>
+<div class="footer">gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude <span style="opacity:0.4">or</span> pi</div>
 </div>${getPostHogSnippet()}</body></html>`;
         }
       }
@@ -5135,7 +5197,7 @@ function showDone(inf,repo,fc,mtasks){
   <div class="bb-item"><div class="bb-l">MVP</div><div class="bb-v">${inf.mvp}</div></div>
   <div class="bb-item"><div class="bb-l">Accent</div><div class="bb-v"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${inf.accent};margin-right:4px;vertical-align:middle"></span>${inf.accent}</div></div>
 </div>
-<div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank">${repoLabel||repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div></div>
+<div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank">${repoLabel||repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div><div class="cmd" style="margin-top:4px;opacity:0.6;font-size:11px">or: gh repo clone ${repo} && cd ${inf.repo} && pi</div></div>
 <div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
 <div class="rc"><h3>Backend + Docker (${beFiles.length})</h3>${beFiles.map(f=>`<div class="lr"><span class="lb lb-be">Code</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}<div style="font-size:11px;color:var(--dim);margin-top:5px">FastAPI + PostgreSQL + Redis · <code style="font-family:monospace">docker-compose up -d</code></div></div>
 <div class="rc"><h3>Design System + Docs (${designFiles.length+docFiles.length})</h3>${[...designFiles,...docFiles].map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
