@@ -1604,30 +1604,44 @@ async function applySelectedRefinements() {
 
 // ── Multi-Model Pivot Review Pipeline ──────────────────────────────────
 
-// Review models — ranked by preference. Pipeline filters to only those with working keys.
+// Review models — full pool including free/open-weight models. More voters = stronger consensus.
 const REVIEW_MODELS_POOL = [
+  // ── Paid frontier models (highest weight — strongest reasoning) ─────────
   { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4', icon: '🟣', color: '#A855F7', weight: 1.5 },
   { id: 'gpt-4o', label: 'GPT-4o', icon: '🟢', color: '#22C55E', weight: 1.3 },
   { id: 'deepseek-chat', label: 'DeepSeek V3', icon: '🟠', color: '#F97316', weight: 1.1 },
-  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', icon: '🔷', color: '#4285F4', weight: 1.0 },
-  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', icon: '🟤', color: '#A16207', weight: 0.9 },
-  { id: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B', icon: '🔵', color: '#3B82F6', weight: 0.8 },
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', icon: '💎', color: '#4285F4', weight: 1.2 },
   { id: 'mistral-large-latest', label: 'Mistral Large', icon: '🟡', color: '#FACC15', weight: 1.0 },
-  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', icon: '💎', color: '#34A853', weight: 0.7 },
-];
-let REVIEW_MODELS = REVIEW_MODELS_POOL.slice(0, 5); // default fallback
 
-// Dynamically filter to only models with working API keys
+  // ── Free frontier-class models (strong reasoning, zero cost) ───────────
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', icon: '🔷', color: '#4285F4', weight: 1.0 },
+  { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', icon: '⚡', color: '#34A853', weight: 0.7 },
+  { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', icon: '🟤', color: '#A16207', weight: 0.9 },
+  { id: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B', icon: '🔵', color: '#3B82F6', weight: 0.7 },
+
+  // ── Free open-weight via OpenRouter (diverse perspectives, zero cost) ──
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B (OR)', icon: '🦙', color: '#8B5CF6', weight: 0.6 },
+  { id: 'google/gemma-2-9b-it:free', label: 'Gemma 2 9B (OR)', icon: '💠', color: '#06B6D4', weight: 0.5 },
+
+  // ── Smaller/faster free models (lower weight but add diversity) ────────
+  { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B', icon: '🐪', color: '#D97706', weight: 0.4 },
+  { id: 'gemma2-9b-it', label: 'Gemma 2 9B', icon: '🔶', color: '#0EA5E9', weight: 0.4 },
+  { id: 'mistral-small-latest', label: 'Mistral Small', icon: '🌕', color: '#EAB308', weight: 0.5 },
+];
+let REVIEW_MODELS = REVIEW_MODELS_POOL.slice(0, 7); // default fallback
+
+// Dynamically filter to only models with working API keys — no cap
 async function initReviewModels() {
   try {
     const data = await loadModels();
     const available = data.models || {};
     const working = REVIEW_MODELS_POOL.filter(m => available[m.id]?.available);
     if (working.length >= 3) {
-      REVIEW_MODELS = working.slice(0, 5); // cap at 5 best available
+      REVIEW_MODELS = working; // USE ALL AVAILABLE — more voters = better consensus
       console.log(`Review pipeline: ${REVIEW_MODELS.length} models available — ${REVIEW_MODELS.map(m => m.label).join(', ')}`);
     } else {
-      console.warn(`Only ${working.length} models have keys — using pool of ${REVIEW_MODELS_POOL.length} (some may fail)`);
+      console.warn(`Only ${working.length} models have keys — using top 7 from pool`);
+      REVIEW_MODELS = REVIEW_MODELS_POOL.slice(0, 7);
     }
   } catch {}
   return REVIEW_MODELS;
