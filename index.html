@@ -1480,6 +1480,15 @@ Return 4-5 paragraphs of brutal, specific critique.`,
   // ── Render consensus result ───────────────────────────────────────────
   const bestSynthesis = syntheses[0] || winner?.pivot_description || '';
 
+  // Store state for iterative refinement
+  window._refineState = {
+    currentIdea: winner?.pivot_description || desc,
+    currentCritique: devilsCritique,
+    originalIdea: desc,
+    scorecard: V2_SCORECARD,
+    rounds: [],
+  };
+
   document.getElementById('consensus-result').innerHTML = `
     <div class="consensus-card">
       <div class="consensus-title">🏆 Consensus Recommendation</div>
@@ -1511,7 +1520,16 @@ Return 4-5 paragraphs of brutal, specific critique.`,
       <div style="font-size:14px;font-weight:600;color:var(--red);margin-bottom:.75rem">😈 Devil's Advocate</div>
       <div style="font-size:12px;color:var(--sec);line-height:1.7;white-space:pre-wrap">${devilsCritique}</div>
       <div style="font-size:10px;color:var(--dim);margin-top:.75rem;font-style:italic">Powered by Claude Opus 4 — the harshest critic available</div>
-    </div>` : ''}
+    </div>
+    <div id="refine-controls" style="margin:0.75rem 0">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="launch" style="flex:2;background:linear-gradient(135deg,rgba(229,83,75,0.15),rgba(201,168,76,0.15));border:1px solid rgba(201,168,76,0.3);color:var(--gold)" onclick="refineWithDevil(3)">🔄 Refine with Devil's Advocate (3 rounds)</button>
+        <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="refineWithDevil(1)">1 round</button>
+        <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="refineWithDevil(5)">5 rounds</button>
+      </div>
+      <div style="font-size:10px;color:var(--dim);margin-top:6px">Each round: AI addresses the critique → Devil's Advocate attacks again → repeat until bulletproof</div>
+    </div>
+    <div id="refine-log" style="display:none"></div>` : ''}
     ${runnerUp ? `
     <details style="margin-top:8px">
       <summary style="font-size:11px;color:var(--dim);cursor:pointer">Runner-up: ${runnerUp._model} (${runnerUp.votes} votes, ${runnerUp.avgScore?.toFixed(1)}/10 avg) ▼</summary>
@@ -1552,6 +1570,171 @@ function modifyPivot(pivotDesc) {
       </div>
     </div>
   `;
+}
+
+// ── Iterative Adversarial Refinement Engine ──────────────────────────────────
+// Takes Devil's Advocate critique → refines idea → attacks again → repeat
+// Each round the idea gets sharper until the Devil can't find fatal flaws.
+async function refineWithDevil(maxRounds = 3) {
+  const state = window._refineState;
+  if (!state) return;
+
+  const log = document.getElementById('refine-log');
+  const controls = document.getElementById('refine-controls');
+  if (controls) controls.style.display = 'none';
+  log.style.display = 'block';
+  log.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:12px">🔄 Adversarial Refinement Loop</div>';
+
+  let currentIdea = state.currentIdea;
+  let currentCritique = state.currentCritique;
+  let allRounds = [...(state.rounds || [])];
+
+  for (let round = 1; round <= maxRounds; round++) {
+    // ── Step A: Refine the idea based on the critique ──────────────────
+    const roundEl = document.createElement('div');
+    roundEl.style.cssText = 'border:1px solid var(--bdr);border-radius:var(--rl);padding:16px;margin-bottom:12px;background:var(--panel)';
+    roundEl.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:600;color:var(--gold)">Round ${round}/${maxRounds}</span>
+      <span id="refine-status-${round}" style="font-size:11px;color:var(--dim)">Refining idea...</span>
+    </div><div id="refine-content-${round}"><div class="thinking-dots"><span></span><span></span><span></span></div></div>`;
+    log.appendChild(roundEl);
+
+    let refinedIdea = '';
+    try {
+      const refineRaw = await aiRawWithModel(
+        `You are a world-class business strategist. A business idea was brutally critiqued. Your job: ADDRESS EVERY SINGLE CRITICISM and produce a significantly improved version.
+
+CURRENT IDEA:
+${currentIdea}
+
+DEVIL'S ADVOCATE CRITIQUE:
+${currentCritique}
+
+ORIGINAL IDEA (for context): ${state.originalIdea}
+ORIGINAL SCORE: ${state.scorecard?.composite || 'N/A'}/10
+
+Your task:
+1. For EACH specific criticism, explain how the refined idea addresses or neutralizes it
+2. Produce a refined business description that is fundamentally stronger
+3. Be specific — include pricing, target market, go-to-market, and competitive positioning
+4. Don't just tweak — if the critique reveals a fatal flaw, pivot around it
+
+Return ONLY valid JSON:
+{
+  "refined_idea": "3-5 sentence refined business description — specific, actionable, addresses every critique",
+  "critiques_addressed": [
+    {"critique": "Brief summary of original critique point", "response": "How the refined idea addresses this"},
+    ...for each major critique
+  ],
+  "key_changes": ["Change 1", "Change 2", "Change 3"],
+  "predicted_score": 8.5,
+  "confidence": "high/medium/low"
+}`,
+        'claude-sonnet-4-20250514', 3000
+      );
+
+      const match = refineRaw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('No JSON in refinement response');
+      const refined = JSON.parse(match[0]);
+      refinedIdea = refined.refined_idea || currentIdea;
+
+      const addressedHtml = (refined.critiques_addressed || []).map(c =>
+        `<div style="margin:6px 0;padding:8px;background:rgba(74,222,128,0.04);border-left:2px solid rgba(74,222,128,0.3);border-radius:0 4px 4px 0">
+          <div style="font-size:11px;color:var(--red);margin-bottom:3px">❌ ${c.critique}</div>
+          <div style="font-size:11px;color:var(--grn)">✓ ${c.response}</div>
+        </div>`
+      ).join('');
+
+      const changesHtml = (refined.key_changes || []).map(c =>
+        `<span style="font-size:10px;background:rgba(201,168,76,0.1);color:var(--gold);padding:2px 8px;border-radius:10px;border:1px solid rgba(201,168,76,0.2)">${c}</span>`
+      ).join(' ');
+
+      document.getElementById(`refine-content-${round}`).innerHTML = `
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:600;color:#4ADE80;margin-bottom:4px">✅ Refined Idea</div>
+          <div style="font-size:12px;color:var(--tx);line-height:1.6">${refinedIdea}</div>
+        </div>
+        <div style="margin-bottom:8px">
+          <div style="font-size:10px;font-weight:600;color:var(--dim);margin-bottom:4px">Changes: ${changesHtml}</div>
+        </div>
+        <details>
+          <summary style="font-size:10px;color:var(--dim);cursor:pointer">Critiques addressed (${(refined.critiques_addressed||[]).length}) ▼</summary>
+          ${addressedHtml}
+        </details>
+        <div style="font-size:10px;color:var(--dim);margin-top:6px">Predicted: ${refined.predicted_score}/10 · Confidence: ${refined.confidence || 'medium'}</div>
+      `;
+      document.getElementById(`refine-status-${round}`).textContent = 'Attacking refined idea...';
+      document.getElementById(`refine-status-${round}`).style.color = 'var(--red)';
+    } catch (e) {
+      document.getElementById(`refine-content-${round}`).innerHTML = `<div style="color:var(--red);font-size:11px">Refinement failed: ${e.message}</div>`;
+      document.getElementById(`refine-status-${round}`).textContent = 'Failed';
+      break;
+    }
+
+    // ── Step B: Devil's Advocate attacks the refined idea ────────────────
+    let newCritique = '';
+    try {
+      newCritique = await aiRawWithModel(
+        `You are a ruthless VC partner. Round ${round} of adversarial refinement. The founder has addressed your previous criticisms and refined their idea. Your job: find NEW fatal flaws. Do NOT repeat criticisms that have been addressed.
+
+REFINED IDEA (round ${round}):
+${refinedIdea}
+
+PREVIOUS CRITIQUE (already addressed — do NOT repeat these):
+${currentCritique}
+
+ORIGINAL IDEA: ${state.originalIdea}
+
+Rules:
+- Only raise NEW concerns not covered by your previous critique
+- If the refinement genuinely fixed a problem, acknowledge it briefly then move on
+- Focus on second-order effects, scaling challenges, competitive responses, and market timing
+- If the idea is now genuinely strong, say so — but still find the 1-2 remaining vulnerabilities
+- Be specific with numbers, market references, and real competitive dynamics
+
+${round >= maxRounds ? 'This is the FINAL round. Give your honest final assessment: is this business viable? What is the single biggest remaining risk?' : ''}
+
+Return 3-4 paragraphs. If the idea has become genuinely strong, your critique should be shorter and more targeted.`,
+        'claude-opus-4-20250514', 2000
+      );
+    } catch {
+      newCritique = 'Devil\'s advocate unavailable for this round.';
+    }
+
+    // Append critique to round display
+    const critiqueEl = document.createElement('div');
+    critiqueEl.style.cssText = 'margin-top:10px;padding:10px;background:rgba(229,83,75,0.04);border:1px solid rgba(229,83,75,0.15);border-radius:8px';
+    critiqueEl.innerHTML = `
+      <div style="font-size:11px;font-weight:600;color:var(--red);margin-bottom:4px">😈 Counter-Attack (Round ${round})</div>
+      <div style="font-size:11px;color:var(--sec);line-height:1.6;white-space:pre-wrap">${newCritique}</div>
+    `;
+    document.getElementById(`refine-content-${round}`).appendChild(critiqueEl);
+    document.getElementById(`refine-status-${round}`).textContent = '✓ Complete';
+    document.getElementById(`refine-status-${round}`).style.color = 'var(--grn)';
+
+    // Save round data
+    allRounds.push({ round, refinedIdea, critique: newCritique });
+    currentIdea = refinedIdea;
+    currentCritique = newCritique;
+  }
+
+  // ── Final: Show accept button with the fully refined idea ────────────────
+  window._refineState.currentIdea = currentIdea;
+  window._refineState.currentCritique = currentCritique;
+  window._refineState.rounds = allRounds;
+
+  const finalEl = document.createElement('div');
+  finalEl.style.cssText = 'margin-top:16px;padding:16px;background:linear-gradient(135deg,rgba(74,222,128,0.06),rgba(201,168,76,0.06));border:1px solid rgba(201,168,76,0.3);border-radius:var(--rl)';
+  finalEl.innerHTML = `
+    <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">🏆 Final Refined Idea (after ${allRounds.length} adversarial rounds)</div>
+    <div style="font-size:13px;color:var(--tx);line-height:1.7;margin-bottom:12px">${currentIdea}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="launch" style="flex:2" onclick="acceptPivot('${currentIdea.replace(/'/g, "\\'")}')">Accept refined idea →</button>
+      <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="refineWithDevil(2)">🔄 2 more rounds</button>
+      <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="modifyPivot('${currentIdea.replace(/'/g, "\\'")}')">Modify</button>
+    </div>
+  `;
+  log.appendChild(finalEl);
 }
 
 async function startBuild() {
