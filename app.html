@@ -5904,6 +5904,14 @@ volumes:
       try {
         const fe = await ai(`GENERATE NEXT.JS 14 APP ROUTER FRONTEND SCAFFOLD. Production-ready TypeScript code. Use the design system from the project config.
 
+CRITICAL BUILD RULES (violations cause Vercel deploy failure):
+1. ICONS: Use lucide-react for ALL icons (NOT @heroicons/react). Import only icons you actually USE. Example: import { ArrowRight, Check, Shield } from 'lucide-react'
+2. UNUSED IMPORTS: NEVER import anything you don't use in the component. TypeScript strict mode treats unused imports as build errors.
+3. PACKAGE.JSON: Must include ALL imported packages. Required deps: next, react, react-dom, lucide-react, tailwindcss, postcss, autoprefixer, typescript, @types/react, @types/node
+4. GLOBALS.CSS: Must start with @tailwind base; @tailwind components; @tailwind utilities;
+5. LAYOUT.TSX: Must import './globals.css' — this file MUST exist
+6. Do NOT use 'use client' unless the component has useState/useEffect/onClick handlers
+
 ${cx(desc, inf)}
 Design: surface=${inf.surface}, accent=${inf.accent}, fonts=${inf.fonts}
 
@@ -5911,24 +5919,30 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
 
 ---BEGIN:layout_tsx---
 // src/app/layout.tsx — Root layout with metadata, fonts, global styles
-// Use Tailwind CSS, import global stylesheet
-// Include proper <html> and <body> with dark/light mode support
+// MUST import './globals.css'
+// Use next/font/google for fonts. Include proper <html> and <body>
+// Do NOT add 'use client' — layouts should be server components
 ---END:layout_tsx---
 
 ---BEGIN:page_tsx---
 // src/app/page.tsx — Landing page with hero, features, pricing, CTA
+// Use lucide-react for icons (NOT heroicons). Only import icons you USE.
 // Professional design matching the accent color and surface mode
 // Include at least: hero section, 3 feature cards, pricing section, footer
 ---END:page_tsx---
 
 ---BEGIN:dashboard_tsx---
 // src/app/dashboard/page.tsx — Authenticated dashboard
+// Use lucide-react for icons (NOT heroicons). Only import icons you USE.
 // Stats cards, recent activity list, quick actions
 ---END:dashboard_tsx---
 
 ---BEGIN:globals_css---
-// src/app/globals.css — Tailwind directives + CSS custom properties from DESIGN.md
-// Include the full color system as CSS variables
+// src/app/globals.css — MUST start with these 3 lines:
+// @tailwind base;
+// @tailwind components;
+// @tailwind utilities;
+// Then add CSS custom properties for the color system
 ---END:globals_css---
 
 ---BEGIN:tailwind_config---
@@ -5936,7 +5950,9 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
 ---END:tailwind_config---
 
 ---BEGIN:package_json---
-// package.json with all dependencies (next, react, tailwindcss, etc.)
+// package.json — MUST include lucide-react (NOT @heroicons/react) in dependencies
+// Required: next, react, react-dom, lucide-react, tailwindcss, postcss, autoprefixer
+// Required devDeps: typescript, @types/react, @types/node
 ---END:package_json---
 
 ---BEGIN:next_config---
@@ -5958,6 +5974,74 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
           'next.config.js': fe.next_config,
           'tsconfig.json': fe.tsconfig,
         };
+
+        // ── Post-generation build safety checks ──────────────────────────────
+        // Fix 1: Ensure globals.css has Tailwind directives
+        if (feFiles['src/app/globals.css'] && !feFiles['src/app/globals.css'].includes('@tailwind base')) {
+          feFiles['src/app/globals.css'] = '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n' + feFiles['src/app/globals.css'];
+        }
+        // Fix 2: If globals.css is empty/missing, create it
+        if (!feFiles['src/app/globals.css'] || feFiles['src/app/globals.css'].trim().length < 20) {
+          feFiles['src/app/globals.css'] = '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n@layer base {\n  :root {\n    --background: 0 0% 100%;\n    --foreground: 222.2 84% 4.9%;\n  }\n  .dark {\n    --background: 222.2 84% 4.9%;\n    --foreground: 210 40% 98%;\n  }\n}\n';
+        }
+        // Fix 3: Replace @heroicons/react with lucide-react in all TSX files
+        for (const fpath of ['src/app/page.tsx', 'src/app/dashboard/page.tsx', 'src/app/layout.tsx']) {
+          if (feFiles[fpath] && feFiles[fpath].includes('@heroicons/react')) {
+            // Common heroicons v1→lucide mappings
+            const iconMap = {
+              'ArrowRightIcon': 'ArrowRight', 'CheckIcon': 'Check', 'CheckCircleIcon': 'CheckCircle',
+              'ShieldCheckIcon': 'ShieldCheck', 'DatabaseIcon': 'Database', 'LightningBoltIcon': 'Zap',
+              'BoltIcon': 'Zap', 'CircleStackIcon': 'Database', 'PlusIcon': 'Plus',
+              'DocumentTextIcon': 'FileText', 'KeyIcon': 'Key', 'ChartBarIcon': 'BarChart3',
+              'ClockIcon': 'Clock', 'ExclamationCircleIcon': 'AlertCircle', 'XMarkIcon': 'X',
+              'Bars3Icon': 'Menu', 'UserIcon': 'User', 'CogIcon': 'Settings', 'HomeIcon': 'Home',
+              'StarIcon': 'Star', 'HeartIcon': 'Heart', 'MagnifyingGlassIcon': 'Search',
+              'EnvelopeIcon': 'Mail', 'PhoneIcon': 'Phone', 'GlobeAltIcon': 'Globe',
+              'CreditCardIcon': 'CreditCard', 'BuildingOfficeIcon': 'Building2',
+              'RocketLaunchIcon': 'Rocket', 'SparklesIcon': 'Sparkles', 'WrenchIcon': 'Wrench'
+            };
+            let code = feFiles[fpath];
+            // Extract which icons are imported
+            const heroImportMatch = code.match(/import\s*\{([^}]+)\}\s*from\s*['"]@heroicons\/react[^'"]*['"]/);
+            if (heroImportMatch) {
+              const importedIcons = heroImportMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+              const lucideIcons = importedIcons.map(icon => iconMap[icon] || icon.replace(/Icon$/, ''));
+              // Replace import line
+              code = code.replace(heroImportMatch[0], `import { ${lucideIcons.join(', ')} } from 'lucide-react'`);
+              // Replace usage in JSX (e.g. <ArrowRightIcon /> → <ArrowRight />)
+              for (let i = 0; i < importedIcons.length; i++) {
+                const regex = new RegExp(importedIcons[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                code = code.replace(regex, lucideIcons[i]);
+              }
+              feFiles[fpath] = code;
+            }
+          }
+        }
+        // Fix 4: Ensure package.json has lucide-react, not heroicons
+        if (feFiles['package.json']) {
+          try {
+            const pkg = JSON.parse(feFiles['package.json']);
+            if (!pkg.dependencies) pkg.dependencies = {};
+            pkg.dependencies['lucide-react'] = '^0.400.0';
+            delete pkg.dependencies['@heroicons/react'];
+            // Ensure essential deps
+            if (!pkg.dependencies['next']) pkg.dependencies['next'] = '14.2.35';
+            if (!pkg.dependencies['react']) pkg.dependencies['react'] = '^18.3.1';
+            if (!pkg.dependencies['react-dom']) pkg.dependencies['react-dom'] = '^18.3.1';
+            if (!pkg.dependencies['tailwindcss']) pkg.dependencies['tailwindcss'] = '^3.4.1';
+            if (!pkg.devDependencies) pkg.devDependencies = {};
+            if (!pkg.devDependencies['typescript']) pkg.devDependencies['typescript'] = '^5.3.3';
+            if (!pkg.devDependencies['@types/react']) pkg.devDependencies['@types/react'] = '^18.2.0';
+            if (!pkg.devDependencies['@types/node']) pkg.devDependencies['@types/node'] = '^20.11.0';
+            if (!pkg.devDependencies['postcss']) pkg.devDependencies['postcss'] = '^8.4.33';
+            if (!pkg.devDependencies['autoprefixer']) pkg.devDependencies['autoprefixer'] = '^10.4.17';
+            feFiles['package.json'] = JSON.stringify(pkg, null, 2);
+          } catch {}
+        }
+        // Fix 5: Ensure layout.tsx imports globals.css
+        if (feFiles['src/app/layout.tsx'] && !feFiles['src/app/layout.tsx'].includes("globals.css")) {
+          feFiles['src/app/layout.tsx'] = "import './globals.css'\n" + feFiles['src/app/layout.tsx'];
+        }
         setP('g7', 'ok', `${Object.keys(fe).filter(k => fe[k]).length} frontend files ready`);
       } catch (e) { setP('g7', 'er', e.message); }
     }
