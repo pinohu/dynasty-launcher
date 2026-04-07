@@ -733,7 +733,6 @@ Return ONLY a valid JSON array (no markdown, no backticks):
 
     // ── VERCEL PROJECT (SaaS/directory/compliance — not WordPress/static) ─────
     let vercelProjectId=null;
-    const deployTarget = inf.deploy_target || 'backend-only';
     const isFullstack = deployTarget === 'fullstack';
     const vercelFramework = isFullstack ? 'nextjs' : null; // null = static/no-build for backend-only
 
