@@ -2531,15 +2531,23 @@ async function initReviewModels() {
 }
 
 async function aiRawWithModel(prompt, modelId, max = 4000) {
-  for (let attempt = 0; attempt < 2; attempt++) {
+  const fallbackModels = [modelId, 'claude-sonnet-4-20250514', 'gpt-4o'];
+  for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
+    const useModel = fallbackModels[attempt];
     try {
+      if (attempt > 0) console.warn(`aiRawWithModel fallback: ${useModel}`);
       const r = await fetch('/api/ai', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: modelId, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
+        body: JSON.stringify({ model: useModel, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
       });
-      if (!r.ok) { if (attempt === 0) { await new Promise(r=>setTimeout(r,2000)); continue; } throw new Error('AI API ' + r.status); }
+      if (r.status === 429) { await new Promise(r=>setTimeout(r, 3000*(attempt+1))); continue; }
+      if (!r.ok) { if (attempt < fallbackModels.length-1) { await new Promise(r=>setTimeout(r,2000)); continue; } throw new Error('AI API ' + r.status); }
       const d = await r.json();
-      if (d.error) { if (attempt === 0) { await new Promise(r=>setTimeout(r,2000)); continue; } throw new Error(d.error.message || 'AI error'); }
+      if (d.error) {
+        if (d.error.message?.includes('overloaded') || d.error.message?.includes('rate')) { await new Promise(r=>setTimeout(r,3000)); continue; }
+        if (attempt < fallbackModels.length-1) { await new Promise(r=>setTimeout(r,2000)); continue; }
+        throw new Error(d.error.message || 'AI error');
+      }
       if (d._cost?.estimated_cost) V2_BUILD_COST += d._cost.estimated_cost;
       const costEl = document.getElementById('build-cost');
       if (costEl && V2_BUILD_COST > 0) {
@@ -2547,9 +2555,10 @@ async function aiRawWithModel(prompt, modelId, max = 4000) {
         document.getElementById('cost-val').textContent = '$' + V2_BUILD_COST.toFixed(4);
       }
       const text = d.content?.find(b => b.type === 'text')?.text || '';
-      if (!text && attempt === 0) { await new Promise(r=>setTimeout(r,2000)); continue; }
-      return text;
-    } catch(e) { if (attempt === 1) throw e; await new Promise(r=>setTimeout(r,2000)); }
+      if (text) return text;
+      if (attempt < fallbackModels.length-1) { await new Promise(r=>setTimeout(r,2000)); continue; }
+      return '';
+    } catch(e) { if (attempt < fallbackModels.length-1) { await new Promise(r=>setTimeout(r,2000)); continue; } throw e; }
   }
   return '';
 }
@@ -3774,55 +3783,99 @@ async function parseDelimited(text,keys){
 async function ai(prompt, keys, max = 8000, phaseId = null) {
   // Smart Model Routing (Improvement 2) — route to optimal model per phase
   const model = phaseId ? await routeModel(phaseId) : ((phaseId && V2_MODEL_MAP[phaseId]) || V2_MODEL);
-  const r = await fetch('/api/ai', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
-  });
-  if (!r.ok) throw new Error('AI API ' + r.status);
-  const d = await r.json();
-  if (d.error) throw new Error(d.error.message || 'AI error');
-  // Track cost
-  if (d._cost?.estimated_cost) V2_BUILD_COST += d._cost.estimated_cost;
-  const costEl = document.getElementById('build-cost');
-  if (costEl && V2_BUILD_COST > 0) {
-    costEl.style.display = 'block';
-    document.getElementById('cost-val').textContent = '$' + V2_BUILD_COST.toFixed(4);
+  const fallbackModels = [model, 'claude-sonnet-4-20250514', 'gpt-4o', 'gemini-2.0-flash-001'];
+  
+  for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
+    const useModel = fallbackModels[attempt];
+    try {
+      if (attempt > 0) console.warn(`AI fallback: trying ${useModel} (attempt ${attempt + 1})`);
+      const r = await fetch('/api/ai', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: useModel, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (r.status === 429) {
+        // Rate limited — wait and try next model
+        const wait = Math.min(5000 * Math.pow(2, attempt), 30000);
+        console.warn(`Rate limited on ${useModel}, waiting ${wait/1000}s...`);
+        await new Promise(r => setTimeout(r, wait));
+        continue;
+      }
+      if (!r.ok) {
+        console.warn(`AI API ${r.status} on ${useModel}`);
+        if (attempt < fallbackModels.length - 1) continue;
+        throw new Error('AI API ' + r.status);
+      }
+      const d = await r.json();
+      if (d.error) {
+        console.warn(`AI error on ${useModel}: ${d.error.message || JSON.stringify(d.error).slice(0,100)}`);
+        if (d.error.message?.includes('overloaded') || d.error.message?.includes('rate') || d.error.type === 'overloaded_error') {
+          await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
+          continue;
+        }
+        if (attempt < fallbackModels.length - 1) continue;
+        throw new Error(d.error.message || 'AI error');
+      }
+      // Track cost
+      if (d._cost?.estimated_cost) V2_BUILD_COST += d._cost.estimated_cost;
+      const costEl = document.getElementById('build-cost');
+      if (costEl && V2_BUILD_COST > 0) {
+        costEl.style.display = 'block';
+        document.getElementById('cost-val').textContent = '$' + V2_BUILD_COST.toFixed(4);
+      }
+      const t = d.content?.find(b => b.type === 'text')?.text || '';
+      if (!t) {
+        console.warn(`Empty response from ${useModel}, trying next...`);
+        await new Promise(r => setTimeout(r, 2000));
+        continue;
+      }
+      return parseDelimited(t, keys);
+    } catch(e) {
+      if (attempt < fallbackModels.length - 1) {
+        console.warn(`Error on ${useModel}: ${e.message}, falling back...`);
+        await new Promise(r => setTimeout(r, 2000));
+        continue;
+      }
+      throw e;
+    }
   }
-  const t = d.content?.find(b => b.type === 'text')?.text || '';
-  if (!t) {
-    // Retry once on empty response
-    console.warn('Empty AI response, retrying...');
-    await new Promise(r => setTimeout(r, 2000));
-    const r2 = await fetch('/api/ai', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
-    });
-    if (!r2.ok) throw new Error('AI API retry ' + r2.status);
-    const d2 = await r2.json();
-    if (d2._cost?.estimated_cost) V2_BUILD_COST += d2._cost.estimated_cost;
-    const t2 = d2.content?.find(b => b.type === 'text')?.text || '';
-    if (!t2) throw new Error('Empty AI response after retry');
-    return parseDelimited(t2, keys);
-  }
-  return parseDelimited(t, keys);
+  throw new Error('All AI models failed — check API keys and rate limits');
 }
 
 async function aiRaw(prompt, max = 4000) {
   const model = V2_MODEL_MAP['strategy'] || V2_MODEL;
-  const r = await fetch('/api/ai', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
-  });
-  if (!r.ok) throw new Error('AI API ' + r.status);
-  const d = await r.json();
-  if (d.error) throw new Error(d.error.message || 'AI error');
-  if (d._cost?.estimated_cost) V2_BUILD_COST += d._cost.estimated_cost;
-  const costEl = document.getElementById('build-cost');
-  if (costEl && V2_BUILD_COST > 0) {
-    costEl.style.display = 'block';
-    document.getElementById('cost-val').textContent = '$' + V2_BUILD_COST.toFixed(4);
+  const fallbackModels = [model, 'claude-sonnet-4-20250514', 'gpt-4o'];
+  
+  for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
+    const useModel = fallbackModels[attempt];
+    try {
+      const r = await fetch('/api/ai', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: useModel, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (r.status === 429) { await new Promise(r => setTimeout(r, 3000 * (attempt + 1))); continue; }
+      if (!r.ok) { if (attempt < fallbackModels.length - 1) continue; throw new Error('AI API ' + r.status); }
+      const d = await r.json();
+      if (d.error) {
+        if (d.error.message?.includes('overloaded') || d.error.message?.includes('rate')) { await new Promise(r => setTimeout(r, 3000)); continue; }
+        if (attempt < fallbackModels.length - 1) continue;
+        throw new Error(d.error.message || 'AI error');
+      }
+      if (d._cost?.estimated_cost) V2_BUILD_COST += d._cost.estimated_cost;
+      const costEl = document.getElementById('build-cost');
+      if (costEl && V2_BUILD_COST > 0) {
+        costEl.style.display = 'block';
+        document.getElementById('cost-val').textContent = '$' + V2_BUILD_COST.toFixed(4);
+      }
+      const t = d.content?.find(b => b.type === 'text')?.text || '';
+      if (t) return t;
+      if (attempt < fallbackModels.length - 1) { await new Promise(r => setTimeout(r, 2000)); continue; }
+      return '';
+    } catch(e) {
+      if (attempt < fallbackModels.length - 1) { await new Promise(r => setTimeout(r, 2000)); continue; }
+      throw e;
+    }
   }
-  return d.content?.find(b => b.type === 'text')?.text || '';
+  return '';
 }
 function cx(desc,inf){
   let base = `Project: ${inf.name}\nDescription: ${desc}\nRepo: ${ORG}/${inf.repo}\nType: ${inf.type_label}\nSurface: ${inf.surface}\nAccent: ${inf.accent}\nFonts: ${inf.fonts}\nStack: ${(inf.stack||[]).join(', ')}\nRevenue: ${inf.revenue_model} at ${inf.price}\nAcquisition: ${inf.acquisition}\nMVP: ${inf.mvp}`;
