@@ -1031,12 +1031,20 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     const { project_id, repo, org } = req.body || {};
     if (!project_id || !repo) return res.status(400).json({ error: 'project_id and repo required' });
     try {
-      // Ensure framework is null (not nextjs) to prevent build errors on static/backend projects
-      await fetch(`https://api.vercel.com/v9/projects/${project_id}?teamId=${VERCEL_TEAM}`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ framework: null })
+      // Check current framework — don't override if already set correctly
+      const projResp = await fetch(`https://api.vercel.com/v9/projects/${project_id}?teamId=${VERCEL_TEAM}`, {
+        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` }
       });
+      const projData = await projResp.json();
+      // Only clear framework if it's causing build issues on non-Next.js projects
+      // NEVER set framework:null on Next.js projects — it breaks routing
+      if (projData.framework && projData.framework !== 'nextjs') {
+        await fetch(`https://api.vercel.com/v9/projects/${project_id}?teamId=${VERCEL_TEAM}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ framework: null })
+        });
+      }
 
       const dr = await fetch(`https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM}`, {
         method: 'POST',

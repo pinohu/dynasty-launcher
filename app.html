@@ -6570,17 +6570,22 @@ jobs:
       - run: pip install -r backend/requirements.txt
       - run: cd backend && python -m pytest --if-present || echo "No tests yet"
 `;
-      files['vercel.json'] = JSON.stringify({
-        framework: null,
-        buildCommand: (inf.stack||[]).includes('Next.js') ? 'npm run build' : null,
-        outputDirectory: (inf.stack||[]).includes('Next.js') ? '.next' : 'public',
-        rewrites: [{ source: '/api/:path*', destination: '/api/:path*' }],
+      // vercel.json — NEVER set framework:null or outputDirectory for Next.js
+      // Vercel auto-detects Next.js framework and output directory
+      const isNextJs = (inf.stack||[]).some(s => s.toLowerCase().includes('next'));
+      const vconf = {
         headers: [{ source: '/(.*)', headers: [
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' }
         ]}]
-      }, null, 2);
+      };
+      // Only set outputDirectory for non-Next.js static sites
+      if (!isNextJs) {
+        vconf.outputDirectory = 'public';
+        vconf.rewrites = [{ source: '/api/:path*', destination: '/api/:path*' }];
+      }
+      files['vercel.json'] = JSON.stringify(vconf, null, 2);
       setP('cicd', 'ok', 'GitHub Actions + vercel.json ready');
     } catch(e) { setP('cicd', 'sk', e.message); }
 
