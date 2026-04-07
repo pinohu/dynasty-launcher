@@ -357,6 +357,14 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 .im-convo-input input{flex:1;padding:8px 12px;background:var(--card);border:1px solid var(--bdr);border-radius:8px;color:#fff;font-size:12px;font-family:inherit;outline:none}
 .im-convo-input button{padding:8px 16px;background:var(--gold);color:#0A0A0A;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer}
 .im-status{font-size:10px;color:var(--dim);margin-top:6px}
+/* ── Framework Enhancements ───────────────────────────────────────────────── */
+.fw-relevance{font-size:10px;margin-top:4px;font-weight:500}
+.fw-relevance.high{color:var(--grn)}.fw-relevance.medium{color:var(--gold)}.fw-relevance.low{color:var(--dim)}
+.fw-synthesis{background:linear-gradient(135deg,rgba(74,222,128,0.04),rgba(201,168,76,0.04));border:1px solid rgba(201,168,76,0.2);border-radius:var(--rl);padding:16px;margin:12px 0}
+.fw-syn-title{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px}
+.fw-syn-section{margin-bottom:10px}.fw-syn-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.fw-syn-label.agree{color:var(--grn)}.fw-syn-label.contra{color:var(--red)}.fw-syn-label.blind{color:var(--gold)}
+.fw-syn-item{font-size:11px;color:var(--sec);line-height:1.5;padding:2px 0}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -499,35 +507,72 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
   <div id="framework-screen" style="display:none">
     <div class="fw-head">
       <h2>Strategy Frameworks</h2>
-      <p>Select frameworks to analyze your idea against. Blue Ocean Hungry Market is always applied. Each adds depth to BUSINESS-SYSTEM.md.</p>
+      <p>Select frameworks to analyze your idea against. Blue Ocean is always applied. Recommended frameworks are auto-selected based on your project type.</p>
+    </div>
+
+    <!-- Depth Tier Selector -->
+    <div style="display:flex;gap:8px;margin-bottom:16px" id="depth-tier-selector">
+      <button class="im-btn" onclick="setDepthTier('quick')" id="tier-quick">⚡ Quick <span style="color:var(--dim);font-size:10px">~15s · $0.01</span></button>
+      <button class="im-btn active" onclick="setDepthTier('standard')" id="tier-standard">📊 Standard <span style="color:var(--dim);font-size:10px">~45s · $0.05</span></button>
+      <button class="im-btn" onclick="setDepthTier('deep')" id="tier-deep">🔬 Deep <span style="color:var(--dim);font-size:10px">~2min · $0.15</span></button>
     </div>
 
     <div class="fw-grid" id="fw-grid">
+      <!-- Always applied -->
       <div class="fw-card selected locked" data-fw="blue-ocean">
         <div class="fw-check">✓</div>
         <h4>🌊 Blue Ocean Hungry Market</h4>
         <p>Dynasty original. Market hunger score, blue ocean index, competitive void analysis, demand signal validation.</p>
         <div class="fw-tag">Always applied</div>
       </div>
+
+      <!-- Qualitative Frameworks -->
       <div class="fw-card" data-fw="porters" onclick="toggleFramework(this,'porters')">
         <div class="fw-check">✓</div>
         <h4>🏗️ Porter's 5 Forces</h4>
         <p>Supplier power, buyer power, rivalry, substitution threat, new entry threat. Industry attractiveness composite.</p>
+        <div class="fw-relevance" id="rel-porters"></div>
       </div>
       <div class="fw-card" data-fw="seven-powers" onclick="toggleFramework(this,'seven-powers')">
         <div class="fw-check">✓</div>
         <h4>⚡ 7 Powers (Helmer)</h4>
         <p>Scale economies, network effects, counter-positioning, switching costs, branding, cornered resource, process power.</p>
+        <div class="fw-relevance" id="rel-seven-powers"></div>
       </div>
       <div class="fw-card" data-fw="jtbd" onclick="toggleFramework(this,'jtbd')">
         <div class="fw-check">✓</div>
         <h4>🎯 Jobs-to-Be-Done</h4>
         <p>Functional, social, emotional jobs. Over-served vs under-served analysis. Switching triggers and hiring criteria.</p>
+        <div class="fw-relevance" id="rel-jtbd"></div>
       </div>
       <div class="fw-card" data-fw="lean-canvas" onclick="toggleFramework(this,'lean-canvas')">
         <div class="fw-check">✓</div>
         <h4>📋 Lean Canvas</h4>
         <p>Problem, solution, key metrics, unfair advantage, channels, customer segments, cost structure, revenue streams.</p>
+        <div class="fw-relevance" id="rel-lean-canvas"></div>
+      </div>
+
+      <!-- NEW: Quantitative Frameworks -->
+      <div class="fw-card" data-fw="tam-sam-som" onclick="toggleFramework(this,'tam-sam-som')">
+        <div class="fw-check">✓</div>
+        <h4>📐 TAM / SAM / SOM</h4>
+        <p>Total, serviceable, and obtainable market sizing with dollar figures. Real numbers from market research data.</p>
+        <div class="fw-relevance" id="rel-tam-sam-som"></div>
+        <div class="fw-tag" style="color:var(--grn)">Quantitative</div>
+      </div>
+      <div class="fw-card" data-fw="unit-economics" onclick="toggleFramework(this,'unit-economics')">
+        <div class="fw-check">✓</div>
+        <h4>💰 Unit Economics</h4>
+        <p>CAC, LTV, LTV:CAC ratio, payback period, gross margin. Flags unsustainable models (LTV:CAC &lt; 3:1).</p>
+        <div class="fw-relevance" id="rel-unit-economics"></div>
+        <div class="fw-tag" style="color:var(--grn)">Quantitative</div>
+      </div>
+      <div class="fw-card" data-fw="competitive-matrix" onclick="toggleFramework(this,'competitive-matrix')">
+        <div class="fw-check">✓</div>
+        <h4>🎯 Competitive Positioning</h4>
+        <p>2×2 matrix plotting you vs competitors on the two most differentiating axes. Names real competitors.</p>
+        <div class="fw-relevance" id="rel-competitive-matrix"></div>
+        <div class="fw-tag" style="color:var(--grn)">Quantitative</div>
       </div>
     </div>
 
@@ -535,6 +580,7 @@ html,body{min-height:100vh;background:#0D0D0D;color:var(--tx);font-family:-apple
 
     <div id="scorecard-wrap" style="display:none">
       <div class="scorecard" id="scorecard"></div>
+      <div id="fw-synthesis" style="display:none"></div>
       <div id="fw-deep-dives"></div>
       <div class="sc-actions" id="sc-actions">
         <div class="sc-action" onclick="buildAsIs()">
@@ -1467,6 +1513,118 @@ function getPostHogSnippet() {
   return `<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_por7UBqX7fRWPXACWt386vLfVc4fpDVffFy3tHsxvErk',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only'})</script>`;
 }
 
+// ── Framework Depth Tiers ────────────────────────────────────────────────────
+let FW_DEPTH = 'standard'; // quick | standard | deep
+
+function setDepthTier(tier) {
+  FW_DEPTH = tier;
+  document.querySelectorAll('#depth-tier-selector .im-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tier-' + tier)?.classList.add('active');
+}
+
+// ── Smart Framework Matching (auto-recommend based on project type) ──────────
+const FW_RELEVANCE = {
+  'gov-saas':       { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'low', 'jtbd': 'medium', 'lean-canvas': 'high' },
+  'dark-saas':      { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'high', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'compliance':     { 'tam-sam-som': 'high', 'unit-economics': 'medium', 'competitive-matrix': 'high', 'porters': 'high', 'seven-powers': 'low', 'jtbd': 'medium', 'lean-canvas': 'medium' },
+  'member-dir':     { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'low', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'bd-dir':         { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'low', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'real-estate':    { 'tam-sam-som': 'high', 'unit-economics': 'medium', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'low', 'jtbd': 'high', 'lean-canvas': 'medium' },
+  'authority':      { 'tam-sam-som': 'medium', 'unit-economics': 'low', 'competitive-matrix': 'high', 'porters': 'low', 'seven-powers': 'low', 'jtbd': 'high', 'lean-canvas': 'medium' },
+  'ecom':           { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'low', 'jtbd': 'medium', 'lean-canvas': 'high' },
+  'client-portal':  { 'tam-sam-som': 'medium', 'unit-economics': 'high', 'competitive-matrix': 'medium', 'porters': 'low', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'job-board':      { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'custom':         { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'medium', 'porters': 'medium', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
+};
+
+function applySmartMatching(typeId) {
+  const relevance = FW_RELEVANCE[typeId] || FW_RELEVANCE['custom'];
+  if (!relevance) return;
+
+  // Show relevance indicators and auto-select highly relevant frameworks
+  Object.entries(relevance).forEach(([fw, level]) => {
+    const relEl = document.getElementById('rel-' + fw);
+    if (relEl) {
+      const labels = { high: '★ Highly relevant', medium: '○ Relevant', low: '◌ Less relevant' };
+      relEl.textContent = labels[level] || '';
+      relEl.className = 'fw-relevance ' + level;
+    }
+    // Auto-select high relevance frameworks
+    if (level === 'high') {
+      const card = document.querySelector(`[data-fw="${fw}"]`);
+      if (card && !card.classList.contains('selected')) {
+        card.classList.add('selected');
+        if (!V2_FRAMEWORKS.includes(fw)) V2_FRAMEWORKS.push(fw);
+      }
+    }
+  });
+}
+
+// ── All framework prompt definitions (including new quantitative ones) ────────
+const FW_PROMPTS = {
+  'blue-ocean': 'Blue Ocean Hungry Market Framework (Dynasty original): Score market hunger 1-10, blue ocean index 1-10, competitive void analysis, demand signal validation',
+  'porters': "Porter's 5 Forces: Score each force 1-5 (supplier power, buyer power, competitive rivalry, threat of substitution, threat of new entry). Compute industry attractiveness composite.",
+  'seven-powers': '7 Powers (Hamilton Helmer): Evaluate which of the 7 powers this business can realistically achieve. For each, state achievable/unlikely + timeline.',
+  'jtbd': 'Jobs-to-Be-Done: Identify core functional, social, emotional jobs. Analyze over-served vs under-served. Identify switching triggers.',
+  'lean-canvas': 'Lean Canvas: Fill all 9 blocks — Problem (top 3), Solution, Key Metrics, Unfair Advantage, Channels, Customer Segments, Cost Structure, Revenue Streams.',
+  'tam-sam-som': 'TAM/SAM/SOM Market Sizing: Calculate Total Addressable Market, Serviceable Addressable Market, and Serviceable Obtainable Market with SPECIFIC DOLLAR FIGURES. Use real market data if provided. Show methodology: top-down from industry reports AND bottom-up from unit economics.',
+  'unit-economics': 'Unit Economics: Calculate Customer Acquisition Cost (CAC), Lifetime Value (LTV), LTV:CAC ratio, payback period in months, gross margin percentage. FLAG if LTV:CAC < 3:1 as unsustainable. Use the pricing model and acquisition channel to derive realistic numbers.',
+  'competitive-matrix': 'Competitive Positioning Matrix: Identify 3-4 real competitors by name. Choose the 2 most differentiating axes for this market (e.g., price vs feature depth, automation vs customization). Plot each competitor and the new project on these axes. Describe the positioning gap being exploited.',
+};
+
+// ── Depth-aware prompt modifiers ─────────────────────────────────────────────
+const DEPTH_MODIFIERS = {
+  quick: 'Keep each framework analysis to 1 concise paragraph. Focus on the single most important insight. No tables.',
+  standard: 'Give 3-4 paragraphs per framework with specific numbers where possible. Include scored tables for quantitative frameworks.',
+  deep: 'Give exhaustive multi-paragraph analysis per framework. Include all scored tables, specific competitor names, dollar figures, percentages, and timelines. Cross-reference real market data. This is for serious due diligence.',
+};
+
+// ── Cross-Framework Synthesis ────────────────────────────────────────────────
+let FRAMEWORK_SYNTHESIS = null;
+
+async function runCrossFrameworkSynthesis(scorecard) {
+  const analyses = scorecard.framework_analyses || {};
+  if (Object.keys(analyses).length < 2) return null;
+
+  try {
+    const raw = await aiRaw(`You are a meta-analyst. Multiple strategy frameworks have been applied to a business idea. Your job: find where they AGREE (high-confidence signals), CONTRADICT (risk areas), and what they MISSED (blind spots).
+
+FRAMEWORK ANALYSES:
+${Object.entries(analyses).map(([k, v]) => `## ${k.replace(/_/g, ' ').toUpperCase()}\n${typeof v === 'string' ? v.slice(0, 600) : JSON.stringify(v).slice(0, 600)}`).join('\n\n')}
+
+COMPOSITE SCORE: ${scorecard.composite}/10
+
+Return ONLY valid JSON:
+{
+  "consensus_signals": ["Signal where 3+ frameworks agree — high confidence", "...up to 5"],
+  "contradictions": ["Where frameworks disagree — risk area requiring investigation", "...up to 3"],
+  "blind_spots": ["What no framework addressed — needs investigation", "...up to 3"],
+  "score_adjustment": {"direction": "up|down|none", "amount": 0.0, "reason": "Why the cross-framework evidence suggests adjusting the composite score"},
+  "synthesis_summary": "2-3 sentence executive summary of what the combined frameworks reveal"
+}`, 2000);
+
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    FRAMEWORK_SYNTHESIS = JSON.parse(m[0]);
+    return FRAMEWORK_SYNTHESIS;
+  } catch { return null; }
+}
+
+function renderSynthesis(syn) {
+  const el = document.getElementById('fw-synthesis');
+  if (!el || !syn) return;
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="fw-synthesis">
+      <div class="fw-syn-title">🔗 Cross-Framework Synthesis</div>
+      <div style="font-size:12px;color:var(--tx);line-height:1.6;margin-bottom:12px">${syn.synthesis_summary || ''}</div>
+      ${syn.score_adjustment?.direction !== 'none' ? `<div style="font-size:11px;color:${syn.score_adjustment?.direction === 'up' ? 'var(--grn)' : 'var(--red)'};margin-bottom:10px">Score adjustment: ${syn.score_adjustment?.direction === 'up' ? '↑' : '↓'} ${syn.score_adjustment?.amount} — ${syn.score_adjustment?.reason}</div>` : ''}
+      <div class="fw-syn-section"><div class="fw-syn-label agree">✓ Consensus Signals (high confidence)</div>${(syn.consensus_signals || []).map(s => `<div class="fw-syn-item">• ${s}</div>`).join('')}</div>
+      ${(syn.contradictions || []).length ? `<div class="fw-syn-section"><div class="fw-syn-label contra">⚠ Contradictions (investigate)</div>${syn.contradictions.map(s => `<div class="fw-syn-item">• ${s}</div>`).join('')}</div>` : ''}
+      ${(syn.blind_spots || []).length ? `<div class="fw-syn-section"><div class="fw-syn-label blind">? Blind Spots (not covered)</div>${syn.blind_spots.map(s => `<div class="fw-syn-item">• ${s}</div>`).join('')}</div>` : ''}
+    </div>`;
+}
+
 async function scoreIdea() {
   const desc = document.getElementById('project-desc').value.trim();
   if (!desc || !INFERRED) return;
@@ -1481,16 +1639,13 @@ async function scoreIdea() {
   btn.textContent = 'Analyzing with ' + V2_FRAMEWORKS.length + ' frameworks…';
   showLoadingOverlay('Scoring viability...', `Analyzing with ${V2_FRAMEWORKS.length} frameworks${research?.sources?.length ? ' + ' + research.sources.join(', ') + ' data' : ''}`);
 
-  const fwList = V2_FRAMEWORKS.map(f => ({
-    'blue-ocean': 'Blue Ocean Hungry Market Framework (Dynasty original): Score market hunger 1-10, blue ocean index 1-10, competitive void analysis, demand signal validation',
-    'porters': "Porter's 5 Forces: Score each force 1-5 (supplier power, buyer power, competitive rivalry, threat of substitution, threat of new entry). Compute industry attractiveness composite.",
-    'seven-powers': '7 Powers (Hamilton Helmer): Evaluate which of the 7 powers this business can realistically achieve (Scale Economies, Network Effects, Counter-Positioning, Switching Costs, Branding, Cornered Resource, Process Power). For each, state achievable/unlikely + timeline.',
-    'jtbd': 'Jobs-to-Be-Done: Identify the core functional, social, and emotional jobs. Analyze which jobs are over-served vs under-served in the current market. Identify switching triggers.',
-    'lean-canvas': 'Lean Canvas: Fill out all 9 blocks — Problem (top 3), Solution, Key Metrics, Unfair Advantage, Channels, Customer Segments, Cost Structure, Revenue Streams.'
-  }[f])).join('\n\n');
+  const fwList = V2_FRAMEWORKS.map(f => FW_PROMPTS[f] || '').filter(Boolean).join('\n\n');
+  const depthMod = DEPTH_MODIFIERS[FW_DEPTH] || DEPTH_MODIFIERS.standard;
 
   try {
     const raw = await aiRaw(`You are a world-class business strategist. Analyze this business idea using the specified frameworks and return a viability scorecard.
+
+DEPTH LEVEL: ${FW_DEPTH.toUpperCase()} — ${depthMod}
 
 PROJECT: ${desc}
 INFERRED CONFIG: ${JSON.stringify(INFERRED, null, 2)}
@@ -1513,15 +1668,18 @@ Return ONLY valid JSON (no markdown, no backticks, no preamble):
   "risk_summary": "1-2 sentences",
   "opportunity_summary": "1-2 sentences",
   "framework_analyses": {
-    "blue_ocean": "3-4 paragraph analysis..."
-    ${V2_FRAMEWORKS.includes('porters') ? ',"porters": "3-4 paragraph analysis with scored table..."' : ''}
-    ${V2_FRAMEWORKS.includes('seven-powers') ? ',"seven_powers": "3-4 paragraph analysis per power..."' : ''}
-    ${V2_FRAMEWORKS.includes('jtbd') ? ',"jtbd": "3-4 paragraph JTBD analysis..."' : ''}
+    "blue_ocean": "analysis..."
+    ${V2_FRAMEWORKS.includes('porters') ? ',"porters": "analysis with scored table..."' : ''}
+    ${V2_FRAMEWORKS.includes('seven-powers') ? ',"seven_powers": "analysis per power..."' : ''}
+    ${V2_FRAMEWORKS.includes('jtbd') ? ',"jtbd": "JTBD analysis..."' : ''}
     ${V2_FRAMEWORKS.includes('lean-canvas') ? ',"lean_canvas": "Complete 9-block lean canvas..."' : ''}
+    ${V2_FRAMEWORKS.includes('tam-sam-som') ? ',"tam_sam_som": "TAM: $X, SAM: $X, SOM: $X with methodology and sources..."' : ''}
+    ${V2_FRAMEWORKS.includes('unit-economics') ? ',"unit_economics": "CAC: $X, LTV: $X, LTV:CAC ratio: X:1, Payback: X months, Gross margin: X%. FLAG if unsustainable..."' : ''}
+    ${V2_FRAMEWORKS.includes('competitive-matrix') ? ',"competitive_matrix": "Competitors: [name1, name2, name3]. Axes: [axis1 vs axis2]. Positioning: [where each plots]. Gap exploited: ..."' : ''}
   }
 }
 
-All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base composite on weighted average (market_hunger 25%, blue_ocean 20%, moat 20%, revenue 20%, feasibility 15%).`, 6000);
+All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base composite on weighted average (market_hunger 25%, blue_ocean 20%, moat 20%, revenue 20%, feasibility 15%).`, FW_DEPTH === 'deep' ? 8000 : FW_DEPTH === 'quick' ? 3000 : 6000);
 
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('Invalid scorecard response');
@@ -1529,6 +1687,15 @@ All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base 
     hideLoadingOverlay();
     renderScorecard(V2_SCORECARD);
     document.getElementById('scorecard-wrap').style.display = 'block';
+
+    // Cross-Framework Synthesis (if 3+ frameworks)
+    if (V2_FRAMEWORKS.length >= 3 && FW_DEPTH !== 'quick') {
+      showLoadingOverlay('Synthesizing...', 'Cross-referencing framework results for consensus signals and contradictions');
+      const syn = await runCrossFrameworkSynthesis(V2_SCORECARD);
+      hideLoadingOverlay();
+      if (syn) renderSynthesis(syn);
+    }
+
     btn.textContent = 'Score again ↻';
     btn.disabled = false;
   } catch (e) {
@@ -2970,9 +3137,13 @@ document.getElementById('launch-btn').addEventListener('click',async()=>{
   }
 
   if (V2_MODE === 'strategic') {
-    // Show framework screen
+    // Show framework screen with smart matching
     document.getElementById('input-screen').style.display = 'none';
     document.getElementById('framework-screen').style.display = 'block';
+    // Auto-select frameworks based on project type
+    if (INFERRED?.type_id) applySmartMatching(INFERRED.type_id);
+    // Auto-set depth based on mode
+    setDepthTier(V2_MODE === 'strategic' ? 'standard' : 'quick');
     return;
   }
 
@@ -3112,6 +3283,20 @@ function cx(desc,inf){
   // Research data (real market intelligence from Exa.ai, NeuronWriter, Outscraper)
   if (RESEARCH_DATA?.summary) {
     base += `\n\n${RESEARCH_DATA.summary.slice(0, 1500)}`;
+  }
+  // Framework synthesis (consensus signals, contradictions, blind spots)
+  if (FRAMEWORK_SYNTHESIS) {
+    base += `\n\n## Framework Synthesis:`;
+    if (FRAMEWORK_SYNTHESIS.consensus_signals?.length) base += `\nConsensus: ${FRAMEWORK_SYNTHESIS.consensus_signals.join('; ')}`;
+    if (FRAMEWORK_SYNTHESIS.contradictions?.length) base += `\nContradictions: ${FRAMEWORK_SYNTHESIS.contradictions.join('; ')}`;
+    if (FRAMEWORK_SYNTHESIS.blind_spots?.length) base += `\nBlind spots: ${FRAMEWORK_SYNTHESIS.blind_spots.join('; ')}`;
+  }
+  // Quantitative framework data (TAM/SAM/SOM, Unit Economics)
+  if (V2_SCORECARD?.framework_analyses?.tam_sam_som) {
+    base += `\n\n## Market Sizing: ${typeof V2_SCORECARD.framework_analyses.tam_sam_som === 'string' ? V2_SCORECARD.framework_analyses.tam_sam_som.slice(0, 500) : ''}`;
+  }
+  if (V2_SCORECARD?.framework_analyses?.unit_economics) {
+    base += `\n\n## Unit Economics: ${typeof V2_SCORECARD.framework_analyses.unit_economics === 'string' ? V2_SCORECARD.framework_analyses.unit_economics.slice(0, 500) : ''}`;
   }
   return base;
 }
