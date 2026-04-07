@@ -753,6 +753,13 @@ Return ONLY a valid JSON array (no markdown, no backticks):
             {headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`}}).then(r=>r.json());
           vercelProjectId=existing?.id||null;
         }
+        // Ensure framework is ALWAYS set correctly (even on existing projects)
+        if(vercelProjectId && vercelFramework){
+          await fetch(`https://api.vercel.com/v9/projects/${vercelProjectId}?teamId=${VERCEL_TEAM}`,{
+            method:'PATCH',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
+            body:JSON.stringify({framework:vercelFramework})
+          });
+        }
 
         // ── TRIGGER INITIAL DEPLOYMENT from the GitHub repo ──────────────────
         // Wait for GitHub to finish processing the pushed files

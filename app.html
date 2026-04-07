@@ -6710,6 +6710,122 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
       }
     }
 
+    // ══════════════════════════════════════════════════════════════════════════
+    // ── FINAL BUILD VALIDATION GATE — runs before ANY files are pushed ──────
+    // This catches ALL known Vercel build-breaking patterns permanently.
+    // ══════════════════════════════════════════════════════════════════════════
+    (function validateFilesBeforePush() {
+      const isNextJs = V2_DEPLOY_TARGET === 'fullstack' || 
+        (inf.stack||[]).some(s => s.toLowerCase().includes('next'));
+
+      // ── 1. vercel.json: NEVER framework:null or wrong outputDirectory ──
+      if (files['vercel.json']) {
+        try {
+          const vc = JSON.parse(files['vercel.json']);
+          let changed = false;
+          if (vc.framework === null || vc.framework === 'null') { delete vc.framework; changed = true; }
+          if (isNextJs && vc.outputDirectory) { delete vc.outputDirectory; changed = true; }
+          if (isNextJs && vc.buildCommand) { delete vc.buildCommand; changed = true; }
+          if (changed) files['vercel.json'] = JSON.stringify(vc, null, 2);
+        } catch {}
+      }
+
+      // ── 2. package.json: required deps, lucide-react not heroicons ──
+      if (files['package.json']) {
+        try {
+          const pkg = JSON.parse(files['package.json']);
+          if (!pkg.dependencies) pkg.dependencies = {};
+          // Swap heroicons → lucide-react
+          if (pkg.dependencies['@heroicons/react']) {
+            delete pkg.dependencies['@heroicons/react'];
+            pkg.dependencies['lucide-react'] = pkg.dependencies['lucide-react'] || '^0.400.0';
+          }
+          // Ensure essential Next.js deps
+          if (isNextJs) {
+            const reqDeps = { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^3.4.1' };
+            const reqDev = { 'typescript': '^5.3.3', '@types/react': '^18.2.0', '@types/node': '^20.11.0', 'postcss': '^8.4.33', 'autoprefixer': '^10.4.17' };
+            for (const [k,v] of Object.entries(reqDeps)) { if (!pkg.dependencies[k]) pkg.dependencies[k] = v; }
+            if (!pkg.devDependencies) pkg.devDependencies = {};
+            for (const [k,v] of Object.entries(reqDev)) { if (!pkg.devDependencies[k]) pkg.devDependencies[k] = v; }
+          }
+          files['package.json'] = JSON.stringify(pkg, null, 2);
+        } catch {}
+      }
+
+      // ── 3. globals.css: must exist with Tailwind directives ──
+      if (isNextJs) {
+        const gc = files['src/app/globals.css'];
+        if (!gc || gc.trim().length < 20 || !gc.includes('@tailwind')) {
+          files['src/app/globals.css'] = '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n@layer base {\n  :root { --background: 0 0% 100%; --foreground: 222.2 84% 4.9%; }\n  .dark { --background: 222.2 84% 4.9%; --foreground: 210 40% 98%; }\n}\n';
+        }
+      }
+
+      // ── 4. TSX files: replace @heroicons → lucide-react ──
+      const iconMap = {
+        'ArrowRightIcon':'ArrowRight','CheckIcon':'Check','CheckCircleIcon':'CheckCircle',
+        'ShieldCheckIcon':'ShieldCheck','DatabaseIcon':'Database','LightningBoltIcon':'Zap',
+        'BoltIcon':'Zap','CircleStackIcon':'Database','PlusIcon':'Plus',
+        'DocumentTextIcon':'FileText','KeyIcon':'Key','ChartBarIcon':'BarChart3',
+        'ClockIcon':'Clock','ExclamationCircleIcon':'AlertCircle','XMarkIcon':'X',
+        'Bars3Icon':'Menu','UserIcon':'User','CogIcon':'Settings','HomeIcon':'Home',
+        'StarIcon':'Star','HeartIcon':'Heart','MagnifyingGlassIcon':'Search',
+        'EnvelopeIcon':'Mail','PhoneIcon':'Phone','GlobeAltIcon':'Globe',
+        'CreditCardIcon':'CreditCard','BuildingOfficeIcon':'Building2',
+        'RocketLaunchIcon':'Rocket','SparklesIcon':'Sparkles','WrenchIcon':'Wrench',
+        'EyeIcon':'Eye','TrashIcon':'Trash2','PencilIcon':'Pencil',
+        'ArrowLeftIcon':'ArrowLeft','ChevronDownIcon':'ChevronDown','ChevronRightIcon':'ChevronRight',
+        'InformationCircleIcon':'Info','BellIcon':'Bell','CalendarIcon':'Calendar',
+        'FolderIcon':'Folder','LinkIcon':'Link','PhotoIcon':'Image',
+        'CloudArrowUpIcon':'CloudUpload','ArrowDownTrayIcon':'Download',
+        'ShareIcon':'Share2','AdjustmentsHorizontalIcon':'SlidersHorizontal'
+      };
+      for (const [fpath, content] of Object.entries(files)) {
+        if (typeof content === 'string' && fpath.endsWith('.tsx') && content.includes('@heroicons/react')) {
+          let code = content;
+          const heroMatch = code.match(/import\s*\{([^}]+)\}\s*from\s*['"]@heroicons\/react[^'"]*['"]/g);
+          if (heroMatch) {
+            for (const imp of heroMatch) {
+              const iconsInImport = imp.match(/\{([^}]+)\}/)?.[1]?.split(',').map(s=>s.trim()).filter(Boolean) || [];
+              const mapped = iconsInImport.map(i => iconMap[i] || i.replace(/Icon$/, ''));
+              const newImport = `import { ${mapped.join(', ')} } from 'lucide-react'`;
+              code = code.replace(imp, newImport);
+              // Replace usage in JSX
+              iconsInImport.forEach((old, idx) => {
+                code = code.replace(new RegExp(old.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'g'), mapped[idx]);
+              });
+            }
+          }
+          files[fpath] = code;
+        }
+      }
+
+      // ── 5. layout.tsx: must import globals.css ──
+      if (isNextJs && files['src/app/layout.tsx'] && !files['src/app/layout.tsx'].includes('globals.css')) {
+        files['src/app/layout.tsx'] = "import './globals.css'\n" + files['src/app/layout.tsx'];
+      }
+
+      // ── 6. Remove unused imports from TSX (prevents TS strict mode errors) ──
+      for (const [fpath, content] of Object.entries(files)) {
+        if (typeof content === 'string' && fpath.endsWith('.tsx')) {
+          let code = content;
+          // Find all named imports from lucide-react
+          const lucideMatch = code.match(/import\s*\{([^}]+)\}\s*from\s*['"]lucide-react['"]/);
+          if (lucideMatch) {
+            const imported = lucideMatch[1].split(',').map(s=>s.trim()).filter(Boolean);
+            const bodyAfterImport = code.slice(code.indexOf(lucideMatch[0]) + lucideMatch[0].length);
+            const used = imported.filter(icon => {
+              const re = new RegExp('<\\s*' + icon.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '[\\s/>]');
+              return re.test(bodyAfterImport);
+            });
+            if (used.length < imported.length && used.length > 0) {
+              code = code.replace(lucideMatch[0], `import { ${used.join(', ')} } from 'lucide-react'`);
+              files[fpath] = code;
+            }
+          }
+        }
+      }
+    })();
+
     // Authority sites: docs pushed by authority_deploy in provision.js
     // Non-authority types: push all files to standalone repo
     if (!isAuthority) {
