@@ -708,8 +708,9 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     const isWP      = ['wp-theme','wordpress'].includes(typeId) || deployTarget === 'wordpress';
     const isStatic  = ['static','portfolio','landing'].includes(typeId) || deployTarget === 'static';
     const needsTwentyi = isWP||isStatic;
-    const needsNeon    = ['gov-saas','dark-saas','compliance','client-portal','member-dir',
-                          'bd-dir','real-estate','job-board','n8n','api-svc','ecom',
+    const needsNeon    = ['gov-saas','dark-saas','enterprise-saas','compliance','client-portal','member-dir',
+                          'bd-dir','real-estate','job-board','lead-gen','ai-platform','ai-dashboard',
+                          'ai-chat','booking-service','crm','signing-service','n8n','api-svc','ecom',
                           'custom','flint-proj'].includes(typeId);
 
     // ── STRIPE ────────────────────────────────────────────────────────────────
@@ -924,7 +925,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     }
 
     // ── COMMS STACK: CallScaler + Insighto + SMS-iT (for service businesses) ─
-    const isServiceBiz = ['client-portal', 'custom', 'real-estate', 'job-board'].includes(typeId);
+    const isServiceBiz = ['client-portal', 'custom', 'real-estate', 'job-board', 'booking-service', 'signing-service', 'crm', 'lead-gen'].includes(typeId);
     if (isServiceBiz && svcs.includes('comms')) {
       // CallScaler — provision phone number
       const CS_KEY = process.env.CALLSCALER_API_KEY;

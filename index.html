@@ -1535,6 +1535,17 @@ const FW_RELEVANCE = {
   'client-portal':  { 'tam-sam-som': 'medium', 'unit-economics': 'high', 'competitive-matrix': 'medium', 'porters': 'low', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
   'job-board':      { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
   'custom':         { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'medium', 'porters': 'medium', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
+  // New type_ids
+  'enterprise-saas': { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'high', 'seven-powers': 'high', 'jtbd': 'medium', 'lean-canvas': 'high' },
+  'lead-gen':       { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'low', 'seven-powers': 'low', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'ai-platform':    { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'high', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'ai-dashboard':   { 'tam-sam-som': 'medium', 'unit-economics': 'medium', 'competitive-matrix': 'medium', 'porters': 'low', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'ai-chat':        { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'high', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'booking-service': { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'low', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'crm':            { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'high', 'seven-powers': 'medium', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'signing-service': { 'tam-sam-som': 'medium', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'medium', 'seven-powers': 'low', 'jtbd': 'high', 'lean-canvas': 'high' },
+  'embed-widget':   { 'tam-sam-som': 'medium', 'unit-economics': 'medium', 'competitive-matrix': 'medium', 'porters': 'low', 'seven-powers': 'low', 'jtbd': 'high', 'lean-canvas': 'medium' },
+  'suitedash-niche': { 'tam-sam-som': 'high', 'unit-economics': 'high', 'competitive-matrix': 'high', 'porters': 'low', 'seven-powers': 'low', 'jtbd': 'high', 'lean-canvas': 'high' },
 };
 
 function applySmartMatching(typeId) {
@@ -3232,7 +3243,7 @@ Return:
   "name": "Short project name (2-4 words)",
   "repo": "kebab-case-repo-name",
   "domain": "guessed-domain.com",
-  "type_id": "one of: gov-saas|compliance|client-portal|dark-saas|bd-dir|member-dir|real-estate|job-board|auth-gen|auth-pest|auth-imm|auth-freight|auth-legal|auth-hvac|auth-med|n8n|flint-proj|api-svc|landing|wp-theme|portfolio|ecom",
+  "type_id": "one of: gov-saas|compliance|client-portal|dark-saas|enterprise-saas|bd-dir|member-dir|real-estate|job-board|lead-gen|ai-platform|ai-dashboard|ai-chat|booking-service|crm|signing-service|auth-gen|auth-pest|auth-imm|auth-freight|auth-legal|auth-hvac|auth-med|n8n|flint-proj|api-svc|landing|wp-theme|portfolio|ecom|embed-widget|suitedash-niche",
   "type_label": "Human readable type",
   "surface": "light or dark or dual",
   "accent": "#hexcolor most appropriate for this product",
@@ -4483,15 +4494,66 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
 
     // Authority sites: skip old DYNASTY-SITE-FACTORY path, use authority_deploy instead
 
+    // ── SMART TEMPLATE MAPPING ────────────────────────────────────────────
+    // Maps type_id to the best template repo. World-class open-source forks
+    // give Claude Code a massive head start vs generating from scratch.
+    const TEMPLATE_MAP = {
+      // SaaS (Clerk + Drizzle + Neon + Stripe + multi-tenancy + i18n)
+      'dark-saas':       'dynasty-saas-template',
+      'gov-saas':        'dynasty-saas-template',
+      'compliance':      'dynasty-saas-template',
+      // Enterprise SaaS (SSO/SAML + audit logs + team management)
+      'enterprise-saas': 'dynasty-enterprise-template',
+      // Dashboards (shadcn + CRUD tables + charts + RBAC + Cmd+K)
+      'client-portal':   'dynasty-dashboard-template',
+      'ai-dashboard':    'dynasty-dashboard-template',
+      'crm':             'dynasty-dashboard-template',
+      // AI platforms (agent framework + backend + RAG)
+      'ai-platform':     'aiinfos',
+      // AI chat (ChatGPT-style dashboard + LLM integration)
+      'ai-chat':         'dynasty-ai-chat-template',
+      // Lead generation (Next.js + Prisma lead capture/nurture)
+      'lead-gen':        'dynasty-saas-template',
+      // Booking / Signing (appointment + calendar)
+      'booking-service': 'dynasty-nextjs-template',
+      'signing-service': 'dynasty-nextjs-template',
+      // Directories & marketplaces
+      'bd-dir':          'dynasty-nextjs-template',
+      'member-dir':      'dynasty-nextjs-template',
+      'job-board':       'dynasty-nextjs-template',
+      // E-commerce
+      'ecom':            'dynasty-saas-template',
+      // Real estate
+      'real-estate':     'dynasty-dashboard-template',
+      // Default fullstack
+      'api-svc':         'dynasty-nextjs-template',
+      'n8n':             'dynasty-project-template',
+      'flint-proj':      'dynasty-project-template',
+    };
+
+    // Select template: deploy-target override → type_id map → default
+    let tmplName;
+    if (V2_DEPLOY_TARGET === 'fullstack') {
+      tmplName = TEMPLATE_MAP[inf.type_id] || 'dynasty-nextjs-template';
+    } else {
+      tmplName = 'dynasty-project-template'; // backend-only gets lightweight template
+    }
+    const tmpl = `${ORG}/${tmplName}`;
+
     // Non-authority types create a standalone repo; authority types skip this
-    const tmpl=`${ORG}/dynasty-project-template`;
     if(!isAuthority){
+      addP('cr-detail', `Using template: ${tmplName}`, '', ''); setP('cr-detail', 'run');
       let cr=await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
       if(!cr.ok&&cr.status!==422){
-        // Fallback: create empty repo if template generation fails
-        cr=await gh('/user/repos','POST',{name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,auto_init:true});
-        if(!cr.ok&&cr.status!==422){const e=await cr.json();if(!e.message?.includes('already exists'))throw new Error(e.message||'Repo creation failed');}
+        // Fallback: try dynasty-project-template
+        cr=await gh(`/repos/${ORG}/dynasty-project-template/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
+        if(!cr.ok&&cr.status!==422){
+          // Fallback: create empty repo
+          cr=await gh('/user/repos','POST',{name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,auto_init:true});
+          if(!cr.ok&&cr.status!==422){const e=await cr.json();if(!e.message?.includes('already exists'))throw new Error(e.message||'Repo creation failed');}
+        }
       }
+      setP('cr-detail', 'ok', tmplName);
       await new Promise(r=>setTimeout(r,3500));
     }
     setP('cr','ok');
