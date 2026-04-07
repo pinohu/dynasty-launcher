@@ -735,7 +735,9 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       try{
         const pr=await fetch(`https://api.vercel.com/v10/projects?teamId=${VERCEL_TEAM}`,{
           method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
-          body:JSON.stringify({name:slug,framework:'nextjs'})});
+          body:JSON.stringify({name:slug,framework:'nextjs',
+            gitRepository:{type:'github',repo:`${ORG}/${slug}`}
+          })});
         const pj=await pr.json();
         if(pj.id){
           vercelProjectId=pj.id;
@@ -746,19 +748,8 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           vercelProjectId=existing?.id||null;
         }
 
-        // ── LINK GITHUB REPO to Vercel project (enables auto-deploy on push) ──
+        // ── TRIGGER INITIAL DEPLOYMENT from the GitHub repo ──────────────────
         if(vercelProjectId){
-          try{
-            await fetch(`https://api.vercel.com/v9/projects/${vercelProjectId}?teamId=${VERCEL_TEAM}`,{
-              method:'PATCH',
-              headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
-              body:JSON.stringify({
-                gitRepository:{type:'github',repo:`${ORG}/${slug}`}
-              })
-            });
-          }catch(linkErr){console.error('Git link failed:',linkErr.message);}
-
-          // ── TRIGGER INITIAL DEPLOYMENT from the GitHub repo ──────────────────
           try{
             const depResp=await fetch(`https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM}`,{
               method:'POST',
