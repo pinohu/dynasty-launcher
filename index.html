@@ -4304,6 +4304,32 @@ Return ONLY a markdown table:
     // Authority sites: docs pushed by authority_deploy in provision.js
     // Non-authority types: push all files to standalone repo
     if (!isAuthority) {
+      // For backend-only builds, generate a landing page so Vercel serves something
+      if (V2_DEPLOY_TARGET !== 'fullstack' && !files['index.html']) {
+        files['index.html'] = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${inf.name}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;background:#0A0A0A;color:#EEEDE8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.card{max-width:600px;text-align:center}.badge{display:inline-block;background:rgba(201,168,76,0.1);color:#C9A84C;padding:4px 12px;border-radius:99px;font-size:12px;margin-bottom:1.5rem;border:1px solid rgba(201,168,76,0.2)}
+h1{font-size:2rem;font-weight:700;margin-bottom:0.5rem}p{color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:1.5rem;max-width:480px;margin-left:auto;margin-right:auto}
+.links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;transition:.15s}
+.primary{background:#C9A84C;color:#0A0A0A}.primary:hover{filter:brightness(1.1)}
+.secondary{background:rgba(255,255,255,0.06);color:#EEEDE8;border:1px solid rgba(255,255,255,0.1)}.secondary:hover{border-color:rgba(201,168,76,0.3)}
+.footer{margin-top:3rem;font-size:11px;color:rgba(255,255,255,0.2)}</style></head>
+<body><div class="card">
+<div class="badge">Dynasty Empire</div>
+<h1>${inf.name}</h1>
+<p>Backend-only deployment. Clone the repo and run with Docker to start the server locally, or use Claude Code to build the full-stack frontend.</p>
+<div class="links">
+<a class="primary" href="https://github.com/${ORG}/${inf.repo}">View on GitHub</a>
+<a class="secondary" href="https://github.com/${ORG}/${inf.repo}/blob/main/README.md">README</a>
+<a class="secondary" href="https://github.com/${ORG}/${inf.repo}/blob/main/SPEC.md">SPEC</a>
+</div>
+<div class="footer">Built by Dynasty Launcher · gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</div>
+</div></body></html>`;
+      }
+
       const fl = Object.entries(files);
       updateEduCard('pf');
     addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
