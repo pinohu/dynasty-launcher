@@ -6994,6 +6994,33 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
       files['src/locales/en.json'] = JSON.stringify(fullTranslation, null, 2);
       files['src/locales/fr.json'] = JSON.stringify(fullTranslation, null, 2);
 
+      // ── Fix auth links: /auth/login → /sign-in, /auth/signup → /sign-up ──
+      for (const [fp, content] of Object.entries(files)) {
+        if (typeof content === 'string' && (content.includes('/auth/login') || content.includes('/auth/signup'))) {
+          files[fp] = content.replace(/\/auth\/login/g, '/sign-in').replace(/\/auth\/signup/g, '/sign-up');
+        }
+      }
+
+      // ── Generate /docs page if not present ──
+      if (isNextJs && !files['src/app/docs/page.tsx']) {
+        const docsPage = `import Link from 'next/link';\n\nexport const metadata = { title: '${(inf.name||'App').replace(/'/g,"\\'")} Documentation', description: 'Learn how to use ${(inf.name||'the platform').replace(/'/g,"\\'")}.' };\n\nexport default function DocsPage() {\n  return (\n    <div className="max-w-4xl mx-auto px-4 py-16">\n      <h1 className="text-4xl font-bold mb-6">Documentation</h1>\n      <p className="text-lg text-gray-600 mb-8">Everything you need to get started with ${inf.name||'the platform'}.</p>\n      <div className="space-y-6">\n        <section className="bg-gray-50 rounded-xl p-8 border"><h2 className="text-2xl font-semibold mb-4">Getting Started</h2><p className="text-gray-600">Create an account and explore the dashboard to begin.</p></section>\n        <section className="bg-gray-50 rounded-xl p-8 border"><h2 className="text-2xl font-semibold mb-4">API Reference</h2><p className="text-gray-600">Full API documentation coming soon. Check the dashboard for your API keys.</p></section>\n      </div>\n    </div>\n  );\n}\n`;
+        files['src/app/docs/page.tsx'] = docsPage;
+        files['src/app/[locale]/(unauth)/docs/page.tsx'] = docsPage;
+      }
+
+      // ── Generate /pricing page if not present ──
+      if (isNextJs && !files['src/app/pricing/page.tsx']) {
+        const price = inf.price || '$49/month';
+        const pricingPage = `import Link from 'next/link';\n\nexport const metadata = { title: 'Pricing - ${(inf.name||'App').replace(/'/g,"\\'")}', description: 'Simple, transparent pricing.' };\n\nexport default function PricingPage() {\n  return (\n    <div className="max-w-5xl mx-auto px-4 py-16">\n      <div className="text-center mb-16"><h1 className="text-4xl font-bold mb-4">Pricing</h1><p className="text-xl text-gray-600">Start free, scale as you grow.</p></div>\n      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">\n        <div className="rounded-2xl p-8 border"><h3 className="text-xl font-bold mb-2">Free</h3><div className="text-4xl font-bold mb-6">$0<span className="text-base text-gray-500">/mo</span></div><ul className="space-y-2 mb-8"><li>✓ Basic access</li><li>✓ Community support</li></ul><Link href="/sign-up" className="block text-center py-3 rounded-lg bg-gray-100 font-semibold">Get Started</Link></div>\n        <div className="rounded-2xl p-8 border border-blue-500 ring-2 ring-blue-500"><div className="text-center text-sm font-semibold text-blue-600 mb-4">POPULAR</div><h3 className="text-xl font-bold mb-2">Pro</h3><div className="text-4xl font-bold mb-6">${price.replace(/\/.*/, '')}<span className="text-base text-gray-500">/mo</span></div><ul className="space-y-2 mb-8"><li>✓ Everything in Free</li><li>✓ Priority support</li><li>✓ Advanced features</li></ul><Link href="/sign-up" className="block text-center py-3 rounded-lg bg-blue-600 text-white font-semibold">Start Trial</Link></div>\n        <div className="rounded-2xl p-8 border"><h3 className="text-xl font-bold mb-2">Enterprise</h3><div className="text-4xl font-bold mb-6">Custom</div><ul className="space-y-2 mb-8"><li>✓ Everything in Pro</li><li>✓ SLA guarantee</li><li>✓ Dedicated support</li></ul><Link href="mailto:sales@${(inf.repo||'app')}.com" className="block text-center py-3 rounded-lg bg-gray-100 font-semibold">Contact Sales</Link></div>\n      </div>\n    </div>\n  );\n}\n`;
+        files['src/app/pricing/page.tsx'] = pricingPage;
+        files['src/app/[locale]/(unauth)/pricing/page.tsx'] = pricingPage;
+      }
+
+      // ── Generate .env.example ──
+      if (isNextJs) {
+        files['.env.example'] = `# ${inf.name||'App'} — Environment Variables\n\n# Clerk Authentication (https://dashboard.clerk.com)\nNEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...\nCLERK_SECRET_KEY=sk_test_...\nNEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in\nNEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up\n\n# Stripe (https://dashboard.stripe.com/apikeys)\nNEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...\nSTRIPE_SECRET_KEY=sk_test_...\nSTRIPE_WEBHOOK_SECRET=whsec_...\n\n# Database (auto-configured by Vercel Neon integration)\nDATABASE_URL=postgresql://...\n\n# Sentry (optional)\nSENTRY_DSN=https://...@sentry.io/...\n`;
+      }
+
       // Global find-and-replace across ALL files — catch anything the above missed
       for (const [fpath, content] of Object.entries(files)) {
         if (typeof content !== 'string') continue;

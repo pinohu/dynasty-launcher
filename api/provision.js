@@ -761,6 +761,30 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           });
         }
 
+        // ── Set required env vars for fullstack (Next.js + Clerk + Stripe) ────
+        if(vercelProjectId && isFullstack){
+          const clerkPk = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+          const clerkSk = process.env.CLERK_SECRET_KEY || '';
+          const stripePk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || '';
+          const stripeSk = process.env.STRIPE_SECRET_KEY || '';
+          const stripeWh = process.env.STRIPE_WEBHOOK_SECRET || '';
+          const envVars = [
+            ...(clerkPk ? [{key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:clerkPk,type:'encrypted'}] : []),
+            ...(clerkSk ? [{key:'CLERK_SECRET_KEY',value:clerkSk,type:'encrypted'}] : []),
+            {key:'NEXT_PUBLIC_CLERK_SIGN_IN_URL',value:'/en/sign-in',type:'plain'},
+            {key:'NEXT_PUBLIC_CLERK_SIGN_UP_URL',value:'/en/sign-up',type:'plain'},
+            {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL',value:'/en/dashboard',type:'plain'},
+            {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL',value:'/en/dashboard',type:'plain'},
+            ...(stripePk ? [{key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:stripePk,type:'encrypted'}] : []),
+            ...(stripeSk ? [{key:'STRIPE_SECRET_KEY',value:stripeSk,type:'encrypted'}] : []),
+            ...(stripeWh ? [{key:'STRIPE_WEBHOOK_SECRET',value:stripeWh,type:'encrypted'}] : []),
+            ...(process.env.ANTHROPIC_API_KEY?[{key:'ANTHROPIC_API_KEY',value:process.env.ANTHROPIC_API_KEY,type:'encrypted'}]:[]),
+          ].map(v=>({...v,target:['production','preview','development']}));
+          try{await fetch(`https://api.vercel.com/v10/projects/${vercelProjectId}/env?teamId=${VERCEL_TEAM}`,{
+            method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
+            body:JSON.stringify(envVars)});}catch{}
+        }
+
         // ── TRIGGER INITIAL DEPLOYMENT from the GitHub repo ──────────────────
         // Wait for GitHub to finish processing the pushed files
         if(vercelProjectId){
