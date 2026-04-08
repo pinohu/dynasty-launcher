@@ -123,18 +123,21 @@ async function mod_hosting(config, project, liveUrl) {
 
     // 3. Create email mailbox
     try {
+      const emailPassword = `Dyn${Date.now().toString(36)}!`;
       await fetch(`https://api.20i.com/package/${packageId}/email/mailbox`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mailbox: `hello@${domain}`, password: `Dyn${Date.now().toString(36)}!` })
+        body: JSON.stringify({ mailbox: `hello@${domain}`, password: emailPassword })
       });
       results.details.email = `hello@${domain}`;
+      results.details.email_password = emailPassword;
+      results.details.email_webmail = 'https://webmail.20i.com';
     } catch (e) { results.details.email_error = e.message; }
 
     // 4. SPF record
     try {
       await fetch(`https://api.20i.com/package/${packageId}/web/dnsRecords`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new: { txt: [{ host: '@', txt: 'v=spf1 include:spf.20i.com ~all' }] } })
+        body: JSON.stringify({ new: { txt: [{ host: '@', txt: 'v=spf1 include:spf.20i.com include:_spf.acumbamail.com ~all' }] } })
       });
       results.details.spf = true;
     } catch {}
@@ -295,13 +298,14 @@ async function mod_email(config, project, liveUrl) {
     if (!listId) throw new Error('List creation failed');
     results.details.list_id = listId;
 
-    // 2. Create 5-email welcome sequence
+    // 2. Create 5-email welcome sequence (CAN-SPAM compliant: unsubscribe link + physical address)
+    const canSpamFooter = `<hr style="border:none;border-top:1px solid #eee;margin:24px 0 16px"><p style="font-size:12px;color:#888;line-height:1.5">${project.name}<br>{{company_address}}<br><a href="{{unsubscribe_url}}" style="color:#888">Unsubscribe</a> | <a href="{{preferences_url}}" style="color:#888">Email Preferences</a></p>`;
     const emailSequence = [
-      { subject: `Welcome to ${project.name}!`, body: `<h2>Welcome aboard!</h2><p>Thanks for joining ${project.name}. We're excited to have you.</p><p>Here's what you can expect from us...</p>`, delay: 0 },
-      { subject: `Getting started with ${project.name}`, body: `<h2>Let's get you set up</h2><p>Here's a quick guide to making the most of ${project.name}.</p><p>Step 1: Complete your profile<br>Step 2: Explore the dashboard<br>Step 3: Connect your tools</p>`, delay: 1 },
-      { subject: `${project.name} tips & tricks`, body: `<h2>Pro tips for success</h2><p>Our most successful users do these 3 things...</p>`, delay: 3 },
-      { subject: `How ${project.name} compares`, body: `<h2>Why users choose us</h2><p>Here's what makes ${project.name} different...</p>`, delay: 5 },
-      { subject: `Special offer from ${project.name}`, body: `<h2>Ready to upgrade?</h2><p>As a thank you for being part of our community, here's an exclusive offer...</p>`, delay: 7 }
+      { subject: `Welcome to ${project.name}!`, body: `<h2>Welcome aboard!</h2><p>Thanks for joining ${project.name}. We're excited to have you.</p><p>Here's what you can expect from us...</p>${canSpamFooter}`, delay: 0 },
+      { subject: `Getting started with ${project.name}`, body: `<h2>Let's get you set up</h2><p>Here's a quick guide to making the most of ${project.name}.</p><p>Step 1: Complete your profile<br>Step 2: Explore the dashboard<br>Step 3: Connect your tools</p>${canSpamFooter}`, delay: 1 },
+      { subject: `${project.name} tips & tricks`, body: `<h2>Pro tips for success</h2><p>Our most successful users do these 3 things...</p>${canSpamFooter}`, delay: 3 },
+      { subject: `How ${project.name} compares`, body: `<h2>Why users choose us</h2><p>Here's what makes ${project.name} different...</p>${canSpamFooter}`, delay: 5 },
+      { subject: `News from ${project.name}`, body: `<h2>What's new</h2><p>Here's what we've been working on to make ${project.name} even better for you...</p>${canSpamFooter}`, delay: 7 }
     ];
     results.details.emails_created = 0;
     for (const email of emailSequence) {
@@ -445,11 +449,11 @@ async function mod_sms(config, project) {
       groupCreated = !!(grp.data?.id || grp.id);
     } catch {}
 
-    // Store template text for manual creation
+    // Store template text for manual creation (TCPA-compliant: opt-out language included)
     results.details.templates = [
-      { name: 'Welcome', body: `Welcome to ${project.name}! We're glad to have you. Reply HELP for assistance.` },
-      { name: 'Reminder', body: `Reminder: Your appointment with ${project.name} is coming up. Reply CONFIRM to confirm.` },
-      { name: 'Follow-up', body: `Thanks for choosing ${project.name}! We'd love your feedback. Rate us 1-5.` }
+      { name: 'Welcome', body: `Welcome to ${project.name}! We're glad to have you. Reply HELP for assistance or STOP to opt out.` },
+      { name: 'Reminder', body: `Reminder: Your appointment with ${project.name} is coming up. Reply CONFIRM to confirm or STOP to unsubscribe.` },
+      { name: 'Follow-up', body: `Thanks for choosing ${project.name}! We'd love your feedback. Rate us 1-5. Reply STOP to opt out.` }
     ];
     results.details.setup_note = 'SMS-iT campaign API is not publicly documented. Templates provided — create them at app.smsit.ai → Campaigns → Templates.';
     results.ok = groupCreated;
@@ -1296,7 +1300,8 @@ async function runModules(config, project, liveUrl, enabledModules) {
 
 // ── Main handler ──────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin','*');
+  const allowedOrigin = process.env.CORS_ORIGIN || 'https://dynasty-launcher.vercel.app';
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers','Content-Type');
   if (req.method==='OPTIONS') return res.status(200).end();
@@ -1543,20 +1548,22 @@ REQUIREMENTS:
 
     // 4c. Generate testimonials
     try {
-      const testRaw = await aiGenerate(`Generate 6 realistic customer testimonials for "${niche_name}".
+      const testRaw = await aiGenerate(`Generate 6 PLACEHOLDER customer testimonials for "${niche_name}".
+
+IMPORTANT: These are PLACEHOLDER examples only. They must NOT be presented as real customer reviews.
 
 Return ONLY valid TypeScript:
 
 export const testimonials = [
-  { quote: "Detailed 2-3 sentence testimonial about the service.", author: "First Last", role: "Homeowner", company: "City, State", rating: 5 },
-  // ... 5 more
+  { quote: "Detailed 2-3 sentence placeholder testimonial about the service.", author: "Jane D. (Example)", role: "Role", company: "City, State", rating: 5, isPlaceholder: true },
+  // ... 5 more, all with isPlaceholder: true
 ];
 
-Make them sound natural and specific to the service. Vary ratings between 4 and 5.`, 2000);
+Make them illustrative of the kinds of testimonials the business should collect. Vary ratings between 4 and 5.`, 2000);
       if (testRaw && testRaw.includes('export const testimonials')) {
         const clean = testRaw.match(/export const testimonials[\s\S]*/)?.[0] || testRaw;
-        const testFile = `export interface Testimonial {\n  quote: string;\n  author: string;\n  role: string;\n  company: string;\n  rating: number;\n}\n\n${clean}\n`;
-        await pushFile(GH_TOKEN,ORG,project_slug,'src/data/testimonials.ts',testFile,'feat: AI-generated testimonials');
+        const testFile = `/**\n * PLACEHOLDER TESTIMONIALS — AI-generated examples.\n * Replace these with real customer testimonials before going live.\n * Using fake testimonials as real ones violates FTC Endorsement Guides.\n */\nexport interface Testimonial {\n  quote: string;\n  author: string;\n  role: string;\n  company: string;\n  rating: number;\n  isPlaceholder: boolean;\n}\n\n${clean}\n`;
+        await pushFile(GH_TOKEN,ORG,project_slug,'src/data/testimonials.ts',testFile,'feat: placeholder testimonials (replace with real ones before launch)');
         await new Promise(r=>setTimeout(r,300));
       }
     } catch{}
