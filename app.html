@@ -7840,6 +7840,10 @@ function saveBuildHistory(inf, repo, fc) {
     cost: V2_BUILD_COST || 0,
     duration: Math.round((Date.now() - BUILD_START_TIME) / 1000),
     live_url: provRes?.results?.vercel?.url || null,
+    infrastructure: provRes?.results ? Object.keys(provRes.results) : [],
+    v3_modules_ok: provRes?.modules ? Object.entries(provRes.modules).filter(([,r]) => r?.ok).map(([k]) => k) : [],
+    v3_modules_failed: provRes?.modules ? Object.entries(provRes.modules).filter(([,r]) => r && !r.ok && r.error).map(([k]) => k) : [],
+    tier: localStorage.getItem('dynasty_tier') || null,
     date: new Date().toISOString()
   };
   window._buildHistory.push(entry);
@@ -7873,6 +7877,9 @@ function showBuildComparison() {
         ${row('Cost', '$' + (a.cost || 0).toFixed(4), '$' + (b.cost || 0).toFixed(4))}
         ${row('Duration', a.duration + 's', b.duration + 's')}
         ${row('URL', a.live_url ? '<a href="' + a.live_url + '" target="_blank" style="color:var(--gold)">' + a.live_url.replace('https://','') + '</a>' : '—', b.live_url ? '<a href="' + b.live_url + '" target="_blank" style="color:var(--gold)">' + b.live_url.replace('https://','') + '</a>' : '—')}
+        ${row('Infra', (a.infrastructure||[]).join(', ')||'—', (b.infrastructure||[]).join(', ')||'—')}
+        ${row('V3 Modules', (a.v3_modules_ok||[]).length ? '<span style="color:var(--grn)">' + (a.v3_modules_ok||[]).length + ' ok</span>' + ((a.v3_modules_failed||[]).length ? ' · <span style="color:var(--red)">' + (a.v3_modules_failed||[]).length + ' failed</span>' : '') : '—', (b.v3_modules_ok||[]).length ? '<span style="color:var(--grn)">' + (b.v3_modules_ok||[]).length + ' ok</span>' + ((b.v3_modules_failed||[]).length ? ' · <span style="color:var(--red)">' + (b.v3_modules_failed||[]).length + ' failed</span>' : '') : '—')}
+        ${row('Tier', a.tier||'—', b.tier||'—')}
       </tbody>
     </table>
     <div style="text-align:right;margin-top:1rem"><button onclick="this.closest('div[style]').parentElement.remove()" style="padding:7px 14px;background:var(--gold);color:var(--ink);border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer">Close</button></div>
