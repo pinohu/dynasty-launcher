@@ -9,7 +9,7 @@
       "maxDuration": 30
     },
     "api/provision.js": {
-      "maxDuration": 60
+      "maxDuration": 300
     },
     "api/health.js": {
       "maxDuration": 10
