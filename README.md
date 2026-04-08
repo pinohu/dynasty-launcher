@@ -1,67 +1,72 @@
-# Dynasty Business System Launcher
+# Dynasty Launcher V3
 
-> Permanent deployment of the Dynasty Empire project launcher. Generates complete deployable business systems in 90 seconds.
+> One prompt deploys a complete operating business in 5 minutes. Website, domain, email, phone, CRM, billing, marketing, SEO, video, design, analytics, automation, and legal docs — all provisioned automatically.
 
 ## What It Does
 
-* 22 project types across 6 categories
-* 5+ Claude AI generation calls per project
-* 23 files generated and pushed to GitHub automatically
-* Flint autonomously provisions infrastructure in background
-* MANUAL-ACTIONS.md documents everything requiring human hands
+Dynasty Launcher takes a plain-English business description and provisions:
 
-## Claude Code Architecture Patterns (v2)
+**Infrastructure** (Phase 8)
+- GitHub repo with 30+ production files
+- Vercel/20i deployment with custom domain + SSL
+- Neon PostgreSQL database
+- Business email with SPF/DKIM/DMARC
 
-Inspired by patterns exposed in the Claude Code source leak (March 31, 2026), the launcher now implements 8 production-grade agentic patterns:
+**17 Integration Modules** (Phases 9-20)
+| Module | Service | What It Provisions |
+|--------|---------|-------------------|
+| mod_hosting | 20i | Domain, DNS, email, SSL, SPF/DKIM/DMARC |
+| mod_billing | Stripe | Product, 3 price tiers, webhooks, dunning, customer portal |
+| mod_email | Acumbamail | Subscriber list, 5-email welcome sequence, automation |
+| mod_phone | CallScaler + Insighto + Trafft | Local number, AI voice agent, booking page |
+| mod_sms | SMS-iT | Contact group, 3 SMS templates |
+| mod_chatbot | Chatbase | Website chatbot trained on business FAQ |
+| mod_seo | WriterZen + NeuronWriter | Keyword research, 5 SEO blog posts |
+| mod_video | Vadoo AI + Fliki | 60-90s explainer video, 3 social clips |
+| mod_design | SUPERMACHINE + Pixelied + RelayThat | Hero image, OG image, 40+ social graphics |
+| mod_analytics | Plerdy + PostHog | Heatmaps, funnels, session recording |
+| mod_leads | Happierleads + Salespanel | Visitor ID, lead scoring, hot lead alerts |
+| mod_automation | n8n | 7 workflows (signup, booking, payment, leads, missed call, dunning, reviews) |
+| mod_docs | Documentero + SparkReceipt | ToS, Privacy Policy, Service Agreement PDFs |
+| mod_crm | SuiteDash | Workspace, pipeline, client portal, invoicing |
+| mod_directory | Brilliant Directories | Directory instance, tiers, categories (directory projects) |
+| mod_wordpress | 20i | WordPress package, theme, plugins (WordPress projects) |
+| mod_social | Vista Social | 260-post social calendar import |
 
-### 1. Parallel Subagent Execution
-Independent build phases run concurrently using a Fork/Teammate model. Cuts build time from ~90s to ~30-45s.
-
-### 2. Smart Model Routing
-Each phase routes to the optimal model by complexity tier:
-- **Architect** (Opus): Blueprint, design system, business strategy
-- **Standard** (Sonnet): Spec docs, backend code, frontend scaffold
-- **Fast** (Haiku): Boilerplate files (.env, Dockerfile, .gitignore)
-
-Reduces API cost 40-60% while maintaining quality where it matters.
-
-### 3. Context Compaction
-After each phase, outputs are compressed into a compact context object (colors, fonts, entity names, key decisions). This feeds forward to ensure cross-file coherence without burning full token context.
-
-### 4. Tool Registry Pattern
-API is modular: `api/ai.js` (multi-provider router), `api/orchestrate.js` (compaction + routing + preflight), `api/memory.js` (project history), `api/flags.js` (feature flags), `api/provision.js` (infrastructure).
-
-### 5. Feature Flags
-Inspired by Claude Code's compile-time flags (KAIROS, BUDDY, etc.). Enables gated rollouts, A/B testing prompt strategies, and safe iteration without breaking production.
-
-### 6. Project Memory
-Tracks build history in Neon: what was built, what failed, which models worked best, cost per build. Over time, the launcher learns patterns and avoids repeating mistakes.
-
-### 7. CLAUDE.md Read-Back
-Reads existing CLAUDE.md from previously generated repos for iterative updates instead of fresh builds.
-
-### 8. Preflight Review
-Shows a confirmation modal before GitHub push and infrastructure provisioning with full build plan.
+**Plus:** 13+ strategy documents, 8-framework viability analysis, OPERATIONS.md owner's manual, CREDENTIALS.md service credentials.
 
 ## Architecture
 
 ```
-index.html              <- launcher UI (vanilla JS + build orchestrator)
-api/ai.js               <- multi-provider AI router (7 providers, 25+ models)
-api/orchestrate.js      <- compaction engine, smart routing, preflight, CLAUDE.md read-back
-api/memory.js           <- project history (Neon Postgres)
-api/flags.js            <- feature flag system
-api/provision.js        <- infrastructure provisioning (GitHub, Vercel, Neon, 20i, Stripe)
-api/health.js           <- credential health checks
-api/validate.js         <- output quality validation
-vercel.json             <- Vercel config
+index.html              <- Landing page (V3 pricing + features)
+app.html                <- Builder app (8014 lines, monolith frontend)
+api/provision.js        <- Backend orchestrator (2186 lines, 17 modules)
+api/ai.js               <- Multi-provider AI router (7 providers)
+api/orchestrate.js      <- Compaction engine + smart routing
+api/memory.js           <- Project history (Neon)
+api/flags.js            <- Feature flags
+api/health.js           <- Credential health checks
+api/checkout.js         <- Stripe checkout for Dynasty tiers
+vercel.json             <- Vercel config (300s timeout for modules)
 ```
+
+## Pricing Tiers
+
+- **Starter** ($297/build): Code + docs + Vercel deployment (Phases 1-8)
+- **Professional** ($997/build): + domain, email, billing, CRM, marketing, chatbot
+- **Enterprise** ($2,497/build): All 17 modules activated
 
 ## Deploy
 
 ```
 npx vercel --prod
 ```
+
+## Vercel Project
+
+- Domain: `dynasty-launcher.vercel.app`
+- Project ID: `prj_ohqrZxB5qgn4Hkc5rt8qZAG5fDHX`
+- Team: `team_fuTLGjBMk3NAD32Bm5hA7wkr`
 
 ---
 

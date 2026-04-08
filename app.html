@@ -7315,7 +7315,41 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
         const sc = V2_SCORECARD;
         const scoreHtml = sc ? `<div style="margin:1rem 0;padding:12px;border-radius:8px;background:${sc.composite>=8?'rgba(62,207,142,0.06)':sc.composite>=6?'rgba(201,168,76,0.06)':'rgba(229,83,75,0.05)'}"><strong>${sc.verdict}</strong> — Score: ${sc.composite.toFixed(1)}/10</div>` : '';
         const filesTable = Object.keys(window._buildFiles || {}).map(f => `<li>${f}</li>`).join('');
-        const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>${reportTitle} — Build Report</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0A0A0A;color:#EEEDE8;padding:2rem;max-width:700px;margin:0 auto;line-height:1.6}h1{font-size:1.8rem;margin-bottom:.5rem}h2{color:#C9A84C;font-size:1rem;margin:1.5rem 0 .5rem;border-bottom:1px solid #222;padding-bottom:4px}.meta{color:#666;font-size:13px}.card{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:1rem;margin:8px 0}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}ul{padding-left:1.2rem;font-size:13px;color:#888}li{margin:3px 0}</style></head><body><h1>${reportTitle}</h1><p class="meta">${inf.type_label} · ${inf.revenue_model} · ${inf.price} · ${reportDate}</p>${scoreHtml}<h2>Generated Files (${Object.keys(window._buildFiles||{}).length})</h2><ul>${filesTable}</ul><h2>Quick Start</h2><pre style="background:#111;padding:12px;border-radius:6px;font-size:12px;color:#C9A84C">gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</pre><p style="margin-top:2rem;text-align:center;color:#333;font-size:11px">${isWhiteLabel() ? '' : 'Built with Dynasty Launcher · '}${reportDate}</p></body></html>`;
+        // Build module results section for report
+        const moduleReport = (() => {
+          if (!provRes?.modules) return '';
+          const mods = provRes.modules;
+          const okMods = Object.entries(mods).filter(([,v]) => v?.ok);
+          const failMods = Object.entries(mods).filter(([,v]) => v && !v.ok && v.error);
+          const skipMods = Object.entries(mods).filter(([,v]) => v && !v.ok && !v.error);
+          let html = `<h2>Provisioned Services (${okMods.length} of ${Object.keys(mods).length})</h2>`;
+          if (okMods.length) {
+            html += '<div class="g">' + okMods.map(([k,v]) => {
+              const details = v.details || {};
+              const info = details.domain || details.product_id || details.list_id || details.phone_number || details.workspace_url || details.chatbot_id || '';
+              return `<div class="card"><strong style="color:#22C55E">&#10003; ${k}</strong><div style="font-size:12px;color:#888;margin-top:4px">${info || v.service || 'Provisioned'}</div></div>`;
+            }).join('') + '</div>';
+          }
+          if (failMods.length) {
+            html += `<h2 style="color:#F87171">Failed (${failMods.length})</h2>`;
+            html += failMods.map(([k,v]) => `<div class="card"><strong style="color:#F87171">&#10007; ${k}</strong><div style="font-size:12px;color:#888;margin-top:4px">${v.fallback || v.error}</div></div>`).join('');
+          }
+          if (skipMods.length) {
+            html += `<h2 style="color:#71717A">Skipped (${skipMods.length})</h2>`;
+            html += '<div style="font-size:12px;color:#555">' + skipMods.map(([k]) => k).join(', ') + '</div>';
+          }
+          // Infrastructure summary
+          if (provRes.results) {
+            html += '<h2>Infrastructure</h2><div class="g">';
+            for (const [k, v] of Object.entries(provRes.results)) {
+              const status = v.ok || v.package_id || v.price_id ? '#22C55E' : v.manual ? '#FBBF24' : '#F87171';
+              html += `<div class="card"><strong style="color:${status}">${k}</strong></div>`;
+            }
+            html += '</div>';
+          }
+          return html;
+        })();
+        const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>${reportTitle} — Build Report</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0A0A0A;color:#EEEDE8;padding:2rem;max-width:700px;margin:0 auto;line-height:1.6}h1{font-size:1.8rem;margin-bottom:.5rem}h2{color:#C9A84C;font-size:1rem;margin:1.5rem 0 .5rem;border-bottom:1px solid #222;padding-bottom:4px}.meta{color:#666;font-size:13px}.card{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:1rem;margin:8px 0}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}ul{padding-left:1.2rem;font-size:13px;color:#888}li{margin:3px 0}.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}</style></head><body><h1>${reportTitle}</h1><p class="meta">${inf.type_label} · ${inf.revenue_model} · ${inf.price} · ${reportDate}</p>${scoreHtml}${moduleReport}<h2>Generated Files (${Object.keys(window._buildFiles||{}).length})</h2><ul>${filesTable}</ul><h2>Quick Start</h2><pre style="background:#111;padding:12px;border-radius:6px;font-size:12px;color:#C9A84C">gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</pre><h2>Documentation</h2><div class="g"><div class="card"><a href="OPERATIONS.md" style="color:#C9A84C;text-decoration:none">OPERATIONS.md</a><div style="font-size:12px;color:#888">Owner's manual</div></div><div class="card"><a href="CREDENTIALS.md" style="color:#C9A84C;text-decoration:none">CREDENTIALS.md</a><div style="font-size:12px;color:#888">Service credentials</div></div></div><p style="margin-top:2rem;text-align:center;color:#333;font-size:11px">${isWhiteLabel() ? '' : 'Built with Dynasty Launcher V3 · '}${reportDate}</p></body></html>`;
         await pushF(`${ORG}/${inf.repo}`, 'REPORT.html', reportHtml, 'docs: shareable build report');
       } catch {}
     }
@@ -7590,7 +7624,7 @@ function showDone(inf,repo,fc,mtasks){
     EXISTING_CLAUDE_MD ? '♻️ iterative update' : null,
   ].filter(Boolean).join(' · ');
   d.innerHTML=`
-<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated and pushed · ${provRes?.results?Object.keys(provRes.results).length+' services provisioned':'provisioning'} · ${mtasks.length} manual actions documented${V2_BUILD_COST > 0 ? ' · API cost: $' + V2_BUILD_COST.toFixed(4) : ' · API cost: $0.00 (free models)'} · ${buildDuration}s${intelligenceNote ? '<br><span style="color:var(--gold);font-size:0.78rem">' + intelligenceNote + '</span>' : ''}</p></div>
+<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated · ${provRes?.results?Object.keys(provRes.results).length+' infrastructure services':''}${provRes?.modules?' + '+Object.values(provRes.modules).filter(m=>m?.ok).length+' V3 modules provisioned':' provisioned'} · ${mtasks.length} manual actions · ${buildDuration}s${V2_BUILD_COST > 0 ? ' · $' + V2_BUILD_COST.toFixed(4) + ' API cost' : ''}${intelligenceNote ? '<br><span style="color:var(--gold);font-size:0.78rem">' + intelligenceNote + '</span>' : ''}</p></div>
 
 ${V2_SCORECARD ? `<div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1rem">
   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin-bottom:8px">Strategic Viability</div>
@@ -7635,6 +7669,19 @@ ${provRes&&provRes.results?`<div class="rc"><h3>Infrastructure Provisioned</h3><
       ${provRes.results.pulsetic?`<div class="lr"><span class="lb lb-g">Monitor</span><span>${provRes.results.pulsetic.note||'Queued'}</span></div>`:''}
       ${provRes.manual_steps&&provRes.manual_steps.length?`<div class="lr"><span class="lb" style="background:#f59e0b;color:#000">Manual</span><span style="color:#f59e0b;font-size:12px">${provRes.manual_steps[0]}</span></div>`:''}
     </div></div>`:''}
+${provRes&&provRes.modules?`<div class="rc"><h3>V3 Modules Provisioned (${Object.values(provRes.modules).filter(m=>m?.ok).length} of ${Object.keys(provRes.modules).length})</h3><div class="rl">
+      ${Object.entries(provRes.modules).map(([k,v]) => {
+        if (v?.ok) {
+          const d = v.details || {};
+          const info = d.domain || d.product_id || d.phone_number || d.list_id || d.workspace_url || d.chatbot_id || d.workflow_ids?.length + ' workflows' || v.service;
+          return `<div class="lr"><span class="lb lb-g">${k}</span><span>${info || 'Provisioned'}</span></div>`;
+        } else if (v?.error) {
+          return `<div class="lr"><span class="lb" style="background:#f87171;color:#fff">${k}</span><span style="color:#f87171;font-size:12px">${v.fallback || v.error}</span></div>`;
+        } else {
+          return `<div class="lr"><span class="lb" style="background:#333;color:#888">${k}</span><span style="color:#888;font-size:12px">Skipped</span></div>`;
+        }
+      }).join('')}
+    </div></div>`:''}
 ${window._socialCalendarMd?`<div class="rc"><h3>📱 Social Media Calendar</h3><div style="font-size:11px;color:var(--sec);margin-bottom:8px">1-year content calendar across 5 platforms — ready to schedule. Includes AI image prompts and optimal posting times.</div><div class="lr"><span class="lb lb-f">CSV</span><a href="${repoUrl}/blob/main/social-media/calendar.csv" target="_blank">calendar.csv — Import to Buffer, Hootsuite, Later</a></div><div class="lr"><span class="lb lb-f">JSON</span><a href="${repoUrl}/blob/main/social-media/calendar.json" target="_blank">calendar.json — API-ready format</a></div><div class="lr"><span class="lb lb-f">MD</span><a href="${repoUrl}/blob/main/social-media/SOCIAL-MEDIA-CALENDAR.md" target="_blank">SOCIAL-MEDIA-CALENDAR.md — Full calendar</a></div><div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"><div style="font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Sample Posts</div>${(()=>{try{const rows=(window._socialCalendarMd||'').split('\\n').filter(l=>l.startsWith('|')&&!l.includes('---')&&!l.includes('Week')).slice(0,3);return rows.map(r=>{const c=r.split('|').map(x=>x.trim()).filter(Boolean);return c.length>=4?'<div style="font-size:11px;color:var(--sec);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span style="color:var(--gold);font-weight:600;font-size:10px">'+c[1]+'</span> · '+(c[3]||'').slice(0,120)+'…</div>':'';}).join('');}catch{return'';}})()}</div></div>`:''}
 ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see MANUAL-ACTIONS.md</h3><div class="ml">${mtasks.map(t=>`<div class="mi">${t}</div>`).join('')}</div></div>`:''}
 
@@ -7642,19 +7689,21 @@ ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see M
   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);margin-bottom:10px">💎 Deliverable Value</div>
   <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px 12px;font-size:11px">
     <span style="color:var(--sec)">Strategic business architecture</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$8,000–15,000</span>
-    <span style="color:var(--sec)">Financial model & projections</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
-    <span style="color:var(--sec)">Go-to-market playbook</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$5,000–12,000</span>
-    <span style="color:var(--sec)">Product spec + roadmap</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$4,000–10,000</span>
-    <span style="color:var(--sec)">Backend code + infrastructure</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$5,000–15,000</span>
-    <span style="color:var(--sec)">Design system + brand</span><span style="color:var(--dim)">Designer equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
-    <span style="color:var(--sec)">Social media calendar (260 posts)</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$1,500–3,000</span>
-    <span style="color:var(--sec)">SEO content strategy (25 articles)</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
-    <span style="color:var(--sec)">Investor pitch summary</span><span style="color:var(--dim)">Advisor equiv.</span><span style="color:var(--gold);font-weight:600">$5,000–15,000</span>
-    <span style="color:var(--sec)">Legal templates (ToS + Privacy)</span><span style="color:var(--dim)">Attorney equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
-    <span style="color:var(--sec)">Email onboarding sequence</span><span style="color:var(--dim)">Copywriter equiv.</span><span style="color:var(--gold);font-weight:600">$1,500–3,000</span>
-    <span style="color:var(--sec)">Customer discovery script</span><span style="color:var(--dim)">Consultant equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
-    <span style="color:var(--sec)">CI/CD pipeline + DevOps config</span><span style="color:var(--dim)">DevOps equiv.</span><span style="color:var(--gold);font-weight:600">$1,000–3,000</span>
-    <span style="color:var(--sec);font-weight:600;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px;grid-column:1/3">Total equivalent value</span><span style="color:var(--gold);font-weight:700;font-size:14px;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px">$45,000–104,000</span>
+    <span style="color:var(--sec)">Financial model + GTM playbook</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$8,000–20,000</span>
+    <span style="color:var(--sec)">Production code + infrastructure</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$5,000–15,000</span>
+    <span style="color:var(--sec)">Custom domain + email (SPF/DKIM)</span><span style="color:var(--dim)">IT setup</span><span style="color:var(--gold);font-weight:600">$500–1,500</span>
+    <span style="color:var(--sec)">Stripe billing (3 tiers + webhooks)</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
+    <span style="color:var(--sec)">CRM + client portal (SuiteDash)</span><span style="color:var(--dim)">Setup equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
+    <span style="color:var(--sec)">AI phone + booking system</span><span style="color:var(--dim)">Service equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
+    <span style="color:var(--sec)">Email marketing (5-email sequence)</span><span style="color:var(--dim)">Copywriter equiv.</span><span style="color:var(--gold);font-weight:600">$1,500–3,000</span>
+    <span style="color:var(--sec)">5 SEO blog posts + keyword research</span><span style="color:var(--dim)">Content equiv.</span><span style="color:var(--gold);font-weight:600">$2,500–7,500</span>
+    <span style="color:var(--sec)">Explainer video + social clips</span><span style="color:var(--dim)">Video equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
+    <span style="color:var(--sec)">Design assets (hero, OG, 40+ social)</span><span style="color:var(--dim)">Designer equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
+    <span style="color:var(--sec)">7 automation workflows (n8n)</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
+    <span style="color:var(--sec)">Analytics + lead intelligence</span><span style="color:var(--dim)">MarTech equiv.</span><span style="color:var(--gold);font-weight:600">$1,000–3,000</span>
+    <span style="color:var(--sec)">Legal PDFs + operations manual</span><span style="color:var(--dim)">Attorney equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
+    <span style="color:var(--sec)">Social calendar (260 posts)</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$1,500–3,000</span>
+    <span style="color:var(--sec);font-weight:600;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px;grid-column:1/3">Total equivalent value</span><span style="color:var(--gold);font-weight:700;font-size:14px;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px">$45,000–112,000</span>
   </div>
   <div style="font-size:10px;color:var(--dim);margin-top:8px">Generated in ${buildDuration}s for $${V2_BUILD_COST?.toFixed(4)||'0.00'} in AI costs</div>
 </div>
@@ -8011,6 +8060,18 @@ table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
     ${provRes.results.acumbamail ? '<div class="card"><div class="label">📧 Email</div><div class="value">Acumbamail list active</div></div>' : ''}
     ${provRes.results.pulsetic ? '<div class="card"><div class="label">📊 Monitoring</div><div class="value">Pulsetic (5-min intervals)</div></div>' : ''}
     ${provRes.results.n8n ? '<div class="card"><div class="label">⚙️ Automation</div><div class="value">n8n webhook workflow</div></div>' : ''}
+  </div>` : ''}
+  ${provRes?.modules ? `<h2>7b. V3 Module Results</h2><div class="grid">
+    ${Object.entries(provRes.modules).map(([k,v]) => {
+      if (v?.ok) {
+        const d = v.details || {};
+        const label = {hosting:'🌐 Domain',billing:'💳 Billing',email:'📧 Marketing',phone:'📞 Phone',sms:'💬 SMS',chatbot:'🤖 Chatbot',seo:'📝 SEO',video:'🎬 Video',design:'🎨 Design',analytics:'📈 Analytics',leads:'🎯 Leads',automation:'⚙️ Workflows',docs:'📄 Legal',crm:'👥 CRM',directory:'📁 Directory',wordpress:'🔧 WordPress',social:'📱 Social'}[k] || k;
+        return '<div class="card"><div class="label">' + label + '</div><div class="value" style="color:#3ECF8E">' + (d.domain || d.product_id || d.phone_number || d.list_id || 'Active') + '</div></div>';
+      } else if (v?.error) {
+        return '<div class="card"><div class="label" style="color:#F87171">' + k + '</div><div class="value" style="font-size:11px;color:#888">' + (v.fallback || v.error) + '</div></div>';
+      }
+      return '';
+    }).join('')}
   </div>` : ''}
 
   <h2 id="files">8. Generated Deliverables (${fileCount} files)</h2>
