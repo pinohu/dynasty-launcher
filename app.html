@@ -1041,7 +1041,7 @@ html,body{overflow-x:hidden}
   <div id="prog-screen" style="display:none">
     <div class="global-progress" id="global-progress" style="display:none">
       <div class="global-progress-bar"><div class="global-progress-fill" id="gp-fill"></div></div>
-      <div class="global-progress-text" id="gp-text">Phase 1 of 12 · Estimated: ~3 min</div>
+      <div class="global-progress-text" id="gp-text">Phase 1 of 14 · Estimated: ~3 min</div>
     </div>
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
@@ -1849,34 +1849,81 @@ document.getElementById('settings-btn').onclick=()=>{
   const webhookUrl = localStorage.getItem('dynasty_webhook_url') || '';
   const whiteLabel = localStorage.getItem('dynasty_white_label') === 'true';
   const customDomain = localStorage.getItem('dynasty_custom_domain') || '';
+  const location = localStorage.getItem('dynasty_location') || '';
+  const pricePro = localStorage.getItem('dynasty_price_pro') || '49';
+  const priceEnterprise = localStorage.getItem('dynasty_price_enterprise') || '199';
+  const savedModules = JSON.parse(localStorage.getItem('dynasty_modules_enabled') || '{}');
+  const moduleDefaults = { hosting: true, billing: true, email: true, phone: false, sms: false, chatbot: false, seo: true, video: false, design: false, analytics: true, leads: false, automation: true, docs: true, crm: false, directory: false, wordpress: false, social: false };
+  const modules = { ...moduleDefaults, ...savedModules };
 
   const modal = document.createElement('div');
   modal.id = 'settings-modal';
-  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto';
   modal.innerHTML = `
-    <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;max-width:500px;width:90%">
-      <h3 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:1rem">⚙ Settings</h3>
-      
+    <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;max-width:560px;width:90%;max-height:90vh;overflow-y:auto;margin:20px 0">
+      <h3 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:1rem">⚙ Settings & Build Configuration</h3>
+
       <div style="margin-bottom:12px">
         <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">GitHub Organization</label>
         <input id="set-org" class="ti" value="${ORG}" style="width:100%" />
       </div>
-      
+
       <div style="margin-bottom:12px">
         <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Webhook URL <span style="color:var(--dim);font-weight:400">(POST on build completion)</span></label>
         <input id="set-webhook" class="ti" value="${webhookUrl}" placeholder="https://your-server.com/webhook" style="width:100%" />
       </div>
-      
+
       <div style="margin-bottom:12px">
         <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Custom Domain <span style="color:var(--dim);font-weight:400">(added to Vercel projects)</span></label>
         <input id="set-domain" class="ti" value="${customDomain}" placeholder="app.yourdomain.com" style="width:100%" />
       </div>
-      
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Location <span style="color:var(--dim);font-weight:400">(for phone area code)</span></label>
+        <input id="set-location" class="ti" value="${location}" placeholder="Erie, PA" style="width:100%" />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Pro Price ($/mo)</label>
+          <input id="set-price-pro" class="ti" type="number" value="${pricePro}" style="width:100%" />
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Enterprise Price ($/mo)</label>
+          <input id="set-price-enterprise" class="ti" type="number" value="${priceEnterprise}" style="width:100%" />
+        </div>
+      </div>
+
       <div style="margin-bottom:16px;display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="set-whitelabel" ${whiteLabel ? 'checked' : ''} style="accent-color:var(--gold)" />
-        <label for="set-whitelabel" style="font-size:11px;color:var(--sec)">White-label mode <span style="color:var(--dim)">(removes Dynasty branding from generated files)</span></label>
+        <label for="set-whitelabel" style="font-size:11px;color:var(--sec)">White-label mode <span style="color:var(--dim)">(removes Dynasty branding)</span></label>
       </div>
-      
+
+      <div style="border-top:1px solid var(--bdr);padding-top:12px;margin-bottom:12px">
+        <h4 style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">V3 Integration Modules</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+          ${Object.entries({
+            hosting: 'Domain + Email (20i)',
+            billing: 'Stripe Billing (3 tiers)',
+            email: 'Email Marketing (Acumbamail)',
+            phone: 'Phone + AI Voice (CallScaler)',
+            sms: 'SMS Campaigns (SMS-iT)',
+            chatbot: 'Website Chatbot (Chatbase)',
+            seo: 'SEO Content (5 blog posts)',
+            video: 'Explainer Video (Vadoo/Fliki)',
+            design: 'Design Assets (SUPERMACHINE)',
+            analytics: 'Analytics (PostHog/Plerdy)',
+            leads: 'Lead Intelligence',
+            automation: 'Automation (n8n 7 workflows)',
+            docs: 'Legal PDFs (Documentero)',
+            crm: 'CRM Portal (SuiteDash)',
+            directory: 'Directory (Brilliant Dir)',
+            wordpress: 'WordPress (20i)',
+            social: 'Social Scheduling (Vista)'
+          }).map(([k, v]) => `<div style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="mod-${k}" ${modules[k] ? 'checked' : ''} style="accent-color:var(--gold)" /><label for="mod-${k}" style="font-size:10px;color:var(--sec)">${v}</label></div>`).join('')}
+        </div>
+      </div>
+
       <div style="display:flex;gap:8px;justify-content:flex-end">
         <button onclick="document.getElementById('settings-modal').remove()" style="padding:7px 14px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r);color:var(--sec);font-size:12px;cursor:pointer">Cancel</button>
         <button onclick="saveSettings()" class="tsave">Save</button>
@@ -1891,18 +1938,61 @@ function saveSettings() {
   const webhook = document.getElementById('set-webhook')?.value?.trim();
   const domain = document.getElementById('set-domain')?.value?.trim();
   const whiteLabel = document.getElementById('set-whitelabel')?.checked;
-  
+  const location = document.getElementById('set-location')?.value?.trim();
+  const pricePro = document.getElementById('set-price-pro')?.value?.trim();
+  const priceEnterprise = document.getElementById('set-price-enterprise')?.value?.trim();
+
   if (org) { ORG = org; localStorage.setItem('dynasty_gh_org', ORG); }
   if (webhook !== undefined) localStorage.setItem('dynasty_webhook_url', webhook);
   if (domain !== undefined) localStorage.setItem('dynasty_custom_domain', domain);
   localStorage.setItem('dynasty_white_label', whiteLabel ? 'true' : 'false');
-  
+  if (location !== undefined) localStorage.setItem('dynasty_location', location);
+  if (pricePro) localStorage.setItem('dynasty_price_pro', pricePro);
+  if (priceEnterprise) localStorage.setItem('dynasty_price_enterprise', priceEnterprise);
+
+  // Save module toggles
+  const moduleKeys = ['hosting','billing','email','phone','sms','chatbot','seo','video','design','analytics','leads','automation','docs','crm','directory','wordpress','social'];
+  const modules = {};
+  for (const k of moduleKeys) { modules[k] = document.getElementById(`mod-${k}`)?.checked || false; }
+  localStorage.setItem('dynasty_modules_enabled', JSON.stringify(modules));
+
   document.getElementById('settings-modal')?.remove();
+}
+
+// V3 Module config helpers
+function getEnabledModules() {
+  const defaults = { hosting: true, billing: true, email: true, seo: true, analytics: true, automation: true, docs: true };
+  return { ...defaults, ...JSON.parse(localStorage.getItem('dynasty_modules_enabled') || '{}') };
+}
+function getV3Project(inf) {
+  return {
+    name: inf.name || 'Dynasty Project', slug: inf.repo || 'dynasty-project',
+    description: inf.description || '', type: inf.type_id || '', domain: localStorage.getItem('dynasty_custom_domain') || inf.domain || `${inf.repo}.vercel.app`,
+    accent: inf.accent || '#0066FF', location: localStorage.getItem('dynasty_location') || '',
+    price_pro_cents: (parseInt(localStorage.getItem('dynasty_price_pro') || '49') || 49) * 100,
+    price_enterprise_cents: (parseInt(localStorage.getItem('dynasty_price_enterprise') || '199') || 199) * 100,
+    services: inf.type_label || ''
+  };
 }
 
 // White-label helper
 function isWhiteLabel() { return localStorage.getItem('dynasty_white_label') === 'true'; }
 function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
+
+// ── V3 Tier Gating ─────────────────────────────────────────────────
+const V3_TIERS = {
+  starter: { price: 297, label: 'Starter ($297)', modules: ['hosting', 'billing', 'email', 'seo', 'docs', 'analytics'] },
+  professional: { price: 997, label: 'Professional ($997)', modules: ['hosting', 'billing', 'email', 'seo', 'docs', 'analytics', 'phone', 'sms', 'chatbot', 'automation', 'leads', 'video', 'design'] },
+  enterprise: { price: 2497, label: 'Enterprise ($2,497)', modules: ['hosting', 'billing', 'email', 'seo', 'docs', 'analytics', 'phone', 'sms', 'chatbot', 'automation', 'leads', 'video', 'design', 'crm', 'directory', 'wordpress', 'social'] }
+};
+function getUserTier() {
+  return localStorage.getItem('dynasty_tier') || 'enterprise'; // Default to enterprise for now (gating comes in Sprint 6)
+}
+function isModuleAllowed(moduleName) {
+  const tier = getUserTier();
+  const tierDef = V3_TIERS[tier] || V3_TIERS.enterprise;
+  return tierDef.modules.includes(moduleName);
+}
 
 // ── Builder Entry + Payment Flow ────────────────────────────────────
 async function enterBuilder() {
@@ -4394,7 +4484,7 @@ async function build(desc,inf){
   try{
     updateEduCard('g1');
     addP('g1','Generating DESIGN.md + CLAUDE.md','','⬡ Design System');setP('g1','run');
-    updateGlobalProgress(1, 12, 'Phase 1 of 12 \u00b7 Design System');
+    updateGlobalProgress(1, 12, 'Phase 1 of 14 \u00b7 Design System');
     let df;try{
       df=await ai(`GENERATE DYNASTY EMPIRE DESIGN FILES. No preamble. Return ONLY in the delimiter format below.
 
@@ -4496,7 +4586,7 @@ git config user.name "pinohu"
 
     updateEduCard('g2');
     addP('g2','Generating SPEC + ROADMAP + README + MANUAL-ACTIONS + .env','','⬡ Product Docs');setP('g2','run');
-    updateGlobalProgress(2, 12, 'Phase 2 of 12 \u00b7 Product Docs');
+    updateGlobalProgress(2, 12, 'Phase 2 of 14 \u00b7 Product Docs');
     let dc;try{
       dc=await ai(`You are a senior product strategist at a world-class consulting firm. Generate board-ready product documentation. Write with precision and authority. Use numbered sections, professional tables, and specific measurable criteria. No AI clichés. No hedging. Every feature has acceptance criteria. Every metric has a target. Cross-reference other Dynasty documents. Return ONLY in delimiter format. No preamble.
 
@@ -4814,7 +4904,7 @@ SECRET_KEY=generate-me
 
     updateEduCard('g3');
     addP('g3','Generating DATA-MODEL + API-CONTRACTS + KB-OUTLINES','','⬡ Supporting Docs');setP('g3','run');
-    updateGlobalProgress(3, 12, 'Phase 3 of 12 \u00b7 Technical Docs');
+    updateGlobalProgress(3, 12, 'Phase 3 of 14 \u00b7 Technical Docs');
     let ds;try{
       ds=await ai(`You are a senior software architect writing technical documentation for an engineering team. Every table must have real column names and types. Every API endpoint must have request/response schemas. No placeholders. Reference the Architecture Blueprint decisions. Return ONLY in delimiter format. No preamble.
 
@@ -5034,7 +5124,7 @@ ${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.r
 
     updateEduCard('g4a');
     addP('g4a','Generating BUSINESS-SYSTEM + REVENUE-MODEL + GTM-PLAYBOOK','','⬡ Business System');setP('g4a','run');
-    updateGlobalProgress(4, 12, 'Phase 4 of 12 \u00b7 Business Strategy');
+    updateGlobalProgress(4, 12, 'Phase 4 of 14 \u00b7 Business Strategy');
     let bz1;try{
       bz1=await ai(`You are a senior partner at a top-tier strategy firm (McKinsey/BCG/Bain caliber) preparing a board-ready strategic analysis. Write with authority, precision, and data density. Every claim must cite specific numbers. No hedging. No filler. No AI clichés ("certainly", "it's worth noting", "let's dive in"). Active voice. Numbered sections. Tables with real data. Cross-reference other Dynasty documents by name.
 
@@ -5449,7 +5539,7 @@ Subject: [Subject]
     // ── Parallel Execution: Agent System runs concurrently with Business wrap-up ──
     updateEduCard('g4b');
     addP('g4b','Generating AGENT-SYSTEM + FAILURE-MODES','');setP('g4b','run');
-    updateGlobalProgress(5, 12, 'Phase 5 of 12 \u00b7 Agent System');
+    updateGlobalProgress(5, 12, 'Phase 5 of 14 \u00b7 Agent System');
     let bz2;try{
       bz2=await ai(`You are a systems architect presenting to a CTO. Write with technical authority and operational precision. Every component must have measurable success criteria. No filler. No generic descriptions. Return in delimiter format ONLY. No preamble.
 
@@ -5597,7 +5687,7 @@ Scenarios to cover: JWT/Auth failure, Database connection loss, Stripe webhook f
 
     updateEduCard('g5');
     addP('g5','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend Code');setP('g5','run');
-    updateGlobalProgress(6, 12, 'Phase 6 of 12 \u00b7 Backend Code');
+    updateGlobalProgress(6, 12, 'Phase 6 of 14 \u00b7 Backend Code');
     let be;try{
       be=await ai(`GENERATE PRODUCTION-GRADE FASTAPI BACKEND. This must be deployment-ready code — not a tutorial example. Include: structured error handling with custom exception classes, request ID tracking via middleware, dependency injection for services, environment-based CORS configuration, graceful startup/shutdown with connection pool management, comprehensive health check (DB + Redis + external deps), API versioning prefix, and proper Python type hints throughout. Real Python code only. Delimiter format ONLY. No preamble.
 
@@ -6573,7 +6663,7 @@ Then read DESIGN.md for visual design rules.
     try {
       addP('social','Generating 1-year social media calendar (260 posts)','5 platforms × 52 weeks','⬡ Social Media');setP('social','run');
       updateEduCard('social');
-      updateGlobalProgress(7, 12, 'Phase 7 of 12 · Social Media Calendar');
+      updateGlobalProgress(7, 12, 'Phase 7 of 14 · Social Media Calendar');
       const socialPrompt = `Generate a 1-year social media content calendar for "${inf.name}" (${inf.type_label}). Keywords: ${(inf.stack||[]).join(', ')}.
 
 Create 20 posts (4 per platform × 5 platforms). For EACH post include ALL columns below.
@@ -7209,7 +7299,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
 
       updateEduCard('pf');
     addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
-      updateGlobalProgress(8, 12, 'Phase 8 of 12 \u00b7 Pushing Files');
+      updateGlobalProgress(8, 12, 'Phase 8 of 14 \u00b7 Pushing Files');
       for(let i=0;i<fl.length;i++){
         const[p,c]=fl[i];
         if(!c||c.includes('[Generation incomplete]'))continue;
@@ -7241,7 +7331,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       const provNote=isWP||isStaticType?'20i package + Stripe + Acumbamail':'Vercel project, Neon DB, Stripe product, Acumbamail list';
       updateEduCard('prov');
     addP('prov',provLabel,provNote);setP('prov','run');
-      updateGlobalProgress(9, 12, 'Phase 9 of 12 \u00b7 Provisioning');
+      updateGlobalProgress(9, 12, 'Phase 9 of 14 \u00b7 Provisioning');
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
@@ -7261,7 +7351,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     if(isAuthority){
       updateEduCard('deploy');
     addP('deploy','Deploying authority site to Vercel','Forking template → AI content generation → Google directory → auto-build');setP('deploy','run');
-      updateGlobalProgress(10, 12, 'Phase 10 of 12 \u00b7 Deploying');
+      updateGlobalProgress(10, 12, 'Phase 10 of 14 \u00b7 Deploying');
       try{
         const deployResp=await fetch('/api/provision',{method:'POST',
           headers:{'Content-Type':'application/json'},
@@ -7308,11 +7398,51 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       }
     } catch {}
 
+    // ── V3 MODULE PROVISIONING ────────────────────────────────────────────
+    // After deployment succeeds, provision all enabled V3 integration modules
+    const v3Modules = getEnabledModules();
+    const anyModulesEnabled = Object.values(v3Modules).some(v => v);
+    let v3Results = null;
+    if (anyModulesEnabled) {
+      const liveUrl = LAUNCH_URL || provRes?.results?.vercel?.url || `https://${inf.repo}.vercel.app`;
+      const v3Project = getV3Project(inf);
+      const moduleNames = { hosting: 'Domain + Email', billing: 'Stripe Billing', email: 'Email Marketing', phone: 'Phone + Voice', sms: 'SMS Campaigns', chatbot: 'Website Chatbot', seo: 'SEO Content', video: 'Explainer Video', design: 'Design Assets', analytics: 'Analytics', leads: 'Lead Intelligence', automation: 'Automation Workflows', docs: 'Legal PDFs', crm: 'CRM Portal', directory: 'Directory', wordpress: 'WordPress', social: 'Social Scheduling' };
+      const enabledList = Object.entries(v3Modules).filter(([,v]) => v).map(([k]) => moduleNames[k] || k);
+      addP('v3-start', `V3 Modules — ${enabledList.length} integrations`, enabledList.join(', '));
+      setP('v3-start', 'run', 'Provisioning external services...');
+      updateGlobalProgress(10, 14, 'Phase 10 of 14 · V3 Module Provisioning');
+
+      try {
+        const v3Resp = await fetch('/api/provision?action=provision_modules', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules })
+        });
+        v3Results = await v3Resp.json();
+        if (v3Results.ok) {
+          // Show per-module results
+          for (const [mod, res] of Object.entries(v3Results.modules || {})) {
+            const label = moduleNames[mod] || mod;
+            if (res.ok) {
+              const detail = Object.entries(res.details || {}).filter(([k]) => !k.includes('error') && !k.includes('snippet') && !k.includes('script')).slice(0, 2).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v).slice(0, 40) : String(v).slice(0, 40)}`).join(' · ');
+              addP(`v3-${mod}`, label); setP(`v3-${mod}`, 'ok', detail || 'Provisioned');
+            } else if (res.error) {
+              addP(`v3-${mod}`, label); setP(`v3-${mod}`, 'sk', res.fallback || res.error);
+            }
+          }
+          setP('v3-start', 'ok', `${v3Results.summary?.succeeded || 0}/${v3Results.summary?.total || 0} modules provisioned`);
+        } else {
+          setP('v3-start', 'sk', v3Results.error || 'Module provisioning failed');
+        }
+      } catch (e) {
+        setP('v3-start', 'sk', 'Module API error — services can be provisioned manually');
+      }
+    }
+
     // ── PHASE 11: Deployment Verification ─────────────────────────────────
     // Confirms every service is actually live before declaring success.
     addP('verify', 'Verifying deployment...', 'Checking GitHub, Vercel, and live URL');
     setP('verify', 'run');
-    updateGlobalProgress(11, 12, 'Phase 11 of 12 · Verifying Deployment');
+    updateGlobalProgress(11, 14, 'Phase 11 of 14 · Verifying Deployment');
 
     const verifyResults = { github: false, vercel: false, live: false, issues: [] };
 
