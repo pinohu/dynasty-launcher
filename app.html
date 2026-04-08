@@ -7384,7 +7384,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     // ── Live tool provisioning ────────────────────────────────────────────
     // ── Live tool provisioning (type-aware: 20i/Neon/Vercel/Stripe/Acumbamail) ─
     provRes=null;
-    const provisionSvcs=['stripe','acumbamail'];
+    const provisionSvcs=['stripe','acumbamail','n8n','comms'];
     {
       const isWP=inf?.type_id==='wp-theme'||inf?.type_id==='wordpress'||V2_DEPLOY_TARGET==='wordpress';
       const isStaticType=['static','portfolio','landing'].includes(inf?.type_id||'')||V2_DEPLOY_TARGET==='static';
