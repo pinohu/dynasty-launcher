@@ -5,12 +5,10 @@ export const maxDuration = 60;
 // Docs: https://api.20i.com
 
 function getAuth(config) {
-  // 20i auth: Basic base64("GENERAL_KEY:OAUTH_KEY")
+  // 20i API: the General API key IS the Bearer token (no encoding needed)
   const general = config?.infrastructure?.twentyi_general;
-  const oauth   = config?.infrastructure?.twentyi_oauth;
   if (!general) return null;
-  const combined = general;  // 20i uses Bearer base64(general_key)
-  return `Bearer ${Buffer.from(combined).toString('base64')}`;  // 20i Bearer auth
+  return `Bearer ${general}`;
 }
 
 async function twentyiRequest(auth, method, path, body) {

@@ -7595,7 +7595,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
 
     // 1. Verify GitHub repo has files
     try {
-      const ghCheck = await fetch(`https://api.github.com/repos/${ORG}/${inf.repo}/contents/`, {
+      const ghCheck = await fetch(`/api/github?path=/repos/${ORG}/${inf.repo}/contents/`, {
         headers: { 'Accept': 'application/vnd.github.v3+json' }
       });
       if (ghCheck.ok) {

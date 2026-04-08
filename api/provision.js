@@ -96,7 +96,8 @@ async function mod_hosting(config, project, liveUrl) {
   const results = { ok: false, service: 'hosting', details: {} };
   const apiKey = config.infrastructure?.twentyi_general;
   if (!apiKey) { results.error = 'No 20i API key'; results.fallback = 'Add twentyi_general to DYNASTY_TOOL_CONFIG'; return results; }
-  const auth = `Bearer ${Buffer.from(apiKey).toString('base64')}`;
+  // 20i API expects the General API key as a direct Bearer token (not base64-encoded)
+  const auth = `Bearer ${apiKey}`;
   const domain = project.domain || `${project.slug}.com`;
   const resellerId = config.infrastructure?.twentyi_reseller_id || '10455';
   try {
@@ -475,7 +476,7 @@ async function mod_chatbot(config, project, liveUrl) {
       body: JSON.stringify({
         name: `${project.name} Assistant`,
         sourceText: `Business: ${project.name}\nDescription: ${project.description || ''}\nWebsite: ${liveUrl || ''}\nServices: ${project.services || 'General business services'}\n\nFAQ:\nQ: What services do you offer?\nA: We offer professional ${project.type || 'business'} services.\nQ: How do I get started?\nA: Visit our website or call us to schedule a consultation.\nQ: What are your hours?\nA: We're available Monday-Friday, 9am-5pm.`,
-        settings: { model: 'gpt-3.5-turbo', temperature: 0.7, initialMessages: [`Hi! Welcome to ${project.name}. How can I help you?`] }
+        settings: { model: 'gpt-4o-mini', temperature: 0.7, initialMessages: [`Hi! Welcome to ${project.name}. How can I help you?`] }
       })
     }).then(r => r.json());
     if (bot.chatbotId || bot.id) {
@@ -885,7 +886,7 @@ async function mod_automation(config, project, liveUrl) {
         if (data.id) {
           // Activate the workflow
           let activated = false;
-          try { const ar = await fetch(`${n8nUrl}/api/v1/workflows/${data.id}/activate`, { method: 'POST', headers: nh }); activated = ar.ok; } catch {}
+          try { const ar = await fetch(`${n8nUrl}/api/v1/workflows/${data.id}`, { method: 'PATCH', headers: nh, body: JSON.stringify({ active: true }) }); activated = ar.ok; } catch {}
           results.details.workflows.push({ name: wf.name, id: data.id, active: activated });
         }
       } catch {}
@@ -1005,7 +1006,8 @@ async function mod_wordpress(config, project) {
   const results = { ok: false, service: 'wordpress', details: {} };
   const apiKey = config.infrastructure?.twentyi_general;
   if (!apiKey) { results.error = 'No 20i API key'; results.fallback = 'Add twentyi_general to DYNASTY_TOOL_CONFIG.infrastructure'; return results; }
-  const auth = `Bearer ${Buffer.from(apiKey).toString('base64')}`;
+  // 20i API expects the General API key as a direct Bearer token (not base64-encoded)
+  const auth = `Bearer ${apiKey}`;
   const domain = project.domain || `${project.slug}.com`;
   const resellerId = config.infrastructure?.twentyi_reseller_id || '10455';
   try {
@@ -2190,7 +2192,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       if(!gen){
         results.twentyi={manual:true, action:'Add twentyi_general to DYNASTY_TOOL_CONFIG.infrastructure'};
       }else{
-        const auth=`Bearer ${Buffer.from(gen).toString('base64')}`;
+        const auth=`Bearer ${gen}`;
         const typeRef=isWP?'88291':'80359';
         try{
           const pr=await fetch('https://api.20i.com/reseller/10455/addWeb',{
@@ -2230,7 +2232,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       try {
         const pr = await fetch('https://api.pulsetic.com/api/public/monitors', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${PULSETIC_KEY}`, 'Content-Type': 'application/json' },
+          headers: { 'Authorization': PULSETIC_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             url: monitorUrl,
             name: `${name} — Dynasty`,
