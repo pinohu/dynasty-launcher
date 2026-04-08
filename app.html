@@ -1099,7 +1099,7 @@ html,body{overflow-x:hidden}
     'h2{font-size:1.4rem;font-weight:600}p{color:rgba(255,255,255,0.4);font-size:0.9rem}</style></head>',
     '<body><div style="font-size:2rem">⚡</div>',
     '<h2>Dynasty Launcher</h2>',
-    '<p>Access requires the private URL.</p>',
+    '<p>Access requires a valid plan. <a href="/" style="color:#C9A84C">Choose a plan</a> to get started.</p>',
     '</body></html>'
   ].join('');
 })();
@@ -2042,11 +2042,15 @@ async function enterBuilder() {
   // Require authentication before entering builder
   const authed = await requireAuth();
   if (!authed) return;
-  
-  document.getElementById('landing').style.display = 'none';
-  document.querySelector('.page').style.display = 'block';
-  document.getElementById('builder-header').style.display = 'flex';
-  document.getElementById('mode-screen').style.display = 'block';
+
+  const landing = document.getElementById('landing');
+  if (landing) landing.style.display = 'none';
+  const page = document.querySelector('.page');
+  if (page) page.style.display = 'block';
+  const header = document.getElementById('builder-header');
+  if (header) header.style.display = 'flex';
+  const modeScreen = document.getElementById('mode-screen');
+  if (modeScreen) modeScreen.style.display = 'block';
 }
 
 async function startCheckout(plan) {
@@ -2080,21 +2084,41 @@ async function startCheckout(plan) {
 })();
 
 // Check for payment return
-(function checkPaymentReturn() {
+(async function checkPaymentReturn() {
   const params = new URLSearchParams(window.location.search);
   const payment = params.get('payment');
   const sessionId = params.get('session_id');
-  
+
   if (payment === 'success' && sessionId) {
-    // Verify and store payment + tier
-    localStorage.setItem('dynasty_paid_session', sessionId);
-    localStorage.setItem('dynasty_paid_at', new Date().toISOString());
-    const tier = params.get('tier');
-    if (tier) localStorage.setItem('dynasty_tier', tier);
-    // Clean URL
-    window.history.replaceState({}, '', window.location.pathname);
-    // Go straight to builder
-    enterBuilder();
+    // Verify payment with Stripe before granting access
+    try {
+      const resp = await fetch('/api/checkout?action=verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId })
+      });
+      const data = await resp.json();
+      if (data.ok && data.paid) {
+        localStorage.setItem('dynasty_paid_session', sessionId);
+        localStorage.setItem('dynasty_paid_at', new Date().toISOString());
+        const tier = data.plan || params.get('tier') || 'starter';
+        localStorage.setItem('dynasty_tier', tier);
+        window.history.replaceState({}, '', window.location.pathname);
+        enterBuilder();
+      } else {
+        // Payment not confirmed — don't grant access
+        alert('Payment could not be verified. If you completed checkout, please contact support.');
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    } catch {
+      // Network error — fall back to URL params but flag as unverified
+      localStorage.setItem('dynasty_paid_session', sessionId);
+      localStorage.setItem('dynasty_payment_unverified', 'true');
+      const tier = params.get('tier');
+      if (tier) localStorage.setItem('dynasty_tier', tier);
+      window.history.replaceState({}, '', window.location.pathname);
+      enterBuilder();
+    }
   } else if (payment === 'cancelled') {
     window.history.replaceState({}, '', window.location.pathname);
   }
@@ -4030,7 +4054,12 @@ document.getElementById('launch-btn').addEventListener('click',async()=>{
     return;
   }
 
-  // Quick build — go straight to build
+  // Quick build — check payment gate before building
+  if (getBuildsRemaining() <= 0) {
+    const action = confirm('You\'ve used your free build. Purchase a Starter build for $297, Professional for $997, or Enterprise for $2,497.\n\nClick OK to go to checkout, or Cancel to return.');
+    if (action) { startCheckout('starter'); return; }
+    else return;
+  }
   document.getElementById('input-screen').style.display='none';
   document.getElementById('prog-screen').style.display='block';
   document.getElementById('prog-title').textContent=`Building ${INFERRED.name}…`;
@@ -7495,7 +7524,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     const tierAllowed = V3_TIERS[userTier]?.modules || [];
     const v3Modules = {};
     for (const [mod, on] of Object.entries(v3ModulesRaw)) {
-      v3Modules[mod] = on && (tierAllowed.length === 0 || tierAllowed.includes(mod));
+      v3Modules[mod] = on && tierAllowed.includes(mod);
     }
     const anyModulesEnabled = Object.values(v3Modules).some(v => v);
     let v3Results = null;
@@ -7511,7 +7540,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       try {
         const v3Resp = await fetch('/api/provision?action=provision_modules', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: localStorage.getItem('dynasty_tier') || 'enterprise' })
+          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: getUserTier() })
         });
         v3Results = await v3Resp.json();
         if (v3Results.ok) {
@@ -7645,9 +7674,9 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       try {
         // Use a small delay for DNS propagation
         await new Promise(r => setTimeout(r, 5000));
-        const liveCheck = await fetch(vercelUrl, { method: 'HEAD', mode: 'no-cors' });
-        // no-cors won't give us status, so we check via API instead
-        verifyResults.live = true; // if vercel says READY, trust it
+        await fetch(vercelUrl, { method: 'HEAD', mode: 'no-cors' });
+        // no-cors won't return status; we trust Vercel's READY state from API check above
+        verifyResults.live = true;
       } catch {
         verifyResults.live = verifyResults.vercel; // trust Vercel status
       }

@@ -2320,8 +2320,8 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       professional: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'],
       enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify']
     };
-    const userTier = tier || 'enterprise'; // Default to enterprise if no tier specified
-    const allowedModules = TIER_MODULES[userTier] || TIER_MODULES.enterprise;
+    const userTier = TIER_MODULES[tier] ? tier : 'starter'; // Default to starter (most restrictive) if unknown tier
+    const allowedModules = TIER_MODULES[userTier];
     const rawEnabled = modules_enabled || config.modules_enabled || {};
     const enabled = {};
     for (const [mod, on] of Object.entries(rawEnabled)) {
