@@ -7554,6 +7554,18 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       const v3Project = getV3Project(inf);
       const moduleNames = { hosting: 'Domain + Email', billing: 'Stripe Billing', email: 'Email Marketing', phone: 'Phone + Voice', sms: 'SMS Campaigns', chatbot: 'Website Chatbot', seo: 'SEO Content', video: 'Explainer Video', design: 'Design Assets', analytics: 'Analytics', leads: 'Lead Intelligence', automation: 'Automation Workflows', docs: 'Legal PDFs', crm: 'CRM Portal', directory: 'Directory', wordpress: 'WordPress', social: 'Social Scheduling' };
       const enabledList = Object.entries(v3Modules).filter(([,v]) => v).map(([k]) => moduleNames[k] || k);
+
+      // Managed services opt-in: ask about Stripe billing management
+      const managedServices = {};
+      if (v3Modules.billing) {
+        const wantManaged = confirm('Dynasty can manage your Stripe billing (products, webhooks, and payment processing are handled for you).\n\nChoose:\n  OK = Dynasty manages Stripe billing (you can migrate to your own Stripe account anytime)\n  Cancel = Self-service (you set up your own Stripe account using the .env.example template)\n\nEither way, you own all the code.');
+        managedServices.billing = wantManaged;
+        if (!wantManaged) {
+          addP('v3-stripe-self', 'Stripe Billing: self-service mode', '.env.example with Stripe placeholders will be pushed to your repo');
+          setP('v3-stripe-self', 'ok');
+        }
+      }
+
       addP('v3-start', `V3 Modules — ${enabledList.length} integrations`, enabledList.join(', '));
       setP('v3-start', 'run', 'Provisioning external services...');
       updateGlobalProgress(10, 14, 'Phase 10 of 14 · V3 Module Provisioning');
@@ -7561,7 +7573,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       try {
         const v3Resp = await fetch('/api/provision?action=provision_modules', {
           method: 'POST', headers: getDynastyAuthHeaders(),
-          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: getUserTier() })
+          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: getUserTier(), managed_services: managedServices })
         });
         v3Results = await v3Resp.json();
         if (v3Results.ok) {

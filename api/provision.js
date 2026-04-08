@@ -198,8 +198,26 @@ async function mod_hosting(config, project, liveUrl) {
 }
 
 // ── mod_billing: Stripe 3-tier + Webhooks + Dunning ─────────────────────────
+// MANAGED MODEL: Uses Dynasty's Stripe key ONLY if client opts in to managed billing.
+// Self-service clients get scaffold code + .env template to wire their own Stripe account.
 async function mod_billing(config, project, liveUrl) {
   const results = { ok: false, service: 'billing', details: {} };
+  const managedBilling = project.managed_services?.billing !== false; // default: managed
+
+  if (!managedBilling) {
+    // Self-service: don't create Stripe products under Dynasty's account
+    results.ok = true;
+    results.details.mode = 'self-service';
+    results.details.setup_note = 'Stripe billing is self-service. Add your own Stripe keys to your project .env.local file. See OPERATIONS.md for setup instructions.';
+    results.details.env_template = {
+      STRIPE_SECRET_KEY: 'sk_live_your_key_here',
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_live_your_key_here',
+      STRIPE_WEBHOOK_SECRET: 'whsec_your_secret_here'
+    };
+    return results;
+  }
+
+  // Managed: create products under Dynasty's Stripe account
   const SK = config.payments?.stripe_live;
   if (!SK || !SK.startsWith('sk_live')) { results.error = 'No Stripe live key'; results.fallback = 'Add stripe_live to DYNASTY_TOOL_CONFIG.payments'; return results; }
   const auth = Buffer.from(`${SK}:`).toString('base64');
@@ -280,6 +298,8 @@ async function mod_billing(config, project, liveUrl) {
     }
 
     results.ok = true;
+    results.details.mode = 'managed';
+    results.details.managed_note = 'Stripe products created under Dynasty account. Client can migrate to own Stripe account anytime — see OPERATIONS.md.';
     results.cost_usd = 0; // Stripe API is free
   } catch (e) { results.error = e.message; results.fallback = 'Stripe Dashboard → create product and prices manually'; }
   return results;
@@ -1131,13 +1151,36 @@ function generateOperationsMd(project, moduleResults) {
       lines.push(`### ${mod.charAt(0).toUpperCase() + mod.slice(1)}\n${details}\n`);
     }
   }
+  // Managed services section
+  const billingMode = moduleResults.billing?.details?.mode;
+  if (billingMode === 'managed') {
+    lines.push(`\n## Managed Services (Dynasty)\n`);
+    lines.push(`Your Stripe billing is managed by Dynasty Empire. Payments flow through Dynasty's Stripe account.`);
+    lines.push(`- **To keep managed billing:** No action needed. Dynasty handles Stripe fees and maintenance.`);
+    lines.push(`- **To migrate to your own Stripe:** Create a Stripe account at stripe.com, then:`);
+    lines.push(`  1. Create your own product and price tiers in the Stripe Dashboard`);
+    lines.push(`  2. Set up a webhook endpoint pointing to \`your-domain.com/api/webhooks/stripe\``);
+    lines.push(`  3. Update your .env.local with your own keys (see .env.example in repo)`);
+    lines.push(`  4. Push to Vercel or set env vars in the Vercel dashboard`);
+    lines.push(`  5. Contact Dynasty to disengage managed billing for this project\n`);
+  } else if (billingMode === 'self-service') {
+    lines.push(`\n## Self-Service Billing Setup\n`);
+    lines.push(`You chose self-service billing. Set up your own Stripe account:`);
+    lines.push(`1. Create account at stripe.com`);
+    lines.push(`2. Get your API keys from Stripe Dashboard → Developers → API Keys`);
+    lines.push(`3. Copy .env.example to .env.local and fill in your Stripe keys`);
+    lines.push(`4. Create products and price tiers in Stripe Dashboard`);
+    lines.push(`5. Set up a webhook endpoint and add the secret to .env.local\n`);
+  }
+
   lines.push(`\n## What You Need to Do\n`);
-  lines.push(`1. **Verify custom domain DNS** — If you configured a custom domain, update DNS records as shown above. Propagation: 15min-48hrs.`);
-  lines.push(`2. **Create Google Business Profile** — Use your business name, domain, and phone number.`);
-  lines.push(`3. **Set up dedicated Clerk app** — Go to dashboard.clerk.com → Create Application → update env vars.`);
-  lines.push(`4. **Review email sequences** — Check Acumbamail dashboard and customize welcome emails.`);
-  lines.push(`5. **Connect Google Calendar** — Link to Trafft booking if phone module was provisioned.`);
-  lines.push(`6. **Import social calendar** — Upload social-media/calendar.csv to Vista Social or your preferred scheduler.\n`);
+  lines.push(`1. **Add your credentials** — Copy .env.example to .env.local and fill in your API keys (Stripe, Anthropic, etc.).`);
+  lines.push(`2. **Verify custom domain DNS** — If you configured a custom domain, update DNS records as shown above. Propagation: 15min-48hrs.`);
+  lines.push(`3. **Create Google Business Profile** — Use your business name, domain, and phone number.`);
+  lines.push(`4. **Set up dedicated Clerk app** — Go to dashboard.clerk.com → Create Application → update env vars.`);
+  lines.push(`5. **Review email sequences** — Check Acumbamail dashboard and customize welcome emails.`);
+  lines.push(`6. **Connect Google Calendar** — Link to Trafft booking if phone module was provisioned.`);
+  lines.push(`7. **Import social calendar** — Upload social-media/calendar.csv to Vista Social or your preferred scheduler.\n`);
   lines.push(`## Ongoing Operations\n`);
   lines.push(`- **Daily:** Check CRM for new leads, respond to chatbot conversations`);
   lines.push(`- **Weekly:** Review email campaign stats, hot lead alerts, analytics dashboard`);
@@ -1269,6 +1312,49 @@ async function runModules(config, project, liveUrl, enabledModules) {
       const credsMd = generateCredentialsMd(project, results);
       await pushFile(GH_TOKEN, 'pinohu', project.slug, 'CREDENTIALS.md', credsMd, 'docs: service credentials');
     } catch (e) { orchestratorWarnings.push(`CREDENTIALS.md push failed: ${e.message}`); }
+
+    // Push .env.example with all credential placeholders for client self-service
+    try {
+      const envExample = [
+        `# ${project.name} — Environment Variables`,
+        `# Copy this file to .env.local and fill in your credentials`,
+        `# Generated by Dynasty Launcher on ${new Date().toISOString().split('T')[0]}`,
+        ``,
+        `# ── Stripe (Required for billing) ──`,
+        `STRIPE_SECRET_KEY=sk_live_your_key_here`,
+        `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_key_here`,
+        `STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret`,
+        ``,
+        `# ── Anthropic (Required for AI features) ──`,
+        `ANTHROPIC_API_KEY=sk-ant-your_key_here`,
+        ``,
+        `# ── Clerk (Authentication — pre-configured, replace for your own Clerk app) ──`,
+        `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_your_clerk_key`,
+        `CLERK_SECRET_KEY=sk_live_your_clerk_secret`,
+        `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in`,
+        `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up`,
+        `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/en/dashboard`,
+        `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/en/dashboard`,
+        ``,
+        `# ── App Config ──`,
+        `NEXT_PUBLIC_APP_URL=https://${project.domain || project.slug + '.vercel.app'}`,
+        `BILLING_PLAN_ENV=test`,
+        ``,
+        `# ── PostHog Analytics (Optional) ──`,
+        `NEXT_PUBLIC_POSTHOG_KEY=phc_your_key_here`,
+        `NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com`,
+        ``,
+        `# ── Database (Auto-configured via Neon) ──`,
+        `# DATABASE_URL is set automatically via Vercel Storage integration`,
+        ``,
+        `# ── Dynasty Managed Services (Optional — contact Dynasty to enable/disable) ──`,
+        `# If you subscribed to Dynasty managed services, these are handled for you.`,
+        `# If self-service, fill in your own keys above and leave these empty.`,
+        `DYNASTY_MANAGED_BILLING=${results.billing?.details?.mode === 'managed' ? 'true' : 'false'}`,
+        ``
+      ].join('\n');
+      await pushFile(GH_TOKEN, 'pinohu', project.slug, '.env.example', envExample, 'docs: environment variable template for self-service setup');
+    } catch (e) { orchestratorWarnings.push(`.env.example push failed: ${e.message}`); }
 
     // Push BUILD-REPORT.json with all module results (machine-readable)
     try {
@@ -2005,12 +2091,11 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       }
     } catch{}
 
-    // 9. Set env vars (including Supabase for app to boot)
+    // 9. Set env vars (site config + Supabase — NO Dynasty secret keys pushed to client projects)
     if(projectId){
       const envVars=[
         {key:'VITE_SITE_SLUG',value:project_slug,type:'plain'},
         {key:'VITE_SITE_NAME',value:niche_name,type:'plain'},
-        ...(process.env.ANTHROPIC_API_KEY?[{key:'ANTHROPIC_API_KEY',value:process.env.ANTHROPIC_API_KEY,type:'encrypted'}]:[]),
         ...(process.env.VITE_SUPABASE_URL?[{key:'VITE_SUPABASE_URL',value:process.env.VITE_SUPABASE_URL,type:'plain'}]:[]),
         ...(process.env.VITE_SUPABASE_PUBLISHABLE_KEY?[{key:'VITE_SUPABASE_PUBLISHABLE_KEY',value:process.env.VITE_SUPABASE_PUBLISHABLE_KEY,type:'plain'}]:[]),
         ...(process.env.VITE_SUPABASE_PROJECT_ID?[{key:'VITE_SUPABASE_PROJECT_ID',value:process.env.VITE_SUPABASE_PROJECT_ID,type:'plain'}]:[]),
@@ -2099,13 +2184,13 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           });
         }
 
-        // ── Set required env vars for fullstack (Next.js + Clerk + Stripe) ────
+        // ── Set required env vars for fullstack (Next.js + Clerk) ────
+        // IMPORTANT: Stripe and Anthropic keys are NOT auto-pushed to client projects.
+        // Clients add their own keys via .env.local or Vercel dashboard.
+        // Managed-service clients get Dynasty keys pushed via mod_billing only.
         if(vercelProjectId && isFullstack){
           const clerkPk = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
           const clerkSk = process.env.CLERK_SECRET_KEY || '';
-          const stripePk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || '';
-          const stripeSk = process.env.STRIPE_SECRET_KEY || '';
-          const stripeWh = process.env.STRIPE_WEBHOOK_SECRET || '';
           const envVars = [
             ...(clerkPk ? [{key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:clerkPk,type:'encrypted'}] : []),
             ...(clerkSk ? [{key:'CLERK_SECRET_KEY',value:clerkSk,type:'encrypted'}] : []),
@@ -2113,12 +2198,8 @@ Return ONLY a valid JSON array (no markdown, no backticks):
             {key:'NEXT_PUBLIC_CLERK_SIGN_UP_URL',value:'/en/sign-up',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL',value:'/en/dashboard',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL',value:'/en/dashboard',type:'plain'},
-            ...(stripePk ? [{key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:stripePk,type:'encrypted'}] : []),
-            ...(stripeSk ? [{key:'STRIPE_SECRET_KEY',value:stripeSk,type:'encrypted'}] : []),
-            ...(stripeWh ? [{key:'STRIPE_WEBHOOK_SECRET',value:stripeWh,type:'encrypted'}] : []),
             {key:'BILLING_PLAN_ENV',value:'test',type:'plain'},
             {key:'NEXT_PUBLIC_APP_URL',value:`https://${slug}.vercel.app`,type:'plain'},
-            ...(process.env.ANTHROPIC_API_KEY?[{key:'ANTHROPIC_API_KEY',value:process.env.ANTHROPIC_API_KEY,type:'encrypted'}]:[]),
           ].map(v=>({...v,target:['production','preview','development']}));
           try{await fetch(`https://api.vercel.com/v10/projects/${vercelProjectId}/env?teamId=${VERCEL_TEAM}`,{
             method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
@@ -2261,8 +2342,10 @@ Return ONLY a valid JSON array (no markdown, no backticks):
   // ── PROVISION MODULES (V3) ──────────────────────────────────────────────
   // Called by app.html after deployment succeeds, with the live URL
   if (action === 'provision_modules') {
-    const { project, liveUrl, modules_enabled, tier, dry_run } = req.body || {};
+    const { project, liveUrl, modules_enabled, tier, dry_run, managed_services } = req.body || {};
     if (!project || !project.slug) return res.status(400).json({ ok: false, error: 'project.slug required' });
+    // Pass managed_services preferences through to project for modules to check
+    if (managed_services) project.managed_services = managed_services;
 
     // Dry-run mode: return what WOULD be provisioned without making real API calls
     if (dry_run || project.slug.startsWith('test-') || project.slug === 'test') {
