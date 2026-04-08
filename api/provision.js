@@ -36,7 +36,7 @@ function generateThemeCss(accentHex) {
 async function getPool() {
   const connStr = process.env.POSTGRES_URL || process.env.DATABASE_URL;
   if (!connStr) return null;
-  try { const { Pool } = await import('pg'); return new Pool({ connectionString: connStr, max: 3, idleTimeoutMillis: 5000 }); } catch { return null; }
+  try { const { Pool } = await import('pg'); return new Pool({ connectionString: connStr, max: 1, idleTimeoutMillis: 5000 }); } catch { return null; }
 }
 
 async function ensureDynastyOpsTables(pool) {
@@ -315,16 +315,18 @@ async function mod_email(config, project, liveUrl) {
 
     // 3. Create campaigns for each email in the sequence (autoresponder API is UI-only)
     // Campaigns are created as drafts — owner activates the drip sequence in Acumbamail dashboard
+    let campaignsOk = 0;
     for (const email of emailSequence) {
       try {
-        await fetch('https://acumbamail.com/api/1/createCampaign/', { method: 'POST', headers: ah,
+        const cr = await fetch('https://acumbamail.com/api/1/createCampaign/', { method: 'POST', headers: ah,
           body: JSON.stringify({ auth_token: apiKey, name: `${project.name} — ${email.subject}`,
             subject: email.subject, from_email: `hello@${project.domain || 'dynastyempire.com'}`,
             from_name: project.name, list_id: listId, html: email.body })
         });
+        if (cr.ok) campaignsOk++;
       } catch {}
     }
-    results.details.campaigns_created = emailSequence.length;
+    results.details.campaigns_created = campaignsOk;
     results.details.automation_note = 'Email campaigns created as drafts. Set up autoresponder drip sequence in Acumbamail dashboard → Automation → New Automation.';
 
     // 4. Get subscription form HTML
@@ -877,8 +879,9 @@ async function mod_automation(config, project, liveUrl) {
         const data = await resp.json();
         if (data.id) {
           // Activate the workflow
-          try { await fetch(`${n8nUrl}/api/v1/workflows/${data.id}/activate`, { method: 'POST', headers: nh }); } catch {}
-          results.details.workflows.push({ name: wf.name, id: data.id, active: true });
+          let activated = false;
+          try { const ar = await fetch(`${n8nUrl}/api/v1/workflows/${data.id}/activate`, { method: 'POST', headers: nh }); activated = ar.ok; } catch {}
+          results.details.workflows.push({ name: wf.name, id: data.id, active: activated });
         }
       } catch {}
     }
@@ -984,7 +987,7 @@ async function mod_directory(config, project) {
     results.details.directory_url = `https://${dirDomain}`;
     results.details.setup_note = 'Brilliant Directories site must be created at brilliantdirectories.com dashboard. API manages content within an existing site. Set up membership tiers (Free/Featured $29/Premium $99) in the admin panel.';
 
-    try { const pool = await getPool(); if (pool) { await allocateLicense(pool, 'brilliant_directories', project.slug, results.details.directory_id); await pool.end(); } } catch {}
+    try { const pool = await getPool(); if (pool) { await allocateLicense(pool, 'brilliant_directories', project.slug, results.details.directory_url || dirDomain); await pool.end(); } } catch {}
     results.details.licenses_used = used + 1;
     results.ok = true;
     results.cost_usd = 0;
@@ -1018,7 +1021,7 @@ async function mod_wordpress(config, project) {
     try {
       await fetch(`https://api.20i.com/package/${packageId}/web/wordpressCli`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cmd: 'theme install flavor flavor --activate || theme install flavor flavor --activate || theme activate flavor' })
+        body: JSON.stringify({ cmd: 'theme install flavor --activate || theme activate flavor' })
       });
     } catch {}
 
@@ -1063,9 +1066,11 @@ async function mod_social(config, project) {
       method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: project.name })
     }).then(r => r.json());
-    results.details.group_id = grp.id || grp.data?.id;
+    const groupId = grp.id || grp.data?.id;
+    results.details.group_id = groupId;
     results.details.import_note = 'Social calendar CSV generated in repo at social-media/calendar.csv — import via Vista Social bulk scheduler';
-    results.ok = true;
+    results.ok = !!groupId;
+    if (!groupId) { results.error = 'Vista Social group creation returned no ID'; results.fallback = 'Create profile group at vistasocial.com manually'; }
     results.cost_usd = 0;
   } catch (e) { results.error = e.message; results.fallback = 'Set up Vista Social manually and import calendar.csv'; }
   return results;
@@ -1310,37 +1315,9 @@ export default async function handler(req, res) {
   // ── INVENTORY ─────────────────────────────────────────────────────────────
   if (action==='inventory') {
     // Check which modules have credentials configured
-    const modules_available = {
-      hosting: !!(config.infrastructure?.twentyi_general),
-      billing: !!(config.payments?.stripe_live?.startsWith('sk_live')),
-      email: !!(config.comms?.acumbamail),
-      phone: !!(config.comms?.callscaler || config.comms?.insighto || config.comms?.trafft_client_id),
-      sms: !!(config.comms?.smsit),
-      chatbot: !!(config.content?.chatbase),
-      seo: !!(config.content?.writerzen || process.env.ANTHROPIC_API_KEY), // AI fallback
-      video: !!(config.content?.vadoo_ai || config.content?.fliki),
-      design: !!(config.content?.supermachine || config.content?.pixelied || config.content?.relaythat),
-      analytics: !!(config.data_research?.posthog || config.data_research?.plerdy),
-      leads: !!(config.data_research?.happierleads || config.data_research?.salespanel),
-      automation: !!(process.env.N8N_API_KEY || config.automation?.n8n_api),
-      docs: !!(config.content?.documentero),
-      crm: !!(config.crm_pm?.suitedash_api),
-      directory: !!(config.directories?.brilliant_api),
-      wordpress: !!(config.infrastructure?.twentyi_general),
-      social: !!(config.content?.vista_social),
-      verify: true // No key needed
-    };
     return res.json({
       ai: Object.keys(config.ai||{}), comms: Object.keys(config.comms||{}),
       automation: Object.keys(config.automation||{}),
-      modules_available, modules_enabled: config.modules_enabled || {},
-      brilliant_licenses: config.directories?.brilliant_licenses||100,
-      suitedash_licenses: config.suitedash?.licenses_total||136,
-      stripe_active:   !!(config.payments?.stripe_live?.startsWith('sk_live')),
-      vercel_active:   !!VERCEL_TOKEN,
-      github_active:   !!GH_TOKEN,
-      neon_active:     !!NEON_STORE,
-      twentyi_active:  !!(config.infrastructure?.twentyi_general),
       modules_available: {
         hosting: !!(config.infrastructure?.twentyi_general),
         billing: !!(config.payments?.stripe_live?.startsWith('sk_live')),
@@ -1350,18 +1327,25 @@ export default async function handler(req, res) {
         chatbot: !!(config.content?.chatbase),
         seo: !!(config.content?.writerzen || config.content?.neuronwriter || process.env.ANTHROPIC_API_KEY),
         video: !!(config.content?.vadoo_ai || config.content?.fliki),
-        design: !!(config.content?.supermachine || config.content?.pixelied || config.content?.relaythat),
+        design: !!(config.content?.supermachine),
         analytics: !!(config.data_research?.posthog || config.data_research?.plerdy),
         leads: !!(config.data_research?.happierleads || config.data_research?.salespanel),
         automation: !!(process.env.N8N_API_KEY || config.automation?.n8n_api),
-        docs: !!(config.content?.documentero || config.data_research?.sparkreceipt),
+        docs: !!(config.content?.documentero),
         crm: !!(config.crm_pm?.suitedash_api),
         directory: !!(config.directories?.brilliant_api),
         wordpress: !!(config.infrastructure?.twentyi_general),
         social: !!(config.content?.vista_social),
         verify: true
       },
-      modules_enabled: config.modules_enabled || {}
+      modules_enabled: config.modules_enabled || {},
+      brilliant_licenses: config.directories?.brilliant_licenses||100,
+      suitedash_licenses: config.suitedash?.licenses_total||136,
+      stripe_active:   !!(config.payments?.stripe_live?.startsWith('sk_live')),
+      vercel_active:   !!VERCEL_TOKEN,
+      github_active:   !!GH_TOKEN,
+      neon_active:     !!NEON_STORE,
+      twentyi_active:  !!(config.infrastructure?.twentyi_general)
     });
   }
 
