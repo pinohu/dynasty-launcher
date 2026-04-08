@@ -7279,7 +7279,24 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
       }
     })();
 
-    // Authority sites: docs pushed by authority_deploy in provision.js
+    // Authority sites: content files pushed by authority_deploy in provision.js
+    // Strategy docs still need to be pushed separately
+    if (isAuthority) {
+      const strategyDocs = Object.entries(files).filter(([p]) =>
+        p.endsWith('.md') || p === '.env.example' || p === '.gitignore' || p.startsWith('docs/') || p.startsWith('.github/')
+      );
+      if (strategyDocs.length > 0) {
+        addP('auth-docs', `Pushing ${strategyDocs.length} strategy docs`); setP('auth-docs', 'run');
+        for (let i = 0; i < strategyDocs.length; i++) {
+          const [p, c] = strategyDocs[i];
+          if (!c || c.includes('[Generation incomplete]')) continue;
+          try { await pushF(`${ORG}/${inf.repo}`, p, c, `docs: dynasty strategy — ${p}`); } catch {}
+          setP('auth-docs', 'run', `${i+1}/${strategyDocs.length} — ${p}`);
+        }
+        setP('auth-docs', 'ok', `${strategyDocs.length} strategy docs pushed`);
+      }
+    }
+
     // Non-authority types: push all files to standalone repo
     if (!isAuthority) {
       // For backend-only builds, generate a landing page so Vercel serves something
