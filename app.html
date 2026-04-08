@@ -1079,15 +1079,15 @@ html,body{overflow-x:hidden}
     try { sessionStorage.setItem('dlg_ok', VAL); localStorage.setItem('dlg_ok', VAL); } catch(e){}
     return;
   }
-  // Allow payment return URLs (Stripe checkout success/cancel)
+  // Allow payment return URLs (Stripe checkout success/cancel) — session only, not permanent
   if (params.get('payment') === 'success' || params.get('payment') === 'cancelled') {
-    try { sessionStorage.setItem('dlg_ok', VAL); localStorage.setItem('dlg_ok', VAL); } catch(e){}
+    try { sessionStorage.setItem('dlg_ok', VAL); } catch(e){}
     return;
   }
-  // Allow pricing plan URLs — redirect to checkout instead of blocking
+  // Allow pricing plan URLs — session only (checkout will redirect to Stripe)
   var plan = params.get('plan');
   if (plan && ['starter','professional','enterprise'].includes(plan)) {
-    try { sessionStorage.setItem('dlg_ok', VAL); localStorage.setItem('dlg_ok', VAL); } catch(e){}
+    try { sessionStorage.setItem('dlg_ok', VAL); } catch(e){}
     return;
   }
   // No valid key — show access denied and halt
@@ -1859,7 +1859,7 @@ document.getElementById('settings-btn').onclick=()=>{
   const webhookUrl = localStorage.getItem('dynasty_webhook_url') || '';
   const whiteLabel = localStorage.getItem('dynasty_white_label') === 'true';
   const customDomain = localStorage.getItem('dynasty_custom_domain') || '';
-  const location = localStorage.getItem('dynasty_location') || '';
+  const savedLocation = localStorage.getItem('dynasty_location') || '';
   const pricePro = localStorage.getItem('dynasty_price_pro') || '49';
   const priceEnterprise = localStorage.getItem('dynasty_price_enterprise') || '199';
   const savedModules = JSON.parse(localStorage.getItem('dynasty_modules_enabled') || '{}');
@@ -1890,7 +1890,7 @@ document.getElementById('settings-btn').onclick=()=>{
 
       <div style="margin-bottom:12px">
         <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Location <span style="color:var(--dim);font-weight:400">(for phone area code)</span></label>
-        <input id="set-location" class="ti" value="${location}" placeholder="Erie, PA" style="width:100%" />
+        <input id="set-location" class="ti" value="${savedLocation}" placeholder="Erie, PA" style="width:100%" />
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
@@ -1965,24 +1965,26 @@ function saveSettings() {
   const modules = {};
   for (const k of moduleKeys) { modules[k] = document.getElementById(`mod-${k}`)?.checked || false; }
   localStorage.setItem('dynasty_modules_enabled', JSON.stringify(modules));
+  localStorage.setItem('dynasty_modules_configured', 'true');
 
   document.getElementById('settings-modal')?.remove();
 }
 
 // V3 Module config helpers
 function getEnabledModules() {
-  const userOverrides = JSON.parse(localStorage.getItem('dynasty_modules_enabled') || '{}');
-  // If user has explicitly configured modules, use those
-  if (Object.keys(userOverrides).length > 0) return userOverrides;
+  // Only use manual overrides if user explicitly configured via Settings
+  if (localStorage.getItem('dynasty_modules_configured') === 'true') {
+    return JSON.parse(localStorage.getItem('dynasty_modules_enabled') || '{}');
+  }
   // Otherwise, auto-select modules based on project type
   return autoSelectModules();
 }
 function autoSelectModules() {
-  const inf = typeof INFERRED !== 'undefined' ? INFERRED : {};
+  const inf = INFERRED || {};
   const type = inf.type_id || '';
-  const target = typeof V2_DEPLOY_TARGET !== 'undefined' ? V2_DEPLOY_TARGET : '';
+  const target = (typeof V2_DEPLOY_TARGET !== 'undefined') ? V2_DEPLOY_TARGET : '';
   // Base modules every project gets
-  const mods = { hosting: true, billing: true, email: true, analytics: true, docs: true, automation: true, seo: true, verify: true };
+  const mods = { hosting: true, billing: true, email: true, analytics: true, docs: true, automation: true, seo: true };
   // Service businesses: add phone, SMS, booking, CRM
   if (['client-portal','real-estate','job-board','booking-service','signing-service','crm','lead-gen','custom'].includes(type)) {
     mods.phone = true; mods.sms = true; mods.crm = true; mods.chatbot = true; mods.leads = true;
@@ -2004,7 +2006,7 @@ function autoSelectModules() {
 function getV3Project(inf) {
   return {
     name: inf.name || 'Dynasty Project', slug: inf.repo || 'dynasty-project',
-    description: inf.description || '', type: inf.type_id || '', domain: localStorage.getItem('dynasty_custom_domain') || inf.domain || `${inf.repo}.vercel.app`,
+    description: inf.reasoning || inf.type_label || '', type: inf.type_id || '', domain: localStorage.getItem('dynasty_custom_domain') || inf.domain || `${inf.repo}.vercel.app`,
     accent: inf.accent || '#0066FF', location: localStorage.getItem('dynasty_location') || '',
     price_pro_cents: (parseInt(localStorage.getItem('dynasty_price_pro') || '49') || 49) * 100,
     price_enterprise_cents: (parseInt(localStorage.getItem('dynasty_price_enterprise') || '199') || 199) * 100,
@@ -2021,7 +2023,7 @@ function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 const V3_TIERS = {
   starter: { price: 297, label: 'Starter ($297)', modules: [] }, // Code + docs + deployment only
   professional: { price: 997, label: 'Professional ($997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'] },
-  enterprise: { price: 2497, label: 'Enterprise ($2,497)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify'] }
+  enterprise: { price: 2497, label: 'Enterprise ($2,497)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] }
 };
 function getUserTier() {
   // Check URL params first (set by Stripe checkout success redirect)
@@ -2072,9 +2074,7 @@ async function startCheckout(plan) {
   const params = new URLSearchParams(window.location.search);
   const plan = params.get('plan');
   if (plan && ['starter', 'professional', 'enterprise'].includes(plan) && !params.get('payment')) {
-    localStorage.setItem('dynasty_tier', plan);
-    // Don't clear URL yet — startCheckout is async and may redirect to Stripe.
-    // URL gets cleaned by Stripe redirect or by checkPaymentReturn on success.
+    // Don't store tier yet — wait for payment confirmation in checkPaymentReturn
     startCheckout(plan);
   }
 })();
@@ -7489,7 +7489,14 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
 
     // ── V3 MODULE PROVISIONING ────────────────────────────────────────────
     // After deployment succeeds, provision all enabled V3 integration modules
-    const v3Modules = getEnabledModules();
+    const v3ModulesRaw = getEnabledModules();
+    // Client-side tier filtering — only send modules allowed by user's tier
+    const userTier = getUserTier();
+    const tierAllowed = V3_TIERS[userTier]?.modules || [];
+    const v3Modules = {};
+    for (const [mod, on] of Object.entries(v3ModulesRaw)) {
+      v3Modules[mod] = on && (tierAllowed.length === 0 || tierAllowed.includes(mod));
+    }
     const anyModulesEnabled = Object.values(v3Modules).some(v => v);
     let v3Results = null;
     if (anyModulesEnabled) {
@@ -7738,7 +7745,7 @@ ${provRes&&provRes.modules?`<div class="rc"><h3>V3 Modules Provisioned (${Object
       ${Object.entries(provRes.modules).map(([k,v]) => {
         if (v?.ok) {
           const d = v.details || {};
-          const info = d.domain || d.product_id || d.phone_number || d.list_id || d.workspace_url || d.chatbot_id || d.workflow_ids?.length + ' workflows' || v.service;
+          const info = d.domain || d.product_id || d.phone_number || d.list_id || d.workspace_url || d.chatbot_id || (d.workflow_ids?.length ? d.workflow_ids.length + ' workflows' : null) || v.service || 'Provisioned';
           return `<div class="lr"><span class="lb lb-g">${k}</span><span>${info || 'Provisioned'}</span></div>`;
         } else if (v?.error) {
           return `<div class="lr"><span class="lb" style="background:#f87171;color:#fff">${k}</span><span style="color:#f87171;font-size:12px">${v.fallback || v.error}</span></div>`;
@@ -7898,6 +7905,7 @@ function saveBuildHistory(inf, repo, fc) {
     infrastructure: provRes?.results ? Object.keys(provRes.results) : [],
     v3_modules_ok: provRes?.modules ? Object.entries(provRes.modules).filter(([,r]) => r?.ok).map(([k]) => k) : [],
     v3_modules_failed: provRes?.modules ? Object.entries(provRes.modules).filter(([,r]) => r && !r.ok && r.error).map(([k]) => k) : [],
+    v3_modules_skipped: provRes?.modules ? Object.entries(provRes.modules).filter(([,r]) => r && !r.ok && !r.error).map(([k]) => k) : [],
     tier: localStorage.getItem('dynasty_tier') || null,
     date: new Date().toISOString()
   };
