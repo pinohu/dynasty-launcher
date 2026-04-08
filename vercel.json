@@ -51,7 +51,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "value": "https://dynasty-launcher.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",

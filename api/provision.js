@@ -88,6 +88,14 @@ async function addDeferredCheck(pool, projectSlug, checkType, target, expectedVa
   } catch { return null; }
 }
 
+// ── Error sanitization — strip potential API keys from error messages ────────
+function sanitizeError(msg) {
+  if (!msg || typeof msg !== 'string') return msg || 'Unknown error';
+  return msg.replace(/sk_live_[a-zA-Z0-9]+/g, 'sk_live_***').replace(/sk_test_[a-zA-Z0-9]+/g, 'sk_test_***')
+    .replace(/Bearer [a-zA-Z0-9._-]+/g, 'Bearer ***').replace(/token [a-zA-Z0-9._-]+/g, 'token ***')
+    .replace(/key=[a-zA-Z0-9._-]+/g, 'key=***').replace(/ghp_[a-zA-Z0-9]+/g, 'ghp_***').slice(0, 200);
+}
+
 // ── V3 INTEGRATION MODULES ──────────────────────────────────────────────────
 // Each module follows: async function mod_xxx(config, project, liveUrl) → { ok, service, details, error?, fallback?, cleanup?, cost_usd? }
 
@@ -1227,7 +1235,7 @@ async function runModules(config, project, liveUrl, enabledModules) {
         new Promise((_, reject) => setTimeout(() => reject(new Error(`Module ${name} timed out after 30s`)), MODULE_TIMEOUT))
       ]);
     } catch (e) {
-      results[name] = { ok: false, service: name, error: e.message, fallback: `Module ${name} failed — see OPERATIONS.md for manual setup` };
+      results[name] = { ok: false, service: name, error: sanitizeError(e.message), fallback: `Module ${name} failed — see OPERATIONS.md for manual setup` };
     }
   }
 
@@ -1310,6 +1318,22 @@ async function runModules(config, project, liveUrl, enabledModules) {
       await pool.end();
     }
   } catch {}
+
+  // Alert on failures via Telegram (if configured)
+  const failedMods = Object.entries(results).filter(([,r]) => !r.ok && r.error).map(([k,r]) => `${k}: ${r.error}`);
+  if (failedMods.length > 0) {
+    try {
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = process.env.TELEGRAM_CHAT_ID;
+      if (botToken && chatId) {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, parse_mode: 'Markdown',
+            text: `⚠️ *Dynasty Build Alert*\nProject: ${project.name}\n${failedMods.length} module(s) failed:\n${failedMods.join('\n')}` })
+        });
+      }
+    } catch {}
+  }
 
   return { results, totalCost };
 }

@@ -1,0 +1,12 @@
+{
+  "name": "dynasty-launcher",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Business provisioning engine — one prompt deploys a complete operating company",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  }
+}
