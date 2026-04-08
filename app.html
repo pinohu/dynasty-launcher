@@ -1068,43 +1068,57 @@ html,body{overflow-x:hidden}
   <div id="done-screen" style="display:none"></div>
 </div>
 
-<script>// ── Dynasty Access Gate — URL key check ─────────────────────────────────────
+<script>// ── Dynasty Access Gate — strict payment/key check ─────────────────────────────────────
 (function(){
   var KEY = 'k', VAL = 'DYNASTY2026';
   var params = new URLSearchParams(window.location.search);
-  // Also accept session token for repeat visits
-  var stored = sessionStorage.getItem('dlg_ok') || localStorage.getItem('dlg_ok');
-  if (stored === VAL) return; // already authed this session
+
+  // 1. Admin access key (for owner/dev use only)
   if (params.get(KEY) === VAL) {
-    try { sessionStorage.setItem('dlg_ok', VAL); localStorage.setItem('dlg_ok', VAL); } catch(e){}
+    try { localStorage.setItem('dlg_ok', VAL); } catch(e){}
     return;
   }
-  // Allow payment SUCCESS return URL (Stripe checkout) — session only, not permanent
+  // Previously authenticated admin
+  if (localStorage.getItem('dlg_ok') === VAL) return;
+
+  // 2. Payment success return from Stripe (requires session_id for verification)
   if (params.get('payment') === 'success' && params.get('session_id')) {
-    try { sessionStorage.setItem('dlg_ok', VAL); } catch(e){}
+    return; // Let checkPaymentReturn() handle verification
+  }
+
+  // 3. Plan purchase URLs redirect to Stripe checkout (user doesn't stay on /app)
+  var plan = params.get('plan');
+  if (plan && ['starter','professional','enterprise'].includes(plan)) {
+    return; // Let checkPlanPurchase() redirect to Stripe
+  }
+
+  // 4. Verified paid user (has a confirmed Stripe session)
+  var paidSession = localStorage.getItem('dynasty_paid_session');
+  var paidAt = localStorage.getItem('dynasty_paid_at');
+  if (paidSession && paidAt) {
+    // Payment exists — allow access (server-side tier gating handles module limits)
     return;
   }
-  // Cancelled goes back to landing page
+
+  // 5. Cancelled payment — back to homepage
   if (params.get('payment') === 'cancelled') {
     window.location.href = '/';
     return;
   }
-  // Allow pricing plan URLs — session only (checkout will redirect to Stripe)
-  var plan = params.get('plan');
-  if (plan && ['starter','professional','enterprise'].includes(plan)) {
-    try { sessionStorage.setItem('dlg_ok', VAL); } catch(e){}
-    return;
-  }
-  // No valid key — show access denied and halt
+
+  // 6. No valid access — redirect to homepage pricing
   document.documentElement.innerHTML = [
     '<html><head><title>Dynasty Launcher</title>',
     '<style>*{margin:0;padding:0;box-sizing:border-box}',
     'body{background:#0a0a0a;color:#fff;display:flex;align-items:center;',
     'justify-content:center;height:100vh;font-family:-apple-system,sans-serif;flex-direction:column;gap:16px}',
-    'h2{font-size:1.4rem;font-weight:600}p{color:rgba(255,255,255,0.4);font-size:0.9rem}</style></head>',
+    'h2{font-size:1.4rem;font-weight:600}p{color:rgba(255,255,255,0.4);font-size:0.9rem}',
+    'a{color:#C9A84C;text-decoration:none;font-weight:600;padding:10px 24px;border:1px solid #C9A84C;border-radius:8px;margin-top:8px;display:inline-block}',
+    'a:hover{background:#C9A84C;color:#000}</style></head>',
     '<body><div style="font-size:2rem">⚡</div>',
     '<h2>Dynasty Launcher</h2>',
-    '<p>Access requires the private URL.</p>',
+    '<p>Purchase a build to get started.</p>',
+    '<a href="/#pricing">View Pricing</a>',
     '</body></html>'
   ].join('');
 })();
@@ -2042,10 +2056,19 @@ function isModuleAllowed(moduleName) {
 
 // ── Builder Entry + Payment Flow ────────────────────────────────────
 async function enterBuilder() {
+  // Require payment OR admin key before entering builder
+  const isAdmin = localStorage.getItem('dlg_ok') === 'DYNASTY2026';
+  const hasPaid = !!localStorage.getItem('dynasty_paid_session');
+  if (!isAdmin && !hasPaid) {
+    alert('Please purchase a build first.');
+    window.location.href = '/#pricing';
+    return;
+  }
+
   // Require authentication before entering builder
   const authed = await requireAuth();
   if (!authed) return;
-  
+
   const landing = document.getElementById('landing');
   if (landing) landing.style.display = 'none';
   const page = document.querySelector('.page');
@@ -3454,6 +3477,15 @@ Return 3-4 paragraphs. If the idea has become genuinely strong, your critique sh
 }
 
 async function startBuild() {
+  // ── Payment verification: require paid session or admin key ────────────
+  const isAdmin = localStorage.getItem('dlg_ok') === 'DYNASTY2026';
+  const hasPaid = !!localStorage.getItem('dynasty_paid_session');
+  if (!isAdmin && !hasPaid) {
+    alert('Please purchase a build to continue.');
+    window.location.href = '/#pricing';
+    return;
+  }
+
   // ── Build gating: check if user has builds remaining ────────────
   if (getBuildsRemaining() <= 0) {
     const action = confirm('You\'ve used your free build. Purchase a Starter build for $297?\n\nClick OK to go to checkout, or Cancel to return.');
