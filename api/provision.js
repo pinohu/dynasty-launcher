@@ -778,6 +778,8 @@ Return ONLY a valid JSON array (no markdown, no backticks):
             ...(stripePk ? [{key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:stripePk,type:'encrypted'}] : []),
             ...(stripeSk ? [{key:'STRIPE_SECRET_KEY',value:stripeSk,type:'encrypted'}] : []),
             ...(stripeWh ? [{key:'STRIPE_WEBHOOK_SECRET',value:stripeWh,type:'encrypted'}] : []),
+            {key:'BILLING_PLAN_ENV',value:'test',type:'plain'},
+            {key:'NEXT_PUBLIC_APP_URL',value:`https://${slug}.vercel.app`,type:'plain'},
             ...(process.env.ANTHROPIC_API_KEY?[{key:'ANTHROPIC_API_KEY',value:process.env.ANTHROPIC_API_KEY,type:'encrypted'}]:[]),
           ].map(v=>({...v,target:['production','preview','development']}));
           try{await fetch(`https://api.vercel.com/v10/projects/${vercelProjectId}/env?teamId=${VERCEL_TEAM}`,{

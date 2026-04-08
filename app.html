@@ -6161,6 +6161,104 @@ Generate using ---BEGIN:key--- / ---END:key--- delimiters:
         }
         setP('g7b', 'ok', `${Object.keys(tmplOverride).filter(k => tmplOverride[k]).length + 4} template components customized`);
       } catch (e) { setP('g7b', 'sk', e.message); }
+
+      // ── g7c: Backend Integration — DB, API routes, dashboard, billing ────────
+      // This transforms the template from a visual shell into a working application
+      try {
+        addP('g7c', 'Generating backend integration (DB, API, dashboard)', '', '⬡ Backend');
+        setP('g7c', 'run');
+        const backend = await ai(`Generate backend integration files for a Next.js 14 SaaS application using the existing boilerplate template infrastructure.
+
+PROJECT: ${inf.name}
+DESCRIPTION: ${desc}
+TYPE: ${inf.type_label}
+PRICE: ${inf.price || '$49/month'}
+REVENUE: ${inf.revenue_model || 'subscription'}
+
+The template already has: Drizzle ORM (pgTable), Clerk auth, Stripe billing, next-intl i18n.
+You are EXTENDING the existing template — not replacing its infrastructure.
+
+CRITICAL RULES:
+1. Use drizzle-orm/pg-core for schema (pgTable, text, serial, timestamp, etc.)
+2. API routes go in src/app/api/ as route.ts files with NextResponse
+3. Dashboard must use real data from API routes, not hardcoded content
+4. Use 'use client' only for components with useState/useEffect
+5. Import types from drizzle-orm, next/server, @clerk/nextjs as needed
+6. Every file must compile with TypeScript strict mode — no unused imports
+
+Generate using ---BEGIN:key--- / ---END:key--- delimiters:
+
+---BEGIN:schema_ts---
+// src/models/Schema.ts — Drizzle ORM database schema
+// KEEP the existing organizationSchema and todoSchema from the template
+// ADD 2-4 new tables specific to ${inf.name}
+// Use: pgTable, serial, text, timestamp, bigint, boolean, integer from drizzle-orm/pg-core
+// Include proper indexes and relationships
+---END:schema_ts---
+
+---BEGIN:api_route_ts---
+// src/app/api/v1/route.ts — Main API endpoint
+// GET: returns project status/health
+// POST: handles the primary action for ${inf.name}
+// Use NextRequest/NextResponse from next/server
+// Include proper error handling and JSON responses
+---END:api_route_ts---
+
+---BEGIN:api_data_route_ts---
+// src/app/api/data/route.ts — Data CRUD endpoint
+// GET: fetch records with pagination
+// POST: create new record
+// Use NextRequest/NextResponse, return proper JSON
+---END:api_data_route_ts---
+
+---BEGIN:dashboard_page_tsx---
+// src/app/[locale]/(auth)/dashboard/page.tsx — Functional dashboard
+// Must show: stat cards with real numbers, recent activity table, quick action buttons
+// Use 'use client' and fetch data from /api/data on mount
+// Use useState and useEffect for data loading
+// Include loading states and error handling
+// Import useTranslations from next-intl for the page title
+---END:dashboard_page_tsx---
+
+---BEGIN:appconfig_ts---
+// src/utils/AppConfig.ts — App configuration with billing plans
+// Keep: locales, defaultLocale, localePrefix
+// Update: name to "${inf.name}"
+// Add: PLAN_ID enum and billingPlans array with Free/Pro/Enterprise tiers
+// Include Stripe price IDs as placeholders (price_xxx format)
+---END:appconfig_ts---
+
+---BEGIN:env_ts---
+// src/libs/Env.ts — Environment validation (RELAXED for initial deploy)
+// Use @t3-oss/env-nextjs and zod
+// Make STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, BILLING_PLAN_ENV optional
+// Keep CLERK_SECRET_KEY and NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY required
+// This ensures the app boots even before Stripe is fully configured
+---END:env_ts---
+
+---BEGIN:env_example---
+// .env.example — All environment variables needed
+// Group by: Auth, Billing, Database, Monitoring
+---END:env_example---
+`, ['schema_ts', 'api_route_ts', 'api_data_route_ts', 'dashboard_page_tsx', 'appconfig_ts', 'env_ts', 'env_example'], 8000, 'frontend');
+
+        if (backend.schema_ts) feFiles['src/models/Schema.ts'] = backend.schema_ts;
+        if (backend.api_route_ts) {
+          feFiles['src/app/api/v1/route.ts'] = backend.api_route_ts;
+        }
+        if (backend.api_data_route_ts) {
+          feFiles['src/app/api/data/route.ts'] = backend.api_data_route_ts;
+        }
+        if (backend.dashboard_page_tsx) {
+          feFiles['src/app/[locale]/(auth)/dashboard/page.tsx'] = backend.dashboard_page_tsx;
+          feFiles['src/app/dashboard/page.tsx'] = backend.dashboard_page_tsx;
+        }
+        if (backend.appconfig_ts) feFiles['src/utils/AppConfig.ts'] = backend.appconfig_ts;
+        if (backend.env_ts) feFiles['src/libs/Env.ts'] = backend.env_ts;
+        if (backend.env_example) feFiles['.env.example'] = backend.env_example;
+
+        setP('g7c', 'ok', `${Object.keys(backend).filter(k => backend[k]).length} backend files generated`);
+      } catch (e) { setP('g7c', 'sk', e.message); }
     }
 
     addP('dx','Fetching DYNASTY-DESIGN.md from master repo','','⬡ GitHub');setP('dx','run');
