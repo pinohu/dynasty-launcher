@@ -839,8 +839,8 @@ html,body{overflow-x:hidden}
         </div>
         <div class="sc-action sc-action-premium" onclick="runPivotReview()">
           <div class="sc-act-icon">🧠</div>
-          <h4>5-Model Pivot Review</h4>
-          <p>5 AI models analyze, cross-review, and find the strongest pivot. Multi-model consensus.</p>
+          <h4>7-Model Pivot Review</h4>
+          <p>7 AI models analyze, cross-review, and find the strongest pivot. Multi-model consensus.</p>
           <div class="sc-act-cost">~$0.15-0.35</div>
         </div>
       </div>
@@ -2719,7 +2719,7 @@ function showPipelineUI() {
   document.getElementById('sc-actions').style.display = 'none';
   div.innerHTML = `
     <div class="pipeline-vis">
-      <div class="pipe-title">🧠 5-Model Pivot Review Pipeline</div>
+      <div class="pipe-title">🧠 7-Model Pivot Review Pipeline</div>
       <div class="pipe-phase" id="phase1">
         <div class="pipe-phase-label">Phase 1: Independent Analysis <span class="pipe-phase-status waiting" id="p1-status">Waiting</span></div>
         <div class="model-cards" id="phase1-cards">
@@ -2841,7 +2841,7 @@ Be bold. Be specific. No generic advice.`;
 
   const proposalList = validProposals.map((p, i) => `PROPOSAL ${i+1} (by ${p._model}):\n${p.pivot_description}\nPredicted score: ${p.predicted_composite_score}\nAdvantages: ${(p.key_advantages||[]).join(', ')}\nRisks: ${(p.risks||[]).join(', ')}\nReasoning: ${p.reasoning}`).join('\n\n---\n\n');
 
-  const crossReviewPrompt = (modelLabel, myIndex) => `5 AI models independently analyzed a business idea (original score: ${V2_SCORECARD.composite}/10) and proposed pivots. You are ${modelLabel}. Evaluate ALL proposals objectively.
+  const crossReviewPrompt = (modelLabel, myIndex) => `7 AI models independently analyzed a business idea (original score: ${V2_SCORECARD.composite}/10) and proposed pivots. You are ${modelLabel}. Evaluate ALL proposals objectively.
 
 ORIGINAL IDEA: ${desc}
 
