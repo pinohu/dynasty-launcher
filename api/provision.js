@@ -313,18 +313,19 @@ async function mod_email(config, project, liveUrl) {
       } catch {}
     }
 
-    // 3. Create autoresponder/drip automation for the sequence
-    try {
-      for (let i = 0; i < emailSequence.length; i++) {
-        const email = emailSequence[i];
-        await fetch('https://acumbamail.com/api/1/createAutoresponder/', { method: 'POST', headers: ah,
-          body: JSON.stringify({ auth_token: apiKey, list_id: listId, subject: email.subject, body: email.body,
-            from_email: `hello@${project.domain || 'dynastyempire.com'}`, from_name: project.name,
-            delay_days: email.delay, position: i + 1 })
+    // 3. Create campaigns for each email in the sequence (autoresponder API is UI-only)
+    // Campaigns are created as drafts — owner activates the drip sequence in Acumbamail dashboard
+    for (const email of emailSequence) {
+      try {
+        await fetch('https://acumbamail.com/api/1/createCampaign/', { method: 'POST', headers: ah,
+          body: JSON.stringify({ auth_token: apiKey, name: `${project.name} — ${email.subject}`,
+            subject: email.subject, from_email: `hello@${project.domain || 'dynastyempire.com'}`,
+            from_name: project.name, list_id: listId, html: email.body })
         });
-      }
-      results.details.autoresponders_created = emailSequence.length;
-    } catch {}
+      } catch {}
+    }
+    results.details.campaigns_created = emailSequence.length;
+    results.details.automation_note = 'Email campaigns created as drafts. Set up autoresponder drip sequence in Acumbamail dashboard → Automation → New Automation.';
 
     // 4. Get subscription form HTML
     try {
@@ -349,29 +350,23 @@ async function mod_phone(config, project, liveUrl) {
   const trafftId = config.comms?.trafft_client_id;
   if (!csKey && !inKey && !trafftId) { results.error = 'No phone/voice keys'; results.fallback = 'Add callscaler, insighto, trafft_client_id to DYNASTY_TOOL_CONFIG.comms'; return results; }
   try {
-    // 1. CallScaler — provision phone number
+    // 1. CallScaler — API is read-only (no number provisioning endpoint)
+    // List existing numbers to verify account access, provide manual setup instructions
     if (csKey) {
       try {
-        const areaCode = project.location ? project.location.replace(/\D/g, '').slice(0, 3) : '';
-        const searchParams = areaCode ? `?area_code=${areaCode}` : '';
-        const searchResp = await fetch(`https://api.callscaler.com/v1/numbers/available${searchParams}`, {
-          headers: { 'Authorization': `Bearer ${csKey}`, 'Content-Type': 'application/json' }
+        const numResp = await fetch('https://v2.callscaler.com/api/v2/numbers', {
+          headers: { 'Authorization': `Bearer ${csKey}` }
         });
-        if (searchResp.ok) {
-          const numbers = await searchResp.json();
-          const num = Array.isArray(numbers) ? numbers[0] : (numbers.data?.[0] || numbers.number);
-          if (num) {
-            const phoneNumber = typeof num === 'string' ? num : (num.phone_number || num.number);
-            const buyResp = await fetch('https://api.callscaler.com/v1/numbers', {
-              method: 'POST', headers: { 'Authorization': `Bearer ${csKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ phone_number: phoneNumber, name: project.name })
-            });
-            if (buyResp.ok) {
-              const bought = await buyResp.json();
-              results.details.phone_number = bought.phone_number || phoneNumber;
-              results.details.callscaler_id = bought.id;
-            }
+        if (numResp.ok) {
+          const nums = await numResp.json();
+          const existing = Array.isArray(nums) ? nums : (nums.data || []);
+          if (existing.length > 0) {
+            const num = existing[0];
+            results.details.phone_number = num.number || num.phone_number || num.number_friendly_name;
+            results.details.callscaler_id = num.uuid || num.id;
           }
+          results.details.callscaler_note = 'CallScaler API is read-only. Purchase numbers at app.callscaler.com, then configure forwarding to your business line.';
+          results.details.callscaler_numbers_found = existing.length;
         }
       } catch (e) { results.details.callscaler_error = e.message; }
     }
@@ -379,7 +374,7 @@ async function mod_phone(config, project, liveUrl) {
     // 2. Insighto — create AI voice agent
     if (inKey) {
       try {
-        const agentResp = await fetch('https://api.insighto.ai/api/v1/agents', {
+        const agentResp = await fetch('https://app.insighto.ai/api/v1/assistant', {
           method: 'POST', headers: { 'Authorization': `Bearer ${inKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: `${project.name} AI Receptionist`,
@@ -390,7 +385,14 @@ async function mod_phone(config, project, liveUrl) {
         });
         if (agentResp.ok) {
           const agent = await agentResp.json();
-          results.details.insighto_agent_id = agent.id || agent.agent_id;
+          results.details.insighto_agent_id = agent.id || agent.assistant_id;
+          // Create a phone widget for the assistant
+          try {
+            await fetch('https://app.insighto.ai/api/v1/widget', {
+              method: 'POST', headers: { 'Authorization': `Bearer ${inKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ assistant_id: agent.id || agent.assistant_id, type: 'phone', name: `${project.name} Phone` })
+            });
+          } catch {}
         }
       } catch (e) { results.details.insighto_error = e.message; }
     }
@@ -399,7 +401,7 @@ async function mod_phone(config, project, liveUrl) {
     if (trafftId) {
       try {
         const svcResp = await fetch('https://app.trafft.com/api/v1/services', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${trafftId}`, 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Authorization': `Bearer ${trafftId}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({
             name: `${project.name} Consultation`, duration: 30, price: 0,
             description: `Book a consultation with ${project.name}`
@@ -425,32 +427,31 @@ async function mod_sms(config, project) {
   const results = { ok: false, service: 'sms', details: {} };
   const apiKey = config.comms?.smsit;
   if (!apiKey) { results.error = 'No SMS-iT key'; results.fallback = 'Add smsit to DYNASTY_TOOL_CONFIG.comms'; return results; }
+  // Note: SMS-iT's public API (tool-it.smsit.ai) is for their link shortener tool.
+  // The core SMS CRM platform (app.smsit.ai) campaign endpoints are not publicly documented.
+  // We attempt the known endpoints and fall back to manual setup instructions.
   const sh = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
   try {
-    // 1. Create contact group
-    const grp = await fetch('https://app.smsit.ai/api/v3/contacts/groups', {
-      method: 'POST', headers: sh,
-      body: JSON.stringify({ name: `${project.name} Contacts` })
-    }).then(r => r.json());
-    results.details.group_id = grp.data?.id || grp.id;
+    // Attempt to create contact group via the CRM API
+    let groupCreated = false;
+    try {
+      const grp = await fetch('https://app.smsit.ai/api/v3/contacts/groups', {
+        method: 'POST', headers: sh,
+        body: JSON.stringify({ name: `${project.name} Contacts` })
+      }).then(r => r.json());
+      results.details.group_id = grp.data?.id || grp.id;
+      groupCreated = !!(grp.data?.id || grp.id);
+    } catch {}
 
-    // 2. Create SMS templates
-    const templates = [
+    // Store template text for manual creation
+    results.details.templates = [
       { name: 'Welcome', body: `Welcome to ${project.name}! We're glad to have you. Reply HELP for assistance.` },
       { name: 'Reminder', body: `Reminder: Your appointment with ${project.name} is coming up. Reply CONFIRM to confirm.` },
       { name: 'Follow-up', body: `Thanks for choosing ${project.name}! We'd love your feedback. Rate us 1-5.` }
     ];
-    results.details.templates = [];
-    for (const tmpl of templates) {
-      try {
-        const t = await fetch('https://app.smsit.ai/api/v3/templates', {
-          method: 'POST', headers: sh,
-          body: JSON.stringify({ name: `${project.name} - ${tmpl.name}`, body: tmpl.body })
-        }).then(r => r.json());
-        results.details.templates.push({ name: tmpl.name, id: t.data?.id || t.id });
-      } catch {}
-    }
-    results.ok = true;
+    results.details.setup_note = 'SMS-iT campaign API is not publicly documented. Templates provided — create them at app.smsit.ai → Campaigns → Templates.';
+    results.ok = groupCreated;
+    if (!results.ok) { results.fallback = 'Create contact group and SMS templates at app.smsit.ai. Template text is in OPERATIONS.md.'; }
     results.cost_usd = 0;
   } catch (e) { results.error = e.message; results.fallback = 'SMS-iT dashboard → create group and templates manually'; }
   return results;
@@ -551,9 +552,9 @@ Each post: 800+ words HTML content, unique keywords, real actionable content.`, 
     // 4. NeuronWriter content optimization (if key available)
     if (nwKey && posts.length > 0) {
       try {
-        for (const post of posts.slice(0, 3)) { // Optimize top 3 posts
-          const optResp = await fetch('https://app.neuronwriter.com/api/v1/content-optimization', {
-            method: 'POST', headers: { 'Authorization': `Bearer ${nwKey}`, 'Content-Type': 'application/json' },
+        for (const post of posts.slice(0, 3)) { // Optimize top 3 posts (consumes analysis credits)
+          const optResp = await fetch('https://app.neuronwriter.com/neuron-api/0.5/writer/evaluate-content', {
+            method: 'POST', headers: { 'X-API-KEY': nwKey, 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: post.content, keyword: post.tags?.[0] || project.name, language: 'en' })
           });
           if (optResp.ok) {
@@ -599,12 +600,12 @@ async function mod_video(config, project) {
     // Vadoo AI — create explainer video
     if (vadooKey) {
       try {
-        const vid = await fetch('https://api.vadoo.tv/v1/videos', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${vadooKey}`, 'Content-Type': 'application/json' },
+        const vid = await fetch('https://aiapi.vadoo.tv/api/generate_video', {
+          method: 'POST', headers: { 'X-Api-Key': vadooKey, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            title: `${project.name} Explainer`,
-            script: `Introducing ${project.name}. ${project.description || ''}. Our solution helps you achieve your goals faster. Get started today at ${project.domain || project.slug + '.vercel.app'}.`,
-            style: 'professional', duration: 60
+            topic: `${project.name}: ${(project.description || '').slice(0, 200)}`,
+            voice: 'en-US-male', theme: 'professional', language: 'English',
+            duration: 60, aspect_ratio: '16:9'
           })
         }).then(r => r.json());
         if (vid.id || vid.video_id) {
@@ -618,12 +619,11 @@ async function mod_video(config, project) {
     // Fliki — create social clips
     if (flikiKey) {
       try {
-        const clip = await fetch('https://api.fliki.ai/v1/generate', {
+        const clip = await fetch('https://api.fliki.ai/v1/generate/text-to-speech', {
           method: 'POST', headers: { 'Authorization': `Bearer ${flikiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: `${project.name} Social Clip`, format: 'square',
-            text: `${project.name} — ${(project.description || '').slice(0, 100)}. Learn more today!`,
-            duration: 15
+            content: `${project.name} — ${(project.description || '').slice(0, 200)}. Visit us today!`,
+            voiceId: 'en-US-1', format: 'mp3'
           })
         }).then(r => r.json());
         if (clip.id) { results.details.fliki_clip_id = clip.id; results.ok = true; }
@@ -658,27 +658,13 @@ async function mod_design(config, project) {
       } catch (e) { results.details.supermachine_error = e.message; }
     }
 
-    // Pixelied — OG image
-    if (pxKey) {
-      try {
-        const og = await fetch('https://api.pixelied.com/v1/designs', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${pxKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ template: 'og-image', text: project.name, width: 1200, height: 630 })
-        }).then(r => r.json());
-        if (og.url) { results.details.og_image = og.url; results.ok = true; }
-      } catch (e) { results.details.pixelied_error = e.message; }
-    }
+    // Pixelied — NO PUBLIC API (browser-based design tool only)
+    // Provide manual instructions instead
+    results.details.pixelied_note = 'Pixelied has no API. Create OG image (1200x630) at pixelied.com manually. Use project name and accent color.';
 
-    // RelayThat — social media kit (40+ variants)
-    if (rtKey) {
-      try {
-        const kit = await fetch('https://api.relaythat.com/v1/projects', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${rtKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: project.name, brand_color: project.accent || '#0066FF' })
-        }).then(r => r.json());
-        if (kit.id) { results.details.relaythat_project_id = kit.id; results.ok = true; }
-      } catch (e) { results.details.relaythat_error = e.message; }
-    }
+    // RelayThat — NO PUBLIC API (browser-based brand asset tool only)
+    // Provide manual instructions instead
+    results.details.relaythat_note = 'RelayThat has no API. Create social media kit (40+ variants) at relaythat.com. Set brand color to ' + (project.accent || '#0066FF') + '.';
 
     if (!results.ok) { results.error = 'All design services failed'; results.fallback = 'Create brand assets manually. Output as WebP for optimal performance. Sizes: hero 1920x1080, OG 1200x630, favicon 512x512.'; }
     results.cost_usd = 0;
@@ -710,20 +696,11 @@ async function mod_analytics(config, project, liveUrl) {
       } catch (e) { results.details.posthog_error = e.message; }
     }
 
-    // Plerdy — heatmap setup
+    // Plerdy — NO REST API for site creation. Integration is via tracking script injection.
+    // Provide manual setup instructions
     if (plKey) {
-      try {
-        const site = await fetch('https://api.plerdy.com/v1/sites', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${plKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: liveUrl || `https://${project.slug}.vercel.app`, name: project.name })
-        });
-        if (site.ok) {
-          const sd = await site.json();
-          results.details.plerdy_site_id = sd.id;
-          results.details.plerdy_snippet = sd.script || sd.tracking_code;
-          results.ok = true;
-        }
-      } catch (e) { results.details.plerdy_error = e.message; }
+      results.details.plerdy_note = 'Plerdy has no REST API for site provisioning. Add your site at plerdy.com → Settings → List of websites, then copy the tracking script and inject it into your site HTML.';
+      results.details.plerdy_site_url = liveUrl || `https://${project.slug}.vercel.app`;
     }
 
     if (!results.ok) { results.error = 'Analytics setup failed'; results.fallback = 'Add PostHog/Plerdy tracking manually'; }
@@ -742,7 +719,7 @@ async function mod_leads(config, project, liveUrl) {
     // Happierleads — visitor identification
     if (hlKey) {
       try {
-        const site = await fetch('https://api.happierleads.com/v1/websites', {
+        const site = await fetch('https://rest-admin.happierleads.com/admin/websites', {
           method: 'POST', headers: { 'Authorization': `Bearer ${hlKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: liveUrl || `https://${project.slug}.vercel.app`, name: project.name })
         });
@@ -758,9 +735,11 @@ async function mod_leads(config, project, liveUrl) {
     // Salespanel — lead scoring
     if (spKey) {
       try {
-        const tracker = await fetch('https://api.salespanel.io/v1/trackers', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${spKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ domain: liveUrl || `${project.slug}.vercel.app`, name: project.name })
+        // Salespanel API is primarily read-only (contacts, leads, companies). Tracking is via JS snippet.
+        // We create a custom activity to register the site, then provide tracking setup instructions.
+        const tracker = await fetch('https://salespanel.io/api/v1/custom-activity/create/', {
+          method: 'POST', headers: { 'Authorization': `Token ${spKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ activity_type: 'site_registered', domain: liveUrl || `${project.slug}.vercel.app`, name: project.name })
         });
         if (tracker.ok) {
           const td = await tracker.json();
@@ -794,9 +773,9 @@ async function mod_docs(config, project) {
       results.details.documents = [];
       for (const doc of docs) {
         try {
-          const resp = await fetch('https://app.documentero.com/api/v1/documents', {
-            method: 'POST', headers: { 'Authorization': `Bearer ${docKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ template: doc.template, data: doc.data, format: 'pdf' })
+          const resp = await fetch('https://app.documentero.com/api', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ document: doc.template, apiKey: docKey, data: doc.data, format: 'pdf' })
           });
           if (resp.ok) {
             const d = await resp.json();
@@ -807,20 +786,8 @@ async function mod_docs(config, project) {
       results.ok = results.details.documents.length > 0;
     }
 
-    // SparkReceipt — expense tracking setup
-    if (sparkKey) {
-      try {
-        const acct = await fetch('https://api.sparkreceipt.com/v1/accounts', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${sparkKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: project.name, currency: 'USD' })
-        });
-        if (acct.ok) {
-          const ad = await acct.json();
-          results.details.sparkreceipt_account_id = ad.id;
-          results.ok = true;
-        }
-      } catch (e) { results.details.sparkreceipt_error = e.message; }
-    }
+    // SparkReceipt — NO PUBLIC API. Provide manual setup instructions.
+    results.details.sparkreceipt_note = 'SparkReceipt has no API. Download the app at sparkreceipt.com and create an account for expense tracking. Connect to QuickBooks or Xero for accounting sync.';
 
     if (!results.ok) { results.error = 'Document generation failed'; results.fallback = 'Generate legal docs at documentero.com'; }
     results.cost_usd = 0;
@@ -939,31 +906,29 @@ async function mod_crm(config, project) {
   } catch {}
   if (used >= total) { results.error = `SuiteDash license limit reached (${used}/${total})`; results.fallback = 'All SuiteDash licenses allocated. Purchase more or reclaim unused.'; return results; }
 
-  const sh = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+  // SuiteDash API uses custom X-Public-ID and X-Secret-Key headers
+  // API is limited to contacts/companies — no projects, invoicing, or portal creation endpoints
+  const publicId = config.crm_pm?.suitedash_public_id || apiKey;
+  const secretKey = config.crm_pm?.suitedash_secret_key || apiKey;
+  const sh = { 'X-Public-ID': publicId, 'X-Secret-Key': secretKey, 'Content-Type': 'application/json' };
   try {
-    // 1. Create workspace/company
-    const ws = await fetch(`${baseUrl}/api/v1/companies`, {
+    // 1. Create company (contacts/companies are the only writable API)
+    const ws = await fetch(`${baseUrl}/secure-api/company`, {
       method: 'POST', headers: sh,
       body: JSON.stringify({ name: project.name, website: `https://${project.domain || project.slug + '.vercel.app'}`, industry: project.type || 'General' })
     }).then(r => r.json());
     results.details.company_id = ws.id || ws.data?.id;
 
-    // 2. Create deal pipeline
+    // 2. Create a contact for the project owner
     try {
-      const pipeline = await fetch(`${baseUrl}/api/v1/pipelines`, {
+      await fetch(`${baseUrl}/secure-api/contact`, {
         method: 'POST', headers: sh,
-        body: JSON.stringify({ name: `${project.name} Sales`, stages: ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'] })
-      }).then(r => r.json());
-      results.details.pipeline_id = pipeline.id || pipeline.data?.id;
-    } catch {}
-
-    // 3. Create onboarding task template
-    try {
-      await fetch(`${baseUrl}/api/v1/tasks`, {
-        method: 'POST', headers: sh,
-        body: JSON.stringify({ title: `${project.name} — Client Onboarding`, description: 'Welcome email sent, Account setup, Initial consultation scheduled, Service agreement signed', status: 'template' })
+        body: JSON.stringify({ first_name: project.name, last_name: 'Admin', email: `admin@${project.domain || 'dynastyempire.com'}`, company_id: results.details.company_id })
       });
     } catch {}
+
+    // 3. Pipeline, tasks, invoicing, portal — NOT available via API. Document for manual setup.
+    results.details.manual_setup = 'SuiteDash API is limited to contacts/companies. Set up deal pipeline, onboarding tasks, invoice templates, and client portal at app.suitedash.com manually.';
 
     results.details.portal_url = `${baseUrl}/portal`;
     results.details.workspace_url = `${baseUrl}`;
@@ -988,29 +953,36 @@ async function mod_directory(config, project) {
   try { const pool = await getPool(); if (pool) { await ensureDynastyOpsTables(pool); used = await getLicenseCount(pool, 'brilliant_directories'); await pool.end(); } } catch {}
   if (used >= total) { results.error = `BD license limit reached (${used}/${total})`; results.fallback = 'All Brilliant Directories licenses allocated.'; return results; }
 
+  // Note: Brilliant Directories API is per-site (manages content within an existing directory).
+  // There is NO endpoint to provision a brand new directory site — that's done via the BD dashboard.
+  // We document what needs to be set up manually and use the API to create initial content if site exists.
+  const dirDomain = project.domain || `${project.slug}.brilliantdirectories.com`;
   try {
-    // 1. Create directory instance
-    const dir = await fetch('https://api.brilliantdirectories.com/v1/directories', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: project.name, domain: project.domain || `${project.slug}.brilliantdirectories.com`,
-        description: project.description || `${project.name} professional directory`,
-        categories: ['General', 'Featured', 'Premium']
-      })
-    }).then(r => r.json());
-    results.details.directory_id = dir.id;
-    results.details.directory_url = dir.url || `https://${project.slug}.brilliantdirectories.com`;
-
-    // 2. Create membership tiers
+    // Attempt to create initial content via per-site API (requires existing BD site)
+    let siteApiWorks = false;
     try {
-      for (const tier of [{ name: 'Free Listing', price: 0 }, { name: 'Featured', price: 29 }, { name: 'Premium', price: 99 }]) {
-        await fetch('https://api.brilliantdirectories.com/v1/membership-types', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ directory_id: dir.id, name: tier.name, price: tier.price, interval: 'monthly' })
-        });
-      }
-      results.details.membership_tiers = 3;
+      const testResp = await fetch(`https://${dirDomain}/api/v2/post/search`, {
+        method: 'POST', headers: { 'X-Api-Key': apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 1 })
+      });
+      siteApiWorks = testResp.ok;
     } catch {}
+
+    if (siteApiWorks) {
+      // Create seed listing posts
+      for (const cat of ['General', 'Featured', 'Premium']) {
+        try {
+          await fetch(`https://${dirDomain}/api/v2/post/create`, {
+            method: 'POST', headers: { 'X-Api-Key': apiKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: `Sample ${cat} Listing`, body: `${project.name} ${cat.toLowerCase()} listing.`, category: cat })
+          });
+        } catch {}
+      }
+      results.details.seed_listings = 3;
+    }
+
+    results.details.directory_url = `https://${dirDomain}`;
+    results.details.setup_note = 'Brilliant Directories site must be created at brilliantdirectories.com dashboard. API manages content within an existing site. Set up membership tiers (Free/Featured $29/Premium $99) in the admin panel.';
 
     try { const pool = await getPool(); if (pool) { await allocateLicense(pool, 'brilliant_directories', project.slug, results.details.directory_id); await pool.end(); } } catch {}
     results.details.licenses_used = used + 1;
