@@ -2399,29 +2399,28 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     const { project, liveUrl, modules_enabled, tier, dry_run } = req.body || {};
     if (!project || !project.slug) return res.status(400).json({ ok: false, error: 'project.slug required' });
 
-    // Dry-run mode: return what WOULD be provisioned without making real API calls
-    if (dry_run || project.slug.startsWith('test-') || project.slug === 'test') {
-      const enabled = modules_enabled || config.modules_enabled || {};
-      const wouldRun = Object.entries(enabled).filter(([, v]) => v).map(([k]) => k);
-      return res.json({ ok: true, dry_run: true, would_provision: wouldRun, tier: tier || 'enterprise',
-        note: 'Dry-run mode — no real API calls made. Remove dry_run flag or use a non-test slug to provision.' });
-    }
-
-    // Server-side revenue gating: enforce tier limits
+    // Server-side revenue gating: enforce tier limits FIRST (before dry_run)
     const TIER_MODULES = {
       starter: [], // Phases 1-8 only, no modules
       professional: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'],
       enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify']
     };
     const userTier = tier || 'starter'; // Default to most restrictive tier
-    const allowedModules = TIER_MODULES[userTier] || TIER_MODULES.enterprise;
+    const allowedModules = TIER_MODULES[userTier] || TIER_MODULES.starter;
     const rawEnabled = modules_enabled || config.modules_enabled || {};
     const enabled = {};
     for (const [mod, on] of Object.entries(rawEnabled)) {
       enabled[mod] = on && allowedModules.includes(mod);
     }
-    // Warn about gated modules
     const gatedOut = Object.entries(rawEnabled).filter(([mod, on]) => on && !allowedModules.includes(mod)).map(([mod]) => mod);
+
+    // Dry-run mode: return what WOULD be provisioned (with tier gating already applied)
+    if (dry_run || project.slug.startsWith('test-') || project.slug === 'test') {
+      const wouldRun = Object.entries(enabled).filter(([, v]) => v).map(([k]) => k);
+      return res.json({ ok: true, dry_run: true, would_provision: wouldRun, tier: userTier,
+        gated: gatedOut.length > 0 ? { modules: gatedOut, message: `${gatedOut.length} module(s) blocked by ${userTier} tier` } : null,
+        note: 'Dry-run mode — no real API calls made. Remove dry_run flag or use a non-test slug to provision.' });
+    }
 
     try {
       const { results: moduleResults, totalCost } = await runModules(config, project, liveUrl, enabled);
