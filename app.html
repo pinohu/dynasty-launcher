@@ -1971,8 +1971,35 @@ function saveSettings() {
 
 // V3 Module config helpers
 function getEnabledModules() {
-  const defaults = { hosting: true, billing: true, email: true, seo: true, analytics: true, automation: true, docs: true };
-  return { ...defaults, ...JSON.parse(localStorage.getItem('dynasty_modules_enabled') || '{}') };
+  const userOverrides = JSON.parse(localStorage.getItem('dynasty_modules_enabled') || '{}');
+  // If user has explicitly configured modules, use those
+  if (Object.keys(userOverrides).length > 0) return userOverrides;
+  // Otherwise, auto-select modules based on project type
+  return autoSelectModules();
+}
+function autoSelectModules() {
+  const inf = typeof INFERRED !== 'undefined' ? INFERRED : {};
+  const type = inf.type_id || '';
+  const target = typeof V2_DEPLOY_TARGET !== 'undefined' ? V2_DEPLOY_TARGET : '';
+  // Base modules every project gets
+  const mods = { hosting: true, billing: true, email: true, analytics: true, docs: true, automation: true, seo: true, verify: true };
+  // Service businesses: add phone, SMS, booking, CRM
+  if (['client-portal','real-estate','job-board','booking-service','signing-service','crm','lead-gen','custom'].includes(type)) {
+    mods.phone = true; mods.sms = true; mods.crm = true; mods.chatbot = true; mods.leads = true;
+  }
+  // SaaS/platforms: add chatbot, leads, video
+  if (['gov-saas','dark-saas','enterprise-saas','ai-platform','ai-dashboard','ai-chat','api-svc'].includes(type)) {
+    mods.chatbot = true; mods.leads = true; mods.video = true; mods.design = true;
+  }
+  // Directory sites: add directory module
+  if (['bd-dir','member-dir'].includes(type)) { mods.directory = true; mods.crm = true; }
+  // WordPress targets
+  if (target === 'wordpress' || type === 'wp-theme') { mods.wordpress = true; mods.seo = true; }
+  // E-commerce: add design, video, social
+  if (type === 'ecom') { mods.design = true; mods.video = true; mods.social = true; }
+  // Authority/local: add SEO, social, phone
+  if (target === 'authority' || ['landing','portfolio','static'].includes(type)) { mods.social = true; mods.design = true; }
+  return mods;
 }
 function getV3Project(inf) {
   return {
