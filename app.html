@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dynasty Launcher — Turn a Business Idea Into a Deployed Company in 12 Minutes</title>
-<meta name="description" content="One text prompt generates 30+ production files, provisions infrastructure, and deploys a live application — backed by consulting-grade strategic analysis from 8 business frameworks. $45K-104K agency equivalent.">
+<title>Dynasty Launcher — Turn a Business Idea Into a Deployed Company in Under 10 Minutes</title>
+<meta name="description" content="One text prompt generates 30+ production files, provisions infrastructure, and deploys a live application — backed by consulting-grade strategic analysis from 8 business frameworks. $45K-112K agency equivalent.">
 <meta name="keywords" content="AI business generator, SaaS launcher, startup builder, business system, automated deployment, strategic analysis">
 <meta name="author" content="Dynasty Empire LLC">
 <meta name="robots" content="index, follow">
@@ -12,14 +12,14 @@
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Dynasty Launcher — Deploy a Business in 12 Minutes">
+<meta property="og:title" content="Dynasty Launcher — Deploy a Business in Under 10 Minutes">
 <meta property="og:description" content="30+ production files, live infrastructure, and consulting-grade strategic analysis from one text prompt.">
 <meta property="og:url" content="https://dynasty-launcher.vercel.app">
 <meta property="og:site_name" content="Dynasty Launcher">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Dynasty Launcher — Deploy a Business in 12 Minutes">
+<meta name="twitter:title" content="Dynasty Launcher — Deploy a Business in Under 10 Minutes">
 <meta name="twitter:description" content="30+ production files, live infrastructure, and consulting-grade strategic analysis from one text prompt.">
 
 <!-- Favicon -->
@@ -621,15 +621,15 @@ html,body{overflow-x:hidden}
 
   <div id="mode-screen">
     <div class="hero">
-      <h1>Dynasty Business <span>System Launcher</span></h1>
-      <p>Describe a business idea. Get 23 production files, infrastructure provisioning, and a deployable system — powered by your choice of AI models and strategy frameworks.</p>
+      <h1>Dynasty <span>Launcher</span></h1>
+      <p>Describe a business idea. Get 30+ production files, infrastructure provisioning, and a deployable system — powered by your choice of AI models and strategy frameworks.</p>
     </div>
 
     <div class="mode-cards">
       <div class="mode-card" id="mode-quick" onclick="selectMode('quick')">
         <div class="mc-icon">⚡</div>
         <h3>Quick Build</h3>
-        <p>One prompt → AI infers everything → 23 files generated and deployed. Same as v1.</p>
+        <p>One prompt → AI infers everything → 30+ files generated and deployed. Same as v1.</p>
         <div class="mc-tag">~3 minutes</div>
       </div>
       <div class="mode-card" id="mode-strategic" onclick="selectMode('strategic')">
@@ -650,7 +650,7 @@ html,body{overflow-x:hidden}
     <div id="input-screen" style="display:none">
     <div class="hero">
       <h1>What are you <span>building?</span></h1>
-      <p>Describe your project in plain English. The system infers the type, tech stack, business model, acquisition channel, and pricing — then generates 23 files and provisions infrastructure automatically.</p>
+      <p>Describe your project in plain English. The system infers the type, tech stack, business model, acquisition channel, and pricing — then generates 30+ files and provisions infrastructure automatically.</p>
     </div>
 
     <div class="input-area">
@@ -1045,7 +1045,7 @@ html,body{overflow-x:hidden}
     </div>
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
-      <p id="prog-sub">AI generation · 23 docs · Vercel + Neon + Stripe · 20i for WordPress/Static</p>
+      <p id="prog-sub">AI generation · 30+ files · Vercel + Neon + Stripe · 20i for WordPress/Static</p>
       <div id="build-cost" style="font-size:11px;color:var(--gold);margin-top:4px;display:none">
         Cost so far: <span id="cost-val">$0.00</span>
       </div>
@@ -3217,7 +3217,7 @@ Return 4-5 paragraphs of brutal, specific critique.`,
     <div style="background:rgba(229,83,75,0.06);border:2px solid rgba(229,83,75,0.3);border-radius:var(--rl);padding:1.25rem;margin:1rem 0">
       <div style="font-size:14px;font-weight:600;color:var(--red);margin-bottom:.75rem">😈 Devil's Advocate</div>
       <div style="font-size:12px;color:var(--sec);line-height:1.7;white-space:pre-wrap">${devilsCritique}</div>
-      <div style="font-size:10px;color:var(--dim);margin-top:.75rem;font-style:italic">Powered by Claude Opus 4 — the harshest critic available</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:.75rem;font-style:italic">Powered by Llama 3.3 70B — independent adversarial analysis</div>
     </div>
     <div id="refine-controls" style="margin:0.75rem 0">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -3438,7 +3438,7 @@ Return 3-4 paragraphs. If the idea has become genuinely strong, your critique sh
 async function startBuild() {
   // ── Build gating: check if user has builds remaining ────────────
   if (getBuildsRemaining() <= 0) {
-    const action = confirm('You\'ve used your free build. Purchase a build for $29 or subscribe for $99/mo?\n\nClick OK to go to checkout, or Cancel to return.');
+    const action = confirm('You\'ve used your free build. Purchase a Starter build for $297, Professional for $997, or Enterprise for $2,497.\n\nClick OK to go to checkout, or Cancel to return.');
     if (action) { startCheckout('single'); return; }
     else return;
   }
@@ -3815,7 +3815,7 @@ const TEMPLATES = [
   { icon: '🤖', name: 'AI Agent Service', desc: 'Autonomous task execution with human oversight', prompt: 'An AI agent service that autonomously handles [task type] for [business type]. Monitored by human operators, charged per task completed.' },
   { icon: '📰', name: 'Authority Site', desc: 'Content, SEO, lead gen, affiliate revenue', prompt: 'An authority website for [niche] that ranks for high-intent keywords, captures leads, and monetizes through affiliate partnerships and premium listings.' },
   { icon: '🛒', name: 'E-commerce Store', desc: 'Products, cart, payments, fulfillment', prompt: 'An e-commerce store selling [product type] to [target audience]. Dropshipping/print-on-demand fulfillment, Stripe payments, email marketing.' },
-  { icon: '📊', name: 'Analytics Dashboard', desc: 'Data viz, reporting, alerts, integrations', prompt: 'A analytics dashboard that aggregates data from [sources] and gives [user type] actionable insights. Real-time alerts, custom reports, API integrations.' },
+  { icon: '📊', name: 'Analytics Dashboard', desc: 'Data viz, reporting, alerts, integrations', prompt: 'An analytics dashboard that aggregates data from [sources] and gives [user type] actionable insights. Real-time alerts, custom reports, API integrations.' },
   { icon: '🎓', name: 'Online Course / LMS', desc: 'Lessons, quizzes, certificates, payments', prompt: 'An online learning platform teaching [subject] to [audience]. Video lessons, quizzes, certificates, community forum. One-time or subscription pricing.' },
   { icon: '📱', name: 'Mobile App Backend', desc: 'API, auth, push notifications, analytics', prompt: 'A mobile app backend for [app concept]. REST API, user auth, push notifications, analytics, and admin dashboard. The app helps [users] to [action].' },
   { icon: '🔧', name: 'Client Portal', desc: 'Projects, invoicing, comms, file sharing', prompt: 'A client portal for [service business] that manages projects, invoicing, communication, and file sharing. Clients log in to see progress and pay invoices.' },

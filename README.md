@@ -1,6 +1,6 @@
 # Dynasty Launcher V3
 
-> One prompt deploys a complete operating business in 5 minutes. Website, domain, email, phone, CRM, billing, marketing, SEO, video, design, analytics, automation, and legal docs — all provisioned automatically.
+> One prompt deploys a complete operating business in under 10 minutes. Website, domain, email, phone, CRM, billing, marketing, SEO, video, design, analytics, automation, and legal docs — all provisioned automatically.
 
 ## What It Does
 
@@ -39,8 +39,8 @@ Dynasty Launcher takes a plain-English business description and provisions:
 
 ```
 index.html              <- Landing page (V3 pricing + features)
-app.html                <- Builder app (8014 lines, monolith frontend)
-api/provision.js        <- Backend orchestrator (2186 lines, 17 modules)
+app.html                <- Builder app (~8300 lines, monolith frontend)
+api/provision.js        <- Backend orchestrator (~2450 lines, 17 modules)
 api/ai.js               <- Multi-provider AI router (7 providers)
 api/orchestrate.js      <- Compaction engine + smart routing
 api/memory.js           <- Project history (Neon)
