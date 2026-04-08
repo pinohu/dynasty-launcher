@@ -2073,7 +2073,8 @@ async function startCheckout(plan) {
   const plan = params.get('plan');
   if (plan && ['starter', 'professional', 'enterprise'].includes(plan) && !params.get('payment')) {
     localStorage.setItem('dynasty_tier', plan);
-    window.history.replaceState({}, '', window.location.pathname);
+    // Don't clear URL yet — startCheckout is async and may redirect to Stripe.
+    // URL gets cleaned by Stripe redirect or by checkPaymentReturn on success.
     startCheckout(plan);
   }
 })();

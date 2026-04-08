@@ -221,7 +221,7 @@ async function mod_billing(config, project, liveUrl) {
         const p = await fetch('https://api.stripe.com/v1/prices', { method: 'POST', headers: sh,
           body: `product=${prod.id}&currency=usd&unit_amount=0&recurring[interval]=month&nickname=${enc(tier.name)}`
         }).then(r => r.json());
-        results.details.prices[tier.name.toLowerCase()] = { monthly: p.id };
+        if (p.id) results.details.prices[tier.name.toLowerCase()] = { monthly: p.id };
       } else {
         // Paid tier — monthly + annual (20% discount)
         const monthly = await fetch('https://api.stripe.com/v1/prices', { method: 'POST', headers: sh,
@@ -231,7 +231,7 @@ async function mod_billing(config, project, liveUrl) {
         const annual = await fetch('https://api.stripe.com/v1/prices', { method: 'POST', headers: sh,
           body: `product=${prod.id}&currency=usd&unit_amount=${annualCents}&recurring[interval]=year&nickname=${enc(tier.name + ' Annual')}`
         }).then(r => r.json());
-        results.details.prices[tier.name.toLowerCase()] = { monthly: monthly.id, annual: annual.id };
+        if (monthly.id) results.details.prices[tier.name.toLowerCase()] = { monthly: monthly.id, annual: annual?.id || null };
       }
     }
 
