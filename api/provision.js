@@ -205,106 +205,134 @@ async function mod_hosting(config, project, liveUrl) {
   return results;
 }
 
-// ── mod_billing: Stripe 3-tier + Webhooks + Dunning ─────────────────────────
+// ── mod_billing: Stripe Setup Guide + .env Template (client-owned) ──────────
+// Dynasty does NOT create Stripe products under its own account.
+// Instead, generates a complete setup guide and .env template for the client
+// to configure their own Stripe account.
 async function mod_billing(config, project, liveUrl) {
   const results = { ok: false, service: 'billing', details: {} };
-  const SK = config.payments?.stripe_live;
-  if (!SK || !SK.startsWith('sk_live')) { results.error = 'No Stripe live key'; results.fallback = 'Add stripe_live to DYNASTY_TOOL_CONFIG.payments'; return results; }
-  const auth = Buffer.from(`${SK}:`).toString('base64');
-  const sh = { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' };
-  const enc = (s) => encodeURIComponent(s);
+  const GH_TOKEN = process.env.GITHUB_TOKEN;
+
   try {
-    // 1. Create product
-    const prod = await fetch('https://api.stripe.com/v1/products', { method: 'POST', headers: sh,
-      body: `name=${enc(project.name)}&description=${enc(`${project.description || project.name} — Dynasty provisioned`)}&metadata[dynasty_slug]=${enc(project.slug)}&metadata[dynasty_type]=${enc(project.type || '')}`
-    }).then(r => r.json());
-    if (!prod.id) throw new Error('Product creation failed');
-    results.details.product_id = prod.id;
+    const proPriceCents = project.price_pro_cents || 4900;
+    const entPriceCents = project.price_enterprise_cents || 19900;
 
-    // 2. Create 3 price tiers (monthly)
-    const tiers = [
-      { name: 'Free', cents: 0 },
-      { name: 'Pro', cents: project.price_pro_cents || 4900 },
-      { name: 'Enterprise', cents: project.price_enterprise_cents || 19900 }
-    ];
-    results.details.prices = {};
-    for (const tier of tiers) {
-      if (tier.cents === 0) {
-        // Free tier — create $0 price
-        const p = await fetch('https://api.stripe.com/v1/prices', { method: 'POST', headers: sh,
-          body: `product=${prod.id}&currency=usd&unit_amount=0&recurring[interval]=month&nickname=${enc(tier.name)}`
-        }).then(r => r.json());
-        if (p.id) results.details.prices[tier.name.toLowerCase()] = { monthly: p.id };
-      } else {
-        // Paid tier — monthly + annual (20% discount)
-        const monthly = await fetch('https://api.stripe.com/v1/prices', { method: 'POST', headers: sh,
-          body: `product=${prod.id}&currency=usd&unit_amount=${tier.cents}&recurring[interval]=month&nickname=${enc(tier.name + ' Monthly')}`
-        }).then(r => r.json());
-        const annualCents = Math.round(tier.cents * 12 * 0.8); // 20% annual discount
-        const annual = await fetch('https://api.stripe.com/v1/prices', { method: 'POST', headers: sh,
-          body: `product=${prod.id}&currency=usd&unit_amount=${annualCents}&recurring[interval]=year&nickname=${enc(tier.name + ' Annual')}`
-        }).then(r => r.json());
-        if (monthly.id) results.details.prices[tier.name.toLowerCase()] = { monthly: monthly.id, annual: annual?.id || null };
-      }
-    }
+    // Generate comprehensive Stripe setup guide
+    const stripeGuide = `# ${project.name} — Stripe Billing Setup Guide
 
-    // 3. Create webhook endpoint
-    if (liveUrl) {
+## Step 1: Create Your Stripe Account
+1. Go to [dashboard.stripe.com](https://dashboard.stripe.com) and sign up
+2. Complete identity verification
+3. Get your API keys from Developers → API Keys
+
+## Step 2: Create Your Product
+1. Go to Products → Add Product
+2. Name: "${project.name}"
+3. Add 3 price tiers:
+   - **Free**: $0/month (recurring)
+   - **Pro**: $${(proPriceCents / 100).toFixed(0)}/month (recurring)
+   - **Enterprise**: $${(entPriceCents / 100).toFixed(0)}/month (recurring)
+4. Optional: Add annual pricing at 20% discount
+   - Pro Annual: $${Math.round(proPriceCents * 12 * 0.8 / 100)}/year
+   - Enterprise Annual: $${Math.round(entPriceCents * 12 * 0.8 / 100)}/year
+
+## Step 3: Create Webhook Endpoint
+1. Go to Developers → Webhooks → Add Endpoint
+2. URL: \`${liveUrl || 'https://your-domain.com'}/api/webhooks/stripe\`
+3. Events to listen for:
+   - checkout.session.completed
+   - customer.subscription.updated
+   - customer.subscription.deleted
+   - invoice.payment_failed
+   - invoice.paid
+
+## Step 4: Configure Customer Portal
+1. Go to Settings → Billing → Customer Portal
+2. Enable: Cancel subscription, Update subscription, Update payment method
+
+## Step 5: Update Environment Variables
+Copy the values into your Vercel project (Settings → Environment Variables):
+\`\`\`
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_key_here
+STRIPE_SECRET_KEY=sk_live_your_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+STRIPE_PRICE_PRO_MONTHLY=price_your_pro_price_id
+STRIPE_PRICE_ENTERPRISE_MONTHLY=price_your_enterprise_price_id
+STRIPE_PRODUCT_ID=prod_your_product_id
+\`\`\`
+
+## Step 6: Test
+1. Use Stripe's test mode first (sk_test_ keys)
+2. Make a test purchase
+3. Verify webhook fires
+4. Switch to live mode when ready
+
+## Recommended: Create a Launch Coupon
+- Go to Products → Coupons → Create
+- 10% off, one-time use
+- Name: "${project.name} Launch Discount"
+- Share the coupon code in your email marketing sequence
+`;
+
+    // Generate .env.example with all client-owned credentials
+    const envExample = `# ${project.name} — Environment Variables
+# Copy this to .env.local and fill in YOUR credentials
+# DO NOT commit .env.local to git
+
+# ── Stripe (YOUR account — https://dashboard.stripe.com/apikeys) ──
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_PRO_MONTHLY=price_...
+STRIPE_PRICE_ENTERPRISE_MONTHLY=price_...
+STRIPE_PRODUCT_ID=prod_...
+
+# ── Clerk Authentication (YOUR account — https://dashboard.clerk.com) ──
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
+CLERK_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/en/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/en/dashboard
+
+# ── Database (auto-configured if using Vercel + Neon integration) ──
+DATABASE_URL=postgresql://...
+POSTGRES_URL=postgresql://...
+
+# ── App Config ──
+NEXT_PUBLIC_APP_URL=${liveUrl || 'https://your-domain.vercel.app'}
+BILLING_PLAN_ENV=test
+
+# ── Optional: Analytics ──
+# NEXT_PUBLIC_POSTHOG_KEY=phc_...
+# NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+
+# ── Optional: Sentry ──
+# SENTRY_DSN=https://...@sentry.io/...
+`;
+
+    // Push billing guide and .env.example to the project repo
+    if (GH_TOKEN && project.slug) {
       try {
-        const wh = await fetch('https://api.stripe.com/v1/webhook_endpoints', { method: 'POST', headers: sh,
-          body: `url=${enc(liveUrl + '/api/webhooks/stripe')}&enabled_events[0]=checkout.session.completed&enabled_events[1]=customer.subscription.updated&enabled_events[2]=customer.subscription.deleted&enabled_events[3]=invoice.payment_failed&enabled_events[4]=invoice.paid`
-        }).then(r => r.json());
-        if (wh.id) {
-          results.details.webhook_id = wh.id;
-          // Store secret for env var push but do NOT include in API response or CREDENTIALS.md
-          results._webhook_secret = wh.secret;
-        }
+        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'docs/STRIPE-SETUP.md', stripeGuide, 'docs: Stripe billing setup guide');
+        await pushFile(GH_TOKEN, 'pinohu', project.slug, '.env.example', envExample, 'docs: environment variables template');
+        results.details.files_pushed = ['docs/STRIPE-SETUP.md', '.env.example'];
       } catch {}
     }
 
-    // 4. Create customer portal configuration
-    try {
-      const portal = await fetch('https://api.stripe.com/v1/billing_portal/configurations', { method: 'POST', headers: sh,
-        body: `business_profile[headline]=${enc('Manage your ' + project.name + ' subscription')}&features[subscription_cancel][enabled]=true&features[subscription_update][enabled]=true&features[payment_method_update][enabled]=true`
-      }).then(r => r.json());
-      if (portal.id) results.details.portal_config_id = portal.id;
-    } catch {}
-
-    // 4b. Create payment link for Pro tier (instant buy URL)
-    if (results.details.prices?.pro?.monthly) {
-      try {
-        const pl = await fetch('https://api.stripe.com/v1/payment_links', { method: 'POST', headers: sh,
-          body: `line_items[0][price]=${results.details.prices.pro.monthly}&line_items[0][quantity]=1`
-        }).then(r => r.json());
-        if (pl.url) results.details.payment_link_pro = pl.url;
-      } catch {}
-    }
-
-    // 4c. Create a 10% launch discount coupon
-    try {
-      const coupon = await fetch('https://api.stripe.com/v1/coupons', { method: 'POST', headers: sh,
-        body: `percent_off=10&duration=once&name=${enc(project.name + ' Launch Discount')}&metadata[dynasty_slug]=${enc(project.slug)}`
-      }).then(r => r.json());
-      if (coupon.id) results.details.coupon_id = coupon.id;
-    } catch {}
-
-    // 5. Push Stripe keys back to deployed Vercel project
-    const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN || config.infrastructure?.vercel;
-    if (VERCEL_TOKEN && project.vercel_project_id) {
-      try {
-        const envVars = [
-          ...(results._webhook_secret ? [{ key: 'STRIPE_WEBHOOK_SECRET', value: results._webhook_secret, type: 'encrypted' }] : []),
-          ...(results.details.prices?.pro?.monthly ? [{ key: 'STRIPE_PRICE_PRO_MONTHLY', value: results.details.prices.pro.monthly, type: 'plain' }] : []),
-          ...(results.details.prices?.enterprise?.monthly ? [{ key: 'STRIPE_PRICE_ENTERPRISE_MONTHLY', value: results.details.prices.enterprise.monthly, type: 'plain' }] : []),
-          { key: 'STRIPE_PRODUCT_ID', value: prod.id, type: 'plain' }
-        ].map(v => ({ ...v, target: ['production', 'preview', 'development'] }));
-        await fetch(`https://api.vercel.com/v10/projects/${project.vercel_project_id}/env?teamId=team_fuTLGjBMk3NAD32Bm5hA7wkr`, {
-          method: 'POST', headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(envVars)
-        });
-        results.details.env_vars_pushed = true;
-      } catch {}
-    }
+    results.details.pricing_tiers = {
+      free: { monthly: '$0/mo' },
+      pro: { monthly: `$${(proPriceCents / 100).toFixed(0)}/mo`, annual: `$${Math.round(proPriceCents * 12 * 0.8 / 100)}/yr` },
+      enterprise: { monthly: `$${(entPriceCents / 100).toFixed(0)}/mo`, annual: `$${Math.round(entPriceCents * 12 * 0.8 / 100)}/yr` }
+    };
+    results.details.setup_guide = 'docs/STRIPE-SETUP.md';
+    results.details.env_template = '.env.example';
+    results.details.note = 'Billing setup guide and .env.example pushed to repo. Client configures their own Stripe account — Dynasty does not create Stripe products under its account.';
+    results.ok = true;
+    results.cost_usd = 0;
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up Stripe manually — see docs/STRIPE-SETUP.md in the repo'; }
+  return results;
+}
 
     results.ok = true;
     results.cost_usd = 0; // Stripe API is free
@@ -1499,7 +1527,7 @@ export default async function handler(req, res) {
       automation: Object.keys(config.automation||{}),
       modules_available: {
         hosting: !!(config.infrastructure?.twentyi_general),
-        billing: !!(config.payments?.stripe_live?.startsWith('sk_live')),
+        billing: true, // Generates setup guide + .env template (no Dynasty Stripe key needed)
         email: !!(config.comms?.acumbamail),
         phone: !!(config.comms?.callscaler || config.comms?.insighto || config.comms?.trafft_client_id),
         sms: !!(config.comms?.smsit),
@@ -2119,9 +2147,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       const envVars=[
         {key:'VITE_SITE_SLUG',value:project_slug,type:'plain'},
         {key:'VITE_SITE_NAME',value:niche_name,type:'plain'},
-        ...(process.env.VITE_SUPABASE_URL?[{key:'VITE_SUPABASE_URL',value:process.env.VITE_SUPABASE_URL,type:'plain'}]:[]),
-        ...(process.env.VITE_SUPABASE_PUBLISHABLE_KEY?[{key:'VITE_SUPABASE_PUBLISHABLE_KEY',value:process.env.VITE_SUPABASE_PUBLISHABLE_KEY,type:'plain'}]:[]),
-        ...(process.env.VITE_SUPABASE_PROJECT_ID?[{key:'VITE_SUPABASE_PROJECT_ID',value:process.env.VITE_SUPABASE_PROJECT_ID,type:'plain'}]:[]),
+        // Client configures their own Supabase keys via .env.example
       ].map(v=>({...v,target:['production','preview','development']}));
       try{await fetch(`https://api.vercel.com/v10/projects/${projectId}/env?teamId=${VERCEL_TEAM}`,{
         method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
@@ -2223,23 +2249,14 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           });
         }
 
-        // ── Set required env vars for fullstack (Next.js + Clerk + Stripe) ────
+        // ── Set non-sensitive routing env vars for fullstack (paths only, NO keys) ──
+        // Client configures their own Clerk + Stripe keys via .env.example
         if(vercelProjectId && isFullstack){
-          const clerkPk = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
-          const clerkSk = process.env.CLERK_SECRET_KEY || '';
-          const stripePk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || '';
-          const stripeSk = process.env.STRIPE_SECRET_KEY || '';
-          const stripeWh = process.env.STRIPE_WEBHOOK_SECRET || '';
           const envVars = [
-            ...(clerkPk ? [{key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:clerkPk,type:'encrypted'}] : []),
-            ...(clerkSk ? [{key:'CLERK_SECRET_KEY',value:clerkSk,type:'encrypted'}] : []),
             {key:'NEXT_PUBLIC_CLERK_SIGN_IN_URL',value:'/en/sign-in',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_SIGN_UP_URL',value:'/en/sign-up',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL',value:'/en/dashboard',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL',value:'/en/dashboard',type:'plain'},
-            ...(stripePk ? [{key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:stripePk,type:'encrypted'}] : []),
-            ...(stripeSk ? [{key:'STRIPE_SECRET_KEY',value:stripeSk,type:'encrypted'}] : []),
-            ...(stripeWh ? [{key:'STRIPE_WEBHOOK_SECRET',value:stripeWh,type:'encrypted'}] : []),
             {key:'BILLING_PLAN_ENV',value:'test',type:'plain'},
             {key:'NEXT_PUBLIC_APP_URL',value:`https://${slug}.vercel.app`,type:'plain'},
           ].map(v=>({...v,target:['production','preview','development']}));
