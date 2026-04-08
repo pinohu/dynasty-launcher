@@ -134,7 +134,7 @@ async function mod_hosting(config, project, liveUrl) {
     try {
       await fetch(`https://api.20i.com/package/${packageId}/web/dnsRecords`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new: { txt: [{ host: '@', txt: 'v=spf1 include:spf.20i.com ~all' }] } })
+        body: JSON.stringify({ new: { txt: [{ host: '@', txt: 'v=spf1 include:spf.20i.com include:acumbamail.com ~all' }] } })
       });
       results.details.spf = true;
     } catch {}
@@ -295,13 +295,16 @@ async function mod_email(config, project, liveUrl) {
     if (!listId) throw new Error('List creation failed');
     results.details.list_id = listId;
 
-    // 2. Create 5-email welcome sequence
+    // 2. Create 5-email welcome sequence (CAN-SPAM compliant)
+    const unsubLink = '{{unsubscribe_url}}'; // Acumbamail merge tag for unsubscribe
+    const physAddr = project.location || 'United States';
+    const emailWrap = (subject, innerHtml) => `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${subject}</title></head><body style="margin:0;padding:0;background:#f4f4f4;font-family:system-ui,sans-serif"><div style="max-width:600px;margin:0 auto;padding:20px"><div style="background:#fff;border-radius:8px;padding:32px;margin-bottom:16px">${innerHtml}</div><div style="text-align:center;font-size:12px;color:#999;padding:16px"><p>${project.name} | ${physAddr}</p><p><a href="${unsubLink}" style="color:#999">Unsubscribe</a> | <a href="https://${project.domain || project.slug + '.vercel.app'}" style="color:#999">Visit website</a></p></div></div></body></html>`;
     const emailSequence = [
-      { subject: `Welcome to ${project.name}!`, body: `<h2>Welcome aboard!</h2><p>Thanks for joining ${project.name}. We're excited to have you.</p><p>Here's what you can expect from us...</p>`, delay: 0 },
-      { subject: `Getting started with ${project.name}`, body: `<h2>Let's get you set up</h2><p>Here's a quick guide to making the most of ${project.name}.</p><p>Step 1: Complete your profile<br>Step 2: Explore the dashboard<br>Step 3: Connect your tools</p>`, delay: 1 },
-      { subject: `${project.name} tips & tricks`, body: `<h2>Pro tips for success</h2><p>Our most successful users do these 3 things...</p>`, delay: 3 },
-      { subject: `How ${project.name} compares`, body: `<h2>Why users choose us</h2><p>Here's what makes ${project.name} different...</p>`, delay: 5 },
-      { subject: `Special offer from ${project.name}`, body: `<h2>Ready to upgrade?</h2><p>As a thank you for being part of our community, here's an exclusive offer...</p>`, delay: 7 }
+      { subject: `Welcome to ${project.name}!`, body: emailWrap(`Welcome to ${project.name}!`, `<h2 style="color:#333;margin:0 0 16px">Welcome aboard!</h2><p style="color:#555;line-height:1.6">Thanks for joining ${project.name}. We're excited to have you.</p><p style="color:#555;line-height:1.6">Here's what you can expect from us over the next few days:</p><ul style="color:#555;line-height:1.8"><li>A quick-start guide to get you set up</li><li>Tips from our most successful users</li><li>An exclusive offer just for new members</li></ul><p style="margin-top:24px"><a href="https://${project.domain || project.slug + '.vercel.app'}" style="background:#C9A84C;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">Get Started</a></p>`), delay: 0 },
+      { subject: `Getting started with ${project.name}`, body: emailWrap(`Getting started with ${project.name}`, `<h2 style="color:#333;margin:0 0 16px">Let's get you set up</h2><p style="color:#555;line-height:1.6">Here's a quick guide to making the most of ${project.name}:</p><ol style="color:#555;line-height:1.8"><li><strong>Complete your profile</strong> — Add your details and preferences</li><li><strong>Explore the dashboard</strong> — See all your tools in one place</li><li><strong>Connect your tools</strong> — Link your calendar, email, and accounts</li></ol>`), delay: 1 },
+      { subject: `${project.name} tips & tricks`, body: emailWrap(`${project.name} tips & tricks`, `<h2 style="color:#333;margin:0 0 16px">Pro tips for success</h2><p style="color:#555;line-height:1.6">Our most successful users share three habits:</p><ol style="color:#555;line-height:1.8"><li>They check their dashboard daily for new leads</li><li>They respond to inquiries within 2 hours</li><li>They review analytics weekly to spot trends</li></ol>`), delay: 3 },
+      { subject: `How ${project.name} compares`, body: emailWrap(`How ${project.name} compares`, `<h2 style="color:#333;margin:0 0 16px">Why users choose us</h2><p style="color:#555;line-height:1.6">Here's what makes ${project.name} different from the alternatives:</p><ul style="color:#555;line-height:1.8"><li>Everything provisioned and connected from day one</li><li>You own 100% of the code and data</li><li>Professional-grade infrastructure, not a template</li></ul>`), delay: 5 },
+      { subject: `Special offer from ${project.name}`, body: emailWrap(`Special offer from ${project.name}`, `<h2 style="color:#333;margin:0 0 16px">Ready to upgrade?</h2><p style="color:#555;line-height:1.6">As a thank you for being part of our community, here's an exclusive offer for our early members.</p><p style="margin-top:24px"><a href="https://${project.domain || project.slug + '.vercel.app'}/pricing" style="background:#C9A84C;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">See Pricing</a></p>`), delay: 7 }
     ];
     results.details.emails_created = 0;
     for (const email of emailSequence) {
@@ -1201,12 +1204,17 @@ async function runModules(config, project, liveUrl, enabledModules) {
   const results = {};
   let totalCost = 0;
 
+  // Per-module timeout (30s) prevents a single slow API from blocking the entire build
+  const MODULE_TIMEOUT = 30000;
   for (const [name, fn] of Object.entries(moduleMap)) {
     if (!enabledModules[name]) continue;
     try {
-      results[name] = await fn(config, project, liveUrl);
+      results[name] = await Promise.race([
+        fn(config, project, liveUrl),
+        new Promise((_, reject) => setTimeout(() => reject(new Error(`Module ${name} timed out after 30s`)), MODULE_TIMEOUT))
+      ]);
     } catch (e) {
-      results[name] = { ok: false, service: name, error: e.message, fallback: 'Module crashed — check logs' };
+      results[name] = { ok: false, service: name, error: e.message, fallback: `Module ${name} failed — see OPERATIONS.md for manual setup` };
     }
   }
 
