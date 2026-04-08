@@ -2279,7 +2279,7 @@ function renderScorecard(sc) {
       </div>
       <div class="fw-dive-body">
         ${generateFrameworkVisual(k, v, sc.scores)}
-        <div style="margin-top:10px">${v}</div>
+        <div style="margin-top:10px">${typeof v === 'string' ? v : (v?.analysis || v?.summary || v?.text || JSON.stringify(v, null, 2))}</div>
       </div>
     </div>
   `).join('');
