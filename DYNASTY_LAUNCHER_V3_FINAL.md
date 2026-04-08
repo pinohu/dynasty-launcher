@@ -540,7 +540,74 @@ Keys with `""` = need to collect from tool dashboards.
 
 ---
 
-## 15. IMPLEMENTATION PLAN — 6 Sprints
+## 15. IMPLEMENTATION PLAN — 7 Sprints
+
+### Sprint 0: Prep — Fork Repos + Build Workflow Library (Week 0, 12 hours)
+
+**Goal:** Acquire open-source assets that accelerate Sprints 1-6. No code writing — just forking, organizing, and extracting reusable patterns.
+
+| Task | Repo | What Dynasty Gets | Hours |
+|------|------|-------------------|-------|
+| Fork n8n workflow library | `ritik-prog/n8n-automation-templates-5000` | 5,000+ workflow JSONs. mod_automation.js selects + customizes proven templates instead of generating from scratch | 2 |
+| Fork curated n8n templates | `enescingoz/awesome-n8n-templates` | 280+ curated workflows for email, WhatsApp, Telegram, RAG chatbots, social media | 1 |
+| Fork n8n searchable library | `Zie619/n8n-workflows` | 4,343 workflows with FastAPI search server. Deploy on Flint VM for instant lookup | 2 |
+| Study Stripe subscription starter | `vercel/nextjs-subscription-payments` | Battle-tested webhook handlers, customer portal, dunning, subscription lifecycle. Extract patterns for mod_billing.js | 1 |
+| Study enterprise SaaS kit | `boxyhq/saas-starter-kit` | SSO, SAML, directory sync, audit logs, team management. Add as template option for B2B projects | 1 |
+| Study AI website builder | `Ratna-Babu/Ai-Website-Builder` | Convex backend + Gemini AI + theme customization + export-ready code. Architecture reference for Dynasty's code generation | 1 |
+| Study AI landing page generator | `zinedkaloc/aipage.dev` | Prompt → HTML/Tailwind generation patterns. Improve Dynasty's page generation quality | 1 |
+| Create dynasty-n8n-library | New repo: `pinohu/dynasty-n8n-library` | Curated subset of workflows tagged by Dynasty project type (saas, directory, service, ecom). Each workflow has placeholder variables for project-specific webhook URLs and API keys | 2 |
+| Extract Stripe patterns | From `vercel/nextjs-subscription-payments` | Create `templates/stripe-billing/` in dynasty-launcher with webhook handler, customer portal route, subscription status component, dunning email templates | 1 |
+
+**Sprint 0 Deliverables:**
+- `pinohu/dynasty-n8n-library` repo with 50+ curated, tagged workflow templates
+- `templates/stripe-billing/` directory with production-grade Stripe patterns
+- `templates/enterprise/` directory with B2B SaaS patterns from boxyhq
+- Architecture notes document for code generation improvements
+- All repos forked under `pinohu` org for modification
+
+**Why this matters:** Sprint 4 (mod_automation.js) drops from 10 hours to 4 hours because workflows are pre-built. Sprint 1 (mod_billing.js) drops from 6 hours to 3 hours because Stripe patterns are extracted. Total savings: ~15 hours across later sprints.
+
+---
+
+### Repo Reference — Complete List
+
+**AUTOMATION & WORKFLOWS**
+| Repo | Stars | Use |
+|------|-------|-----|
+| `ritik-prog/n8n-automation-templates-5000` | 500+ | 5,000 workflow JSONs — Stripe, CRM, email, AI agents |
+| `enescingoz/awesome-n8n-templates` | 300+ | 280 curated: Gmail, Telegram, WhatsApp, RAG chatbots |
+| `Zie619/n8n-workflows` | 200+ | 4,343 workflows with searchable FastAPI server |
+| `n8n-io/self-hosted-ai-starter-kit` | 5K+ | Self-hosted AI environment (Flint reference) |
+| `n8n-io/n8n` | 182K+ | n8n source — reference for node API and workflow JSON format |
+
+**SAAS TEMPLATES (potential template upgrades)**
+| Repo | Stars | Use |
+|------|-------|-----|
+| `ixartz/SaaS-Boilerplate` | 8K+ | Current template — keep as default |
+| `boxyhq/saas-starter-kit` | 5K+ | Enterprise: SSO, SAML, audit logs — add as B2B option |
+| `adrianhajdin/saas-template` | 2K+ | Clerk + Supabase + Stripe — cleaner alternative |
+| `The-SaaS-Factory/next-14-saas-boilerplate` | 1K+ | Multi-tenancy + Prisma — better for client portals |
+| `NextJSTemplates/play-nextjs` | 800+ | Has MDX blogging built in — solves blog gap |
+
+**BILLING**
+| Repo | Stars | Use |
+|------|-------|-----|
+| `vercel/nextjs-subscription-payments` | 6K+ | Gold standard Stripe + Next.js — webhook, portal, dunning |
+
+**AI WEBSITE GENERATION**
+| Repo | Stars | Use |
+|------|-------|-----|
+| `zinedkaloc/aipage.dev` | 2K+ | Prompt → HTML/Tailwind patterns |
+| `cameronking4/nextjs-ai-page-generator` | 500+ | GPT page gen with Sandpack preview |
+| `Ratna-Babu/Ai-Website-Builder` | 300+ | Full-stack AI builder with Convex + theme export |
+
+**DESIGN**
+| Repo | Stars | Use |
+|------|-------|-----|
+| `shadcn-ui/ui` | 80K+ | Component library — generate shadcn patterns directly |
+| GitHub topic: `design-md` | — | DESIGN.md collection from popular sites — reference patterns |
+
+---
 
 ### Sprint 1: Foundation (Week 1) — 30 hours
 | Task | Module | Hours | Priority |
@@ -702,10 +769,12 @@ Dynasty Launcher V3 is **complete** when:
 
 | Metric | Value |
 |--------|-------|
-| **Total sprints** | 6 (one per week) |
-| **Total hours** | 170 |
+| **Total sprints** | 7 (Sprint 0-6, one per week) |
+| **Total hours** | 182 |
 | **Total modules** | 17 |
 | **Total build phases** | 20 |
+| **Forked repos** | 8 |
+| **n8n workflow templates** | 50+ curated (from 9,600+ source) |
 | **Credentials already have** | 15 tools |
 | **Credentials to collect** | 17 tools |
 | **Services provisioned per build** | up to 15 |
@@ -718,4 +787,4 @@ Dynasty Launcher V3 is **complete** when:
 
 ---
 
-*Ready to begin Sprint 1 on approval.*
+*Ready to begin Sprint 0 (repo forking + workflow library) on approval.*
