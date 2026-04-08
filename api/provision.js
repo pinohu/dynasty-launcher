@@ -1221,6 +1221,52 @@ async function runModules(config, project, liveUrl, enabledModules) {
       const credsMd = generateCredentialsMd(project, results);
       await pushFile(GH_TOKEN, 'pinohu', project.slug, 'CREDENTIALS.md', credsMd, 'docs: service credentials');
     } catch {}
+
+    // Push BUILD-REPORT.json with all module results (machine-readable)
+    try {
+      const reportData = {
+        project: { name: project.name, slug: project.slug, type: project.type, domain: project.domain },
+        generated_at: new Date().toISOString(),
+        modules: {},
+        summary: { total: 0, succeeded: 0, failed: 0, cost_usd: totalCost }
+      };
+      for (const [mod, res] of Object.entries(results)) {
+        reportData.modules[mod] = { ok: res.ok, service: res.service, error: res.error || null, fallback: res.fallback || null, cost_usd: res.cost_usd || 0 };
+        if (res.ok && res.details) reportData.modules[mod].details = res.details;
+        reportData.summary.total++;
+        if (res.ok) reportData.summary.succeeded++; else if (res.error) reportData.summary.failed++;
+      }
+      await pushFile(GH_TOKEN, 'pinohu', project.slug, 'BUILD-REPORT.json', JSON.stringify(reportData, null, 2), 'docs: V3 build report (machine-readable)');
+    } catch {}
+
+    // Push tracking snippets and embed scripts to a config file for easy injection
+    try {
+      const snippets = {};
+      if (results.analytics?.ok && results.analytics.details?.posthog_snippet) snippets.posthog = results.analytics.details.posthog_snippet;
+      if (results.analytics?.details?.plerdy_snippet) snippets.plerdy = results.analytics.details.plerdy_snippet;
+      if (results.chatbot?.ok && results.chatbot.details?.embed_script) snippets.chatbot = results.chatbot.details.embed_script;
+      if (results.leads?.ok && results.leads.details?.happierleads_snippet) snippets.happierleads = results.leads.details.happierleads_snippet;
+      if (results.leads?.details?.salespanel_snippet) snippets.salespanel = results.leads.details.salespanel_snippet;
+      if (Object.keys(snippets).length > 0) {
+        const snippetFile = `// Dynasty Launcher V3 — Tracking & Embed Snippets\n// Inject these into your site's <head> or before </body>\n// Generated: ${new Date().toISOString()}\n\nexport const snippets = ${JSON.stringify(snippets, null, 2)};\n`;
+        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'src/config/dynasty-snippets.ts', snippetFile, 'feat: tracking snippets and embed scripts');
+      }
+    } catch {}
+
+    // Push email signup form HTML if available
+    try {
+      if (results.email?.ok && results.email.details?.form_html) {
+        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'src/components/EmailSignupForm.html', results.email.details.form_html, 'feat: email signup form from Acumbamail');
+      }
+    } catch {}
+
+    // Push V3 module summary to REPORT.html
+    try {
+      const okMods = Object.entries(results).filter(([,r]) => r?.ok).map(([k]) => k);
+      const failMods = Object.entries(results).filter(([,r]) => r && !r.ok && r.error).map(([k]) => k);
+      const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>${project.name} — V3 Build Report</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0A0A0A;color:#EEEDE8;padding:2rem;max-width:700px;margin:0 auto;line-height:1.6}h1{font-size:1.8rem;margin-bottom:.5rem}h2{color:#C9A84C;font-size:1rem;margin:1.5rem 0 .5rem;border-bottom:1px solid #222;padding-bottom:4px}.meta{color:#666;font-size:13px}.card{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:1rem;margin:8px 0}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ok{color:#22C55E}.fail{color:#F87171}</style></head><body><h1>${project.name}</h1><p class="meta">V3 Build Report · ${new Date().toISOString().split('T')[0]} · ${okMods.length}/${Object.keys(results).length} modules</p><h2>Modules Provisioned (${okMods.length})</h2><div class="g">${okMods.map(m => `<div class="card"><strong class="ok">✓ ${m}</strong></div>`).join('')}</div>${failMods.length ? `<h2>Failed (${failMods.length})</h2>${failMods.map(m => `<div class="card"><strong class="fail">✗ ${m}</strong><div style="font-size:12px;color:#888">${results[m].fallback || results[m].error}</div></div>`).join('')}` : ''}<h2>Documents</h2><div class="g"><div class="card"><a href="OPERATIONS.md" style="color:#C9A84C">OPERATIONS.md</a></div><div class="card"><a href="CREDENTIALS.md" style="color:#C9A84C">CREDENTIALS.md</a></div><div class="card"><a href="BUILD-REPORT.json" style="color:#C9A84C">BUILD-REPORT.json</a></div></div><h2>Quick Start</h2><pre style="background:#111;padding:12px;border-radius:6px;font-size:12px;color:#C9A84C">gh repo clone pinohu/${project.slug} && cd ${project.slug} && claude</pre><p style="margin-top:2rem;text-align:center;color:#333;font-size:11px">Built with Dynasty Launcher V3</p></body></html>`;
+      await pushFile(GH_TOKEN, 'pinohu', project.slug, 'REPORT.html', reportHtml, 'docs: V3 build report');
+    } catch {}
   }
 
   // Record build history in Neon
@@ -2297,6 +2343,18 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       const succeeded = Object.entries(moduleResults).filter(([, r]) => r.ok).map(([k]) => k);
       const failed = Object.entries(moduleResults).filter(([, r]) => !r.ok && r.error).map(([k, r]) => `${k}: ${r.error}`);
       const fallbacks = Object.entries(moduleResults).filter(([, r]) => !r.ok && r.fallback).map(([k, r]) => ({ module: k, instruction: r.fallback }));
+
+      // Trigger a final Vercel redeploy so the site picks up new env vars and pushed files
+      if (VERCEL_TOKEN && project.vercel_project_id) {
+        try {
+          await fetch(`https://api.vercel.com/v13/deployments?teamId=${VERCEL_TEAM}`, {
+            method: 'POST', headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: project.slug, project: project.vercel_project_id, target: 'production',
+              gitSource: { type: 'github', org: ORG, repo: project.slug, ref: 'main' } })
+          });
+        } catch {}
+      }
+
       return res.json({
         ok: true,
         modules: moduleResults,
