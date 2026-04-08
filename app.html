@@ -1076,7 +1076,17 @@ html,body{overflow-x:hidden}
   var stored = sessionStorage.getItem('dlg_ok') || localStorage.getItem('dlg_ok');
   if (stored === VAL) return; // already authed this session
   if (params.get(KEY) === VAL) {
-    // Store for this session so bookmark without key still works
+    try { sessionStorage.setItem('dlg_ok', VAL); localStorage.setItem('dlg_ok', VAL); } catch(e){}
+    return;
+  }
+  // Allow payment return URLs (Stripe checkout success/cancel)
+  if (params.get('payment') === 'success' || params.get('payment') === 'cancelled') {
+    try { sessionStorage.setItem('dlg_ok', VAL); localStorage.setItem('dlg_ok', VAL); } catch(e){}
+    return;
+  }
+  // Allow pricing plan URLs — redirect to checkout instead of blocking
+  var plan = params.get('plan');
+  if (plan && ['starter','professional','enterprise'].includes(plan)) {
     try { sessionStorage.setItem('dlg_ok', VAL); localStorage.setItem('dlg_ok', VAL); } catch(e){}
     return;
   }
@@ -1971,7 +1981,8 @@ function getV3Project(inf) {
     accent: inf.accent || '#0066FF', location: localStorage.getItem('dynasty_location') || '',
     price_pro_cents: (parseInt(localStorage.getItem('dynasty_price_pro') || '49') || 49) * 100,
     price_enterprise_cents: (parseInt(localStorage.getItem('dynasty_price_enterprise') || '199') || 199) * 100,
-    services: inf.type_label || ''
+    services: inf.type_label || '',
+    vercel_project_id: provRes?.results?.vercel?.project_id || null
   };
 }
 
@@ -1981,12 +1992,15 @@ function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 
 // ── V3 Tier Gating ─────────────────────────────────────────────────
 const V3_TIERS = {
-  starter: { price: 297, label: 'Starter ($297)', modules: ['hosting', 'billing', 'email', 'seo', 'docs', 'analytics'] },
-  professional: { price: 997, label: 'Professional ($997)', modules: ['hosting', 'billing', 'email', 'seo', 'docs', 'analytics', 'phone', 'sms', 'chatbot', 'automation', 'leads', 'video', 'design'] },
-  enterprise: { price: 2497, label: 'Enterprise ($2,497)', modules: ['hosting', 'billing', 'email', 'seo', 'docs', 'analytics', 'phone', 'sms', 'chatbot', 'automation', 'leads', 'video', 'design', 'crm', 'directory', 'wordpress', 'social'] }
+  starter: { price: 297, label: 'Starter ($297)', modules: [] }, // Code + docs + deployment only
+  professional: { price: 997, label: 'Professional ($997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'] },
+  enterprise: { price: 2497, label: 'Enterprise ($2,497)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify'] }
 };
 function getUserTier() {
-  return localStorage.getItem('dynasty_tier') || 'enterprise'; // Default to enterprise for now (gating comes in Sprint 6)
+  // Check URL params first (set by Stripe checkout success redirect)
+  const urlTier = new URLSearchParams(window.location.search).get('tier');
+  if (urlTier && V3_TIERS[urlTier]) { localStorage.setItem('dynasty_tier', urlTier); return urlTier; }
+  return localStorage.getItem('dynasty_tier') || 'starter'; // Default to starter (gated)
 }
 function isModuleAllowed(moduleName) {
   const tier = getUserTier();
@@ -2026,6 +2040,17 @@ async function startCheckout(plan) {
   }
 }
 
+// Check for plan purchase redirect from homepage (e.g. ?plan=professional)
+(function checkPlanPurchase() {
+  const params = new URLSearchParams(window.location.search);
+  const plan = params.get('plan');
+  if (plan && ['starter', 'professional', 'enterprise'].includes(plan) && !params.get('payment')) {
+    localStorage.setItem('dynasty_tier', plan);
+    window.history.replaceState({}, '', window.location.pathname);
+    startCheckout(plan);
+  }
+})();
+
 // Check for payment return
 (function checkPaymentReturn() {
   const params = new URLSearchParams(window.location.search);
@@ -2033,9 +2058,11 @@ async function startCheckout(plan) {
   const sessionId = params.get('session_id');
   
   if (payment === 'success' && sessionId) {
-    // Verify and store payment
+    // Verify and store payment + tier
     localStorage.setItem('dynasty_paid_session', sessionId);
     localStorage.setItem('dynasty_paid_at', new Date().toISOString());
+    const tier = params.get('tier');
+    if (tier) localStorage.setItem('dynasty_tier', tier);
     // Clean URL
     window.history.replaceState({}, '', window.location.pathname);
     // Go straight to builder
