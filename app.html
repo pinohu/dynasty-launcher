@@ -7449,7 +7449,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       try {
         const v3Resp = await fetch('/api/provision?action=provision_modules', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules })
+          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: localStorage.getItem('dynasty_tier') || 'enterprise' })
         });
         v3Results = await v3Resp.json();
         if (v3Results.ok) {
@@ -7464,6 +7464,16 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
             }
           }
           setP('v3-start', 'ok', `${v3Results.summary?.succeeded || 0}/${v3Results.summary?.total || 0} modules provisioned`);
+          // Show gated modules warning
+          if (v3Results.gated?.modules?.length) {
+            addP('v3-gated', `Tier upgrade available`);
+            setP('v3-gated', 'sk', v3Results.gated.message);
+          }
+          // Add V3 module costs to build total
+          if (v3Results.totalCost) V2_BUILD_COST += v3Results.totalCost;
+          // Store module results for done screen
+          if (provRes) provRes.modules = v3Results.modules;
+          else provRes = { results: {}, modules: v3Results.modules };
         } else {
           setP('v3-start', 'sk', v3Results.error || 'Module provisioning failed');
         }
