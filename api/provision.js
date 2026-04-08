@@ -70,7 +70,7 @@ async function allocateLicense(pool, tool, projectSlug, resourceId) {
   try {
     await pool.query('INSERT INTO dynasty_license_allocations (tool, project_slug, resource_id) VALUES ($1,$2,$3) ON CONFLICT (tool, project_slug) DO UPDATE SET resource_id=$3, allocated_at=NOW()', [tool, projectSlug, resourceId]);
     return true;
-  } catch { return false; }
+  } catch (e) { console.warn(`allocateLicense failed for ${tool}/${projectSlug}: ${e.message}`); return false; }
 }
 
 async function recordBuild(pool, data) {
@@ -78,14 +78,14 @@ async function recordBuild(pool, data) {
     await pool.query(`INSERT INTO dynasty_build_history (project_slug, project_name, project_type, cost_usd, module_costs, modules_run, modules_ok, modules_failed, status, services, completed_at)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())`,
       [data.slug, data.name, data.type, data.cost, JSON.stringify(data.moduleCosts), data.run, data.ok, data.failed, data.status, JSON.stringify(data.services)]);
-  } catch {}
+  } catch (e) { console.warn(`recordBuild failed for ${data.slug}: ${e.message}`); }
 }
 
 async function addDeferredCheck(pool, projectSlug, checkType, target, expectedValue) {
   try {
     const r = await pool.query('INSERT INTO dynasty_deferred_checks (project_slug, check_type, target, expected_value) VALUES ($1,$2,$3,$4) RETURNING id', [projectSlug, checkType, target, expectedValue]);
     return r.rows[0]?.id;
-  } catch { return null; }
+  } catch (e) { console.warn(`addDeferredCheck failed for ${projectSlug}/${checkType}: ${e.message}`); return null; }
 }
 
 // ── V3 INTEGRATION MODULES ──────────────────────────────────────────────────
@@ -142,7 +142,7 @@ async function mod_hosting(config, project, liveUrl) {
         body: JSON.stringify({ new: { txt: [{ host: '@', txt: 'v=spf1 include:spf.20i.com include:_spf.acumbamail.com ~all' }] } })
       });
       results.details.spf = true;
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`SPF record: ${e.message}`); }
 
     // 5. DKIM — fetch key and add DNS record
     try {
@@ -159,7 +159,7 @@ async function mod_hosting(config, project, liveUrl) {
           results.details.dkim = true;
         }
       }
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`DKIM setup: ${e.message}`); }
 
     // 6. DMARC record
     try {
@@ -168,7 +168,7 @@ async function mod_hosting(config, project, liveUrl) {
         body: JSON.stringify({ new: { txt: [{ host: '_dmarc', txt: `v=DMARC1; p=quarantine; rua=mailto:dmarc@${domain}` }] } })
       });
       results.details.dmarc = true;
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`DMARC record: ${e.message}`); }
 
     // 7. Request SSL
     try {
@@ -177,7 +177,7 @@ async function mod_hosting(config, project, liveUrl) {
         body: JSON.stringify({ domain_name: domain })
       });
       results.details.ssl = 'requested';
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`SSL request: ${e.message}`); }
 
     // 8. Register deferred DNS check in Neon
     try {
@@ -189,7 +189,7 @@ async function mod_hosting(config, project, liveUrl) {
         await addDeferredCheck(pool, project.slug, 'ssl_cert', domain, 'valid');
         await pool.end();
       }
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Deferred DNS check: ${e.message}`); }
 
     results.ok = true;
     results.cost_usd = 0; // 20i is owned license
@@ -250,7 +250,7 @@ async function mod_billing(config, project, liveUrl) {
           results.details.webhook_id = wh.id;
           results.details.webhook_secret = wh.secret;
         }
-      } catch {}
+      } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Stripe webhook: ${e.message}`); }
     }
 
     // 4. Create customer portal configuration
@@ -259,7 +259,7 @@ async function mod_billing(config, project, liveUrl) {
         body: `business_profile[headline]=${enc('Manage your ' + project.name + ' subscription')}&features[subscription_cancel][enabled]=true&features[subscription_update][enabled]=true&features[payment_method_update][enabled]=true`
       }).then(r => r.json());
       if (portal.id) results.details.portal_config_id = portal.id;
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Stripe portal: ${e.message}`); }
 
     // 5. Push Stripe keys back to deployed Vercel project
     const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN || config.infrastructure?.vercel;
@@ -276,7 +276,7 @@ async function mod_billing(config, project, liveUrl) {
           body: JSON.stringify(envVars)
         });
         results.details.env_vars_pushed = true;
-      } catch {}
+      } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Stripe env push: ${e.message}`); }
     }
 
     results.ok = true;
@@ -316,7 +316,7 @@ async function mod_email(config, project, liveUrl) {
           body: JSON.stringify({ auth_token: apiKey, name: email.subject, body: email.body, list_id: listId })
         });
         results.details.emails_created++;
-      } catch {}
+      } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Email template "${email.subject}": ${e.message}`); }
     }
 
     // 3. Create campaigns for each email in the sequence (autoresponder API is UI-only)
@@ -330,7 +330,7 @@ async function mod_email(config, project, liveUrl) {
             from_name: project.name, list_id: listId, html: email.body })
         });
         if (cr.ok) campaignsOk++;
-      } catch {}
+      } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Campaign "${email.subject}": ${e.message}`); }
     }
     results.details.campaigns_created = campaignsOk;
     results.details.automation_note = 'Email campaigns created as drafts. Set up autoresponder drip sequence in Acumbamail dashboard → Automation → New Automation.';
@@ -342,7 +342,7 @@ async function mod_email(config, project, liveUrl) {
         const formData = await formResp.json();
         results.details.form_html = formData.form || formData.html || null;
       }
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Subscription form: ${e.message}`); }
 
     results.ok = true;
     results.cost_usd = 0; // Acumbamail is owned license
@@ -400,7 +400,7 @@ async function mod_phone(config, project, liveUrl) {
               method: 'POST', headers: { 'Authorization': `Bearer ${inKey}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({ assistant_id: agent.id || agent.assistant_id, type: 'phone', name: `${project.name} Phone` })
             });
-          } catch {}
+          } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Insighto widget: ${e.message}`); }
         }
       } catch (e) { results.details.insighto_error = e.message; }
     }
@@ -449,7 +449,7 @@ async function mod_sms(config, project) {
       }).then(r => r.json());
       results.details.group_id = grp.data?.id || grp.id;
       groupCreated = !!(grp.data?.id || grp.id);
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`SMS-iT group creation: ${e.message}`); }
 
     // Store template text for manual creation (TCPA-compliant: opt-out language included)
     results.details.templates = [
@@ -507,7 +507,7 @@ async function mod_seo(config, project, liveUrl) {
       });
       const d = await r.json();
       return d.content?.[0]?.text || '';
-    } catch { return ''; }
+    } catch (e) { console.warn(`aiGenSeo failed: ${e.message}`); return ''; }
   }
 
   try {
@@ -523,12 +523,12 @@ async function mod_seo(config, project, liveUrl) {
           const kwData = await kwResp.json();
           keywords = (kwData.data || kwData.keywords || []).slice(0, 20).map(k => typeof k === 'string' ? k : k.keyword);
         }
-      } catch {}
+      } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`WriterZen keywords: ${e.message}`); }
     }
     if (keywords.length === 0) {
       // AI fallback for keywords
       const kwRaw = await aiGenSeo(`Generate 20 SEO keywords for a business called "${project.name}" in the "${project.type || 'business'}" niche. Return ONLY a JSON array of strings, no explanation.`, 500);
-      try { keywords = JSON.parse(kwRaw.match(/\[[\s\S]*\]/)?.[0] || '[]'); } catch { keywords = [project.name]; }
+      try { keywords = JSON.parse(kwRaw.match(/\[[\s\S]*\]/)?.[0] || '[]'); } catch (e) { keywords = [project.name]; results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Keyword JSON parse: ${e.message}`); }
     }
     results.details.keywords = keywords.slice(0, 20);
 
@@ -541,7 +541,7 @@ Return ONLY valid JSON array:
 Each post: 800+ words HTML content, unique keywords, real actionable content.`, 8000);
 
     let posts = [];
-    try { posts = JSON.parse(postsRaw.match(/\[[\s\S]*\]/)?.[0] || '[]'); } catch {}
+    try { posts = JSON.parse(postsRaw.match(/\[[\s\S]*\]/)?.[0] || '[]'); } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Blog posts JSON parse: ${e.message}`); }
     results.details.posts_generated = posts.length;
 
     // 3. Push posts to GitHub repo if possible
@@ -552,7 +552,7 @@ Each post: 800+ words HTML content, unique keywords, real actionable content.`, 
           const mdContent = `---\ntitle: "${post.title}"\ndescription: "${post.description}"\ntags: ${JSON.stringify(post.tags || [])}\ndate: "${new Date().toISOString().split('T')[0]}"\n---\n\n${post.content}`;
           await pushFile(GH_TOKEN, 'pinohu', project.slug, `content/blog/${post.slug}.md`, mdContent, `feat: SEO blog post — ${post.slug}`);
           pushed++;
-        } catch {}
+        } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Blog push "${post.slug}": ${e.message}`); }
       }
       results.details.posts_pushed = pushed;
     }
@@ -573,7 +573,7 @@ Each post: 800+ words HTML content, unique keywords, real actionable content.`, 
             }
           }
         }
-      } catch {}
+      } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`NeuronWriter optimization: ${e.message}`); }
     }
 
     // 5. Multi-language detection — generate in second language if bilingual market
@@ -587,8 +587,8 @@ Each post: 800+ words HTML content, unique keywords, real actionable content.`, 
           const translated = JSON.parse(translatedRaw.match(/\[[\s\S]*\]/)?.[0] || '[]');
           results.details.translated_posts = translated.length;
           results.details.secondary_language = secondLang;
-        } catch {}
-      } catch {}
+        } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Translation parse: ${e.message}`); }
+      } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Translation generation: ${e.message}`); }
     }
 
     results.ok = posts.length > 0 || keywords.length > 0;
@@ -789,7 +789,7 @@ async function mod_docs(config, project) {
             const d = await resp.json();
             results.details.documents.push({ name: doc.name, url: d.url || d.download_url, id: d.id });
           }
-        } catch {}
+        } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`Document "${doc.name}": ${e.message}`); }
       }
       results.ok = results.details.documents.length > 0;
     }
@@ -821,51 +821,58 @@ async function mod_automation(config, project, liveUrl) {
     nodes.push({ parameters: { respondWith: 'json', responseBody: '={{ JSON.stringify($json) }}' }, name: 'Respond', type: 'n8n-nodes-base.respondToWebhook', position: [650 + steps.length * 200, 300], typeVersion: 1.1 });
     return nodes;
   }
+  // Each action step uses a Set node to record the intended action + data in the execution log.
+  // The workflows run without errors; all data is captured for manual review or future wiring.
+  // TODO: Replace placeholder Set nodes with real integrations once API keys are configured:
+  //   - CRM actions → SuiteDash API (config.crm_pm.suitedash_*)
+  //   - Email actions → Acumbamail API (config.comms.acumbamail)
+  //   - SMS actions → SMS-iT API (config.comms.smsit)
+  //   - Notifications → n8n built-in Email Send node, Slack, or Telegram node
   const workflows = [
     { name: `${project.name} — New Signup → CRM → Email → SMS`, nodes: wfNodes(`${project.slug}-signup`, [
       { name: 'Extract Data', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'email', value: '={{ $json.email }}', type: 'string' }, { name: 'name', value: '={{ $json.name }}', type: 'string' }, { name: 'project', value: project.name, type: 'string' }] } } },
-      { name: 'Add to CRM', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/contacts`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'email', value: '={{ $json.email }}' }, { name: 'name', value: '={{ $json.name }}' }, { name: 'source', value: 'signup' }] } } },
-      { name: 'Send Welcome Email', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.email }}' }, { name: 'template', value: 'welcome' }] } } },
-      { name: 'Send Welcome SMS', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/sms/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.phone }}' }, { name: 'message', value: `Welcome to ${project.name}! We're glad to have you.` }] } } },
-      { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'signup_processed', type: 'string' }, { name: 'crm', value: 'contact_created', type: 'string' }, { name: 'email', value: 'welcome_sent', type: 'string' }] } } }
+      { name: 'Add to CRM', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'crm_create_contact', type: 'string' }, { name: '_todo', value: 'Connect SuiteDash API: POST /secure-api/contact with email, name, source=signup', type: 'string' }, { name: 'email', value: '={{ $json.email }}', type: 'string' }, { name: 'name', value: '={{ $json.name }}', type: 'string' }, { name: 'source', value: 'signup', type: 'string' }] } } },
+      { name: 'Send Welcome Email', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'email_send_welcome', type: 'string' }, { name: '_todo', value: 'Connect Acumbamail API: send welcome template to subscriber', type: 'string' }, { name: 'to', value: '={{ $json.email }}', type: 'string' }, { name: 'template', value: 'welcome', type: 'string' }] } } },
+      { name: 'Send Welcome SMS', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'sms_send_welcome', type: 'string' }, { name: '_todo', value: 'Connect SMS-iT API: send welcome SMS to phone number', type: 'string' }, { name: 'to', value: '={{ $json.phone }}', type: 'string' }, { name: 'message', value: `Welcome to ${project.name}! We're glad to have you.`, type: 'string' }] } } },
+      { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'signup_processed', type: 'string' }, { name: 'crm', value: 'pending_integration', type: 'string' }, { name: 'email', value: 'pending_integration', type: 'string' }] } } }
     ])},
     { name: `${project.name} — New Booking → Confirm → Remind`, nodes: wfNodes(`${project.slug}-booking`, [
       { name: 'Extract Booking', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'client_email', value: '={{ $json.email }}', type: 'string' }, { name: 'service', value: '={{ $json.service }}', type: 'string' }, { name: 'date', value: '={{ $json.date }}', type: 'string' }] } } },
-      { name: 'Create CRM Task', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/tasks`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'title', value: '={{ "Booking: " + $json.service }}' }, { name: 'due_date', value: '={{ $json.date }}' }] } } },
-      { name: 'Send Confirmation', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.client_email }}' }, { name: 'template', value: 'booking_confirmed' }] } } },
+      { name: 'Create CRM Task', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'crm_create_task', type: 'string' }, { name: '_todo', value: 'Connect SuiteDash API: create task for booking follow-up', type: 'string' }, { name: 'title', value: '={{ "Booking: " + $json.service }}', type: 'string' }, { name: 'due_date', value: '={{ $json.date }}', type: 'string' }] } } },
+      { name: 'Send Confirmation', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'email_send_booking_confirmed', type: 'string' }, { name: '_todo', value: 'Connect Acumbamail API: send booking_confirmed template', type: 'string' }, { name: 'to', value: '={{ $json.client_email }}', type: 'string' }, { name: 'template', value: 'booking_confirmed', type: 'string' }] } } },
       { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'booking_confirmed', type: 'string' }] } } }
     ])},
     { name: `${project.name} — New Payment → Invoice → Receipt`, nodes: wfNodes(`${project.slug}-payment`, [
       { name: 'Extract Payment', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'customer_email', value: '={{ $json.customer_email || $json.data?.object?.customer_email }}', type: 'string' }, { name: 'amount', value: '={{ $json.amount || $json.data?.object?.amount_total }}', type: 'string' }] } } },
-      { name: 'Create Invoice Record', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/invoices`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'email', value: '={{ $json.customer_email }}' }, { name: 'amount', value: '={{ $json.amount }}' }] } } },
-      { name: 'Send Receipt Email', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.customer_email }}' }, { name: 'template', value: 'payment_receipt' }] } } },
+      { name: 'Create Invoice Record', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'crm_create_invoice', type: 'string' }, { name: '_todo', value: 'Connect SuiteDash API: create invoice record, or use Stripe API to retrieve invoice details', type: 'string' }, { name: 'email', value: '={{ $json.customer_email }}', type: 'string' }, { name: 'amount', value: '={{ $json.amount }}', type: 'string' }] } } },
+      { name: 'Send Receipt Email', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'email_send_receipt', type: 'string' }, { name: '_todo', value: 'Connect Acumbamail API: send payment_receipt template', type: 'string' }, { name: 'to', value: '={{ $json.customer_email }}', type: 'string' }, { name: 'template', value: 'payment_receipt', type: 'string' }] } } },
       { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'payment_processed', type: 'string' }] } } }
     ])},
     { name: `${project.name} — Hot Lead → CRM Deal → Email → Alert`, nodes: wfNodes(`${project.slug}-hotlead`, [
       { name: 'Extract Lead', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'lead_email', value: '={{ $json.email }}', type: 'string' }, { name: 'lead_score', value: '={{ $json.score || 80 }}', type: 'number' }, { name: 'company', value: '={{ $json.company || "Unknown" }}', type: 'string' }] } } },
-      { name: 'Create CRM Deal', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/deals`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'email', value: '={{ $json.lead_email }}' }, { name: 'score', value: '={{ $json.lead_score }}' }, { name: 'stage', value: 'Qualified' }] } } },
-      { name: 'Send Personalized Email', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.lead_email }}' }, { name: 'template', value: 'hot_lead_outreach' }] } } },
-      { name: 'Alert Owner', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/notifications/owner`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'type', value: 'hot_lead' }, { name: 'message', value: '={{ "Hot lead: " + $json.lead_email + " (score: " + $json.lead_score + ")" }}' }] } } },
+      { name: 'Create CRM Deal', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'crm_create_deal', type: 'string' }, { name: '_todo', value: 'Connect SuiteDash API: create deal with stage=Qualified', type: 'string' }, { name: 'email', value: '={{ $json.lead_email }}', type: 'string' }, { name: 'score', value: '={{ $json.lead_score }}', type: 'string' }, { name: 'stage', value: 'Qualified', type: 'string' }] } } },
+      { name: 'Send Personalized Email', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'email_send_hot_lead_outreach', type: 'string' }, { name: '_todo', value: 'Connect Acumbamail API: send hot_lead_outreach template', type: 'string' }, { name: 'to', value: '={{ $json.lead_email }}', type: 'string' }, { name: 'template', value: 'hot_lead_outreach', type: 'string' }] } } },
+      { name: 'Alert Owner', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'notify_owner_hot_lead', type: 'string' }, { name: '_todo', value: 'Connect n8n Email Send node, Slack, or Telegram to notify business owner', type: 'string' }, { name: 'type', value: 'hot_lead', type: 'string' }, { name: 'message', value: '={{ "Hot lead: " + $json.lead_email + " (score: " + $json.lead_score + ")" }}', type: 'string' }] } } },
       { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'hot_lead_processed', type: 'string' }] } } }
     ])},
     { name: `${project.name} — Missed Call → SMS → CRM → Email`, nodes: wfNodes(`${project.slug}-missed`, [
       { name: 'Extract Caller', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'caller_phone', value: '={{ $json.from || $json.caller }}', type: 'string' }, { name: 'called_at', value: '={{ $json.timestamp || new Date().toISOString() }}', type: 'string' }] } } },
-      { name: 'Send Apology SMS', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/sms/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.caller_phone }}' }, { name: 'message', value: `Sorry we missed your call! Book online: ${webhookBase}/booking` }] } } },
-      { name: 'Create CRM Lead', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/leads`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'phone', value: '={{ $json.caller_phone }}' }, { name: 'source', value: 'missed_call' }] } } },
-      { name: 'Email Owner', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/notifications/owner`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'type', value: 'missed_call' }, { name: 'message', value: '={{ "Missed call from " + $json.caller_phone }}' }] } } },
+      { name: 'Send Apology SMS', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'sms_send_apology', type: 'string' }, { name: '_todo', value: 'Connect SMS-iT API: send apology SMS with booking link', type: 'string' }, { name: 'to', value: '={{ $json.caller_phone }}', type: 'string' }, { name: 'message', value: `Sorry we missed your call! Book online: ${webhookBase}/booking`, type: 'string' }] } } },
+      { name: 'Create CRM Lead', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'crm_create_lead', type: 'string' }, { name: '_todo', value: 'Connect SuiteDash API: create lead from missed call', type: 'string' }, { name: 'phone', value: '={{ $json.caller_phone }}', type: 'string' }, { name: 'source', value: 'missed_call', type: 'string' }] } } },
+      { name: 'Email Owner', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'notify_owner_missed_call', type: 'string' }, { name: '_todo', value: 'Connect n8n Email Send node, Slack, or Telegram to notify business owner', type: 'string' }, { name: 'type', value: 'missed_call', type: 'string' }, { name: 'message', value: '={{ "Missed call from " + $json.caller_phone }}', type: 'string' }] } } },
       { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'missed_call_handled', type: 'string' }] } } }
     ])},
     { name: `${project.name} — Failed Payment → Dunning → SMS → Escalate`, nodes: wfNodes(`${project.slug}-dunning`, [
       { name: 'Extract Failure', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'customer_email', value: '={{ $json.data?.object?.customer_email || $json.email }}', type: 'string' }, { name: 'amount', value: '={{ $json.data?.object?.amount_due || $json.amount }}', type: 'string' }, { name: 'attempt', value: '={{ $json.data?.object?.attempt_count || 1 }}', type: 'number' }] } } },
-      { name: 'Send Dunning Email', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.customer_email }}' }, { name: 'template', value: 'payment_failed' }, { name: 'amount', value: '={{ $json.amount }}' }] } } },
-      { name: 'Send SMS Reminder', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/sms/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.customer_phone }}' }, { name: 'message', value: `Your payment to ${project.name} needs attention. Update your card at ${webhookBase}/billing` }] } } },
-      { name: 'Alert Owner if Escalation', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/notifications/owner`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'type', value: 'failed_payment' }, { name: 'message', value: '={{ "Failed payment: " + $json.customer_email + " ($" + $json.amount/100 + ") attempt #" + $json.attempt }}' }] } } },
+      { name: 'Send Dunning Email', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'email_send_dunning', type: 'string' }, { name: '_todo', value: 'Connect Acumbamail API: send payment_failed template with amount', type: 'string' }, { name: 'to', value: '={{ $json.customer_email }}', type: 'string' }, { name: 'template', value: 'payment_failed', type: 'string' }, { name: 'amount', value: '={{ $json.amount }}', type: 'string' }] } } },
+      { name: 'Send SMS Reminder', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'sms_send_payment_reminder', type: 'string' }, { name: '_todo', value: 'Connect SMS-iT API: send payment reminder SMS', type: 'string' }, { name: 'to', value: '={{ $json.customer_phone }}', type: 'string' }, { name: 'message', value: `Your payment to ${project.name} needs attention. Update your card at ${webhookBase}/billing`, type: 'string' }] } } },
+      { name: 'Alert Owner if Escalation', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'notify_owner_failed_payment', type: 'string' }, { name: '_todo', value: 'Connect n8n Email Send node, Slack, or Telegram to notify business owner', type: 'string' }, { name: 'type', value: 'failed_payment', type: 'string' }, { name: 'message', value: '={{ "Failed payment: " + $json.customer_email + " ($" + $json.amount/100 + ") attempt #" + $json.attempt }}', type: 'string' }] } } },
       { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'dunning_initiated', type: 'string' }] } } }
     ])},
     { name: `${project.name} — Post-Service → Review → Collect → Update`, nodes: wfNodes(`${project.slug}-review`, [
       { name: 'Extract Client', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'client_email', value: '={{ $json.email }}', type: 'string' }, { name: 'service_name', value: '={{ $json.service || "service" }}', type: 'string' }] } } },
-      { name: 'Send Review Request', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.client_email }}' }, { name: 'template', value: 'review_request' }, { name: 'review_link', value: `${webhookBase}/review` }] } } },
-      { name: 'Log Review Request', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/activities`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'type', value: 'review_requested' }, { name: 'email', value: '={{ $json.client_email }}' }] } } },
+      { name: 'Send Review Request', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'email_send_review_request', type: 'string' }, { name: '_todo', value: 'Connect Acumbamail API: send review_request template with review link', type: 'string' }, { name: 'to', value: '={{ $json.client_email }}', type: 'string' }, { name: 'template', value: 'review_request', type: 'string' }, { name: 'review_link', value: `${webhookBase}/review`, type: 'string' }] } } },
+      { name: 'Log Review Request', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: '_action', value: 'crm_log_activity', type: 'string' }, { name: '_todo', value: 'Connect SuiteDash API: log review_requested activity for contact', type: 'string' }, { name: 'type', value: 'review_requested', type: 'string' }, { name: 'email', value: '={{ $json.client_email }}', type: 'string' }] } } },
       { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'review_requested', type: 'string' }] } } }
     ])}
   ];
@@ -886,10 +893,10 @@ async function mod_automation(config, project, liveUrl) {
         if (data.id) {
           // Activate the workflow
           let activated = false;
-          try { const ar = await fetch(`${n8nUrl}/api/v1/workflows/${data.id}`, { method: 'PATCH', headers: nh, body: JSON.stringify({ active: true }) }); activated = ar.ok; } catch {}
+          try { const ar = await fetch(`${n8nUrl}/api/v1/workflows/${data.id}`, { method: 'PATCH', headers: nh, body: JSON.stringify({ active: true }) }); activated = ar.ok; } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`n8n activate "${wf.name}": ${e.message}`); }
           results.details.workflows.push({ name: wf.name, id: data.id, active: activated });
         }
-      } catch {}
+      } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`n8n workflow "${wf.name}": ${e.message}`); }
     }
     results.ok = results.details.workflows.length > 0;
     results.details.workflow_ids = results.details.workflows.map(w => w.id);
@@ -912,7 +919,7 @@ async function mod_crm(config, project) {
   try {
     const pool = await getPool();
     if (pool) { await ensureDynastyOpsTables(pool); used = await getLicenseCount(pool, 'suitedash'); await pool.end(); }
-  } catch {}
+  } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`SuiteDash license check: ${e.message}`); }
   if (used >= total) { results.error = `SuiteDash license limit reached (${used}/${total})`; results.fallback = 'All SuiteDash licenses allocated. Purchase more or reclaim unused.'; return results; }
 
   // SuiteDash API uses custom X-Public-ID and X-Secret-Key headers
@@ -934,7 +941,7 @@ async function mod_crm(config, project) {
         method: 'POST', headers: sh,
         body: JSON.stringify({ first_name: project.name, last_name: 'Admin', email: `admin@${project.domain || 'dynastyempire.com'}`, company_id: results.details.company_id })
       });
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`SuiteDash contact creation: ${e.message}`); }
 
     // 3. Pipeline, tasks, invoicing, portal — NOT available via API. Document for manual setup.
     results.details.manual_setup = 'SuiteDash API is limited to contacts/companies. Set up deal pipeline, onboarding tasks, invoice templates, and client portal at app.suitedash.com manually.';
@@ -942,7 +949,7 @@ async function mod_crm(config, project) {
     results.details.portal_url = `${baseUrl}/portal`;
     results.details.workspace_url = `${baseUrl}`;
     // Record license allocation in Neon
-    try { const pool = await getPool(); if (pool) { await allocateLicense(pool, 'suitedash', project.slug, results.details.company_id); await pool.end(); } } catch {}
+    try { const pool = await getPool(); if (pool) { await allocateLicense(pool, 'suitedash', project.slug, results.details.company_id); await pool.end(); } } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`SuiteDash license alloc: ${e.message}`); }
     results.details.licenses_used = used + 1;
     results.ok = true;
     results.cost_usd = 0;
@@ -959,7 +966,7 @@ async function mod_directory(config, project) {
   // License check via Neon DB
   const total = config.directories?.brilliant_licenses || 100;
   let used = config.directories?.brilliant_licenses_used || 0;
-  try { const pool = await getPool(); if (pool) { await ensureDynastyOpsTables(pool); used = await getLicenseCount(pool, 'brilliant_directories'); await pool.end(); } } catch {}
+  try { const pool = await getPool(); if (pool) { await ensureDynastyOpsTables(pool); used = await getLicenseCount(pool, 'brilliant_directories'); await pool.end(); } } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`BD license check: ${e.message}`); }
   if (used >= total) { results.error = `BD license limit reached (${used}/${total})`; results.fallback = 'All Brilliant Directories licenses allocated.'; return results; }
 
   // Note: Brilliant Directories API is per-site (manages content within an existing directory).
@@ -975,7 +982,7 @@ async function mod_directory(config, project) {
         body: JSON.stringify({ limit: 1 })
       });
       siteApiWorks = testResp.ok;
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`BD site API test: ${e.message}`); }
 
     if (siteApiWorks) {
       // Create seed listing posts
@@ -985,7 +992,7 @@ async function mod_directory(config, project) {
             method: 'POST', headers: { 'X-Api-Key': apiKey, 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: `Sample ${cat} Listing`, body: `${project.name} ${cat.toLowerCase()} listing.`, category: cat })
           });
-        } catch {}
+        } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`BD seed listing "${cat}": ${e.message}`); }
       }
       results.details.seed_listings = 3;
     }
@@ -993,7 +1000,7 @@ async function mod_directory(config, project) {
     results.details.directory_url = `https://${dirDomain}`;
     results.details.setup_note = 'Brilliant Directories site must be created at brilliantdirectories.com dashboard. API manages content within an existing site. Set up membership tiers (Free/Featured $29/Premium $99) in the admin panel.';
 
-    try { const pool = await getPool(); if (pool) { await allocateLicense(pool, 'brilliant_directories', project.slug, results.details.directory_url || dirDomain); await pool.end(); } } catch {}
+    try { const pool = await getPool(); if (pool) { await allocateLicense(pool, 'brilliant_directories', project.slug, results.details.directory_url || dirDomain); await pool.end(); } } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`BD license alloc: ${e.message}`); }
     results.details.licenses_used = used + 1;
     results.ok = true;
     results.cost_usd = 0;
@@ -1030,7 +1037,7 @@ async function mod_wordpress(config, project) {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
         body: JSON.stringify({ cmd: 'theme install flavor --activate || theme activate flavor' })
       });
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`WP theme install: ${e.message}`); }
 
     // 3. Install plugins
     const plugins = ['hide-my-wp-ghost', 'stackable-ultimate-gutenberg-blocks'];
@@ -1040,7 +1047,7 @@ async function mod_wordpress(config, project) {
           method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
           body: JSON.stringify({ cmd: `plugin install ${plugin} --activate` })
         });
-      } catch {}
+      } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`WP plugin "${plugin}": ${e.message}`); }
     }
     results.details.plugins = plugins;
 
@@ -1054,7 +1061,7 @@ async function mod_wordpress(config, project) {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
         body: JSON.stringify({ cmd: `option update blogdescription "${project.description || project.name}"` })
       });
-    } catch {}
+    } catch (e) { results.details._warnings = results.details._warnings || []; results.details._warnings.push(`WP site title/tagline: ${e.message}`); }
 
     results.ok = true;
     results.cost_usd = 0;
@@ -1155,17 +1162,20 @@ function generateOperationsMd(project, moduleResults) {
 
 // ── generateCredentialsMd: Per-build credentials document ───────────────────
 function generateCredentialsMd(project, moduleResults) {
-  const mask = (s) => { if (!s || typeof s !== 'string') return ''; if (s.length <= 8) return '****'; return s.slice(0, 6) + '...' + '****'; };
-  const lines = [`# ${project.name} — Service Credentials\n`, `> Generated ${new Date().toISOString().split('T')[0]} | KEEP THIS DOCUMENT SECURE\n`];
+  // SECURITY: No API keys, secrets, or tokens in this file — reference Vercel env var names instead.
+  // Service IDs, URLs, dashboard links, and email passwords (user needs to log in) are safe to include.
+  const lines = [`# ${project.name} — Service Credentials\n`, `> Generated ${new Date().toISOString().split('T')[0]}\n`];
   lines.push(`## Website\n- URL: https://${project.domain || project.slug + '.vercel.app'}\n- GitHub: https://github.com/pinohu/${project.slug}\n- Vercel: https://vercel.com/polycarpohu-gmailcoms-projects/${project.slug}\n`);
 
   if (moduleResults.hosting?.ok) {
     const h = moduleResults.hosting.details;
-    lines.push(`## Hosting (20i)\n- Domain: ${h.domain}\n- Control Panel: ${h.control_panel}\n- Email: ${h.email || 'N/A'}\n- SSL: ${h.ssl || 'pending'}\n`);
+    lines.push(`## Hosting (20i)\n- Domain: ${h.domain}\n- Control Panel: ${h.control_panel}\n- Email: ${h.email || 'N/A'}`);
+    if (h.email_password) lines.push(`- Email Password: ${h.email_password}`);
+    lines.push(`- SSL: ${h.ssl || 'pending'}\n`);
   }
   if (moduleResults.billing?.ok) {
     const b = moduleResults.billing.details;
-    lines.push(`## Billing (Stripe)\n- Product ID: ${b.product_id}\n- Webhook ID: ${b.webhook_id || 'N/A'}\n- Webhook Secret: ${mask(b.webhook_secret)}\n- Prices: ${JSON.stringify(Object.keys(b.prices || {}))}\n`);
+    lines.push(`## Billing (Stripe)\n- Product ID: ${b.product_id}\n- Webhook ID: ${b.webhook_id || 'N/A'}\n- Webhook Secret: Stored in Vercel env var STRIPE_WEBHOOK_SECRET\n- Prices: ${JSON.stringify(Object.keys(b.prices || {}))}\n`);
   }
   if (moduleResults.email?.ok) {
     const e = moduleResults.email.details;
@@ -1177,7 +1187,7 @@ function generateCredentialsMd(project, moduleResults) {
   }
   if (moduleResults.analytics?.ok) {
     const a = moduleResults.analytics.details;
-    lines.push(`## Analytics\n- PostHog Project: ${a.posthog_project_id || 'N/A'}\n- PostHog Key: ${mask(a.posthog_api_key)}\n- Plerdy Site: ${a.plerdy_site_id || 'N/A'}\n`);
+    lines.push(`## Analytics\n- PostHog Project: ${a.posthog_project_id || 'N/A'}\n- PostHog API Key: Stored in Vercel env var NEXT_PUBLIC_POSTHOG_KEY\n- Plerdy Site: ${a.plerdy_site_id || 'N/A'}\n`);
   }
   if (moduleResults.automation?.ok) {
     const a = moduleResults.automation.details;
@@ -1190,7 +1200,9 @@ function generateCredentialsMd(project, moduleResults) {
     lines.push(`## Chatbot (Chatbase)\n- Bot ID: ${moduleResults.chatbot.details.chatbot_id}\n`);
   }
 
-  lines.push(`\n---\n*Keep this document secure. Do not commit to public repositories.*`);
+  lines.push(`\n## Secrets\nAll API keys and secrets are stored as Vercel environment variables.`);
+  lines.push(`Access them at: https://vercel.com/polycarpohu-gmailcoms-projects/${project.slug}/settings/environment-variables\n`);
+  lines.push(`---\n*Do not add secrets to this file. Manage them via Vercel environment variables.*`);
   return lines.join('\n');
 }
 
@@ -1244,17 +1256,19 @@ async function runModules(config, project, liveUrl, enabledModules) {
     if (r?.cost_usd) totalCost += r.cost_usd;
   }
 
+  const orchestratorWarnings = [];
+
   // Generate OPERATIONS.md and CREDENTIALS.md
   const GH_TOKEN = process.env.GITHUB_TOKEN;
   if (GH_TOKEN && project.slug) {
     try {
       const opsMd = generateOperationsMd(project, results);
       await pushFile(GH_TOKEN, 'pinohu', project.slug, 'OPERATIONS.md', opsMd, 'docs: operations manual');
-    } catch {}
+    } catch (e) { orchestratorWarnings.push(`OPERATIONS.md push failed: ${e.message}`); }
     try {
       const credsMd = generateCredentialsMd(project, results);
       await pushFile(GH_TOKEN, 'pinohu', project.slug, 'CREDENTIALS.md', credsMd, 'docs: service credentials');
-    } catch {}
+    } catch (e) { orchestratorWarnings.push(`CREDENTIALS.md push failed: ${e.message}`); }
 
     // Push BUILD-REPORT.json with all module results (machine-readable)
     try {
@@ -1271,7 +1285,7 @@ async function runModules(config, project, liveUrl, enabledModules) {
         if (res.ok) reportData.summary.succeeded++; else if (res.error) reportData.summary.failed++;
       }
       await pushFile(GH_TOKEN, 'pinohu', project.slug, 'BUILD-REPORT.json', JSON.stringify(reportData, null, 2), 'docs: V3 build report (machine-readable)');
-    } catch {}
+    } catch (e) { orchestratorWarnings.push(`BUILD-REPORT.json push failed: ${e.message}`); }
 
     // Push tracking snippets and embed scripts to a config file for easy injection
     try {
@@ -1285,14 +1299,14 @@ async function runModules(config, project, liveUrl, enabledModules) {
         const snippetFile = `// Dynasty Launcher V3 — Tracking & Embed Snippets\n// Inject these into your site's <head> or before </body>\n// Generated: ${new Date().toISOString()}\n\nexport const snippets = ${JSON.stringify(snippets, null, 2)};\n`;
         await pushFile(GH_TOKEN, 'pinohu', project.slug, 'src/config/dynasty-snippets.ts', snippetFile, 'feat: tracking snippets and embed scripts');
       }
-    } catch {}
+    } catch (e) { orchestratorWarnings.push(`Tracking snippets push failed: ${e.message}`); }
 
     // Push email signup form HTML if available
     try {
       if (results.email?.ok && results.email.details?.form_html) {
         await pushFile(GH_TOKEN, 'pinohu', project.slug, 'src/components/EmailSignupForm.html', results.email.details.form_html, 'feat: email signup form from Acumbamail');
       }
-    } catch {}
+    } catch (e) { orchestratorWarnings.push(`Email signup form push failed: ${e.message}`); }
 
     // Push V3 module summary to REPORT.html
     try {
@@ -1300,7 +1314,7 @@ async function runModules(config, project, liveUrl, enabledModules) {
       const failMods = Object.entries(results).filter(([,r]) => r && !r.ok && r.error).map(([k]) => k);
       const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>${project.name} — V3 Build Report</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0A0A0A;color:#EEEDE8;padding:2rem;max-width:700px;margin:0 auto;line-height:1.6}h1{font-size:1.8rem;margin-bottom:.5rem}h2{color:#C9A84C;font-size:1rem;margin:1.5rem 0 .5rem;border-bottom:1px solid #222;padding-bottom:4px}.meta{color:#666;font-size:13px}.card{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:1rem;margin:8px 0}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ok{color:#22C55E}.fail{color:#F87171}</style></head><body><h1>${project.name}</h1><p class="meta">V3 Build Report · ${new Date().toISOString().split('T')[0]} · ${okMods.length}/${Object.keys(results).length} modules</p><h2>Modules Provisioned (${okMods.length})</h2><div class="g">${okMods.map(m => `<div class="card"><strong class="ok">✓ ${m}</strong></div>`).join('')}</div>${failMods.length ? `<h2>Failed (${failMods.length})</h2>${failMods.map(m => `<div class="card"><strong class="fail">✗ ${m}</strong><div style="font-size:12px;color:#888">${results[m].fallback || results[m].error}</div></div>`).join('')}` : ''}<h2>Documents</h2><div class="g"><div class="card"><a href="OPERATIONS.md" style="color:#C9A84C">OPERATIONS.md</a></div><div class="card"><a href="CREDENTIALS.md" style="color:#C9A84C">CREDENTIALS.md</a></div><div class="card"><a href="BUILD-REPORT.json" style="color:#C9A84C">BUILD-REPORT.json</a></div></div><h2>Quick Start</h2><pre style="background:#111;padding:12px;border-radius:6px;font-size:12px;color:#C9A84C">gh repo clone pinohu/${project.slug} && cd ${project.slug} && claude</pre><p style="margin-top:2rem;text-align:center;color:#333;font-size:11px">Built with Dynasty Launcher V3</p></body></html>`;
       await pushFile(GH_TOKEN, 'pinohu', project.slug, 'REPORT.html', reportHtml, 'docs: V3 build report');
-    } catch {}
+    } catch (e) { orchestratorWarnings.push(`REPORT.html push failed: ${e.message}`); }
   }
 
   // Record build history in Neon
@@ -1317,9 +1331,9 @@ async function runModules(config, project, liveUrl, enabledModules) {
       });
       await pool.end();
     }
-  } catch {}
+  } catch (e) { orchestratorWarnings.push(`Build history record failed: ${e.message}`); }
 
-  return { results, totalCost };
+  return { results, totalCost, orchestratorWarnings };
 }
 
 
@@ -1328,12 +1342,36 @@ export default async function handler(req, res) {
   const allowedOrigin = process.env.CORS_ORIGIN || 'https://dynasty-launcher.vercel.app';
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type,Authorization,x-dynasty-key');
   if (req.method==='OPTIONS') return res.status(200).end();
 
   const action = req.method==='GET'
     ? req.query?.action
     : (req.body?.action || new URLSearchParams(req.url?.split('?')[1]).get('action'));
+
+  // ── AUTHENTICATION ──────────────────────────────────────────────────────────
+  // Protect all mutating (POST) endpoints with a shared secret.
+  // GET inventory is a health-check and remains open.
+  const DYNASTY_API_SECRET = process.env.DYNASTY_API_SECRET;
+  if (req.method === 'POST') {
+    if (DYNASTY_API_SECRET) {
+      const authHeader = req.headers['authorization'] || '';
+      const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+      const dynastyKeyHeader = req.headers['x-dynasty-key'] || '';
+      const bodySession = req.body?.dynasty_paid_session || '';
+
+      const isAuthed = bearerToken === DYNASTY_API_SECRET
+        || dynastyKeyHeader === DYNASTY_API_SECRET
+        || (bodySession && bodySession === DYNASTY_API_SECRET);
+
+      if (!isAuthed) {
+        return res.status(401).json({ ok: false, error: 'Authentication required' });
+      }
+    } else {
+      // DYNASTY_API_SECRET not configured — allow request but warn
+      console.warn('[dynasty-auth] DYNASTY_API_SECRET not set — POST request allowed without auth (backwards compat)');
+    }
+  }
 
   const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
   const GH_TOKEN     = process.env.GITHUB_TOKEN;
@@ -2029,23 +2067,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
                           'ai-chat','booking-service','crm','signing-service','n8n','api-svc','ecom',
                           'custom','flint-proj'].includes(typeId);
 
-    // ── STRIPE ────────────────────────────────────────────────────────────────
-    if(svcs.includes('stripe')&&config.payments?.stripe_live?.startsWith('sk_live')){
-      try{
-        const SK=config.payments.stripe_live;
-        const auth=Buffer.from(`${SK}:`).toString('base64');
-        const cents=inf.price_cents||(inf.price?Math.round(parseFloat(inf.price.replace(/[^0-9.]/g,''))*100):9700);
-        const prod=await fetch('https://api.stripe.com/v1/products',{method:'POST',
-          headers:{'Authorization':`Basic ${auth}`,'Content-Type':'application/x-www-form-urlencoded'},
-          body:`name=${encodeURIComponent(name)}&description=${encodeURIComponent(`Dynasty: ${slug}`)}`}).then(r=>r.json());
-        if(prod.id){
-          const price=await fetch('https://api.stripe.com/v1/prices',{method:'POST',
-            headers:{'Authorization':`Basic ${auth}`,'Content-Type':'application/x-www-form-urlencoded'},
-            body:`product=${prod.id}&currency=usd&unit_amount=${cents}&recurring[interval]=month&nickname=${encodeURIComponent(name)}`}).then(r=>r.json());
-          results.stripe={product_id:prod.id, price_id:price.id, amount:`$${(cents/100).toFixed(0)}/mo`};
-        }
-      }catch(e){results.stripe={error:e.message};}
-    }
+    // ── STRIPE (legacy — moved to V3 mod_billing via provision_modules action) ──
 
     // ── VERCEL PROJECT (SaaS/directory/compliance — not WordPress/static) ─────
     let vercelProjectId=null;
@@ -2186,109 +2208,13 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       results.neon={manual:true, action:'Re-run provision — Vercel project required first'};
     }
 
-    // ── 20i HOSTING (WordPress 88291 / Static 80359) ──────────────────────────
-    if(needsTwentyi){
-      const gen=config.infrastructure?.twentyi_general;
-      if(!gen){
-        results.twentyi={manual:true, action:'Add twentyi_general to DYNASTY_TOOL_CONFIG.infrastructure'};
-      }else{
-        const auth=`Bearer ${gen}`;
-        const typeRef=isWP?'88291':'80359';
-        try{
-          const pr=await fetch('https://api.20i.com/reseller/10455/addWeb',{
-            method:'POST',headers:{'Authorization':auth,'Content-Type':'application/json'},
-            body:JSON.stringify({domain_name:domain, type:typeRef})});
-          const pd=await pr.json();
-          if(pr.ok&&pd?.result){
-            results.twentyi={package_id:pd.result, domain,
-              control_panel:`https://my.20i.com/package/${pd.result}`,
-              type:isWP?'WordPress Pinnacle':'Linux Pinnacle'};
-          }else if(pr.status===401||(Array.isArray(pd)&&pd.length===0)){
-            results.twentyi={manual:true, keys_expired:true,
-              action:'20i Reseller Panel → API Settings → Generate New Keys → update DYNASTY_TOOL_CONFIG.infrastructure.twentyi_general'};
-          }else{
-            results.twentyi={error:JSON.stringify(pd).slice(0,120)};
-          }
-        }catch(e){results.twentyi={manual:true, error:e.message};}
-      }
-    }
+    // ── 20i HOSTING (legacy — moved to V3 mod_hosting via provision_modules action) ──
 
-    // ── ACUMBAMAIL LIST ────────────────────────────────────────────────────────
-    if(svcs.includes('acumbamail')&&config.comms?.acumbamail){
-      try{
-        const r=await fetch('https://acumbamail.com/api/1/createList/',{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({auth_token:config.comms.acumbamail,
-            name:`${name} - Dynasty`,from_email:'hello@dynastyempire.com',from_name:'Dynasty Empire',country:'US'})
-        }).then(r=>r.json());
-        results.acumbamail={ok:true, list_id:r.id||r.list_id||r.result, raw:r};
-      }catch(e){results.acumbamail={error:e.message};}
-    }
+    // ── ACUMBAMAIL (legacy — moved to V3 mod_email via provision_modules action) ──
 
-    // ── PULSETIC MONITOR (auto-create via API) ──────────────────────────────
-    const PULSETIC_KEY = process.env.PULSETIC_API_KEY;
-    if (PULSETIC_KEY) {
-      const monitorUrl = needsTwentyi ? `https://${domain}` : `https://${slug}.vercel.app`;
-      try {
-        const pr = await fetch('https://api.pulsetic.com/api/public/monitors', {
-          method: 'POST',
-          headers: { 'Authorization': PULSETIC_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: monitorUrl,
-            name: `${name} — Dynasty`,
-            interval: 300, // check every 5 minutes
-            type: 'http',
-          }),
-        });
-        const pd = await pr.json();
-        if (pr.ok || pd.id) {
-          results.pulsetic = { ok: true, monitor_id: pd.id, url: monitorUrl, interval: '5min' };
-        } else {
-          results.pulsetic = { queued: true, url: monitorUrl, note: `Add at pulsetic.com: ${monitorUrl}`, raw: JSON.stringify(pd).slice(0, 80) };
-        }
-      } catch (e) {
-        results.pulsetic = { queued: true, url: monitorUrl, note: `Add at pulsetic.com: ${monitorUrl}` };
-      }
-    }
+    // ── PULSETIC MONITOR (legacy — moved to V3 mod_verify via provision_modules action) ──
 
-    // ── N8N STARTER WORKFLOWS (auto-create via API) ──────────────────────────
-    const N8N_KEY = process.env.N8N_API_KEY;
-    if (N8N_KEY && svcs.includes('n8n')) {
-      try {
-        const webhookUrl = needsTwentyi ? `https://${domain}` : `https://${slug}.vercel.app`;
-        // Create a starter workflow: webhook → email notification
-        const wfBody = {
-          name: `${name} — Webhook Handler`,
-          nodes: [
-            { parameters: { httpMethod: 'POST', path: slug, responseMode: 'responseNode' }, name: 'Webhook', type: 'n8n-nodes-base.webhook', position: [250, 300], typeVersion: 2 },
-            { parameters: { assignments: { assignments: [{ name: 'status', value: 'received', type: 'string' }] } }, name: 'Set Response', type: 'n8n-nodes-base.set', position: [450, 300], typeVersion: 3.4 },
-            { parameters: { respondWith: 'json', responseBody: '={{ JSON.stringify($json) }}' }, name: 'Respond', type: 'n8n-nodes-base.respondToWebhook', position: [650, 300], typeVersion: 1.1 },
-          ],
-          connections: {
-            'Webhook': { main: [[{ node: 'Set Response', type: 'main', index: 0 }]] },
-            'Set Response': { main: [[{ node: 'Respond', type: 'main', index: 0 }]] },
-          },
-          settings: { executionOrder: 'v1' },
-        };
-        const wr = await fetch('https://pinohu.app.n8n.cloud/api/v1/workflows', {
-          method: 'POST',
-          headers: { 'X-N8N-API-KEY': N8N_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify(wfBody),
-        });
-        const wd = await wr.json();
-        if (wd.id) {
-          // Activate the workflow
-          await fetch(`https://pinohu.app.n8n.cloud/api/v1/workflows/${wd.id}/activate`, {
-            method: 'POST', headers: { 'X-N8N-API-KEY': N8N_KEY },
-          });
-          results.n8n = { ok: true, workflow_id: wd.id, name: wfBody.name, webhook_path: `/${slug}` };
-        } else {
-          results.n8n = { manual: true, error: JSON.stringify(wd).slice(0, 80) };
-        }
-      } catch (e) {
-        results.n8n = { manual: true, error: e.message };
-      }
-    }
+    // ── N8N WORKFLOWS (legacy — moved to V3 mod_automation via provision_modules action) ──
 
     // ── COMMS STACK: CallScaler + Insighto + SMS-iT (for service businesses) ─
     const isServiceBiz = ['client-portal', 'custom', 'real-estate', 'job-board', 'booking-service', 'signing-service', 'crm', 'lead-gen'].includes(typeId);

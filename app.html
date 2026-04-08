@@ -28,6 +28,7 @@
 <!-- Preconnect for performance -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/app.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--gold:#C9A84C;--gdim:rgba(201,168,76,0.08);--gb:rgba(201,168,76,0.2);--ink:#0A0A0A;--panel:#181818;--card:#1E1E1E;--card2:#252525;--bdr:rgba(255,255,255,0.07);--bmd:rgba(255,255,255,0.13);--tx:#EEEDE8;--sec:#908D86;--dim:#4A4845;--grn:#3ECF8E;--pur:#635BFF;--red:#E5534B;--r:8px;--rl:12px}
@@ -2197,11 +2198,19 @@ async function runPreBuildResearch(niche, location) {
   }
 }
 
+// ── Dynasty API Auth Headers ────────────────────────────────────────────────
+function getDynastyAuthHeaders() {
+  const key = localStorage.getItem('dynasty_api_key') || '';
+  const hdrs = { 'Content-Type': 'application/json' };
+  if (key) hdrs['x-dynasty-key'] = key;
+  return hdrs;
+}
+
 // ── Telegram Build Notification ──────────────────────────────────────────────
 async function sendTelegramNotification(message) {
   try {
     const r = await fetch('/api/provision', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getDynastyAuthHeaders(),
       body: JSON.stringify({ action: 'telegram_notify', message }),
     });
     return (await r.json()).ok;
@@ -7452,7 +7461,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       updateGlobalProgress(9, 12, 'Phase 9 of 14 \u00b7 Provisioning');
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
-          headers:{'Content-Type':'application/json'},
+          headers:getDynastyAuthHeaders(),
           body:JSON.stringify({ inf: {...inf, deploy_target: V2_DEPLOY_TARGET}, svcs:provisionSvcs, custom_domain: localStorage.getItem('dynasty_custom_domain') || null })});
         const pd=await pr.json(); provRes=pd;
         if(pd.ok){
@@ -7472,7 +7481,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       updateGlobalProgress(10, 12, 'Phase 10 of 14 \u00b7 Deploying');
       try{
         const deployResp=await fetch('/api/provision',{method:'POST',
-          headers:{'Content-Type':'application/json'},
+          headers:getDynastyAuthHeaders(),
           body:JSON.stringify({
             action:'authority_deploy',
             project_slug:inf.repo,
@@ -7551,7 +7560,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
 
       try {
         const v3Resp = await fetch('/api/provision?action=provision_modules', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: getDynastyAuthHeaders(),
           body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: getUserTier() })
         });
         v3Results = await v3Resp.json();
@@ -7622,7 +7631,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       // First check: does any deployment exist at all?
       try {
         const firstCheck = await fetch(`/api/provision?action=verify_deploy`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: getDynastyAuthHeaders(),
           body: JSON.stringify({ project_id: vercelProjectId })
         });
         const firstData = await firstCheck.json();
@@ -7635,7 +7644,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
           setP('verify', 'run', 'No deployment found — triggering production deploy...');
           try {
             await fetch('/api/provision?action=retry_deploy', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: getDynastyAuthHeaders(),
               body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
             });
           } catch {}
@@ -7650,7 +7659,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
         for (let attempt = 0; attempt < 6; attempt++) {
           try {
             const depCheck = await fetch(`/api/provision?action=verify_deploy`, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: getDynastyAuthHeaders(),
               body: JSON.stringify({ project_id: vercelProjectId })
             });
             const depData = await depCheck.json();
@@ -7662,7 +7671,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
               // Trigger a retry with correct framework
               setP('verify', 'run', 'Deploy failed — retrying with framework fix...');
               await fetch('/api/provision?action=retry_deploy', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: getDynastyAuthHeaders(),
                 body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
               });
               await new Promise(r => setTimeout(r, 10000));
