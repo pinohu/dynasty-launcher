@@ -4,92 +4,91 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Privacy Policy — Dynasty Launcher</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0C0C14;color:#FAFAF9;font-family:'DM Sans',system-ui,sans-serif;font-size:16px;line-height:1.8;padding:2rem;max-width:740px;margin:0 auto}
-h1{font-size:2rem;margin-bottom:.5rem;color:#C9A84C}
-h2{font-size:1.2rem;margin:2rem 0 .5rem;color:#C9A84C;border-bottom:1px solid #222;padding-bottom:4px}
-p,li{color:#A1A1AA;margin-bottom:.8rem}
-ul{padding-left:1.5rem}
-a{color:#C9A84C}
-.meta{font-size:13px;color:#71717A;margin-bottom:2rem}
+body{background:#0C0C14;color:#FAFAF9;font-family:'DM Sans',system-ui,sans-serif;font-size:16px;line-height:1.8;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:80px 24px 60px}
+h1{font-size:28px;font-weight:600;margin-bottom:8px;color:#C9A84C}
+.updated{font-size:13px;color:#71717A;margin-bottom:40px}
+h2{font-size:18px;font-weight:600;margin:32px 0 12px;color:#FAFAF9}
+p,li{font-size:15px;color:#A1A1AA;line-height:1.8;margin-bottom:12px}
+ul{padding-left:24px;margin-bottom:12px}
+a{color:#C9A84C;text-decoration:none}
+a:hover{text-decoration:underline}
+.back{display:inline-block;margin-bottom:24px;font-size:14px;color:#71717A}
 </style>
 </head>
 <body>
+<div class="wrap">
+<a href="/" class="back">&larr; Back to Dynasty Launcher</a>
 <h1>Privacy Policy</h1>
-<p class="meta">Last updated: April 8, 2026 | Dynasty Empire LLC</p>
+<p class="updated">Last updated: April 8, 2026</p>
 
-<h2>1. Information We Collect</h2>
-<p>When you use Dynasty Launcher, we collect:</p>
+<h2>1. Who We Are</h2>
+<p>Dynasty Launcher is operated by Dynasty Empire LLC ("we," "us," "our"). We provide an AI-powered business provisioning platform at dynasty-launcher.vercel.app.</p>
+
+<h2>2. Information We Collect</h2>
+<p>We collect the following information when you use our service:</p>
 <ul>
-<li><strong>Account information:</strong> Email address and name via Clerk authentication.</li>
-<li><strong>Payment information:</strong> Processed securely by Stripe. We never see or store your card details.</li>
-<li><strong>Build data:</strong> Project descriptions, configuration preferences, and generated file metadata stored in Neon PostgreSQL.</li>
-<li><strong>Usage analytics:</strong> Page views and feature usage via PostHog (anonymized).</li>
+<li><strong>Business description:</strong> The text prompt you provide describing your business idea. This is processed by AI models to generate your business system.</li>
+<li><strong>Payment information:</strong> Processed securely by Stripe. We do not store credit card numbers on our servers.</li>
+<li><strong>Email address:</strong> Collected during checkout for order confirmation and service credentials delivery.</li>
+<li><strong>Build history:</strong> Records of builds you have created, stored in your browser's local storage and optionally in our Neon database for project memory features.</li>
+<li><strong>Usage data:</strong> Anonymous analytics including pages visited and features used.</li>
 </ul>
 
-<h2>2. How We Use Your Information</h2>
+<h2>3. How We Use Your Information</h2>
 <ul>
-<li>To provision your business services (GitHub repos, Vercel deployments, Stripe products, 20i hosting, etc.)</li>
-<li>To authenticate your account and manage your subscription tier</li>
-<li>To improve the product and fix bugs</li>
-<li>To send transactional emails related to your builds</li>
+<li>To generate and provision your business system across third-party services</li>
+<li>To process payments via Stripe</li>
+<li>To deliver credentials and operational documentation for provisioned services</li>
+<li>To improve the platform and fix issues</li>
 </ul>
 
-<h2>3. Third-Party Services</h2>
-<p>Dynasty Launcher integrates with the following services on your behalf. Each service has its own privacy policy:</p>
+<h2>4. Third-Party Services</h2>
+<p>When you use Dynasty Launcher, we provision accounts and services on your behalf using third-party platforms. These may include:</p>
 <ul>
-<li>Stripe (payments) — <a href="https://stripe.com/privacy">stripe.com/privacy</a></li>
-<li>Clerk (authentication) — <a href="https://clerk.com/privacy">clerk.com/privacy</a></li>
-<li>Vercel (hosting) — <a href="https://vercel.com/legal/privacy-policy">vercel.com/privacy</a></li>
-<li>GitHub (code repository) — <a href="https://docs.github.com/en/site-policy/privacy-policies">github.com/privacy</a></li>
-<li>Neon (database) — <a href="https://neon.tech/privacy-policy">neon.tech/privacy</a></li>
-<li>PostHog (analytics) — <a href="https://posthog.com/privacy">posthog.com/privacy</a></li>
-<li>20i (hosting/email) — <a href="https://www.20i.com/legal/privacy-policy">20i.com/privacy</a></li>
-<li>Acumbamail (email marketing) — <a href="https://acumbamail.com/privacy/">acumbamail.com/privacy</a></li>
+<li>GitHub (code repository)</li>
+<li>Vercel (website hosting)</li>
+<li>Neon (database)</li>
+<li>Stripe (payment processing)</li>
+<li>20i (domain, email, hosting)</li>
+<li>SuiteDash (CRM)</li>
+<li>Acumbamail (email marketing)</li>
+<li>CallScaler, Insighto, Trafft (phone and booking)</li>
+<li>n8n (automation)</li>
+<li>And other services listed on our features page</li>
 </ul>
+<p>Each third-party service has its own privacy policy. By using Dynasty Launcher, you acknowledge that accounts will be created on these platforms on your behalf. All accounts and credentials are owned by you.</p>
 
-<h2>4. Data Storage and Security</h2>
-<p>Your data is stored in:</p>
-<ul>
-<li>Neon PostgreSQL (build history, license tracking) — encrypted at rest</li>
-<li>Vercel (environment variables) — encrypted</li>
-<li>Your browser localStorage (preferences, session data)</li>
-</ul>
-<p>All API keys are stored in encrypted Vercel environment variables and never exposed to the browser.</p>
+<h2>5. Data Retention</h2>
+<p>Your business description and build outputs are retained for as long as needed to deliver the service. You may request deletion of your data by contacting us at the email below.</p>
 
-<h2>5. Your Rights</h2>
+<h2>6. Data Security</h2>
+<p>We use encryption in transit (HTTPS) for all communications. API keys for third-party services are stored as encrypted environment variables and are never exposed to client-side code. Payment processing is handled entirely by Stripe's PCI-compliant infrastructure.</p>
+
+<h2>7. Your Rights</h2>
 <p>You have the right to:</p>
 <ul>
-<li>Access your personal data</li>
-<li>Request deletion of your account and data</li>
-<li>Export your build history</li>
-<li>Opt out of analytics tracking</li>
+<li>Request access to the personal data we hold about you</li>
+<li>Request correction or deletion of your data</li>
+<li>Object to processing of your data</li>
+<li>Request data portability</li>
 </ul>
-<p>Contact us at <a href="mailto:ikeohu@dynastyempire.com">ikeohu@dynastyempire.com</a> to exercise these rights.</p>
+<p>For EU/EEA residents, these rights are guaranteed under GDPR. For California residents, additional rights are provided under CCPA.</p>
 
-<h2>6. Cookies and Tracking</h2>
-<p>We use PostHog for product analytics. PostHog uses cookies to track anonymous usage patterns. You can opt out by blocking cookies or using a privacy browser extension.</p>
+<h2>8. Cookies</h2>
+<p>We use essential cookies and local storage for session management and build history. We do not use third-party advertising cookies.</p>
 
-<h2>7. Data Retention</h2>
-<p>Build history is retained for 12 months. Account data is retained until you request deletion. Payment records are retained per Stripe's policies.</p>
+<h2>9. Children's Privacy</h2>
+<p>Dynasty Launcher is not intended for use by individuals under 18 years of age. We do not knowingly collect personal information from children.</p>
 
-<h2>8. California Residents (CCPA)</h2>
-<p>If you are a California resident, you have additional rights under the California Consumer Privacy Act:</p>
-<ul>
-<li><strong>Right to know:</strong> You can request what personal information we collect and how we use it.</li>
-<li><strong>Right to delete:</strong> You can request deletion of your personal information.</li>
-<li><strong>Right to opt-out:</strong> We do not sell personal information. Dynasty Launcher does not sell, rent, or trade your data to third parties for their marketing purposes.</li>
-<li><strong>Non-discrimination:</strong> We will not discriminate against you for exercising your CCPA rights.</li>
-</ul>
-<p>To exercise these rights, contact <a href="mailto:ikeohu@dynastyempire.com">ikeohu@dynastyempire.com</a>.</p>
+<h2>10. Changes to This Policy</h2>
+<p>We may update this privacy policy from time to time. Changes will be reflected by the "Last updated" date above.</p>
 
-<h2>9. Changes to This Policy</h2>
-<p>We may update this policy. Changes will be posted on this page with an updated date.</p>
-
-<h2>10. Contact</h2>
-<p>Dynasty Empire LLC<br>Email: <a href="mailto:ikeohu@dynastyempire.com">ikeohu@dynastyempire.com</a></p>
-
-<p style="margin-top:3rem;text-align:center"><a href="/" style="color:#71717A;font-size:13px">← Back to Dynasty Launcher</a></p>
+<h2>11. Contact</h2>
+<p>For privacy-related inquiries, contact us at <a href="mailto:ikeohu@dynastyempire.com">ikeohu@dynastyempire.com</a>.</p>
+</div>
 </body>
 </html>
