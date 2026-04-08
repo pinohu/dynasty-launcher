@@ -1,11 +1,11 @@
 export const maxDuration = 15;
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const allowedOrigin = process.env.CORS_ORIGIN || 'https://dynasty-launcher.vercel.app';
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
 
   const checks = {};
   const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
-  const flintToken = process.env.FLINT_TOKEN || '1ed943c21ef9e2f60fe1189241a246d769e4191051ad2c0c035282722cb4b030';
 
   // GitHub token
   try {

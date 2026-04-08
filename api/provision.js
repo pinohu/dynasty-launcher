@@ -123,7 +123,8 @@ async function mod_hosting(config, project, liveUrl) {
 
     // 3. Create email mailbox
     try {
-      const emailPassword = `Dyn${Date.now().toString(36)}!`;
+      const { randomBytes } = await import('crypto');
+      const emailPassword = `Dyn${randomBytes(12).toString('base64url')}!`;
       await fetch(`https://api.20i.com/package/${packageId}/email/mailbox`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
         body: JSON.stringify({ mailbox: `hello@${domain}`, password: emailPassword })
@@ -1205,12 +1206,34 @@ async function runModules(config, project, liveUrl, enabledModules) {
   const results = {};
   let totalCost = 0;
 
-  for (const [name, fn] of Object.entries(moduleMap)) {
-    if (!enabledModules[name]) continue;
-    try {
-      results[name] = await fn(config, project, liveUrl);
-    } catch (e) {
-      results[name] = { ok: false, service: name, error: e.message, fallback: 'Module crashed — check logs' };
+  // Run modules in parallel batches to avoid 300s timeout
+  // Batch 1: Infrastructure (hosting must complete before others that depend on domain/email)
+  const batch1 = ['hosting'];
+  // Batch 2: Core services (can run in parallel)
+  const batch2 = ['billing', 'email', 'phone', 'sms', 'chatbot', 'crm', 'analytics', 'leads', 'docs'];
+  // Batch 3: Content generation (AI-heavy, run in parallel)
+  const batch3 = ['seo', 'video', 'design', 'social'];
+  // Batch 4: Automation + remaining (depends on other services being provisioned)
+  const batch4 = ['automation', 'directory', 'wordpress', 'verify'];
+
+  for (const batch of [batch1, batch2, batch3, batch4]) {
+    const batchEntries = batch.filter(name => enabledModules[name] && moduleMap[name]);
+    const batchResults = await Promise.allSettled(
+      batchEntries.map(async name => {
+        try {
+          return { name, result: await moduleMap[name](config, project, liveUrl) };
+        } catch (e) {
+          return { name, result: { ok: false, service: name, error: e.message, fallback: 'Module crashed — check logs' } };
+        }
+      })
+    );
+    for (const settled of batchResults) {
+      if (settled.status === 'fulfilled') {
+        results[settled.value.name] = settled.value.result;
+      } else {
+        const name = batchEntries[batchResults.indexOf(settled)];
+        results[name] = { ok: false, service: name, error: settled.reason?.message || 'Unknown error', fallback: 'Module crashed — check logs' };
+      }
     }
   }
 
