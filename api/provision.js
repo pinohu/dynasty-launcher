@@ -2319,8 +2319,16 @@ Return ONLY a valid JSON array (no markdown, no backticks):
   // ── PROVISION MODULES (V3) ──────────────────────────────────────────────
   // Called by app.html after deployment succeeds, with the live URL
   if (action === 'provision_modules') {
-    const { project, liveUrl, modules_enabled, tier } = req.body || {};
+    const { project, liveUrl, modules_enabled, tier, dry_run } = req.body || {};
     if (!project || !project.slug) return res.status(400).json({ ok: false, error: 'project.slug required' });
+
+    // Dry-run mode: return what WOULD be provisioned without making real API calls
+    if (dry_run || project.slug.startsWith('test-') || project.slug === 'test') {
+      const enabled = modules_enabled || config.modules_enabled || {};
+      const wouldRun = Object.entries(enabled).filter(([, v]) => v).map(([k]) => k);
+      return res.json({ ok: true, dry_run: true, would_provision: wouldRun, tier: tier || 'enterprise',
+        note: 'Dry-run mode — no real API calls made. Remove dry_run flag or use a non-test slug to provision.' });
+    }
 
     // Server-side revenue gating: enforce tier limits
     const TIER_MODULES = {

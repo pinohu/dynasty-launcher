@@ -43,15 +43,6 @@ export default async function handler(req, res) {
     }
   } catch(e) { checks.stripe = { ok: false, error: e.message }; }
 
-  // Flint bridge
-  try {
-    const r = await fetch('https://claude-outbox.audreysplace.place/messages', {
-      headers: { 'Authorization': `Bearer ${flintToken}` },
-      signal: AbortSignal.timeout(5000)
-    });
-    checks.flint = r.ok ? { ok: true } : { ok: false, status: r.status, down: true };
-  } catch(e) { checks.flint = { ok: false, down: true, error: 'Tunnel offline — SSH and run: pm2 restart all' }; }
-
   // Pulsetic (correct auth format)
   try {
     const pulseticKey = config.infrastructure?.pulsetic;
