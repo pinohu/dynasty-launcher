@@ -125,7 +125,7 @@ async function mod_hosting(config, project, liveUrl) {
     try {
       await fetch(`https://api.20i.com/package/${packageId}/email/mailbox`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mailbox: `hello@${domain}`, password: `Dyn${Date.now().toString(36)}!` })
+        body: JSON.stringify({ mailbox: `hello@${domain}`, password: `Dyn!${Array.from({length:16},()=>'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'[Math.random()*56|0]).join('')}` })
       });
       results.details.email = `hello@${domain}`;
     } catch (e) { results.details.email_error = e.message; }
@@ -243,7 +243,8 @@ async function mod_billing(config, project, liveUrl) {
         }).then(r => r.json());
         if (wh.id) {
           results.details.webhook_id = wh.id;
-          results.details.webhook_secret = wh.secret;
+          // Store secret for env var push but do NOT include in API response or CREDENTIALS.md
+          results._webhook_secret = wh.secret;
         }
       } catch {}
     }
@@ -261,7 +262,7 @@ async function mod_billing(config, project, liveUrl) {
     if (VERCEL_TOKEN && project.vercel_project_id) {
       try {
         const envVars = [
-          ...(results.details.webhook_id ? [{ key: 'STRIPE_WEBHOOK_SECRET', value: results.details.webhook_secret, type: 'encrypted' }] : []),
+          ...(results._webhook_secret ? [{ key: 'STRIPE_WEBHOOK_SECRET', value: results._webhook_secret, type: 'encrypted' }] : []),
           ...(results.details.prices?.pro?.monthly ? [{ key: 'STRIPE_PRICE_PRO_MONTHLY', value: results.details.prices.pro.monthly, type: 'plain' }] : []),
           ...(results.details.prices?.enterprise?.monthly ? [{ key: 'STRIPE_PRICE_ENTERPRISE_MONTHLY', value: results.details.prices.enterprise.monthly, type: 'plain' }] : []),
           { key: 'STRIPE_PRODUCT_ID', value: prod.id, type: 'plain' }
@@ -1044,11 +1045,11 @@ async function mod_wordpress(config, project) {
     try {
       await fetch(`https://api.20i.com/package/${packageId}/web/wordpressCli`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cmd: `option update blogname "${project.name}"` })
+        body: JSON.stringify({ cmd: `option update blogname "${(project.name || '').replace(/["\\\$`!]/g, '')}"` })
       });
       await fetch(`https://api.20i.com/package/${packageId}/web/wordpressCli`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cmd: `option update blogdescription "${project.description || project.name}"` })
+        body: JSON.stringify({ cmd: `option update blogdescription "${((project.description || project.name) || '').replace(/["\\\$`!]/g, '')}"` })
       });
     } catch {}
 
@@ -1161,7 +1162,7 @@ function generateCredentialsMd(project, moduleResults) {
   }
   if (moduleResults.billing?.ok) {
     const b = moduleResults.billing.details;
-    lines.push(`## Billing (Stripe)\n- Product ID: ${b.product_id}\n- Webhook ID: ${b.webhook_id || 'N/A'}\n- Webhook Secret: ${mask(b.webhook_secret)}\n- Prices: ${JSON.stringify(Object.keys(b.prices || {}))}\n`);
+    lines.push(`## Billing (Stripe)\n- Product ID: ${b.product_id}\n- Webhook ID: ${b.webhook_id || 'N/A'}\n- Webhook Secret: Stored as STRIPE_WEBHOOK_SECRET env var on Vercel (not shown here for security)\n- Prices: ${JSON.stringify(Object.keys(b.prices || {}))}\n`);
   }
   if (moduleResults.email?.ok) {
     const e = moduleResults.email.details;
@@ -1313,7 +1314,8 @@ export default async function handler(req, res) {
     ? req.query?.action
     : (req.body?.action || new URLSearchParams(req.url?.split('?')[1]).get('action'));
 
-  const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
+  let config = {};
+  try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { return res.status(500).json({ ok: false, error: 'DYNASTY_TOOL_CONFIG is invalid JSON' }); }
   const GH_TOKEN     = process.env.GITHUB_TOKEN;
   const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN || config.infrastructure?.vercel;
   const VERCEL_TEAM  = 'team_fuTLGjBMk3NAD32Bm5hA7wkr';

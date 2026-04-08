@@ -2,10 +2,13 @@ export const maxDuration = 15;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
 
   const checks = {};
   const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
-  const flintToken = process.env.FLINT_TOKEN || '1ed943c21ef9e2f60fe1189241a246d769e4191051ad2c0c035282722cb4b030';
 
   // GitHub token
   try {
