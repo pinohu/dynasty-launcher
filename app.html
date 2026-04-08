@@ -1079,9 +1079,14 @@ html,body{overflow-x:hidden}
     try { sessionStorage.setItem('dlg_ok', VAL); localStorage.setItem('dlg_ok', VAL); } catch(e){}
     return;
   }
-  // Allow payment return URLs (Stripe checkout success/cancel) — session only, not permanent
-  if (params.get('payment') === 'success' || params.get('payment') === 'cancelled') {
+  // Allow payment SUCCESS return URL (Stripe checkout) — session only, not permanent
+  if (params.get('payment') === 'success' && params.get('session_id')) {
     try { sessionStorage.setItem('dlg_ok', VAL); } catch(e){}
+    return;
+  }
+  // Cancelled goes back to landing page
+  if (params.get('payment') === 'cancelled') {
+    window.location.href = '/';
     return;
   }
   // Allow pricing plan URLs — session only (checkout will redirect to Stripe)
@@ -2026,10 +2031,8 @@ const V3_TIERS = {
   enterprise: { price: 2497, label: 'Enterprise ($2,497)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] }
 };
 function getUserTier() {
-  // Check URL params first (set by Stripe checkout success redirect)
-  const urlTier = new URLSearchParams(window.location.search).get('tier');
-  if (urlTier && V3_TIERS[urlTier]) { localStorage.setItem('dynasty_tier', urlTier); return urlTier; }
-  return localStorage.getItem('dynasty_tier') || 'starter'; // Default to starter (gated)
+  // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
+  return localStorage.getItem('dynasty_tier') || 'starter';
 }
 function isModuleAllowed(moduleName) {
   const tier = getUserTier();
@@ -2060,12 +2063,10 @@ async function startCheckout(plan) {
     if (data.ok && data.url) {
       window.location.href = data.url;
     } else {
-      // Fallback: let them build anyway if Stripe isn't configured
-      alert(data.error || 'Checkout unavailable. Starting free build instead.');
-      enterBuilder();
+      alert(data.error || 'Checkout unavailable. Please try again or contact support at ikeohu@dynastyempire.com');
     }
   } catch {
-    enterBuilder();
+    alert('Payment system temporarily unavailable. Please try again later.');
   }
 }
 
@@ -2086,15 +2087,28 @@ async function startCheckout(plan) {
   const sessionId = params.get('session_id');
   
   if (payment === 'success' && sessionId) {
-    // Verify and store payment + tier
-    localStorage.setItem('dynasty_paid_session', sessionId);
-    localStorage.setItem('dynasty_paid_at', new Date().toISOString());
-    const tier = params.get('tier');
-    if (tier) localStorage.setItem('dynasty_tier', tier);
-    // Clean URL
+    // VERIFY payment server-side before granting access (never trust URL params)
     window.history.replaceState({}, '', window.location.pathname);
-    // Go straight to builder
-    enterBuilder();
+    (async () => {
+      try {
+        const verifyResp = await fetch('/api/checkout?action=verify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+        const vd = await verifyResp.json();
+        if (vd.ok && vd.paid) {
+          // Payment confirmed by Stripe — use tier from Stripe metadata, NOT URL
+          localStorage.setItem('dynasty_paid_session', sessionId);
+          localStorage.setItem('dynasty_paid_at', new Date().toISOString());
+          localStorage.setItem('dynasty_tier', vd.plan || 'starter');
+          enterBuilder();
+        } else {
+          alert('Payment verification failed. Please contact support if you were charged.');
+        }
+      } catch (e) {
+        alert('Could not verify payment. Please try again or contact support.');
+      }
+    })();
   } else if (payment === 'cancelled') {
     window.history.replaceState({}, '', window.location.pathname);
   }
