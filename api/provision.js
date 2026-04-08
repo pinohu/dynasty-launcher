@@ -216,7 +216,7 @@ async function mod_billing(config, project, liveUrl) {
   try {
     // 1. Create product
     const prod = await fetch('https://api.stripe.com/v1/products', { method: 'POST', headers: sh,
-      body: `name=${enc(project.name)}&description=${enc(`${project.description || project.name} — Dynasty provisioned`)}`
+      body: `name=${enc(project.name)}&description=${enc(`${project.description || project.name} — Dynasty provisioned`)}&metadata[dynasty_slug]=${enc(project.slug)}&metadata[dynasty_type]=${enc(project.type || '')}`
     }).then(r => r.json());
     if (!prod.id) throw new Error('Product creation failed');
     results.details.product_id = prod.id;
@@ -270,6 +270,24 @@ async function mod_billing(config, project, liveUrl) {
       if (portal.id) results.details.portal_config_id = portal.id;
     } catch {}
 
+    // 4b. Create payment link for Pro tier (instant buy URL)
+    if (results.details.prices?.pro?.monthly) {
+      try {
+        const pl = await fetch('https://api.stripe.com/v1/payment_links', { method: 'POST', headers: sh,
+          body: `line_items[0][price]=${results.details.prices.pro.monthly}&line_items[0][quantity]=1`
+        }).then(r => r.json());
+        if (pl.url) results.details.payment_link_pro = pl.url;
+      } catch {}
+    }
+
+    // 4c. Create a 10% launch discount coupon
+    try {
+      const coupon = await fetch('https://api.stripe.com/v1/coupons', { method: 'POST', headers: sh,
+        body: `percent_off=10&duration=once&name=${enc(project.name + ' Launch Discount')}&metadata[dynasty_slug]=${enc(project.slug)}`
+      }).then(r => r.json());
+      if (coupon.id) results.details.coupon_id = coupon.id;
+    } catch {}
+
     // 5. Push Stripe keys back to deployed Vercel project
     const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN || config.infrastructure?.vercel;
     if (VERCEL_TOKEN && project.vercel_project_id) {
@@ -314,7 +332,7 @@ async function mod_email(config, project, liveUrl) {
     const physAddr = project.location || 'United States';
     const emailWrap = (subject, innerHtml) => `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${subject}</title></head><body style="margin:0;padding:0;background:#f4f4f4;font-family:system-ui,sans-serif"><div style="max-width:600px;margin:0 auto;padding:20px"><div style="background:#fff;border-radius:8px;padding:32px;margin-bottom:16px">${innerHtml}</div><div style="text-align:center;font-size:12px;color:#999;padding:16px"><p>${project.name} | ${physAddr}</p><p><a href="${unsubLink}" style="color:#999">Unsubscribe</a> | <a href="https://${project.domain || project.slug + '.vercel.app'}" style="color:#999">Visit website</a></p></div></div></body></html>`;
     const emailSequence = [
-      { subject: `Welcome to ${project.name}!`, body: emailWrap(`Welcome to ${project.name}!`, `<h2 style="color:#333;margin:0 0 16px">Welcome aboard!</h2><p style="color:#555;line-height:1.6">Thanks for joining ${project.name}. We're excited to have you.</p><p style="color:#555;line-height:1.6">Here's what you can expect from us over the next few days:</p><ul style="color:#555;line-height:1.8"><li>A quick-start guide to get you set up</li><li>Tips from our most successful users</li><li>An exclusive offer just for new members</li></ul><p style="margin-top:24px"><a href="https://${project.domain || project.slug + '.vercel.app'}" style="background:#C9A84C;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">Get Started</a></p>`), delay: 0 },
+      { subject: `Welcome to ${project.name}!`, body: emailWrap(`Welcome to ${project.name}!`, `<h2 style="color:#333;margin:0 0 16px">Welcome aboard, {{name}}!</h2><p style="color:#555;line-height:1.6">Thanks for joining ${project.name}. We're excited to have you.</p><p style="color:#555;line-height:1.6">Here's what you can expect from us over the next few days:</p><ul style="color:#555;line-height:1.8"><li>A quick-start guide to get you set up</li><li>Tips from our most successful users</li><li>An exclusive offer just for new members</li></ul><p style="margin-top:24px"><a href="https://${project.domain || project.slug + '.vercel.app'}" style="background:#C9A84C;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">Get Started</a></p>`), delay: 0 },
       { subject: `Getting started with ${project.name}`, body: emailWrap(`Getting started with ${project.name}`, `<h2 style="color:#333;margin:0 0 16px">Let's get you set up</h2><p style="color:#555;line-height:1.6">Here's a quick guide to making the most of ${project.name}:</p><ol style="color:#555;line-height:1.8"><li><strong>Complete your profile</strong> — Add your details and preferences</li><li><strong>Explore the dashboard</strong> — See all your tools in one place</li><li><strong>Connect your tools</strong> — Link your calendar, email, and accounts</li></ol>`), delay: 1 },
       { subject: `${project.name} tips & tricks`, body: emailWrap(`${project.name} tips & tricks`, `<h2 style="color:#333;margin:0 0 16px">Pro tips for success</h2><p style="color:#555;line-height:1.6">Our most successful users share three habits:</p><ol style="color:#555;line-height:1.8"><li>They check their dashboard daily for new leads</li><li>They respond to inquiries within 2 hours</li><li>They review analytics weekly to spot trends</li></ol>`), delay: 3 },
       { subject: `How ${project.name} compares`, body: emailWrap(`How ${project.name} compares`, `<h2 style="color:#333;margin:0 0 16px">Why users choose us</h2><p style="color:#555;line-height:1.6">Here's what makes ${project.name} different from the alternatives:</p><ul style="color:#555;line-height:1.8"><li>Everything provisioned and connected from day one</li><li>You own 100% of the code and data</li><li>Professional-grade infrastructure, not a template</li></ul>`), delay: 5 },
@@ -486,8 +504,13 @@ async function mod_chatbot(config, project, liveUrl) {
       method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: `${project.name} Assistant`,
-        sourceText: `Business: ${project.name}\nDescription: ${project.description || ''}\nWebsite: ${liveUrl || ''}\nServices: ${project.services || 'General business services'}\n\nFAQ:\nQ: What services do you offer?\nA: We offer professional ${project.type || 'business'} services.\nQ: How do I get started?\nA: Visit our website or call us to schedule a consultation.\nQ: What are your hours?\nA: We're available Monday-Friday, 9am-5pm.`,
-        settings: { model: 'gpt-3.5-turbo', temperature: 0.7, initialMessages: [`Hi! Welcome to ${project.name}. How can I help you?`] }
+        sourceText: `Business: ${project.name}\nDescription: ${project.description || ''}\nWebsite: ${liveUrl || ''}\nServices: ${project.services || 'General business services'}\n\nFAQ:\nQ: What services do you offer?\nA: We offer professional ${project.type || 'business'} services.\nQ: How do I get started?\nA: Visit our website or call us to schedule a consultation.\nQ: What are your hours?\nA: We're available Monday-Friday, 9am-5pm.\nQ: How much does it cost?\nA: Visit our pricing page for current rates.\nQ: Where are you located?\nA: ${project.location || 'Contact us for location details.'}`,
+        sourceUrls: liveUrl ? [liveUrl] : [],
+        settings: { model: 'gpt-4o-mini', temperature: 0.7,
+          initialMessages: [`Hi! Welcome to ${project.name}. How can I help you?`],
+          suggestedMessages: ['What services do you offer?', 'How much does it cost?', 'How do I get started?', 'Book a consultation'],
+          theme: { primaryColor: project.accent || '#0066FF' }
+        }
       })
     }).then(r => r.json());
     if (bot.chatbotId || bot.id) {
@@ -1115,11 +1138,35 @@ async function mod_verify(config, project, liveUrl) {
     checks.push({ route: '/api/v1', status: api.status, ok: api.status === 200 || api.status === 404 });
   } catch (e) { checks.push({ route: '/api/v1', status: 0, ok: false, error: e.message }); }
 
+  // Security header check on homepage
+  try {
+    const mainResp = await fetch(url, { redirect: 'follow' });
+    const secHeaders = {};
+    for (const h of ['x-frame-options', 'x-content-type-options', 'strict-transport-security', 'content-security-policy']) {
+      secHeaders[h] = mainResp.headers.get(h) || 'missing';
+    }
+    checks.push({ route: 'security-headers', status: 200, ok: true, headers: secHeaders });
+  } catch {}
+
+  // PageSpeed Insights (free Google API — no key needed for basic scores)
+  try {
+    const psiResp = await fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance&category=seo&category=accessibility`, { signal: AbortSignal.timeout(25000) });
+    if (psiResp.ok) {
+      const psi = await psiResp.json();
+      const cats = psi.lighthouseResult?.categories || {};
+      results.details.lighthouse = {
+        performance: Math.round((cats.performance?.score || 0) * 100),
+        seo: Math.round((cats.seo?.score || 0) * 100),
+        accessibility: Math.round((cats.accessibility?.score || 0) * 100)
+      };
+    }
+  } catch {}
+
   results.details.checks = checks;
   results.details.passed = checks.filter(c => c.ok).length;
   results.details.total = checks.length;
   results.details.issues = checks.filter(c => !c.ok || c.has_object_object).map(c => `${c.route}: ${c.error || (c.has_object_object ? '[object Object] found' : 'status ' + c.status)}`);
-  results.ok = results.details.passed >= Math.ceil(results.details.total * 0.5); // Pass if 50%+ routes work
+  results.ok = results.details.passed >= Math.ceil(results.details.total * 0.75); // Pass if 75%+ checks work
   if (!results.ok) results.fallback = 'Check Vercel deployment logs for errors';
   return results;
 }
