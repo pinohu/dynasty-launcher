@@ -123,11 +123,16 @@ async function mod_hosting(config, project, liveUrl) {
 
     // 3. Create email mailbox
     try {
+      const emailPw = `Dyn!${Array.from({length:16},()=>'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'[Math.random()*56|0]).join('')}`;
       await fetch(`https://api.20i.com/package/${packageId}/email/mailbox`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mailbox: `hello@${domain}`, password: `Dyn!${Array.from({length:16},()=>'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'[Math.random()*56|0]).join('')}` })
+        body: JSON.stringify({ mailbox: `hello@${domain}`, password: emailPw })
       });
       results.details.email = `hello@${domain}`;
+      results.details.email_password = emailPw;
+      results.details.email_imap = `mail.${domain}`;
+      results.details.email_smtp = `mail.${domain}`;
+      results.details.email_ports = { imap: 993, smtp: 465, starttls: 587 };
     } catch (e) { results.details.email_error = e.message; }
 
     // 4. SPF record
@@ -160,7 +165,7 @@ async function mod_hosting(config, project, liveUrl) {
     try {
       await fetch(`https://api.20i.com/package/${packageId}/web/dnsRecords`, {
         method: 'POST', headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ new: { txt: [{ host: '_dmarc', txt: `v=DMARC1; p=quarantine; rua=mailto:dmarc@${domain}` }] } })
+        body: JSON.stringify({ new: { txt: [{ host: '_dmarc', txt: `v=DMARC1; p=none; rua=mailto:hello@${domain}; adkim=r; aspf=r` }] } })
       });
       results.details.dmarc = true;
     } catch {}
@@ -1143,7 +1148,14 @@ function generateOperationsMd(project, moduleResults) {
 
   lines.push(`\n## Troubleshooting\n`);
   lines.push(`- **Site not loading:** Check Vercel deployment status at vercel.com`);
-  lines.push(`- **Email not delivering:** Verify SPF/DKIM/DMARC DNS records are propagated`);
+  lines.push(`- **Email not delivering:** Verify SPF/DKIM/DMARC DNS records have propagated (check at mxtoolbox.com). DNS takes 15min-48hrs.`);
+  lines.push(`\n## Email Warm-Up Guide\n`);
+  lines.push(`New domains have zero sender reputation. Follow this schedule:`);
+  lines.push(`- **Week 1:** Send to max 50 recipients/day. Only send to engaged contacts.`);
+  lines.push(`- **Week 2:** Increase to 100-200/day. Monitor bounce rates (keep under 2%).`);
+  lines.push(`- **Week 3:** Increase to 500/day. Check spam folder placement with mail-tester.com.`);
+  lines.push(`- **Week 4+:** Scale to full list. Switch DMARC from p=none to p=quarantine.`);
+  lines.push(`- **Never:** Send to purchased/scraped lists. Always use double opt-in.\n`);
   lines.push(`- **Payments not working:** Check Stripe webhook endpoint is active`);
   lines.push(`- **Chatbot not responding:** Verify Chatbase training completed\n`);
   lines.push(`---\n*Built with Dynasty Launcher*`);
@@ -1158,7 +1170,7 @@ function generateCredentialsMd(project, moduleResults) {
 
   if (moduleResults.hosting?.ok) {
     const h = moduleResults.hosting.details;
-    lines.push(`## Hosting (20i)\n- Domain: ${h.domain}\n- Control Panel: ${h.control_panel}\n- Email: ${h.email || 'N/A'}\n- SSL: ${h.ssl || 'pending'}\n`);
+    lines.push(`## Hosting (20i)\n- Domain: ${h.domain}\n- Control Panel: ${h.control_panel}\n- Email: ${h.email || 'N/A'}\n- Email Password: ${h.email_password || 'See 20i control panel'}\n- IMAP Server: ${h.email_imap || 'mail.' + h.domain} (Port 993 SSL)\n- SMTP Server: ${h.email_smtp || 'mail.' + h.domain} (Port 465 SSL or 587 STARTTLS)\n- SSL: ${h.ssl || 'pending'}\n- NOTE: DNS propagation takes 15min-48hrs. Email will not work until DNS resolves.\n`);
   }
   if (moduleResults.billing?.ok) {
     const b = moduleResults.billing.details;
