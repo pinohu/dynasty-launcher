@@ -810,7 +810,7 @@ async function mod_automation(config, project, liveUrl) {
       { parameters: { httpMethod: 'POST', path, responseMode: 'responseNode' }, name: 'Webhook', type: 'n8n-nodes-base.webhook', position: [250, 300], typeVersion: 2 }
     ];
     steps.forEach((s, i) => nodes.push({ ...s, position: [450 + i * 200, 300] }));
-    nodes.push({ parameters: { respondWith: 'json', responseBody: '={{ JSON.stringify($json) }}' }, name: 'Respond', type: 'n8n-nodes-base.respondToWebhook', position: [450 + steps.length * 200, 300], typeVersion: 1.1 });
+    nodes.push({ parameters: { respondWith: 'json', responseBody: '={{ JSON.stringify($json) }}' }, name: 'Respond', type: 'n8n-nodes-base.respondToWebhook', position: [650 + steps.length * 200, 300], typeVersion: 1.1 });
     return nodes;
   }
   const workflows = [
