@@ -2046,10 +2046,14 @@ async function enterBuilder() {
   const authed = await requireAuth();
   if (!authed) return;
   
-  document.getElementById('landing').style.display = 'none';
-  document.querySelector('.page').style.display = 'block';
-  document.getElementById('builder-header').style.display = 'flex';
-  document.getElementById('mode-screen').style.display = 'block';
+  const landing = document.getElementById('landing');
+  if (landing) landing.style.display = 'none';
+  const page = document.querySelector('.page');
+  if (page) page.style.display = 'block';
+  const header = document.getElementById('builder-header');
+  if (header) header.style.display = 'flex';
+  const modeScreen = document.getElementById('mode-screen');
+  if (modeScreen) modeScreen.style.display = 'block';
 }
 
 async function startCheckout(plan) {
@@ -3452,8 +3456,8 @@ Return 3-4 paragraphs. If the idea has become genuinely strong, your critique sh
 async function startBuild() {
   // ── Build gating: check if user has builds remaining ────────────
   if (getBuildsRemaining() <= 0) {
-    const action = confirm('You\'ve used your free build. Purchase a build for $29 or subscribe for $99/mo?\n\nClick OK to go to checkout, or Cancel to return.');
-    if (action) { startCheckout('single'); return; }
+    const action = confirm('You\'ve used your free build. Purchase a Starter build for $297?\n\nClick OK to go to checkout, or Cancel to return.');
+    if (action) { startCheckout('starter'); return; }
     else return;
   }
   
@@ -3461,6 +3465,9 @@ async function startBuild() {
   BUILD_START_TIME = Date.now();
   BUILD_COMPACTIONS = [];
   PREFLIGHT_APPROVED = false;
+  // Warn user before closing tab during build
+  window._buildInProgress = true;
+  window.onbeforeunload = () => window._buildInProgress ? 'Build in progress — closing will lose all generated files.' : null;
   EXISTING_CLAUDE_MD = null;
   PLANNING_OUTPUT = null;
 
@@ -7526,7 +7533,8 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     const tierAllowed = V3_TIERS[userTier]?.modules || [];
     const v3Modules = {};
     for (const [mod, on] of Object.entries(v3ModulesRaw)) {
-      v3Modules[mod] = on && (tierAllowed.length === 0 || tierAllowed.includes(mod));
+      // Starter tier (empty array) = NO modules allowed. Only paid tiers get modules.
+      v3Modules[mod] = on && tierAllowed.length > 0 && tierAllowed.includes(mod);
     }
     const anyModulesEnabled = Object.values(v3Modules).some(v => v);
     let v3Results = null;
@@ -7820,6 +7828,10 @@ ${window._buildFiles?.['VIDEO-SCRIPT.md'] ? '<div style="margin-top:8px;font-siz
 ${window._buildFiles?.['AB-MESSAGING.md'] ? '<div style="font-size:11px;color:var(--dim)">🎯 <a href="' + repoUrl + '/blob/main/AB-MESSAGING.md" target="_blank" style="color:var(--sec)">AB-MESSAGING.md</a> · 2 headline/CTA variants to test</div>' : ''}
 <span class="again" onclick="reset()">Build another →</span>
 ${window._buildHistory?.length > 1 ? '<span class="again" onclick="showBuildComparison()" style="margin-left:12px">Compare builds →</span>' : ''}`;
+
+  // ── Build complete — clear beforeunload warning ──
+  window._buildInProgress = false;
+  window.onbeforeunload = null;
 
   // ── Fire webhook on completion ──
   sendWebhook(inf, repo, fc, provRes);
