@@ -494,110 +494,118 @@ async function mod_sms(config, project) {
   return results;
 }
 
-// ── mod_chatbot: Self-hosted Claude-powered chatbot (no Chatbase limits) ────
+// ── mod_chatbot: Self-hosted chatbot widget with pre-generated FAQ ──────────
+// Generates FAQ content at build time using Dynasty's AI, then creates a
+// static chatbot widget that answers from the pre-generated FAQ — no API
+// key needed at runtime on the client's site.
 async function mod_chatbot(config, project, liveUrl) {
   const results = { ok: false, service: 'chatbot', details: {} };
   const aiKey = process.env.ANTHROPIC_API_KEY;
   const GH_TOKEN = process.env.GITHUB_TOKEN;
-  if (!aiKey) { results.error = 'No Anthropic API key'; results.fallback = 'Set ANTHROPIC_API_KEY env var'; return results; }
+  if (!aiKey) { results.error = 'No Anthropic API key for FAQ generation'; results.fallback = 'Set ANTHROPIC_API_KEY env var'; return results; }
 
   try {
-    // Generate a self-hosted chatbot widget that uses the project's own Claude API key
     const businessContext = `Business: ${project.name}\nType: ${project.type || 'business'}\nDescription: ${project.description || ''}\nWebsite: ${liveUrl || ''}\nLocation: ${project.location || ''}\nServices: ${project.services || 'Professional services'}`;
 
-    // Generate comprehensive FAQ from business context via AI
-    let faqContent = '';
+    // Generate comprehensive FAQ at BUILD TIME using Dynasty's AI key (one-time cost)
+    let faqItems = [];
     try {
       const faqResp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST', headers: { 'x-api-key': aiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000,
-          messages: [{ role: 'user', content: `Generate a comprehensive FAQ for this business as a JSON array. Each item has "q" (question) and "a" (answer, 2-3 sentences). Generate 15 FAQs covering: services, pricing, process, qualifications, hours, location, guarantees, contact methods.\n\n${businessContext}\n\nReturn ONLY valid JSON array, no markdown.` }]
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 3000,
+          messages: [{ role: 'user', content: `Generate 20 FAQ items for this business. Return ONLY a valid JSON array where each item has "q" (question) and "a" (detailed answer, 2-4 sentences). Cover: services offered, pricing, process/how it works, qualifications/experience, hours/availability, location/service area, guarantees/warranties, payment methods, booking/scheduling, what to expect, turnaround time, cancellation policy, support/contact, comparison to competitors, getting started.\n\n${businessContext}\n\nReturn ONLY the JSON array. No markdown, no backticks.` }]
         })
       });
       const faqData = await faqResp.json();
-      faqContent = faqData.content?.[0]?.text || '';
+      const faqText = faqData.content?.[0]?.text || '';
+      try { faqItems = JSON.parse(faqText.match(/\[[\s\S]*\]/)?.[0] || '[]'); } catch {}
     } catch {}
 
-    // Create the chatbot widget component
-    const chatbotComponent = `// Dynasty Chatbot Widget — Self-hosted, powered by Claude
-// No third-party limits. Uses your project's ANTHROPIC_API_KEY.
-// Drop this into your site or import as a React component.
-
-const DYNASTY_CHATBOT_CONFIG = {
-  businessName: ${JSON.stringify(project.name)},
-  businessContext: ${JSON.stringify(businessContext)},
-  greeting: "Hi! Welcome to ${project.name}. How can I help you today?",
-  suggestedQuestions: [
-    "What services do you offer?",
-    "How much does it cost?",
-    "How do I get started?",
-    "Can I book a consultation?"
-  ],
-  accentColor: "${project.accent || '#0066FF'}",
-  faq: ${faqContent || '[]'}
-};
-
-// Embed script — add to your HTML before </body>:
-// <div id="dynasty-chat"></div>
-// <script src="/chatbot.js"></script>
-export default DYNASTY_CHATBOT_CONFIG;
-`;
-
-    // Create the embed HTML widget
+    // Create a STATIC chatbot widget — runs entirely client-side with NO API calls
+    // All answers come from the pre-generated FAQ embedded in the HTML
     const embedWidget = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${project.name} - Chat</title>
 <style>
-#dynasty-chat-btn{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:${project.accent || '#0066FF'};color:#fff;border:none;cursor:pointer;font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:9998;transition:transform .2s}
-#dynasty-chat-btn:hover{transform:scale(1.1)}
-#dynasty-chat-panel{display:none;position:fixed;bottom:90px;right:20px;width:380px;max-height:500px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.2);z-index:9999;overflow:hidden;flex-direction:column}
-#dynasty-chat-panel.open{display:flex}
-.dc-header{padding:16px;background:${project.accent || '#0066FF'};color:#fff;font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center}
-.dc-messages{flex:1;padding:12px;overflow-y:auto;max-height:340px;font-size:14px;line-height:1.5}
-.dc-msg{margin-bottom:10px;padding:8px 12px;border-radius:12px;max-width:85%}
-.dc-bot{background:#f0f0f0;color:#333}.dc-user{background:${project.accent || '#0066FF'};color:#fff;margin-left:auto}
-.dc-input{display:flex;border-top:1px solid #eee;padding:8px}
-.dc-input input{flex:1;border:none;padding:8px 12px;font-size:14px;outline:none}
-.dc-input button{background:${project.accent || '#0066FF'};color:#fff;border:none;padding:8px 16px;cursor:pointer;font-weight:600;border-radius:8px}
-.dc-suggestions{padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px}
-.dc-sug{font-size:12px;padding:4px 10px;border:1px solid #ddd;border-radius:12px;cursor:pointer;background:#fff;color:#555}
-.dc-sug:hover{border-color:${project.accent || '#0066FF'};color:${project.accent || '#0066FF'}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif}
+#dc-btn{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:${project.accent || '#0066FF'};color:#fff;border:none;cursor:pointer;font-size:24px;box-shadow:0 4px 16px rgba(0,0,0,0.3);z-index:9998;transition:transform .2s}
+#dc-btn:hover{transform:scale(1.1)}
+#dc-panel{display:none;position:fixed;bottom:90px;right:20px;width:380px;max-height:520px;background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.2);z-index:9999;flex-direction:column;overflow:hidden}
+#dc-panel.open{display:flex}
+.dc-hdr{padding:16px;background:${project.accent || '#0066FF'};color:#fff;font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.dc-msgs{flex:1;padding:12px;overflow-y:auto;max-height:360px;font-size:14px;line-height:1.6}
+.dc-m{margin:8px 0;padding:10px 14px;border-radius:14px;max-width:85%;word-wrap:break-word}
+.dc-bot{background:#f0f0f5;color:#333}.dc-usr{background:${project.accent || '#0066FF'};color:#fff;margin-left:auto;text-align:right}
+.dc-in{display:flex;border-top:1px solid #eee;padding:8px}
+.dc-in input{flex:1;border:none;padding:10px 14px;font-size:14px;outline:none;border-radius:8px}
+.dc-in button{background:${project.accent || '#0066FF'};color:#fff;border:none;padding:8px 18px;cursor:pointer;font-weight:600;border-radius:8px;margin-left:4px}
+.dc-sugs{padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px}
+.dc-s{font-size:12px;padding:6px 12px;border:1px solid #ddd;border-radius:14px;cursor:pointer;background:#fff;color:#555;transition:.15s}
+.dc-s:hover{border-color:${project.accent || '#0066FF'};color:${project.accent || '#0066FF'}}
+@media(max-width:480px){#dc-panel{width:calc(100vw - 24px);right:12px;bottom:80px;max-height:70vh}}
 </style></head><body>
-<button id="dynasty-chat-btn" onclick="document.getElementById('dynasty-chat-panel').classList.toggle('open')">💬</button>
-<div id="dynasty-chat-panel">
-<div class="dc-header"><span>${project.name} Assistant</span><span onclick="document.getElementById('dynasty-chat-panel').classList.remove('open')" style="cursor:pointer;font-size:18px">×</span></div>
-<div class="dc-messages" id="dc-msgs"><div class="dc-msg dc-bot">Hi! Welcome to ${project.name}. How can I help you today?</div></div>
-<div class="dc-suggestions" id="dc-sugs"></div>
-<div class="dc-input"><input id="dc-in" placeholder="Type a message..." onkeydown="if(event.key==='Enter')dcSend()"><button onclick="dcSend()">Send</button></div>
+<button id="dc-btn" onclick="document.getElementById('dc-panel').classList.toggle('open')" aria-label="Open chat">💬</button>
+<div id="dc-panel" role="dialog" aria-label="Chat assistant">
+<div class="dc-hdr"><span>${project.name} Assistant</span><button onclick="document.getElementById('dc-panel').classList.remove('open')" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer" aria-label="Close chat">&times;</button></div>
+<div class="dc-msgs" id="dc-msgs"><div class="dc-m dc-bot">Hi! Welcome to ${project.name}. Ask me anything about our services — I'm here to help!</div></div>
+<div class="dc-sugs" id="dc-sugs"></div>
+<div class="dc-in"><input id="dc-inp" placeholder="Ask a question..." onkeydown="if(event.key==='Enter')dcSend()" aria-label="Type your question"><button onclick="dcSend()">Send</button></div>
 </div>
 <script>
-var dcSugs=["What services do you offer?","How much does it cost?","How do I get started?","Can I book a consultation?"];
-var dcEl=document.getElementById('dc-sugs');
-dcSugs.forEach(function(s){var b=document.createElement('span');b.className='dc-sug';b.textContent=s;b.onclick=function(){document.getElementById('dc-in').value=s;dcSend()};dcEl.appendChild(b)});
-function dcSend(){var inp=document.getElementById('dc-in'),msg=inp.value.trim();if(!msg)return;inp.value='';var msgs=document.getElementById('dc-msgs');
-msgs.innerHTML+='<div class="dc-msg dc-user">'+msg.replace(/</g,'&lt;')+'</div>';
-msgs.innerHTML+='<div class="dc-msg dc-bot" id="dc-typing">Thinking...</div>';
-msgs.scrollTop=msgs.scrollHeight;document.getElementById('dc-sugs').style.display='none';
-fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})})
-.then(function(r){return r.json()}).then(function(d){var t=document.getElementById('dc-typing');if(t)t.outerHTML='<div class="dc-msg dc-bot">'+(d.reply||'Sorry, I could not process that.').replace(/\\n/g,'<br>')+'</div>';msgs.scrollTop=msgs.scrollHeight})
-.catch(function(){var t=document.getElementById('dc-typing');if(t)t.textContent='Sorry, something went wrong. Please try again.'});}
+// Pre-generated FAQ — no API calls needed at runtime
+var FAQ=${JSON.stringify(faqItems)};
+var SUGS=FAQ.slice(0,4).map(function(f){return f.q});
+var sugEl=document.getElementById('dc-sugs');
+SUGS.forEach(function(s){var b=document.createElement('span');b.className='dc-s';b.textContent=s;b.onclick=function(){document.getElementById('dc-inp').value=s;dcSend()};sugEl.appendChild(b)});
+
+function findAnswer(q){
+  q=q.toLowerCase();
+  var best=null,bestScore=0;
+  FAQ.forEach(function(f){
+    var words=f.q.toLowerCase().split(/\\s+/);
+    var score=0;
+    words.forEach(function(w){if(w.length>3&&q.includes(w))score++});
+    // Also check answer keywords
+    var aWords=f.a.toLowerCase().split(/\\s+/).slice(0,20);
+    aWords.forEach(function(w){if(w.length>4&&q.includes(w))score+=0.5});
+    if(score>bestScore){bestScore=score;best=f}
+  });
+  if(best&&bestScore>=2)return best.a;
+  if(best&&bestScore>=1)return best.a+"\\n\\nIf you need more specific information, please contact us directly!";
+  return "Thanks for your question! I don't have a specific answer for that, but I'd love to help. Please reach out to us directly at ${liveUrl || 'our website'} or email us for personalized assistance.";
+}
+
+function dcSend(){
+  var inp=document.getElementById('dc-inp'),msg=inp.value.trim();
+  if(!msg)return;inp.value='';
+  var msgs=document.getElementById('dc-msgs');
+  msgs.innerHTML+='<div class="dc-m dc-usr">'+msg.replace(/</g,'&lt;')+'</div>';
+  document.getElementById('dc-sugs').style.display='none';
+  setTimeout(function(){
+    var answer=findAnswer(msg);
+    msgs.innerHTML+='<div class="dc-m dc-bot">'+answer.replace(/\\n/g,'<br>')+'</div>';
+    msgs.scrollTop=msgs.scrollHeight;
+  },300+Math.random()*500);
+}
 </script></body></html>`;
 
-    // Push chatbot files to the project repo
+    // Push chatbot widget to the project repo
     if (GH_TOKEN && project.slug) {
       try {
-        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'src/config/chatbot.config.ts', chatbotComponent, 'feat: dynasty chatbot configuration');
-        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'public/chatbot.html', embedWidget, 'feat: dynasty chatbot widget (self-hosted, Claude-powered)');
-        results.details.files_pushed = ['src/config/chatbot.config.ts', 'public/chatbot.html'];
+        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'public/chatbot.html', embedWidget, 'feat: dynasty chatbot widget (FAQ-powered, no API key needed)');
+        results.details.files_pushed = ['public/chatbot.html'];
       } catch {}
     }
 
-    results.details.type = 'self-hosted-claude';
-    results.details.embed_script = `<!-- Dynasty Chatbot Widget -->\n<iframe src="/chatbot.html" style="position:fixed;bottom:0;right:0;width:420px;height:600px;border:none;z-index:9999" title="Chat"></iframe>`;
-    results.details.faq_generated = faqContent ? true : false;
-    results.details.note = 'Self-hosted chatbot using your ANTHROPIC_API_KEY. No third-party limits. Widget at /chatbot.html, config at /src/config/chatbot.config.ts.';
-    results.ok = true;
-    results.cost_usd = 0.02; // AI FAQ generation cost
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Chatbot files are in the repo — configure /api/chat endpoint to use ANTHROPIC_API_KEY'; }
+    results.details.type = 'static-faq-chatbot';
+    results.details.faq_count = faqItems.length;
+    results.details.embed_instruction = 'Add to your site: <iframe src="/chatbot.html" style="position:fixed;bottom:0;right:0;width:420px;height:580px;border:none;z-index:9999"></iframe>';
+    results.details.note = 'Static FAQ chatbot — runs entirely client-side. No API key needed on the deployed site. FAQ was generated at build time.';
+    results.ok = faqItems.length > 0;
+    if (!results.ok) { results.error = 'FAQ generation failed'; results.fallback = 'Create FAQ manually and update public/chatbot.html'; }
+    results.cost_usd = 0.02; // One-time AI FAQ generation cost at build time
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create a chatbot widget manually'; }
   return results;
 }
 
@@ -2111,7 +2119,6 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       const envVars=[
         {key:'VITE_SITE_SLUG',value:project_slug,type:'plain'},
         {key:'VITE_SITE_NAME',value:niche_name,type:'plain'},
-        ...(process.env.ANTHROPIC_API_KEY?[{key:'ANTHROPIC_API_KEY',value:process.env.ANTHROPIC_API_KEY,type:'encrypted'}]:[]),
         ...(process.env.VITE_SUPABASE_URL?[{key:'VITE_SUPABASE_URL',value:process.env.VITE_SUPABASE_URL,type:'plain'}]:[]),
         ...(process.env.VITE_SUPABASE_PUBLISHABLE_KEY?[{key:'VITE_SUPABASE_PUBLISHABLE_KEY',value:process.env.VITE_SUPABASE_PUBLISHABLE_KEY,type:'plain'}]:[]),
         ...(process.env.VITE_SUPABASE_PROJECT_ID?[{key:'VITE_SUPABASE_PROJECT_ID',value:process.env.VITE_SUPABASE_PROJECT_ID,type:'plain'}]:[]),
@@ -2235,7 +2242,6 @@ Return ONLY a valid JSON array (no markdown, no backticks):
             ...(stripeWh ? [{key:'STRIPE_WEBHOOK_SECRET',value:stripeWh,type:'encrypted'}] : []),
             {key:'BILLING_PLAN_ENV',value:'test',type:'plain'},
             {key:'NEXT_PUBLIC_APP_URL',value:`https://${slug}.vercel.app`,type:'plain'},
-            ...(process.env.ANTHROPIC_API_KEY?[{key:'ANTHROPIC_API_KEY',value:process.env.ANTHROPIC_API_KEY,type:'encrypted'}]:[]),
           ].map(v=>({...v,target:['production','preview','development']}));
           try{await fetch(`https://api.vercel.com/v10/projects/${vercelProjectId}/env?teamId=${VERCEL_TEAM}`,{
             method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
