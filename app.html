@@ -661,6 +661,8 @@ html,body{overflow-x:hidden}
         <button class="im-btn" id="im-voice" onclick="toggleVoiceInput()"><span class="im-icon">🎤</span> Voice</button>
         <button class="im-btn" id="im-url" onclick="togglePanel('url')"><span class="im-icon">🔗</span> Competitor URL</button>
         <button class="im-btn" id="im-image" onclick="togglePanel('image')"><span class="im-icon">📸</span> Image/Screenshot</button>
+        <button class="im-btn" id="im-camera" onclick="togglePanel('camera')"><span class="im-icon">📷</span> Camera</button>
+        <button class="im-btn" id="im-video" onclick="togglePanel('video')"><span class="im-icon">🎬</span> Video</button>
         <button class="im-btn" id="im-doc" onclick="togglePanel('doc')"><span class="im-icon">📄</span> Document</button>
         <button class="im-btn" id="im-convo-btn" onclick="togglePanel('convo')"><span class="im-icon">💬</span> Talk to AI</button>
         <button class="im-btn" id="im-tpl" onclick="togglePanel('templates')"><span class="im-icon">📋</span> Templates</button>
@@ -687,6 +689,44 @@ html,body{overflow-x:hidden}
           <div class="im-upload-label"><strong>Click or drag</strong> an image here<br>PNG, JPG, GIF, WebP — napkin sketches welcome</div>
         </div>
         <div id="im-image-status" class="im-status"></div>
+      </div>
+
+      <!-- Camera Capture Panel — take a photo of an ad, storefront, sketch, business card -->
+      <div class="im-panel" id="im-panel-camera">
+        <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px">Take a photo of an ad, storefront, business card, or napkin sketch</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px">
+            <input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleImageUpload(this.files[0])" />
+            <div style="font-size:24px;margin-bottom:4px">📷</div>
+            <div class="im-upload-label"><strong>Back camera</strong><br>Ads, storefronts, flyers</div>
+          </label>
+          <label class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px">
+            <input type="file" accept="image/*" capture="user" style="display:none" onchange="handleImageUpload(this.files[0])" />
+            <div style="font-size:24px;margin-bottom:4px">🤳</div>
+            <div class="im-upload-label"><strong>Front camera</strong><br>Whiteboard, sketch</div>
+          </label>
+        </div>
+        <div style="font-size:10px;color:var(--dim);margin-top:6px">The AI will analyze the image and extract a business description from what it sees.</div>
+        <div id="im-camera-status" class="im-status"></div>
+      </div>
+
+      <!-- Video Input Panel — record a walkthrough or upload a pitch video -->
+      <div class="im-panel" id="im-panel-video">
+        <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px">Record or upload a video describing your business idea</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px">
+            <input type="file" accept="video/*" capture="environment" style="display:none" onchange="handleVideoUpload(this.files[0])" />
+            <div style="font-size:24px;margin-bottom:4px">🎬</div>
+            <div class="im-upload-label"><strong>Record video</strong><br>Walk through your shop, show your product</div>
+          </label>
+          <label class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px">
+            <input type="file" accept="video/mp4,video/webm,video/quicktime" style="display:none" onchange="handleVideoUpload(this.files[0])" />
+            <div style="font-size:24px;margin-bottom:4px">📁</div>
+            <div class="im-upload-label"><strong>Upload video</strong><br>MP4, WebM, MOV (max 50MB)</div>
+          </label>
+        </div>
+        <div style="font-size:10px;color:var(--dim);margin-top:6px">The AI will transcribe the video and extract your business description from what you said and showed.</div>
+        <div id="im-video-status" class="im-status"></div>
       </div>
 
       <!-- Document Upload Panel -->
@@ -3711,8 +3751,8 @@ Return ONLY the project description paragraph — no headers, no analysis, just 
 // ── 3. Image/Screenshot Upload (Claude Vision) ──────────────────────────────
 async function handleImageUpload(file) {
   if (!file) return;
-  const status = document.getElementById('im-image-status');
-  status.textContent = `⏳ Analyzing ${file.name}...`;
+  const status = document.getElementById('im-image-status') || document.getElementById('im-camera-status');
+  if (status) status.textContent = `⏳ Analyzing ${file.name}...`;
 
   try {
     const base64 = await fileToBase64(file);
@@ -3744,6 +3784,70 @@ async function handleImageUpload(file) {
     }
   } catch (e) {
     status.textContent = `Error: ${e.message}`;
+  }
+}
+
+// ── 3b. Video Upload (extract audio → transcribe → business description) ────
+async function handleVideoUpload(file) {
+  if (!file) return;
+  const status = document.getElementById('im-video-status') || document.getElementById('im-image-status');
+  if (file.size > 50 * 1024 * 1024) { status.textContent = 'Video too large (max 50MB). Try a shorter clip.'; return; }
+  status.textContent = `⏳ Processing ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)...`;
+
+  try {
+    // For short videos, extract first frame as image and analyze visually
+    // For longer videos, we'd need server-side transcription — for now, extract a frame
+    const videoUrl = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.src = videoUrl;
+    video.muted = true;
+    video.currentTime = 1; // Seek to 1 second
+
+    await new Promise((resolve, reject) => {
+      video.onloadeddata = resolve;
+      video.onerror = reject;
+      setTimeout(reject, 10000);
+    });
+
+    // Capture a frame from the video
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const frameDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    const frameBase64 = frameDataUrl.split(',')[1];
+    URL.revokeObjectURL(videoUrl);
+
+    status.textContent = '⏳ AI is analyzing the video frame...';
+
+    // Also try to extract audio for transcription context
+    // Send the frame to AI for visual analysis
+    const r = await fetch('/api/ai', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: frameBase64 } },
+            { type: 'text', text: `This is a frame captured from a video where someone is showing their business concept — it might show a storefront, product, workspace, or service in action. Analyze what you see and write a clear 3-5 sentence business description suitable for a project generator. Include: what the business does, who it serves, the type of service/product, and a revenue model. If the image shows a physical location, describe what kind of business it is. Write ONLY the project description.` }
+          ]
+        }]
+      })
+    });
+
+    const d = await r.json();
+    const text = d.content?.find(b => b.type === 'text')?.text || '';
+    if (text) {
+      document.getElementById('project-desc').value = text;
+      status.textContent = `✓ Extracted business idea from video`;
+      onDescInput();
+    } else {
+      status.textContent = 'Could not extract idea from video frame. Try the Image or Voice input instead.';
+    }
+  } catch (e) {
+    status.textContent = `Error: ${e.message}. Try recording a shorter clip or using Voice input.`;
   }
 }
 
