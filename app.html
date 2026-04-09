@@ -2487,7 +2487,23 @@ All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base 
     if (!m) throw new Error('No JSON in scorecard response (raw length: ' + (raw||'').length + ', first 100: ' + (raw||'').slice(0,100) + ')');
     V2_SCORECARD = safeJsonParse(m[0]);
     if (!V2_SCORECARD) throw new Error('JSON parse failed');
-    if (!V2_SCORECARD.composite && !V2_SCORECARD.scores) throw new Error('Scorecard missing required fields');
+
+    // Normalize scorecard fields — AI may use different field names
+    if (!V2_SCORECARD.composite && V2_SCORECARD.composite_score) V2_SCORECARD.composite = V2_SCORECARD.composite_score;
+    if (!V2_SCORECARD.composite && V2_SCORECARD.overall_score) V2_SCORECARD.composite = V2_SCORECARD.overall_score;
+    if (!V2_SCORECARD.composite && V2_SCORECARD.viability_score) V2_SCORECARD.composite = V2_SCORECARD.viability_score;
+    if (!V2_SCORECARD.composite && V2_SCORECARD.total_score) V2_SCORECARD.composite = V2_SCORECARD.total_score;
+    // Try to compute composite from scores if still missing
+    if (!V2_SCORECARD.composite && V2_SCORECARD.scores) {
+      const vals = Object.values(V2_SCORECARD.scores).map(v => typeof v === 'object' ? v.score : v).filter(n => typeof n === 'number');
+      if (vals.length > 0) V2_SCORECARD.composite = vals.reduce((a, b) => a + b, 0) / vals.length;
+    }
+    // Ensure composite is a number
+    if (typeof V2_SCORECARD.composite === 'string') V2_SCORECARD.composite = parseFloat(V2_SCORECARD.composite) || 0;
+    if (!V2_SCORECARD.composite) V2_SCORECARD.composite = 0;
+    if (!V2_SCORECARD.scores) V2_SCORECARD.scores = {};
+    if (!V2_SCORECARD.verdict) V2_SCORECARD.verdict = V2_SCORECARD.composite >= 8 ? 'STRONG BUILD CANDIDATE' : V2_SCORECARD.composite >= 6 ? 'VIABLE WITH CAVEATS' : 'NEEDS REFINEMENT';
+
     hideLoadingOverlay();
     renderScorecard(V2_SCORECARD);
     document.getElementById('scorecard-wrap').style.display = 'block';
