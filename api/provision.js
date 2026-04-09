@@ -201,7 +201,7 @@ async function mod_hosting(config, project, liveUrl) {
 
     results.ok = true;
     results.cost_usd = 0; // 20i is owned license
-  } catch (e) { results.error = e.message; results.fallback = '20i Reseller Panel → manage package manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = '20i Reseller Panel → manage package manually'; }
   return results;
 }
 
@@ -375,7 +375,7 @@ async function mod_email(config, project, liveUrl) {
 
     results.ok = true;
     results.cost_usd = 0; // Acumbamail is owned license
-  } catch (e) { results.error = e.message; results.fallback = 'Acumbamail dashboard → create list and templates manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Acumbamail dashboard → create list and templates manually'; }
   return results;
 }
 
@@ -455,7 +455,7 @@ async function mod_phone(config, project, liveUrl) {
     results.ok = !!(results.details.phone_number || results.details.insighto_agent_id || results.details.trafft_service_id);
     if (!results.ok) { results.error = 'All phone services failed'; results.fallback = 'Set up CallScaler/Insighto/Trafft manually'; }
     results.cost_usd = 0; // Owned licenses
-  } catch (e) { results.error = e.message; results.fallback = 'Configure phone stack manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Configure phone stack manually'; }
   return results;
 }
 
@@ -490,7 +490,7 @@ async function mod_sms(config, project) {
     results.ok = groupCreated;
     if (!results.ok) { results.fallback = 'Create contact group and SMS templates at app.smsit.ai. Template text is in OPERATIONS.md.'; }
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = 'SMS-iT dashboard → create group and templates manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'SMS-iT dashboard → create group and templates manually'; }
   return results;
 }
 
@@ -714,7 +714,7 @@ Each post: 800+ words HTML content, unique keywords, real actionable content.`, 
     results.ok = posts.length > 0 || keywords.length > 0;
     results.cost_usd = posts.length > 0 ? 0.05 : 0; // AI content generation cost
     if (!results.ok) { results.error = 'No content generated'; results.fallback = 'Create blog content manually'; }
-  } catch (e) { results.error = e.message; results.fallback = 'Generate SEO content manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Generate SEO content manually'; }
   return results;
 }
 
@@ -760,7 +760,7 @@ async function mod_video(config, project) {
 
     if (!results.ok) { results.error = 'Video generation failed'; results.fallback = 'Create videos at vadoo.tv or fliki.ai manually'; }
     results.cost_usd = 0; // Owned licenses
-  } catch (e) { results.error = e.message; results.fallback = 'Create explainer video manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create explainer video manually'; }
   return results;
 }
 
@@ -824,7 +824,7 @@ async function mod_design(config, project) {
 
     if (!results.ok) { results.error = 'All design services failed'; results.fallback = 'Create brand assets manually. Output as WebP for optimal performance. Sizes: hero 1920x1080, OG 1200x630, favicon 512x512.'; }
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = 'Create brand assets manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create brand assets manually'; }
   return results;
 }
 
@@ -861,7 +861,7 @@ async function mod_analytics(config, project, liveUrl) {
 
     if (!results.ok) { results.error = 'Analytics setup failed'; results.fallback = 'Add PostHog/Plerdy tracking manually'; }
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = 'Set up analytics manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up analytics manually'; }
   return results;
 }
 
@@ -908,7 +908,7 @@ async function mod_leads(config, project, liveUrl) {
 
     if (!results.ok) { results.error = 'Lead tracking setup failed'; results.fallback = 'Set up lead intelligence manually'; }
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = 'Set up lead tracking manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up lead tracking manually'; }
   return results;
 }
 
@@ -947,7 +947,7 @@ async function mod_docs(config, project) {
 
     if (!results.ok) { results.error = 'Document generation failed'; results.fallback = 'Generate legal docs at documentero.com'; }
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = 'Generate legal documents manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Generate legal documents manually'; }
   return results;
 }
 
@@ -1043,7 +1043,7 @@ async function mod_automation(config, project, liveUrl) {
     results.details.workflow_ids = results.details.workflows.map(w => w.id);
     if (!results.ok) { results.error = 'No workflows created'; results.fallback = 'Create n8n workflows manually'; }
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = 'Set up n8n workflows manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up n8n workflows manually'; }
   return results;
 }
 
@@ -1094,7 +1094,7 @@ async function mod_crm(config, project) {
     results.details.licenses_used = used + 1;
     results.ok = true;
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = 'Set up SuiteDash workspace manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up SuiteDash workspace manually'; }
   return results;
 }
 
@@ -1145,7 +1145,7 @@ async function mod_directory(config, project) {
     results.details.licenses_used = used + 1;
     results.ok = true;
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = 'Create directory at brilliantdirectories.com manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create directory at brilliantdirectories.com manually'; }
   return results;
 }
 
@@ -1205,7 +1205,7 @@ async function mod_wordpress(config, project) {
 
     results.ok = true;
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = '20i Reseller Panel → create WordPress package manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = '20i Reseller Panel → create WordPress package manually'; }
   return results;
 }
 
@@ -1226,7 +1226,7 @@ async function mod_social(config, project) {
     results.ok = !!groupId;
     if (!groupId) { results.error = 'Vista Social group creation returned no ID'; results.fallback = 'Create profile group at vistasocial.com manually'; }
     results.cost_usd = 0;
-  } catch (e) { results.error = e.message; results.fallback = 'Set up Vista Social manually and import calendar.csv'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up Vista Social manually and import calendar.csv'; }
   return results;
 }
 
@@ -1687,6 +1687,7 @@ export default async function handler(req, res) {
   if (action==='authority_deploy') {
     const { project_slug, niche_name, niche_config, theme_css, accent_hex, domain } = req.body||{};
     if (!project_slug) return res.status(400).json({ok:false, error:'project_slug required'});
+    try {
 
     // 1. Fork dynasty-authority-template (clean niche-agnostic template)
     const forkResp = await fetch(`https://api.github.com/repos/${ORG}/dynasty-authority-template/generate`, {
@@ -2309,6 +2310,9 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       vercel_url:vercel_url||`https://${project_slug}.vercel.app`,
       vercel_project_id:projectId||null,
       note:'Vercel building now — live in ~90s'});
+    } catch (e) {
+      return res.status(500).json({ ok: false, error: sanitizeError(e.message), action: 'authority_deploy' });
+    }
   }
 
   // ── MAIN PROVISION (non-authority — Flint-free) ───────────────────────────
