@@ -8216,6 +8216,10 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
         if(dd.ok){
           setP('deploy','ok',`Live in ~90s → ${dd.vercel_url}`);
           LAUNCH_URL=dd.vercel_url;
+          // Carry authority_deploy's Vercel project ID into provRes so verification loop can use it
+          if (!provRes) provRes = { results: {} };
+          if (!provRes.results) provRes.results = {};
+          provRes.results.vercel = { ok: true, url: dd.vercel_url, project_id: dd.vercel_project_id };
         }else{
           setP('deploy','warn',dd.error||'Deploy triggered — check hosting dashboard');
         }
