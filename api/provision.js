@@ -2750,6 +2750,39 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     }
   }
 
+  // ── VERIFY LIVE URL ─────────────────────────────────────────────────────
+  // Server-side proxy to check if a deployed URL actually returns content
+  if (action === 'verify_live') {
+    const { url, project_name } = req.body || {};
+    if (!url) return res.status(400).json({ error: 'url required' });
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      const resp = await fetch(url, {
+        method: 'GET',
+        headers: { 'User-Agent': 'YourDeputy-VerifyBot/1.0' },
+        signal: controller.signal,
+        redirect: 'follow'
+      });
+      clearTimeout(timeout);
+      const status = resp.status;
+      let has_content = false;
+      let has_project_name = false;
+      if (status === 200) {
+        const text = await resp.text();
+        has_content = text.length > 500; // More than a bare error page
+        has_project_name = project_name ? text.toLowerCase().includes(project_name.toLowerCase()) : false;
+        // Check for common error indicators
+        const isErrorPage = text.includes('Application error') || text.includes('500 Internal Server Error') ||
+                           text.includes('NEXT_NOT_FOUND') || text.includes('This page could not be found');
+        if (isErrorPage) has_content = false;
+      }
+      return res.json({ ok: true, status, has_content, has_project_name, url: resp.url });
+    } catch (e) {
+      return res.json({ ok: false, status: 0, error: e.message });
+    }
+  }
+
   // ── RETRY DEPLOYMENT ──────────────────────────────────────────────────────
   if (action === 'retry_deploy') {
     const { project_id, repo, org } = req.body || {};

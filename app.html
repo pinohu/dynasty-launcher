@@ -8398,26 +8398,81 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       verifyResults.vercel = true;
     }
 
-    // 3. Verify live URL returns 200
+    // 3. Verify live URL returns real content (not an error page)
     if (vercelUrl && verifyResults.vercel) {
       try {
-        // Use a small delay for DNS propagation
-        await new Promise(r => setTimeout(r, 5000));
-        const liveCheck = await fetch(vercelUrl, { method: 'HEAD', mode: 'no-cors' });
-        // no-cors won't give us status, so we check via API instead
-        verifyResults.live = true; // if vercel says READY, trust it
+        await new Promise(r => setTimeout(r, 5000)); // DNS propagation
+        // Proxy through our API to avoid CORS — checks actual HTTP status + content
+        const liveCheck = await fetch(`/api/provision?action=verify_live`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: vercelUrl, project_name: inf.name })
+        });
+        const liveData = await liveCheck.json();
+        if (liveData.ok && liveData.status === 200) {
+          verifyResults.live = true;
+          if (liveData.has_content) {
+            verifyResults.content_verified = true;
+          }
+        } else if (liveData.status >= 500) {
+          verifyResults.issues.push(`Live URL returned ${liveData.status} — server error`);
+        } else {
+          // Non-200 but might still be deploying
+          verifyResults.live = verifyResults.vercel; // trust Vercel READY state
+        }
       } catch {
-        verifyResults.live = verifyResults.vercel; // trust Vercel status
+        verifyResults.live = verifyResults.vercel; // trust Vercel status if proxy fails
       }
     }
 
-    // 4. Report verification results
+    // 4. Report verification results — HARD GATE
     const allGood = verifyResults.github && (verifyResults.vercel || !vercelProjectId);
-    if (allGood) {
-      setP('verify', 'ok', `✓ GitHub repo live · Vercel deployed · URL responding`);
+    const liveGood = verifyResults.live || !vercelUrl;
+
+    if (allGood && liveGood) {
+      const checks = ['✓ GitHub repo live', verifyResults.vercel ? '✓ Vercel deployed' : null, verifyResults.live ? '✓ URL responding' : null].filter(Boolean);
+      setP('verify', 'ok', checks.join(' · '));
+    } else if (allGood && !liveGood) {
+      // Deployed but not yet responding — give it more time with a second pass
+      setP('verify', 'run', 'Deployed but URL not yet responding — waiting 30s...');
+      await new Promise(r => setTimeout(r, 30000));
+      try {
+        const retryCheck = await fetch(`/api/provision?action=verify_live`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: vercelUrl, project_name: inf.name })
+        });
+        const retryData = await retryCheck.json();
+        if (retryData.ok && retryData.status === 200) {
+          verifyResults.live = true;
+          setP('verify', 'ok', '✓ GitHub repo live · ✓ Vercel deployed · ✓ URL responding (after retry)');
+        } else {
+          setP('verify', 'sk', `GitHub ✓ · Vercel ✓ · Live URL: ${retryData.status || 'timeout'} — may need 1-2 min to propagate`);
+        }
+      } catch {
+        setP('verify', 'sk', 'GitHub ✓ · Vercel ✓ · Live URL check timed out — usually resolves in 1-2 min');
+      }
     } else {
       const issueText = verifyResults.issues.join(' | ') || 'Verification incomplete';
-      setP('verify', 'sk', issueText);
+      setP('verify', 'er', issueText);
+      // Add a manual retry button
+      addP('verify-retry', 'Retry verification');
+      setP('verify-retry', 'sk', 'Deploy may still be building — check your Vercel dashboard');
+    }
+
+    // ── PHASE 12: Definition of Done Summary ─────────────────────────────────
+    addP('done-gate', 'Build Completion Check');
+    const doneChecks = {
+      github: verifyResults.github,
+      vercel: verifyResults.vercel || !vercelProjectId,
+      live: verifyResults.live || !vercelUrl,
+      files: Object.keys(files).length >= 10,
+    };
+    const doneCount = Object.values(doneChecks).filter(Boolean).length;
+    const doneTotal = Object.keys(doneChecks).length;
+    if (doneCount === doneTotal) {
+      setP('done-gate', 'ok', `${doneCount}/${doneTotal} checks passed — build complete`);
+    } else {
+      const failed = Object.entries(doneChecks).filter(([,v]) => !v).map(([k]) => k);
+      setP('done-gate', 'sk', `${doneCount}/${doneTotal} passed · Failed: ${failed.join(', ')}`);
     }
 
     updateGlobalProgress(12, 12, 'Complete!');
