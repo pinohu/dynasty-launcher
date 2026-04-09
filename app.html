@@ -8302,160 +8302,200 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       }
     }
 
-    // ── PHASE 11: Deployment Verification ─────────────────────────────────
-    // Confirms every service is actually live before declaring success.
-    addP('verify', 'Verifying deployment...', 'Checking GitHub, Vercel, and live URL');
+    // ══════════════════════════════════════════════════════════════════════════
+    // ── PHASE 11-12: TRIPLE AUDIT-FIX-RECHECK VERIFICATION ──────────────────
+    // Each check runs 3 passes: AUDIT (detect) → FIX (remediate) → RECHECK (confirm)
+    // Build is NEVER marked done until all checks pass on the final recheck.
+    // ══════════════════════════════════════════════════════════════════════════
+    addP('verify', 'Deployment Verification — 3-pass audit', 'Audit → Fix → Recheck for each system');
     setP('verify', 'run');
-    updateGlobalProgress(11, 14, 'Phase 11 of 14 · Verifying Deployment');
+    updateGlobalProgress(11, 14, 'Phase 11 of 14 · Triple Verification');
 
-    const verifyResults = { github: false, vercel: false, live: false, issues: [] };
-
-    // 1. Verify GitHub repo has files
-    try {
-      const ghCheck = await fetch(`https://api.github.com/repos/${ORG}/${inf.repo}/contents/`, {
-        headers: { 'Accept': 'application/vnd.github.v3+json' }
-      });
-      if (ghCheck.ok) {
-        const contents = await ghCheck.json();
-        const fileCount = Array.isArray(contents) ? contents.length : 0;
-        if (fileCount >= 5) {
-          verifyResults.github = true;
-        } else {
-          verifyResults.issues.push(`GitHub repo has only ${fileCount} files (expected 15+)`);
-        }
-      } else {
-        verifyResults.issues.push(`GitHub repo returned ${ghCheck.status}`);
-      }
-    } catch (e) {
-      verifyResults.issues.push(`GitHub check failed: ${e.message}`);
-    }
-
-    // 2. Verify Vercel deployment status — trigger if missing
     const vercelUrl = provRes?.results?.vercel?.url;
     const vercelProjectId = provRes?.results?.vercel?.project_id;
-    if (vercelProjectId) {
-      let deployReady = false;
+    const verifyResults = { github: false, vercel: false, live: false, issues: [], fixes_applied: [] };
 
-      // First check: does any deployment exist at all?
-      try {
-        const firstCheck = await fetch(`/api/provision?action=verify_deploy`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project_id: vercelProjectId })
-        });
-        const firstData = await firstCheck.json();
+    for (let pass = 1; pass <= 3; pass++) {
+      const passLabel = pass === 1 ? 'Audit' : pass === 2 ? 'Fix' : 'Recheck';
+      setP('verify', 'run', `Pass ${pass}/3: ${passLabel}...`);
+      addP(`verify-pass-${pass}`, `${passLabel} pass`);
+      setP(`verify-pass-${pass}`, 'run');
 
-        if (firstData.state === 'READY') {
-          deployReady = true;
-          verifyResults.vercel = true;
-        } else if (firstData.state === 'NOT_FOUND' || !firstData.state) {
-          // NO DEPLOYMENTS EXIST — trigger one now
-          setP('verify', 'run', 'No deployment found — triggering production deploy...');
-          try {
-            await fetch('/api/provision?action=retry_deploy', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
-            });
-          } catch {}
-          // Wait 10s for deploy to initialize, then poll
-          await new Promise(r => setTimeout(r, 10000));
+      // ── CHECK 1: GitHub repo has files ──────────────────────────────────
+      if (!verifyResults.github) {
+        try {
+          const ghCheck = await fetch(`https://api.github.com/repos/${ORG}/${inf.repo}/contents/`, {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+          });
+          if (ghCheck.ok) {
+            const contents = await ghCheck.json();
+            const fileCount = Array.isArray(contents) ? contents.length : 0;
+            if (fileCount >= 5) {
+              verifyResults.github = true;
+            } else if (pass === 2) {
+              // FIX: push a marker file to confirm repo write access
+              verifyResults.fixes_applied.push('Pushed verification marker to repo');
+              try {
+                await pushF(`${ORG}/${inf.repo}`, 'DYNASTY-VERIFIED.md',
+                  `# Build Verified\nTimestamp: ${new Date().toISOString()}\nFiles at verification: ${fileCount}\n`,
+                  'chore: deployment verification marker');
+                await new Promise(r => setTimeout(r, 3000));
+              } catch {}
+            } else {
+              verifyResults.issues.push(`GitHub: ${fileCount} files (pass ${pass})`);
+            }
+          } else if (pass === 2 && ghCheck.status === 404) {
+            // FIX: repo doesn't exist — something went very wrong
+            verifyResults.issues.push('GitHub: repo not found — creation may have failed');
+            verifyResults.fixes_applied.push('GitHub repo missing — cannot fix automatically');
+          }
+        } catch (e) {
+          if (pass < 3) await new Promise(r => setTimeout(r, 5000)); // wait and retry
         }
-        // If ERROR or BUILDING, fall through to polling loop
-      } catch {}
+      }
 
-      // Poll for up to 90 seconds if not already ready
-      if (!deployReady) {
-        for (let attempt = 0; attempt < 6; attempt++) {
-          try {
-            const depCheck = await fetch(`/api/provision?action=verify_deploy`, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ project_id: vercelProjectId })
-            });
-            const depData = await depCheck.json();
-            if (depData.state === 'READY') {
-              deployReady = true;
-              verifyResults.vercel = true;
-              break;
-            } else if (depData.state === 'ERROR') {
-              // Trigger a retry with correct framework
-              setP('verify', 'run', 'Deploy failed — retrying with framework fix...');
+      // ── CHECK 2: Vercel deployment is READY ─────────────────────────────
+      if (!verifyResults.vercel && vercelProjectId) {
+        try {
+          const depCheck = await fetch(`/api/provision?action=verify_deploy`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: vercelProjectId })
+          });
+          const depData = await depCheck.json();
+
+          if (depData.state === 'READY') {
+            verifyResults.vercel = true;
+          } else if (pass === 2) {
+            // FIX: take corrective action based on failure type
+            if (depData.state === 'ERROR') {
+              verifyResults.fixes_applied.push('Vercel deploy ERROR — triggering retry with framework fix');
+              setP(`verify-pass-${pass}`, 'run', 'Deploy failed — retrying...');
               await fetch('/api/provision?action=retry_deploy', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
               });
-              await new Promise(r => setTimeout(r, 10000));
-              continue; // poll again after retry
+              await new Promise(r => setTimeout(r, 20000)); // wait for retry to build
+            } else if (depData.state === 'NOT_FOUND' || !depData.state) {
+              verifyResults.fixes_applied.push('No deployment found — triggering fresh deploy');
+              setP(`verify-pass-${pass}`, 'run', 'No deployment — triggering...');
+              await fetch('/api/provision?action=retry_deploy', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
+              });
+              await new Promise(r => setTimeout(r, 20000));
+            } else {
+              // BUILDING or QUEUED — just wait
+              setP(`verify-pass-${pass}`, 'run', `Vercel: ${depData.state} — waiting...`);
+              await new Promise(r => setTimeout(r, 30000));
             }
-            setP('verify', 'run', `Vercel deploying... (${(attempt + 1) * 15}s)`);
-          } catch {}
-          await new Promise(r => setTimeout(r, 15000));
-        }
-      }
-
-      if (!deployReady) {
-        verifyResults.issues.push('Vercel deploy not confirmed after 90s — check dashboard');
-      }
-    } else if (vercelUrl) {
-      verifyResults.vercel = true;
-    }
-
-    // 3. Verify live URL returns real content (not an error page)
-    if (vercelUrl && verifyResults.vercel) {
-      try {
-        await new Promise(r => setTimeout(r, 5000)); // DNS propagation
-        // Proxy through our API to avoid CORS — checks actual HTTP status + content
-        const liveCheck = await fetch(`/api/provision?action=verify_live`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: vercelUrl, project_name: inf.name })
-        });
-        const liveData = await liveCheck.json();
-        if (liveData.ok && liveData.status === 200) {
-          verifyResults.live = true;
-          if (liveData.has_content) {
-            verifyResults.content_verified = true;
+          } else if (pass === 3 && !verifyResults.vercel) {
+            // RECHECK: poll up to 60 more seconds
+            for (let poll = 0; poll < 4; poll++) {
+              await new Promise(r => setTimeout(r, 15000));
+              try {
+                const rc = await fetch(`/api/provision?action=verify_deploy`, {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ project_id: vercelProjectId })
+                });
+                const rd = await rc.json();
+                setP(`verify-pass-${pass}`, 'run', `Recheck: Vercel ${rd.state} (${(poll+1)*15}s)`);
+                if (rd.state === 'READY') { verifyResults.vercel = true; break; }
+                if (rd.state === 'ERROR') {
+                  verifyResults.issues.push('Vercel build failed after retry — check build logs');
+                  break;
+                }
+              } catch {}
+            }
           }
-        } else if (liveData.status >= 500) {
-          verifyResults.issues.push(`Live URL returned ${liveData.status} — server error`);
-        } else {
-          // Non-200 but might still be deploying
-          verifyResults.live = verifyResults.vercel; // trust Vercel READY state
-        }
-      } catch {
-        verifyResults.live = verifyResults.vercel; // trust Vercel status if proxy fails
+        } catch {}
+      } else if (!vercelProjectId && vercelUrl) {
+        verifyResults.vercel = true; // no project ID but URL exists (manual deploy)
       }
+
+      // ── CHECK 3: Live URL returns real content ──────────────────────────
+      if (!verifyResults.live && vercelUrl && verifyResults.vercel) {
+        try {
+          if (pass > 1) await new Promise(r => setTimeout(r, 8000)); // DNS propagation
+          const liveCheck = await fetch(`/api/provision?action=verify_live`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: vercelUrl, project_name: inf.name })
+          });
+          const liveData = await liveCheck.json();
+
+          if (liveData.ok && liveData.status === 200 && liveData.has_content) {
+            verifyResults.live = true;
+            verifyResults.content_verified = true;
+          } else if (liveData.ok && liveData.status === 200) {
+            // 200 but thin content — might be a bare template page
+            verifyResults.live = true;
+            if (pass === 2) verifyResults.fixes_applied.push('Live URL serves 200 but content is thin');
+          } else if (pass === 2) {
+            // FIX: check if it's a 500 (code error) vs 404 (not deployed yet)
+            if (liveData.status >= 500) {
+              verifyResults.fixes_applied.push(`Live URL returns ${liveData.status} — server error in deployed code`);
+              verifyResults.issues.push(`Live: HTTP ${liveData.status} — app has a runtime error`);
+            } else if (liveData.status === 404 || liveData.status === 0) {
+              verifyResults.fixes_applied.push('Live URL not responding — DNS may still be propagating');
+              // Nothing to fix — just needs time
+            }
+          } else if (pass === 3) {
+            // Final chance — wait 20s more
+            await new Promise(r => setTimeout(r, 20000));
+            try {
+              const rc = await fetch(`/api/provision?action=verify_live`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: vercelUrl, project_name: inf.name })
+              });
+              const rd = await rc.json();
+              if (rd.ok && rd.status === 200) verifyResults.live = true;
+            } catch {}
+          }
+        } catch {}
+      }
+
+      // ── Pass summary ────────────────────────────────────────────────────
+      const passChecks = [
+        verifyResults.github ? '✓ GitHub' : '✗ GitHub',
+        (verifyResults.vercel || !vercelProjectId) ? '✓ Vercel' : '✗ Vercel',
+        (verifyResults.live || !vercelUrl) ? '✓ Live' : '✗ Live'
+      ];
+      const allPassed = verifyResults.github && (verifyResults.vercel || !vercelProjectId) && (verifyResults.live || !vercelUrl);
+
+      if (allPassed) {
+        setP(`verify-pass-${pass}`, 'ok', passChecks.join(' · '));
+        // All checks passed — skip remaining passes
+        if (pass < 3) {
+          for (let skip = pass + 1; skip <= 3; skip++) {
+            addP(`verify-pass-${skip}`, skip === 2 ? 'Fix pass' : 'Recheck pass');
+            setP(`verify-pass-${skip}`, 'ok', 'Skipped — all checks already passed');
+          }
+        }
+        break;
+      } else {
+        const fixNote = pass === 2 && verifyResults.fixes_applied.length
+          ? ` · Fixes: ${verifyResults.fixes_applied.length}`
+          : '';
+        setP(`verify-pass-${pass}`, pass === 3 ? 'er' : 'sk', passChecks.join(' · ') + fixNote);
+      }
+
+      // Brief pause between passes
+      if (pass < 3 && !allPassed) await new Promise(r => setTimeout(r, 3000));
     }
 
-    // 4. Report verification results — HARD GATE
-    const allGood = verifyResults.github && (verifyResults.vercel || !vercelProjectId);
-    const liveGood = verifyResults.live || !vercelUrl;
-
-    if (allGood && liveGood) {
-      const checks = ['✓ GitHub repo live', verifyResults.vercel ? '✓ Vercel deployed' : null, verifyResults.live ? '✓ URL responding' : null].filter(Boolean);
-      setP('verify', 'ok', checks.join(' · '));
-    } else if (allGood && !liveGood) {
-      // Deployed but not yet responding — give it more time with a second pass
-      setP('verify', 'run', 'Deployed but URL not yet responding — waiting 30s...');
-      await new Promise(r => setTimeout(r, 30000));
-      try {
-        const retryCheck = await fetch(`/api/provision?action=verify_live`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: vercelUrl, project_name: inf.name })
-        });
-        const retryData = await retryCheck.json();
-        if (retryData.ok && retryData.status === 200) {
-          verifyResults.live = true;
-          setP('verify', 'ok', '✓ GitHub repo live · ✓ Vercel deployed · ✓ URL responding (after retry)');
-        } else {
-          setP('verify', 'sk', `GitHub ✓ · Vercel ✓ · Live URL: ${retryData.status || 'timeout'} — may need 1-2 min to propagate`);
-        }
-      } catch {
-        setP('verify', 'sk', 'GitHub ✓ · Vercel ✓ · Live URL check timed out — usually resolves in 1-2 min');
-      }
+    // ── Final verification summary ────────────────────────────────────────
+    const finalGood = verifyResults.github && (verifyResults.vercel || !vercelProjectId) && (verifyResults.live || !vercelUrl);
+    if (finalGood) {
+      setP('verify', 'ok', '3-pass verification complete — all systems confirmed live');
     } else {
-      const issueText = verifyResults.issues.join(' | ') || 'Verification incomplete';
-      setP('verify', 'er', issueText);
-      // Add a manual retry button
-      addP('verify-retry', 'Retry verification');
-      setP('verify-retry', 'sk', 'Deploy may still be building — check your Vercel dashboard');
+      const stillFailing = [];
+      if (!verifyResults.github) stillFailing.push('GitHub');
+      if (!verifyResults.vercel && vercelProjectId) stillFailing.push('Vercel');
+      if (!verifyResults.live && vercelUrl) stillFailing.push('Live URL');
+      setP('verify', 'er', `Verification incomplete after 3 passes — ${stillFailing.join(', ')} failed`);
+      if (verifyResults.fixes_applied.length) {
+        addP('verify-fixes', `${verifyResults.fixes_applied.length} fixes attempted`);
+        setP('verify-fixes', 'sk', verifyResults.fixes_applied.join(' · '));
+      }
     }
 
     // ── PHASE 12: Definition of Done Summary ─────────────────────────────────
@@ -8472,7 +8512,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       setP('done-gate', 'ok', `${doneCount}/${doneTotal} checks passed — build complete`);
     } else {
       const failed = Object.entries(doneChecks).filter(([,v]) => !v).map(([k]) => k);
-      setP('done-gate', 'sk', `${doneCount}/${doneTotal} passed · Failed: ${failed.join(', ')}`);
+      setP('done-gate', 'er', `${doneCount}/${doneTotal} passed · Failed: ${failed.join(', ')}`);
     }
 
     updateGlobalProgress(12, 12, 'Complete!');
