@@ -2409,9 +2409,13 @@ Return ONLY valid JSON (no markdown, no backticks, no preamble):
 
 All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base composite on weighted average (market_hunger 25%, blue_ocean 20%, moat 20%, revenue 20%, feasibility 15%).`, FW_DEPTH === 'deep' ? 8000 : FW_DEPTH === 'quick' ? 3000 : 6000);
 
-    const m = raw.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error('Invalid scorecard response');
-    V2_SCORECARD = safeJsonParse(m[0]); if (!V2_SCORECARD) throw new Error("Scorecard JSON repair failed");
+    // Strip markdown code fences if present
+    let cleaned = (raw || '').replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    const m = cleaned.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('No JSON in scorecard response (raw length: ' + (raw||'').length + ', first 100: ' + (raw||'').slice(0,100) + ')');
+    V2_SCORECARD = safeJsonParse(m[0]);
+    if (!V2_SCORECARD) throw new Error('JSON parse failed');
+    if (!V2_SCORECARD.composite && !V2_SCORECARD.scores) throw new Error('Scorecard missing required fields');
     hideLoadingOverlay();
     renderScorecard(V2_SCORECARD);
     document.getElementById('scorecard-wrap').style.display = 'block';
@@ -2428,7 +2432,9 @@ All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base 
     btn.disabled = false;
   } catch (e) {
     hideLoadingOverlay();
+    console.error('Scoring error:', e);
     btn.textContent = 'Scoring failed — try again';
+    btn.title = e.message || 'Unknown error';
     btn.disabled = false;
   }
 }
