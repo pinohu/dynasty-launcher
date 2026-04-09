@@ -4095,7 +4095,7 @@ async function sendConvoMsg() {
   input.value = '';
 
   const log = document.getElementById('im-convo-log');
-  log.innerHTML += `<div class="im-msg user">${msg}</div>`;
+  const userDiv = document.createElement('div'); userDiv.className = 'im-msg user'; userDiv.textContent = msg; log.appendChild(userDiv);
   convoHistory.push({ role: 'user', content: msg });
 
   log.innerHTML += `<div class="im-msg ai" id="convo-thinking"><div class="thinking-dots"><span></span><span></span><span></span></div></div>`;

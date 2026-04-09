@@ -57,11 +57,8 @@ fetch('/api/checkout?action=create_session', {
     });
   }
 
-  // Check for dynasty_session cookie (set by successful payment verification)
-  const cookies = request.headers.get('cookie') || '';
-  if (cookies.includes('dynasty_session=verified')) {
-    return; // Pass through — has verified payment cookie
-  }
+  // Payment verification happens client-side via Stripe session verification.
+  // No cookie-based bypass — prevents cookie forgery attacks.
 
   // No valid access — return a gate page that redirects to pricing
   return new Response(`<!DOCTYPE html>

@@ -1609,7 +1609,7 @@ async function runModules(config, project, liveUrl, enabledModules) {
 
 // ── Main handler ──────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin','*');
+  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers','Content-Type');
   if (req.method==='OPTIONS') return res.status(200).end();
@@ -2660,7 +2660,12 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify'],
       managed: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify']
     };
-    const userTier = tier || 'foundation'; // Default to most restrictive paid tier
+    // Server-side tier enforcement: default to foundation (most restrictive paid tier)
+    // Client sends tier from localStorage, but we cap at max allowed
+    // TODO: Verify tier against Stripe session_id for cryptographic guarantee
+    const claimedTier = tier || 'foundation';
+    const validTiers = ['free', 'foundation', 'starter', 'professional', 'enterprise', 'managed'];
+    const userTier = validTiers.includes(claimedTier) ? claimedTier : 'foundation';
     const allowedModules = TIER_MODULES[userTier] || TIER_MODULES.foundation;
     const rawEnabled = modules_enabled || config.modules_enabled || {};
     const enabled = {};
@@ -2755,6 +2760,13 @@ Return ONLY a valid JSON array (no markdown, no backticks):
   if (action === 'verify_live') {
     const { url, project_name } = req.body || {};
     if (!url) return res.status(400).json({ error: 'url required' });
+    // SSRF protection: only allow HTTPS URLs to vercel.app or known domains
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:') return res.status(400).json({ error: 'HTTPS required' });
+      const allowed = ['.vercel.app', '.yourdeputy.com', '.dynastyempire.com'];
+      if (!allowed.some(d => parsed.hostname.endsWith(d))) return res.status(400).json({ error: 'URL domain not allowed' });
+    } catch { return res.status(400).json({ error: 'Invalid URL' }); }
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
