@@ -267,7 +267,7 @@ async function loadHealth() {
     <div class="stat ${check.ok ? 'ok' : 'bad'}">
       <div class="label">${name}</div>
       <div class="value" style="font-size:16px">${check.ok ? 'Online' : 'Offline'}</div>
-      <div class="sub">${check.user || check.status || check.lists !== undefined ? `Lists: ${check.lists}` : check.balance ? check.balance.join(', ') : check.error || ''}</div>
+      <div class="sub">${check.error ? `<span style="color:var(--red)">${check.error}</span>` : check.user ? `User: ${check.user}` : check.balance ? check.balance.join(', ') : check.lists !== undefined ? `Lists: ${check.lists}` : check.scopes ? `Scopes: ${check.scopes}` : check.status || 'Connected'}</div>
     </div>
   `).join('');
 }
