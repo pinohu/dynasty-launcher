@@ -3943,7 +3943,9 @@ function toggleVideoRecording() {
   if (!_vidRecording) {
     // Start recording
     _vidChunks = [];
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus'
+      : MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ? 'video/webm;codecs=vp8,opus'
+      : 'video/webm';
     _vidRecorder = new MediaRecorder(_vidStream, { mimeType });
     _vidRecorder.ondataavailable = (e) => { if (e.data.size > 0) _vidChunks.push(e.data); };
     _vidRecorder.onstop = () => {
