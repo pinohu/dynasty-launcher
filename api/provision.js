@@ -2704,7 +2704,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         modules: moduleResults,
         summary: { succeeded: succeeded.length, failed: failed.length, total: Object.keys(moduleResults).length },
         succeeded, failed, fallbacks, totalCost, tier: userTier,
-        gated: gatedOut.length > 0 ? { modules: gatedOut, message: `${gatedOut.length} module(s) require ${userTier === 'starter' ? 'Professional' : 'Enterprise'} tier: ${gatedOut.join(', ')}` } : null,
+        gated: gatedOut.length > 0 ? { modules: gatedOut, message: `${gatedOut.length} module(s) require ${['free','foundation','starter'].includes(userTier) ? 'Professional' : 'Enterprise'} tier: ${gatedOut.join(', ')}` } : null,
         note: `${succeeded.length} modules provisioned${failed.length ? `, ${failed.length} need manual setup` : ''}${gatedOut.length ? ` (${gatedOut.length} gated by tier)` : ''}`
       });
     } catch (e) {

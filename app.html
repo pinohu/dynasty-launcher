@@ -1147,8 +1147,8 @@ html,body{overflow-x:hidden}
 
   // 3. Plan purchase URLs redirect to Stripe checkout (user doesn't stay on /app)
   var plan = params.get('plan');
-  if (plan && ['starter','professional','enterprise'].includes(plan)) {
-    return; // Let checkPlanPurchase() redirect to Stripe
+  if (plan && ['free','foundation','starter','professional','enterprise','managed'].includes(plan)) {
+    return; // Let checkPlanPurchase() handle (free → enter builder, paid → redirect to Stripe)
   }
 
   // 4. Verified paid user (has a confirmed Stripe session)
