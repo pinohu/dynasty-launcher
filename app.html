@@ -622,21 +622,21 @@ html,body{overflow-x:hidden}
   <div id="mode-screen">
     <div class="hero">
       <h1>Your Deputy <span>Platform</span></h1>
-      <p>Describe a business idea. Get 30+ production files, infrastructure provisioning, and a deployable system — powered by your choice of AI models and strategy frameworks.</p>
+      <p>Describe a business idea. Get 14+ strategy documents, 65+ production files, live infrastructure, and a deployed application — scored by up to 14 AI models across 8 business frameworks.</p>
     </div>
 
     <div class="mode-cards">
       <div class="mode-card" id="mode-quick" onclick="selectMode('quick')">
         <div class="mc-icon">⚡</div>
         <h3>Quick Build</h3>
-        <p>One prompt → AI infers everything → 30+ files generated and deployed. Same as v1.</p>
+        <p>Describe your idea → AI analyzes and generates everything → deployed to your domain with infrastructure provisioned.</p>
         <div class="mc-tag">~3 minutes</div>
       </div>
       <div class="mode-card" id="mode-strategic" onclick="selectMode('strategic')">
         <div class="mc-icon">🏛️</div>
         <h3>Strategic Build</h3>
-        <p>Choose AI models, apply business frameworks (Porter's 5 Forces, 7 Powers, Blue Ocean), get a viability score, configure deployment target — then build.</p>
-        <div class="mc-tag">~8 minutes · deeper analysis</div>
+        <p>Choose AI models, score across 8 frameworks (Porter's, 7 Powers, Blue Ocean, JTBD), configure deployment target, review viability — then build with full control.</p>
+        <div class="mc-tag">~8 minutes · deeper analysis · planning cycles</div>
       </div>
     </div>
 
@@ -4740,17 +4740,17 @@ const EDU_CONTENT = {
   g4a: {
     phase: '⬡ Business Strategy',
     title: 'Building your business engine',
-    body: 'BUSINESS-SYSTEM.md is your complete operating manual — market positioning, 11-agent automation system, revenue projections, pricing tiers, and scale plan. REVENUE-MODEL.md shows month-by-month MRR growth. GTM-PLAYBOOK.md gives you day-by-day launch actions. Strategy firms charge $8,000–15,000 for a business system of this depth.',
-    tip: '💡 The business system includes actual sales scripts, email sequences, and KPI targets with specific numbers.',
-    facts: ['Building 12-month MRR projection model...','Writing word-for-word sales scripts...','Mapping 11-agent automation workflow...','Calculating unit economics: CAC, LTV, payback period...','Designing 3-tier pricing with feature gates...'],
+    body: 'BUSINESS-SYSTEM.md is your complete operating manual — market positioning, automation workflows, revenue projections, pricing tiers, and scale plan. REVENUE-MODEL.md shows month-by-month MRR growth with bottoms-up unit economics. GTM-PLAYBOOK.md gives you a day-by-day 90-day launch sprint. Strategy firms charge $8,000–15,000 for a business system of this depth.',
+    tip: '💡 The business system includes actual sales scripts, email sequences, KPI targets with specific numbers, and real competitor pricing.',
+    facts: ['Building 12-month bottoms-up revenue model...','Writing word-for-word sales scripts...','Mapping 7 automation workflows to provisioned services...','Calculating unit economics: CAC, LTV, payback period...','Designing 3-tier pricing with feature gates...'],
     preview: ['## Revenue Model','| Month | MRR | Customers |','| 1     | $0  | 0         |','| 3     | $2.9K | 30      |','| 12    | $29K  | 300     |']
   },
   g4b: {
     phase: '⬡ Agent System',
     title: 'Designing your AI workforce',
-    body: 'AGENT-SYSTEM.md specifies 11 autonomous agents — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. FAILURE-MODES.md anticipates 10 specific failure scenarios with recovery playbooks.',
-    tip: '💡 Every agent maps to a real provisioned service — phone, AI voice, SMS, payments, automation — ready to wire up. An AI consultancy charges $5,000–12,000 for agent architecture.',
-    facts: ['Configuring intake → evaluation → decision pipeline...','Setting up circuit breakers for each failure mode...','Defining agent triggers, inputs, and outputs...','Mapping tool dependencies for 11 autonomous agents...'],
+    body: 'AGENT-SYSTEM.md specifies your automation workforce — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. 7 of these map directly to n8n workflows provisioned in your build. FAILURE-MODES.md anticipates 10 specific failure scenarios with recovery playbooks.',
+    tip: '💡 7 workflows are auto-provisioned: signup→CRM, booking→confirm, payment→receipt, hot lead→deal, missed call→SMS, dunning→escalate, post-service→review. An AI consultancy charges $5,000–12,000 for this architecture.',
+    facts: ['Configuring intake → evaluation → decision pipeline...','Setting up circuit breakers for each failure mode...','Defining agent triggers, inputs, and outputs...','Mapping 7 automation workflows to provisioned services...'],
     preview: ['## Agent: Lead Intake','Trigger: New form submission','Tool: Phone + AI Voice','Output: Qualified lead object','Fallback: Manual review queue']
   },
   g5: {
