@@ -1421,8 +1421,11 @@ Be specific. Real table names. Real field names. Real API paths. This is the con
     const match = bp.match(/\{[\s\S]*\}/);
     if (match) {
       PLANNING_OUTPUT.blueprint = safeJsonParse(match[0]);
-      if (!PLANNING_OUTPUT.blueprint) throw new Error('Blueprint JSON repair failed');
-      updatePlanPhase(1, 'done', `${PLANNING_OUTPUT.blueprint.data_model?.entities?.length || 0} entities, ${PLANNING_OUTPUT.blueprint.api_contracts?.length || 0} endpoints`);
+      if (!PLANNING_OUTPUT.blueprint) {
+        updatePlanPhase(1, 'error', 'Blueprint JSON parse failed — skipping, will build without blueprint');
+        console.error('Blueprint parse failed, raw length:', bp?.length);
+      } else {
+        updatePlanPhase(1, 'done', `${PLANNING_OUTPUT.blueprint.data_model?.entities?.length || 0} entities, ${PLANNING_OUTPUT.blueprint.api_contracts?.length || 0} endpoints`);
       renderBlueprintPreview(PLANNING_OUTPUT.blueprint);
 
       // Seed compaction with blueprint
@@ -1438,9 +1441,10 @@ Be specific. Real table names. Real field names. Real API paths. This is the con
           key_decisions: PLANNING_OUTPUT.blueprint.key_decisions?.slice(0, 5) || [],
         }
       });
+      } // close else
     }
   } catch (e) {
-    updatePlanPhase(1, 'error', e.message);
+    updatePlanPhase(1, 'error', 'Blueprint generation failed — will build without it');
     console.error('Blueprint failed:', e);
   }
 
@@ -1528,7 +1532,8 @@ Be pixel-precise. Real hex values. Real font names (from Google Fonts). This con
     const dcCleaned = (dc || '').replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
     const match = dcCleaned.match(/\{[\s\S]*\}/);
     if (match) {
-      PLANNING_OUTPUT.design_contract = safeJsonParse(match[0]); if (!PLANNING_OUTPUT.design_contract) throw new Error("Design contract JSON repair failed");
+      PLANNING_OUTPUT.design_contract = safeJsonParse(match[0]);
+      if (!PLANNING_OUTPUT.design_contract) { updatePlanPhase(2, 'error', 'Design contract parse failed — will use defaults'); }
       const pageCount = PLANNING_OUTPUT.design_contract.pages?.length || 0;
       updatePlanPhase(2, 'done', `${Object.keys(PLANNING_OUTPUT.design_contract.color_tokens || {}).length} tokens, ${pageCount} pages`);
       renderDesignPreview(PLANNING_OUTPUT.design_contract);
@@ -1611,7 +1616,8 @@ Return ONLY valid JSON:
 
     const match = plan.match(/\{[\s\S]*\}/);
     if (match) {
-      PLANNING_OUTPUT.build_plan = safeJsonParse(match[0]); if (!PLANNING_OUTPUT.build_plan) throw new Error("Build plan JSON repair failed");
+      PLANNING_OUTPUT.build_plan = safeJsonParse(match[0]);
+      if (!PLANNING_OUTPUT.build_plan) { updatePlanPhase(3, 'error', 'Build plan parse failed — will build with defaults'); }
       const phaseCount = PLANNING_OUTPUT.build_plan.phases?.length || 0;
       updatePlanPhase(3, 'done', `${phaseCount} phases, ${PLANNING_OUTPUT.build_plan.estimated_time_parallel || '~35s'} estimated`);
       renderBuildPlanPreview(PLANNING_OUTPUT.build_plan);
@@ -3606,17 +3612,41 @@ async function startBuild() {
     }
   }
 
-  // ── Planning Cycles (ULTRAPLAN pattern) ─────────────────────────────────
-  // Run 3 planning cycles to create binding contracts before generation
+  // ── Planning Cycles — give user the choice to skip ─────────────────────
   if (PLANNING_ENABLED && flagEnabled('context_compaction')) {
-    document.getElementById('config-screen').style.display = 'none';
-    await runPlanningCycles(desc, INFERRED);
-    // Don't auto-proceed — wait for user to click "Execute Build Plan"
-    return;
+    // Show choice: plan or build directly
+    const configScreen = document.getElementById('config-screen');
+    let skipDiv = document.getElementById('plan-skip-choice');
+    if (!skipDiv) {
+      skipDiv = document.createElement('div');
+      skipDiv.id = 'plan-skip-choice';
+      skipDiv.style.cssText = 'margin-top:16px;padding:16px;background:var(--card);border:1px solid var(--bdr);border-radius:12px;text-align:center';
+      skipDiv.innerHTML = `
+        <div style="font-size:13px;color:var(--sec);margin-bottom:12px">The planning phase creates an architecture blueprint, design contract, and build plan before generating code. It improves output quality but takes 2-3 minutes.</div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="launch" style="flex:1;max-width:260px" onclick="document.getElementById('plan-skip-choice').remove();runPlanAfterChoice()">🏗️ Plan then Build <span style="font-size:10px;opacity:.6">(recommended)</span></button>
+          <button class="launch" style="flex:1;max-width:260px;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="document.getElementById('plan-skip-choice').remove();skipPlanAndBuildDirect()">⚡ Skip to Build <span style="font-size:10px;opacity:.6">(faster)</span></button>
+        </div>`;
+      configScreen.appendChild(skipDiv);
+    }
+    return; // Wait for user to click
   }
 
   // If planning is disabled, go straight to build
   proceedToBuild(desc);
+}
+
+async function runPlanAfterChoice() {
+  const desc = document.getElementById('project-desc').value.trim();
+  document.getElementById('config-screen').style.display = 'none';
+  await runPlanningCycles(desc, INFERRED);
+}
+
+async function skipPlanAndBuildDirect() {
+  const desc = document.getElementById('project-desc').value.trim();
+  document.getElementById('config-screen').style.display = 'none';
+  PLANNING_ENABLED = false;
+  await proceedToBuild(desc);
 }
 
 // Called by "Execute Build Plan" button after planning completes
