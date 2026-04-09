@@ -40,6 +40,13 @@ const PROVIDERS = {
   'meta-llama/llama-3.3-70b-instruct:free': { provider: 'openrouter', label: 'Llama 3.3 70B (OR)', costPer1kIn: 0, costPer1kOut: 0, free: true },
   'google/gemma-2-9b-it:free':               { provider: 'openrouter', label: 'Gemma 2 9B (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
   'microsoft/phi-3-mini-128k-instruct:free': { provider: 'openrouter', label: 'Phi-3 Mini (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Ollama (self-hosted — any model you run locally) ──────────────────
+  'ollama/gemma4':                { provider: 'ollama', label: 'Gemma 4 (Ollama)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/llama3.3':              { provider: 'ollama', label: 'Llama 3.3 (Ollama)',   costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/deepseek-r1':           { provider: 'ollama', label: 'DeepSeek R1 (Ollama)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/qwen3':                 { provider: 'ollama', label: 'Qwen 3 (Ollama)',      costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/mistral':               { provider: 'ollama', label: 'Mistral (Ollama)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
 };
 
 function getApiKey(provider, config) {
@@ -51,6 +58,7 @@ function getApiKey(provider, config) {
     deepseek:    process.env.DEEPSEEK_API_KEY || config?.ai?.deepseek,
     mistral:     process.env.MISTRAL_API_KEY || config?.ai?.mistral,
     openrouter:  process.env.OPENROUTER_API_KEY || config?.ai?.openrouter,
+    ollama:      process.env.OLLAMA_URL || config?.ai?.ollama_url || null, // URL acts as the "key"
   };
   return keys[provider] || null;
 }
@@ -132,6 +140,21 @@ async function callMistral(apiKey, body) {
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
 
+async function callOllama(apiKey, body) {
+  // Ollama uses OpenAI-compatible API. apiKey = the base URL (e.g., http://localhost:11434)
+  const baseUrl = apiKey.replace(/\/$/, '');
+  const ollamaModel = body.model.replace('ollama/', ''); // strip prefix
+  const messages = (body.messages || []).map(m => ({ role: m.role, content: m.content }));
+  if (body.system) messages.unshift({ role: 'system', content: body.system });
+  const r = await fetch(`${baseUrl}/v1/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: ollamaModel, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7, stream: false }),
+  });
+  const d = await r.json();
+  return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
+}
+
 async function callOpenRouter(apiKey, body) {
   const messages = (body.messages || []).map(m => ({ role: m.role, content: m.content }));
   if (body.system) messages.unshift({ role: 'system', content: body.system });
@@ -144,7 +167,7 @@ async function callOpenRouter(apiKey, body) {
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
 
-const CALLERS = { anthropic: callAnthropic, openai: callOpenAI, google: callGoogle, groq: callGroq, deepseek: callDeepSeek, mistral: callMistral, openrouter: callOpenRouter };
+const CALLERS = { anthropic: callAnthropic, openai: callOpenAI, google: callGoogle, groq: callGroq, deepseek: callDeepSeek, mistral: callMistral, openrouter: callOpenRouter, ollama: callOllama };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');

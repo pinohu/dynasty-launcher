@@ -2992,6 +2992,12 @@ const REVIEW_MODELS_POOL = [
   { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B', icon: '🐪', color: '#D97706', weight: 0.4 },
   { id: 'gemma2-9b-it', label: 'Gemma 2 9B', icon: '🔶', color: '#0EA5E9', weight: 0.4 },
   { id: 'mistral-small-latest', label: 'Mistral Small', icon: '🌕', color: '#EAB308', weight: 0.5 },
+
+  // ── Ollama (self-hosted — available when OLLAMA_URL env var is set) ────
+  { id: 'ollama/gemma4', label: 'Gemma 4 (Ollama)', icon: '🏠', color: '#06B6D4', weight: 0.9 },
+  { id: 'ollama/llama3.3', label: 'Llama 3.3 (Ollama)', icon: '🏠', color: '#A16207', weight: 0.8 },
+  { id: 'ollama/deepseek-r1', label: 'DeepSeek R1 (Ollama)', icon: '🏠', color: '#F97316', weight: 0.8 },
+  { id: 'ollama/qwen3', label: 'Qwen 3 (Ollama)', icon: '🏠', color: '#8B5CF6', weight: 0.8 },
 ];
 let REVIEW_MODELS = REVIEW_MODELS_POOL.slice(0, 7); // default fallback
 
@@ -4598,7 +4604,7 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
     try {
       if (attempt > 0) console.warn(`AI fallback: trying ${useModel} (attempt ${attempt + 1})`);
       // Quality primer: help free models follow delimiter format perfectly
-      const isFreeModel = useModel.includes('llama') || useModel.includes('gemini') || useModel.includes('mixtral') || useModel.includes('gemma');
+      const isFreeModel = useModel.includes('llama') || useModel.includes('gemini') || useModel.includes('mixtral') || useModel.includes('gemma') || useModel.includes('ollama/');
       const qualityPrimer = isFreeModel ? `CRITICAL FORMATTING RULES:
 1. Use EXACTLY the ---BEGIN:key--- and ---END:key--- delimiters shown below
 2. Fill EVERY section with substantial, specific content (500+ words per section minimum)
