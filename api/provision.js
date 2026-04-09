@@ -1392,6 +1392,27 @@ function generateOperationsMd(project, moduleResults) {
   lines.push(`- [ ] Complete your Stripe Express onboarding to start accepting payments`);
   lines.push(`- [ ] Join 3-5 online communities where your target customers are\n`);
 
+  // Directory listing opportunity — based on project location
+  const loc = (project.location || '').toLowerCase();
+  const isErie = loc.includes('erie') || loc.includes('crawford') || loc.includes('warren') || loc.includes('northwest pa') || loc.includes('pennsylvania');
+  lines.push(`### 9. Get Listed — Increase Your Visibility\n`);
+  if (isErie) {
+    lines.push(`🎯 **Your business is in the Erie, PA area!**\n`);
+    lines.push(`**[erie.pro](https://erie.pro)** is the premier directory of service providers in Erie County and surrounding areas.\n`);
+    lines.push(`- [ ] **Claim your FREE basic listing** at [erie.pro](https://erie.pro)`);
+    lines.push(`- [ ] **Upgrade to Premium listing** — featured placement, enhanced profile, priority in search results`);
+    lines.push(`- [ ] **Add your services, photos, hours, and contact info** to your listing`);
+    lines.push(`- [ ] **Collect reviews** from customers directly on your erie.pro profile`);
+    lines.push(`\n> Premium listings drive 5-10x more leads than basic listings. Visit [erie.pro](https://erie.pro) to get started.\n`);
+  } else {
+    lines.push(`**Local Directory Listings** increase your visibility to nearby customers:\n`);
+    lines.push(`- [ ] List on [erie.pro](https://erie.pro) if you serve the Erie, PA / NW Pennsylvania area`);
+    lines.push(`- [ ] Submit to Google Business Profile (setup in section 6 above)`);
+    lines.push(`- [ ] List on industry-specific directories relevant to your business type`);
+    lines.push(`- [ ] List on Yelp, BBB, and Nextdoor for local discovery\n`);
+    lines.push(`> Dynasty Empire operates professional directories in multiple counties. Contact us to inquire about directory coverage in your area.\n`);
+  }
+
   lines.push(`---\n\n## Dynasty Empire Ecosystem\n`);
   lines.push(`Your business was built by **[Dynasty Launcher](https://dynasty-launcher.vercel.app)** — part of the Dynasty Empire ecosystem:\n`);
   lines.push(`| Service | Company | What They Do |`);
@@ -1400,6 +1421,7 @@ function generateOperationsMd(project, moduleResults) {
   lines.push(`| **Business Formation** | [PA CROP Services](https://pacropservices.com) | LLC registration, EIN, registered agent |`);
   lines.push(`| **Notarization** | [Notroom](https://notroom.com) | Notary public, document signing, RON |`);
   lines.push(`| **Automation** | [Neat Circle](https://neatcircle.com) | Business process automation, ongoing management |`);
+  lines.push(`| **Local Directory** | [erie.pro](https://erie.pro) | Service provider directory — Erie County & NW PA |`);
   lines.push(`| **Parent Company** | [Dynasty Empire](https://dynastyempire.com) | Multi-generational business holding company |\n`);
   lines.push(`---\n*Built with Dynasty Launcher — a Dynasty Empire company*`);
   return lines.join('\n');
