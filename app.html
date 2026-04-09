@@ -6460,11 +6460,11 @@ Generate using ---BEGIN:key--- / ---END:key--- delimiters:
 ---END:appconfig_ts---
 
 ---BEGIN:env_ts---
-// src/libs/Env.ts — Environment validation (RELAXED for initial deploy)
+// src/libs/Env.ts — Environment validation (ALL OPTIONAL for initial deploy)
 // Use @t3-oss/env-nextjs and zod
-// Make STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, BILLING_PLAN_ENV optional
-// Keep CLERK_SECRET_KEY and NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY required
-// This ensures the app boots even before Stripe is fully configured
+// Make ALL env vars optional so the build succeeds without real keys
+// This ensures the app deploys immediately — owner adds real keys later via Vercel dashboard
+// CRITICAL: Every env var must be z.string().optional() or z.string().default('')
 ---END:env_ts---
 
 ---BEGIN:env_example---
@@ -6485,7 +6485,41 @@ Generate using ---BEGIN:key--- / ---END:key--- delimiters:
           feFiles['src/app/dashboard/page.tsx'] = backend.dashboard_page_tsx;
         }
         if (backend.appconfig_ts) feFiles['src/utils/AppConfig.ts'] = backend.appconfig_ts;
-        if (backend.env_ts) feFiles['src/libs/Env.ts'] = backend.env_ts;
+        // Always push a safe Env.ts that makes ALL vars optional (prevents build crashes)
+        feFiles['src/libs/Env.ts'] = backend.env_ts || `import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod';
+
+export const Env = createEnv({
+  server: {
+    CLERK_SECRET_KEY: z.string().optional().default(''),
+    STRIPE_SECRET_KEY: z.string().optional().default(''),
+    STRIPE_WEBHOOK_SECRET: z.string().optional().default(''),
+    DATABASE_URL: z.string().optional().default(''),
+    LOGTAIL_SOURCE_TOKEN: z.string().optional().default(''),
+  },
+  client: {
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().optional().default(''),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional().default(''),
+    NEXT_PUBLIC_APP_URL: z.string().optional().default(''),
+  },
+  runtimeEnv: {
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    DATABASE_URL: process.env.DATABASE_URL,
+    LOGTAIL_SOURCE_TOKEN: process.env.LOGTAIL_SOURCE_TOKEN,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  },
+});
+`;
+        // If AI-generated Env.ts has "required" checks, replace them with optional
+        if (feFiles['src/libs/Env.ts'].includes('.min(1)') || feFiles['src/libs/Env.ts'].includes('z.string().min')) {
+          feFiles['src/libs/Env.ts'] = feFiles['src/libs/Env.ts']
+            .replace(/z\.string\(\)\.min\(\d+\)/g, 'z.string().optional().default(\'\')')
+            .replace(/z\.string\(\)(?!\.optional)/g, 'z.string().optional().default(\'\')');
+        }
         if (backend.env_example) feFiles['.env.example'] = backend.env_example;
 
         setP('g7c', 'ok', `${Object.keys(backend).filter(k => backend[k]).length} backend files generated`);
