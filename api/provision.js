@@ -334,12 +334,6 @@ BILLING_PLAN_ENV=test
   return results;
 }
 
-    results.ok = true;
-    results.cost_usd = 0; // Stripe API is free
-  } catch (e) { results.error = e.message; results.fallback = 'Stripe Dashboard → create product and prices manually'; }
-  return results;
-}
-
 // ── mod_email: Acumbamail List + 5-Email Sequence + Automation ──────────────
 async function mod_email(config, project, liveUrl) {
   const results = { ok: false, service: 'email', details: {} };
@@ -2249,14 +2243,22 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           });
         }
 
-        // ── Set non-sensitive routing env vars for fullstack (paths only, NO keys) ──
-        // Client configures their own Clerk + Stripe keys via .env.example
+        // ── Set env vars for fullstack build to succeed ──
+        // Placeholders allow Next.js compilation. Client replaces with real keys.
         if(vercelProjectId && isFullstack){
           const envVars = [
+            // Clerk — placeholders so Next.js build doesn't crash on missing NEXT_PUBLIC_*
+            {key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:'pk_test_placeholder_replace_with_your_key',type:'plain'},
+            {key:'CLERK_SECRET_KEY',value:'sk_test_placeholder_replace_with_your_key',type:'encrypted'},
             {key:'NEXT_PUBLIC_CLERK_SIGN_IN_URL',value:'/en/sign-in',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_SIGN_UP_URL',value:'/en/sign-up',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL',value:'/en/dashboard',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL',value:'/en/dashboard',type:'plain'},
+            // Stripe — placeholders so billing pages compile
+            {key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:'pk_test_placeholder_replace_with_your_key',type:'plain'},
+            {key:'STRIPE_SECRET_KEY',value:'sk_test_placeholder_replace_with_your_key',type:'encrypted'},
+            {key:'STRIPE_WEBHOOK_SECRET',value:'whsec_placeholder_replace_with_your_key',type:'encrypted'},
+            // App config
             {key:'BILLING_PLAN_ENV',value:'test',type:'plain'},
             {key:'NEXT_PUBLIC_APP_URL',value:`https://${slug}.vercel.app`,type:'plain'},
           ].map(v=>({...v,target:['production','preview','development']}));

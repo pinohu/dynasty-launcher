@@ -1045,9 +1045,11 @@ html,body{overflow-x:hidden}
     </div>
     <div class="prog-head">
       <h2 id="prog-title">Building system…</h2>
-      <p id="prog-sub">AI generation · 23 docs · Vercel + Neon + Stripe · 20i for WordPress/Static</p>
-      <div id="build-cost" style="font-size:11px;color:var(--gold);margin-top:4px;display:none">
-        Cost so far: <span id="cost-val">$0.00</span>
+      <p id="prog-sub">AI generation · strategy docs · infrastructure · integrations</p>
+      <div id="build-stats" style="display:flex;gap:20px;margin-top:8px;font-size:12px;align-items:center;justify-content:center;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--gold);font-size:16px;font-family:monospace;font-weight:700" id="elapsed-timer">0:00</span><span style="color:var(--dim)">elapsed</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--grn);font-size:16px;font-family:monospace;font-weight:700" id="files-counter">0</span><span style="color:var(--dim)">files generated</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--sec);font-size:16px;font-family:monospace;font-weight:700" id="words-counter">0</span><span style="color:var(--dim)">words</span></div>
       </div>
     </div>
     <div class="build-layout">
@@ -3513,6 +3515,24 @@ async function startBuild() {
   // Warn user before closing tab during build
   window._buildInProgress = true;
   window.onbeforeunload = () => window._buildInProgress ? 'Build in progress — closing will lose all generated files.' : null;
+
+  // Start elapsed timer
+  window._buildTimerInterval = setInterval(() => {
+    const sec = Math.floor((Date.now() - BUILD_START_TIME) / 1000);
+    const min = Math.floor(sec / 60);
+    const s = sec % 60;
+    const el = document.getElementById('elapsed-timer');
+    if (el) el.textContent = `${min}:${s.toString().padStart(2, '0')}`;
+    // Update file counter
+    const fc = document.getElementById('files-counter');
+    if (fc && window._buildFiles) fc.textContent = Object.keys(window._buildFiles).length.toLocaleString();
+    // Update word counter
+    const wc = document.getElementById('words-counter');
+    if (wc && window._buildFiles) {
+      const totalWords = Math.round(Object.values(window._buildFiles).join('').split(/\s+/).length);
+      wc.textContent = totalWords.toLocaleString();
+    }
+  }, 1000);
   EXISTING_CLAUDE_MD = null;
   PLANNING_OUTPUT = null;
 
@@ -7874,9 +7894,10 @@ ${window._buildFiles?.['AB-MESSAGING.md'] ? '<div style="font-size:11px;color:va
 <span class="again" onclick="reset()">Build another →</span>
 ${window._buildHistory?.length > 1 ? '<span class="again" onclick="showBuildComparison()" style="margin-left:12px">Compare builds →</span>' : ''}`;
 
-  // ── Build complete — clear beforeunload warning ──
+  // ── Build complete — clear timers and warnings ──
   window._buildInProgress = false;
   window.onbeforeunload = null;
+  if (window._buildTimerInterval) { clearInterval(window._buildTimerInterval); window._buildTimerInterval = null; }
 
   // ── Fire webhook on completion ──
   sendWebhook(inf, repo, fc, provRes);
