@@ -4474,15 +4474,16 @@ function validateOutputQuality(result, keys, maxTokens) {
 
 async function ai(prompt, keys, max = 8000, phaseId = null) {
   // Cost-optimized model selection per phase
-  // 100x Cost Mode: FREE models first, quality-validated with paid fallback
+  // Strategy-critical phases use frontier models for McKinsey-grade output
+  // Template/boilerplate phases use free models to minimize cost
   const PHASE_MODELS = {
-    'g1': 'gemini-2.0-flash',              // Design system — FREE (structured template)
-    'g2': 'llama-3.3-70b-versatile',       // Product docs — FREE (Groq, excellent quality)
-    'g3': 'gemini-2.0-flash',              // Tech docs — FREE (structured specs)
-    'g4a': 'llama-3.3-70b-versatile',      // Business strategy — FREE (Groq Llama 70B is excellent for analysis)
-    'g4b': 'gemini-2.0-flash',             // Agent system — FREE
+    'g1': 'gemini-2.0-flash',              // Design system — FREE (structured template, quality sufficient)
+    'g2': 'claude-sonnet-4-20250514',      // Product docs — PAID (SPEC.md requires deep technical reasoning)
+    'g3': 'gemini-2.0-flash',              // Tech docs — FREE (structured specs, template-driven)
+    'g4a': 'claude-sonnet-4-20250514',     // Business strategy — PAID (MUST be frontier model for consulting-grade analysis)
+    'g4b': 'claude-sonnet-4-20250514',     // Agent system — PAID (requires deep architectural reasoning)
     'g5': 'llama-3.3-70b-versatile',       // Backend code — FREE (Llama 70B writes good Python)
-    'g7': 'gemini-2.0-flash',              // Frontend — FREE
+    'g7': 'gemini-2.0-flash',              // Frontend — FREE (template scaffolding)
   };
   
   let model;
@@ -5316,7 +5317,7 @@ NODE_ENV=development
 # Generate: openssl rand -hex 32
 SECRET_KEY=generate-me
 ---END:env_ex---
-`, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 10000);
+`, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 14000, 'g2');
       setP('g2','ok',`${Object.values(dc).filter(v=>v).length} docs ready`);
       await compactPhase('spec', dc);
     }catch(e){setP('g2','er',e.message);throw e;}
@@ -5545,7 +5546,20 @@ ${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.r
     addP('g4a','Generating BUSINESS-SYSTEM + REVENUE-MODEL + GTM-PLAYBOOK','','⬡ Business System');setP('g4a','run');
     updateGlobalProgress(4, 12, 'Phase 4 of 14 \u00b7 Business Strategy');
     let bz1;try{
-      bz1=await ai(`You are a senior partner at a top-tier strategy firm (McKinsey/BCG/Bain caliber) preparing a board-ready strategic analysis. Write with authority, precision, and data density. Every claim must cite specific numbers. No hedging. No filler. No AI clichés ("certainly", "it's worth noting", "let's dive in"). Active voice. Numbered sections. Tables with real data. Cross-reference other Dynasty documents by name.
+      bz1=await ai(`You are a senior partner at McKinsey & Company preparing a board-ready strategic analysis that will be delivered to the CEO and investors. This document must be indistinguishable from a $50,000 consulting engagement.
+
+QUALITY STANDARDS (non-negotiable):
+- Every paragraph must contain at least one specific number, percentage, or dollar figure
+- Every strategic claim must be supported with evidence or structured logic
+- Use McKinsey's MECE framework (Mutually Exclusive, Collectively Exhaustive) for all categorizations
+- Include "so what" implications after every data table — don't just present data, interpret it
+- Financial projections must use bottoms-up methodology with explicit assumptions
+- Competitor analysis must name real companies and reference real pricing/features
+- Risk assessment must use probability × impact scoring with specific mitigation plans
+- Write in the authoritative, direct tone of a senior partner briefing a board of directors
+- NO hedging language, NO filler, NO AI clichés ("certainly", "it's worth noting", "dive in", "landscape")
+- EVERY section must be substantial — minimum 3 paragraphs or a detailed table
+- Cross-reference other documents by name (REVENUE-MODEL.md, GTM-PLAYBOOK.md, SPEC.md)
 
 ${cx(desc,inf)}
 ${scorecardContext}
@@ -5950,7 +5964,7 @@ Subject: [Subject]
 ### North Star Metric
 **[Metric]** — because [1 sentence explaining why this metric captures the full health of the business]
 ---END:gtm_playbook---
-`, ['biz_system','revenue_model','gtm_playbook'], 10000);
+`, ['biz_system','revenue_model','gtm_playbook'], 16000, 'g4a');
       setP('g4a','ok',`Business strategy ready`);
       await compactPhase('business', bz1);
     }catch(e){setP('g4a','er',e.message);throw e;}
@@ -6096,7 +6110,7 @@ Scenarios to cover: JWT/Auth failure, Database connection loss, Stripe webhook f
 | Code | Git tagged releases | Every deploy | Infinite | <1 minute (rollback) |
 | Secrets | Vercel encrypted env vars | On change | Versioned | Immediate |
 ---END:failure_modes---
-`, ['agent_system','failure_modes'], 8000);
+`, ['agent_system','failure_modes'], 12000, 'g4b');
       setP('g4b','ok',`Agent system + failure modes ready`);
     }catch(e){setP('g4b','er',e.message);throw e;}
 
