@@ -1323,7 +1323,7 @@ let V2_FRAMEWORKS = ['blue-ocean']; // always includes blue-ocean
 let V2_SCORECARD = null;
 let V2_MODEL = 'claude-sonnet-4-20250514';
 let V2_MODEL_MAP = {}; // per-phase model overrides
-let V2_DEPLOY_TARGET = 'backend-only'; // 'backend-only' | 'fullstack' | 'authority' | 'wordpress' | 'static'
+let V2_DEPLOY_TARGET = 'fullstack'; // 'backend-only' | 'fullstack' | 'authority' | 'wordpress' | 'static'
 let V2_MODELS_CACHE = null;
 let V2_BUILD_COST = 0; // running cost accumulator
 
@@ -8773,7 +8773,7 @@ async function downloadAllFiles() {
 
 function reset(){
   INFERRED=null;PRGS=[];isAuthority=false;LAUNCH_URL=null;provRes=null;
-  V2_SCORECARD=null;V2_BUILD_COST=0;V2_DEPLOY_TARGET='backend-only';V2_CATEGORY='backend';
+  V2_SCORECARD=null;V2_BUILD_COST=0;V2_DEPLOY_TARGET='fullstack';V2_CATEGORY='saas';
   RESEARCH_DATA=null;FRAMEWORK_SYNTHESIS=null;
   document.getElementById('mode-screen').style.display='block';
   document.getElementById('input-screen').style.display='none';
