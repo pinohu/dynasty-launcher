@@ -3596,20 +3596,20 @@ async function startBuild() {
   window.onbeforeunload = () => window._buildInProgress ? 'Build in progress — closing will lose all generated files.' : null;
 
   // Start elapsed timer
+  window._buildFileCount = 0;
+  window._buildWordCount = 0;
   window._buildTimerInterval = setInterval(() => {
     const sec = Math.floor((Date.now() - BUILD_START_TIME) / 1000);
     const min = Math.floor(sec / 60);
     const s = sec % 60;
     const el = document.getElementById('elapsed-timer');
     if (el) el.textContent = `${min}:${s.toString().padStart(2, '0')}`;
-    // Update file counter
+    // Update file counter from live tracker
     const fc = document.getElementById('files-counter');
-    if (fc && window._buildFiles) fc.textContent = Object.keys(window._buildFiles).length.toLocaleString();
-    // Update word counter
+    if (fc) fc.textContent = (window._buildFileCount || 0).toLocaleString();
+    // Update word counter from live tracker
     const wc = document.getElementById('words-counter');
-    if (wc && window._buildFiles) {
-      const totalWords = Math.round(Object.values(window._buildFiles).join('').split(/\s+/).length);
-      wc.textContent = totalWords.toLocaleString();
+    if (wc) wc.textContent = (window._buildWordCount || 0).toLocaleString();
     }
   }, 1000);
   EXISTING_CLAUDE_MD = null;
@@ -4432,6 +4432,11 @@ async function parseDelimited(text,keys){
     const re=new RegExp('---BEGIN:'+key+'---([\\s\\S]*?)---END:'+key+'---');
     const m=text.match(re);
     result[key]=m?m[1].trim():'';
+    // Update live build counters
+    if (m && m[1].trim().length > 10) {
+      window._buildFileCount = (window._buildFileCount || 0) + 1;
+      window._buildWordCount = (window._buildWordCount || 0) + Math.round(m[1].trim().split(/\s+/).length);
+    }
   }
   return result;
 }
@@ -4617,6 +4622,11 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
         document.getElementById('cost-val').textContent = '$' + V2_BUILD_COST.toFixed(4);
       }
       const t = d.content?.find(b => b.type === 'text')?.text || '';
+      if (t && t.length > 50) {
+        // Update live build counters
+        window._buildFileCount = (window._buildFileCount || 0) + 1;
+        window._buildWordCount = (window._buildWordCount || 0) + Math.round(t.split(/\s+/).length);
+      }
       if (t && t.length > 100) return t; // Quality gate: must be >100 chars
       if (t && t.length > 0 && attempt >= fallbackModels.length - 1) return t; // Last resort: accept anything
       if (attempt < fallbackModels.length - 1) { await new Promise(r => setTimeout(r, 2000)); continue; }
