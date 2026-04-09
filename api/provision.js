@@ -102,7 +102,7 @@ function sanitizeError(msg) {
 // ── mod_hosting: 20i Domain + Email + SPF/DKIM/DMARC ────────────────────────
 async function mod_hosting(config, project, liveUrl) {
   const results = { ok: false, service: 'hosting', details: {} };
-  const apiKey = config.infrastructure?.twentyi_general;
+  const apiKey = config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
   if (!apiKey) { results.error = 'No 20i API key'; results.fallback = 'Add twentyi_general to DYNASTY_TOOL_CONFIG'; return results; }
   const auth = `Bearer ${Buffer.from(apiKey).toString('base64')}`;
   const domain = project.domain || `${project.slug}.com`;
@@ -1152,7 +1152,7 @@ async function mod_directory(config, project) {
 // ── mod_wordpress: 20i + Dynasty Developer Theme ────────────────────────────
 async function mod_wordpress(config, project) {
   const results = { ok: false, service: 'wordpress', details: {} };
-  const apiKey = config.infrastructure?.twentyi_general;
+  const apiKey = config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
   if (!apiKey) { results.error = 'No 20i API key'; results.fallback = 'Add twentyi_general to DYNASTY_TOOL_CONFIG.infrastructure'; return results; }
   const auth = `Bearer ${Buffer.from(apiKey).toString('base64')}`;
   const domain = project.domain || `${project.slug}.com`;
@@ -1661,7 +1661,7 @@ export default async function handler(req, res) {
       ai: Object.keys(config.ai||{}), comms: Object.keys(config.comms||{}),
       automation: Object.keys(config.automation||{}),
       modules_available: {
-        hosting: !!(config.infrastructure?.twentyi_general),
+        hosting: !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
         billing: true, // Generates setup guide + .env template (no Dynasty Stripe key needed)
         email: !!(config.comms?.acumbamail),
         phone: !!(config.comms?.callscaler || config.comms?.insighto || config.comms?.trafft_client_id),
@@ -1676,7 +1676,7 @@ export default async function handler(req, res) {
         docs: !!(config.content?.documentero),
         crm: !!(config.crm_pm?.suitedash_api),
         directory: !!(config.directories?.brilliant_api),
-        wordpress: !!(config.infrastructure?.twentyi_general),
+        wordpress: !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
         social: !!(config.content?.vista_social),
         verify: true
       },
@@ -1687,7 +1687,7 @@ export default async function handler(req, res) {
       vercel_active:   !!VERCEL_TOKEN,
       github_active:   !!GH_TOKEN,
       neon_active:     !!NEON_STORE,
-      twentyi_active:  !!(config.infrastructure?.twentyi_general)
+      twentyi_active:  !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY)
     });
   }
 
@@ -2513,7 +2513,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
 
     // ── 20i HOSTING (WordPress 88291 / Static 80359) ──────────────────────────
     if(needsTwentyi){
-      const gen=config.infrastructure?.twentyi_general;
+      const gen=config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
       if(!gen){
         results.twentyi={manual:true, action:'Add twentyi_general to DYNASTY_TOOL_CONFIG.infrastructure'};
       }else{

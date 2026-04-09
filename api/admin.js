@@ -98,7 +98,7 @@ export default async function handler(req, res) {
         const d = await r.json(); return r.ok ? { ok: true, user: d.user?.username } : { ok: false, error: d.error?.message };
       }),
       check('twentyi', async () => {
-        const key = config.infrastructure?.twentyi_general;
+        const key = config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
         if (!key) return { ok: false, error: 'No key' };
         const r = await fetch('https://api.20i.com/reseller/10455', { headers: { 'Authorization': `Bearer ${key}` } });
         return { ok: r.ok, status: r.status };
