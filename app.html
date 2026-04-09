@@ -6485,30 +6485,30 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         };
 
         // ── Template compatibility: also write to [locale] paths ──────────
-        // SaaS boilerplate templates use i18n routing: /[locale]/(unauth)/page.tsx
+        // SaaS boilerplate templates use i18n routing: /[locale]/(marketing)/page.tsx
         // If we only write to src/app/page.tsx, the middleware redirects to the
         // locale path and serves the template's default content instead.
         // Writing to BOTH paths ensures Dynasty content appears regardless of routing.
         if (fe.page_tsx) {
           // Strip i18n-incompatible imports (getTranslations etc.) — Dynasty pages are self-contained
           const cleanPage = fe.page_tsx;
-          feFiles['src/app/[locale]/(unauth)/page.tsx'] = cleanPage;
+          feFiles['src/app/[locale]/(marketing)/page.tsx'] = cleanPage;
         }
         if (fe.dashboard_tsx) {
           feFiles['src/app/[locale]/(auth)/dashboard/page.tsx'] = fe.dashboard_tsx;
         }
 
         // ── Post-generation build safety checks ──────────────────────────────
-        // Fix 1: Ensure globals.css has Tailwind directives
-        if (feFiles['src/app/globals.css'] && !feFiles['src/app/globals.css'].includes('@tailwind base')) {
-          feFiles['src/app/globals.css'] = '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n' + feFiles['src/app/globals.css'];
-        }
+        // Fix 1: Do NOT overwrite globals.css — the template's Tailwind v4 config handles it
+        // Dynasty's old Tailwind v3 directives (@tailwind base/components/utilities, @apply border-border)
+        // are incompatible with Tailwind v4. Let the template's own globals.css stand.
+        delete feFiles['src/app/globals.css'];
         // Fix 2: If globals.css is empty/missing, create it
         if (!feFiles['src/app/globals.css'] || feFiles['src/app/globals.css'].trim().length < 20) {
           feFiles['src/app/globals.css'] = '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n@layer base {\n  :root {\n    --background: 0 0% 100%;\n    --foreground: 222.2 84% 4.9%;\n  }\n  .dark {\n    --background: 222.2 84% 4.9%;\n    --foreground: 210 40% 98%;\n  }\n}\n';
         }
         // Fix 3: Replace @heroicons/react with lucide-react in all TSX files
-        for (const fpath of ['src/app/page.tsx', 'src/app/dashboard/page.tsx', 'src/app/layout.tsx', 'src/app/[locale]/(unauth)/page.tsx', 'src/app/[locale]/(auth)/dashboard/page.tsx']) {
+        for (const fpath of ['src/app/page.tsx', 'src/app/dashboard/page.tsx', 'src/app/layout.tsx', 'src/app/[locale]/(marketing)/page.tsx', 'src/app/[locale]/(auth)/dashboard/page.tsx']) {
           if (feFiles[fpath] && feFiles[fpath].includes('@heroicons/react')) {
             // Common heroicons v1→lucide mappings
             const iconMap = {
@@ -7603,13 +7603,10 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
         } catch {}
       }
 
-      // ── 3. globals.css: must exist with Tailwind directives ──
-      if (isNextJs) {
-        const gc = files['src/app/globals.css'];
-        if (!gc || gc.trim().length < 20 || !gc.includes('@tailwind')) {
-          files['src/app/globals.css'] = '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n@layer base {\n  :root { --background: 0 0% 100%; --foreground: 222.2 84% 4.9%; }\n  .dark { --background: 222.2 84% 4.9%; --foreground: 210 40% 98%; }\n}\n';
-        }
-      }
+      // ── 3. globals.css: do NOT create or overwrite ──
+      // Tailwind v4 templates use @import "tailwindcss" not @tailwind directives
+      // Dynasty's Tailwind v3 globals.css breaks the build. Delete any we generated.
+      delete files['src/app/globals.css'];
 
       // ── 4. TSX files: replace @heroicons → lucide-react ──
       const iconMap = {
@@ -7739,7 +7736,7 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
       if (isNextJs && !files['src/app/docs/page.tsx']) {
         const docsPage = `import Link from 'next/link';\n\nexport const metadata = { title: '${(inf.name||'App').replace(/'/g,"\\'")} Documentation', description: 'Learn how to use ${(inf.name||'the platform').replace(/'/g,"\\'")}.' };\n\nexport default function DocsPage() {\n  return (\n    <div className="max-w-4xl mx-auto px-4 py-16">\n      <h1 className="text-4xl font-bold mb-6">Documentation</h1>\n      <p className="text-lg text-gray-600 mb-8">Everything you need to get started with ${inf.name||'the platform'}.</p>\n      <div className="space-y-6">\n        <section className="bg-gray-50 rounded-xl p-8 border"><h2 className="text-2xl font-semibold mb-4">Getting Started</h2><p className="text-gray-600">Create an account and explore the dashboard to begin.</p></section>\n        <section className="bg-gray-50 rounded-xl p-8 border"><h2 className="text-2xl font-semibold mb-4">API Reference</h2><p className="text-gray-600">Full API documentation coming soon. Check the dashboard for your API keys.</p></section>\n      </div>\n    </div>\n  );\n}\n`;
         files['src/app/docs/page.tsx'] = docsPage;
-        files['src/app/[locale]/(unauth)/docs/page.tsx'] = docsPage;
+        files['src/app/[locale]/(marketing)/docs/page.tsx'] = docsPage;
       }
 
       // ── Generate /pricing page if not present ──
@@ -7747,7 +7744,7 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
         const price = inf.price || '$49/month';
         const pricingPage = `import Link from 'next/link';\n\nexport const metadata = { title: 'Pricing - ${(inf.name||'App').replace(/'/g,"\\'")}', description: 'Simple, transparent pricing.' };\n\nexport default function PricingPage() {\n  return (\n    <div className="max-w-5xl mx-auto px-4 py-16">\n      <div className="text-center mb-16"><h1 className="text-4xl font-bold mb-4">Pricing</h1><p className="text-xl text-gray-600">Start free, scale as you grow.</p></div>\n      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">\n        <div className="rounded-2xl p-8 border"><h3 className="text-xl font-bold mb-2">Free</h3><div className="text-4xl font-bold mb-6">$0<span className="text-base text-gray-500">/mo</span></div><ul className="space-y-2 mb-8"><li>✓ Basic access</li><li>✓ Community support</li></ul><Link href="/sign-up" className="block text-center py-3 rounded-lg bg-gray-100 font-semibold">Get Started</Link></div>\n        <div className="rounded-2xl p-8 border border-blue-500 ring-2 ring-blue-500"><div className="text-center text-sm font-semibold text-blue-600 mb-4">POPULAR</div><h3 className="text-xl font-bold mb-2">Pro</h3><div className="text-4xl font-bold mb-6">${price.replace(/\/.*/, '')}<span className="text-base text-gray-500">/mo</span></div><ul className="space-y-2 mb-8"><li>✓ Everything in Free</li><li>✓ Priority support</li><li>✓ Advanced features</li></ul><Link href="/sign-up" className="block text-center py-3 rounded-lg bg-blue-600 text-white font-semibold">Start Trial</Link></div>\n        <div className="rounded-2xl p-8 border"><h3 className="text-xl font-bold mb-2">Enterprise</h3><div className="text-4xl font-bold mb-6">Custom</div><ul className="space-y-2 mb-8"><li>✓ Everything in Pro</li><li>✓ SLA guarantee</li><li>✓ Dedicated support</li></ul><Link href="mailto:sales@${(inf.repo||'app')}.com" className="block text-center py-3 rounded-lg bg-gray-100 font-semibold">Contact Sales</Link></div>\n      </div>\n    </div>\n  );\n}\n`;
         files['src/app/pricing/page.tsx'] = pricingPage;
-        files['src/app/[locale]/(unauth)/pricing/page.tsx'] = pricingPage;
+        files['src/app/[locale]/(marketing)/pricing/page.tsx'] = pricingPage;
       }
 
       // ── Generate .env.example ──
