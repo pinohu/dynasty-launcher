@@ -2419,7 +2419,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         // ── TRIGGER INITIAL DEPLOYMENT from the GitHub repo ──────────────────
         // Wait for GitHub to finish processing the pushed files
         if(vercelProjectId){
-          await new Promise(r => setTimeout(r, 5000)); // 5s delay for GitHub propagation
+          await new Promise(r => setTimeout(r, 10000)); // 10s delay for GitHub propagation across CDN
           let deployOk = false;
           for (let attempt = 0; attempt < 3; attempt++) {
             try{

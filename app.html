@@ -6657,9 +6657,9 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         }
 
         // ── Post-generation build safety checks ──────────────────────────────
-        // Fix 1: Do NOT overwrite globals.css — the template's Tailwind v4 config handles it
-        // Dynasty's old Tailwind v3 directives (@tailwind base/components/utilities, @apply border-border)
-        // are incompatible with Tailwind v4. Let the template's own globals.css stand.
+        // globals.css: AI-generated version is unreliable (often Tailwind v3 syntax).
+        // The validation gate (section 3) pushes a clean Tailwind v4 globals.css.
+        // Delete the AI-generated version here so the gate's clean version takes priority.
         delete feFiles['src/app/globals.css'];
         // Fix 3: Replace @heroicons/react with lucide-react in all TSX files
         for (const fpath of ['src/app/page.tsx', 'src/app/dashboard/page.tsx', 'src/app/layout.tsx', 'src/app/[locale]/(marketing)/page.tsx', 'src/app/[locale]/(auth)/dashboard/page.tsx']) {
@@ -7815,6 +7815,37 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
       // Push a clean Tailwind v4 compatible globals.css that REPLACES the template's.
       files['src/app/globals.css'] = `@import "tailwindcss";\n\n:root {\n  --background: 0 0% 100%;\n  --foreground: 0 0% 3.9%;\n  --card: 0 0% 100%;\n  --card-foreground: 0 0% 3.9%;\n  --popover: 0 0% 100%;\n  --popover-foreground: 0 0% 3.9%;\n  --primary: 0 0% 9%;\n  --primary-foreground: 0 0% 98%;\n  --secondary: 0 0% 96.1%;\n  --secondary-foreground: 0 0% 9%;\n  --muted: 0 0% 96.1%;\n  --muted-foreground: 0 0% 45.1%;\n  --accent: 0 0% 96.1%;\n  --accent-foreground: 0 0% 9%;\n  --destructive: 0 84.2% 60.2%;\n  --destructive-foreground: 0 0% 98%;\n  --border: 0 0% 89.8%;\n  --input: 0 0% 89.8%;\n  --ring: 0 0% 3.9%;\n  --radius: 0.5rem;\n}\n\n.dark {\n  --background: 0 0% 3.9%;\n  --foreground: 0 0% 98%;\n  --card: 0 0% 3.9%;\n  --card-foreground: 0 0% 98%;\n  --popover: 0 0% 3.9%;\n  --popover-foreground: 0 0% 98%;\n  --primary: 0 0% 98%;\n  --primary-foreground: 0 0% 9%;\n  --secondary: 0 0% 14.9%;\n  --secondary-foreground: 0 0% 98%;\n  --muted: 0 0% 14.9%;\n  --muted-foreground: 0 0% 63.9%;\n  --accent: 0 0% 14.9%;\n  --accent-foreground: 0 0% 98%;\n  --destructive: 0 62.8% 30.6%;\n  --destructive-foreground: 0 0% 98%;\n  --border: 0 0% 14.9%;\n  --input: 0 0% 14.9%;\n  --ring: 0 0% 83.1%;\n}\n\nbody {\n  font-family: var(--font-sans, system-ui, sans-serif);\n}\n`;
 
+      // ── 3b. postcss.config.js: REQUIRED for Tailwind CSS to work ──
+      if (isNextJs && !files['postcss.config.js'] && !files['postcss.config.mjs']) {
+        files['postcss.config.js'] = `module.exports = {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n};\n`;
+      }
+
+      // ── 3c. next.config.js: ensure it's not just a comment placeholder ──
+      if (isNextJs) {
+        const nc = files['next.config.js'] || files['next.config.mjs'] || '';
+        if (!nc.includes('module.exports') && !nc.includes('export default') && !nc.includes('nextConfig')) {
+          files['next.config.mjs'] = `/** @type {import('next').NextConfig} */\nconst nextConfig = {};\n\nexport default nextConfig;\n`;
+          delete files['next.config.js']; // prefer .mjs for Next.js 14+
+        }
+      }
+
+      // ── 3d. tsconfig.json: ensure Next.js compatible settings ──
+      if (isNextJs && files['tsconfig.json']) {
+        try {
+          const tsconfig = JSON.parse(files['tsconfig.json']);
+          if (!tsconfig.compilerOptions) tsconfig.compilerOptions = {};
+          let changed = false;
+          if (tsconfig.compilerOptions.jsx !== 'preserve') { tsconfig.compilerOptions.jsx = 'preserve'; changed = true; }
+          if (!['bundler','nodenext','node16'].includes(tsconfig.compilerOptions.moduleResolution)) { tsconfig.compilerOptions.moduleResolution = 'bundler'; changed = true; }
+          if (!tsconfig.compilerOptions.paths?.['@/*']) {
+            tsconfig.compilerOptions.baseUrl = '.';
+            tsconfig.compilerOptions.paths = { '@/*': ['./src/*'] };
+            changed = true;
+          }
+          if (changed) files['tsconfig.json'] = JSON.stringify(tsconfig, null, 2);
+        } catch {}
+      }
+
       // ── 4. TSX files: replace @heroicons → lucide-react ──
       const iconMap = {
         'ArrowRightIcon':'ArrowRight','CheckIcon':'Check','CheckCircleIcon':'CheckCircle',
@@ -7854,7 +7885,13 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
         }
       }
 
-      // ── 5. layout.tsx: do NOT modify — template handles its own CSS imports ──
+      // ── 5. layout.tsx: ensure globals.css import exists ──
+      const layoutPaths = ['src/app/layout.tsx', 'src/app/[locale]/layout.tsx'];
+      for (const lp of layoutPaths) {
+        if (files[lp] && !files[lp].includes("globals.css")) {
+          files[lp] = `import './globals.css';\n\n${files[lp]}`;
+        }
+      }
 
       // ── 6. Remove unused imports from TSX (prevents TS strict mode errors) ──
       for (const [fpath, content] of Object.entries(files)) {
