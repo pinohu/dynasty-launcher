@@ -1495,6 +1495,7 @@ export default async function handler(req, res) {
   config.content.vadoo_ai = config.content.vadoo_ai || process.env.VADOO_API_KEY || '';
   config.content.supermachine = config.content.supermachine || process.env.SUPERMACHINE_API_KEY || '';
   config.content.documentero = config.content.documentero || process.env.DOCUMENTERO_API_KEY || '';
+  config.content.neuronwriter = config.content.neuronwriter || process.env.NEURONWRITER_API_KEY || '';
   config.content.vista_social = config.content.vista_social || process.env.VISTA_SOCIAL_API_KEY || '';
   config.content.fliki = config.content.fliki || process.env.FLIKI_API_KEY || '';
   config.data_research.posthog = config.data_research.posthog || process.env.POSTHOG_API_KEY || '';
