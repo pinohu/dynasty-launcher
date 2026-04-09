@@ -772,18 +772,46 @@ async function mod_design(config, project) {
   const rtKey = config.content?.relaythat;
   if (!smKey && !pxKey && !rtKey) { results.error = 'No design API keys'; results.fallback = 'Create brand assets at supermachine.art, pixelied.com, or relaythat.com. Need: hero image (1920x1080), OG image (1200x630), favicon (512x512), social kit (40+ variants)'; return results; }
   try {
-    // SUPERMACHINE — AI hero image
+    // SUPERMACHINE — AI hero image + logo + OG image
     if (smKey) {
+      // Hero image (1920x1080)
       try {
         const img = await fetch('https://api.supermachine.art/v1/generate', {
           method: 'POST', headers: { 'Authorization': `Bearer ${smKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt: `Professional hero image for ${project.name}, ${project.type || 'business'} theme, modern clean design, ${project.accent || 'blue'} accent color`,
+            prompt: `Professional hero image for ${project.name}, ${project.type || 'business'} theme, modern clean design, ${project.accent || 'blue'} accent color, high quality`,
+            negative_prompt: 'text, watermark, logo, blurry, low quality',
             width: 1920, height: 1080, style: 'photorealistic'
           })
         }).then(r => r.json());
         if (img.url || img.image_url) { results.details.hero_image = img.url || img.image_url; results.ok = true; }
-      } catch (e) { results.details.supermachine_error = e.message; }
+      } catch (e) { results.details.hero_error = e.message; }
+
+      // Logo (512x512) — minimalist icon style
+      try {
+        const logo = await fetch('https://api.supermachine.art/v1/generate', {
+          method: 'POST', headers: { 'Authorization': `Bearer ${smKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: `Minimalist professional logo icon for "${project.name}", ${project.type || 'business'}, clean vector style, ${project.accent || 'blue'} accent color, simple geometric, white background`,
+            negative_prompt: 'text, words, letters, complex, photorealistic, blurry',
+            width: 512, height: 512, style: 'illustration'
+          })
+        }).then(r => r.json());
+        if (logo.url || logo.image_url) { results.details.logo = logo.url || logo.image_url; results.ok = true; }
+      } catch (e) { results.details.logo_error = e.message; }
+
+      // OG image (1200x630) — for social sharing
+      try {
+        const og = await fetch('https://api.supermachine.art/v1/generate', {
+          method: 'POST', headers: { 'Authorization': `Bearer ${smKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: `Social media preview card for "${project.name}", ${project.type || 'business'}, professional banner style, ${project.accent || 'blue'} accent, modern design`,
+            negative_prompt: 'text, watermark, blurry',
+            width: 1200, height: 630, style: 'photorealistic'
+          })
+        }).then(r => r.json());
+        if (og.url || og.image_url) { results.details.og_image = og.url || og.image_url; results.ok = true; }
+      } catch (e) { results.details.og_error = e.message; }
     }
 
     // Pixelied — NO PUBLIC API (browser-based design tool only)
@@ -1298,7 +1326,43 @@ function generateOperationsMd(project, moduleResults) {
   lines.push(`- **Week 4+:** Scale to full list. Switch DMARC from p=none to p=quarantine.`);
   lines.push(`- **Never:** Send to purchased/scraped lists. Always use double opt-in.\n`);
   lines.push(`- **Payments not working:** Check Stripe webhook endpoint is active`);
-  lines.push(`- **Chatbot not responding:** Verify Chatbase training completed\n`);
+  lines.push(`- **Chatbot not responding:** Check FAQ content in public/chatbot.html\n`);
+
+  lines.push(`\n## Business Formation Checklist\n`);
+  lines.push(`These steps require your personal action — they cannot be automated:\n`);
+  lines.push(`### 1. Legal Formation`);
+  lines.push(`- [ ] Register your LLC/Corporation at your state's Secretary of State website`);
+  lines.push(`- [ ] Get your EIN (free) at [irs.gov/ein](https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online)`);
+  lines.push(`- [ ] Draft an Operating Agreement (template in docs/LEGAL-TEMPLATES.md if generated)`);
+  lines.push(`- [ ] Register for state/local business licenses at your city/county clerk's office\n`);
+  lines.push(`### 2. Banking & Finance`);
+  lines.push(`- [ ] Open a business bank account (separate from personal) — recommended: Mercury, Relay, or your local bank`);
+  lines.push(`- [ ] Set up bookkeeping — recommended: QuickBooks Self-Employed ($15/mo) or Wave (free)`);
+  lines.push(`- [ ] Connect your Stripe payouts to your business bank account`);
+  lines.push(`- [ ] Set aside 25-30% of revenue for taxes (or hire a CPA)\n`);
+  lines.push(`### 3. Insurance`);
+  lines.push(`- [ ] Get General Liability insurance — recommended: Next Insurance, Hiscox, or your local broker`);
+  lines.push(`- [ ] Consider Professional Liability (E&O) if offering professional services`);
+  lines.push(`- [ ] Consider Cyber Liability if handling customer data\n`);
+  lines.push(`### 4. Google Business Profile`);
+  lines.push(`- [ ] Create your profile at [business.google.com](https://business.google.com)`);
+  lines.push(`- [ ] Business name: ${project.name}`);
+  lines.push(`- [ ] Website: https://${project.domain || project.slug + '.vercel.app'}`);
+  lines.push(`- [ ] Phone: (use the number from your phone module or a Google Voice number)`);
+  lines.push(`- [ ] Add 5+ photos, business hours, and a 750-character description`);
+  lines.push(`- [ ] Request reviews from your first 10 customers\n`);
+  lines.push(`### 5. Compliance`);
+  lines.push(`- [ ] Check if your industry requires specific licenses at [SBA.gov](https://www.sba.gov/business-guide/launch-your-business/apply-licenses-permits)`);
+  lines.push(`- [ ] If handling personal data: ensure GDPR/CCPA compliance (Privacy Policy is generated)`);
+  lines.push(`- [ ] If accepting payments: your Stripe Connect account handles PCI compliance`);
+  lines.push(`- [ ] If sending marketing emails: CAN-SPAM compliance (unsubscribe links are included in templates)\n`);
+  lines.push(`### 6. Growth Preparation`);
+  lines.push(`- [ ] Set up Google Analytics or use the PostHog analytics already provisioned`);
+  lines.push(`- [ ] Claim your social media handles (username matching your business name)`);
+  lines.push(`- [ ] Import the 260-post social media calendar from social-media/calendar.csv`);
+  lines.push(`- [ ] Record a 5-minute Loom walkthrough video (script in VIDEO-SCRIPT.md if generated)`);
+  lines.push(`- [ ] Join 3-5 online communities where your target customers hang out\n`);
+
   lines.push(`---\n*Built with Dynasty Launcher*`);
   return lines.join('\n');
 }
