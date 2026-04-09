@@ -207,6 +207,46 @@ export default async function handler(req, res) {
     } catch (e) { return res.json({ ok: false, error: e.message }); }
   }
 
+  // ── CREATE USER ──────────────────────────────────────────────────────
+  if (action === 'create_user') {
+    const sk = process.env.CLERK_SECRET_KEY;
+    if (!sk) return res.json({ ok: false, error: 'Clerk not configured' });
+    const { email, first_name, last_name, tier, password } = req.body || {};
+    if (!email) return res.json({ ok: false, error: 'email required' });
+    try {
+      const body = {
+        email_address: [email],
+        ...(first_name ? { first_name } : {}),
+        ...(last_name ? { last_name } : {}),
+        ...(password ? { password } : {}),
+        public_metadata: { plan: tier || 'free', builds_used: 0 },
+        skip_password_checks: !password,
+        skip_password_requirement: !password,
+      };
+      const r = await fetch('https://api.clerk.com/v1/users', {
+        method: 'POST', headers: { 'Authorization': `Bearer ${sk}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const u = await r.json();
+      if (u.errors) return res.json({ ok: false, error: u.errors.map(e => e.long_message || e.message).join(', ') });
+      return res.json({ ok: true, user_id: u.id, email: u.email_addresses?.[0]?.email_address, tier: tier || 'free' });
+    } catch (e) { return res.json({ ok: false, error: e.message }); }
+  }
+
+  // ── DELETE USER ─────────────────────────────────────────────────────
+  if (action === 'delete_user') {
+    const sk = process.env.CLERK_SECRET_KEY;
+    if (!sk) return res.json({ ok: false, error: 'Clerk not configured' });
+    const { user_id } = req.body || {};
+    if (!user_id) return res.json({ ok: false, error: 'user_id required' });
+    try {
+      const r = await fetch(`https://api.clerk.com/v1/users/${user_id}`, {
+        method: 'DELETE', headers: { 'Authorization': `Bearer ${sk}` },
+      });
+      return res.json({ ok: r.ok || r.status === 200, deleted: user_id });
+    } catch (e) { return res.json({ ok: false, error: e.message }); }
+  }
+
   // ── UPDATE USER TIER ────────────────────────────────────────────────
   if (action === 'update_tier') {
     const sk = process.env.CLERK_SECRET_KEY;
