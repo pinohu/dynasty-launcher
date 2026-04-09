@@ -40,10 +40,10 @@ export default async function handler(req, res) {
     const { plan, email } = req.body || {};
 
     const tiers = {
-      foundation: { amount: 49700, name: 'Your Deputy — Foundation', desc: '9 consulting-grade strategy documents, SBA business plan, investor readiness package, 8-framework viability scorecard, production app deployed to Vercel, 65+ files, private GitHub repo + PostgreSQL database.' },
-      starter: { amount: 49700, name: 'Your Deputy — Foundation', desc: '9 consulting-grade strategy documents, SBA business plan, investor readiness package, 8-framework viability scorecard, production app deployed to Vercel, 65+ files, private GitHub repo + PostgreSQL database.' },
-      professional: { amount: 149700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus: custom domain + authenticated email, Stripe Connected Account, CRM, 5-email marketing automation, AI chatbot, PostHog analytics + lead tracking.' },
-      enterprise: { amount: 299700, name: 'Your Deputy — Enterprise', desc: 'Complete operational business: all 17 modules including AI voice agent, SMS, SEO content, explainer video, design assets, 7 automation workflows, legal docs, social calendar, and more.' }
+      foundation: { amount: 49700, name: 'Your Deputy — Foundation', desc: '9 consulting-grade strategy documents, SBA business plan, investor readiness package, 8-framework viability scorecard, production application deployed to your domain, 65+ files, private code repository + PostgreSQL database.' },
+      starter: { amount: 49700, name: 'Your Deputy — Foundation', desc: '9 consulting-grade strategy documents, SBA business plan, investor readiness package, 8-framework viability scorecard, production application deployed to your domain, 65+ files, private code repository + PostgreSQL database.' },
+      professional: { amount: 149700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus: custom domain + authenticated business email (SPF/DKIM), connected payment account, CRM + client portal, 5-email marketing automation, AI chatbot, behavioral analytics + lead tracking.' },
+      enterprise: { amount: 299700, name: 'Your Deputy — Enterprise', desc: 'Complete operational business: all 17 modules including AI voice agent, SMS campaigns, SEO content, explainer video, design assets, 7 automation workflows, legal documents, 260-post social calendar, and more.' }
     };
     const tierDef = tiers[plan] || tiers.foundation;
     const enc = (s) => encodeURIComponent(s);

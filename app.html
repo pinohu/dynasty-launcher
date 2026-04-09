@@ -938,22 +938,22 @@ html,body{overflow-x:hidden}
         <div class="deploy-card" data-target="fullstack" data-category="saas" onclick="selectCategory(this,'fullstack','saas')">
           <div class="dc-icon">🚀</div>
           <h4>SaaS Platform</h4>
-          <p>Auth, billing, dashboard, multi-tenancy. Full-stack on Vercel.</p>
-          <div class="dc-extra" style="color:var(--grn)">Clerk · Stripe · Neon · shadcn</div>
+          <p>Auth, billing, dashboard, multi-tenancy. Full-stack deployed.</p>
+          <div class="dc-extra" style="color:var(--grn)">Auth · Payments · Database · UI Kit</div>
         </div>
 
         <div class="deploy-card" data-target="fullstack" data-category="enterprise" onclick="selectCategory(this,'fullstack','enterprise')">
           <div class="dc-icon">🏢</div>
           <h4>Enterprise SaaS</h4>
           <p>SSO/SAML, audit logs, webhooks, team management.</p>
-          <div class="dc-extra" style="color:var(--grn)">NextAuth · Prisma · RBAC</div>
+          <div class="dc-extra" style="color:var(--grn)">SSO · ORM · RBAC</div>
         </div>
 
         <div class="deploy-card" data-target="fullstack" data-category="ai" onclick="selectCategory(this,'fullstack','ai')">
           <div class="dc-icon">🤖</div>
           <h4>AI Application</h4>
           <p>Agent framework, chat UI, or AI dashboard with LLM integration.</p>
-          <div class="dc-extra" style="color:var(--grn)">OpenAI · Anthropic · RAG</div>
+          <div class="dc-extra" style="color:var(--grn)">Multi-model · RAG · Streaming</div>
         </div>
 
         <div class="deploy-card" data-target="fullstack" data-category="dashboard" onclick="selectCategory(this,'fullstack','dashboard')">
@@ -981,7 +981,7 @@ html,body{overflow-x:hidden}
           <div class="dc-icon">🛒</div>
           <h4>E-Commerce</h4>
           <p>Products, cart, payments, inventory, order management.</p>
-          <div class="dc-extra" style="color:var(--grn)">Stripe · Products · Cart</div>
+          <div class="dc-extra" style="color:var(--grn)">Payments · Products · Cart</div>
         </div>
 
         <div class="deploy-card" data-target="authority" data-category="authority" onclick="selectCategory(this,'authority','authority')">
@@ -1001,22 +1001,22 @@ html,body{overflow-x:hidden}
         <div class="deploy-card" data-target="wordpress" data-category="wordpress" onclick="selectCategory(this,'wordpress','wordpress')">
           <div class="dc-icon">🔧</div>
           <h4>WordPress Site</h4>
-          <p>WordPress on 20i hosting with Dynasty Developer theme.</p>
-          <div class="dc-extra" style="color:var(--dim)">20i · WP Pinnacle</div>
+          <p>WordPress on managed hosting with premium theme.</p>
+          <div class="dc-extra" style="color:var(--dim)">Managed hosting · Premium theme</div>
         </div>
 
         <div class="deploy-card" data-target="backend-only" data-category="backend" onclick="selectCategory(this,'backend-only','backend')">
           <div class="dc-icon">📦</div>
           <h4>Backend + Docs Only</h4>
           <p>FastAPI backend, Docker, full docs. Build frontend yourself.</p>
-          <div class="dc-extra" style="color:var(--dim)">Python · Docker · Claude Code</div>
+          <div class="dc-extra" style="color:var(--dim)">Python · Docker · AI-assisted dev</div>
         </div>
 
         <div class="deploy-card" data-target="backend-only" data-category="suitedash" onclick="selectCategory(this,'backend-only','suitedash')">
           <div class="dc-icon">⚙️</div>
-          <h4>SuiteDash Niche Pack</h4>
-          <p>Client portal niche pack deployed on your SuiteDash license.</p>
-          <div class="dc-extra" style="color:var(--dim)">136 Pinnacle licenses</div>
+          <h4>Client Portal Pack</h4>
+          <p>Branded client portal with CRM, invoicing, and project management.</p>
+          <div class="dc-extra" style="color:var(--dim)">CRM · Invoicing · Portal</div>
         </div>
 
       </div>
@@ -1975,7 +1975,7 @@ document.getElementById('settings-btn').onclick=()=>{
       </div>
 
       <div style="margin-bottom:12px">
-        <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Custom Domain <span style="color:var(--dim);font-weight:400">(added to Vercel projects)</span></label>
+        <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Custom Domain <span style="color:var(--dim);font-weight:400">(used for deployment)</span></label>
         <input id="set-domain" class="ti" value="${customDomain}" placeholder="app.yourdomain.com" style="width:100%" />
       </div>
 
@@ -2004,23 +2004,23 @@ document.getElementById('settings-btn').onclick=()=>{
         <h4 style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">V3 Integration Modules</h4>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
           ${Object.entries({
-            hosting: 'Domain + Email (20i)',
-            billing: 'Stripe Billing (3 tiers)',
-            email: 'Email Marketing (Acumbamail)',
-            phone: 'Phone + AI Voice (CallScaler)',
-            sms: 'SMS Campaigns (SMS-iT)',
-            chatbot: 'Website Chatbot (Chatbase)',
+            hosting: 'Custom Domain + Business Email',
+            billing: 'Payment Processing (3 tiers)',
+            email: 'Email Marketing (5-sequence)',
+            phone: 'Phone + AI Voice Agent',
+            sms: 'SMS Campaigns + Templates',
+            chatbot: 'Website Chatbot (FAQ-trained)',
             seo: 'SEO Content (5 blog posts)',
-            video: 'Explainer Video (Vadoo/Fliki)',
-            design: 'Design Assets (SUPERMACHINE)',
-            analytics: 'Analytics (PostHog/Plerdy)',
-            leads: 'Lead Intelligence',
-            automation: 'Automation (n8n 7 workflows)',
-            docs: 'Legal PDFs (Documentero)',
-            crm: 'CRM Portal (SuiteDash)',
-            directory: 'Directory (Brilliant Dir)',
-            wordpress: 'WordPress (20i)',
-            social: 'Social Scheduling (Vista)'
+            video: 'Explainer Video + Clips',
+            design: 'Design Assets (hero + OG + logo)',
+            analytics: 'Behavioral Analytics + Heatmaps',
+            leads: 'Lead Intelligence + Scoring',
+            automation: 'Automation (7 workflows)',
+            docs: 'Legal PDFs (ToS + Privacy + SLA)',
+            crm: 'CRM + Client Portal',
+            directory: 'Directory Listing',
+            wordpress: 'WordPress Site',
+            social: 'Social Media Scheduling'
           }).map(([k, v]) => `<div style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="mod-${k}" ${modules[k] ? 'checked' : ''} style="accent-color:var(--gold)" /><label for="mod-${k}" style="font-size:10px;color:var(--sec)">${v}</label></div>`).join('')}
         </div>
       </div>
@@ -2443,7 +2443,7 @@ async function scoreIdea() {
   if (!desc || !INFERRED) return;
   const btn = document.getElementById('score-btn');
   btn.disabled = true; btn.textContent = 'Researching market data…';
-  showLoadingOverlay('Researching market...', 'Pulling competitor data, market size, and SEO signals from Exa.ai + NeuronWriter');
+  showLoadingOverlay('Researching market...', 'Pulling competitor data, market size, and SEO demand signals');
 
   // Run pre-build research to get real market data
   const research = await runPreBuildResearch(INFERRED.name || desc.slice(0, 50), INFERRED.location || 'United States');
@@ -4187,12 +4187,12 @@ const TEMPLATES = [
   { icon: '🏠', name: 'Real Estate Tool', desc: 'Property analysis, CRM, deal tracking', prompt: 'A real estate investment tool that helps investors analyze properties, track deals, and manage portfolios. Features: deal calculator, CRM, document management.' },
   { icon: '🤖', name: 'AI Agent Service', desc: 'Autonomous task execution with human oversight', prompt: 'An AI agent service that autonomously handles [task type] for [business type]. Monitored by human operators, charged per task completed.' },
   { icon: '📰', name: 'Authority Site', desc: 'Content, SEO, lead gen, affiliate revenue', prompt: 'An authority website for [niche] that ranks for high-intent keywords, captures leads, and monetizes through affiliate partnerships and premium listings.' },
-  { icon: '🛒', name: 'E-commerce Store', desc: 'Products, cart, payments, fulfillment', prompt: 'An e-commerce store selling [product type] to [target audience]. Dropshipping/print-on-demand fulfillment, Stripe payments, email marketing.' },
+  { icon: '🛒', name: 'E-commerce Store', desc: 'Products, cart, payments, fulfillment', prompt: 'An e-commerce store selling [product type] to [target audience]. Dropshipping/print-on-demand fulfillment, integrated payments, email marketing.' },
   { icon: '📊', name: 'Analytics Dashboard', desc: 'Data viz, reporting, alerts, integrations', prompt: 'A analytics dashboard that aggregates data from [sources] and gives [user type] actionable insights. Real-time alerts, custom reports, API integrations.' },
   { icon: '🎓', name: 'Online Course / LMS', desc: 'Lessons, quizzes, certificates, payments', prompt: 'An online learning platform teaching [subject] to [audience]. Video lessons, quizzes, certificates, community forum. One-time or subscription pricing.' },
   { icon: '📱', name: 'Mobile App Backend', desc: 'API, auth, push notifications, analytics', prompt: 'A mobile app backend for [app concept]. REST API, user auth, push notifications, analytics, and admin dashboard. The app helps [users] to [action].' },
   { icon: '🔧', name: 'Client Portal', desc: 'Projects, invoicing, comms, file sharing', prompt: 'A client portal for [service business] that manages projects, invoicing, communication, and file sharing. Clients log in to see progress and pay invoices.' },
-  { icon: '⚡', name: 'Automation Service', desc: 'n8n workflows, API integrations, monitoring', prompt: 'An automation service that connects [System A] to [System B] for [business type]. Eliminates manual data entry, runs scheduled workflows, alerts on failures.' },
+  { icon: '⚡', name: 'Automation Service', desc: 'Workflows, API integrations, monitoring', prompt: 'An automation service that connects [System A] to [System B] for [business type]. Eliminates manual data entry, runs scheduled workflows, alerts on failures.' },
 ];
 
 function initTemplateGrid() {
@@ -4723,9 +4723,9 @@ const EDU_CONTENT = {
     phase: '⬡ Product Docs',
     title: 'Writing your product specification',
     body: 'Your SPEC.md defines every feature, user story, and acceptance criterion. ROADMAP.md maps out 6 months of development. README.md gives anyone the quick-start guide to your codebase. These are the documents investors and developers need. A product strategist charges $4,000–10,000 for this level of specification.',
-    tip: '💡 The manual actions file tells you exactly which services to configure by hand — Clerk auth, Stripe webhooks, Google Search Console.',
+    tip: '💡 The manual actions file tells you exactly which services to configure by hand — authentication, payment webhooks, Google Search Console.',
     facts: ['Defining MVP features with acceptance criteria...','Writing 6-month development roadmap...','Generating environment variable template...','Creating deployment instructions...'],
-    preview: ['# SPEC.md','## P0 — MVP Features','- User authentication','- Dashboard with KPIs','- Stripe subscription','- Admin panel']
+    preview: ['# SPEC.md','## P0 — MVP Features','- User authentication','- Dashboard with KPIs','- Subscription billing','- Admin panel']
   },
   g3: {
     phase: '⬡ Technical Docs',
@@ -4747,9 +4747,9 @@ const EDU_CONTENT = {
     phase: '⬡ Agent System',
     title: 'Designing your AI workforce',
     body: 'AGENT-SYSTEM.md specifies 11 autonomous agents — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. FAILURE-MODES.md anticipates 10 specific failure scenarios with recovery playbooks.',
-    tip: '💡 Every agent maps to a real Dynasty tool — CallScaler, Insighto, SMS-iT, Stripe, n8n — ready to wire up. An AI consultancy charges $5,000–12,000 for agent architecture.',
+    tip: '💡 Every agent maps to a real provisioned service — phone, AI voice, SMS, payments, automation — ready to wire up. An AI consultancy charges $5,000–12,000 for agent architecture.',
     facts: ['Configuring intake → evaluation → decision pipeline...','Setting up circuit breakers for each failure mode...','Defining agent triggers, inputs, and outputs...','Mapping tool dependencies for 11 autonomous agents...'],
-    preview: ['## Agent: Lead Intake','Trigger: New form submission','Tool: CallScaler + Insighto','Output: Qualified lead object','Fallback: Manual review queue']
+    preview: ['## Agent: Lead Intake','Trigger: New form submission','Tool: Phone + AI Voice','Output: Qualified lead object','Fallback: Manual review queue']
   },
   g5: {
     phase: '⬡ Backend Code',
@@ -4763,7 +4763,7 @@ const EDU_CONTENT = {
     phase: '⬡ Frontend',
     title: 'Scaffolding your Next.js frontend',
     body: 'A Next.js 14 App Router frontend with TypeScript, Tailwind CSS, responsive layout, dashboard, and landing page. The design system colors and fonts from DESIGN.md are already wired into the Tailwind config.',
-    tip: '💡 Full-stack deploy means your frontend goes live on Vercel immediately — real URL, real HTTPS, real CDN. A frontend developer charges $3,000–8,000 for this scaffold.',
+    tip: '💡 Full-stack deploy means your frontend goes live immediately — real URL, real HTTPS, real CDN. A frontend developer charges $3,000–8,000 for this scaffold.',
     facts: ['Generating responsive landing page with hero section...','Building authenticated dashboard with stat cards...','Wiring Tailwind config to your brand colors...','Setting up TypeScript with strict mode...'],
     preview: ['// src/app/page.tsx','export default function Home() {','  return (','    <Hero title={config.hero}','     cta={config.cta} />']
   },
@@ -4778,18 +4778,18 @@ const EDU_CONTENT = {
   prov: {
     phase: '⬡ Infrastructure',
     title: 'Provisioning your tech stack',
-    body: 'Real infrastructure is being set up right now — Stripe for payments, Vercel for hosting, Neon for your database, Acumbamail for email marketing. These are production services, not sandboxes.',
-    tip: '💡 Your Stripe product and price are already created. Your Vercel project is linked to GitHub for auto-deploy on every push.',
-    facts: ['Creating Stripe product and monthly price...','Setting up Vercel project with GitHub auto-deploy...','Provisioning Neon PostgreSQL database...','Creating Acumbamail email marketing list...','Configuring uptime monitoring...'],
-    preview: ['✓ Stripe: product created','✓ Vercel: project linked','✓ Neon: database ready','✓ Email: list configured','⟳ Pulsetic: monitoring...']
+    body: 'Real infrastructure is being set up right now — payment processing, cloud hosting, your database, and email marketing. These are production services, not sandboxes.',
+    tip: '💡 Your payment product and price tiers are already created. Your project is linked to your repo for auto-deploy on every push.',
+    facts: ['Creating payment product and monthly price...','Setting up cloud project with auto-deploy...','Provisioning PostgreSQL database...','Creating email marketing list...','Configuring uptime monitoring...'],
+    preview: ['✓ Payments: product created','✓ Hosting: project linked','✓ Database: ready','✓ Email: list configured','⟳ Monitoring: active...']
   },
   deploy: {
     phase: '⬡ Deployment',
     title: 'Launching your authority site',
-    body: 'Your complete authority website is being deployed to Vercel right now. It includes AI-generated blog articles, FAQ content, testimonials, case studies, and a directory of real local businesses scraped from Google Maps.',
-    tip: '💡 The site will be live at your Vercel URL in about 90 seconds. Every page is SEO-optimized with Schema.org markup.',
+    body: 'Your complete authority website is being deployed right now. It includes AI-generated blog articles, FAQ content, testimonials, case studies, and a directory of real local businesses scraped from Google Maps.',
+    tip: '💡 The site will be live at your URL in about 90 seconds. Every page is SEO-optimized with Schema.org markup.',
     facts: ['Forking authority site template (80 files)...','AI writing 6 blog articles (800-1200 words each)...','Generating 15 FAQ items with detailed answers...','Creating 6 customer testimonials...','Scraping 20 real businesses from Google Maps...','Building 10 location-specific landing pages...','Generating social media calendar (260 posts)...'],
-    preview: ['→ Forking template...','→ Pushing niche config...','→ AI generating content...','→ Outscraper scraping...','→ Vercel deploying...']
+    preview: ['→ Forking template...','→ Pushing niche config...','→ AI generating content...','→ Scraping local businesses...','→ Deploying to production...']
   },
   social: {
     phase: '⬡ Social Media',
@@ -8072,8 +8072,8 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     {
       const isWP=inf?.type_id==='wp-theme'||inf?.type_id==='wordpress'||V2_DEPLOY_TARGET==='wordpress';
       const isStaticType=['static','portfolio','landing'].includes(inf?.type_id||'')||V2_DEPLOY_TARGET==='static';
-      const provLabel=isWP?'Provisioning on 20i (WordPress)':isStaticType?'Provisioning on 20i (Static)':'Provisioning — Vercel + Neon + Stripe';
-      const provNote=isWP||isStaticType?'20i package + Stripe + Acumbamail':'Vercel project, Neon DB, Stripe product, Acumbamail list';
+      const provLabel=isWP?'Provisioning WordPress hosting':isStaticType?'Provisioning static hosting':'Provisioning cloud infrastructure';
+      const provNote=isWP||isStaticType?'Hosting + payments + email marketing':'Hosting, database, payments, email marketing';
       updateEduCard('prov');
     addP('prov',provLabel,provNote);setP('prov','run');
       updateGlobalProgress(9, 12, 'Phase 9 of 14 \u00b7 Provisioning');
@@ -8114,7 +8114,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
           setP('deploy','ok',`Live in ~90s → ${dd.vercel_url}`);
           LAUNCH_URL=dd.vercel_url;
         }else{
-          setP('deploy','warn',dd.error||'Deploy triggered — check Vercel dashboard');
+          setP('deploy','warn',dd.error||'Deploy triggered — check hosting dashboard');
         }
       }catch(e){
         setP('deploy','warn','Deploy queued — check https://vercel.com/polycarpohu-gmailcoms-projects');
@@ -8390,11 +8390,11 @@ ${window._buildFiles?.['BUSINESS-SYSTEM.md'] ? `<div style="background:var(--car
 <div class="rc"><h3>Design System + Docs (${designFiles.length+docFiles.length})</h3>${[...designFiles,...docFiles].map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
 ${bonusFiles.length?`<div class="rc"><h3>💎 Bonus Deliverables (${bonusFiles.length})</h3>${bonusFiles.map(f=>`<div class="lr"><span class="lb" style="background:rgba(201,168,76,0.15);color:#C9A84C">New</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>`:''}
 ${provRes&&provRes.results?`<div class="rc"><h3>Infrastructure Provisioned</h3><div class="rl">
-      ${provRes.results.stripe?`<div class="lr"><span class="lb lb-g">Stripe</span><span>Product + price created</span></div>`:''}
-      ${provRes.results.vercel?`<div class="lr"><span class="lb lb-g">Vercel</span><a href="${provRes.results.vercel.url||'#'}" target="_blank">${provRes.results.vercel.url||'project created'}</a></div>`:''}
-      ${provRes.results.neon?`<div class="lr"><span class="lb lb-g">Neon DB</span><span>${provRes.results.neon.note||provRes.results.neon.action||'linked'}</span></div>`:''}
-      ${provRes.results.twentyi?`<div class="lr"><span class="lb lb-g">20i</span><a href="${provRes.results.twentyi.control_panel||'https://my.20i.com'}" target="_blank">${provRes.results.twentyi.type||'Package'} #${provRes.results.twentyi.package_id||''}</a></div>`:''}
-      ${provRes.results.acumbamail?`<div class="lr"><span class="lb lb-g">Email</span><span>Acumbamail list created</span></div>`:''}
+      ${provRes.results.stripe?`<div class="lr"><span class="lb lb-g">Payments</span><span>Product + price tiers created</span></div>`:''}
+      ${provRes.results.vercel?`<div class="lr"><span class="lb lb-g">Hosting</span><a href="${provRes.results.vercel.url||'#'}" target="_blank">${provRes.results.vercel.url||'project created'}</a></div>`:''}
+      ${provRes.results.neon?`<div class="lr"><span class="lb lb-g">Database</span><span>${provRes.results.neon.note||provRes.results.neon.action||'linked'}</span></div>`:''}
+      ${provRes.results.twentyi?`<div class="lr"><span class="lb lb-g">Domain</span><a href="${provRes.results.twentyi.control_panel||'#'}" target="_blank">${provRes.results.twentyi.type||'Package'} #${provRes.results.twentyi.package_id||''}</a></div>`:''}
+      ${provRes.results.acumbamail?`<div class="lr"><span class="lb lb-g">Email</span><span>Marketing list created</span></div>`:''}
       ${provRes.results.pulsetic?`<div class="lr"><span class="lb lb-g">Monitor</span><span>${provRes.results.pulsetic.note||'Queued'}</span></div>`:''}
       ${provRes.manual_steps&&provRes.manual_steps.length?`<div class="lr"><span class="lb" style="background:#f59e0b;color:#000">Manual</span><span style="color:#f59e0b;font-size:12px">${provRes.manual_steps[0]}</span></div>`:''}
     </div></div>`:''}
@@ -8421,14 +8421,14 @@ ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see M
     <span style="color:var(--sec)">Financial model + GTM playbook</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$8,000–20,000</span>
     <span style="color:var(--sec)">Production code + infrastructure</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$5,000–15,000</span>
     <span style="color:var(--sec)">Custom domain + email (SPF/DKIM)</span><span style="color:var(--dim)">IT setup</span><span style="color:var(--gold);font-weight:600">$500–1,500</span>
-    <span style="color:var(--sec)">Stripe billing (3 tiers + webhooks)</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
-    <span style="color:var(--sec)">CRM + client portal (SuiteDash)</span><span style="color:var(--dim)">Setup equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
+    <span style="color:var(--sec)">Payment processing (3 tiers + webhooks)</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
+    <span style="color:var(--sec)">CRM + client portal + invoicing</span><span style="color:var(--dim)">Setup equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
     <span style="color:var(--sec)">AI phone + booking system</span><span style="color:var(--dim)">Service equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
     <span style="color:var(--sec)">Email marketing (5-email sequence)</span><span style="color:var(--dim)">Copywriter equiv.</span><span style="color:var(--gold);font-weight:600">$1,500–3,000</span>
     <span style="color:var(--sec)">5 SEO blog posts + keyword research</span><span style="color:var(--dim)">Content equiv.</span><span style="color:var(--gold);font-weight:600">$2,500–7,500</span>
     <span style="color:var(--sec)">Explainer video + social clips</span><span style="color:var(--dim)">Video equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
     <span style="color:var(--sec)">Design assets (hero, OG, 40+ social)</span><span style="color:var(--dim)">Designer equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
-    <span style="color:var(--sec)">7 automation workflows (n8n)</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
+    <span style="color:var(--sec)">7 automation workflows (end-to-end)</span><span style="color:var(--dim)">Developer equiv.</span><span style="color:var(--gold);font-weight:600">$3,000–8,000</span>
     <span style="color:var(--sec)">Analytics + lead intelligence</span><span style="color:var(--dim)">MarTech equiv.</span><span style="color:var(--gold);font-weight:600">$1,000–3,000</span>
     <span style="color:var(--sec)">Legal PDFs + operations manual</span><span style="color:var(--dim)">Attorney equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
     <span style="color:var(--sec)">Social calendar (260 posts)</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$1,500–3,000</span>
@@ -8796,12 +8796,12 @@ table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
 
   <h2 id="infrastructure">7. Infrastructure & Services</h2>
   ${provRes?.results ? `<div class="grid">
-    ${provRes.results.stripe ? '<div class="card"><div class="label">💳 Payments</div><div class="value">Stripe product + price active</div></div>' : ''}
-    ${provRes.results.vercel ? `<div class="card"><div class="label">🌐 Hosting</div><div class="value"><a href="${provRes.results.vercel.url || ''}" style="color:#C9A84C">${provRes.results.vercel.url || 'Vercel'}</a></div></div>` : ''}
-    ${provRes.results.neon ? '<div class="card"><div class="label">🗄️ Database</div><div class="value">Neon PostgreSQL connected</div></div>' : ''}
-    ${provRes.results.acumbamail ? '<div class="card"><div class="label">📧 Email</div><div class="value">Acumbamail list active</div></div>' : ''}
-    ${provRes.results.pulsetic ? '<div class="card"><div class="label">📊 Monitoring</div><div class="value">Pulsetic (5-min intervals)</div></div>' : ''}
-    ${provRes.results.n8n ? '<div class="card"><div class="label">⚙️ Automation</div><div class="value">n8n webhook workflow</div></div>' : ''}
+    ${provRes.results.stripe ? '<div class="card"><div class="label">💳 Payments</div><div class="value">Product + price tiers active</div></div>' : ''}
+    ${provRes.results.vercel ? `<div class="card"><div class="label">🌐 Hosting</div><div class="value"><a href="${provRes.results.vercel.url || ''}" style="color:#C9A84C">${provRes.results.vercel.url || 'Live'}</a></div></div>` : ''}
+    ${provRes.results.neon ? '<div class="card"><div class="label">🗄️ Database</div><div class="value">PostgreSQL connected</div></div>' : ''}
+    ${provRes.results.acumbamail ? '<div class="card"><div class="label">📧 Email</div><div class="value">Marketing list active</div></div>' : ''}
+    ${provRes.results.pulsetic ? '<div class="card"><div class="label">📊 Monitoring</div><div class="value">Uptime monitoring (5-min intervals)</div></div>' : ''}
+    ${provRes.results.n8n ? '<div class="card"><div class="label">⚙️ Automation</div><div class="value">Webhook workflow active</div></div>' : ''}
   </div>` : ''}
   ${provRes?.modules ? `<h2>7b. V3 Module Results</h2><div class="grid">
     ${Object.entries(provRes.modules).map(([k,v]) => {
