@@ -1151,6 +1151,11 @@ html,body{overflow-x:hidden}
     return; // Let checkPlanPurchase() handle (free → enter builder, paid → redirect to Stripe)
   }
 
+  // 3b. Returning user (linked from gate page / "Sign in")
+  if (params.get('returning') === '1') {
+    // Falls through to check 4 (localStorage verification) below
+  }
+
   // 4. Verified paid user (has a confirmed Stripe session)
   var paidSession = localStorage.getItem('dynasty_paid_session');
   var paidAt = localStorage.getItem('dynasty_paid_at');

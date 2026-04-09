@@ -57,8 +57,12 @@ fetch('/api/checkout?action=create_session', {
     });
   }
 
-  // Payment verification happens client-side via Stripe session verification.
-  // No cookie-based bypass — prevents cookie forgery attacks.
+  // Returning users: pass through with ?returning=1 so app.html can check localStorage
+  // The gate page links to this. If localStorage has no paid session, the JS access gate
+  // at line 1155 will reject them — so this is NOT a bypass.
+  if (params.get('returning') === '1') {
+    return; // Let app.html JS check localStorage for dynasty_paid_session
+  }
 
   // No valid access — return a gate page that redirects to pricing
   return new Response(`<!DOCTYPE html>
@@ -90,7 +94,7 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
 <div class="btns" style="margin-top:8px">
   <a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>
 </div>
-<p style="font-size:13px;color:rgba(255,255,255,0.25);margin-top:12px">Already purchased? <a href="/app?plan=foundation" style="border:none;padding:0;font-size:13px;color:rgba(201,168,76,0.6)">Sign in</a></p>
+<p style="font-size:13px;color:rgba(255,255,255,0.25);margin-top:12px">Already purchased? <a href="/app?returning=1" style="border:none;padding:0;font-size:13px;color:rgba(201,168,76,0.6)">Sign in</a></p>
 </body>
 </html>`, {
     status: 200,
