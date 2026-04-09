@@ -2,13 +2,37 @@
 // Runs at the edge BEFORE the static file is served
 
 export const config = {
-  matcher: ['/app'],
+  matcher: ['/app', '/admin'],
   runtime: 'edge',
 };
 
 export default function middleware(request) {
   const url = new URL(request.url);
   const params = url.searchParams;
+
+  // ── /admin route — require admin key in URL or let page handle token check ──
+  if (url.pathname === '/admin') {
+    const adminKey = process.env.ADMIN_KEY || 'DYNASTY2026';
+    // Allow with key in URL
+    if (params.get('k') && params.get('k') === adminKey) return;
+    // Allow if page will check localStorage token (admin.html handles auth)
+    if (params.get('auth') === 'token') return;
+    // Block with a minimal auth page
+    return new Response(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — Your Deputy</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;flex-direction:column;gap:16px}
+input{padding:10px 16px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;width:280px;text-align:center}
+button{padding:10px 24px;background:#C9A84C;color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px}
+button:hover{opacity:.9}p{color:#666;font-size:12px}</style></head><body>
+<div style="font-size:2rem">⚡</div><h2>Admin Access</h2>
+<input type="password" id="ak" placeholder="Admin key" onkeydown="if(event.key==='Enter')go()">
+<button onclick="go()">Authenticate</button>
+<p id="err"></p>
+<script>function go(){const k=document.getElementById('ak').value;if(!k)return;
+fetch('/api/auth?action=verify_admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k})})
+.then(r=>r.json()).then(d=>{if(d.ok&&d.admin){localStorage.setItem('dynasty_admin_token',d.token);window.location.href='/admin?auth=token';}
+else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{document.getElementById('err').textContent='Server error';});}</script>
+</body></html>`, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+  }
 
   // Allow admin access with server-side key (never hardcoded in client)
   const adminKey = process.env.ADMIN_KEY || 'DYNASTY2026';
