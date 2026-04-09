@@ -137,5 +137,5 @@ See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:
 - 32 identified gaps all resolved
 - DYNASTY_TOOL_CONFIG complete JSON schema
 - Error handling, fallbacks, rollback strategy
-- Revenue model ($297-$2,497 per build)
+- Revenue model ($497-$2,997 per build)
 - Success criteria and testing strategy

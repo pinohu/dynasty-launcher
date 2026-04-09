@@ -52,9 +52,9 @@ vercel.json             <- Vercel config (300s timeout for modules)
 
 ## Pricing Tiers
 
-- **Starter** ($297/build): Code + docs + Vercel deployment (Phases 1-8)
-- **Professional** ($997/build): + domain, email, billing, CRM, marketing, chatbot
-- **Enterprise** ($2,497/build): All 17 modules activated
+- **Foundation** ($497/build): Strategy docs + code + deployment (Phases 1-8)
+- **Professional** ($1,497/build): + domain, email, billing, CRM, marketing, chatbot, analytics
+- **Enterprise** ($2,997/build): All 17 modules + managed operations available
 
 ## Deploy
 
