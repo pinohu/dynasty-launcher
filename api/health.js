@@ -1,7 +1,7 @@
 export const maxDuration = 15;
 
 export default async function handler(req, res) {
-  const allowedOrigin = process.env.CORS_ORIGIN || 'https://dynasty-launcher.vercel.app';
+  const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

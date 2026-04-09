@@ -38,7 +38,7 @@ export default function middleware(request) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dynasty Launcher</title>
+<title>Your Deputy</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui,-apple-system,sans-serif;flex-direction:column;gap:20px;text-align:center;padding:24px}
@@ -53,7 +53,7 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
 </head>
 <body>
 <div style="font-size:2.5rem">⚡</div>
-<h2>Dynasty Launcher</h2>
+<h2>Your Deputy</h2>
 <p>Build a complete operating business from one prompt. Choose a plan to get started.</p>
 <div class="btns">
   <a href="/#pricing">View Plans</a>

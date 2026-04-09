@@ -1,4 +1,4 @@
-# Dynasty Launcher V3 — FINAL Build Specification
+# Your Deputy V3 — FINAL Build Specification
 ## Consolidated: Original Spec + Addendum (17 gaps) + Final Review (15 gaps)
 ## Total: 32 identified gaps, all resolved
 
@@ -673,14 +673,14 @@ Keys with `""` = need to collect from tool dashboards.
 ### Sprint 6: Revenue + Portfolio (Week 6) — 22 hours
 | Task | Hours | Priority |
 |------|-------|----------|
-| Dynasty Launcher's own Stripe checkout (gate builds behind payment) | 8 | P0 |
+| Your Deputy's own Stripe checkout (gate builds behind payment) | 8 | P0 |
 | Tier gating (Starter/Professional/Enterprise) | 4 | P0 |
 | OPERATIONS.md generator (complete, per-build) | 3 | P0 |
 | CREDENTIALS.md generator (masked + full versions) | 2 | P0 |
 | GBP content generator (description, categories, photos for manual setup) | 2 | P1 |
 | Competitor monitoring setup (RTILA) | 3 | P2 |
 
-**Sprint 6 delivers:** Dynasty Launcher is a revenue-generating product. Builds are gated behind payment tiers. Every deliverable is polished.
+**Sprint 6 delivers:** Your Deputy is a revenue-generating product. Builds are gated behind payment tiers. Every deliverable is polished.
 
 ---
 
@@ -735,7 +735,7 @@ Before Sprint 3 starts, collect these API keys:
 
 ## 18. SUCCESS CRITERIA
 
-Dynasty Launcher V3 is **complete** when:
+Your Deputy V3 is **complete** when:
 
 1. ☐ User describes business in one prompt
 2. ☐ Within 5 minutes, receives all deliverables from Section 9

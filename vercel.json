@@ -51,7 +51,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://dynasty-launcher.vercel.app"
+          "value": "https://yourdeputy.com"
         },
         {
           "key": "Access-Control-Allow-Methods",

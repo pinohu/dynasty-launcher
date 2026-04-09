@@ -1,4 +1,4 @@
-# Deploying the Dynasty Launcher
+# Deploying the Your Deputy
 
 Two ways to deploy. Pick one.
 

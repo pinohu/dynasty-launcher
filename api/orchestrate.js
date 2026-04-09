@@ -1,4 +1,4 @@
-// ── Dynasty Launcher — Build Orchestrator ────────────────────────────────────
+// ── Your Deputy — Build Orchestrator ────────────────────────────────────
 // Implements 4 Claude Code architectural patterns:
 //   1. Parallel subagent execution (Fork/Teammate/Worktree model)
 //   2. Context compaction between phases (5-strategy pattern)

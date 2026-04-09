@@ -1,4 +1,4 @@
-// ── Dynasty Launcher — Feature Flags ─────────────────────────────────────────
+// ── Your Deputy — Feature Flags ─────────────────────────────────────────
 // Inspired by Claude Code's compile-time feature flag system (KAIROS, BUDDY, etc.)
 // Enables safe iteration, A/B testing, and gated rollouts.
 export const maxDuration = 10;

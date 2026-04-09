@@ -1,10 +1,10 @@
-# Dynasty Launcher V3
+# Your Deputy V3
 
 > One prompt deploys a complete operating business in under 10 minutes. Website, domain, email, phone, CRM, billing, marketing, SEO, video, design, analytics, automation, and legal docs — all provisioned automatically.
 
 ## What It Does
 
-Dynasty Launcher takes a plain-English business description and provisions:
+Your Deputy takes a plain-English business description and provisions:
 
 **Infrastructure** (Phase 8)
 - GitHub repo with 30+ production files

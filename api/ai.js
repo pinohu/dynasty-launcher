@@ -1,4 +1,4 @@
-// ── Dynasty Launcher v2 — Multi-Model AI Router ──────────────────────────────
+// ── Your Deputy v2 — Multi-Model AI Router ──────────────────────────────
 // Routes to: Anthropic, OpenAI, Google, Groq, DeepSeek, Mistral, OpenRouter
 // Adapts prompt format per provider. Returns unified response shape.
 export const maxDuration = 300;
@@ -137,7 +137,7 @@ async function callOpenRouter(apiKey, body) {
   if (body.system) messages.unshift({ role: 'system', content: body.system });
   const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': 'https://dynasty-launcher.vercel.app', 'X-Title': 'Dynasty Launcher' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': 'https://yourdeputy.com', 'X-Title': 'Your Deputy' },
     body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
   });
   const d = await r.json();

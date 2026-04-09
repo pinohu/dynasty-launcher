@@ -1,4 +1,4 @@
-# Sprint Tracking — Dynasty Launcher V3
+# Sprint Tracking — Your Deputy V3
 
 ## Sprint 0: Prep (Week 0, 12 hrs)
 - [ ] Fork `ritik-prog/n8n-automation-templates-5000` → curate 50 workflows into `templates/n8n-workflows/`
@@ -52,7 +52,7 @@
 - [ ] Review/testimonial collection workflow (2h)
 
 ## Sprint 6: Revenue + Portfolio (Week 6, 22 hrs)
-- [ ] Dynasty Launcher Stripe checkout (gate builds behind payment) (8h)
+- [ ] Your Deputy Stripe checkout (gate builds behind payment) (8h)
 - [ ] Tier gating (Starter $297 / Professional $997 / Enterprise $2,497) (4h)
 - [ ] OPERATIONS.md generator (per-build, complete) (3h)
 - [ ] CREDENTIALS.md generator (masked + full versions) (2h)

@@ -1,4 +1,4 @@
-// Dynasty Launcher — Clerk Auth API
+// Your Deputy — Clerk Auth API
 // Returns publishable key for frontend, verifies sessions, manages user metadata
 
 export default async function handler(req, res) {

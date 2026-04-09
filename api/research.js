@@ -1,4 +1,4 @@
-// ── Dynasty Launcher — Pre-Build Research Engine ─────────────────────────────
+// ── Your Deputy — Pre-Build Research Engine ─────────────────────────────
 // Pulls REAL market data before framework analysis runs.
 // Sources: Exa.ai (competitors/market), NeuronWriter (SEO), Outscraper (local)
 export const maxDuration = 60;

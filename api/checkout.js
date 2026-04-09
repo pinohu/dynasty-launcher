@@ -1,9 +1,9 @@
-// Dynasty Launcher — Stripe Checkout API
+// Your Deputy — Stripe Checkout API
 // Handles: create checkout session, verify payment, usage tracking
 // Uses Stripe REST API directly (no SDK — no package.json in this project)
 
 const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://dynasty-launcher.vercel.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://yourdeputy.com';
 
 async function stripePost(endpoint, params) {
   const auth = Buffer.from(`${STRIPE_SECRET}:`).toString('base64');
@@ -24,7 +24,7 @@ async function stripeGet(endpoint) {
 }
 
 export default async function handler(req, res) {
-  const allowedOrigin = process.env.CORS_ORIGIN || 'https://dynasty-launcher.vercel.app';
+  const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -40,9 +40,9 @@ export default async function handler(req, res) {
     const { plan, email } = req.body || {};
 
     const tiers = {
-      starter: { amount: 29700, name: 'Dynasty Launcher — Starter', desc: 'Code + docs + Vercel deployment. 30+ production files, 8-framework viability analysis, GitHub repo + Neon database.' },
-      professional: { amount: 99700, name: 'Dynasty Launcher — Professional', desc: 'Everything in Starter plus: custom domain, business email, Stripe billing, CRM, email marketing, chatbot, analytics.' },
-      enterprise: { amount: 249700, name: 'Dynasty Launcher — Enterprise', desc: 'All 17 modules: domain, email, phone, CRM, billing, SEO, video, design, analytics, leads, automation, legal docs, and more.' }
+      starter: { amount: 29700, name: 'Your Deputy — Starter', desc: 'Code + docs + Vercel deployment. 30+ production files, 8-framework viability analysis, GitHub repo + Neon database.' },
+      professional: { amount: 99700, name: 'Your Deputy — Professional', desc: 'Everything in Starter plus: custom domain, business email, Stripe billing, CRM, email marketing, chatbot, analytics.' },
+      enterprise: { amount: 249700, name: 'Your Deputy — Enterprise', desc: 'All 17 modules: domain, email, phone, CRM, billing, SEO, video, design, analytics, leads, automation, legal docs, and more.' }
     };
     const tierDef = tiers[plan] || tiers.starter;
     const enc = (s) => encodeURIComponent(s);

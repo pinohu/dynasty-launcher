@@ -1,4 +1,4 @@
-// ── Dynasty Launcher — Project Memory ────────────────────────────────────────
+// ── Your Deputy — Project Memory ────────────────────────────────────────
 // Inspired by Claude Code's autoDream memory consolidation pattern.
 // Tracks: what was built, what customizations were made, what failed.
 // Over time, the launcher learns your patterns and avoids repeating mistakes.
