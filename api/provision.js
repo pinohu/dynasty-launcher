@@ -955,7 +955,7 @@ async function mod_docs(config, project) {
 async function mod_automation(config, project, liveUrl) {
   const results = { ok: false, service: 'automation', details: {} };
   const n8nKey = process.env.N8N_API_KEY || config.automation?.n8n_api;
-  const n8nUrl = config.automation?.n8n_url || 'https://pinohu.app.n8n.cloud';
+  const n8nUrl = config.automation?.n8n_url || process.env.N8N_URL || 'https://pinohu.app.n8n.cloud';
   if (!n8nKey) { results.error = 'No n8n API key'; results.fallback = 'Add N8N_API_KEY env var or n8n_api to DYNASTY_TOOL_CONFIG.automation'; return results; }
   const nh = { 'X-N8N-API-KEY': n8nKey, 'Content-Type': 'application/json' };
   const webhookBase = liveUrl || `https://${project.slug}.vercel.app`;
@@ -2595,7 +2595,8 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           },
           settings: { executionOrder: 'v1' },
         };
-        const wr = await fetch('https://pinohu.app.n8n.cloud/api/v1/workflows', {
+        const n8nBaseUrl = config.automation?.n8n_url || process.env.N8N_URL || 'https://pinohu.app.n8n.cloud';
+        const wr = await fetch(`${n8nBaseUrl}/api/v1/workflows`, {
           method: 'POST',
           headers: { 'X-N8N-API-KEY': N8N_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(wfBody),
@@ -2603,7 +2604,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         const wd = await wr.json();
         if (wd.id) {
           // Activate the workflow
-          await fetch(`https://pinohu.app.n8n.cloud/api/v1/workflows/${wd.id}/activate`, {
+          await fetch(`${n8nUrl}/api/v1/workflows/${wd.id}/activate`, {
             method: 'POST', headers: { 'X-N8N-API-KEY': N8N_KEY },
           });
           results.n8n = { ok: true, workflow_id: wd.id, name: wfBody.name, webhook_path: `/${slug}` };

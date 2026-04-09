@@ -111,7 +111,7 @@ export default async function handler(req, res) {
       }),
       check('n8n', async () => {
         const key = process.env.N8N_API_KEY || config.automation?.n8n_api;
-        const url = config.automation?.n8n_url || 'https://pinohu.app.n8n.cloud';
+        const url = config.automation?.n8n_url || process.env.N8N_URL || 'https://pinohu.app.n8n.cloud';
         if (!key) return { ok: false, error: 'No key' };
         const r = await fetch(`${url}/api/v1/workflows?limit=1`, { headers: { 'X-N8N-API-KEY': key } });
         return { ok: r.ok, status: r.status };
