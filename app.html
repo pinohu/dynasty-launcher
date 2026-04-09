@@ -4866,18 +4866,13 @@ function updateGlobalProgress(phase, total, label) {
     gp.style.display = 'block';
     const pct = Math.round((phase / total) * 100);
     document.getElementById('gp-fill').style.width = pct + '%';
-    
-    // Estimated time remaining
-    const elapsed = (Date.now() - BUILD_START_TIME) / 1000;
-    let eta = '';
-    if (phase > 1 && phase < total) {
-      const perPhase = elapsed / phase;
-      const remaining = Math.round(perPhase * (total - phase));
-      eta = remaining > 60 ? ` · ~${Math.round(remaining/60)}m remaining` : ` · ~${remaining}s remaining`;
-    } else if (phase >= total) {
-      eta = ' · Complete!';
+
+    // Show phase progress without time estimate (estimates were inaccurate and caused anxiety)
+    let status = '';
+    if (phase >= total) {
+      status = ' · Complete!';
     }
-    document.getElementById('gp-text').textContent = (label || `Phase ${phase} of ${total}`) + eta;
+    document.getElementById('gp-text').textContent = (label || `Phase ${phase} of ${total}`) + status;
   }
 }
 
