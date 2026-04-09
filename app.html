@@ -7737,7 +7737,7 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
           version: '0.1.0',
           private: true,
           scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
-          dependencies: { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^3.4.1' },
+          dependencies: { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^4.0.0' },
           devDependencies: { 'typescript': '^5.3.3', '@types/react': '^18.2.0', '@types/node': '^20.11.0', 'postcss': '^8.4.33', 'autoprefixer': '^10.4.17' },
           engines: { node: '20.x' }
         }, null, 2);
@@ -7799,8 +7799,8 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
 
           // ── 2c. Ensure essential Next.js deps ──
           if (isNextJs) {
-            const reqDeps = { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^3.4.1' };
-            const reqDev = { 'typescript': '^5.3.3', '@types/react': '^18.2.0', '@types/node': '^20.11.0', 'postcss': '^8.4.33', 'autoprefixer': '^10.4.17' };
+            const reqDeps = { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^4.0.0' };
+            const reqDev = { 'typescript': '^5.3.3', '@types/react': '^18.2.0', '@types/node': '^20.11.0' };
             for (const [k,v] of Object.entries(reqDeps)) { if (!pkg.dependencies[k]) pkg.dependencies[k] = v; }
             for (const [k,v] of Object.entries(reqDev)) { if (!pkg.devDependencies[k]) pkg.devDependencies[k] = v; }
             // Ensure build script exists
@@ -7820,11 +7820,13 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
       // ── 3. globals.css: OVERRIDE template's broken Tailwind v3 globals.css ──
       // Template globals.css uses @apply border-border which crashes Tailwind v4.
       // Push a clean Tailwind v4 compatible globals.css that REPLACES the template's.
-      files['src/app/globals.css'] = `@import "tailwindcss";\n\n:root {\n  --background: 0 0% 100%;\n  --foreground: 0 0% 3.9%;\n  --card: 0 0% 100%;\n  --card-foreground: 0 0% 3.9%;\n  --popover: 0 0% 100%;\n  --popover-foreground: 0 0% 3.9%;\n  --primary: 0 0% 9%;\n  --primary-foreground: 0 0% 98%;\n  --secondary: 0 0% 96.1%;\n  --secondary-foreground: 0 0% 9%;\n  --muted: 0 0% 96.1%;\n  --muted-foreground: 0 0% 45.1%;\n  --accent: 0 0% 96.1%;\n  --accent-foreground: 0 0% 9%;\n  --destructive: 0 84.2% 60.2%;\n  --destructive-foreground: 0 0% 98%;\n  --border: 0 0% 89.8%;\n  --input: 0 0% 89.8%;\n  --ring: 0 0% 3.9%;\n  --radius: 0.5rem;\n}\n\n.dark {\n  --background: 0 0% 3.9%;\n  --foreground: 0 0% 98%;\n  --card: 0 0% 3.9%;\n  --card-foreground: 0 0% 98%;\n  --popover: 0 0% 3.9%;\n  --popover-foreground: 0 0% 98%;\n  --primary: 0 0% 98%;\n  --primary-foreground: 0 0% 9%;\n  --secondary: 0 0% 14.9%;\n  --secondary-foreground: 0 0% 98%;\n  --muted: 0 0% 14.9%;\n  --muted-foreground: 0 0% 63.9%;\n  --accent: 0 0% 14.9%;\n  --accent-foreground: 0 0% 98%;\n  --destructive: 0 62.8% 30.6%;\n  --destructive-foreground: 0 0% 98%;\n  --border: 0 0% 14.9%;\n  --input: 0 0% 14.9%;\n  --ring: 0 0% 83.1%;\n}\n\nbody {\n  font-family: var(--font-sans, system-ui, sans-serif);\n}\n`;
+      if (isNextJs) files['src/app/globals.css'] = `@import "tailwindcss";\n\n:root {\n  --background: 0 0% 100%;\n  --foreground: 0 0% 3.9%;\n  --card: 0 0% 100%;\n  --card-foreground: 0 0% 3.9%;\n  --popover: 0 0% 100%;\n  --popover-foreground: 0 0% 3.9%;\n  --primary: 0 0% 9%;\n  --primary-foreground: 0 0% 98%;\n  --secondary: 0 0% 96.1%;\n  --secondary-foreground: 0 0% 9%;\n  --muted: 0 0% 96.1%;\n  --muted-foreground: 0 0% 45.1%;\n  --accent: 0 0% 96.1%;\n  --accent-foreground: 0 0% 9%;\n  --destructive: 0 84.2% 60.2%;\n  --destructive-foreground: 0 0% 98%;\n  --border: 0 0% 89.8%;\n  --input: 0 0% 89.8%;\n  --ring: 0 0% 3.9%;\n  --radius: 0.5rem;\n}\n\n.dark {\n  --background: 0 0% 3.9%;\n  --foreground: 0 0% 98%;\n  --card: 0 0% 3.9%;\n  --card-foreground: 0 0% 98%;\n  --popover: 0 0% 3.9%;\n  --popover-foreground: 0 0% 98%;\n  --primary: 0 0% 98%;\n  --primary-foreground: 0 0% 9%;\n  --secondary: 0 0% 14.9%;\n  --secondary-foreground: 0 0% 98%;\n  --muted: 0 0% 14.9%;\n  --muted-foreground: 0 0% 63.9%;\n  --accent: 0 0% 14.9%;\n  --accent-foreground: 0 0% 98%;\n  --destructive: 0 62.8% 30.6%;\n  --destructive-foreground: 0 0% 98%;\n  --border: 0 0% 14.9%;\n  --input: 0 0% 14.9%;\n  --ring: 0 0% 83.1%;\n}\n\nbody {\n  font-family: var(--font-sans, system-ui, sans-serif);\n}\n`;
 
-      // ── 3b. postcss.config.js: REQUIRED for Tailwind CSS to work ──
-      if (isNextJs && !files['postcss.config.js'] && !files['postcss.config.mjs']) {
-        files['postcss.config.js'] = `module.exports = {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n};\n`;
+      // ── 3b. postcss.config.js: Tailwind v4 doesn't use PostCSS plugins ──
+      // Remove any postcss.config that references tailwindcss as a plugin (v3 pattern)
+      // Tailwind v4 uses @import "tailwindcss" in CSS instead
+      if (isNextJs && files['postcss.config.js']?.includes('tailwindcss')) {
+        delete files['postcss.config.js'];
       }
 
       // ── 3c. next.config.js: ensure it's not just a comment placeholder ──
@@ -8069,7 +8071,7 @@ Requirements:
 - Include the PostHog analytics snippet at the bottom: ${getPostHogSnippet().replace(/</g, '&lt;').slice(0, 50)}... (just add a comment placeholder for analytics)
 
 Return ONLY the complete HTML. No markdown, no backticks, no explanation. Start with <!DOCTYPE html>.`, 8000);
-            if (lpHtml && lpHtml.includes('<!DOCTYPE') || lpHtml.includes('<html')) {
+            if (lpHtml && (lpHtml.includes('<!DOCTYPE') || lpHtml.includes('<html'))) {
               files['index.html'] = lpHtml;
               setP('static-page', 'ok', 'Landing page generated');
             } else {
