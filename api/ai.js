@@ -20,12 +20,14 @@ const PROVIDERS = {
   'gemini-2.5-pro':             { provider: 'google', label: 'Gemini 2.5 Pro',   costPer1kIn: 0.00125, costPer1kOut: 0.01, free: false },
   'gemini-2.5-flash':           { provider: 'google', label: 'Gemini 2.5 Flash', costPer1kIn: 0.00015, costPer1kOut: 0.001, free: false },
   'gemini-2.0-flash':           { provider: 'google', label: 'Gemini 2.0 Flash', costPer1kIn: 0.0001, costPer1kOut: 0.0004, free: true },
+  'gemma-4-27b-it':             { provider: 'google', label: 'Gemma 4 27B',     costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── Groq (free tier) ──────────────────────────────────────────────────────
   'llama-3.3-70b-versatile':    { provider: 'groq', label: 'Llama 3.3 70B',  costPer1kIn: 0, costPer1kOut: 0, free: true },
   'llama-3.1-8b-instant':       { provider: 'groq', label: 'Llama 3.1 8B',   costPer1kIn: 0, costPer1kOut: 0, free: true },
   'mixtral-8x7b-32768':         { provider: 'groq', label: 'Mixtral 8x7B',   costPer1kIn: 0, costPer1kOut: 0, free: true },
   'gemma2-9b-it':               { provider: 'groq', label: 'Gemma 2 9B',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'gemma4-27b-it':              { provider: 'groq', label: 'Gemma 4 27B (Groq)', costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── DeepSeek ──────────────────────────────────────────────────────────────
   'deepseek-chat':              { provider: 'deepseek', label: 'DeepSeek V3',    costPer1kIn: 0.00027, costPer1kOut: 0.0011, free: false },
@@ -39,6 +41,7 @@ const PROVIDERS = {
   // ── OpenRouter (aggregator — free models) ─────────────────────────────────
   'meta-llama/llama-3.3-70b-instruct:free': { provider: 'openrouter', label: 'Llama 3.3 70B (OR)', costPer1kIn: 0, costPer1kOut: 0, free: true },
   'google/gemma-2-9b-it:free':               { provider: 'openrouter', label: 'Gemma 2 9B (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'google/gemma-4-27b-it:free':              { provider: 'openrouter', label: 'Gemma 4 27B (OR)',   costPer1kIn: 0, costPer1kOut: 0, free: true },
   'microsoft/phi-3-mini-128k-instruct:free': { provider: 'openrouter', label: 'Phi-3 Mini (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── Ollama (self-hosted — any model you run locally) ──────────────────

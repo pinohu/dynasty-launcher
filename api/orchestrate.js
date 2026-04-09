@@ -25,6 +25,7 @@ const ROUTING_TIERS = {
     google: 'gemini-2.5-pro',
     deepseek: 'deepseek-chat',
     mistral: 'mistral-large-latest',
+    groq: 'gemma4-27b-it',
     fallback: 'claude-sonnet-4-20250514',
   },
   // Fast: boilerplate, templates, simple generation
