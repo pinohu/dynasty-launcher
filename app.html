@@ -2930,7 +2930,7 @@ async function applySelectedRefinements() {
   INFERRED = null;
   document.getElementById('refinement-results').innerHTML = '<p style="font-size:12px;color:var(--gold)">Re-inferring with ' + selected.length + ' refinement' + (selected.length > 1 ? 's' : '') + ' applied...</p>';
   await inferConfig(document.getElementById('project-desc').value.trim());
-  document.getElementById('refinement-results').innerHTML = '<p style="font-size:12px;color:var(--grn)">✓ ' + selected.length + ' refinement' + (selected.length > 1 ? 's' : '') + ' applied. Click "Score this idea" again to see the improvement.</p>';
+  document.getElementById('refinement-results').innerHTML = '<p style="font-size:12px;color:var(--grn)">✓ ' + selected.length + ' refinement' + (selected.length > 1 ? 's' : '') + ' applied.</p><div style="display:flex;gap:8px;margin-top:8px"><button class="launch" style="flex:1" onclick="startBuild()">Build with refinements →</button><button class="launch" style="flex:1;background:transparent;border:1px solid var(--gb);color:var(--gold)" onclick="scoreIdea()">Re-score to verify</button></div><p style="font-size:10px;color:var(--dim);margin-top:6px">Scoring is free. Build credit is only consumed when the build starts.</p>';
 }
 
 // ── Multi-Model Pivot Review Pipeline ──────────────────────────────────
@@ -3395,6 +3395,27 @@ Return 4-5 paragraphs of brutal, specific critique.`,
 
 async function acceptPivot(pivotDesc) {
   document.getElementById('project-desc').value = pivotDesc;
+
+  // Offer choice: re-score or skip to build
+  const pipeline = document.getElementById('pipeline-screen');
+  const consensus = document.getElementById('consensus-result');
+  if (consensus) {
+    consensus.innerHTML = `
+      <div style="margin-top:1rem;text-align:center">
+        <div style="font-size:13px;color:var(--grn);margin-bottom:12px">✓ Pivot accepted</div>
+        <p style="font-size:12px;color:var(--sec);margin-bottom:16px;line-height:1.6">"${pivotDesc.slice(0, 150)}${pivotDesc.length > 150 ? '...' : ''}"</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="launch" style="flex:2" onclick="skipToBuild()">Skip to Build →</button>
+          <button class="launch" style="flex:1;background:transparent;border:1px solid var(--gb);color:var(--gold)" onclick="reScorePivot()">Re-score first</button>
+          <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--dim)" onclick="cancelPivot()">Cancel</button>
+        </div>
+        <p style="font-size:10px;color:var(--dim);margin-top:8px">Scoring is always free. Your build credit is only used when you click Build.</p>
+      </div>`;
+  }
+}
+
+async function reScorePivot() {
+  const pivotDesc = document.getElementById('project-desc').value.trim();
   INFERRED = null;
   V2_SCORECARD = null;
   document.getElementById('pipeline-screen').style.display = 'none';
@@ -3407,6 +3428,24 @@ async function acceptPivot(pivotDesc) {
   document.getElementById('launch-btn').textContent = 'Re-analyzing pivoted idea...';
   document.getElementById('launch-btn').disabled = true;
   await inferConfig(pivotDesc);
+}
+
+function skipToBuild() {
+  // Use the pivoted description but skip re-scoring — go straight to build
+  document.getElementById('pipeline-screen').style.display = 'none';
+  document.getElementById('scorecard-wrap').style.display = 'none';
+  document.getElementById('framework-screen').style.display = 'none';
+  document.getElementById('input-screen').style.display = 'none';
+  document.getElementById('refinement-results').style.display = 'none';
+  startBuild();
+}
+
+function cancelPivot() {
+  // Return to scorecard without changing anything
+  document.getElementById('pipeline-screen').style.display = 'none';
+  const sc = document.getElementById('scorecard-wrap');
+  if (sc) sc.style.display = 'block';
+  document.getElementById('sc-actions').style.display = 'grid';
 }
 
 function modifyPivot(pivotDesc) {
