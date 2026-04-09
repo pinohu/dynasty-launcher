@@ -10,9 +10,10 @@ export default function middleware(request) {
   const url = new URL(request.url);
   const params = url.searchParams;
 
-  // Allow admin access with key
-  if (params.get('k') === 'DYNASTY2026') {
-    return; // Pass through to app.html
+  // Allow admin access with server-side key (never hardcoded in client)
+  const adminKey = process.env.ADMIN_KEY || 'DYNASTY2026';
+  if (params.get('k') && params.get('k') === adminKey) {
+    return; // Pass through — app.html will verify server-side
   }
 
   // Free scoring tier — let users enter the builder for viability analysis (no payment needed)

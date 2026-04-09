@@ -1127,18 +1127,51 @@ html,body{overflow-x:hidden}
   <div id="done-screen" style="display:none"></div>
 </div>
 
-<script>// ── Dynasty Access Gate — strict payment/key check ─────────────────────────────────────
+<script>// ── Access Gate — server-verified admin + payment check ─────────────────────────────────────
 (function(){
-  var KEY = 'k', VAL = 'DYNASTY2026';
   var params = new URLSearchParams(window.location.search);
 
-  // 1. Admin access key (for owner/dev use only)
-  if (params.get(KEY) === VAL) {
-    try { localStorage.setItem('dlg_ok', VAL); } catch(e){}
-    return;
+  // 1. Admin access key — verified server-side (key not in client code)
+  var adminKey = params.get('k');
+  if (adminKey) {
+    // Verify key with server before granting access
+    fetch('/api/auth?action=verify_admin', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: adminKey })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.ok && d.admin) {
+        try {
+          localStorage.setItem('dynasty_admin_token', d.token);
+          localStorage.setItem('dynasty_tier', 'enterprise');
+          localStorage.setItem('dynasty_paid_session', 'admin');
+          localStorage.setItem('dynasty_paid_at', new Date().toISOString());
+        } catch(e) {}
+        window.history.replaceState({}, '', window.location.pathname);
+        window.location.reload();
+      } else {
+        // Invalid key — fall through to gate
+      }
+    }).catch(function() {});
+    return; // Let the async verification handle it
   }
-  // Previously authenticated admin
-  if (localStorage.getItem('dlg_ok') === VAL) return;
+  // Previously authenticated admin (server-signed token)
+  var adminToken = localStorage.getItem('dynasty_admin_token');
+  if (adminToken) {
+    // Validate token server-side (async, but let the page load — enterBuilder checks too)
+    fetch('/api/auth?action=validate_admin', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: adminToken })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      if (!d.ok || !d.valid) {
+        // Token expired or invalid — clear and redirect
+        localStorage.removeItem('dynasty_admin_token');
+        localStorage.removeItem('dynasty_tier');
+        localStorage.removeItem('dynasty_paid_session');
+        window.location.href = '/';
+      }
+    }).catch(function() {});
+    return; // Token present — allow page load (server validates async)
+  }
 
   // 2. Payment success return from Stripe (requires session_id for verification)
   if (params.get('payment') === 'success' && params.get('session_id')) {
@@ -2140,7 +2173,7 @@ function isModuleAllowed(moduleName) {
 // ── Builder Entry + Payment Flow ────────────────────────────────────
 async function enterBuilder() {
   // Free tier: allow entry for scoring — build is gated separately in startBuild()
-  const isAdmin = localStorage.getItem('dlg_ok') === 'DYNASTY2026';
+  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   const isFreeScoring = !isAdmin && !hasPaid;
 
@@ -3629,7 +3662,7 @@ Return 3-4 paragraphs. If the idea has become genuinely strong, your critique sh
 
 async function startBuild() {
   // ── Payment verification: require paid session or admin key ────────────
-  const isAdmin = localStorage.getItem('dlg_ok') === 'DYNASTY2026';
+  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   if (!isAdmin && !hasPaid) {
     // Free tier can score but not build — show upgrade prompt
