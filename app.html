@@ -3610,7 +3610,6 @@ async function startBuild() {
     // Update word counter from live tracker
     const wc = document.getElementById('words-counter');
     if (wc) wc.textContent = (window._buildWordCount || 0).toLocaleString();
-    }
   }, 1000);
   EXISTING_CLAUDE_MD = null;
   PLANNING_OUTPUT = null;
