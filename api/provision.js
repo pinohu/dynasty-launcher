@@ -2233,9 +2233,8 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       // First try creating with git repository link
       const pr=await fetch(`https://api.vercel.com/v10/projects?teamId=${VERCEL_TEAM}`,{
         method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
-        body:JSON.stringify({name:project_slug,framework:'vite',
-          gitRepository:{type:'github',repo:`${ORG}/${project_slug}`},
-          buildCommand:'npm run build',outputDirectory:'dist'})
+        body:JSON.stringify({name:project_slug,
+          gitRepository:{type:'github',repo:`${ORG}/${project_slug}`}})
       });
       const pj=await pr.json();
       if(pj.id){
@@ -2246,7 +2245,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         await new Promise(r=>setTimeout(r,3000));
         const pr2=await fetch(`https://api.vercel.com/v10/projects?teamId=${VERCEL_TEAM}`,{
           method:'POST',headers:{'Authorization':`Bearer ${VERCEL_TOKEN}`,'Content-Type':'application/json'},
-          body:JSON.stringify({name:project_slug,framework:'vite',buildCommand:'npm run build',outputDirectory:'dist'})
+          body:JSON.stringify({name:project_slug})
         });
         const pj2=await pr2.json();
         projectId=pj2.id;

@@ -7720,8 +7720,21 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
     // This catches ALL known Vercel build-breaking patterns permanently.
     // ══════════════════════════════════════════════════════════════════════════
     (function validateFilesBeforePush() {
-      const isNextJs = V2_DEPLOY_TARGET === 'fullstack' || 
+      const isNextJs = V2_DEPLOY_TARGET === 'fullstack' ||
         (inf.stack||[]).some(s => s.toLowerCase().includes('next'));
+
+      // ── 0. Guarantee a clean package.json exists (replaces template bloat) ──
+      if (isNextJs && !files['package.json']) {
+        files['package.json'] = JSON.stringify({
+          name: inf.repo || 'app',
+          version: '0.1.0',
+          private: true,
+          scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
+          dependencies: { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^3.4.1' },
+          devDependencies: { 'typescript': '^5.3.3', '@types/react': '^18.2.0', '@types/node': '^20.11.0', 'postcss': '^8.4.33', 'autoprefixer': '^10.4.17' },
+          engines: { node: '20.x' }
+        }, null, 2);
+      }
 
       // ── 1. vercel.json: NEVER framework:null or wrong outputDirectory ──
       if (files['vercel.json']) {
@@ -7735,24 +7748,64 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
         } catch {}
       }
 
-      // ── 2. package.json: required deps, lucide-react not heroicons ──
+      // ── 2. package.json: clean deps, required deps, no template bloat ──
       if (files['package.json']) {
         try {
           const pkg = JSON.parse(files['package.json']);
           if (!pkg.dependencies) pkg.dependencies = {};
-          // Swap heroicons → lucide-react
+          if (!pkg.devDependencies) pkg.devDependencies = {};
+
+          // ── 2a. STRIP TEMPLATE BLOAT — Storybook, testing, and dev tools that break Vercel builds ──
+          const bloatPrefixes = ['@storybook/', '@chromatic/', '@jest/', '@testing-library/', '@playwright/'];
+          const bloatExact = [
+            'storybook', 'chromatic', 'jest', 'ts-jest', 'vitest',
+            '@vitest/coverage-v8', '@vitest/ui',
+            'playwright', '@playwright/test',
+            'msw', 'cypress',
+            'prettier', 'eslint', 'husky', 'lint-staged', 'commitlint',
+            '@commitlint/cli', '@commitlint/config-conventional',
+            'concurrently', 'turbo',
+            // Vite deps that conflict with Next.js
+            ...(isNextJs ? ['vite', '@vitejs/plugin-react', '@vitejs/plugin-react-swc', 'vite-tsconfig-paths'] : [])
+          ];
+          for (const section of [pkg.dependencies, pkg.devDependencies]) {
+            for (const dep of Object.keys(section)) {
+              if (bloatPrefixes.some(p => dep.startsWith(p)) || bloatExact.includes(dep)) {
+                delete section[dep];
+              }
+            }
+          }
+          // Remove storybook scripts
+          if (pkg.scripts) {
+            for (const [k] of Object.entries(pkg.scripts)) {
+              if (k.includes('storybook') || k.includes('chromatic') || k === 'test' || k === 'test:watch' || k === 'test:coverage') {
+                delete pkg.scripts[k];
+              }
+            }
+          }
+
+          // ── 2b. Swap heroicons → lucide-react ──
           if (pkg.dependencies['@heroicons/react']) {
             delete pkg.dependencies['@heroicons/react'];
             pkg.dependencies['lucide-react'] = pkg.dependencies['lucide-react'] || '^0.400.0';
           }
-          // Ensure essential Next.js deps
+
+          // ── 2c. Ensure essential Next.js deps ──
           if (isNextJs) {
             const reqDeps = { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^3.4.1' };
             const reqDev = { 'typescript': '^5.3.3', '@types/react': '^18.2.0', '@types/node': '^20.11.0', 'postcss': '^8.4.33', 'autoprefixer': '^10.4.17' };
             for (const [k,v] of Object.entries(reqDeps)) { if (!pkg.dependencies[k]) pkg.dependencies[k] = v; }
-            if (!pkg.devDependencies) pkg.devDependencies = {};
             for (const [k,v] of Object.entries(reqDev)) { if (!pkg.devDependencies[k]) pkg.devDependencies[k] = v; }
+            // Ensure build script exists
+            if (!pkg.scripts) pkg.scripts = {};
+            if (!pkg.scripts.build) pkg.scripts.build = 'next build';
+            if (!pkg.scripts.dev) pkg.scripts.dev = 'next dev';
+            if (!pkg.scripts.start) pkg.scripts.start = 'next start';
           }
+
+          // ── 2d. Clean engine constraint to prevent Vercel warnings ──
+          if (pkg.engines?.node === '>=20') { pkg.engines.node = '20.x'; }
+
           files['package.json'] = JSON.stringify(pkg, null, 2);
         } catch {}
       }
