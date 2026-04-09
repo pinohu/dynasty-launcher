@@ -2112,13 +2112,19 @@ function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 
 // ── V3 Tier Gating ─────────────────────────────────────────────────
 const V3_TIERS = {
-  starter: { price: 297, label: 'Starter ($297)', modules: [] }, // Code + docs + deployment only
-  professional: { price: 997, label: 'Professional ($997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'] },
-  enterprise: { price: 2497, label: 'Enterprise ($2,497)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] }
+  free: { price: 0, label: 'Free Scoring', modules: [] }, // Viability scoring only — no build
+  foundation: { price: 497, label: 'Foundation ($497)', modules: [] }, // Strategy docs + deployment, no integration modules
+  starter: { price: 497, label: 'Foundation ($497)', modules: [] }, // Alias for legacy starter references
+  professional: { price: 1497, label: 'Professional ($1,497)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'] },
+  enterprise: { price: 2997, label: 'Enterprise ($2,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] },
+  managed: { price: 197, label: 'Managed Ops ($197/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] }
 };
 function getUserTier() {
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
-  return localStorage.getItem('dynasty_tier') || 'starter';
+  return localStorage.getItem('dynasty_tier') || 'free';
+}
+function isFreeTier() {
+  return getUserTier() === 'free' && !localStorage.getItem('dynasty_paid_session');
 }
 function isModuleAllowed(moduleName) {
   const tier = getUserTier();
@@ -2128,18 +2134,19 @@ function isModuleAllowed(moduleName) {
 
 // ── Builder Entry + Payment Flow ────────────────────────────────────
 async function enterBuilder() {
-  // Require payment OR admin key before entering builder
+  // Free tier: allow entry for scoring — build is gated separately in startBuild()
   const isAdmin = localStorage.getItem('dlg_ok') === 'DYNASTY2026';
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
-  if (!isAdmin && !hasPaid) {
-    alert('Please purchase a build first.');
-    window.location.href = '/#pricing';
-    return;
-  }
+  const isFreeScoring = !isAdmin && !hasPaid;
 
   // Require authentication before entering builder
   const authed = await requireAuth();
   if (!authed) return;
+
+  // Mark free-tier entry for UI gating
+  if (isFreeScoring) {
+    localStorage.setItem('dynasty_tier', 'free');
+  }
 
   const landing = document.getElementById('landing');
   if (landing) landing.style.display = 'none';
@@ -2173,9 +2180,15 @@ async function startCheckout(plan) {
 (function checkPlanPurchase() {
   const params = new URLSearchParams(window.location.search);
   const plan = params.get('plan');
-  if (plan && ['starter', 'professional', 'enterprise'].includes(plan) && !params.get('payment')) {
+  if (plan === 'free' && !params.get('payment')) {
+    // Free scoring — enter builder without checkout
+    localStorage.setItem('dynasty_tier', 'free');
+    enterBuilder();
+    return;
+  }
+  if (plan && ['foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(plan) && !params.get('payment')) {
     // Don't store tier yet — wait for payment confirmation in checkPaymentReturn
-    startCheckout(plan);
+    startCheckout(plan === 'starter' ? 'foundation' : plan);
   }
 })();
 
@@ -2199,7 +2212,7 @@ async function startCheckout(plan) {
           // Payment confirmed by Stripe — use tier from Stripe metadata, NOT URL
           localStorage.setItem('dynasty_paid_session', sessionId);
           localStorage.setItem('dynasty_paid_at', new Date().toISOString());
-          localStorage.setItem('dynasty_tier', vd.plan || 'starter');
+          localStorage.setItem('dynasty_tier', vd.plan || 'foundation');
           enterBuilder();
         } else {
           alert('Payment verification failed. Please contact support if you were charged.');
@@ -3575,15 +3588,16 @@ async function startBuild() {
   const isAdmin = localStorage.getItem('dlg_ok') === 'DYNASTY2026';
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   if (!isAdmin && !hasPaid) {
-    alert('Please purchase a build to continue.');
-    window.location.href = '/#pricing';
+    // Free tier can score but not build — show upgrade prompt
+    const action = confirm('Free tier includes viability scoring only.\n\nUpgrade to Foundation ($497) to get strategy documents + deployed application.\n\nClick OK to view plans.');
+    if (action) { window.location.href = '/#pricing'; }
     return;
   }
 
   // ── Build gating: check if user has builds remaining ────────────
   if (getBuildsRemaining() <= 0) {
-    const action = confirm('You\'ve used your free build. Purchase a Starter build for $297?\n\nClick OK to go to checkout, or Cancel to return.');
-    if (action) { startCheckout('starter'); return; }
+    const action = confirm('You\'ve used your build credit. Purchase a Foundation build for $497?\n\nClick OK to go to checkout, or Cancel to return.');
+    if (action) { startCheckout('foundation'); return; }
     else return;
   }
   
@@ -8137,7 +8151,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     const tierAllowed = V3_TIERS[userTier]?.modules || [];
     const v3Modules = {};
     for (const [mod, on] of Object.entries(v3ModulesRaw)) {
-      // Starter tier (empty array) = NO modules allowed. Only paid tiers get modules.
+      // Free/Foundation tiers (empty modules array) = NO modules. Only Professional+ get modules.
       v3Modules[mod] = on && tierAllowed.length > 0 && tierAllowed.includes(mod);
     }
     const anyModulesEnabled = Object.values(v3Modules).some(v => v);
@@ -8154,7 +8168,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       try {
         const v3Resp = await fetch('/api/provision?action=provision_modules', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: localStorage.getItem('dynasty_tier') || 'enterprise' })
+          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: localStorage.getItem('dynasty_tier') || 'foundation' })
         });
         v3Results = await v3Resp.json();
         if (v3Results.ok) {

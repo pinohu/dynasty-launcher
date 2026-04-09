@@ -15,6 +15,11 @@ export default function middleware(request) {
     return; // Pass through to app.html
   }
 
+  // Free scoring tier — let users enter the builder for viability analysis (no payment needed)
+  if (params.get('plan') === 'free') {
+    return; // Pass through — JS will set free tier and show scoring UI
+  }
+
   // Allow Stripe payment success returns (checkPaymentReturn will verify server-side)
   if (params.get('payment') === 'success' && params.get('session_id')) {
     return; // Pass through — JS will verify with Stripe
@@ -22,7 +27,7 @@ export default function middleware(request) {
 
   // Plan purchase URLs — redirect to Stripe checkout at the edge (don't serve app.html)
   const plan = params.get('plan');
-  if (plan && ['starter', 'professional', 'enterprise'].includes(plan)) {
+  if (plan && ['foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(plan)) {
     // Redirect to checkout API which creates Stripe session and redirects to Stripe
     const checkoutUrl = new URL('/api/checkout', request.url);
     checkoutUrl.searchParams.set('action', 'create_session');
@@ -42,7 +47,7 @@ fetch('/api/checkout?action=create_session', {
 .then(r => r.json())
 .then(d => {
   if (d.ok && d.url) { window.location.href = d.url; }
-  else { document.body.innerHTML = '<div style="text-align:center;padding:40px"><h2 style="color:#fff;font-size:1.4rem">⚡ Your Deputy</h2><p style="color:rgba(255,255,255,0.5);margin:16px 0">' + (d.error || 'Checkout unavailable') + '</p><a href="/#pricing" style="color:#C9A84C">← Back to plans</a></div>'; }
+  else { document.body.innerHTML = '<div style="text-align:center;padding:40px"><h2 style="color:#fff;font-size:1.4rem">⚡ Your Deputy</h2><p style="color:rgba(255,255,255,0.5);margin:16px 0">' + (d.error || 'Checkout unavailable') + '</p><a href="/#pricing" style="color:#C9A84C">&larr; Back to plans</a></div>'; }
 })
 .catch(() => { window.location.href = '/#pricing'; });
 </script>
@@ -80,12 +85,15 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
 <body>
 <div style="font-size:2.5rem">⚡</div>
 <h2>Your Deputy</h2>
-<p>Build a complete operating business from one prompt. Choose a plan to get started.</p>
+<p>Build a complete operating business from one prompt. Score your idea free, or choose a plan to build.</p>
 <div class="btns">
-  <a href="/#pricing">View Plans</a>
-  <a href="/app?plan=professional" class="primary">Get Started — $997</a>
+  <a href="/app?plan=free">Score Free</a>
+  <a href="/app?plan=professional" class="primary">Build — $1,497</a>
 </div>
-<p style="font-size:13px;color:rgba(255,255,255,0.25);margin-top:20px">Already purchased? <a href="/app?plan=starter" style="border:none;padding:0;font-size:13px;color:rgba(201,168,76,0.6)">Sign in</a></p>
+<div class="btns" style="margin-top:8px">
+  <a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>
+</div>
+<p style="font-size:13px;color:rgba(255,255,255,0.25);margin-top:12px">Already purchased? <a href="/app?plan=foundation" style="border:none;padding:0;font-size:13px;color:rgba(201,168,76,0.6)">Sign in</a></p>
 </body>
 </html>`, {
     status: 200,

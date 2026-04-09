@@ -2654,12 +2654,15 @@ Return ONLY a valid JSON array (no markdown, no backticks):
 
     // Server-side revenue gating: enforce tier limits FIRST (before dry_run)
     const TIER_MODULES = {
-      starter: [], // Phases 1-8 only, no modules
+      free: [], // Viability scoring only — no build, no modules
+      foundation: [], // Strategy docs + deployment only, no integration modules
+      starter: [], // Legacy alias for foundation
       professional: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'],
-      enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify']
+      enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify'],
+      managed: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify']
     };
-    const userTier = tier || 'starter'; // Default to most restrictive tier
-    const allowedModules = TIER_MODULES[userTier] || TIER_MODULES.starter;
+    const userTier = tier || 'foundation'; // Default to most restrictive paid tier
+    const allowedModules = TIER_MODULES[userTier] || TIER_MODULES.foundation;
     const rawEnabled = modules_enabled || config.modules_enabled || {};
     const enabled = {};
     for (const [mod, on] of Object.entries(rawEnabled)) {

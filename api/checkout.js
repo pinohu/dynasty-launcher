@@ -40,21 +40,22 @@ export default async function handler(req, res) {
     const { plan, email } = req.body || {};
 
     const tiers = {
-      starter: { amount: 29700, name: 'Your Deputy — Starter', desc: 'Code + docs + Vercel deployment. 30+ production files, 8-framework viability analysis, GitHub repo + Neon database.' },
-      professional: { amount: 99700, name: 'Your Deputy — Professional', desc: 'Everything in Starter plus: custom domain, business email, Stripe billing, CRM, email marketing, chatbot, analytics.' },
-      enterprise: { amount: 249700, name: 'Your Deputy — Enterprise', desc: 'All 17 modules: domain, email, phone, CRM, billing, SEO, video, design, analytics, leads, automation, legal docs, and more.' }
+      foundation: { amount: 49700, name: 'Your Deputy — Foundation', desc: '9 consulting-grade strategy documents, SBA business plan, investor readiness package, 8-framework viability scorecard, production app deployed to Vercel, 65+ files, private GitHub repo + PostgreSQL database.' },
+      starter: { amount: 49700, name: 'Your Deputy — Foundation', desc: '9 consulting-grade strategy documents, SBA business plan, investor readiness package, 8-framework viability scorecard, production app deployed to Vercel, 65+ files, private GitHub repo + PostgreSQL database.' },
+      professional: { amount: 149700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus: custom domain + authenticated email, Stripe Connected Account, CRM, 5-email marketing automation, AI chatbot, PostHog analytics + lead tracking.' },
+      enterprise: { amount: 299700, name: 'Your Deputy — Enterprise', desc: 'Complete operational business: all 17 modules including AI voice agent, SMS, SEO content, explainer video, design assets, 7 automation workflows, legal docs, social calendar, and more.' }
     };
-    const tierDef = tiers[plan] || tiers.starter;
+    const tierDef = tiers[plan] || tiers.foundation;
     const enc = (s) => encodeURIComponent(s);
 
     try {
       const params = [
         'payment_method_types[0]=card',
         'mode=payment',
-        `success_url=${enc(`${APP_URL}/app?payment=success&session_id={CHECKOUT_SESSION_ID}&tier=${plan || 'starter'}`)}`,
+        `success_url=${enc(`${APP_URL}/app?payment=success&session_id={CHECKOUT_SESSION_ID}&tier=${plan || 'foundation'}`)}`,
         `cancel_url=${enc(`${APP_URL}/app?payment=cancelled`)}`,
         `metadata[source]=dynasty-launcher`,
-        `metadata[plan]=${plan || 'starter'}`,
+        `metadata[plan]=${plan || 'foundation'}`,
         `line_items[0][price_data][currency]=usd`,
         `line_items[0][price_data][unit_amount]=${tierDef.amount}`,
         `line_items[0][price_data][product_data][name]=${enc(tierDef.name)}`,
@@ -62,6 +63,28 @@ export default async function handler(req, res) {
         `line_items[0][quantity]=1`
       ];
       if (email) params.push(`customer_email=${enc(email)}`);
+
+      // Managed Operations is a $197/mo subscription — use Stripe subscription mode
+      if (plan === 'managed') {
+        const subParams = [
+          'payment_method_types[0]=card',
+          'mode=subscription',
+          `success_url=${enc(`${APP_URL}/app?payment=success&session_id={CHECKOUT_SESSION_ID}&tier=managed`)}`,
+          `cancel_url=${enc(`${APP_URL}/app?payment=cancelled`)}`,
+          'metadata[source]=dynasty-launcher',
+          'metadata[plan]=managed',
+          'line_items[0][price_data][currency]=usd',
+          'line_items[0][price_data][unit_amount]=19700',
+          `line_items[0][price_data][product_data][name]=${enc('Your Deputy — Managed Operations')}`,
+          `line_items[0][price_data][product_data][description]=${enc('Monthly managed operations: weekly performance reports, priority support, automation monitoring, quarterly strategy refresh, ongoing optimization.')}`,
+          'line_items[0][price_data][recurring][interval]=month',
+          'line_items[0][quantity]=1'
+        ];
+        if (email) subParams.push(`customer_email=${enc(email)}`);
+        const subSession = await stripePost('checkout/sessions', subParams.join('&'));
+        if (subSession.error) return res.json({ ok: false, error: subSession.error.message });
+        return res.json({ ok: true, url: subSession.url, session_id: subSession.id });
+      }
 
       const session = await stripePost('checkout/sessions', params.join('&'));
       if (session.error) return res.json({ ok: false, error: session.error.message });
@@ -81,10 +104,13 @@ export default async function handler(req, res) {
     try {
       const session = await stripeGet(`checkout/sessions/${session_id}`);
       if (session.error) return res.json({ ok: false, error: session.error.message });
+      const isPaid = session.payment_status === 'paid' ||
+                     (session.mode === 'subscription' && session.status === 'complete');
       return res.json({
         ok: true,
-        paid: session.payment_status === 'paid',
-        plan: session.metadata?.plan || 'starter',
+        paid: isPaid,
+        plan: session.metadata?.plan || 'foundation',
+        mode: session.mode,
         customer_email: session.customer_email || session.customer_details?.email,
         amount: session.amount_total,
         currency: session.currency,
