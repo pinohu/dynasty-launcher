@@ -5543,8 +5543,8 @@ ${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.r
 ` : '';
 
     updateEduCard('g4a');
-    addP('g4a','Generating BUSINESS-SYSTEM + REVENUE-MODEL + GTM-PLAYBOOK','','⬡ Business System');setP('g4a','run');
-    updateGlobalProgress(4, 12, 'Phase 4 of 14 \u00b7 Business Strategy');
+    addP('g4a','Generating comprehensive business intelligence suite','','⬡ Business Intelligence');setP('g4a','run');
+    updateGlobalProgress(4, 12, 'Phase 4 of 14 \u00b7 Business Intelligence Suite');
     let bz1;try{
       bz1=await ai(`You are a senior partner at McKinsey & Company preparing a board-ready strategic analysis that will be delivered to the CEO and investors. This document must be indistinguishable from a $50,000 consulting engagement.
 
@@ -5965,7 +5965,137 @@ Subject: [Subject]
 **[Metric]** — because [1 sentence explaining why this metric captures the full health of the business]
 ---END:gtm_playbook---
 `, ['biz_system','revenue_model','gtm_playbook'], 16000, 'g4a');
-      setP('g4a','ok',`Business strategy ready`);
+
+      // Generate INVESTOR-READINESS and M&A documents in parallel (separate AI calls for depth)
+      setP('g4a','run','Generating investor + M&A analysis...');
+      const [investorDoc, maDoc] = await Promise.allSettled([
+        aiRaw(`You are a senior investment analyst preparing a comprehensive due diligence package. This must cover everything VCs, SBA loan officers, and Shark Tank investors evaluate.
+
+Business: ${inf.name} (${inf.type_label})
+Description: ${desc}
+Revenue: ${inf.revenue_model} at ${inf.price}
+${scorecardContext}
+
+Generate an EXHAUSTIVE investor readiness document covering:
+
+# ${inf.name} — Investor & Lender Readiness Package
+
+## SECTION A: VENTURE CAPITAL READINESS
+### What VCs Evaluate (address each):
+1. Team — founder background, domain expertise, technical capability, gaps
+2. Market — TAM/SAM/SOM with bottoms-up methodology, growth rate, timing
+3. Product — current stage, differentiation, IP/moat, technology risk
+4. Traction — users, revenue, growth rate, engagement, retention
+5. Unit Economics — CAC, LTV, LTV:CAC, payback, gross margin, burn rate
+6. Business Model — revenue streams, pricing power, scalability
+7. Competition — direct/indirect, competitive matrix, sustainable advantage
+8. Ask & Use of Funds — how much, allocation breakdown, milestones achieved
+9. Return Profile — potential exit size, comparable exits, expected timeline
+10. Deal Terms — valuation methodology, cap table, previous rounds
+
+## SECTION B: SBA LOAN ELIGIBILITY
+### SBA Requirements (address each):
+1. Business Plan Summary — executive summary, company description
+2. Market Analysis — industry overview, target market, competition
+3. Organization & Management — legal structure, ownership, team bios
+4. Products/Services — description, lifecycle, IP, R&D
+5. Marketing & Sales Strategy — positioning, channels, pricing
+6. Financial Projections — P&L (3 years), cash flow, balance sheet
+7. Funding Request — amount, terms, use of funds, repayment plan
+8. Collateral — assets, personal guarantees
+9. Owner's Equity Injection — % owner investment vs loan amount
+10. Industry Risk Assessment — regulatory, market, technology risks
+
+## SECTION C: SHARK TANK / PITCH READINESS
+### What Sharks Evaluate:
+1. The Hook — 30-second elevator pitch
+2. The Problem — specific, quantified pain point
+3. The Solution — how it works, demo script
+4. The Traction — sales, users, revenue, growth
+5. The Numbers — revenue, costs, margins, valuation
+6. The Ask — dollar amount, equity offered, valuation justification
+7. The Moat — what prevents copying, defensibility
+8. Customer Acquisition — how customers find you, CAC, channels
+9. Founder Story — why you, personal investment, commitment
+10. Use of Funds — exact allocation, milestones
+
+## SECTION D: IDEO HUMAN-CENTERED DESIGN ASSESSMENT
+### Desirability-Viability-Feasibility Framework:
+1. Desirability — who wants this? Evidence of demand. User research findings.
+2. Viability — business model sustainability. Revenue potential vs costs.
+3. Feasibility — technical capability to build. Resource requirements.
+4. Prototype Plan — what to build first, how to test, success metrics
+5. User Journey Map — step-by-step customer experience
+6. Empathy Map — what users think, feel, see, hear, say, do
+
+## SECTION E: M&A / EXIT READINESS
+### Acquisition Package Requirements:
+1. Business Overview — history, operations, key metrics
+2. Financial Performance — 3-year P&L, revenue trends, EBITDA
+3. Valuation — revenue multiples, EBITDA multiples, comparable transactions
+4. Customer Analysis — concentration risk, top 10 customers, retention
+5. Technology Assessment — architecture, tech debt, scalability
+6. IP Portfolio — patents, trademarks, trade secrets, copyrights
+7. Team & Key Person Risk — dependencies, retention plans
+8. Legal/Compliance — contracts, liabilities, regulatory status
+9. Growth Opportunities — expansion potential, new markets, product extensions
+10. Integration Considerations — what an acquirer needs to know
+
+Write EVERY section with extreme detail. Minimum 3 paragraphs per sub-section. Use specific numbers, percentages, and dollar figures throughout. This document alone should justify a $10,000+ consulting fee.`, 8000, 'premium'),
+
+        aiRaw(`Generate a comprehensive SBA Business Plan document for "${inf.name}" (${inf.type_label}).
+Revenue model: ${inf.revenue_model} at ${inf.price}
+${scorecardContext}
+
+This must follow the EXACT format the SBA requires for loan applications:
+
+# ${inf.name} — SBA Business Plan
+
+## 1. Executive Summary (1 page)
+Company name, mission statement, founding date, products/services overview, financial highlights, funding request summary.
+
+## 2. Company Description (2 pages)
+Legal structure, ownership, history, mission/vision, goals (short-term and long-term), industry overview, competitive advantages.
+
+## 3. Market Analysis (3 pages)
+Industry description and outlook, target market description with demographics, market size and growth projections, competitive analysis with 5+ competitors, regulatory environment, SWOT analysis.
+
+## 4. Organization & Management (2 pages)
+Organizational structure, management team bios, board of advisors, staffing plan, legal structure, ownership breakdown.
+
+## 5. Products & Services (2 pages)
+Detailed description, pricing model, product lifecycle, intellectual property, research and development plans.
+
+## 6. Marketing & Sales Strategy (3 pages)
+Marketing strategy, sales strategy, pricing strategy, distribution channels, promotional activities, customer retention plan, marketing budget.
+
+## 7. Financial Projections (5 pages)
+### 7.1 Revenue Forecast (monthly for Year 1, quarterly for Years 2-3)
+### 7.2 Expense Budget (detailed line items)
+### 7.3 Profit & Loss Statement (3 years)
+### 7.4 Cash Flow Projection (monthly Year 1)
+### 7.5 Balance Sheet (3 years)
+### 7.6 Break-Even Analysis
+### 7.7 Key Financial Ratios and Benchmarks
+
+## 8. Funding Request (1 page)
+Amount requested, purpose breakdown, terms desired, future funding needs, repayment plan.
+
+## 9. Appendix
+Key assumptions, supporting data, relevant permits/licenses needed.
+
+Be extremely detailed and specific. Use real numbers based on the business model. This must pass SBA review.`, 8000, 'premium')
+      ]);
+
+      // Add the additional documents to the build files
+      if (investorDoc.status === 'fulfilled' && investorDoc.value?.length > 500) {
+        bz1.investor_readiness = investorDoc.value;
+      }
+      if (maDoc.status === 'fulfilled' && maDoc.value?.length > 500) {
+        bz1.sba_business_plan = maDoc.value;
+      }
+
+      setP('g4a','ok',`Business intelligence suite complete (${Object.keys(bz1).filter(k => bz1[k]).length} documents)`);
       await compactPhase('business', bz1);
     }catch(e){setP('g4a','er',e.message);throw e;}
 
@@ -7111,6 +7241,8 @@ Then read DESIGN.md for visual design rules.
       'BUSINESS-SYSTEM.md':bz.biz_system,'AGENT-SYSTEM.md':bz.agent_system,
       'REVENUE-MODEL.md':bz.revenue_model,'GTM-PLAYBOOK.md':bz.gtm_playbook,
       'FAILURE-MODES.md':bz.failure_modes,
+      ...(bz.investor_readiness ? {'INVESTOR-READINESS.md': `# ${inf.name} — Investor & Lender Readiness Package\n\n> Generated by Your Deputy Intelligence Engine · ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${bz.investor_readiness}`} : {}),
+      ...(bz.sba_business_plan ? {'SBA-BUSINESS-PLAN.md': `# ${inf.name} — SBA Business Plan\n\n> Generated by Your Deputy Intelligence Engine · ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${bz.sba_business_plan}`} : {}),
       'backend/main.py':be.main_py,'backend/requirements.txt':be.requirements,
       'backend/Dockerfile':be.dockerfile,'docker-compose.yml':be.docker_compose,
       ...feFiles,
