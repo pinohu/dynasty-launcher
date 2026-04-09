@@ -20,10 +20,36 @@ export default function middleware(request) {
     return; // Pass through — JS will verify with Stripe
   }
 
-  // Allow plan purchase URLs (checkPlanPurchase will redirect to Stripe)
+  // Plan purchase URLs — redirect to Stripe checkout at the edge (don't serve app.html)
   const plan = params.get('plan');
   if (plan && ['starter', 'professional', 'enterprise'].includes(plan)) {
-    return; // Pass through — JS will redirect to Stripe checkout
+    // Redirect to checkout API which creates Stripe session and redirects to Stripe
+    const checkoutUrl = new URL('/api/checkout', request.url);
+    checkoutUrl.searchParams.set('action', 'create_session');
+    // We can't POST from a redirect, so serve a tiny page that auto-submits
+    return new Response(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Redirecting to checkout...</title>
+<style>body{background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;flex-direction:column;gap:16px}h2{font-size:1.2rem;font-weight:400;color:rgba(255,255,255,0.6)}</style>
+</head><body>
+<div style="font-size:2rem">⚡</div>
+<h2>Redirecting to secure checkout...</h2>
+<script>
+fetch('/api/checkout?action=create_session', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ plan: '${plan}' })
+})
+.then(r => r.json())
+.then(d => {
+  if (d.ok && d.url) { window.location.href = d.url; }
+  else { document.body.innerHTML = '<div style="text-align:center;padding:40px"><h2 style="color:#fff;font-size:1.4rem">⚡ Your Deputy</h2><p style="color:rgba(255,255,255,0.5);margin:16px 0">' + (d.error || 'Checkout unavailable') + '</p><a href="/#pricing" style="color:#C9A84C">← Back to plans</a></div>'; }
+})
+.catch(() => { window.location.href = '/#pricing'; });
+</script>
+</body></html>`, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+    });
   }
 
   // Check for dynasty_session cookie (set by successful payment verification)
