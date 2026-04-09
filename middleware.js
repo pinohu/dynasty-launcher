@@ -2,7 +2,8 @@
 // Runs at the edge BEFORE the static file is served
 
 export const config = {
-  matcher: ['/app', '/app/'],
+  matcher: ['/app'],
+  runtime: 'edge',
 };
 
 export default function middleware(request) {
