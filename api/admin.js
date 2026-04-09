@@ -101,7 +101,9 @@ export default async function handler(req, res) {
         const key = config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
         if (!key) return { ok: false, error: 'No key' };
         const r = await fetch('https://api.20i.com/reseller/10455', { headers: { 'Authorization': `Bearer ${key}` } });
-        return { ok: r.ok, status: r.status };
+        if (r.ok) return { ok: true, status: r.status };
+        const d = await r.json().catch(() => ({}));
+        return { ok: false, status: r.status, error: d.error?.message || `HTTP ${r.status}` };
       }),
       check('acumbamail', async () => {
         const key = config.comms?.acumbamail;
