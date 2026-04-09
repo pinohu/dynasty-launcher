@@ -6503,10 +6503,6 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         // Dynasty's old Tailwind v3 directives (@tailwind base/components/utilities, @apply border-border)
         // are incompatible with Tailwind v4. Let the template's own globals.css stand.
         delete feFiles['src/app/globals.css'];
-        // Fix 2: If globals.css is empty/missing, create it
-        if (!feFiles['src/app/globals.css'] || feFiles['src/app/globals.css'].trim().length < 20) {
-          feFiles['src/app/globals.css'] = '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n@layer base {\n  :root {\n    --background: 0 0% 100%;\n    --foreground: 222.2 84% 4.9%;\n  }\n  .dark {\n    --background: 222.2 84% 4.9%;\n    --foreground: 210 40% 98%;\n  }\n}\n';
-        }
         // Fix 3: Replace @heroicons/react with lucide-react in all TSX files
         for (const fpath of ['src/app/page.tsx', 'src/app/dashboard/page.tsx', 'src/app/layout.tsx', 'src/app/[locale]/(marketing)/page.tsx', 'src/app/[locale]/(auth)/dashboard/page.tsx']) {
           if (feFiles[fpath] && feFiles[fpath].includes('@heroicons/react')) {
@@ -6561,10 +6557,8 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
             feFiles['package.json'] = JSON.stringify(pkg, null, 2);
           } catch {}
         }
-        // Fix 5: Ensure layout.tsx imports globals.css
-        if (feFiles['src/app/layout.tsx'] && !feFiles['src/app/layout.tsx'].includes("globals.css")) {
-          feFiles['src/app/layout.tsx'] = "import './globals.css'\n" + feFiles['src/app/layout.tsx'];
-        }
+        // Fix 5: Do NOT modify layout.tsx globals.css import — template handles it
+        // (Tailwind v4 templates import CSS differently)
         setP('g7', 'ok', `${Object.keys(fe).filter(k => fe[k]).length} frontend files ready`);
       } catch (e) { setP('g7', 'er', e.message); }
 
@@ -7647,10 +7641,7 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
         }
       }
 
-      // ── 5. layout.tsx: must import globals.css ──
-      if (isNextJs && files['src/app/layout.tsx'] && !files['src/app/layout.tsx'].includes('globals.css')) {
-        files['src/app/layout.tsx'] = "import './globals.css'\n" + files['src/app/layout.tsx'];
-      }
+      // ── 5. layout.tsx: do NOT modify — template handles its own CSS imports ──
 
       // ── 6. Remove unused imports from TSX (prevents TS strict mode errors) ──
       for (const [fpath, content] of Object.entries(files)) {
