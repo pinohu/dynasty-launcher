@@ -4584,8 +4584,8 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
     'g2': 'gemini-2.5-flash',              // Product docs — near-free (Flash handles structured docs well)
     'g3': 'gemini-2.0-flash',              // Tech docs — FREE (structured specs, template-driven)
     'g4a': 'deepseek-chat',                // Business strategy — cheap (DeepSeek V3 excels at analysis, ~10x cheaper than Sonnet)
-    'g4b': 'gemini-2.5-flash',             // Agent system — near-free (structured architectural output)
-    'g5': 'llama-3.3-70b-versatile',       // Backend code — FREE (Llama 70B writes good Python)
+    'g4b': 'gemma-4-27b-it',               // Agent system — FREE (Gemma 4 strong at structured technical output)
+    'g5': 'gemma-4-27b-it',               // Backend code — FREE (Gemma 4 excellent at code generation)
     'g7': 'gemini-2.0-flash',              // Frontend — FREE (template scaffolding)
   };
   
@@ -4600,7 +4600,7 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
     model = V2_MODEL;
   }
   
-  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
+  const fallbackModels = [model, 'gemma-4-27b-it', 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
@@ -4701,7 +4701,7 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
     budget: 'gemini-2.0-flash',                      // FREE (Google) — for boilerplate
   };
   const model = COST_MODELS[costTier] || COST_MODELS.standard;
-  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
+  const fallbackModels = [model, 'gemma-4-27b-it', 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
