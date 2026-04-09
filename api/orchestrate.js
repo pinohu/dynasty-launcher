@@ -12,30 +12,31 @@ export const maxDuration = 300;
 const ROUTING_TIERS = {
   // Architect-level: complex strategy, needs highest quality
   architect: {
-    anthropic: 'claude-opus-4-20250514',
+    anthropic: 'claude-sonnet-4-20250514',
     openai: 'gpt-4o',
     google: 'gemini-2.5-pro',
     deepseek: 'deepseek-reasoner',
-    fallback: 'claude-sonnet-4-20250514',
+    groq: 'gemma4-27b-it',
+    fallback: 'gemini-2.5-pro',
   },
   // Standard: most generation tasks
   standard: {
-    anthropic: 'claude-sonnet-4-20250514',
-    openai: 'gpt-4.1',
-    google: 'gemini-2.5-pro',
+    anthropic: 'claude-haiku-4-5-20251001',
+    openai: 'gpt-4.1-mini',
+    google: 'gemini-2.5-flash',
     deepseek: 'deepseek-chat',
-    mistral: 'mistral-large-latest',
+    mistral: 'mistral-small-latest',
     groq: 'gemma4-27b-it',
-    fallback: 'claude-sonnet-4-20250514',
+    fallback: 'gemini-2.5-flash',
   },
   // Fast: boilerplate, templates, simple generation
   fast: {
     anthropic: 'claude-haiku-4-5-20251001',
     openai: 'gpt-4.1-mini',
-    google: 'gemini-2.5-flash',
+    google: 'gemini-2.0-flash',
     groq: 'llama-3.3-70b-versatile',
     mistral: 'mistral-small-latest',
-    fallback: 'claude-haiku-4-5-20251001',
+    fallback: 'llama-3.3-70b-versatile',
   },
 };
 

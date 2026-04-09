@@ -1359,7 +1359,7 @@ let V2_MODE = 'quick'; // 'quick' or 'strategic'
 let V2_VIEW = 'wizard'; // 'wizard' or 'scroll'
 let V2_FRAMEWORKS = ['blue-ocean']; // always includes blue-ocean
 let V2_SCORECARD = null;
-let V2_MODEL = 'claude-sonnet-4-20250514';
+let V2_MODEL = 'gemini-2.5-flash';
 let V2_MODEL_MAP = {}; // per-phase model overrides
 let V2_DEPLOY_TARGET = 'fullstack'; // 'backend-only' | 'fullstack' | 'authority' | 'wordpress' | 'static'
 let V2_MODELS_CACHE = null;
@@ -1649,7 +1649,7 @@ Return ONLY valid JSON:
     "etc"
   ]
 }`,
-      'claude-sonnet-4-20250514', 4000
+      'gemini-2.5-flash', 4000
     );
 
     const match = plan.match(/\{[\s\S]*\}/);
@@ -3563,7 +3563,7 @@ Return ONLY valid JSON:
   "predicted_score": 8.5,
   "confidence": "high/medium/low"
 }`,
-        'claude-sonnet-4-20250514', 3000
+        'deepseek-chat', 3000
       );
 
       const match = refineRaw.match(/\{[\s\S]*\}/);
@@ -3924,7 +3924,7 @@ async function handleImageUpload(file) {
     const r = await fetch('/api/ai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1500,
         messages: [{
           role: 'user',
@@ -4097,7 +4097,7 @@ async function handleVideoUpload(file) {
     const r = await fetch('/api/ai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 2000,
         messages: [{
           role: 'user',
@@ -4137,7 +4137,7 @@ async function handleDocUpload(file) {
       const r = await fetch('/api/ai', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 1500,
+          model: 'claude-haiku-4-5-20251001', max_tokens: 1500,
           messages: [{
             role: 'user',
             content: [
@@ -4200,7 +4200,7 @@ Ask ONE question at a time. Be conversational and encouraging. After 3-5 exchang
     const r = await fetch('/api/ai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 500,
+        model: 'gemini-2.5-flash', max_tokens: 500,
         system: systemPrompt,
         messages: convoHistory,
       })
@@ -4581,10 +4581,10 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
   // Template/boilerplate phases use free models to minimize cost
   const PHASE_MODELS = {
     'g1': 'gemini-2.0-flash',              // Design system — FREE (structured template, quality sufficient)
-    'g2': 'claude-sonnet-4-20250514',      // Product docs — PAID (SPEC.md requires deep technical reasoning)
+    'g2': 'gemini-2.5-flash',              // Product docs — near-free (Flash handles structured docs well)
     'g3': 'gemini-2.0-flash',              // Tech docs — FREE (structured specs, template-driven)
-    'g4a': 'claude-sonnet-4-20250514',     // Business strategy — PAID (MUST be frontier model for consulting-grade analysis)
-    'g4b': 'claude-sonnet-4-20250514',     // Agent system — PAID (requires deep architectural reasoning)
+    'g4a': 'deepseek-chat',                // Business strategy — cheap (DeepSeek V3 excels at analysis, ~10x cheaper than Sonnet)
+    'g4b': 'gemini-2.5-flash',             // Agent system — near-free (structured architectural output)
     'g5': 'llama-3.3-70b-versatile',       // Backend code — FREE (Llama 70B writes good Python)
     'g7': 'gemini-2.0-flash',              // Frontend — FREE (template scaffolding)
   };

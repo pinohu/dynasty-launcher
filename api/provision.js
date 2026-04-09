@@ -512,7 +512,7 @@ async function mod_chatbot(config, project, liveUrl) {
     try {
       const faqResp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST', headers: { 'x-api-key': aiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 3000,
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 3000,
           messages: [{ role: 'user', content: `Generate 20 FAQ items for this business. Return ONLY a valid JSON array where each item has "q" (question) and "a" (detailed answer, 2-4 sentences). Cover: services offered, pricing, process/how it works, qualifications/experience, hours/availability, location/service area, guarantees/warranties, payment methods, booking/scheduling, what to expect, turnaround time, cancellation policy, support/contact, comparison to competitors, getting started.\n\n${businessContext}\n\nReturn ONLY the JSON array. No markdown, no backticks.` }]
         })
       });
@@ -623,7 +623,7 @@ async function mod_seo(config, project, liveUrl) {
     try {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST', headers: { 'x-api-key': aiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] })
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] })
       });
       const d = await r.json();
       return d.content?.[0]?.text || '';
@@ -1784,7 +1784,7 @@ Each headline should be under 60 chars. Subtitles under 120 chars. Target primar
         const r = await fetch('https://api.anthropic.com/v1/messages', {
           method:'POST',
           headers:{'x-api-key':AI_KEY,'anthropic-version':'2023-06-01','content-type':'application/json'},
-          body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,
+          body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTokens,
             messages:[{role:'user',content:prompt}]})
         });
         const d = await r.json();

@@ -198,7 +198,7 @@ export default async function handler(req, res) {
 
   const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
   const body = req.body || {};
-  const model = body.model || 'claude-sonnet-4-20250514';
+  const model = body.model || 'gemini-2.5-flash';
   const info = PROVIDERS[model];
 
   if (!info) return res.status(400).json({ error: `Unknown model: ${model}`, available: Object.keys(PROVIDERS) });
