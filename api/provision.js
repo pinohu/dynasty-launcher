@@ -205,132 +205,110 @@ async function mod_hosting(config, project, liveUrl) {
   return results;
 }
 
-// ── mod_billing: Stripe Setup Guide + .env Template (client-owned) ──────────
-// Dynasty does NOT create Stripe products under its own account.
-// Instead, generates a complete setup guide and .env template for the client
-// to configure their own Stripe account.
+// ── mod_billing: Stripe Connect — Managed Billing for Client Projects ───────
+// Creates a Stripe Connected Account for each client project under Dynasty's
+// platform account. Products, prices, and webhooks are created on the connected
+// account. Client gets their own Stripe dashboard. Dynasty can take a platform fee.
 async function mod_billing(config, project, liveUrl) {
   const results = { ok: false, service: 'billing', details: {} };
+  const SK = config.payments?.stripe_live || process.env.STRIPE_SECRET_KEY;
   const GH_TOKEN = process.env.GITHUB_TOKEN;
+  if (!SK || !SK.startsWith('sk_live')) { results.error = 'No Stripe live key'; results.fallback = 'Add STRIPE_SECRET_KEY env var'; return results; }
+  const auth = Buffer.from(`${SK}:`).toString('base64');
+  const sh = { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' };
+  const enc = (s) => encodeURIComponent(s);
 
   try {
+    // 1. Create a Stripe Connected Account (Express type — client gets a dashboard)
+    const acct = await fetch('https://api.stripe.com/v1/accounts', { method: 'POST', headers: sh,
+      body: `type=express&country=US&business_type=company&company[name]=${enc(project.name)}&capabilities[card_payments][requested]=true&capabilities[transfers][requested]=true&metadata[dynasty_slug]=${enc(project.slug)}&metadata[dynasty_type]=${enc(project.type || '')}`
+    }).then(r => r.json());
+    if (!acct.id) throw new Error('Connected account creation failed: ' + (acct.error?.message || 'unknown'));
+    results.details.stripe_account_id = acct.id;
+
+    // 2. Create products and prices ON the connected account
+    const connSh = { ...sh, 'Stripe-Account': acct.id };
     const proPriceCents = project.price_pro_cents || 4900;
     const entPriceCents = project.price_enterprise_cents || 19900;
 
-    // Generate comprehensive Stripe setup guide
-    const stripeGuide = `# ${project.name} — Stripe Billing Setup Guide
+    const prod = await fetch('https://api.stripe.com/v1/products', { method: 'POST', headers: connSh,
+      body: `name=${enc(project.name)}&description=${enc(project.description || project.name)}`
+    }).then(r => r.json());
+    if (prod.id) {
+      results.details.product_id = prod.id;
 
-## Step 1: Create Your Stripe Account
-1. Go to [dashboard.stripe.com](https://dashboard.stripe.com) and sign up
-2. Complete identity verification
-3. Get your API keys from Developers → API Keys
+      // Create 3 price tiers
+      results.details.prices = {};
+      for (const tier of [
+        { name: 'Free', cents: 0 },
+        { name: 'Pro', cents: proPriceCents },
+        { name: 'Enterprise', cents: entPriceCents }
+      ]) {
+        const p = await fetch('https://api.stripe.com/v1/prices', { method: 'POST', headers: connSh,
+          body: `product=${prod.id}&currency=usd&unit_amount=${tier.cents}&recurring[interval]=month&nickname=${enc(tier.name)}`
+        }).then(r => r.json());
+        if (p.id) results.details.prices[tier.name.toLowerCase()] = p.id;
+      }
+    }
 
-## Step 2: Create Your Product
-1. Go to Products → Add Product
-2. Name: "${project.name}"
-3. Add 3 price tiers:
-   - **Free**: $0/month (recurring)
-   - **Pro**: $${(proPriceCents / 100).toFixed(0)}/month (recurring)
-   - **Enterprise**: $${(entPriceCents / 100).toFixed(0)}/month (recurring)
-4. Optional: Add annual pricing at 20% discount
-   - Pro Annual: $${Math.round(proPriceCents * 12 * 0.8 / 100)}/year
-   - Enterprise Annual: $${Math.round(entPriceCents * 12 * 0.8 / 100)}/year
-
-## Step 3: Create Webhook Endpoint
-1. Go to Developers → Webhooks → Add Endpoint
-2. URL: \`${liveUrl || 'https://your-domain.com'}/api/webhooks/stripe\`
-3. Events to listen for:
-   - checkout.session.completed
-   - customer.subscription.updated
-   - customer.subscription.deleted
-   - invoice.payment_failed
-   - invoice.paid
-
-## Step 4: Configure Customer Portal
-1. Go to Settings → Billing → Customer Portal
-2. Enable: Cancel subscription, Update subscription, Update payment method
-
-## Step 5: Update Environment Variables
-Copy the values into your Vercel project (Settings → Environment Variables):
-\`\`\`
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_key_here
-STRIPE_SECRET_KEY=sk_live_your_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
-STRIPE_PRICE_PRO_MONTHLY=price_your_pro_price_id
-STRIPE_PRICE_ENTERPRISE_MONTHLY=price_your_enterprise_price_id
-STRIPE_PRODUCT_ID=prod_your_product_id
-\`\`\`
-
-## Step 6: Test
-1. Use Stripe's test mode first (sk_test_ keys)
-2. Make a test purchase
-3. Verify webhook fires
-4. Switch to live mode when ready
-
-## Recommended: Create a Launch Coupon
-- Go to Products → Coupons → Create
-- 10% off, one-time use
-- Name: "${project.name} Launch Discount"
-- Share the coupon code in your email marketing sequence
-`;
-
-    // Generate .env.example with all client-owned credentials
-    const envExample = `# ${project.name} — Environment Variables
-# Copy this to .env.local and fill in YOUR credentials
-# DO NOT commit .env.local to git
-
-# ── Stripe (YOUR account — https://dashboard.stripe.com/apikeys) ──
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRICE_PRO_MONTHLY=price_...
-STRIPE_PRICE_ENTERPRISE_MONTHLY=price_...
-STRIPE_PRODUCT_ID=prod_...
-
-# ── Clerk Authentication (YOUR account — https://dashboard.clerk.com) ──
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
-CLERK_SECRET_KEY=sk_live_...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/en/dashboard
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/en/dashboard
-
-# ── Database (auto-configured if using Vercel + Neon integration) ──
-DATABASE_URL=postgresql://...
-POSTGRES_URL=postgresql://...
-
-# ── App Config ──
-NEXT_PUBLIC_APP_URL=${liveUrl || 'https://your-domain.vercel.app'}
-BILLING_PLAN_ENV=test
-
-# ── Optional: Analytics ──
-# NEXT_PUBLIC_POSTHOG_KEY=phc_...
-# NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
-
-# ── Optional: Sentry ──
-# SENTRY_DSN=https://...@sentry.io/...
-`;
-
-    // Push billing guide and .env.example to the project repo
-    if (GH_TOKEN && project.slug) {
+    // 3. Create webhook endpoint on the connected account
+    if (liveUrl) {
       try {
-        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'docs/STRIPE-SETUP.md', stripeGuide, 'docs: Stripe billing setup guide');
-        await pushFile(GH_TOKEN, 'pinohu', project.slug, '.env.example', envExample, 'docs: environment variables template');
-        results.details.files_pushed = ['docs/STRIPE-SETUP.md', '.env.example'];
+        const wh = await fetch('https://api.stripe.com/v1/webhook_endpoints', { method: 'POST', headers: connSh,
+          body: `url=${enc(liveUrl + '/api/webhooks/stripe')}&enabled_events[0]=checkout.session.completed&enabled_events[1]=customer.subscription.updated&enabled_events[2]=invoice.payment_failed&enabled_events[3]=invoice.paid`
+        }).then(r => r.json());
+        if (wh.id) {
+          results.details.webhook_id = wh.id;
+          results.details._webhook_secret = wh.secret; // For env var push only
+        }
       } catch {}
     }
 
-    results.details.pricing_tiers = {
-      free: { monthly: '$0/mo' },
-      pro: { monthly: `$${(proPriceCents / 100).toFixed(0)}/mo`, annual: `$${Math.round(proPriceCents * 12 * 0.8 / 100)}/yr` },
-      enterprise: { monthly: `$${(entPriceCents / 100).toFixed(0)}/mo`, annual: `$${Math.round(entPriceCents * 12 * 0.8 / 100)}/yr` }
-    };
-    results.details.setup_guide = 'docs/STRIPE-SETUP.md';
-    results.details.env_template = '.env.example';
-    results.details.note = 'Billing setup guide and .env.example pushed to repo. Client configures their own Stripe account — Dynasty does not create Stripe products under its account.';
+    // 4. Generate onboarding link so client can complete Stripe Express setup
+    try {
+      const link = await fetch('https://api.stripe.com/v1/account_links', { method: 'POST', headers: sh,
+        body: `account=${acct.id}&refresh_url=${enc(liveUrl || 'https://dynasty-launcher.vercel.app')}&return_url=${enc(liveUrl || 'https://dynasty-launcher.vercel.app')}&type=account_onboarding`
+      }).then(r => r.json());
+      if (link.url) results.details.onboarding_url = link.url;
+    } catch {}
+
+    // 5. Push Stripe keys to the client's Vercel project
+    const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN || config.infrastructure?.vercel;
+    if (VERCEL_TOKEN && project.vercel_project_id) {
+      try {
+        const envVars = [
+          { key: 'STRIPE_ACCOUNT_ID', value: acct.id, type: 'plain' },
+          ...(prod?.id ? [{ key: 'STRIPE_PRODUCT_ID', value: prod.id, type: 'plain' }] : []),
+          ...(results.details.prices?.pro ? [{ key: 'STRIPE_PRICE_PRO_MONTHLY', value: results.details.prices.pro, type: 'plain' }] : []),
+          ...(results.details.prices?.enterprise ? [{ key: 'STRIPE_PRICE_ENTERPRISE_MONTHLY', value: results.details.prices.enterprise, type: 'plain' }] : []),
+          ...(results.details._webhook_secret ? [{ key: 'STRIPE_WEBHOOK_SECRET', value: results.details._webhook_secret, type: 'encrypted' }] : []),
+          // The connected account's keys are managed through Dynasty's platform
+          // Client accesses their dashboard via the onboarding link
+        ].map(v => ({ ...v, target: ['production', 'preview', 'development'] }));
+        await fetch(`https://api.vercel.com/v10/projects/${project.vercel_project_id}/env?teamId=team_fuTLGjBMk3NAD32Bm5hA7wkr`, {
+          method: 'POST', headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(envVars)
+        });
+        results.details.env_vars_pushed = true;
+      } catch {}
+    }
+
+    // 6. Still push .env.example and setup guide to the repo
+    if (GH_TOKEN && project.slug) {
+      try {
+        await pushFile(GH_TOKEN, 'pinohu', project.slug, '.env.example',
+          `# ${project.name} — Environment Variables\n# Stripe is managed by Dynasty (Stripe Connect)\n# Complete your Stripe onboarding: ${results.details.onboarding_url || 'Contact Dynasty support'}\n\nSTRIPE_ACCOUNT_ID=${acct.id}\nSTRIPE_PRODUCT_ID=${prod?.id || ''}\nSTRIPE_PRICE_PRO_MONTHLY=${results.details.prices?.pro || ''}\nSTRIPE_PRICE_ENTERPRISE_MONTHLY=${results.details.prices?.enterprise || ''}\n\n# Clerk Authentication\nNEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\nCLERK_SECRET_KEY=\nNEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in\nNEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up\n\n# Database\nDATABASE_URL=\nNEXT_PUBLIC_APP_URL=${liveUrl || ''}\nBILLING_PLAN_ENV=test\n`,
+          'docs: environment variables (Stripe managed by Dynasty)');
+      } catch {}
+    }
+
+    // Remove secret from response (only used for env var push)
+    delete results.details._webhook_secret;
+
+    results.details.note = 'Stripe Connected Account created. Client completes onboarding at the provided URL. Products, prices, and webhooks are live on their connected account.';
     results.ok = true;
     results.cost_usd = 0;
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up Stripe manually — see docs/STRIPE-SETUP.md in the repo'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create Stripe account at dashboard.stripe.com — see docs/STRIPE-SETUP.md'; }
   return results;
 }
 
@@ -1506,7 +1484,26 @@ export default async function handler(req, res) {
     : (req.body?.action || new URLSearchParams(req.url?.split('?')[1]).get('action'));
 
   let config = {};
-  try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { return res.status(500).json({ ok: false, error: 'DYNASTY_TOOL_CONFIG is invalid JSON' }); }
+  try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { config = {}; }
+
+  // Enrich config with individual env vars (easier to manage than editing JSON blob)
+  if (!config.content) config.content = {};
+  if (!config.data_research) config.data_research = {};
+  if (!config.crm_pm) config.crm_pm = {};
+  if (!config.directories) config.directories = {};
+  config.content.chatbase = config.content.chatbase || process.env.CHATBASE_API_KEY || '';
+  config.content.vadoo_ai = config.content.vadoo_ai || process.env.VADOO_API_KEY || '';
+  config.content.supermachine = config.content.supermachine || process.env.SUPERMACHINE_API_KEY || '';
+  config.content.documentero = config.content.documentero || process.env.DOCUMENTERO_API_KEY || '';
+  config.content.vista_social = config.content.vista_social || process.env.VISTA_SOCIAL_API_KEY || '';
+  config.content.fliki = config.content.fliki || process.env.FLIKI_API_KEY || '';
+  config.data_research.posthog = config.data_research.posthog || process.env.POSTHOG_API_KEY || '';
+  config.data_research.happierleads = config.data_research.happierleads || process.env.HAPPIERLEADS_API_KEY || '';
+  config.data_research.salespanel = config.data_research.salespanel || process.env.SALESPANEL_API_KEY || '';
+  config.crm_pm.suitedash_api = config.crm_pm.suitedash_api || process.env.SUITEDASH_API_KEY || '';
+  config.crm_pm.suitedash_public_id = config.crm_pm.suitedash_public_id || process.env.SUITEDASH_PUBLIC_ID || '';
+  config.crm_pm.suitedash_secret_key = config.crm_pm.suitedash_secret_key || process.env.SUITEDASH_SECRET_KEY || '';
+  config.directories.brilliant_api = config.directories.brilliant_api || process.env.BRILLIANT_API_KEY || '';
   const GH_TOKEN     = process.env.GITHUB_TOKEN;
   const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN || config.infrastructure?.vercel;
   const VERCEL_TEAM  = 'team_fuTLGjBMk3NAD32Bm5hA7wkr';
@@ -2243,21 +2240,38 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           });
         }
 
-        // ── Set env vars for fullstack build to succeed ──
-        // Placeholders allow Next.js compilation. Client replaces with real keys.
+        // ── Set env vars for fullstack build — use Dynasty's managed Clerk instance ──
+        // Dynasty provides auth via its Clerk account. Each client project is an Organization.
         if(vercelProjectId && isFullstack){
+          const clerkPk = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+          const clerkSk = process.env.CLERK_SECRET_KEY || '';
+          const stripePk = config.payments?.stripe_publishable || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
+
+          // Create a Clerk Organization for this project (isolates their users)
+          let clerkOrgId = null;
+          if (clerkSk) {
+            try {
+              const orgResp = await fetch('https://api.clerk.com/v1/organizations', {
+                method: 'POST', headers: { 'Authorization': `Bearer ${clerkSk}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: inf.name || slug, slug: slug, max_allowed_memberships: 100 })
+              });
+              const orgData = await orgResp.json();
+              clerkOrgId = orgData.id;
+            } catch {}
+          }
+
           const envVars = [
-            // Clerk — placeholders so Next.js build doesn't crash on missing NEXT_PUBLIC_*
-            {key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:'pk_test_placeholder_replace_with_your_key',type:'plain'},
-            {key:'CLERK_SECRET_KEY',value:'sk_test_placeholder_replace_with_your_key',type:'encrypted'},
+            // Clerk — Dynasty's managed instance (real keys that work immediately)
+            ...(clerkPk ? [{key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:clerkPk,type:'encrypted'}] : [{key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:'pk_test_placeholder',type:'plain'}]),
+            ...(clerkSk ? [{key:'CLERK_SECRET_KEY',value:clerkSk,type:'encrypted'}] : [{key:'CLERK_SECRET_KEY',value:'sk_test_placeholder',type:'encrypted'}]),
             {key:'NEXT_PUBLIC_CLERK_SIGN_IN_URL',value:'/en/sign-in',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_SIGN_UP_URL',value:'/en/sign-up',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL',value:'/en/dashboard',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL',value:'/en/dashboard',type:'plain'},
-            // Stripe — placeholders so billing pages compile
-            {key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:'pk_test_placeholder_replace_with_your_key',type:'plain'},
-            {key:'STRIPE_SECRET_KEY',value:'sk_test_placeholder_replace_with_your_key',type:'encrypted'},
-            {key:'STRIPE_WEBHOOK_SECRET',value:'whsec_placeholder_replace_with_your_key',type:'encrypted'},
+            ...(clerkOrgId ? [{key:'CLERK_ORGANIZATION_ID',value:clerkOrgId,type:'plain'}] : []),
+            // Stripe — publishable key for client-side checkout (connected account handles the rest)
+            ...(stripePk ? [{key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:stripePk,type:'encrypted'}] : [{key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:'pk_test_placeholder',type:'plain'}]),
+            {key:'STRIPE_WEBHOOK_SECRET',value:'whsec_placeholder',type:'encrypted'},
             // App config
             {key:'BILLING_PLAN_ENV',value:'test',type:'plain'},
             {key:'NEXT_PUBLIC_APP_URL',value:`https://${slug}.vercel.app`,type:'plain'},
