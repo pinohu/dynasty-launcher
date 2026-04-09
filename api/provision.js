@@ -1328,42 +1328,80 @@ function generateOperationsMd(project, moduleResults) {
   lines.push(`- **Payments not working:** Check Stripe webhook endpoint is active`);
   lines.push(`- **Chatbot not responding:** Check FAQ content in public/chatbot.html\n`);
 
-  lines.push(`\n## Business Formation Checklist\n`);
-  lines.push(`These steps require your personal action — they cannot be automated:\n`);
-  lines.push(`### 1. Legal Formation`);
-  lines.push(`- [ ] Register your LLC/Corporation at your state's Secretary of State website`);
-  lines.push(`- [ ] Get your EIN (free) at [irs.gov/ein](https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online)`);
-  lines.push(`- [ ] Draft an Operating Agreement (template in docs/LEGAL-TEMPLATES.md if generated)`);
-  lines.push(`- [ ] Register for state/local business licenses at your city/county clerk's office\n`);
-  lines.push(`### 2. Banking & Finance`);
-  lines.push(`- [ ] Open a business bank account (separate from personal) — recommended: Mercury, Relay, or your local bank`);
-  lines.push(`- [ ] Set up bookkeeping — recommended: QuickBooks Self-Employed ($15/mo) or Wave (free)`);
-  lines.push(`- [ ] Connect your Stripe payouts to your business bank account`);
-  lines.push(`- [ ] Set aside 25-30% of revenue for taxes (or hire a CPA)\n`);
-  lines.push(`### 3. Insurance`);
-  lines.push(`- [ ] Get General Liability insurance — recommended: Next Insurance, Hiscox, or your local broker`);
-  lines.push(`- [ ] Consider Professional Liability (E&O) if offering professional services`);
-  lines.push(`- [ ] Consider Cyber Liability if handling customer data\n`);
-  lines.push(`### 4. Google Business Profile`);
-  lines.push(`- [ ] Create your profile at [business.google.com](https://business.google.com)`);
-  lines.push(`- [ ] Business name: ${project.name}`);
-  lines.push(`- [ ] Website: https://${project.domain || project.slug + '.vercel.app'}`);
-  lines.push(`- [ ] Phone: (use the number from your phone module or a Google Voice number)`);
-  lines.push(`- [ ] Add 5+ photos, business hours, and a 750-character description`);
-  lines.push(`- [ ] Request reviews from your first 10 customers\n`);
-  lines.push(`### 5. Compliance`);
-  lines.push(`- [ ] Check if your industry requires specific licenses at [SBA.gov](https://www.sba.gov/business-guide/launch-your-business/apply-licenses-permits)`);
-  lines.push(`- [ ] If handling personal data: ensure GDPR/CCPA compliance (Privacy Policy is generated)`);
-  lines.push(`- [ ] If accepting payments: your Stripe Connect account handles PCI compliance`);
-  lines.push(`- [ ] If sending marketing emails: CAN-SPAM compliance (unsubscribe links are included in templates)\n`);
-  lines.push(`### 6. Growth Preparation`);
-  lines.push(`- [ ] Set up Google Analytics or use the PostHog analytics already provisioned`);
-  lines.push(`- [ ] Claim your social media handles (username matching your business name)`);
-  lines.push(`- [ ] Import the 260-post social media calendar from social-media/calendar.csv`);
-  lines.push(`- [ ] Record a 5-minute Loom walkthrough video (script in VIDEO-SCRIPT.md if generated)`);
-  lines.push(`- [ ] Join 3-5 online communities where your target customers hang out\n`);
+  lines.push(`\n## Complete Your Business Launch\n`);
+  lines.push(`Your digital infrastructure is live. Complete these remaining steps to be fully operational:\n`);
 
-  lines.push(`---\n*Built with Dynasty Launcher*`);
+  lines.push(`### 1. Legal Formation — PA CROP Services`);
+  lines.push(`**[PA CROP Services](https://pacropservices.com)** handles business formation end-to-end:\n`);
+  lines.push(`- [ ] **LLC/Corporation Registration** — filed with your state's Secretary of State`);
+  lines.push(`- [ ] **EIN (Tax ID)** — obtained from the IRS for your new entity`);
+  lines.push(`- [ ] **Registered Agent** — PA CROP Services serves as your registered agent, receiving legal documents on your behalf`);
+  lines.push(`- [ ] **Operating Agreement** — professionally drafted (template in docs/LEGAL-TEMPLATES.md as starting point)`);
+  lines.push(`- [ ] **Business Licenses** — research and filing for your industry and location`);
+  lines.push(`\n> **Get started:** Visit [pacropservices.com](https://pacropservices.com) or email for a formation package quote.\n`);
+
+  lines.push(`### 2. Notarization — Notroom`);
+  lines.push(`**[Notroom](https://notroom.com)** provides notary public and notary signing agent services:\n`);
+  lines.push(`- [ ] **Operating Agreement notarization** — legally binding execution`);
+  lines.push(`- [ ] **Contract signing** — service agreements, partnership agreements, NDAs`);
+  lines.push(`- [ ] **Loan/financing documents** — if securing business funding`);
+  lines.push(`- [ ] **Remote Online Notarization (RON)** — notarize from anywhere, no in-person visit needed`);
+  lines.push(`\n> **Get started:** Visit [notroom.com](https://notroom.com) to schedule a notarization session.\n`);
+
+  lines.push(`### 3. Business Process Automation — Neat Circle`);
+  lines.push(`**[Neat Circle](https://neatcircle.com)** handles ongoing automation beyond what Dynasty provisioned:\n`);
+  lines.push(`- [ ] **Custom workflow automation** — connect your tools beyond the 7 n8n workflows provided`);
+  lines.push(`- [ ] **CRM pipeline optimization** — configure SuiteDash deal stages, templates, and client portal`);
+  lines.push(`- [ ] **Marketing automation** — advanced email sequences, A/B testing, segmentation`);
+  lines.push(`- [ ] **Integration maintenance** — keep your 17+ provisioned services running smoothly`);
+  lines.push(`- [ ] **Google Business Profile management** — setup, optimization, review management`);
+  lines.push(`- [ ] **Ongoing SEO & content** — beyond the initial 5 blog posts`);
+  lines.push(`\n> **Get started:** Visit [neatcircle.com](https://neatcircle.com) for a free automation audit.\n`);
+
+  lines.push(`### 4. Banking & Finance`);
+  lines.push(`- [ ] Open a **business bank account** (separate from personal) — recommended: [Mercury](https://mercury.com), [Relay](https://relayfi.com), or your local bank`);
+  lines.push(`- [ ] Set up **bookkeeping** — recommended: [QuickBooks Self-Employed](https://quickbooks.intuit.com) ($15/mo) or [Wave](https://waveapps.com) (free)`);
+  lines.push(`- [ ] Connect your **Stripe payouts** to your business bank account via [Stripe Dashboard](https://dashboard.stripe.com/settings/payouts)`);
+  lines.push(`- [ ] Set aside **25-30% of revenue** for quarterly estimated taxes (or hire a CPA)\n`);
+
+  lines.push(`### 5. Insurance`);
+  lines.push(`- [ ] **General Liability** — recommended: [Next Insurance](https://nextinsurance.com), [Hiscox](https://hiscox.com), or ask PA CROP Services for a referral`);
+  lines.push(`- [ ] **Professional Liability (E&O)** — if offering consulting, professional, or technical services`);
+  lines.push(`- [ ] **Cyber Liability** — if handling customer personal data or payment information\n`);
+
+  lines.push(`### 6. Google Business Profile`);
+  lines.push(`- [ ] Create your profile at [business.google.com](https://business.google.com)`);
+  lines.push(`- [ ] Business name: **${project.name}**`);
+  lines.push(`- [ ] Website: **https://${project.domain || project.slug + '.vercel.app'}**`);
+  lines.push(`- [ ] Add 5+ photos, business hours, services, and a 750-character description`);
+  lines.push(`- [ ] Request reviews from your first 10 customers`);
+  lines.push(`\n> **Need help?** [Neat Circle](https://neatcircle.com) offers GBP setup and management services.\n`);
+
+  lines.push(`### 7. Compliance`);
+  lines.push(`- [ ] Check industry-specific licenses at [SBA.gov](https://www.sba.gov/business-guide/launch-your-business/apply-licenses-permits)`);
+  lines.push(`- [ ] **GDPR/CCPA** — Privacy Policy is generated and deployed`);
+  lines.push(`- [ ] **PCI Compliance** — handled by your Stripe Connect account`);
+  lines.push(`- [ ] **CAN-SPAM** — unsubscribe links included in all email templates`);
+  lines.push(`\n> **Need compliance help?** [PA CROP Services](https://pacropservices.com) can advise on business compliance requirements.\n`);
+
+  lines.push(`### 8. Launch & Growth`);
+  lines.push(`- [ ] Claim social media handles matching your business name`);
+  lines.push(`- [ ] Import the **260-post social calendar** from \`social-media/calendar.csv\` into your scheduler`);
+  lines.push(`- [ ] Record a 5-minute walkthrough video (script in VIDEO-SCRIPT.md)`);
+  lines.push(`- [ ] Activate your Acumbamail email campaign drafts`);
+  lines.push(`- [ ] Complete your Stripe Express onboarding to start accepting payments`);
+  lines.push(`- [ ] Join 3-5 online communities where your target customers are\n`);
+
+  lines.push(`---\n\n## Dynasty Empire Ecosystem\n`);
+  lines.push(`Your business was built by **[Dynasty Launcher](https://dynasty-launcher.vercel.app)** — part of the Dynasty Empire ecosystem:\n`);
+  lines.push(`| Service | Company | What They Do |`);
+  lines.push(`|---------|---------|-------------|`);
+  lines.push(`| **Business Launch** | [Dynasty Launcher](https://dynasty-launcher.vercel.app) | One-prompt business provisioning (what built this) |`);
+  lines.push(`| **Business Formation** | [PA CROP Services](https://pacropservices.com) | LLC registration, EIN, registered agent |`);
+  lines.push(`| **Notarization** | [Notroom](https://notroom.com) | Notary public, document signing, RON |`);
+  lines.push(`| **Automation** | [Neat Circle](https://neatcircle.com) | Business process automation, ongoing management |`);
+  lines.push(`| **Parent Company** | [Dynasty Empire](https://dynastyempire.com) | Multi-generational business holding company |\n`);
+  lines.push(`---\n*Built with Dynasty Launcher — a Dynasty Empire company*`);
   return lines.join('\n');
 }
 
