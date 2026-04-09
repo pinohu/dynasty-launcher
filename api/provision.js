@@ -1493,13 +1493,16 @@ async function runModules(config, project, liveUrl, enabledModules) {
   const results = {};
   let totalCost = 0;
 
-  // Per-module timeout (15s) prevents a single slow API from blocking the build.
+  // Per-module timeout — AI-heavy modules get more time, API-only modules get less.
   // Overall budget: 240s max (leaves 60s for post-module operations within 300s limit).
-  const MODULE_TIMEOUT = 15000;
+  const AI_MODULES = new Set(['chatbot', 'seo', 'video']); // These call AI APIs (slow)
+  const MODULE_TIMEOUT_DEFAULT = 20000; // 20s for API-only modules
+  const MODULE_TIMEOUT_AI = 60000;      // 60s for AI-generating modules
   const startTime = Date.now();
   const MAX_TOTAL_MS = 240000;
   for (const [name, fn] of Object.entries(moduleMap)) {
     if (!enabledModules[name]) continue;
+    const timeout = AI_MODULES.has(name) ? MODULE_TIMEOUT_AI : MODULE_TIMEOUT_DEFAULT;
     // Check overall time budget before starting another module
     if (Date.now() - startTime > MAX_TOTAL_MS) {
       results[name] = { ok: false, service: name, error: 'Skipped — build time budget exceeded', fallback: `Module ${name} skipped to prevent timeout — see OPERATIONS.md` };
@@ -1508,7 +1511,7 @@ async function runModules(config, project, liveUrl, enabledModules) {
     try {
       results[name] = await Promise.race([
         fn(config, project, liveUrl),
-        new Promise((_, reject) => setTimeout(() => reject(new Error(`Module ${name} timed out after 15s`)), MODULE_TIMEOUT))
+        new Promise((_, reject) => setTimeout(() => reject(new Error(`Module ${name} timed out after ${timeout/1000}s`)), timeout))
       ]);
     } catch (e) {
       results[name] = { ok: false, service: name, error: sanitizeError(e.message), fallback: `Module ${name} failed — see OPERATIONS.md for manual setup` };
