@@ -1395,7 +1395,17 @@ function generateOperationsMd(project, moduleResults) {
   // Directory listing opportunity — based on project location
   const loc = (project.location || '').toLowerCase();
   const isErie = loc.includes('erie') || loc.includes('crawford') || loc.includes('warren') || loc.includes('northwest pa') || loc.includes('pennsylvania');
-  lines.push(`### 9. Get Listed — Increase Your Visibility\n`);
+  lines.push(`### 9. Lead Capture — CXReact\n`);
+  lines.push(`**[CXReact](https://cxreact.com)** is a lead generation operating system for creating embeddable forms, quizzes, checklists, and interactive lead magnets:\n`);
+  lines.push(`- [ ] **Create a lead capture form** — embed on your homepage to collect visitor emails and phone numbers`);
+  lines.push(`- [ ] **Build a qualifying quiz** — "Which plan is right for you?" or "Get your free assessment" — pre-qualifies leads before they talk to you`);
+  lines.push(`- [ ] **Add a checklist lead magnet** — "10-step checklist for [your niche]" — trades value for contact info`);
+  lines.push(`- [ ] **Connect to your CRM** — CXReact feeds leads directly into your SuiteDash pipeline or email list`);
+  lines.push(`- [ ] **Embed on your site** — copy the CXReact embed code into your deployed website\n`);
+  lines.push(`> **Why this matters:** Your website has traffic (from SEO posts, social calendar, and ads) but without lead capture, visitors leave without converting. CXReact turns visitors into qualified leads.\n`);
+  lines.push(`> **Get started:** Visit [cxreact.com](https://cxreact.com) to create your first lead capture system.\n`);
+
+  lines.push(`### 10. Get Listed — Increase Your Visibility\n`);
   if (isErie) {
     lines.push(`🎯 **Your business is in the Erie, PA area!**\n`);
     lines.push(`**[erie.pro](https://erie.pro)** is the premier directory of service providers in Erie County and surrounding areas.\n`);
@@ -1421,6 +1431,7 @@ function generateOperationsMd(project, moduleResults) {
   lines.push(`| **Business Formation** | [PA CROP Services](https://pacropservices.com) | LLC registration, EIN, registered agent |`);
   lines.push(`| **Notarization** | [Notroom](https://notroom.com) | Notary public, document signing, RON |`);
   lines.push(`| **Automation** | [Neat Circle](https://neatcircle.com) | Business process automation, ongoing management |`);
+  lines.push(`| **Lead Generation** | [CXReact](https://cxreact.com) | Embeddable forms, quizzes, checklists for lead capture |`);
   lines.push(`| **Local Directory** | [erie.pro](https://erie.pro) | Service provider directory — Erie County & NW PA |`);
   lines.push(`| **Parent Company** | [Dynasty Empire](https://dynastyempire.com) | Multi-generational business holding company |\n`);
   lines.push(`---\n*Built with Dynasty Launcher — a Dynasty Empire company*`);
