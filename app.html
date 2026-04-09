@@ -7787,6 +7787,1739 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
       } catch(e) { setP('compete', 'sk', e.message); }
     }
 
+
+// ── PHASE: Business Depth Documents (78 gaps implementation) ────────────
+    // Generates 78 additional business documents covering MBA frameworks,
+    // accelerator playbooks, serial entrepreneur patterns, legal templates,
+    // financial depth, GTM tactics, product strategy, and people/culture.
+    // Documents are generated in parallel batches using Promise.allSettled.
+
+    updateGlobalProgress(9, 14, 'Phase 9 of 14 · Business Depth Documents');
+    addP('depth-docs', 'Generating business depth documents', '78 documents across 8 domains');
+    setP('depth-docs', 'run');
+    let depthDocsGenerated = 0;
+
+    // ── CRITICAL: 9 foundational business documents ────────────────────────
+    const criticalDocs = [
+      ['PMF-MEASUREMENT.md', 'pmf', 'PMF Measurement', `Generate a Product-Market Fit measurement framework for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). ${desc}\n\nInclude:\n1. SEAN ELLIS TEST: The exact "very disappointed" survey (4 questions), how to distribute it, sample size requirements (min 40 responses), and the 40% threshold interpretation with examples.\n2. PMF SCORING METHODOLOGY: Create a composite PMF score from 5 signals: Sean Ellis %, retention rate, organic growth rate, NPS, and usage frequency. Weight each signal and define scoring thresholds (no PMF / emerging / strong / exceptional).\n3. WEEKLY PMF TRACKING TEMPLATE: Dashboard with 8 metrics tracked weekly with targets.\n4. PIVOT-OR-PERSEVERE DECISION TREE: Quantitative decision framework — if metrics X below threshold Y for Z weeks, take action A.\n5. INNOVATION ACCOUNTING: Define 3 levels — establish baseline, tune engine, pivot/persevere. Create specific dashboard for this business.\n6. LEADING VS LAGGING INDICATORS: Identify 5 leading indicators that predict PMF 30-60 days ahead for ${inf.type_label} businesses.`],
+      ['UNSCALABLE-PLAYBOOK.md', 'unscalable', 'Unscalable Playbook', `Generate a "Do Things That Don't Scale" checklist for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). ${desc}\n\nBased on Paul Graham's essay. Include 20 specific manual, high-touch actions organized by:\n\nCUSTOMER ACQUISITION (5 actions): personal outreach, hand-delivered demos, manual onboarding calls, founder-led sales, handwritten notes.\nONBOARDING (4 actions): personal setup calls, white-glove configuration, custom walkthroughs, first-week daily check-ins.\nSUPPORT (4 actions): founder-answers-every-ticket, proactive check-ins, screen-share debugging, customer Slack channels.\nSALES (4 actions): custom proposals, in-person meetings, hand-crafted demos, personal follow-ups.\nPRODUCT (3 actions): manual data imports, concierge fulfillment, manual feature requests.\n\nFor EACH action: what to do manually, when to automate (specific metric trigger like "when you have 50+ customers"), what automation looks like, and estimated time savings.`],
+      ['docs/OPERATING-AGREEMENT-TEMPLATE.md', 'op-agree', 'Operating Agreement', `Generate an LLC Operating Agreement template for "${inf.name}". Include: Article 1 Formation (name, purpose, registered agent, term), Article 2 Members (initial members table, additional members, membership interests), Article 3 Capital (initial contributions, additional contributions, capital accounts, no interest on capital), Article 4 Profit/Loss Distribution (allocation, distribution timing, tax distributions), Article 5 Management (member-managed vs manager-managed, voting, meetings, quorum, written consent), Article 6 Transfer Restrictions (right of first refusal, permitted transfers, drag-along, tag-along), Article 7 Dissolution (events, winding up, distribution of assets), Article 8 Dispute Resolution (mediation then arbitration, governing law), Article 9 Buy-Sell (death/disability, voluntary withdrawal, valuation method, payment terms), Article 10 Non-Compete. Add [BRACKETED PLACEHOLDERS] for customization. Disclaimer: review with legal counsel.`],
+      ['docs/IP-ASSIGNMENT.md', 'ip-assign', 'IP Assignment', `Generate an IP Assignment Agreement template for "${inf.name}". Cover: 1) ASSIGNMENT clause — all work product, inventions, improvements assigned to company, 2) WORK-FOR-HIRE — designation under Copyright Act, 3) MORAL RIGHTS WAIVER, 4) REPRESENTATIONS — original work, no conflicts, no prior encumbrances, 5) PRIOR INVENTIONS SCHEDULE — list of pre-existing IP excluded from assignment, 6) FURTHER ASSURANCES — obligation to sign future documents, 7) CONSIDERATION — acknowledgment of adequate consideration. Also include: explanation of contractor vs employee IP ownership differences, work-for-hire doctrine summary, and why this agreement is critical (the legal time bomb analogy). Format as ready-to-use template with [BRACKETS].`],
+      ['ENTITY-SELECTION.md', 'entity', 'Entity Selection', `Generate an Entity Selection Analysis for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). ${desc}\n\nCompare across 15 dimensions in a matrix:\n| Dimension | LLC | S-Corp | C-Corp (DE) |\nCover: liability protection, taxation (pass-through vs corporate), self-employment tax, fundraising compatibility, equity compensation (options/RSUs), administrative burden, annual costs, exit treatment, investors' preference, QSBS eligibility, number of shareholders, ownership restrictions, formation complexity, operating flexibility, public perception.\n\nInclude DECISION TREE: if raising VC → C-Corp. If bootstrapped <$500K → LLC. If profitable >$100K → S-Corp election analysis. If planning exit in 5 years → C-Corp for QSBS.\n\nQSBS Section 1202: qualification requirements, $10M exclusion, 5-year holding period, eligible businesses.\n\nState analysis: Delaware vs Wyoming vs home state. Franchise tax comparison.`],
+      ['RUNWAY-CALCULATOR.md', 'runway', 'Runway Calculator', `Generate a Cash Flow Runway Calculator for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). ${desc}\n\nInclude:\n1. BURN RATE TEMPLATE: Monthly expense breakdown (team, infrastructure, marketing, legal, office, misc). Define gross burn (total spend) vs net burn (spend minus revenue). Show why the distinction matters.\n2. RUNWAY FORMULA: Runway = Cash / Net Monthly Burn. Calculate for $50K, $100K, $250K, $500K, $1M starting cash.\n3. DEFAULT ALIVE/DEAD ASSESSMENT: Paul Graham's framework — if current revenue growth rate continues, will you become profitable before running out of cash? Show the calculation.\n4. RUNWAY EXTENSION STRATEGIES: 10 specific tactics (cut non-essential spend, renegotiate contracts, accelerate collections, bridge financing, revenue sprints, hiring freeze, convert fixed to variable, prepaid annual plans, government grants, factoring).\n5. FUNDING TIMELINE: When to start raising based on runway (start at 6 months remaining, expect 3-6 month process).\n6. 12-MONTH CASH FLOW TEMPLATE: Monthly projection with revenue, expenses, net cash flow, cumulative cash, runway remaining.\n7. BREAK-EVEN ANALYSIS: Fixed costs, variable costs per customer, contribution margin, break-even customer count at ${inf.price}.`],
+      ['CUSTOMER-SUCCESS.md', 'cust-success', 'Customer Success', `Generate a Customer Success Framework for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). ${desc}\n\nInclude:\n1. POST-SALE JOURNEY MAP: 7 stages — purchase, onboarding (day 1-7), activation (day 7-30), adoption (month 2-3), expansion (month 4-6), renewal (month 11-12), advocacy (ongoing). Define milestones and touchpoints for each.\n2. HEALTH SCORE: Define 5-7 signals with weights — login frequency (20%), feature breadth (20%), support tickets (15%), NPS response (15%), billing status (15%), engagement trend (15%). Score 0-100, define brackets: healthy (70+), at-risk (40-69), critical (<40).\n3. QBR TEMPLATE: Quarterly Business Review agenda — value delivered, usage metrics, ROI calculation, roadmap preview, expansion opportunities, feedback.\n4. EXPANSION STRATEGY: Upsell triggers (usage hitting limits, team growth, feature requests), cross-sell identification, expansion revenue targets (net retention >120%).\n5. CHURN RISK SIGNALS: 8 behavioral signals that predict churn 30-60 days ahead. Early intervention playbooks for each.\n6. FIRST 90 DAYS PLAYBOOK: Day 1, 3, 7, 14, 30, 60, 90 touchpoints with specific actions and communication templates.`],
+      ['HIRING-PLAN.md', 'hiring', 'Hiring Plan', `Generate a Hiring Plan for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). ${desc}\n\nInclude:\n1. FIRST 5 HIRES: Ordered by priority with timing tied to revenue milestones. For each: role title, key responsibilities (5), skills required, salary range, equity range (%), why this hire at this position in sequence, interview process (4 stages).\n2. COMPENSATION BENCHMARKING: Methodology using Levels.fyi, Pave, Carta data. Geographic adjustments. Cash vs equity tradeoff at different stages.\n3. HIRING SCORECARD: Structured interview evaluation template with 8 competencies scored 1-5.\n4. EMPLOYEE ONBOARDING: Day 1/Week 1/Month 1 checklist (20 items each). 30-60-90 day goals template.\n5. CULTURE VALUES: 5 core values with behavioral examples and interview questions to assess each.\n6. HIRE VS CONTRACT DECISION: Framework — when to use contractors vs FTEs based on duration, IP sensitivity, cost, management overhead.\n7. REMOTE HIRING: Where to find candidates (5 sources), screening for remote readiness, onboarding remote employees.`],
+      ['FOUNDER-AGREEMENT.md', 'founder', 'Founder Agreement', `Generate a Founder Operating Agreement for "${inf.name}". This is NOT the legal LLC agreement — it's the operational agreement between co-founders covering how they work together.\n\nInclude:\n1. ROLE MATRIX: CEO/CTO/COO responsibilities clearly delineated. Decision authority by domain (product, engineering, sales, finance, hiring, partnerships).\n2. DECISION FRAMEWORK: What needs consensus (fundraising, pivots, key hires, >$10K spend) vs individual authority (day-to-day operations in your domain).\n3. EQUITY SPLIT RATIONALE: Framework for determining fair split. Factors: idea (5-10%), execution capability (20-30%), domain expertise (15-20%), time commitment (20-30%), capital contribution (10-20%).\n4. VESTING: Standard 4-year / 1-year cliff. Reverse vesting for founder shares. What happens to unvested shares on departure.\n5. TIME COMMITMENT: Expected hours/week, moonlighting policy, outside board seats, competing interests disclosure.\n6. CONFLICT RESOLUTION: 3-tier process — direct conversation (48 hours), mediation with advisor/mentor, binding arbitration.\n7. DEPARTURE SCENARIOS: Voluntary (good leaver — vested shares retained, unvested forfeited), involuntary (bad leaver — board removal process, buyback at fair value or discount), death/disability (life insurance, buyback obligation).\n8. IP & NON-COMPETE: All founder work belongs to company. 12-month non-compete in same market post-departure.\n9. REVIEW CADENCE: Quarterly founder check-in agenda template.`]
+    ];
+
+    // Generate critical docs in 3 parallel groups of 3
+    for (let g = 0; g < criticalDocs.length; g += 3) {
+      const batch = criticalDocs.slice(g, g + 3);
+      await Promise.allSettled(batch.map(async ([file, id, label, prompt]) => {
+        addP(id, label, '', '⬡ Critical'); setP(id, 'run');
+        try {
+          const raw = await aiRaw(prompt, 6000);
+          if (raw?.length > 500) {
+            files[file] = `# ${label} — ${inf.name}\n\n> Generated by Your Deputy Intelligence Engine\n> ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${raw}`;
+            setP(id, 'ok', `${file} ready`);
+            depthDocsGenerated++;
+          } else { setP(id, 'sk', 'Insufficient content'); }
+        } catch(e) { setP(id, 'sk', e.message); }
+      }));
+    }
+    // ── END: Critical business docs (9/78) ────────────
+// ── HIGH-PRIORITY: Strategy + Accelerator + Financial (14/78) ────────────
+
+// ── Group A — Strategy & Fundraising (4 docs) ────────────
+const groupA = [
+  (async () => {
+    addP('fundraising_strategy', 'Fundraising Strategy', '', '⬡ Phase 5c');
+    setP('fundraising_strategy', 'run');
+    try {
+      const raw = await aiRaw(`You are a startup finance advisor. Generate a comprehensive FUNDRAISING STRATEGY for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price point: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Cover ALL of the following with specific numbers and frameworks tailored to this business:
+
+1. FUNDRAISING TIMING ANALYSIS: When to raise based on this business's metrics milestones (MRR thresholds, user counts, unit economics). Pre-seed vs seed vs bootstrap decision tree specific to ${inf.type_label} businesses.
+
+2. CAPITAL REQUIREMENTS MODEL: Calculate 18-month runway needs. Break down: product development, go-to-market, operations, hiring. Provide low/mid/high scenarios with specific dollar amounts.
+
+3. DEBT VS EQUITY FRAMEWORK: When revenue-based financing, venture debt, or SBA loans make sense for this revenue model (${inf.revenue_model}). Compare cost of capital across options.
+
+4. DILUTION MODELING: Model founder ownership across Seed ($1-3M), Series A ($5-15M), Series B ($20-50M). Show dilution percentages at each stage assuming standard terms.
+
+5. 83(b) ELECTION GUIDANCE: When to file, tax implications, step-by-step process, 30-day deadline warning, sample calculation showing tax savings.
+
+6. SAFE VS PRICED ROUND DECISION FRAMEWORK: Decision matrix with criteria (amount raising, investor type, complexity tolerance, valuation confidence). Annotate when each instrument is optimal.
+
+7. INVESTOR TARGETING CRITERIA: Build ideal investor profile for this business — check size range, sector focus, stage preference, value-add requirements. List 5 specific investor categories to target.
+
+8. FUNDRAISING TIMELINE: Week-by-week 12-week fundraising sprint plan from deck prep through close.
+
+Use specific numbers, not ranges where possible. Reference the ${inf.price} price point and ${inf.revenue_model} model in financial projections.`, 5000);
+      if (raw?.length > 500) { files['FUNDRAISING-STRATEGY.md'] = `# Fundraising Strategy — ${inf.name}\n\n${raw}`; setP('fundraising_strategy', 'ok', 'Done'); }
+      else { setP('fundraising_strategy', 'sk', 'Skipped'); }
+    } catch(e) { setP('fundraising_strategy', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('org_design', 'Org Design', '', '⬡ Phase 5c');
+    setP('org_design', 'run');
+    try {
+      const raw = await aiRaw(`You are an organizational design consultant. Generate a detailed ORG DESIGN document for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}.
+Viability data: ${V2_SCORECARD}
+
+Create a complete organizational blueprint covering:
+
+1. ORGANIZATIONAL STRUCTURE: Design the org chart for 3 stages — founding team (1-5), growth stage (6-20), scale stage (21-50). Specify exact roles needed at each stage with hiring sequence priority.
+
+2. RACI MATRIX: Build a RACI (Responsible, Accountable, Consulted, Informed) matrix for 12 key decisions: product roadmap, pricing changes, hiring, firing, budget allocation, partnerships, customer escalations, marketing campaigns, technical architecture, legal/compliance, fundraising, vendor selection.
+
+3. REPORTING LINES: Define clear reporting structure. Who reports to whom at each stage. Identify where dual-reporting is acceptable vs harmful.
+
+4. SPAN OF CONTROL: Recommend optimal span of control for each function (engineering: 5-7, sales: 8-10, support: 12-15). Justify based on ${inf.type_label} business complexity.
+
+5. DECISION RIGHTS FRAMEWORK: Classify decisions as Type 1 (irreversible, CEO-only) vs Type 2 (reversible, delegate). Create a decision rights matrix with dollar thresholds and impact levels.
+
+6. TEAM TOPOLOGY: Apply Team Topologies framework — identify stream-aligned teams, enabling teams, complicated-subsystem teams, and platform teams specific to building and scaling ${inf.name}.
+
+7. FIRST 10 HIRES: Ordered list of first 10 hires with role title, key responsibilities, salary range, and why this hire at this position in the sequence.
+
+8. CULTURE ARCHITECTURE: Define 5 operating principles, meeting cadence (daily/weekly/monthly/quarterly), communication norms, and remote vs hybrid vs in-person recommendation.
+
+Tailor everything to a ${inf.type_label} business with ${inf.revenue_model} revenue model.`, 5000);
+      if (raw?.length > 500) { files['ORG-DESIGN.md'] = `# Organizational Design — ${inf.name}\n\n${raw}`; setP('org_design', 'ok', 'Done'); }
+      else { setP('org_design', 'sk', 'Skipped'); }
+    } catch(e) { setP('org_design', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('ops_playbook', 'Operations Playbook', '', '⬡ Phase 5c');
+    setP('ops_playbook', 'run');
+    try {
+      const raw = await aiRaw(`You are a COO and operations expert. Generate a comprehensive OPERATIONS PLAYBOOK for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Build a complete operations manual covering:
+
+1. STANDARD OPERATING PROCEDURES: Write SOP templates for the 8 most critical processes in a ${inf.type_label} business: customer onboarding, order fulfillment/service delivery, customer support escalation, billing and collections, vendor management, quality assurance, incident response, employee onboarding. Each SOP needs: purpose, scope, steps, responsible party, tools used, SLA.
+
+2. CORE PROCESS FLOWS: Map the end-to-end process flow for the primary value delivery chain of ${inf.name}. From customer acquisition through delivery through renewal/repeat. Include decision points, handoffs, and cycle times.
+
+3. CAPACITY PLANNING MODEL: Define capacity constraints for this business. How many customers can be served per employee/unit? What are the scaling triggers (at X customers, hire Y role)? Build a capacity planning table from 10 to 10,000 customers.
+
+4. QUALITY MANAGEMENT SYSTEM: Define quality metrics, inspection points, acceptable defect rates, customer satisfaction targets (NPS/CSAT), and corrective action procedures. Specific to ${inf.type_label}.
+
+5. KPI OWNERSHIP MATRIX: Assign every KPI to a specific role. Include: metric name, definition, target, measurement frequency, owner, escalation threshold. Cover financial, operational, customer, and product KPIs.
+
+6. VENDOR & TOOL STACK: Recommended operational tools at each stage with monthly costs. Cover: project management, communication, documentation, monitoring, analytics.
+
+7. DAILY/WEEKLY/MONTHLY OPERATING RHYTHM: Define the cadence of standups, reviews, retrospectives, planning sessions, and board updates.
+
+Make all SOPs actionable — someone should be able to follow them on day one.`, 5000);
+      if (raw?.length > 500) { files['OPERATIONS-PLAYBOOK.md'] = `# Operations Playbook — ${inf.name}\n\n${raw}`; setP('ops_playbook', 'ok', 'Done'); }
+      else { setP('ops_playbook', 'sk', 'Skipped'); }
+    } catch(e) { setP('ops_playbook', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('pivot_framework', 'Pivot Framework', '', '⬡ Phase 5c');
+    setP('pivot_framework', 'run');
+    try {
+      const raw = await aiRaw(`You are a startup strategy advisor specializing in pivots. Generate a PIVOT FRAMEWORK for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Build a comprehensive pivot decision system:
+
+1. PIVOT DECISION TRIGGERS: Define 10 quantitative triggers that signal a pivot is needed. For each: the metric, the threshold, the measurement period, and the confidence level required. Examples: "If CAC exceeds 3x LTV for 3 consecutive months" or "If Month-3 retention drops below 15%." Tailor to ${inf.revenue_model}.
+
+2. PIVOT TYPE ANALYSIS: For ${inf.name} specifically, analyze 6 pivot types and rate feasibility (High/Medium/Low):
+   - Zoom-in pivot (single feature becomes the product)
+   - Zoom-out pivot (product becomes a feature of larger product)
+   - Customer segment pivot (same product, different buyer)
+   - Customer need pivot (same customer, different problem)
+   - Channel pivot (same product, different distribution)
+   - Revenue model pivot (same value, different monetization)
+
+3. ADJACENT BUSINESS MODELS: Identify 5 specific adjacent business models ${inf.name} could pivot to. For each: describe the model, required changes, estimated time to pivot, capital required, and revenue potential.
+
+4. STRATEGIC OPTIONALITY MAP: Create a 2x2 matrix of pivot options based on (market risk vs execution risk). Place each adjacent model on the matrix.
+
+5. PIVOT EXECUTION PLAYBOOK: Step-by-step 8-week pivot execution plan: week 1-2 validation, week 3-4 MVP, week 5-6 testing, week 7-8 decision. Include stakeholder communication templates.
+
+6. ANTI-PIVOT CHECKLIST: 5 reasons NOT to pivot (insufficient data, founder fatigue misread as market signal, etc.). Prevent premature pivoting.
+
+7. CASE STUDIES: Reference 3 relevant pivot examples from companies in or adjacent to the ${inf.type_label} space.
+
+Be specific to this business — not generic startup advice.`, 5000);
+      if (raw?.length > 500) { files['PIVOT-FRAMEWORK.md'] = `# Pivot Framework — ${inf.name}\n\n${raw}`; setP('pivot_framework', 'ok', 'Done'); }
+      else { setP('pivot_framework', 'sk', 'Skipped'); }
+    } catch(e) { setP('pivot_framework', 'sk', e.message); }
+  })()
+];
+await Promise.allSettled(groupA);
+
+// ── Group B — Accelerator Essentials (4 docs) ────────────
+const groupB = [
+  (async () => {
+    addP('cohort_analysis', 'Cohort Analysis', '', '⬡ Phase 5c');
+    setP('cohort_analysis', 'run');
+    try {
+      const raw = await aiRaw(`You are a growth analytics expert. Generate a COHORT ANALYSIS framework for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Build a complete cohort analysis system:
+
+1. COHORT RETENTION CURVES: Design retention curve templates for ${inf.type_label} businesses. Define what "retained" means for this specific business (active usage? repeat purchase? subscription renewal?). Provide benchmark retention rates: Day 1, Day 7, Day 30, Month 2, Month 3, Month 6, Month 12. Show good/average/poor benchmarks for this business category.
+
+2. COHORT REVENUE ANALYSIS: Template for tracking revenue per cohort over time. Include: initial ARPU, ARPU expansion rate, net revenue retention target, cohort LTV calculation methodology. Show how to calculate payback period per cohort.
+
+3. BEHAVIORAL SEGMENTATION: Define 5 behavioral segments for ${inf.name} users based on engagement patterns. For each segment: name, defining behaviors, percentage of user base (expected), revenue contribution, recommended actions to move them to a higher-value segment.
+
+4. MONTHLY COHORT TRACKING STRUCTURE: Design the exact spreadsheet structure — rows are cohort months, columns are periods since signup. Include formulas for: retention rate, cumulative revenue, average revenue per user, churn rate. Provide a 12x12 cohort table template.
+
+5. INTERPRETATION GUIDE: How to read cohort charts. Common patterns and what they mean: smiling curves (good), frowning curves (bad), flat lines (concerning), hockey stick recovery (rare). What each pattern means for ${inf.name} specifically.
+
+6. ACQUISITION CHANNEL COHORTS: How to segment cohorts by acquisition channel to identify highest-quality traffic sources. Define quality metrics beyond conversion: retention, LTV, referral rate.
+
+7. COHORT-BASED FORECASTING: How to use cohort data to forecast revenue 6-12 months out. Provide the formula and methodology specific to ${inf.revenue_model}.
+
+Include specific numbers calibrated to the ${inf.price} price point.`, 5000);
+      if (raw?.length > 500) { files['COHORT-ANALYSIS.md'] = `# Cohort Analysis Framework — ${inf.name}\n\n${raw}`; setP('cohort_analysis', 'ok', 'Done'); }
+      else { setP('cohort_analysis', 'sk', 'Skipped'); }
+    } catch(e) { setP('cohort_analysis', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('retention_playbook', 'Retention Playbook', '', '⬡ Phase 5c');
+    setP('retention_playbook', 'run');
+    try {
+      const raw = await aiRaw(`You are a retention and churn reduction specialist. Generate a RETENTION PLAYBOOK for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Build a comprehensive churn-fighting system:
+
+1. CHURN SEGMENTATION: Break down churn into voluntary (active cancellation) vs involuntary (payment failure). For a ${inf.revenue_model} business at ${inf.price}, estimate the expected split. Define sub-categories: price-sensitive, feature-gap, competitor-switch, no-longer-need, poor-experience, payment-failure.
+
+2. CHURN REASON TAXONOMY: Create a hierarchical churn reason classification with 20+ specific reasons organized under 5 categories. Include: the reason, frequency estimate, preventability score (1-5), and intervention cost.
+
+3. SAVE FLOW SCRIPTS: Write 5 complete cancellation save flow scripts for the top 5 churn reasons. Each script: opening acknowledgment, probing question, tailored offer (discount/pause/downgrade/feature unlock), close. Include specific dollar amounts based on ${inf.price}.
+
+4. REACTIVATION CAMPAIGNS: Design a 3-email reactivation sequence for churned customers. Include: timing (days post-churn), subject lines, body copy, offer strategy, segmentation by churn reason. Write the actual email copy.
+
+5. RETENTION METRICS DASHBOARD: Define the 12 metrics that belong on a retention dashboard. For each: metric name, formula, target for ${inf.type_label} businesses, measurement frequency, alert threshold.
+
+6. WIN-BACK EMAIL SEQUENCE: Write a 5-email win-back sequence sent over 90 days to churned users. Email 1 (Day 3): "We miss you." Email 2 (Day 14): Value reminder. Email 3 (Day 30): New feature announcement. Email 4 (Day 60): Special offer. Email 5 (Day 90): Final attempt. Write full copy for each.
+
+7. INVOLUNTARY CHURN PREVENTION: Smart dunning sequence — retry schedule, pre-dunning notifications, payment update flow, grace period strategy. Expected recovery rate for each tactic.
+
+8. LEADING INDICATORS: Identify 8 behavioral signals that predict churn 30-60 days before it happens for ${inf.name}. For each: the signal, detection method, intervention playbook.`, 5000);
+      if (raw?.length > 500) { files['RETENTION-PLAYBOOK.md'] = `# Retention Playbook — ${inf.name}\n\n${raw}`; setP('retention_playbook', 'ok', 'Done'); }
+      else { setP('retention_playbook', 'sk', 'Skipped'); }
+    } catch(e) { setP('retention_playbook', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('cap_table', 'Cap Table Model', '', '⬡ Phase 5c');
+    setP('cap_table', 'run');
+    try {
+      const raw = await aiRaw(`You are a startup attorney and cap table expert. Generate a CAP TABLE MODEL for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Build a complete cap table guide and model:
+
+1. FOUNDER SPLIT FRAMEWORK: Decision framework for 1-4 co-founders. Factors: idea origination (5-10%), domain expertise (10-20%), time commitment (20-30%), capital contribution (10-20%), CEO role premium (5-10%). Provide 3 example splits for common founder configurations. Include the "equal split" argument and when it's actually optimal.
+
+2. ESOP POOL SIZING: Recommend ESOP pool size (typically 10-20%) based on stage and hiring plan. Show how pool creation dilutes founders. Option pool shuffle explanation. Provide a sample option grant table for first 10 employees with percentage ranges by role.
+
+3. DILUTION MODELING ACROSS ROUNDS:
+   - Pre-seed: $500K on $5M cap SAFE → show resulting ownership
+   - Seed: $2M on $10M pre-money → show resulting ownership
+   - Series A: $8M on $30M pre-money → show resulting ownership
+   - Series B: $25M on $100M pre-money → show resulting ownership
+   Show founder ownership percentage at each stage with and without pro-rata participation.
+
+4. PRO-RATA RIGHTS: Explain pro-rata rights, super pro-rata, and pay-to-play provisions. When to grant them, when to fight for them as founder. Dollar impact at each round.
+
+5. VESTING SCHEDULES: Standard 4-year/1-year cliff with monthly vesting thereafter. Explain: single-trigger vs double-trigger acceleration, good leaver vs bad leaver provisions, reverse vesting for founders. Provide sample vesting schedule table.
+
+6. ACCELERATION CLAUSES: Single-trigger (change of control) vs double-trigger (change of control + termination). Recommend which is appropriate for each role level.
+
+7. 409A VALUATION: When it's needed, how it works, typical cost, how it sets strike price. Rule of thumb: 409A is typically 25-30% of preferred price. Explain safe harbor provisions.
+
+8. CAP TABLE TEMPLATE: Provide a text-based cap table showing columns: shareholder, share class, shares, percentage, invested, price/share. Populate with realistic numbers for ${inf.name}.`, 5000);
+      if (raw?.length > 500) { files['CAP-TABLE-MODEL.md'] = `# Cap Table Model — ${inf.name}\n\n${raw}`; setP('cap_table', 'ok', 'Done'); }
+      else { setP('cap_table', 'sk', 'Skipped'); }
+    } catch(e) { setP('cap_table', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('term_sheets', 'Term Sheet Templates', '', '⬡ Phase 5c');
+    setP('term_sheets', 'run');
+    try {
+      const raw = await aiRaw(`You are a venture capital attorney. Generate TERM SHEET TEMPLATES and guidance for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Create comprehensive fundraising document templates:
+
+1. SAFE TEMPLATE WITH ANNOTATIONS: Write a complete YC-style SAFE (Simple Agreement for Future Equity) with inline annotations explaining each clause. Cover: valuation cap, discount rate, MFN (most favored nation), pro-rata rights, dissolution preference. Use brackets for customizable values. Annotate which terms are founder-friendly vs investor-friendly.
+
+2. CONVERTIBLE NOTE TEMPLATE: Write a convertible note template with annotations. Cover: principal amount, interest rate (typically 2-8%), maturity date (18-24 months), conversion mechanics, qualified financing threshold, valuation cap, discount. Explain how conversion math works with a numerical example.
+
+3. VALUATION CAP EXPLANATION: Deep dive on valuation caps. How they work mechanically — show with exact math: if cap is $8M and Series A is at $20M pre-money, what percentage does SAFE holder get? Include both pre-money and post-money SAFE mechanics.
+
+4. DISCOUNT RATE ANALYSIS: Standard discount rates (15-25%). Show conversion math at 20% discount. When to negotiate higher vs lower discounts. Interaction between cap and discount (which applies? — typically more favorable to investor).
+
+5. MFN CLAUSE DEEP DIVE: What Most Favored Nation means in practice. When it triggers. Why later SAFEs can be dangerous for earlier investors without MFN. Strategic implications for founders issuing multiple SAFEs.
+
+6. PRO-RATA RIGHTS IN SAFES: Side letter template for pro-rata rights. When investors can participate in future rounds. Major vs minor investor thresholds.
+
+7. KEY TERMS GLOSSARY: Define 25 essential fundraising terms: liquidation preference, anti-dilution (broad vs narrow weighted average), drag-along, tag-along, information rights, board composition, protective provisions, no-shop, right of first refusal, co-sale rights, redemption rights, dividends, registration rights, founders' activities, non-compete, IP assignment, representations and warranties, indemnification, governing law, pay-to-play, participation rights, conversion rights, voting rights, preemptive rights, observer rights.
+
+Tailor valuation ranges and amounts to what's realistic for a ${inf.type_label} startup.`, 5000);
+      if (raw?.length > 500) { files['TERM-SHEET-TEMPLATES.md'] = `# Term Sheet Templates — ${inf.name}\n\n${raw}`; setP('term_sheets', 'ok', 'Done'); }
+      else { setP('term_sheets', 'sk', 'Skipped'); }
+    } catch(e) { setP('term_sheets', 'sk', e.message); }
+  })()
+];
+await Promise.allSettled(groupB);
+
+// ── Group C — Serial Entrepreneur (4 docs) ────────────
+const groupC = [
+  (async () => {
+    addP('crisis_playbook', 'Crisis Playbook', '', '⬡ Phase 5c');
+    setP('crisis_playbook', 'run');
+    try {
+      const raw = await aiRaw(`You are a startup crisis management advisor. Generate a CRISIS PLAYBOOK for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}.
+Viability data: ${V2_SCORECARD}
+
+Build a comprehensive crisis response system with detailed playbooks for each of these 10 crisis scenarios:
+
+1. CO-FOUNDER CONFLICT: Equity disputes, vision disagreements, effort imbalance. Detection signs, mediation steps, buyout mechanics, operating agreement enforcement, legal nuclear options.
+
+2. KEY EMPLOYEE DEPARTURE: CTO/lead engineer/top salesperson leaves. Knowledge transfer emergency protocol, counter-offer decision framework, 30-day transition plan, competitive threat assessment.
+
+3. CUSTOMER CONCENTRATION RISK: When >25% revenue comes from one client. Diversification timeline, relationship deepening vs dependency reduction, contract renegotiation for protection.
+
+4. CASH CRUNCH: <3 months runway remaining. 48-hour triage plan: cut list priority order, revenue acceleration tactics, emergency bridge financing options, vendor negotiation scripts for payment extensions.
+
+5. PR DISASTER: Negative press, viral social media backlash, customer data complaint goes public. First-hour response protocol, spokesperson designation, statement templates, social media response framework.
+
+6. LEGAL THREAT: Cease & desist, patent troll, employee lawsuit, regulatory inquiry. First 24 hours: what to do and NOT do. When to engage counsel. Insurance (D&O, E&O) activation. Cost estimation.
+
+7. DATA BREACH: Customer data compromised. Incident response timeline (first 1/4/24/72 hours). Notification requirements by jurisdiction. Customer communication templates. Forensics and remediation steps.
+
+8. COMPETITOR UNDERCUT: Competitor launches similar product at 50% of your price. Response framework: when to match, when to differentiate, when to ignore. Value communication pivots.
+
+9. REGULATORY CHANGE: New regulation impacts ${inf.type_label} business model. Compliance assessment framework, lobbying options, business model adaptation, timeline management.
+
+10. MARKET CRASH/RECESSION: Economic downturn playbook. Cash preservation mode, pricing adjustments, customer retention focus, counter-cyclical opportunities, hiring from distressed competitors.
+
+For each scenario include: early warning signs, severity assessment (1-5), immediate actions (first 24 hours), 30-day resolution plan, and estimated cost impact.`, 5000);
+      if (raw?.length > 500) { files['CRISIS-PLAYBOOK.md'] = `# Crisis Playbook — ${inf.name}\n\n${raw}`; setP('crisis_playbook', 'ok', 'Done'); }
+      else { setP('crisis_playbook', 'sk', 'Skipped'); }
+    } catch(e) { setP('crisis_playbook', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('experiment_framework', 'Experiment Framework', '', '⬡ Phase 5c');
+    setP('experiment_framework', 'run');
+    try {
+      const raw = await aiRaw(`You are a growth experimentation expert (Lean Startup methodology). Generate an EXPERIMENT FRAMEWORK for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Build a complete experimentation system:
+
+1. BUILD-MEASURE-LEARN LOOP: Define the exact Build-Measure-Learn loop for ${inf.name}. What constitutes a "build" (minimum viable test)? What do you "measure" (specific metrics)? What do you "learn" (decision criteria)? Define cycle time target (ideally 1-2 weeks).
+
+2. HYPOTHESIS TEMPLATE: Provide a fill-in-the-blank hypothesis template: "We believe that [change] for [segment] will cause [metric] to [direction] by [amount] because [rationale]. We will measure this by [method] over [timeframe]. Success criteria: [threshold]. If wrong, we will [next action]." Provide 5 completed examples specific to ${inf.name}.
+
+3. EXPERIMENT DESIGN GUIDE: Types of experiments ranked by cost and speed: landing page smoke tests, fake door tests, concierge MVP, Wizard of Oz, A/B tests, multivariate tests, holdout groups. When to use each for ${inf.type_label} businesses.
+
+4. MINIMUM SAMPLE SIZES: Statistical significance calculator reference. For ${inf.price} price point and expected conversion rates, calculate minimum sample sizes for detecting 10%, 20%, and 50% lifts at 95% confidence and 80% power. Include runtime estimates based on expected traffic.
+
+5. EXPERIMENT BACKLOG TEMPLATE: Create a prioritized backlog of 15 experiments for ${inf.name} using ICE scoring (Impact 1-10, Confidence 1-10, Ease 1-10). Include: experiment name, hypothesis, ICE score, estimated duration, resources needed, success metric.
+
+6. INNOVATION ACCOUNTING: Define the 3 levels: (a) establish baseline metrics, (b) tune the engine toward ideal, (c) pivot or persevere decision. Create the specific dashboard for ${inf.name} with baseline → target for each metric.
+
+7. EXPERIMENT DOCUMENTATION: Template for documenting completed experiments: hypothesis, design, duration, sample size, results, statistical significance, decision made, learnings, follow-up experiments.`, 5000);
+      if (raw?.length > 500) { files['EXPERIMENT-FRAMEWORK.md'] = `# Experiment Framework — ${inf.name}\n\n${raw}`; setP('experiment_framework', 'ok', 'Done'); }
+      else { setP('experiment_framework', 'sk', 'Skipped'); }
+    } catch(e) { setP('experiment_framework', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('growth_experiments', 'Growth Experiments', '', '⬡ Phase 5c');
+    setP('growth_experiments', 'run');
+    try {
+      const raw = await aiRaw(`You are a growth hacker and AARRR funnel expert. Generate 20 GROWTH EXPERIMENTS for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Organize 20 specific, actionable growth experiments by pirate metrics funnel stage:
+
+AWARENESS (4 experiments):
+- Design 4 experiments to increase brand awareness and top-of-funnel traffic for ${inf.name}. Include: content marketing hack, partnership/co-marketing play, community-driven growth tactic, unconventional PR stunt. For each: hypothesis, implementation steps, expected cost, expected timeline, success metric and target.
+
+ACQUISITION (4 experiments):
+- Design 4 experiments to convert visitors to signups/leads. Include: landing page optimization, lead magnet creation, channel arbitrage opportunity, paid acquisition creative test. Specific to ${inf.type_label} with ${inf.price} price point. Calculate expected CAC for each.
+
+ACTIVATION (3 experiments):
+- Design 3 experiments to improve first-use experience and "aha moment" achievement. Define what the aha moment is for ${inf.name}. Include: onboarding flow optimization, time-to-value reduction, activation email sequence.
+
+RETENTION (3 experiments):
+- Design 3 experiments to improve retention for a ${inf.revenue_model} business. Include: engagement loop creation, habit formation trigger, re-engagement campaign. Define retention period and target rates.
+
+REFERRAL (3 experiments):
+- Design 3 referral/viral loop experiments. Include: referral program mechanics (give $X get $X), viral loop within the product, social proof/UGC campaign. Calculate viral coefficient targets.
+
+REVENUE (3 experiments):
+- Design 3 revenue optimization experiments. Include: pricing page A/B test, upsell/cross-sell flow, annual plan incentive. Calculate expected revenue impact at ${inf.price} price point.
+
+VIRAL LOOP DESIGN: Design a complete viral loop specific to ${inf.name}: trigger → share → accept → value → trigger. Calculate target viral coefficient (K>1 for organic growth).
+
+REFERRAL PROGRAM TEMPLATE: Complete referral program design: incentive structure (both sides), sharing mechanics, tracking, fraud prevention, terms.
+
+GROWTH MODEL: Build a simple growth model showing how these experiments compound. Monthly growth rate targets for months 1-12.`, 5000);
+      if (raw?.length > 500) { files['GROWTH-EXPERIMENTS.md'] = `# Growth Experiments — ${inf.name}\n\n${raw}`; setP('growth_experiments', 'ok', 'Done'); }
+      else { setP('growth_experiments', 'sk', 'Skipped'); }
+    } catch(e) { setP('growth_experiments', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('customer_dev', 'Customer Development', '', '⬡ Phase 5c');
+    setP('customer_dev', 'run');
+    try {
+      const raw = await aiRaw(`You are a customer development expert (Steve Blank methodology). Generate a CUSTOMER DEVELOPMENT guide for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Build a complete customer development playbook using Blank's 4-step model:
+
+STEP 1 — CUSTOMER DISCOVERY:
+- Define 3 target customer personas for ${inf.name} with demographics, psychographics, jobs-to-be-done, pains, and gains.
+- Write 15 customer interview questions (open-ended, non-leading) to validate problem-solution fit. Avoid "would you use" questions — focus on current behavior and pain.
+- Design a problem validation experiment: how to test if the problem is real and worth solving with <$500 and <2 weeks.
+- Hypothesis table: 10 testable hypotheses about the customer, problem, solution, channel, and revenue model.
+
+STEP 2 — CUSTOMER VALIDATION:
+- Define the minimum criteria for "product-market fit" for ${inf.name}: Sean Ellis survey target (>40% "very disappointed"), NPS target, retention rate, organic growth signals.
+- Design a sales validation experiment: can you sell ${inf.name} at ${inf.price} before the product is fully built? Concierge/Wizard of Oz approach.
+- Conversion funnel benchmarks: visit→signup, signup→activation, activation→payment, payment→retention targets.
+
+STEP 3 — CUSTOMER CREATION:
+- Demand generation strategy for ${inf.type_label} businesses. Which channels to test first (pick 3 from: SEO, SEM, content, social, partnerships, cold outreach, community, events).
+- Channel testing methodology: how to run a $500 test per channel and determine winner. Metrics to track, timeline, decision criteria.
+- Positioning statement template filled in for ${inf.name}.
+
+STEP 4 — COMPANY BUILDING:
+- Transition triggers: what metrics indicate it's time to shift from search mode to execution mode.
+- Scaling playbook: processes to formalize, roles to hire, tools to implement.
+- The "pivot triggers" — specific metric thresholds that indicate the current approach isn't working.
+
+INTERVIEW LOGISTICS: Where to find interviewees (5 specific sources for ${inf.type_label} customers), how to recruit them, compensation, interview duration and format, note-taking template, synthesis framework.`, 5000);
+      if (raw?.length > 500) { files['CUSTOMER-DEVELOPMENT.md'] = `# Customer Development — ${inf.name}\n\n${raw}`; setP('customer_dev', 'ok', 'Done'); }
+      else { setP('customer_dev', 'sk', 'Skipped'); }
+    } catch(e) { setP('customer_dev', 'sk', e.message); }
+  })()
+];
+await Promise.allSettled(groupC);
+
+// ── Group D — Financial (2 docs) ────────────
+const groupD = [
+  (async () => {
+    addP('tax_strategy', 'Tax Strategy', '', '⬡ Phase 5c');
+    setP('tax_strategy', 'run');
+    try {
+      const raw = await aiRaw(`You are a startup tax strategist and CPA. Generate a TAX STRATEGY guide for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Price: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Build a comprehensive tax optimization strategy:
+
+1. R&D TAX CREDITS: Qualification criteria for ${inf.type_label} businesses — which activities count (software development, UX research, algorithm design, cloud architecture). Calculate potential credit: if $200K in qualifying expenses, federal credit = $13K-$20K (6.5-10%). State R&D credits by top 5 startup states. Documentation requirements: contemporaneous logs, project tracking, employee time allocation. How startups <$5M revenue can apply credit against payroll taxes (up to $250K/year for 5 years).
+
+2. QSBS SECTION 1202: Qualified Small Business Stock exclusion — potentially exclude $10M or 10x basis from capital gains. Qualification requirements: C-corp, original issuance, held 5+ years, active business (not consulting/professional services — assess if ${inf.type_label} qualifies). Planning strategies to maximize QSBS benefit. State-level QSBS treatment (CA doesn't conform).
+
+3. STATE TAX OPTIMIZATION: Compare incorporation in DE (franchise tax), WY (no state tax), NV (no state tax) vs operating state obligations. Nexus rules for remote teams. Sales tax obligations for ${inf.revenue_model} businesses (SaaS tax by state). State income tax planning for founders.
+
+4. ENTITY-SPECIFIC STRATEGIES: Compare LLC (pass-through), S-Corp (salary + distribution to save FICA), C-Corp (21% flat rate, retained earnings, QSBS eligible). Recommendation for ${inf.name} at each revenue stage: <$100K, $100K-$500K, $500K-$1M, $1M+.
+
+5. ESTIMATED QUARTERLY TAXES: When to start paying (expect to owe >$1K), safe harbor rules (pay 100% of prior year or 90% of current year), penalty avoidance, payment schedule (Apr 15, Jun 15, Sep 15, Jan 15).
+
+6. DEDUCTION MAXIMIZATION: Startup costs deduction ($5K first year, amortize rest over 180 months), Section 179 expensing, home office deduction, health insurance deduction (S-Corp owners), retirement plan options (SEP-IRA, Solo 401k), vehicle deductions if applicable.
+
+7. WHEN TO HIRE A CPA: Revenue thresholds, complexity triggers, expected costs ($2K-$10K/year), what to look for in a startup CPA, questions to ask. DIY tools for early stage (Bench, Pilot, Fondo).
+
+Include specific dollar amounts and calculations where possible.`, 5000);
+      if (raw?.length > 500) { files['TAX-STRATEGY.md'] = `# Tax Strategy — ${inf.name}\n\n${raw}`; setP('tax_strategy', 'ok', 'Done'); }
+      else { setP('tax_strategy', 'sk', 'Skipped'); }
+    } catch(e) { setP('tax_strategy', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('pricing_strategy', 'Pricing Strategy', '', '⬡ Phase 5c');
+    setP('pricing_strategy', 'run');
+    try {
+      const raw = await aiRaw(`You are a pricing strategy consultant. Generate a PRICING STRATEGY for "${inf.name}" — ${desc}.
+
+Business type: ${inf.type_label}. Revenue model: ${inf.revenue_model}. Current price point: ${inf.price}.
+Viability data: ${V2_SCORECARD}
+
+Build a comprehensive pricing optimization system:
+
+1. PRICING PSYCHOLOGY TACTICS: Apply these principles to ${inf.name}:
+   - Anchoring: Design a 3-tier pricing page where the middle tier is the target. Set anchor prices. Show the exact layout.
+   - Decoy effect: Design a decoy option that makes the target tier look like the best value. Explain the math.
+   - Charm pricing: When to use $X9 vs $X7 vs round numbers. Recommendation for ${inf.price} price range.
+   - Price framing: "Only $X/day" or "$X/month" or "$X/year (save 20%)". Calculate all frames for ${inf.price}.
+   - Loss aversion: Frame pricing around what customers lose by NOT buying.
+
+2. VALUE-BASED PRICING METHODOLOGY: Calculate the value ${inf.name} creates for customers. Quantify: time saved, money saved, revenue generated, risk reduced. Price at 10-20% of value created. Show the calculation.
+
+3. COMPETITIVE PRICING ANALYSIS: Framework for analyzing competitor pricing in the ${inf.type_label} space. Create a comparison matrix template. Positioning strategies: premium, value, penetration, freemium. Recommend one for ${inf.name} with justification.
+
+4. FREEMIUM CONVERSION OPTIMIZATION (if applicable to ${inf.revenue_model}): Define the free tier boundary — enough value to hook, clear upgrade trigger. Target 2-5% free-to-paid conversion. Design the upgrade moment. Map the 5 "aha moments" that trigger upgrade intent.
+
+5. PRICE TESTING FRAMEWORK: A/B testing pricing without destroying trust. Methods: geographic testing, cohort testing, new-visitor-only testing, feature-based testing. Statistical requirements for pricing tests. How to handle price changes for existing customers.
+
+6. WILLINGNESS-TO-PAY RESEARCH: Van Westendorp Price Sensitivity Meter — the 4 questions, how to run the survey, how to analyze results, how to find the optimal price point. Include sample survey design for ${inf.name}. Gabor-Granger methodology as alternative.
+
+7. PRICING PAGE DESIGN: Best practices for the pricing page. Element checklist: social proof placement, FAQ, feature comparison table, money-back guarantee, annual vs monthly toggle, enterprise CTA. Wireframe description for ${inf.name}'s pricing page.
+
+8. MONETIZATION LEVERS BEYOND PRICE: Usage-based add-ons, premium support tiers, API access, white-label licensing, data/insights products, marketplace commissions. Identify 3 secondary revenue streams for ${inf.name}.`, 5000);
+      if (raw?.length > 500) { files['PRICING-STRATEGY.md'] = `# Pricing Strategy — ${inf.name}\n\n${raw}`; setP('pricing_strategy', 'ok', 'Done'); }
+      else { setP('pricing_strategy', 'sk', 'Skipped'); }
+    } catch(e) { setP('pricing_strategy', 'sk', e.message); }
+  })()
+];
+await Promise.allSettled(groupD);
+
+// ── END: Strategy + Accelerator + Financial docs ────────────
+// ── HIGH-PRIORITY: Legal + GTM + People + Product (14/78) ────────────
+
+// ── Group E — Legal (4 docs) ────────────
+addP('nda', 'NDA Template', '', '⬡ Legal Docs'); setP('nda', 'run');
+addP('contractor', 'Contractor Agreement', '', '⬡ Legal Docs'); setP('contractor', 'run');
+addP('offer', 'Offer Letter Template', '', '⬡ Legal Docs'); setP('offer', 'run');
+addP('gdpr', 'GDPR Implementation', '', '⬡ Legal Docs'); setP('gdpr', 'run');
+
+const [ndaR, contractorR, offerR, gdprR] = await Promise.allSettled([
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive Mutual NDA template for "${inf.name}" (${inf.type_label}). ${desc}
+
+Include BOTH a mutual and unilateral version. Cover:
+1. DEFINITION OF CONFIDENTIAL INFORMATION — broad definition covering business plans, financials, customer data, technical specs, trade secrets, algorithms, source code, marketing strategies. Clearly enumerate categories.
+2. EXCLUSIONS — publicly available info, independently developed, received from third party without restriction, required by law/court order (with notice obligation).
+3. OBLIGATIONS OF RECEIVING PARTY — use reasonable care (no less than own confidential info), limit access to need-to-know, no reverse engineering, return/destroy on termination, no copying except as necessary.
+4. TERM — 2-year confidentiality period from date of disclosure, survival clause for trade secrets (indefinite).
+5. REMEDIES — acknowledge irreparable harm, injunctive relief without bond, indemnification for breach, attorney fees to prevailing party.
+6. JURISDICTION — governing law clause with state placeholder, dispute resolution (mediation then arbitration), venue selection.
+7. MUTUAL VERSION — symmetric obligations, both parties as Discloser and Receiver.
+8. UNILATERAL VERSION — one-way protection, clearly labeled alternative clauses.
+9. SIGNATURE BLOCKS — company name, authorized representative, title, date, address, witness line.
+10. SCHEDULES — Schedule A (description of contemplated transaction), Schedule B (specific exclusions).
+
+Format as a ready-to-use legal template with [BRACKETED PLACEHOLDERS] for customization. Include instruction notes in italics.`, 4000);
+      if (raw?.length > 500) { files['docs/NDA-TEMPLATE.md'] = `# Mutual Non-Disclosure Agreement — ${inf.name}\n\n${raw}`; setP('nda', 'ok', 'Done'); }
+      else { setP('nda', 'sk', 'Skipped'); }
+    } catch(e) { setP('nda', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive Independent Contractor Agreement template for "${inf.name}" (${inf.type_label}). ${desc}
+
+Cover ALL of the following in detail:
+1. SCOPE OF WORK TEMPLATE — deliverables table (description, due date, acceptance criteria), change order process, statement of work exhibit format.
+2. PAYMENT TERMS — rate/fee structure (hourly, fixed, milestone), invoicing schedule (net-30), late payment penalties (1.5%/month), expense reimbursement policy, payment method.
+3. IP ASSIGNMENT CLAUSE — all work product assigned to company, work-for-hire designation, moral rights waiver, pre-existing IP carve-out with schedule, license to pre-existing IP incorporated in deliverables.
+4. TERMINATION — termination for convenience (30-day notice), termination for cause (10-day cure), effect on payment (pay for completed work), wind-down obligations, survival clauses.
+5. NON-COMPETE — limited scope (direct competitors only), reasonable duration (12 months), geographic limitation, carve-out for pre-existing clients.
+6. CONFIDENTIALITY — definition, obligations (mirror NDA terms), return of materials, survival (2 years post-termination).
+7. INDEMNIFICATION — mutual indemnification, contractor indemnifies for negligence/IP infringement, limitation of liability (cap at fees paid).
+8. INSURANCE — contractor to maintain general liability ($1M), professional liability/E&O ($1M), workers comp if applicable, proof of insurance requirement.
+9. IRS 20-FACTOR WORKER CLASSIFICATION TEST — behavioral control analysis, financial control analysis, relationship type analysis, safe harbor provisions, Form W-9 requirement, no benefits/withholding confirmation.
+10. REPRESENTATIONS & WARRANTIES — authority to enter agreement, no conflicts, compliance with laws, original work.
+11. DISPUTE RESOLUTION — mediation, then binding arbitration, governing law, venue.
+
+Format as a ready-to-use legal template with [BRACKETED PLACEHOLDERS].`, 4000);
+      if (raw?.length > 500) { files['docs/CONTRACTOR-AGREEMENT.md'] = `# Independent Contractor Agreement — ${inf.name}\n\n${raw}`; setP('contractor', 'ok', 'Done'); }
+      else { setP('contractor', 'sk', 'Skipped'); }
+    } catch(e) { setP('contractor', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive Employee Offer Letter template for "${inf.name}" (${inf.type_label}). ${desc}
+
+The business uses a ${inf.revenue_model} revenue model at ${inf.price} price point. Cover:
+1. POSITION DETAILS — job title, department, reporting manager, start date, employment type (full-time/part-time), work location (remote/hybrid/onsite), FLSA classification (exempt/non-exempt).
+2. COMPENSATION — base salary (annual and per-pay-period), pay frequency (bi-weekly/semi-monthly), bonus structure (target % and criteria), commission plan if applicable, signing bonus with clawback terms.
+3. EQUITY — stock option grant (number of shares), vesting schedule (4-year with 1-year cliff), exercise price (FMV at grant), option type (ISO vs NSO), reference to full Stock Option Agreement.
+4. BENEFITS SUMMARY — health insurance (medical/dental/vision with employer contribution %), 401(k) with match details, PTO policy (days per year), sick leave, parental leave, life/disability insurance, professional development budget, equipment/stipend.
+5. AT-WILL EMPLOYMENT — clear at-will statement, either party can terminate with or without cause, no guaranteed duration.
+6. NON-COMPETE/NON-SOLICIT — reasonable scope and duration, non-solicitation of employees (12 months), non-solicitation of clients (12 months), non-compete if applicable (with geographic/industry limits).
+7. IP ASSIGNMENT REFERENCE — reference to PIIA/CIIAA to be signed, all work product belongs to company, prior inventions disclosure schedule.
+8. CONDITIONS OF EMPLOYMENT — background check, right to work verification (I-9), reference check, signing of additional agreements (PIIA, NDA, employee handbook acknowledgment), drug screening if applicable.
+9. CONFIDENTIALITY — obligation to protect company information, reference to NDA.
+10. ACCEPTANCE — signature block, expiration date for offer (7-14 days), counter-signature by company.
+
+Format as a professional offer letter template with [BRACKETED PLACEHOLDERS]. Include warm, welcoming tone appropriate for a startup.`, 4000);
+      if (raw?.length > 500) { files['docs/OFFER-LETTER-TEMPLATE.md'] = `# Employee Offer Letter Template — ${inf.name}\n\n${raw}`; setP('offer', 'ok', 'Done'); }
+      else { setP('offer', 'sk', 'Skipped'); }
+    } catch(e) { setP('offer', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive GDPR/CCPA Implementation Guide for "${inf.name}" (${inf.type_label}). ${desc}
+
+This is a ${inf.revenue_model} business at ${inf.price}. Cover ALL of the following in actionable detail:
+1. COOKIE CONSENT IMPLEMENTATION — cookie categories (strictly necessary, functional, analytics, marketing), consent banner requirements (GDPR vs CCPA differences), implementation code snippets for consent management, cookie audit template (name, provider, purpose, duration, type), Google Consent Mode v2 integration.
+2. DATA SUBJECT RIGHTS WORKFLOW — right of access (SAR process, 30-day timeline), right to erasure (deletion checklist across all systems), right to rectification, right to portability (data export format), right to restrict processing, right to object, automated decision-making opt-out. Include workflow diagrams and response letter templates for each right.
+3. DATA PROCESSING INVENTORY — template for recording all processing activities (Article 30), data flow mapping methodology, categories of data subjects, categories of personal data, purposes and legal bases, retention periods, third-party processors list, international transfers.
+4. DATA PROCESSING AGREEMENT (DPA) TEMPLATE — sub-processor obligations, security measures (Article 32), breach notification obligations, audit rights, data return/deletion on termination, standard contractual clauses reference.
+5. BREACH NOTIFICATION PROCEDURE — detection and classification (severity matrix), 72-hour supervisory authority notification (template), individual notification threshold and template, breach register template, post-incident review process, documentation requirements.
+6. PRIVACY IMPACT ASSESSMENT (PIA/DPIA) TEMPLATE — when DPIA is required (high-risk processing), systematic description of processing, necessity and proportionality assessment, risk identification and scoring matrix, mitigation measures, consultation triggers, sign-off process.
+7. LAWFUL BASIS DETERMINATION — decision tree for selecting lawful basis (consent, contract, legitimate interest, legal obligation, vital interest, public task), Legitimate Interest Assessment (LIA) template, consent requirements (freely given, specific, informed, unambiguous), records of consent.
+8. CCPA-SPECIFIC REQUIREMENTS — "Do Not Sell My Personal Information" link, categories of PI collected/sold/disclosed, financial incentive notices, service provider contracts, consumer request verification, 12-month lookback requirement.
+
+Include implementation timelines, responsible parties, and compliance checklists.`, 5000);
+      if (raw?.length > 500) { files['docs/GDPR-IMPLEMENTATION.md'] = `# GDPR/CCPA Implementation Guide — ${inf.name}\n\n${raw}`; setP('gdpr', 'ok', 'Done'); }
+      else { setP('gdpr', 'sk', 'Skipped'); }
+    } catch(e) { setP('gdpr', 'sk', e.message); }
+  })()
+]);
+
+// ── Group F — Go-to-Market (4 docs) ────────────
+addP('channels', 'Channel Playbooks', '', '⬡ GTM Docs'); setP('channels', 'run');
+addP('referral', 'Referral Program', '', '⬡ GTM Docs'); setP('referral', 'run');
+addP('launch', 'Launch Checklist', '', '⬡ GTM Docs'); setP('launch', 'run');
+addP('churn', 'Churn Reduction', '', '⬡ GTM Docs'); setP('churn', 'run');
+
+const [channelsR, referralR, launchR, churnR] = await Promise.allSettled([
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate deep tactical channel playbooks for "${inf.name}" (${inf.type_label}). ${desc}
+
+Revenue model: ${inf.revenue_model} at ${inf.price}. Create detailed playbooks for the TOP 5 ACQUISITION CHANNELS:
+
+1. LINKEDIN OUTBOUND (30-day sequence):
+- ICP definition and search filters (Sales Navigator boolean strings)
+- Connection request message (under 300 chars, 3 variations)
+- Day 1: Connection accepted → value-first message (no pitch)
+- Day 3: Share relevant content/case study
+- Day 7: Soft problem-awareness question
+- Day 14: Direct pitch with social proof
+- Day 21: Breakup message with value leave-behind
+- Daily activity targets (connections, messages, content posts)
+- Response rate benchmarks and optimization triggers
+- Tools: Sales Navigator, Dripify/Expandi automation rules
+
+2. CONTENT MARKETING (weekly cadence):
+- Content pillars (4-5 themes mapped to buyer journey)
+- Weekly calendar: Monday (blog post), Wednesday (LinkedIn article), Friday (newsletter)
+- SEO content template (H1/H2 structure, internal linking, CTA placement)
+- Content repurposing workflow (blog → social → email → video)
+- Distribution checklist per piece (social, communities, syndication)
+- KPIs: organic traffic, time on page, conversion rate by content type
+- 90-day content ramp plan with specific topic ideas
+
+3. GOOGLE ADS (account structure):
+- Campaign structure (brand, competitor, category, long-tail)
+- Keyword research framework with example keywords for this business
+- Ad copy templates (3 RSAs per ad group, pinned headlines)
+- Landing page requirements (message match, single CTA, trust signals)
+- Budget allocation by campaign type (% split)
+- Bidding strategy progression (manual CPC → target CPA → target ROAS)
+- Negative keyword seed list, quality score optimization
+
+4. EMAIL COLD OUTREACH (5-email sequence):
+- Email 1 (Day 0): Pattern interrupt subject line, personalized opening, one-line value prop, soft CTA
+- Email 2 (Day 3): Reply to thread, case study/social proof, specific metric
+- Email 3 (Day 7): New thread, different angle (pain point focus), video embed
+- Email 4 (Day 12): Competitor comparison or industry insight, harder CTA
+- Email 5 (Day 18): Breakup email, summary of value, open door
+- Subject line formulas (5 templates per email)
+- Deliverability setup (SPF, DKIM, DMARC, warm-up schedule)
+- Tools and sending limits
+
+5. PRODUCT HUNT LAUNCH (day-by-day timeline):
+- T-30: Build hunter relationship, collect testimonials, prepare assets
+- T-14: Create teaser landing page, build launch day email list
+- T-7: Final asset prep (logo, gallery images, video, description)
+- T-1: Schedule social posts, brief supporters, final check
+- Launch Day hour-by-hour: midnight posting, morning push, afternoon engagement, evening gratitude
+- Post-launch: follow-up with upvoters, blog post recap, press outreach
+- Asset specifications (thumbnail 240x240, gallery 1270x760, video <2min)
+
+Include specific metrics, benchmarks, and budget requirements for each channel.`, 5000);
+      if (raw?.length > 500) { files['CHANNEL-PLAYBOOKS.md'] = `# Channel Playbooks — ${inf.name}\n\n${raw}`; setP('channels', 'ok', 'Done'); }
+      else { setP('channels', 'sk', 'Skipped'); }
+    } catch(e) { setP('channels', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Design a complete referral program for "${inf.name}" (${inf.type_label}). ${desc}
+
+Revenue model: ${inf.revenue_model} at ${inf.price}. Cover:
+
+1. INCENTIVE STRUCTURE (dual-sided):
+- Referrer reward options: credit, cash, extended subscription, feature unlock, tiered rewards (1 referral = X, 5 = Y, 10 = Z)
+- Referee reward: discount on first purchase/month, extended trial, bonus feature
+- Cost-per-acquisition analysis vs other channels
+- Break-even calculation for incentive amounts
+- Tiered/milestone rewards (Bronze 1-2, Silver 3-5, Gold 6-10, Platinum 11+)
+
+2. VIRAL COEFFICIENT CALCULATION:
+- Formula: K = invites_per_user × conversion_rate
+- Current baseline assumptions
+- Target K-factor (>1 for viral growth)
+- Sensitivity analysis: how changes in invite rate and conversion rate affect K
+- Time-to-virality calculation (viral cycle time)
+- Realistic benchmarks by industry
+
+3. REFERRAL TRACKING IMPLEMENTATION:
+- Unique referral link generation (format: ${inf.name.toLowerCase().replace(/\s+/g,'-')}.com/ref/USERNAME)
+- Cookie duration (90 days recommended)
+- Attribution logic (first-touch vs last-touch)
+- Multi-channel tracking (link, code, email)
+- Database schema for referral tracking (referrer_id, referee_id, status, reward_status, created_at, converted_at)
+- Anti-fraud measures (IP dedup, email domain checks, minimum activity threshold)
+- Webhook integration for reward fulfillment
+
+4. EMAIL TEMPLATES (5 templates):
+- Invitation email (from referrer to friend)
+- Referral accepted notification (to referrer)
+- Reward earned notification (to referrer)
+- Welcome email to referred user (highlighting special offer)
+- Milestone reached congratulation (tier upgrade)
+- Subject lines, preview text, and full body copy for each
+
+5. LANDING PAGE COPY:
+- Headline and subheadline variations (3 each)
+- How it works section (3 steps with icons)
+- Reward explanation with visuals
+- FAQ section (6-8 common questions)
+- Social proof section (referral stats, testimonials)
+- CTA button copy variations
+
+6. A/B TEST PLAN:
+- Test 1: Incentive amount (low vs medium vs high)
+- Test 2: Incentive type (credit vs cash vs feature)
+- Test 3: Dual-sided vs referrer-only rewards
+- Test 4: Landing page headline variations
+- Test 5: Email subject line variations
+- Sample size calculator, statistical significance threshold (95%), test duration estimates
+
+Include implementation timeline (4 weeks) and success metrics.`, 5000);
+      if (raw?.length > 500) { files['REFERRAL-PROGRAM.md'] = `# Referral Program Design — ${inf.name}\n\n${raw}`; setP('referral', 'ok', 'Done'); }
+      else { setP('referral', 'sk', 'Skipped'); }
+    } catch(e) { setP('referral', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive launch checklist for "${inf.name}" (${inf.type_label}). ${desc}
+
+Revenue model: ${inf.revenue_model} at ${inf.price}. Structure as three phases:
+
+**PRE-LAUNCH (T-30 to T-1):**
+
+T-30 to T-21:
+- [ ] Finalize MVP feature set and freeze scope
+- [ ] Set up analytics (PostHog/Plausible events, conversion funnels)
+- [ ] Create waitlist landing page with email capture
+- [ ] Begin private beta with 10-20 users, collect feedback
+- [ ] Draft press kit (company backgrounder, founder bios, product screenshots, logo pack)
+- [ ] Identify 50 journalists/bloggers covering ${inf.type_label} space
+- [ ] Set up social media accounts (Twitter, LinkedIn, Facebook, Instagram)
+- [ ] Create Product Hunt upcoming page
+
+T-20 to T-11:
+- [ ] Incorporate beta feedback into product
+- [ ] Write launch blog post (origin story + what we built + who it's for)
+- [ ] Record product demo video (2 min max)
+- [ ] Create social media content calendar for launch week (15+ posts)
+- [ ] Prepare email sequences: waitlist announcement, launch day, follow-up
+- [ ] Build relationships with Product Hunt hunters
+- [ ] Set up customer support (help docs, chat widget, support email)
+- [ ] Create onboarding flow for new users
+
+T-10 to T-1:
+- [ ] Final QA pass (all critical flows, mobile responsive, cross-browser)
+- [ ] Load testing (handle 10x expected launch traffic)
+- [ ] Prepare Product Hunt assets (thumbnail, gallery, tagline, description, first comment)
+- [ ] Schedule all social media posts
+- [ ] Brief launch team on roles and timeline
+- [ ] Send "launching soon" email to waitlist
+- [ ] Set up real-time monitoring dashboard (uptime, errors, signups)
+- [ ] Prepare incident response plan (who to call if things break)
+
+**LAUNCH DAY (hour-by-hour):**
+- 00:01 — Submit to Product Hunt (or hunter posts)
+- 06:00 — Send launch email to full waitlist
+- 07:00 — Post on Twitter/X with product demo GIF
+- 08:00 — Share on LinkedIn (personal + company page)
+- 09:00 — Post in relevant communities (Reddit, Indie Hackers, HN)
+- 10:00 — Respond to all Product Hunt comments
+- 12:00 — Midday social media push (results so far, social proof)
+- 14:00 — Send personalized messages to journalists/bloggers
+- 16:00 — Engagement push (reply to every comment, thank supporters)
+- 18:00 — Share milestone update (signups, upvotes, feedback highlights)
+- 20:00 — Evening gratitude post, behind-the-scenes content
+- 22:00 — Final metrics check, team debrief, plan for Day 2
+
+**POST-LAUNCH WEEK 1:**
+Day 1-2:
+- [ ] Respond to ALL feedback (Product Hunt, social, email) within 4 hours
+- [ ] Track key metrics: signups, activation rate, first-session duration, NPS
+- [ ] Fix any critical bugs discovered during launch
+- [ ] Send follow-up email to non-converting signups
+
+Day 3-5:
+- [ ] Publish launch retrospective blog post (metrics, lessons, what's next)
+- [ ] Follow up with journalists who showed interest
+- [ ] Analyze acquisition channel performance (which drove most signups)
+- [ ] Begin user interviews with first 20 paying customers
+- [ ] Submit to startup directories (20+ directories listed)
+
+Day 6-7:
+- [ ] Week 1 metrics report (vs. targets)
+- [ ] Prioritize feature requests from launch feedback
+- [ ] Plan week 2 content calendar
+- [ ] Set up automated onboarding email sequence based on user behavior
+- [ ] Team retrospective: what worked, what didn't, what to do differently
+
+Include target metrics for each phase and contingency plans.`, 5000);
+      if (raw?.length > 500) { files['LAUNCH-CHECKLIST.md'] = `# Launch Checklist — ${inf.name}\n\n${raw}`; setP('launch', 'ok', 'Done'); }
+      else { setP('launch', 'sk', 'Skipped'); }
+    } catch(e) { setP('launch', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive churn reduction playbook for "${inf.name}" (${inf.type_label}). ${desc}
+
+Revenue model: ${inf.revenue_model} at ${inf.price}. Cover:
+
+1. CHURN TAXONOMY:
+Voluntary churn reasons:
+- Price sensitivity — perceive cost too high relative to value received
+- Value gap — not achieving expected outcomes, underusing features
+- Competitor switch — found alternative that better fits needs
+- Need dissolved — business pivot, project ended, role changed
+- Poor experience — bugs, slow support, UX friction
+Involuntary churn reasons:
+- Card decline — expired card, insufficient funds, fraud block
+- Billing error — incorrect charge, duplicate billing
+- Payment method issues — bank policy, international card restrictions
+
+2. SAVE FLOW SCRIPTS (for each voluntary reason):
+Price objection script: acknowledge → reframe value → offer annual discount → offer downgrade → last resort offer
+Value gap script: acknowledge → diagnose usage → offer onboarding session → create success plan → 30-day check-in
+Competitor script: acknowledge → ask what's better → match/beat feature → highlight switching costs → offer migration help
+Need dissolved script: acknowledge → offer pause (up to 3 months) → offer downgrade to minimal plan → graceful exit with reactivation offer
+Poor experience script: acknowledge + apologize → escalate specific issue → offer credit → assign dedicated support → follow-up timeline
+
+Each script should include exact phrases, tone guidance, and escalation paths.
+
+3. CANCELLATION SURVEY:
+- Primary reason (single select, 6 options matching taxonomy)
+- Secondary factors (multi-select, 10 options)
+- Feature most valued (open text)
+- Feature most missing (open text)
+- Would you return if [condition]? (single select)
+- NPS score at cancellation
+- Permission to follow up (yes/no)
+- Implementation: in-app modal before confirming cancellation
+
+4. WIN-BACK CAMPAIGN (3-email sequence):
+Email 1 (Day 3 post-cancel): "We miss you" — acknowledge departure, share what's new/improved, no hard sell
+Email 2 (Day 14 post-cancel): "Here's what you're missing" — new features since cancellation, customer success story, special return offer (20% off 3 months)
+Email 3 (Day 30 post-cancel): "Last chance" — final offer (30% off or free month), deadline urgency, one-click reactivation link
+Include subject lines (3 variations each), preview text, full body copy, CTA buttons.
+
+5. INVOLUNTARY CHURN RECOVERY (dunning sequence):
+- Pre-dunning: notify 7 days before card expiry
+- Failed payment Day 0: immediate retry + email notification (update payment method link)
+- Day 3: second retry + email with urgency (service will be limited)
+- Day 7: third retry + email warning (account will be paused)
+- Day 10: final retry + SMS notification if available
+- Day 14: account paused (not deleted), final email with 30-day reactivation window
+- Day 44: account data archived, notification of deletion in 30 days
+- Smart retry logic: retry on different days of week, retry at different times, retry after paycheck dates (1st and 15th)
+
+6. CHURN METRICS DASHBOARD:
+- Monthly churn rate (gross and net)
+- Churn by reason (pie chart)
+- Revenue impact by churn reason
+- Save rate by script/offer
+- Win-back conversion rate
+- Involuntary recovery rate
+- Cohort retention curves
+- Leading indicators (usage drop, support tickets, login frequency decline)
+
+Include churn rate benchmarks for ${inf.type_label} businesses and reduction targets.`, 5000);
+      if (raw?.length > 500) { files['CHURN-REDUCTION.md'] = `# Churn Reduction Playbook — ${inf.name}\n\n${raw}`; setP('churn', 'ok', 'Done'); }
+      else { setP('churn', 'sk', 'Skipped'); }
+    } catch(e) { setP('churn', 'sk', e.message); }
+  })()
+]);
+
+// ── Group G — People & Culture (4 docs) ────────────
+addP('culture', 'Culture Document', '', '⬡ People Docs'); setP('culture', 'run');
+addP('equity', 'Equity Guide', '', '⬡ People Docs'); setP('equity', 'run');
+addP('perf', 'Performance Framework', '', '⬡ People Docs'); setP('perf', 'run');
+addP('remote', 'Remote Work Policy', '', '⬡ People Docs'); setP('remote', 'run');
+
+const [cultureR, equityR, perfR, remoteR] = await Promise.allSettled([
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive company culture document for "${inf.name}" (${inf.type_label}). ${desc}
+
+Cover:
+1. COMPANY VALUES (5-7 values):
+For each value provide:
+- Value name (concise, memorable)
+- One-sentence definition
+- "This means we..." (3 behavioral examples of living the value)
+- "This does NOT mean..." (2 anti-patterns to avoid)
+- Interview question to assess for this value
+- Recognition example (how to celebrate someone demonstrating this value)
+
+2. CULTURE DOCUMENT TEMPLATE:
+- Our mission (why we exist beyond making money)
+- Our vision (what the world looks like if we succeed)
+- Who we are (team identity, what makes us different)
+- How we work (operating principles)
+- What we believe about our customers
+- What we believe about our craft
+
+3. DECISION-MAKING PRINCIPLES:
+- Decision-making framework (RAPID: Recommend, Agree, Perform, Input, Decide)
+- When to decide alone vs. consult vs. consensus
+- Reversible vs. irreversible decisions (Type 1 vs Type 2)
+- Disagree and commit principle
+- Decision documentation template (context, options considered, decision, rationale)
+
+4. COMMUNICATION NORMS:
+- Async-first communication (default to written, meetings are escalation)
+- Channel guide: what goes in Slack vs. email vs. docs vs. meetings
+- Response time expectations by channel (Slack: 4hrs, email: 24hrs, urgent: 1hr)
+- Writing norms (clear, concise, provide context, bottom-line-up-front)
+- No-surprise rule (bad news travels fast, share early)
+
+5. MEETING CADENCE:
+- Daily standup (15 min, async option via Slack bot)
+- Weekly team sync (30 min, agenda required)
+- Monthly all-hands (45 min, metrics + wins + Q&A)
+- Quarterly planning (half-day, OKR review and setting)
+- Annual offsite (2-3 days, strategy + team building)
+- Meeting hygiene rules (agenda required, notes published, default 25/50 min)
+
+6. FEEDBACK CULTURE:
+- Radical candor framework (care personally + challenge directly)
+- Feedback format: SBI (Situation, Behavior, Impact)
+- Regular 1:1s (weekly, 30 min, employee-driven agenda)
+- Skip-level 1:1s (monthly)
+- Anonymous feedback channel (quarterly pulse surveys)
+- How to give feedback up (to managers and leadership)
+
+7. DIVERSITY, EQUITY & INCLUSION COMMITMENT:
+- Statement of commitment
+- Inclusive hiring practices (structured interviews, diverse panels, blind resume review)
+- ERG (Employee Resource Group) support
+- Pay equity review process (annual audit)
+- Inclusive language guide
+- Accommodation policy
+- Reporting and accountability mechanisms
+
+Make this feel authentic to a ${inf.type_label} startup, not generic corporate boilerplate.`, 5000);
+      if (raw?.length > 500) { files['CULTURE.md'] = `# Culture & Values — ${inf.name}\n\n${raw}`; setP('culture', 'ok', 'Done'); }
+      else { setP('culture', 'sk', 'Skipped'); }
+    } catch(e) { setP('culture', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate an employee equity education guide for "${inf.name}" (${inf.type_label}). ${desc}
+
+Revenue model: ${inf.revenue_model} at ${inf.price}. Cover:
+
+1. STOCK OPTIONS vs RSUs:
+- Stock options: right to buy shares at a set price (strike/exercise price)
+  - You profit only if company value exceeds strike price
+  - Require action (exercise) and cost money upfront
+  - Common at early-stage startups
+- RSUs (Restricted Stock Units): promise of shares at no cost once vested
+  - Always have value (as long as shares have value)
+  - No action or cost required — shares delivered automatically
+  - More common at later-stage/public companies
+- Side-by-side comparison table (cost, risk, tax timing, employee preference)
+- When each type makes sense for the company and employee
+
+2. VESTING EXPLAINED:
+- Standard 4-year vesting with 1-year cliff
+- Month-by-month vesting after cliff
+- Example timeline: 10,000 shares granted
+  - Month 0-11: 0 shares vested (cliff period)
+  - Month 12: 2,500 shares vest (25% cliff)
+  - Month 13-48: ~208 shares/month
+  - Month 48: fully vested
+- Acceleration clauses: single-trigger (change of control) vs double-trigger (CoC + termination)
+- What happens when you leave (vested vs unvested, exercise window)
+
+3. EXERCISE WINDOWS:
+- Standard 90-day post-termination exercise period (and why it's a problem)
+- Extended exercise windows (trending: 7-10 years post-departure)
+- Early exercise (83(b) election): what it is, when it makes sense, 30-day filing deadline
+- Cashless exercise at IPO/acquisition
+- Exercise strategies: exercise and hold vs. exercise and sell vs. wait
+
+4. TAX IMPLICATIONS:
+- ISOs (Incentive Stock Options):
+  - No tax at grant or exercise (for regular tax)
+  - AMT implications at exercise (spread is AMT preference item)
+  - Long-term capital gains if held 2 years from grant + 1 year from exercise
+  - Disqualifying disposition rules
+- NSOs (Non-Qualified Stock Options):
+  - No tax at grant
+  - Ordinary income tax at exercise (on spread)
+  - Employer withholding at exercise
+  - Capital gains/losses on subsequent sale
+- RSU taxation:
+  - Taxed as ordinary income at vesting (FMV at vest date)
+  - Employer withholds taxes at vesting
+  - Capital gains on appreciation after vesting
+- Tax comparison table with examples at different valuations
+- When to consult a tax advisor (always, but especially when...)
+
+5. 409A VALUATION:
+- What it is (IRS-required fair market value determination)
+- Why it matters (sets your strike price)
+- How it's determined (independent appraisal, typically annually or after material events)
+- Why the 409A is usually lower than the preferred price investors paid
+- Common share vs preferred share price difference explained
+- Impact on your equity value (lower 409A = lower strike = better for employees)
+
+6. HOW TO THINK ABOUT EQUITY VALUE:
+- Never count on equity as guaranteed compensation
+- Equity is a lottery ticket with asymmetric upside
+- Framework: expected value = probability of outcome × value at outcome
+- Scenario modeling: base case, bull case, bear case
+- Dilution: what it is, how future funding rounds affect your ownership %
+- Liquidation preferences: why common shareholders get paid last
+- Fully-diluted share count: why your % matters more than share count
+- Rule of thumb: equity should be a bonus, not a substitute for fair salary
+
+7. COMMON EMPLOYEE QUESTIONS ANSWERED:
+- "How much is my equity worth?" (it depends — here's how to think about it)
+- "Should I exercise my options before I leave?" (decision framework)
+- "What happens to my equity if the company gets acquired?" (scenarios)
+- "Can I sell my shares before an IPO?" (secondary markets, ROFR)
+- "What if the company never goes public?" (tender offers, buybacks, staying private)
+- "Should I negotiate for more equity or more salary?" (depends on risk tolerance and stage)
+- "What's the difference between my option grant and actual ownership?" (fully diluted)
+- "Do I need a financial advisor?" (yes if exercising >$10K or AMT exposure)
+
+Include practical examples with specific dollar amounts throughout.`, 5000);
+      if (raw?.length > 500) { files['EQUITY-GUIDE.md'] = `# Employee Equity Guide — ${inf.name}\n\n${raw}`; setP('equity', 'ok', 'Done'); }
+      else { setP('equity', 'sk', 'Skipped'); }
+    } catch(e) { setP('equity', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive performance management framework for "${inf.name}" (${inf.type_label}). ${desc}
+
+Cover:
+1. REVIEW CADENCE:
+- Quarterly performance reviews (full cycle)
+- Monthly 1:1 check-ins (lightweight, employee-driven)
+- Weekly standup updates (team visibility)
+- Annual compensation review (tied to Q4 performance review)
+- Timeline: Q1 review (Apr), Q2 review (Jul), Q3 review (Oct), Q4 review + annual comp (Jan)
+- Who reviews whom: direct manager primary, skip-level input, peer feedback (360)
+
+2. EVALUATION CRITERIA TEMPLATE:
+- Core competencies (applicable to all roles):
+  - Execution & delivery (quality, speed, reliability)
+  - Collaboration & communication
+  - Problem-solving & initiative
+  - Growth mindset & learning
+  - Alignment with company values
+- Role-specific competencies (examples for engineering, sales, marketing, ops)
+- Rating scale: 1-5 (Does Not Meet, Partially Meets, Meets, Exceeds, Exceptional)
+- Rating descriptions with behavioral anchors for each level
+- Distribution guidance (not forced ranking, but calibration reference)
+
+3. SELF-ASSESSMENT FORM:
+- Key accomplishments this quarter (3-5, with measurable impact)
+- Goals from last quarter — status and learnings
+- Challenges faced and how you addressed them
+- Areas where you want to grow
+- Feedback for your manager (what's helping, what could change)
+- Goals for next quarter (3-5, SMART format)
+- Career development interests (skills, roles, projects)
+- Overall self-rating with justification
+
+4. MANAGER ASSESSMENT FORM:
+- Performance against goals (rated 1-5 per goal)
+- Competency ratings (1-5 per competency with written justification)
+- Key strengths demonstrated this quarter (specific examples)
+- Development areas with actionable suggestions
+- Overall performance rating (1-5 with calibration note)
+- Promotion readiness assessment (not ready / developing / ready now)
+- Compensation recommendation (if applicable)
+- Specific goals and expectations for next quarter
+
+5. CALIBRATION PROCESS:
+- Purpose: ensure consistency across teams and managers
+- Participants: all managers at same level + their skip-level
+- Preparation: managers bring ratings and justification for all direct reports
+- Process: review by rating bucket, discuss edge cases, adjust for consistency
+- Rules: no discussing personality, only behaviors and outcomes
+- Output: calibrated ratings, identified high-performers, identified needs-support
+- Timeline: 1 week after manager assessments due, before delivery to employees
+- Bias checks: gender, tenure, team, recency bias mitigation
+
+6. PERFORMANCE IMPROVEMENT PLAN (PIP) TEMPLATE:
+- When to initiate (sustained "Does Not Meet" rating, specific incident, pattern of issues)
+- PIP document sections:
+  - Current performance concerns (specific, documented examples)
+  - Expected performance standards (measurable, achievable)
+  - Support and resources provided (training, mentoring, reduced workload)
+  - Measurable milestones with specific due dates (30/60/90 day)
+  - Check-in cadence (weekly during PIP)
+  - Consequences of not meeting expectations
+  - Employee acknowledgment and response
+- PIP best practices: document everything, be direct but respectful, involve HR, give genuine path to success
+- PIP outcome options: successful completion, extension, role change, separation
+
+7. PROMOTION CRITERIA:
+- Already performing at next level for 1+ quarter
+- Demonstrates scope and impact beyond current role
+- Peer and cross-functional recognition
+- Skills matrix: what's required at each level (IC1-IC6, M1-M3)
+- Promotion packet template (evidence of readiness, manager recommendation, peer endorsements)
+- Promotion committee process (who decides, what they review)
+
+8. COMPENSATION REVIEW:
+- Annual review tied to Q4 performance cycle
+- Market data comparison (using Levels.fyi, Pave, Radford)
+- Merit increase bands by rating (Meets: 3-5%, Exceeds: 6-8%, Exceptional: 9-12%)
+- Equity refresh grants (criteria and typical amounts by level)
+- Off-cycle adjustment criteria (promotion, market correction, retention risk)
+- Total compensation communication template`, 5000);
+      if (raw?.length > 500) { files['PERFORMANCE-FRAMEWORK.md'] = `# Performance Management Framework — ${inf.name}\n\n${raw}`; setP('perf', 'ok', 'Done'); }
+      else { setP('perf', 'sk', 'Skipped'); }
+    } catch(e) { setP('perf', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive remote work policy for "${inf.name}" (${inf.type_label}). ${desc}
+
+Cover:
+1. REMOTE/HYBRID/IN-PERSON DECISION FRAMEWORK:
+- Decision criteria matrix: role type, collaboration needs, client requirements, employee preference
+- Three modes defined:
+  - Fully remote: no office requirement, work from anywhere
+  - Hybrid: X days in office per week (flexible which days)
+  - In-person: role requires physical presence (with justification)
+- Per-role designation process (manager + HR determine, employee can request change)
+- Relocation policy: approved states/countries, tax implications notice, cost-of-living adjustment policy
+- International remote work: visa/tax considerations, maximum days per country
+
+2. COMMUNICATION NORMS (async-first):
+- Default to async: write it down before scheduling a meeting
+- Tool hierarchy:
+  - Slack: quick questions, social, real-time when needed (not urgent by default)
+  - Email: external communication, formal decisions, long-form
+  - Notion/Docs: specifications, decisions, knowledge base
+  - Video calls: brainstorming, relationship building, complex discussions
+- Response time expectations:
+  - Slack: within 4 business hours (not instant)
+  - Email: within 24 business hours
+  - @urgent tag: within 1 hour during business hours
+  - After hours: no expectation of response until next business day
+- Over-communication encouraged: share context, explain decisions, document everything
+- Status indicators: use Slack status to show availability (focus time, OOO, in meetings)
+
+3. MEETING POLICY:
+- Maximum meeting hours: 15 hours/week per person
+- No-meeting days: Tuesday and Thursday (company-wide focus days)
+- Meeting hygiene:
+  - Every meeting needs an agenda (shared 24h in advance)
+  - Default to 25 min or 50 min (not 30/60)
+  - Notes and action items documented and shared within 24 hours
+  - Optional attendees clearly marked (they should decline if possible)
+  - Recurring meetings reviewed monthly (cancel if not valuable)
+- Camera policy: on for 1:1s and small groups, optional for all-hands
+- Meeting-free weeks: one week per quarter (no internal meetings)
+
+4. TIME ZONE MANAGEMENT:
+- Core collaboration hours: 10am-2pm ET (4 hours of overlap)
+- Meetings scheduled only during core hours unless all parties agree
+- Team time zone map maintained and visible
+- Calendar etiquette: display working hours, block personal time
+- Handoff practices for distributed teams (async standup, written updates)
+- Fair rotation of inconvenient meeting times across time zones
+
+5. HOME OFFICE STIPEND:
+- One-time setup stipend: $1,000 for desk, chair, monitor, peripherals
+- Monthly internet/utilities stipend: $100/month
+- Approved equipment list (ergonomic recommendations)
+- Reimbursement process: submit receipts, approved within 1 week
+- Equipment ownership: company-funded items returned if leaving within 1 year
+- Refresh cycle: additional $500 annually for upgrades/replacements
+
+6. CO-WORKING BUDGET:
+- Monthly co-working allowance: $200/month (WeWork, local spaces)
+- Booking process: use preferred vendors or submit for reimbursement
+- Team co-working days encouraged (team lead coordinates, company pays)
+- Coffee shop work: $50/month food & beverage allowance when working from cafes
+
+7. IN-PERSON GATHERING CADENCE:
+- Quarterly team gatherings (2-3 days, company-funded travel + lodging)
+- Annual company offsite (3-5 days, all employees, strategy + team building)
+- Budget per gathering: $2,000-3,000 per person (travel, hotel, activities, meals)
+- Planning lead time: 8 weeks minimum, 12 weeks for annual offsite
+- Gathering format: 50% work sessions, 30% team building, 20% unstructured
+- Virtual inclusion: if someone can't travel, provide high-quality virtual participation
+
+8. WELLNESS & BOUNDARIES:
+- Right to disconnect: no work communications expected outside business hours
+- Flexible hours within core collaboration window
+- Mental health days (no questions asked, 2 per quarter)
+- Annual wellness stipend: $500 (gym, meditation app, therapy copay)
+- Burnout prevention: manager training, workload monitoring, mandatory PTO minimums`, 5000);
+      if (raw?.length > 500) { files['REMOTE-WORK-POLICY.md'] = `# Remote Work Policy — ${inf.name}\n\n${raw}`; setP('remote', 'ok', 'Done'); }
+      else { setP('remote', 'sk', 'Skipped'); }
+    } catch(e) { setP('remote', 'sk', e.message); }
+  })()
+]);
+
+// ── Group H — Product (2 docs) ────────────
+addP('analytics', 'Analytics Instrumentation', '', '⬡ Product Docs'); setP('analytics', 'run');
+addP('a11y', 'Accessibility Plan', '', '⬡ Product Docs'); setP('a11y', 'run');
+
+const [analyticsR, a11yR] = await Promise.allSettled([
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive analytics instrumentation plan for "${inf.name}" (${inf.type_label}). ${desc}
+
+Revenue model: ${inf.revenue_model} at ${inf.price}. Cover:
+
+1. EVENT TAXONOMY:
+Organize events into four categories with naming convention (object_action format):
+
+Page Views:
+- page_viewed (properties: path, referrer, utm_source, utm_medium, utm_campaign)
+- page_scrolled (properties: path, scroll_depth_percent, time_on_page)
+
+Feature Usage Events:
+- feature_used (properties: feature_name, feature_category, duration_seconds)
+- search_performed (properties: query, results_count, result_clicked)
+- filter_applied (properties: filter_type, filter_value, results_count)
+- export_initiated (properties: export_format, item_count)
+- settings_changed (properties: setting_name, old_value, new_value)
+
+Funnel Events:
+- signup_started (properties: source, referrer)
+- signup_completed (properties: method: email/google/github, time_to_complete)
+- onboarding_step_completed (properties: step_number, step_name, time_spent)
+- onboarding_completed (properties: total_time, steps_skipped)
+- trial_started (properties: plan_type, source)
+- upgrade_initiated (properties: from_plan, to_plan, trigger)
+- checkout_started (properties: plan, price, coupon_applied)
+- payment_completed (properties: plan, amount, payment_method, is_first_payment)
+- subscription_cancelled (properties: plan, reason, tenure_days)
+
+Business Events:
+- revenue_recognized (properties: amount, plan, mrr_change_type: new/expansion/contraction/churn)
+- invitation_sent (properties: invite_method, inviter_plan)
+- invitation_accepted (properties: time_to_accept)
+- support_ticket_created (properties: category, priority)
+- nps_submitted (properties: score, comment_provided)
+
+2. POSTHOG TRACKING IMPLEMENTATION:
+- Installation (npm package + script tag options)
+- Initialization with project API key
+- User identification (posthog.identify with user properties)
+- Group analytics (company/workspace level tracking)
+- Event tracking code examples for each category above
+- Feature flags integration (linking flags to events)
+- Session recording setup (privacy controls, sampling rate)
+- Autocapture configuration (what to enable/disable)
+
+3. DATA LAYER SPECIFICATION:
+- dataLayer structure for Google Tag Manager compatibility
+- User properties schema (plan, role, company_size, signup_date, lifecycle_stage)
+- Group/company properties schema (industry, employee_count, plan, mrr)
+- Event property standards (naming convention, required vs optional, data types)
+- PII handling rules (what to track, what to hash, what to never capture)
+- Consent-aware tracking (check consent before firing events)
+
+4. DASHBOARD WIREFRAMES (5 dashboards):
+
+Dashboard 1 — Executive Overview:
+- MRR (current, trend, vs target)
+- Active users (DAU, WAU, MAU with trends)
+- Trial-to-paid conversion rate (funnel visualization)
+- Net revenue retention (monthly)
+- NPS score (current + trend)
+- Top acquisition sources (pie chart)
+
+Dashboard 2 — Acquisition:
+- Visitors by source/medium (stacked bar, weekly)
+- Signup funnel (visitors → signup started → signup completed → activated)
+- Cost per acquisition by channel
+- Landing page conversion rates (table with trends)
+- UTM campaign performance
+
+Dashboard 3 — Activation & Onboarding:
+- Onboarding funnel (step-by-step drop-off)
+- Time to first value action (distribution)
+- Activation rate by cohort (weekly cohorts)
+- Feature adoption in first 7 days (heatmap)
+- Onboarding completion rate (with/without each step)
+
+Dashboard 4 — Engagement & Retention:
+- DAU/MAU ratio (stickiness, trend)
+- Feature usage frequency (top 10 features, bar chart)
+- Retention curves (weekly cohort, 8-week view)
+- Power users vs casual users (segmentation)
+- Session duration distribution
+- Churn risk score distribution
+
+Dashboard 5 — Revenue:
+- MRR waterfall (new, expansion, contraction, churn)
+- ARPU trend (by plan, by cohort)
+- Plan distribution (pie chart)
+- Upgrade/downgrade rates
+- Lifetime value by acquisition source
+- Revenue churn vs logo churn
+
+5. ALERT THRESHOLDS:
+- Error rate spike: >1% of requests return 5xx → Slack alert
+- Signup drop: <50% of 7-day average daily signups → Slack + email alert
+- Payment failure spike: >5% failure rate in 1 hour → urgent Slack + SMS
+- Conversion rate drop: trial-to-paid below 2% (7-day rolling) → weekly report flag
+- Feature adoption anomaly: any core feature usage drops >30% week-over-week → Slack alert
+- Uptime: any 5-minute period with >10% error rate → PagerDuty
+- Revenue alert: MRR drops >5% in a day → urgent notification to founders`, 5000);
+      if (raw?.length > 500) { files['ANALYTICS-INSTRUMENTATION.md'] = `# Analytics Instrumentation Plan — ${inf.name}\n\n${raw}`; setP('analytics', 'ok', 'Done'); }
+      else { setP('analytics', 'sk', 'Skipped'); }
+    } catch(e) { setP('analytics', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a comprehensive accessibility plan for "${inf.name}" (${inf.type_label}). ${desc}
+
+Cover:
+1. WCAG 2.1 AA CHECKLIST organized by principle:
+
+PERCEIVABLE:
+- [ ] 1.1.1 Non-text content: all images have alt text (descriptive for meaningful, empty for decorative)
+- [ ] 1.2.1 Audio/video: captions for pre-recorded media
+- [ ] 1.2.2 Captions: synchronized captions for all video content
+- [ ] 1.3.1 Info and relationships: proper heading hierarchy (H1→H2→H3), semantic HTML (nav, main, aside, footer)
+- [ ] 1.3.2 Meaningful sequence: DOM order matches visual order
+- [ ] 1.3.3 Sensory characteristics: instructions don't rely solely on shape, color, size, location
+- [ ] 1.4.1 Use of color: color is not the only means of conveying information
+- [ ] 1.4.2 Audio control: mechanism to pause/stop audio that plays >3 seconds
+- [ ] 1.4.3 Contrast minimum: 4.5:1 for normal text, 3:1 for large text (18px+ bold or 24px+)
+- [ ] 1.4.4 Resize text: page readable at 200% zoom without horizontal scrolling
+- [ ] 1.4.5 Images of text: use real text instead of images of text
+- [ ] 1.4.10 Reflow: content reflows at 320px width without horizontal scroll
+- [ ] 1.4.11 Non-text contrast: 3:1 for UI components and graphical objects
+
+OPERABLE:
+- [ ] 2.1.1 Keyboard: all functionality available via keyboard
+- [ ] 2.1.2 No keyboard trap: focus can always be moved away from any component
+- [ ] 2.2.1 Timing adjustable: time limits can be extended or turned off
+- [ ] 2.3.1 Three flashes: no content flashes more than 3 times per second
+- [ ] 2.4.1 Skip navigation: "skip to main content" link as first focusable element
+- [ ] 2.4.2 Page titled: descriptive, unique page titles
+- [ ] 2.4.3 Focus order: logical tab order matching visual layout
+- [ ] 2.4.4 Link purpose: link text is descriptive (no "click here")
+- [ ] 2.4.6 Headings and labels: descriptive headings and form labels
+- [ ] 2.4.7 Focus visible: clear visible focus indicator on all interactive elements
+- [ ] 2.5.1 Pointer gestures: multipoint/path-based gestures have single-pointer alternatives
+
+UNDERSTANDABLE:
+- [ ] 3.1.1 Language of page: lang attribute on HTML element
+- [ ] 3.1.2 Language of parts: lang attribute for content in different language
+- [ ] 3.2.1 On focus: no unexpected context changes on focus
+- [ ] 3.2.2 On input: no unexpected context changes on input (unless user informed)
+- [ ] 3.3.1 Error identification: errors clearly described in text
+- [ ] 3.3.2 Labels or instructions: form fields have visible labels and instructions
+- [ ] 3.3.3 Error suggestion: specific correction suggestions when input errors detected
+- [ ] 3.3.4 Error prevention: confirmation, reversibility, or review for legal/financial submissions
+
+ROBUST:
+- [ ] 4.1.1 Parsing: valid HTML (no duplicate IDs, proper nesting)
+- [ ] 4.1.2 Name, role, value: custom components expose correct ARIA roles and states
+- [ ] 4.1.3 Status messages: dynamic content updates announced via ARIA live regions
+
+2. AUTOMATED TESTING SETUP (axe-core):
+- Installation: npm install @axe-core/react axe-core
+- Development integration: axe-core React integration (console warnings in dev)
+- CI/CD integration: axe-core CLI or Playwright axe plugin in test pipeline
+- Configuration: custom rules (disable false positives, add project-specific rules)
+- Pre-commit hook: run axe on changed components
+- Example test code for Playwright + axe integration
+- Reporting: generate HTML accessibility reports per build
+- Severity classification: critical (blocks usage), serious (major barrier), moderate (degraded experience), minor (annoyance)
+
+3. MANUAL TESTING GUIDE:
+- Keyboard-only testing protocol (30-minute test script):
+  - Navigate entire site using only Tab, Shift+Tab, Enter, Space, Escape, Arrow keys
+  - Verify all interactive elements are reachable and operable
+  - Check focus visibility throughout
+  - Test modal dialogs (focus trap, Escape to close)
+  - Test dropdown menus, tooltips, accordions
+- Screen reader testing:
+  - Test with NVDA (Windows, free) and VoiceOver (macOS, built-in)
+  - Test critical user flows: signup, login, main feature, checkout
+  - Verify: page landmarks announced, headings navigable, form labels read, error messages announced, dynamic content updates announced
+  - Document screen reader behavior for each component
+- Color and contrast testing:
+  - Use browser high contrast mode
+  - Test with color blindness simulators (protanopia, deuteranopia, tritanopia)
+  - Verify contrast ratios with WebAIM Contrast Checker
+- Zoom and reflow testing:
+  - Test at 200% and 400% zoom
+  - Test on 320px viewport width
+  - Verify no content is cut off or overlapping
+- Motion sensitivity testing:
+  - Verify prefers-reduced-motion media query is respected
+  - Test with animations disabled
+
+4. REMEDIATION PRIORITY MATRIX:
+| Priority | Impact | Effort | Examples | Timeline |
+|----------|--------|--------|----------|----------|
+| P0 Critical | Blocks access | Any | Missing form labels, keyboard traps, no alt text on key images | Fix immediately |
+| P1 High | Major barrier | Low-Med | Poor contrast, missing skip nav, focus not visible | Fix within 2 weeks |
+| P2 Medium | Degraded experience | Medium | Missing ARIA landmarks, decorative images with alt text | Fix within 1 month |
+| P3 Low | Minor annoyance | High | Suboptimal heading hierarchy, verbose alt text | Fix within 1 quarter |
+
+5. ACCESSIBILITY STATEMENT TEMPLATE:
+- Commitment statement
+- Standard targeted (WCAG 2.1 Level AA)
+- Current conformance status (partial/full)
+- Known limitations with planned remediation dates
+- Feedback mechanism (email, form, phone)
+- Response commitment (acknowledge within 2 business days, resolve within 10)
+- Enforcement procedure reference
+- Date of last assessment
+- Third-party audit information (if applicable)
+
+Include links to tools, resources, and training materials.`, 5000);
+      if (raw?.length > 500) { files['ACCESSIBILITY-PLAN.md'] = `# Accessibility Plan — ${inf.name}\n\n${raw}`; setP('a11y', 'ok', 'Done'); }
+      else { setP('a11y', 'sk', 'Skipped'); }
+    } catch(e) { setP('a11y', 'sk', e.message); }
+  })()
+]);
+
+// ── END: Legal + GTM + People + Product docs ────────────
+// ── MEDIUM-PRIORITY: Remaining 30 documents (30/78) ────────────
+
+// Batch 1: Financial & Strategic Planning (6 docs)
+addP('valuation_model', 'Valuation Model', '', '⬡ Phase 7b');
+addP('scenario_plan', 'Scenario Planning', '', '⬡ Phase 7b');
+addP('partnership_strat', 'Partnership Strategy', '', '⬡ Phase 7b');
+addP('negotiation_guide', 'Negotiation Guide', '', '⬡ Phase 7b');
+addP('governance', 'Governance Framework', '', '⬡ Phase 7b');
+addP('investor_update', 'Investor Update Template', '', '⬡ Phase 7b');
+
+setP('valuation_model', 'run'); setP('scenario_plan', 'run'); setP('partnership_strat', 'run');
+setP('negotiation_guide', 'run'); setP('governance', 'run'); setP('investor_update', 'run');
+
+await Promise.allSettled([
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a DCF valuation model framework for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). Include: 5-year revenue projections with growth assumptions, COGS and operating expense forecasts, free cash flow calculation, WACC computation (cost of equity via CAPM, cost of debt, capital structure), terminal value using both perpetuity growth and exit multiple methods, comparable company analysis with 5 relevant public comps and multiples (EV/Revenue, EV/EBITDA), sensitivity tables for discount rate vs growth rate, and pre-money valuation range. Use realistic assumptions for a ${inf.type_label} business. Format as actionable spreadsheet-ready tables.`, 3000);
+      if (raw?.length > 300) { files['VALUATION-MODEL.md'] = `# Valuation Model — ${inf.name}\n\n${raw}`; setP('valuation_model', 'ok', 'Done'); }
+      else { setP('valuation_model', 'sk', 'Skipped'); }
+    } catch(e) { setP('valuation_model', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create scenario planning for "${inf.name}" (${inf.type_label}). Define three scenarios: BULL (everything works, market tailwinds), BASE (realistic execution), BEAR (headwinds, slow adoption). For each scenario include: narrative description, trigger events that signal this scenario is unfolding, key metrics and thresholds, revenue impact at 12/24/36 months, required team size, cash runway implications, and strategic response playbook. Add a monitoring dashboard of 5 leading indicators with red/yellow/green thresholds. Include contingency pivots for the bear case and acceleration tactics for the bull case.`, 3000);
+      if (raw?.length > 300) { files['SCENARIO-PLANNING.md'] = `# Scenario Planning — ${inf.name}\n\n${raw}`; setP('scenario_plan', 'ok', 'Done'); }
+      else { setP('scenario_plan', 'sk', 'Skipped'); }
+    } catch(e) { setP('scenario_plan', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Write a partnership strategy for "${inf.name}" (${inf.type_label}). Cover: partner identification methodology (adjacent markets, complementary products, distribution channels), evaluation criteria matrix (reach, brand alignment, technical fit, revenue potential scored 1-5), partnership tiers (referral, integration, co-sell, strategic), deal structure templates for each tier (rev share %, exclusivity, term length), outreach sequence (intro, value prop, proposal, negotiation), partnership onboarding checklist, joint KPIs and reporting cadence, and exit/termination clauses. List 5 specific partner categories relevant to this business type.`, 3000);
+      if (raw?.length > 300) { files['PARTNERSHIP-STRATEGY.md'] = `# Partnership Strategy — ${inf.name}\n\n${raw}`; setP('partnership_strat', 'ok', 'Done'); }
+      else { setP('partnership_strat', 'sk', 'Skipped'); }
+    } catch(e) { setP('partnership_strat', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a negotiation guide for "${inf.name}" (${inf.type_label}). Cover BATNA framework (how to identify and strengthen your best alternative), ZOPA identification, and anchoring techniques. Include specific playbooks for: vendor negotiations (SaaS tools, contractors, office), investor negotiations (valuation, terms, board seats, pro-rata), enterprise sales (procurement, legal, security review, pricing), and hiring (offer structuring, equity negotiation). For each playbook: opening position, concession strategy, walk-away points, and common traps. Add a preparation checklist and post-negotiation review template.`, 3000);
+      if (raw?.length > 300) { files['NEGOTIATION-GUIDE.md'] = `# Negotiation Guide — ${inf.name}\n\n${raw}`; setP('negotiation_guide', 'ok', 'Done'); }
+      else { setP('negotiation_guide', 'sk', 'Skipped'); }
+    } catch(e) { setP('negotiation_guide', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a governance framework for "${inf.name}" (${inf.type_label}). Include: recommended board composition by stage (pre-seed through Series B — number of seats, independent vs investor vs founder), meeting cadence and agenda templates, committee structure (audit, compensation, nominating), fiduciary duties explained plainly, board information rights and reporting packages, observer rights, consent matters requiring board approval, D&O insurance requirements, advisory board structure and compensation (0.1-0.5% equity), and governance evolution timeline as the company scales.`, 3000);
+      if (raw?.length > 300) { files['GOVERNANCE.md'] = `# Governance Framework — ${inf.name}\n\n${raw}`; setP('governance', 'ok', 'Done'); }
+      else { setP('governance', 'sk', 'Skipped'); }
+    } catch(e) { setP('governance', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a monthly investor update template for "${inf.name}" (${inf.type_label}, ${inf.revenue_model}). Structure: TL;DR (3 bullets), Highlights (top 3 wins), Lowlights (top 3 challenges with mitigation), KPI dashboard (MRR, growth rate, CAC, LTV, churn, runway, burn, NPS — with month-over-month deltas), Product update (shipped, in-progress, next), Team update (hires, open roles, org changes), Financial summary (revenue, expenses, cash position, months of runway), The Ask (specific help needed from investors — intros, advice, hiring), and a closing note. Keep format scannable — investors spend 2 minutes reading.`, 3000);
+      if (raw?.length > 300) { files['INVESTOR-UPDATE-TEMPLATE.md'] = `# Investor Update Template — ${inf.name}\n\n${raw}`; setP('investor_update', 'ok', 'Done'); }
+      else { setP('investor_update', 'sk', 'Skipped'); }
+    } catch(e) { setP('investor_update', 'sk', e.message); }
+  })()
+]);
+
+// Batch 2: Reporting, Pitch & Growth Models (6 docs)
+addP('board_deck', 'Board Deck Template', '', '⬡ Phase 7b');
+addP('weekly_metrics', 'Weekly Metrics', '', '⬡ Phase 7b');
+addP('pitch_script', 'Pitch Script', '', '⬡ Phase 7b');
+addP('network_fx', 'Network Effects', '', '⬡ Phase 7b');
+addP('marketplace_strat', 'Marketplace Strategy', '', '⬡ Phase 7b');
+addP('fin_controls', 'Financial Controls', '', '⬡ Phase 7b');
+
+setP('board_deck', 'run'); setP('weekly_metrics', 'run'); setP('pitch_script', 'run');
+setP('network_fx', 'run'); setP('marketplace_strat', 'run'); setP('fin_controls', 'run');
+
+await Promise.allSettled([
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a quarterly board deck template for "${inf.name}" (${inf.type_label}). Slides: 1) Agenda & key decisions needed, 2) Executive summary (3 bullets), 3) Financial overview (revenue, burn, runway with charts), 4) KPI dashboard (core metrics vs targets), 5) Product roadmap (shipped, building, planned), 6) Go-to-market update (pipeline, conversion, CAC trends), 7) Team & hiring (org chart, open roles, culture), 8) Competitive landscape (market shifts), 9) Risk register (top 5 risks with mitigation), 10) Strategic decisions for board vote, 11) Appendix. For each slide specify: data to include, visualization type, and talking points. Keep deck to 20 minutes presentation time.`, 3000);
+      if (raw?.length > 300) { files['BOARD-DECK-TEMPLATE.md'] = `# Board Deck Template — ${inf.name}\n\n${raw}`; setP('board_deck', 'ok', 'Done'); }
+      else { setP('board_deck', 'sk', 'Skipped'); }
+    } catch(e) { setP('board_deck', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a weekly metrics dashboard for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). Define: Tier 1 metrics (check daily — revenue, signups, activation rate), Tier 2 metrics (check weekly — retention, NPS, support tickets, feature adoption), Tier 3 metrics (check monthly — LTV, CAC, payback period). For each metric: definition, data source, target range, alert threshold. Include a weekly standup reporting format (Slack-friendly), a Monday metrics email template, and a weekly review meeting agenda (30 min). Add a scorecard template with red/yellow/green status for each metric and week-over-week trend arrows.`, 3000);
+      if (raw?.length > 300) { files['WEEKLY-METRICS.md'] = `# Weekly Metrics Dashboard — ${inf.name}\n\n${raw}`; setP('weekly_metrics', 'ok', 'Done'); }
+      else { setP('weekly_metrics', 'sk', 'Skipped'); }
+    } catch(e) { setP('weekly_metrics', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Write a 3-minute scripted pitch for "${inf.name}": ${desc}. Type: ${inf.type_label}, revenue model: ${inf.revenue_model} at ${inf.price}. Include timing marks [0:00-0:30] Hook — attention-grabbing problem statement, [0:30-1:00] Problem — pain points with data, [1:00-1:30] Solution — product demo moment, [1:30-2:00] Traction — metrics and social proof, [2:00-2:30] Business model — unit economics, [2:30-3:00] Ask — specific amount, use of funds, closing. Add [PAUSE] marks for emphasis, [SLIDE] cues, audience adaptation notes for investors vs customers vs partners, and common Q&A responses for 5 likely questions.`, 3000);
+      if (raw?.length > 300) { files['PITCH-SCRIPT.md'] = `# Pitch Script — ${inf.name}\n\n${raw}`; setP('pitch_script', 'ok', 'Done'); }
+      else { setP('pitch_script', 'sk', 'Skipped'); }
+    } catch(e) { setP('pitch_script', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Analyze network effects for "${inf.name}" (${inf.type_label}). Classify which types apply: direct (more users = more value per user), indirect/cross-side (two-sided marketplace effects), data (more usage = better product via ML/personalization), platform (third-party integrations/ecosystem). For each applicable type: mechanism description, critical mass estimate, metrics to track (e.g., liquidity, DAU/MAU ratio, cross-side ratio), strategies to reach tipping point, defensibility once achieved. Include viral coefficient calculation framework (invites sent × conversion rate), network effect mapping diagram description, and comparison to analogous companies that achieved strong network effects.`, 3000);
+      if (raw?.length > 300) { files['NETWORK-EFFECTS.md'] = `# Network Effects Analysis — ${inf.name}\n\n${raw}`; setP('network_fx', 'ok', 'Done'); }
+      else { setP('network_fx', 'sk', 'Skipped'); }
+    } catch(e) { setP('network_fx', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a marketplace strategy for "${inf.name}" (${inf.type_label}). Cover the chicken-and-egg problem: which side to seed first and why, supply-side acquisition tactics (concierge, scraping, partnerships), demand-side acquisition tactics (SEO, content, paid). Define liquidity metrics: search-to-fill rate, time-to-match, utilization rate. Include geographic density strategy (single city → metro expansion → national), pricing strategy (subsidize which side, take rate evolution), quality curation (vetting, reviews, guarantees), disintermediation prevention, and marketplace maturity stages with different strategies for each stage. Add competitive moat analysis specific to marketplace dynamics.`, 3000);
+      if (raw?.length > 300) { files['MARKETPLACE-STRATEGY.md'] = `# Marketplace Strategy — ${inf.name}\n\n${raw}`; setP('marketplace_strat', 'ok', 'Done'); }
+      else { setP('marketplace_strat', 'sk', 'Skipped'); }
+    } catch(e) { setP('marketplace_strat', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create financial controls for "${inf.name}" (${inf.type_label}). Cover: separation of duties (who initiates, approves, records transactions), approval authority matrix by amount ($0-500, $500-5K, $5K-25K, $25K+), expense policy (categories, per diems, reimbursement process, prohibited expenses), corporate card controls (per-transaction limits, MCC restrictions), bank account controls (dual signatures above threshold, reconciliation cadence), payroll controls, vendor onboarding and payment process, month-end close checklist, audit preparation guide, and document retention schedule. Include templates for expense reports, purchase orders, and check requests. Scale guidance from startup to 50-person company.`, 3000);
+      if (raw?.length > 300) { files['FINANCIAL-CONTROLS.md'] = `# Financial Controls — ${inf.name}\n\n${raw}`; setP('fin_controls', 'ok', 'Done'); }
+      else { setP('fin_controls', 'sk', 'Skipped'); }
+    } catch(e) { setP('fin_controls', 'sk', e.message); }
+  })()
+]);
+
+// Batch 3: Finance Models, Community & Content (6 docs)
+addP('dilution_model', 'Dilution Model', '', '⬡ Phase 7b');
+addP('three_stmt', 'Three-Statement Model', '', '⬡ Phase 7b');
+addP('community_strat', 'Community Strategy', '', '⬡ Phase 7b');
+addP('content_mktg', 'Content Marketing Plan', '', '⬡ Phase 7b');
+addP('jtbd_guide', 'JTBD Interview Guide', '', '⬡ Phase 7b');
+addP('product_strat', 'Product Strategy', '', '⬡ Phase 7b');
+
+setP('dilution_model', 'run'); setP('three_stmt', 'run'); setP('community_strat', 'run');
+setP('content_mktg', 'run'); setP('jtbd_guide', 'run'); setP('product_strat', 'run');
+
+await Promise.allSettled([
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a dilution model for "${inf.name}" (${inf.type_label}). Model ownership across funding rounds: Founding (100%), Pre-seed ($500K at $3M), Seed ($2M at $10M), Series A ($8M at $40M), Series B ($25M at $150M). For each round show: pre-money valuation, amount raised, post-money, new shares issued, founder ownership %, employee pool %, investor ownership % per round. Include option pool creation (10-20%) and its dilutive effect, anti-dilution provisions (weighted average vs full ratchet) with worked examples, and pro-rata rights impact. Add a cap table template and SAFE/convertible note conversion scenarios.`, 3000);
+      if (raw?.length > 300) { files['DILUTION-MODEL.md'] = `# Dilution Model — ${inf.name}\n\n${raw}`; setP('dilution_model', 'ok', 'Done'); }
+      else { setP('dilution_model', 'sk', 'Skipped'); }
+    } catch(e) { setP('dilution_model', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a three-statement financial model for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). Include: INCOME STATEMENT — revenue (by stream), COGS, gross profit, operating expenses (S&M, R&D, G&A), EBITDA, depreciation, interest, tax, net income for Years 1-3. BALANCE SHEET — cash, AR, prepaid, fixed assets, total assets; AP, accrued liabilities, deferred revenue, debt, equity, total L&E. CASH FLOW STATEMENT — operating (net income + adjustments), investing (capex, acquisitions), financing (equity raises, debt). Show quarterly for Year 1, annual for Years 2-3. Include key assumptions table and unit economics tie-in.`, 3000);
+      if (raw?.length > 300) { files['THREE-STATEMENT-MODEL.md'] = `# Three-Statement Financial Model — ${inf.name}\n\n${raw}`; setP('three_stmt', 'ok', 'Done'); }
+      else { setP('three_stmt', 'sk', 'Skipped'); }
+    } catch(e) { setP('three_stmt', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a community strategy for "${inf.name}" (${inf.type_label}). Cover: platform selection (Discord vs Slack vs Circle vs custom — pros/cons for this business type), community structure (channels/spaces, roles, permissions), engagement mechanics (welcome sequence, daily prompts, weekly events, AMAs, challenges), gamification (levels, badges, leaderboards), ambassador program (selection criteria, responsibilities, rewards — swag, early access, revenue share), content strategy for community (UGC encouragement, knowledge base contributions), moderation policy and tools, metrics (DAU/MAU, posts per member, response time, NPS), and community-led growth tactics. Include a 90-day launch plan.`, 3000);
+      if (raw?.length > 300) { files['COMMUNITY-STRATEGY.md'] = `# Community Strategy — ${inf.name}\n\n${raw}`; setP('community_strat', 'ok', 'Done'); }
+      else { setP('community_strat', 'sk', 'Skipped'); }
+    } catch(e) { setP('community_strat', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a 12-month content marketing plan for "${inf.name}" (${inf.type_label}). Include: content pillars (4-5 topic clusters), keyword clusters per pillar (head terms + long-tail), monthly publishing calendar (blog posts, videos, social, email — frequency per channel), content types by funnel stage (TOFU: educational, MOFU: comparison/case study, BOFU: demo/trial), internal linking strategy between pillar pages and cluster content, repurposing workflow (blog → social → email → video → podcast), distribution channels and promotion strategy per piece, SEO checklist per article, content scoring rubric, and quarterly content audit process. Include specific topic ideas for the first 3 months.`, 3000);
+      if (raw?.length > 300) { files['CONTENT-MARKETING-PLAN.md'] = `# Content Marketing Plan — ${inf.name}\n\n${raw}`; setP('content_mktg', 'ok', 'Done'); }
+      else { setP('content_mktg', 'sk', 'Skipped'); }
+    } catch(e) { setP('content_mktg', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a Jobs-to-be-Done interview guide for "${inf.name}" (${inf.type_label}). Include: JTBD theory overview (functional, emotional, social jobs), recruitment criteria for interview subjects, the Switch Interview framework — explore the timeline: first thought, passive looking, active looking, deciding, consuming, satisfaction. Provide 20 specific interview questions covering: the struggling moment ("When did you first realize..."), pull of new solution, push of current situation, anxiety of new solution, habit of present. Include the forces of progress diagram, timeline mapping template, synthesis framework for identifying jobs, and how to translate findings into product features. Add 5 example jobs statements in format "When I [situation], I want to [motivation], so I can [outcome]."`, 3000);
+      if (raw?.length > 300) { files['JTBD-INTERVIEW-GUIDE.md'] = `# Jobs-to-be-Done Interview Guide — ${inf.name}\n\n${raw}`; setP('jtbd_guide', 'ok', 'Done'); }
+      else { setP('jtbd_guide', 'sk', 'Skipped'); }
+    } catch(e) { setP('jtbd_guide', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a product strategy for "${inf.name}" (${inf.type_label}). Include: Kano model analysis (must-be, one-dimensional, attractive, indifferent features — list 5 per category), RICE scoring framework (Reach × Impact × Confidence / Effort) with worked examples for 10 features, prioritization matrix (2×2: impact vs effort), product vision statement and north star metric, quarterly theme-based roadmap for 4 quarters, feature scoring spreadsheet template, stakeholder input process (customers, sales, support, engineering), and decision-making framework for saying no. Add build-vs-buy decision criteria and technical feasibility assessment template.`, 3000);
+      if (raw?.length > 300) { files['PRODUCT-STRATEGY.md'] = `# Product Strategy — ${inf.name}\n\n${raw}`; setP('product_strat', 'ok', 'Done'); }
+      else { setP('product_strat', 'sk', 'Skipped'); }
+    } catch(e) { setP('product_strat', 'sk', e.message); }
+  })()
+]);
+
+// Batch 4: Testing, Research, Tech & Legal (6 docs)
+addP('ab_testing', 'A/B Testing Framework', '', '⬡ Phase 7b');
+addP('user_research', 'User Research Plan', '', '⬡ Phase 7b');
+addP('tech_debt', 'Tech Debt Framework', '', '⬡ Phase 7b');
+addP('i18n_strat', 'I18N Strategy', '', '⬡ Phase 7b');
+addP('board_resolutions', 'Board Resolutions', '', '⬡ Phase 7b');
+addP('dpa_template', 'DPA Template', '', '⬡ Phase 7b');
+
+setP('ab_testing', 'run'); setP('user_research', 'run'); setP('tech_debt', 'run');
+setP('i18n_strat', 'run'); setP('board_resolutions', 'run'); setP('dpa_template', 'run');
+
+await Promise.allSettled([
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create an A/B testing framework for "${inf.name}" (${inf.type_label}). Include: hypothesis format template ("If we [change], then [metric] will [direction] by [amount] because [rationale]"), statistical foundations (sample size calculator inputs, minimum detectable effect, significance level 95%, power 80%), test duration estimation formula, test prioritization scoring (ICE: Impact × Confidence × Ease), a catalog of 15 high-impact tests for this business type (pricing page, CTA copy, onboarding flow, email subject lines, etc.), implementation checklist (tracking, segmentation, QA), analysis template (results, confidence interval, practical significance vs statistical significance), and common pitfalls (peeking, multiple comparisons, novelty effects).`, 3000);
+      if (raw?.length > 300) { files['AB-TESTING-FRAMEWORK.md'] = `# A/B Testing Framework — ${inf.name}\n\n${raw}`; setP('ab_testing', 'ok', 'Done'); }
+      else { setP('ab_testing', 'sk', 'Skipped'); }
+    } catch(e) { setP('ab_testing', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a user research plan for "${inf.name}" (${inf.type_label}). Include: research methods by stage (discovery: interviews, diary studies; validation: usability tests, surveys; optimization: analytics, session recordings), quarterly research cadence, participant recruitment strategy (sources, screening criteria, incentives — $50-150/session), usability testing protocol (task scenarios, think-aloud, SUS scoring), interview guide template (warm-up, core questions, wrap-up), feedback repository structure (tagging taxonomy, insight patterns), tools stack (Hotjar, Maze, UserTesting alternatives), synthesis methods (affinity mapping, empathy maps, insight statements), and how to share findings (research readouts, insight newsletters, searchable repository). Budget: $500-2000/quarter.`, 3000);
+      if (raw?.length > 300) { files['USER-RESEARCH-PLAN.md'] = `# User Research Plan — ${inf.name}\n\n${raw}`; setP('user_research', 'ok', 'Done'); }
+      else { setP('user_research', 'sk', 'Skipped'); }
+    } catch(e) { setP('user_research', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a tech debt management framework for "${inf.name}" (${inf.type_label}). Define debt categories: code debt (copy-paste, dead code, complex functions), architecture debt (monolith coupling, missing abstractions), infrastructure debt (manual deploys, no monitoring), testing debt (low coverage, flaky tests), documentation debt. Severity scoring matrix: impact (1-5) × likelihood of causing incident (1-5) = priority score. Sprint allocation policy (20% of capacity for debt reduction). Debt register template with columns: ID, description, category, severity, estimated effort, business impact, date identified, owner, status. Include a quarterly debt audit process, definition of "acceptable debt," and decision framework for when to incur intentional debt (shipping deadline tradeoffs).`, 3000);
+      if (raw?.length > 300) { files['TECH-DEBT-FRAMEWORK.md'] = `# Tech Debt Framework — ${inf.name}\n\n${raw}`; setP('tech_debt', 'ok', 'Done'); }
+      else { setP('tech_debt', 'sk', 'Skipped'); }
+    } catch(e) { setP('tech_debt', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create an internationalization strategy for "${inf.name}" (${inf.type_label}). Include: market prioritization framework (TAM, language reach, payment infrastructure, regulatory complexity — rank top 10 markets), translation workflow (machine translation → human review → in-context QA), technical implementation (i18n library selection, string extraction, pluralization, RTL support, date/number/currency formatting), locale-specific compliance (GDPR for EU, LGPD for Brazil, PIPL for China), currency handling (display currency, settlement currency, FX rate management), content localization vs translation distinction, localized SEO strategy (hreflang, ccTLDs vs subfolders), and phased rollout plan (English → Spanish → French → German → Portuguese → Japanese). Budget and timeline estimates per locale.`, 3000);
+      if (raw?.length > 300) { files['I18N-STRATEGY.md'] = `# Internationalization Strategy — ${inf.name}\n\n${raw}`; setP('i18n_strat', 'ok', 'Done'); }
+      else { setP('i18n_strat', 'sk', 'Skipped'); }
+    } catch(e) { setP('i18n_strat', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate board resolution templates for "${inf.name}" (${inf.type_label}). Include complete resolution templates for: 1) Authorize issuance of common stock (number of shares, par value, consideration), 2) Approve SAFE agreement (valuation cap, discount, investor name, amount), 3) Appoint officers (CEO, CTO, Secretary, Treasurer with names and duties), 4) Open corporate bank account (bank name, authorized signers, resolution language banks require), 5) Approve equity incentive plan (share reserve, vesting schedule, exercise window), 6) Ratify founder actions (incorporator actions, initial expenses), 7) Approve contractor/vendor agreement above threshold. Each resolution needs: WHEREAS recitals, RESOLVED clauses, signature blocks, and certification language. Include unanimous written consent format.`, 3000);
+      if (raw?.length > 300) { files['docs/BOARD-RESOLUTIONS.md'] = `# Board Resolutions — ${inf.name}\n\n${raw}`; setP('board_resolutions', 'ok', 'Done'); }
+      else { setP('board_resolutions', 'sk', 'Skipped'); }
+    } catch(e) { setP('board_resolutions', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Generate a Data Processing Agreement template for "${inf.name}" (${inf.type_label}). Include: parties (controller = client, processor = ${inf.name}), definitions (personal data, processing, data subject, sub-processor), subject matter and duration of processing, nature and purpose of processing, types of personal data processed, categories of data subjects, controller obligations, processor obligations (process only on instructions, confidentiality, security measures, sub-processor management, data subject rights assistance, deletion/return on termination, audit rights), approved sub-processor list with notification procedure, international data transfers (SCCs reference), security measures (Annex II — technical and organizational measures: encryption, access controls, incident response), breach notification (72-hour timeline), liability and indemnification, and term/termination. GDPR Article 28 compliant format.`, 3000);
+      if (raw?.length > 300) { files['docs/DPA-TEMPLATE.md'] = `# Data Processing Agreement — ${inf.name}\n\n${raw}`; setP('dpa_template', 'ok', 'Done'); }
+      else { setP('dpa_template', 'sk', 'Skipped'); }
+    } catch(e) { setP('dpa_template', 'sk', e.message); }
+  })()
+]);
+
+// Batch 5: HR, Operations & Strategic Assessment (6 docs)
+addP('onboarding_ck', 'Onboarding Checklist', '', '⬡ Phase 7b');
+addP('comp_bench', 'Compensation Benchmarks', '', '⬡ Phase 7b');
+addP('supply_chain', 'Supply Chain', '', '⬡ Phase 7b');
+addP('rev_recog', 'Revenue Recognition', '', '⬡ Phase 7b');
+addP('cust_journey', 'Customer Journey Map', '', '⬡ Phase 7b');
+addP('zero_to_one', 'Zero-to-One Assessment', '', '⬡ Phase 7b');
+
+setP('onboarding_ck', 'run'); setP('comp_bench', 'run'); setP('supply_chain', 'run');
+setP('rev_recog', 'run'); setP('cust_journey', 'run'); setP('zero_to_one', 'run');
+
+await Promise.allSettled([
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create an employee onboarding checklist for "${inf.name}" (${inf.type_label}). Structure by timeline: PRE-START (offer letter, background check, equipment order, account provisioning, welcome email), DAY 1 (orientation, team introductions, workspace setup, tool access — list specific tools, first-day buddy assignment, company overview presentation), WEEK 1 (1:1 with manager, team norms doc, codebase/product walkthrough, first small task, lunch with different team members each day), MONTH 1 (30-day check-in, complete training modules, first meaningful deliverable, cross-functional introductions), 30-60-90 DAY GOALS template (learning, contributing, leading milestones). Include systems access checklist (email, Slack, GitHub, Notion, HRIS, etc.), equipment list, and onboarding feedback survey.`, 3000);
+      if (raw?.length > 300) { files['ONBOARDING-CHECKLIST.md'] = `# Onboarding Checklist — ${inf.name}\n\n${raw}`; setP('onboarding_ck', 'ok', 'Done'); }
+      else { setP('onboarding_ck', 'sk', 'Skipped'); }
+    } catch(e) { setP('onboarding_ck', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create compensation benchmarks for "${inf.name}" (${inf.type_label}). Include salary ranges for key roles: CEO/Founder, CTO, VP Engineering, Senior Engineer, Junior Engineer, Product Manager, Designer, Head of Marketing, SDR/BDR, Customer Success, Operations. For each role: base salary range (25th/50th/75th percentile), equity range (% for early stage, # shares for later), total compensation calculation methodology. Reference 3 data sources (Levels.fyi, Pave, Carta). Include geographic adjustment factors (SF=1.0, NYC=0.95, Austin=0.80, remote=0.85), stage adjustments (pre-seed through Series B), equity refresh policy, bonus structure, and benefits package comparison (health, 401k, PTO, parental leave). Add a compensation philosophy statement template.`, 3000);
+      if (raw?.length > 300) { files['COMPENSATION-BENCHMARKS.md'] = `# Compensation Benchmarks — ${inf.name}\n\n${raw}`; setP('comp_bench', 'ok', 'Done'); }
+      else { setP('comp_bench', 'sk', 'Skipped'); }
+    } catch(e) { setP('comp_bench', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a supply chain strategy for "${inf.name}" (${inf.type_label}). If this is a software/SaaS business, focus on: vendor/infrastructure supply chain (cloud providers, SaaS dependencies, API providers), single points of failure, redundancy planning, vendor evaluation matrix (reliability, cost, support, lock-in risk), SLA requirements, and business continuity for critical dependencies. If physical products apply, include: supplier evaluation criteria (quality, lead time, MOQ, payment terms), logistics partners, inventory management (JIT vs safety stock), demand forecasting methodology, warehouse/fulfillment strategy (3PL vs in-house), shipping carrier comparison, returns process, and cost optimization. Include risk mitigation for supply disruptions and a vendor scorecard template.`, 3000);
+      if (raw?.length > 300) { files['SUPPLY-CHAIN.md'] = `# Supply Chain Strategy — ${inf.name}\n\n${raw}`; setP('supply_chain', 'ok', 'Done'); }
+      else { setP('supply_chain', 'sk', 'Skipped'); }
+    } catch(e) { setP('supply_chain', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a revenue recognition guide for "${inf.name}" (${inf.type_label}, ${inf.revenue_model} at ${inf.price}). Cover: ASC 606 five-step model (identify contract, identify performance obligations, determine transaction price, allocate to obligations, recognize when satisfied), specific recognition rules for this business model — SaaS (ratably over subscription period), one-time sales (at delivery), professional services (over time or milestone), usage-based (as consumed). Include: deferred revenue accounting (liability until earned), contract modifications, refund reserves, multi-element arrangements, free trial and freemium treatment, annual vs monthly billing differences, and practical examples with journal entries. Add a monthly revenue recognition checklist and common audit findings to avoid.`, 3000);
+      if (raw?.length > 300) { files['REVENUE-RECOGNITION.md'] = `# Revenue Recognition — ${inf.name}\n\n${raw}`; setP('rev_recog', 'ok', 'Done'); }
+      else { setP('rev_recog', 'sk', 'Skipped'); }
+    } catch(e) { setP('rev_recog', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a customer journey map for "${inf.name}" (${inf.type_label}, ${inf.revenue_model}). Map 7 stages with details for each: 1) AWARENESS — channels, first touchpoints, emotions, content that attracts; 2) CONSIDERATION — evaluation criteria, competitor comparison, content that educates; 3) PURCHASE — friction points, conversion triggers, checkout optimization; 4) ONBOARDING — first 7 days experience, activation milestones, welcome sequence; 5) ADOPTION — feature discovery, habit formation, time-to-value; 6) EXPANSION — upsell triggers, cross-sell opportunities, referral program; 7) ADVOCACY — review solicitation, case study creation, community participation. For each stage: customer actions, touchpoints, emotions (😊→😤), pain points, opportunities, KPIs, and responsible team. Include a journey map visualization template.`, 3000);
+      if (raw?.length > 300) { files['CUSTOMER-JOURNEY-MAP.md'] = `# Customer Journey Map — ${inf.name}\n\n${raw}`; setP('cust_journey', 'ok', 'Done'); }
+      else { setP('cust_journey', 'sk', 'Skipped'); }
+    } catch(e) { setP('cust_journey', 'sk', e.message); }
+  })(),
+  (async () => {
+    try {
+      const raw = await aiRaw(`Create a Zero-to-One assessment for "${inf.name}": ${desc}. Apply Peter Thiel's framework from "Zero to One": 1) CONTRARIAN THESIS — What important truth about this market do few people agree with you on? What conventional wisdom is wrong? 2) MONOPOLY THEORY — Can this achieve monopoly in a small market first? What is the small market to dominate (start niche, expand)? 3) LAST MOVER ADVANTAGE — proprietary technology (10x better?), network effects, economies of scale, branding — score each 1-5. 4) SECRETS — What secret about the world or human nature does this business exploit? (Natural secret or human secret?) 5) DEFINITE OPTIMISM — Specific plan to create the future vs indefinite hope? 6) DISTRIBUTION — How will you sell this? (viral, sales, marketing, complex sales) 7) DURABILITY — Will this be valuable in 10 years? Why? Provide honest, critical assessment with a final 1-10 Zero-to-One score.`, 3000);
+      if (raw?.length > 300) { files['ZERO-TO-ONE-ASSESSMENT.md'] = `# Zero-to-One Assessment — ${inf.name}\n\n${raw}`; setP('zero_to_one', 'ok', 'Done'); }
+      else { setP('zero_to_one', 'sk', 'Skipped'); }
+    } catch(e) { setP('zero_to_one', 'sk', e.message); }
+  })()
+]);
+
+// ── END: All 78 business depth documents implemented ────────────
+
+    setP("depth-docs", "ok", `${depthDocsGenerated} business depth documents generated`);
+
+
     // ── Apply white-label if configured ─────────────────────────────────
     if (typeof isWhiteLabel === 'function' && isWhiteLabel()) {
       // Strip Dynasty branding from generated files
@@ -8637,7 +10370,7 @@ function showDone(inf,repo,fc,mtasks){
   const beFiles=['backend/main.py','backend/requirements.txt','backend/Dockerfile','docker-compose.yml'];
   const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
   const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];
-  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html'].filter(f=>window._buildFiles?.[f]);
+  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html','PMF-MEASUREMENT.md','UNSCALABLE-PLAYBOOK.md','docs/OPERATING-AGREEMENT-TEMPLATE.md','docs/IP-ASSIGNMENT.md','ENTITY-SELECTION.md','RUNWAY-CALCULATOR.md','CUSTOMER-SUCCESS.md','HIRING-PLAN.md','FOUNDER-AGREEMENT.md','FUNDRAISING-STRATEGY.md','ORG-DESIGN.md','OPERATIONS-PLAYBOOK.md','PIVOT-FRAMEWORK.md','COHORT-ANALYSIS.md','RETENTION-PLAYBOOK.md','CAP-TABLE-MODEL.md','TERM-SHEET-TEMPLATES.md','CRISIS-PLAYBOOK.md','EXPERIMENT-FRAMEWORK.md','GROWTH-EXPERIMENTS.md','CUSTOMER-DEVELOPMENT.md','TAX-STRATEGY.md','PRICING-STRATEGY.md','docs/NDA-TEMPLATE.md','docs/CONTRACTOR-AGREEMENT.md','docs/OFFER-LETTER-TEMPLATE.md','docs/GDPR-IMPLEMENTATION.md','CHANNEL-PLAYBOOKS.md','REFERRAL-PROGRAM.md','LAUNCH-CHECKLIST.md','CHURN-REDUCTION.md','CULTURE.md','EQUITY-GUIDE.md','PERFORMANCE-FRAMEWORK.md','REMOTE-WORK-POLICY.md','ANALYTICS-INSTRUMENTATION.md','ACCESSIBILITY-PLAN.md','VALUATION-MODEL.md','SCENARIO-PLANNING.md','PARTNERSHIP-STRATEGY.md','NEGOTIATION-GUIDE.md','GOVERNANCE.md','INVESTOR-UPDATE-TEMPLATE.md','BOARD-DECK-TEMPLATE.md','WEEKLY-METRICS.md','PITCH-SCRIPT.md','NETWORK-EFFECTS.md','MARKETPLACE-STRATEGY.md','FINANCIAL-CONTROLS.md','DILUTION-MODEL.md','THREE-STATEMENT-MODEL.md','COMMUNITY-STRATEGY.md','CONTENT-MARKETING-PLAN.md','JTBD-INTERVIEW-GUIDE.md','PRODUCT-STRATEGY.md','AB-TESTING-FRAMEWORK.md','USER-RESEARCH-PLAN.md','TECH-DEBT-FRAMEWORK.md','I18N-STRATEGY.md','docs/BOARD-RESOLUTIONS.md','docs/DPA-TEMPLATE.md','ONBOARDING-CHECKLIST.md','COMPENSATION-BENCHMARKS.md','SUPPLY-CHAIN.md','REVENUE-RECOGNITION.md','CUSTOMER-JOURNEY-MAP.md','ZERO-TO-ONE-ASSESSMENT.md'].filter(f=>window._buildFiles?.[f]);
   const buildDuration = ((Date.now() - BUILD_START_TIME) / 1000).toFixed(0);
   const compactionsUsed = BUILD_COMPACTIONS.length;
   const intelligenceNote = [
