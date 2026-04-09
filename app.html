@@ -8121,13 +8121,20 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       updateEduCard('pf');
     addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
       updateGlobalProgress(8, 12, 'Phase 8 of 14 \u00b7 Pushing Files');
+      let pushFails = 0;
       for(let i=0;i<fl.length;i++){
         const[p,c]=fl[i];
         if(!c||c.includes('[Generation incomplete]'))continue;
-        await pushF(`${ORG}/${inf.repo}`, p, c, `feat: dynasty scaffold — ${p}`);
+        try {
+          await pushF(`${ORG}/${inf.repo}`, p, c, `feat: dynasty scaffold — ${p}`);
+        } catch(pushErr) {
+          pushFails++;
+          console.warn(`Push failed for ${p}: ${pushErr.message}`);
+          // Continue pushing remaining files — don't kill the entire build
+        }
         setP('pf','run',`${i+1}/${fl.length} — ${p}`);
       }
-      setP('pf','ok',`${fl.length} files live`);
+      setP('pf', pushFails > 0 ? 'sk' : 'ok', pushFails > 0 ? `${fl.length - pushFails} files pushed · ${pushFails} failed` : `${fl.length} files live`);
 
       // ── Push shareable report HTML to repo ────────────────────────────
       try {
@@ -8337,9 +8344,8 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       // ── CHECK 1: GitHub repo has files ──────────────────────────────────
       if (!verifyResults.github) {
         try {
-          const ghCheck = await fetch(`https://api.github.com/repos/${ORG}/${inf.repo}/contents/`, {
-            headers: { 'Accept': 'application/vnd.github.v3+json' }
-          });
+          // Use gh() proxy for private repos (direct GitHub API returns 404 without auth)
+          const ghCheck = await gh(`/repos/${ORG}/${inf.repo}/contents/`);
           if (ghCheck.ok) {
             const contents = await ghCheck.json();
             const fileCount = Array.isArray(contents) ? contents.length : 0;
