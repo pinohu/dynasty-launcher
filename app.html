@@ -691,41 +691,58 @@ html,body{overflow-x:hidden}
         <div id="im-image-status" class="im-status"></div>
       </div>
 
-      <!-- Camera Capture Panel — take a photo of an ad, storefront, sketch, business card -->
+      <!-- Camera Capture Panel — live camera viewfinder with capture button -->
       <div class="im-panel" id="im-panel-camera">
         <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px">Take a photo of an ad, storefront, business card, or napkin sketch</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <label class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px">
-            <input type="file" accept="image/*" capture="environment" style="display:none" onchange="handleImageUpload(this.files[0])" />
+        <!-- Live camera viewfinder -->
+        <div id="cam-container" style="display:none;margin-bottom:8px">
+          <video id="cam-preview" style="width:100%;max-height:280px;border-radius:8px;background:#000" autoplay muted playsinline></video>
+          <canvas id="cam-canvas" style="display:none"></canvas>
+          <div style="display:flex;gap:8px;margin-top:6px;justify-content:center">
+            <button onclick="capturePhoto()" style="padding:10px 28px;border-radius:50px;border:none;font-weight:600;cursor:pointer;font-size:14px;background:var(--gold);color:var(--ink)">📸 Capture</button>
+            <button id="cam-flip-btn" onclick="flipCamera()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--bdr);background:transparent;color:var(--sec);cursor:pointer;font-size:13px">🔄 Flip</button>
+            <button onclick="stopCamera()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--bdr);background:transparent;color:var(--sec);cursor:pointer;font-size:13px">✕ Close</button>
+          </div>
+        </div>
+        <div id="cam-buttons" style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px" onclick="openCamera('environment')">
             <div style="font-size:24px;margin-bottom:4px">📷</div>
-            <div class="im-upload-label"><strong>Back camera</strong><br>Ads, storefronts, flyers</div>
-          </label>
+            <div class="im-upload-label"><strong>Open camera</strong><br>Ads, storefronts, flyers, sketches</div>
+          </div>
           <label class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px">
-            <input type="file" accept="image/*" capture="user" style="display:none" onchange="handleImageUpload(this.files[0])" />
-            <div style="font-size:24px;margin-bottom:4px">🤳</div>
-            <div class="im-upload-label"><strong>Front camera</strong><br>Whiteboard, sketch</div>
+            <input type="file" accept="image/*" style="display:none" onchange="handleImageUpload(this.files[0])" />
+            <div style="font-size:24px;margin-bottom:4px">📁</div>
+            <div class="im-upload-label"><strong>Upload photo</strong><br>From gallery or files</div>
           </label>
         </div>
-        <div style="font-size:10px;color:var(--dim);margin-top:6px">The AI will analyze the image and extract a business description from what it sees.</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:6px">The AI will analyze the photo and extract a business description from what it sees.</div>
         <div id="im-camera-status" class="im-status"></div>
       </div>
 
-      <!-- Video Input Panel — record a walkthrough or upload a pitch video -->
+      <!-- Video Input Panel — live camera recording + upload -->
       <div class="im-panel" id="im-panel-video">
         <div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:6px">Record or upload a video describing your business idea</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <label class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px">
-            <input type="file" accept="video/*" capture="environment" style="display:none" onchange="handleVideoUpload(this.files[0])" />
+        <!-- Live camera preview (hidden until recording) -->
+        <div id="vid-rec-container" style="display:none;margin-bottom:8px">
+          <video id="vid-preview" style="width:100%;max-height:240px;border-radius:8px;background:#000" autoplay muted playsinline></video>
+          <div style="display:flex;gap:8px;margin-top:6px;justify-content:center">
+            <button id="vid-rec-btn" onclick="toggleVideoRecording()" style="padding:8px 20px;border-radius:8px;border:none;font-weight:600;cursor:pointer;font-size:13px;background:#E53E3B;color:#fff">⏺ Start Recording</button>
+            <button onclick="stopVideoPreview()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--bdr);background:transparent;color:var(--sec);cursor:pointer;font-size:13px">Cancel</button>
+          </div>
+          <div style="font-size:10px;color:var(--dim);margin-top:4px;text-align:center" id="vid-rec-time"></div>
+        </div>
+        <div id="vid-buttons" style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px" onclick="startVideoPreview()">
             <div style="font-size:24px;margin-bottom:4px">🎬</div>
             <div class="im-upload-label"><strong>Record video</strong><br>Walk through your shop, show your product</div>
-          </label>
+          </div>
           <label class="im-upload-zone" style="flex:1;min-width:140px;cursor:pointer;padding:16px">
             <input type="file" accept="video/mp4,video/webm,video/quicktime" style="display:none" onchange="handleVideoUpload(this.files[0])" />
             <div style="font-size:24px;margin-bottom:4px">📁</div>
             <div class="im-upload-label"><strong>Upload video</strong><br>MP4, WebM, MOV (max 50MB)</div>
           </label>
         </div>
-        <div style="font-size:10px;color:var(--dim);margin-top:6px">The AI will transcribe the video and extract your business description from what you said and showed.</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:6px">The AI will analyze your video and extract a business description from what it sees.</div>
         <div id="im-video-status" class="im-status"></div>
       </div>
 
@@ -3787,7 +3804,114 @@ async function handleImageUpload(file) {
   }
 }
 
-// ── 3b. Video Upload (extract audio → transcribe → business description) ────
+// ── 3a. Live Camera Capture via MediaStream API ────────────────────────────
+let _camStream = null, _camFacing = 'environment';
+
+async function openCamera(facing) {
+  _camFacing = facing || 'environment';
+  const container = document.getElementById('cam-container');
+  const buttons = document.getElementById('cam-buttons');
+  const status = document.getElementById('im-camera-status');
+  try {
+    if (_camStream) _camStream.getTracks().forEach(t => t.stop());
+    _camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: _camFacing, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+    document.getElementById('cam-preview').srcObject = _camStream;
+    container.style.display = 'block';
+    buttons.style.display = 'none';
+  } catch (e) {
+    if (status) status.textContent = 'Camera access denied. Use the Upload option instead.';
+  }
+}
+
+function flipCamera() {
+  _camFacing = _camFacing === 'environment' ? 'user' : 'environment';
+  openCamera(_camFacing);
+}
+
+function stopCamera() {
+  if (_camStream) { _camStream.getTracks().forEach(t => t.stop()); _camStream = null; }
+  document.getElementById('cam-preview').srcObject = null;
+  document.getElementById('cam-container').style.display = 'none';
+  document.getElementById('cam-buttons').style.display = 'flex';
+}
+
+async function capturePhoto() {
+  const video = document.getElementById('cam-preview');
+  const canvas = document.getElementById('cam-canvas');
+  canvas.width = video.videoWidth || 1920;
+  canvas.height = video.videoHeight || 1080;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  stopCamera();
+
+  // Convert to File and process through handleImageUpload
+  const resp = await fetch(dataUrl);
+  const blob = await resp.blob();
+  const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+  handleImageUpload(file);
+}
+
+// ── 3b. Live Video Recording via MediaStream API ───────────────────────────
+let _vidStream = null, _vidRecorder = null, _vidChunks = [], _vidRecording = false, _vidTimer = null, _vidSeconds = 0;
+
+async function startVideoPreview() {
+  const container = document.getElementById('vid-rec-container');
+  const buttons = document.getElementById('vid-buttons');
+  const status = document.getElementById('im-video-status');
+  try {
+    _vidStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true });
+    document.getElementById('vid-preview').srcObject = _vidStream;
+    container.style.display = 'block';
+    buttons.style.display = 'none';
+    document.getElementById('vid-rec-btn').textContent = '⏺ Start Recording';
+    document.getElementById('vid-rec-btn').style.background = '#E53E3B';
+    document.getElementById('vid-rec-time').textContent = 'Camera ready — click Start Recording';
+  } catch (e) {
+    if (status) status.textContent = 'Camera access denied. Try the Upload option instead.';
+  }
+}
+
+function stopVideoPreview() {
+  if (_vidStream) { _vidStream.getTracks().forEach(t => t.stop()); _vidStream = null; }
+  if (_vidTimer) { clearInterval(_vidTimer); _vidTimer = null; }
+  document.getElementById('vid-preview').srcObject = null;
+  document.getElementById('vid-rec-container').style.display = 'none';
+  document.getElementById('vid-buttons').style.display = 'flex';
+  _vidRecording = false; _vidSeconds = 0;
+}
+
+function toggleVideoRecording() {
+  if (!_vidRecording) {
+    // Start recording
+    _vidChunks = [];
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+    _vidRecorder = new MediaRecorder(_vidStream, { mimeType });
+    _vidRecorder.ondataavailable = (e) => { if (e.data.size > 0) _vidChunks.push(e.data); };
+    _vidRecorder.onstop = () => {
+      const blob = new Blob(_vidChunks, { type: 'video/webm' });
+      const file = new File([blob], 'recording.webm', { type: 'video/webm' });
+      stopVideoPreview();
+      handleVideoUpload(file);
+    };
+    _vidRecorder.start(1000);
+    _vidRecording = true;
+    _vidSeconds = 0;
+    document.getElementById('vid-rec-btn').textContent = '⏹ Stop Recording';
+    document.getElementById('vid-rec-btn').style.background = '#333';
+    _vidTimer = setInterval(() => {
+      _vidSeconds++;
+      document.getElementById('vid-rec-time').textContent = `Recording: ${Math.floor(_vidSeconds/60)}:${(_vidSeconds%60).toString().padStart(2,'0')} — max 60s`;
+      if (_vidSeconds >= 60) { _vidRecorder.stop(); clearInterval(_vidTimer); }
+    }, 1000);
+  } else {
+    // Stop recording
+    if (_vidRecorder && _vidRecorder.state === 'recording') _vidRecorder.stop();
+    if (_vidTimer) { clearInterval(_vidTimer); _vidTimer = null; }
+    _vidRecording = false;
+  }
+}
+
+// ── 3c. Video Upload (extract frame → AI analysis) ─────────────────────────
 async function handleVideoUpload(file) {
   if (!file) return;
   const status = document.getElementById('im-video-status') || document.getElementById('im-image-status');
