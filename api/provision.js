@@ -440,7 +440,8 @@ async function mod_email(config, project, liveUrl) {
 
     results.ok = true;
     results.cost_usd = 0; // Acumbamail is owned license
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Acumbamail dashboard → create list and templates manually'; }
+    } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Acumbamail dashboard → create list and templates manually'; }
+  }
   return results;
 }
 
