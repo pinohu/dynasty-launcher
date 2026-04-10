@@ -1153,7 +1153,7 @@ html,body{overflow-x:hidden}
           localStorage.setItem('dynasty_paid_session', 'admin');
           localStorage.setItem('dynasty_paid_at', new Date().toISOString());
         } catch(e) {}
-        window.history.replaceState({}, '', window.location.pathname);
+        window.history.replaceState({}, '', window.location.pathname + '?returning=1');
         window.location.reload();
       } else {
         // Invalid key — fall through to gate
