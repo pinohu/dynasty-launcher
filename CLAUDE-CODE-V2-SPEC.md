@@ -11,7 +11,7 @@
 - **Git config**: Always use `git config user.email "polycarpohu@gmail.com"` and `user.name "pinohu"`
 - **Stack**: Single `index.html` + Vercel Edge Functions in `/api/`
 - **Design language**: Dark theme, dynasty-gold #C9A84C accent, 8px spacing, WCAG AA
-- **Access gate**: URL param `?k=DYNASTY2026` or stored session token
+- **Access gate**: URL param `?k=<ADMIN_KEY>` or stored session token
 
 ## CURRENT STATE (v1)
 
