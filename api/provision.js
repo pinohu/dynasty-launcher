@@ -718,13 +718,13 @@ async function mod_seo(config, project, liveUrl) {
     }
     results.details.keywords = keywords.slice(0, 20);
 
-    // 2. Generate 5 SEO blog posts via AI
-    const postsRaw = await aiGenSeo(`Generate 5 SEO-optimized blog posts for "${project.name}" (${project.type || 'business'}). Target keywords: ${keywords.slice(0, 5).join(', ')}.
+    // 2. Generate 3 SEO blog posts via AI (shorter for speed — owner can generate more later)
+    const postsRaw = await aiGenSeo(`Generate 3 SEO blog posts for "${project.name}" (${project.type || 'business'}). Target keywords: ${keywords.slice(0, 3).join(', ')}.
 
 Return ONLY valid JSON array:
-[{"slug":"kebab-case","title":"SEO Title","description":"Meta desc 155 chars","content":"<h2>Heading</h2><p>800+ words of real content...</p>","tags":["tag1","tag2"]}]
+[{"slug":"kebab-case","title":"SEO Title","description":"Meta desc 155 chars","content":"<h2>Heading</h2><p>400+ words of real content...</p>","tags":["tag1","tag2"]}]
 
-Each post: 800+ words HTML content, unique keywords, real actionable content.`, 8000);
+Each post: 400+ words HTML content, unique keywords, actionable content. Keep it concise.`, 4000);
 
     let posts = [];
     try { posts = JSON.parse(postsRaw.match(/\[[\s\S]*\]/)?.[0] || '[]'); } catch {}
