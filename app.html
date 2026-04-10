@@ -829,7 +829,7 @@ html,body{overflow-x:hidden}
       <div class="fw-card selected locked" data-fw="blue-ocean">
         <div class="fw-check">✓</div>
         <h4>🌊 Blue Ocean Hungry Market</h4>
-        <p>Dynasty original. Market hunger score, blue ocean index, competitive void analysis, demand signal validation.</p>
+        <p>Your Deputy original. Market hunger score, blue ocean index, competitive void analysis, demand signal validation.</p>
         <div class="fw-tag">Always applied</div>
       </div>
 
@@ -2083,7 +2083,7 @@ document.getElementById('settings-btn').onclick=()=>{
 
       <div style="margin-bottom:16px;display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="set-whitelabel" ${whiteLabel ? 'checked' : ''} style="accent-color:var(--gold)" />
-        <label for="set-whitelabel" style="font-size:11px;color:var(--sec)">White-label mode <span style="color:var(--dim)">(removes Dynasty branding)</span></label>
+        <label for="set-whitelabel" style="font-size:11px;color:var(--sec)">White-label mode <span style="color:var(--dim)">(removes Your Deputy branding)</span></label>
       </div>
 
       <div style="border-top:1px solid var(--bdr);padding-top:12px;margin-bottom:12px">
@@ -2182,7 +2182,7 @@ function autoSelectModules() {
 }
 function getV3Project(inf) {
   return {
-    name: inf.name || 'Dynasty Project', slug: inf.repo || 'dynasty-project',
+    name: inf.name || 'Your Deputy Project', slug: inf.repo || 'dynasty-project',
     description: inf.reasoning || inf.type_label || '', type: inf.type_id || '', domain: localStorage.getItem('dynasty_custom_domain') || inf.domain || `${inf.repo}.vercel.app`,
     accent: inf.accent || '#0066FF', location: localStorage.getItem('dynasty_location') || '',
     price_pro_cents: (parseInt(localStorage.getItem('dynasty_price_pro') || '49') || 49) * 100,
@@ -2461,7 +2461,7 @@ function applySmartMatching(typeId) {
 
 // ── All framework prompt definitions (including new quantitative ones) ────────
 const FW_PROMPTS = {
-  'blue-ocean': 'Blue Ocean Hungry Market Framework (Dynasty original): Score market hunger 1-10, blue ocean index 1-10, competitive void analysis, demand signal validation',
+  'blue-ocean': 'Blue Ocean Hungry Market Framework (Your Deputy original): Score market hunger 1-10, blue ocean index 1-10, competitive void analysis, demand signal validation',
   'porters': "Porter's 5 Forces: Score each force 1-5 (supplier power, buyer power, competitive rivalry, threat of substitution, threat of new entry). Compute industry attractiveness composite.",
   'seven-powers': '7 Powers (Hamilton Helmer): Evaluate which of the 7 powers this business can realistically achieve. For each, state achievable/unlikely + timeline.',
   'jtbd': 'Jobs-to-Be-Done: Identify core functional, social, emotional jobs. Analyze over-served vs under-served. Identify switching triggers.',
@@ -2632,7 +2632,7 @@ function renderScorecard(sc) {
   const vcls = sc.composite >= 8 ? 'strong' : sc.composite >= 6 ? 'viable' : 'weak';
 
   document.getElementById('scorecard').innerHTML = `
-    <div class="sc-title">Dynasty Viability Scorecard</div>
+    <div class="sc-title">Your Deputy Viability Scorecard</div>
     ${Object.entries(s).map(([k, v]) => `
       <div class="sc-row">
         <span class="sc-label">${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
@@ -3849,7 +3849,7 @@ async function proceedToBuild(desc) {
   const okCount = PRGS.filter(p => p.st === 'ok').length;
   const errCount = errors.length;
   await sendTelegramNotification(
-    `🏗 Dynasty Build Complete\n\n` +
+    `🏗 Your Deputy Build Complete\n\n` +
     `📦 ${INFERRED.name}\n` +
     `✅ ${okCount} phases completed${errCount ? ` · ❌ ${errCount} errors` : ''}\n` +
     `💰 $${V2_BUILD_COST.toFixed(4)} · ⏱ ${buildDur}s\n` +
@@ -4453,7 +4453,7 @@ async function inferConfig(desc){
   await loadInventory();
   showLoadingOverlay('Analyzing your idea...', 'AI is inferring project type, tech stack, business model, and pricing');
   const toolContext=TOOL_INVENTORY?`
-Available Dynasty tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TOOL_INVENTORY.payments||[]).join(',')}) Comms(${(TOOL_INVENTORY.comms||[]).join(',')}) Infra(${(TOOL_INVENTORY.infrastructure||[]).join(',')}) SuiteDash(${TOOL_INVENTORY.suitedash_licenses} licenses) BD(${TOOL_INVENTORY.brilliant_licenses} licenses)`:'';
+Available Your Deputy tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TOOL_INVENTORY.payments||[]).join(',')}) Comms(${(TOOL_INVENTORY.comms||[]).join(',')}) Infra(${(TOOL_INVENTORY.infrastructure||[]).join(',')}) SuiteDash(${TOOL_INVENTORY.suitedash_licenses} licenses) BD(${TOOL_INVENTORY.brilliant_licenses} licenses)`:'';
 
   try{
     const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -5337,7 +5337,7 @@ ${cx(desc,inf)}
 > [One compelling line — benefit-driven, specific]
 
 [![Deploy](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)](https://${inf.repo}.vercel.app)
-[![Built with Dynasty](https://img.shields.io/badge/Built%20with-Dynasty%20Launcher-C9A84C)](https://yourdeputy.com)
+[![Built with Your Deputy](https://img.shields.io/badge/Built%20with-Your%20Deputy-C9A84C)](https://yourdeputy.com)
 
 ---
 
@@ -6299,7 +6299,7 @@ User Input → Intake Agent → Idea Generator → Evaluator → [if viable] →
 | **Trigger** | [Exact condition that activates this agent] |
 | **Input** | [Specific data structures or files consumed] |
 | **Output** | [Specific deliverables produced] |
-| **Tool** | [Dynasty tool: CallScaler/Insighto/SMS-iT/SEO Machine/Stripe/n8n/Flint/Claude] |
+| **Tool** | [Your Deputy tool: CallScaler/Insighto/SMS-iT/SEO Machine/Stripe/n8n/Flint/Claude] |
 | **Success Metric** | [Quantifiable — "converts >X% of leads" or "generates files in <Y seconds"] |
 | **Fallback** | [What happens when the primary tool fails] |
 | **Est. Cost/Run** | [Estimated API/tool cost per execution] |
@@ -6793,9 +6793,9 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         // SaaS boilerplate templates use i18n routing: /[locale]/(marketing)/page.tsx
         // If we only write to src/app/page.tsx, the middleware redirects to the
         // locale path and serves the template's default content instead.
-        // Writing to BOTH paths ensures Dynasty content appears regardless of routing.
+        // Writing to BOTH paths ensures Your Deputy content appears regardless of routing.
         if (fe.page_tsx) {
-          // Strip i18n-incompatible imports (getTranslations etc.) — Dynasty pages are self-contained
+          // Strip i18n-incompatible imports (getTranslations etc.) — Your Deputy pages are self-contained
           const cleanPage = fe.page_tsx;
           feFiles['src/app/[locale]/(marketing)/page.tsx'] = cleanPage;
         }
@@ -7345,7 +7345,7 @@ git config user.email "polycarpohu@gmail.com"
 git config user.name "pinohu"
 \`\`\`
 
-## Dynasty Bridge
+## Your Deputy Bridge
 Inbox: POST https://claude-inbox.audreysplace.place/message | Auth: Bearer ${FT}
 
 ## Backend
@@ -7357,7 +7357,7 @@ Inbox: POST https://claude-inbox.audreysplace.place/message | Auth: Bearer ${FT}
 - Run tests before pushing
 
 ## Skills (Pi Agent)
-This project includes a \`.pi/\` directory with Dynasty-specific skills.
+This project includes a \`.pi/\` directory with Your Deputy-specific skills.
 Pi will auto-load project instructions from this AGENTS.md on startup.
 `,
       // Pi Agent project config — makes Pi read the same context as Claude Code
@@ -7387,7 +7387,7 @@ Then read DESIGN.md for visual design rules.
 - Docker: \`docker-compose up -d\` for backend
 - Vercel: \`vercel --prod\` for frontend deploys
 
-## Dynasty Conventions
+## Your Deputy Conventions
 - All colors from DESIGN.md (never hardcode)
 - TypeScript strict mode
 - Server components by default
@@ -10765,7 +10765,7 @@ function generateBuildReport() {
     </table>`;
 
   const reportHtml = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>${inf.name} — Dynasty Strategic Report</title>
+<html><head><meta charset="UTF-8"><title>${inf.name} — Your Deputy Strategic Report</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}

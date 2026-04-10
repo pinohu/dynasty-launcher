@@ -16,7 +16,7 @@ User describes a business idea in one prompt → Dynasty provisions a **complete
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    DYNASTY LAUNCHER V3                         │
+│                         YOUR DEPUTY V3                         │
 ├──────────────────────────────────────────────────────────────┤
 │                                                               │
 │  app.html (Frontend)                                          │

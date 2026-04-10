@@ -206,9 +206,9 @@ async function mod_hosting(config, project, liveUrl) {
 }
 
 // ── mod_billing: Stripe Connect — Managed Billing for Client Projects ───────
-// Creates a Stripe Connected Account for each client project under Dynasty's
+// Creates a Stripe Connected Account for each client project under Your Deputy's
 // platform account. Products, prices, and webhooks are created on the connected
-// account. Client gets their own Stripe dashboard. Dynasty can take a platform fee.
+// account. Client gets their own Stripe dashboard. Your Deputy can take a platform fee.
 async function mod_billing(config, project, liveUrl) {
   const results = { ok: false, service: 'billing', details: {} };
   const SK = config.payments?.stripe_live || process.env.STRIPE_SECRET_KEY;
@@ -300,7 +300,7 @@ async function mod_billing(config, project, liveUrl) {
           ...(results.details.prices?.pro ? [{ key: 'STRIPE_PRICE_PRO_MONTHLY', value: results.details.prices.pro, type: 'plain' }] : []),
           ...(results.details.prices?.enterprise ? [{ key: 'STRIPE_PRICE_ENTERPRISE_MONTHLY', value: results.details.prices.enterprise, type: 'plain' }] : []),
           ...(results.details._webhook_secret ? [{ key: 'STRIPE_WEBHOOK_SECRET', value: results.details._webhook_secret, type: 'encrypted' }] : []),
-          // The connected account's keys are managed through Dynasty's platform
+          // The connected account's keys are managed through Your Deputy's platform
           // Client accesses their dashboard via the onboarding link
         ].map(v => ({ ...v, target: ['production', 'preview', 'development'] }));
         await fetch(`https://api.vercel.com/v10/projects/${project.vercel_project_id}/env?teamId=team_fuTLGjBMk3NAD32Bm5hA7wkr`, {
@@ -315,8 +315,8 @@ async function mod_billing(config, project, liveUrl) {
     if (GH_TOKEN && project.slug) {
       try {
         await pushFile(GH_TOKEN, 'pinohu', project.slug, '.env.example',
-          `# ${project.name} — Environment Variables\n# Stripe is managed by Dynasty (Stripe Connect)\n# Complete your Stripe onboarding: ${results.details.onboarding_url || 'Contact Dynasty support'}\n\nSTRIPE_ACCOUNT_ID=${acct.id}\nSTRIPE_PRODUCT_ID=${prod?.id || ''}\nSTRIPE_PRICE_PRO_MONTHLY=${results.details.prices?.pro || ''}\nSTRIPE_PRICE_ENTERPRISE_MONTHLY=${results.details.prices?.enterprise || ''}\n\n# Clerk Authentication\nNEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\nCLERK_SECRET_KEY=\nNEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in\nNEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up\n\n# Database\nDATABASE_URL=\nNEXT_PUBLIC_APP_URL=${liveUrl || ''}\nBILLING_PLAN_ENV=test\n`,
-          'docs: environment variables (Stripe managed by Dynasty)');
+          `# ${project.name} — Environment Variables\n# Stripe is managed by Your Deputy (Stripe Connect)\n# Complete your Stripe onboarding: ${results.details.onboarding_url || 'Contact Your Deputy support'}\n\nSTRIPE_ACCOUNT_ID=${acct.id}\nSTRIPE_PRODUCT_ID=${prod?.id || ''}\nSTRIPE_PRICE_PRO_MONTHLY=${results.details.prices?.pro || ''}\nSTRIPE_PRICE_ENTERPRISE_MONTHLY=${results.details.prices?.enterprise || ''}\n\n# Clerk Authentication\nNEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\nCLERK_SECRET_KEY=\nNEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in\nNEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up\n\n# Database\nDATABASE_URL=\nNEXT_PUBLIC_APP_URL=${liveUrl || ''}\nBILLING_PLAN_ENV=test\n`,
+          'docs: environment variables (Stripe managed by Your Deputy)');
       } catch {}
     }
 
@@ -585,7 +585,7 @@ async function mod_sms(config, project) {
 }
 
 // ── mod_chatbot: Self-hosted chatbot widget with pre-generated FAQ ──────────
-// Generates FAQ content at build time using Dynasty's AI, then creates a
+// Generates FAQ content at build time using Your Deputy's AI, then creates a
 // static chatbot widget that answers from the pre-generated FAQ — no API
 // key needed at runtime on the client's site.
 async function mod_chatbot(config, project, liveUrl) {
@@ -597,7 +597,7 @@ async function mod_chatbot(config, project, liveUrl) {
   try {
     const businessContext = `Business: ${project.name}\nType: ${project.type || 'business'}\nDescription: ${project.description || ''}\nWebsite: ${liveUrl || ''}\nLocation: ${project.location || ''}\nServices: ${project.services || 'Professional services'}`;
 
-    // Generate comprehensive FAQ at BUILD TIME using Dynasty's AI key (one-time cost)
+    // Generate comprehensive FAQ at BUILD TIME using Your Deputy's AI key (one-time cost)
     let faqItems = [];
     try {
       const faqResp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1559,7 +1559,7 @@ function generateOperationsMd(project, moduleResults) {
   lines.push(`\n> **Get started:** Visit [notroom.com](https://notroom.com) to schedule a notarization session.\n`);
 
   lines.push(`### 3. Business Process Automation — Neat Circle`);
-  lines.push(`**[Neat Circle](https://neatcircle.com)** handles ongoing automation beyond what Dynasty provisioned:\n`);
+  lines.push(`**[Neat Circle](https://neatcircle.com)** handles ongoing automation beyond what Your Deputy provisioned:\n`);
   lines.push(`- [ ] **Custom workflow automation** — connect your tools beyond the 7 n8n workflows provided`);
   lines.push(`- [ ] **CRM pipeline optimization** — configure SuiteDash deal stages, templates, and client portal`);
   lines.push(`- [ ] **Marketing automation** — advanced email sequences, A/B testing, segmentation`);
@@ -1866,7 +1866,7 @@ async function runModules(config, project, liveUrl, enabledModules) {
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chat_id: chatId, parse_mode: 'Markdown',
-            text: `⚠️ *Dynasty Build Alert*\nProject: ${project.name}\n${failedMods.length} module(s) failed:\n${failedMods.join('\n')}` })
+            text: `⚠️ *Your Deputy Build Alert*\nProject: ${project.name}\n${failedMods.length} module(s) failed:\n${failedMods.join('\n')}` })
         });
       }
     } catch {}
@@ -1923,7 +1923,7 @@ export default async function handler(req, res) {
       automation: Object.keys(config.automation||{}),
       modules_available: {
         hosting: !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
-        billing: true, // Generates setup guide + .env template (no Dynasty Stripe key needed)
+        billing: true, // Generates setup guide + .env template (no Your Deputy Stripe key needed)
         email: !!(config.comms?.acumbamail),
         phone: !!(config.comms?.callscaler || config.comms?.insighto || config.comms?.trafft_client_id),
         sms: !!(config.comms?.smsit),
@@ -2587,7 +2587,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
   // ── MAIN PROVISION (non-authority — Flint-free) ───────────────────────────
   if (action==='provision') {
     const {inf={},svcs=[]}=req.body||{};
-    const slug=inf.repo||'dynasty-project', name=inf.name||'Dynasty Project';
+    const slug=inf.repo||'dynasty-project', name=inf.name||'Your Deputy Project';
     const typeId=inf.type_id||'', domain=inf.domain||`${slug}.vercel.app`;
     const results={};
 
@@ -2608,7 +2608,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         const cents=inf.price_cents||(inf.price?Math.round(parseFloat(inf.price.replace(/[^0-9.]/g,''))*100):9700);
         const prod=await fetch('https://api.stripe.com/v1/products',{method:'POST',
           headers:{'Authorization':`Basic ${auth}`,'Content-Type':'application/x-www-form-urlencoded'},
-          body:`name=${encodeURIComponent(name)}&description=${encodeURIComponent(`Dynasty: ${slug}`)}`}).then(r=>r.json());
+          body:`name=${encodeURIComponent(name)}&description=${encodeURIComponent(`Your Deputy: ${slug}`)}`}).then(r=>r.json());
         if(prod.id){
           const price=await fetch('https://api.stripe.com/v1/prices',{method:'POST',
             headers:{'Authorization':`Basic ${auth}`,'Content-Type':'application/x-www-form-urlencoded'},
@@ -2648,8 +2648,8 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           });
         }
 
-        // ── Set env vars for fullstack build — use Dynasty's managed Clerk instance ──
-        // Dynasty provides auth via its Clerk account. Each client project is an Organization.
+        // ── Set env vars for fullstack build — use Your Deputy's managed Clerk instance ──
+        // Your Deputy provides auth via its Clerk account. Each client project is an Organization.
         if(vercelProjectId && isFullstack){
           const clerkPk = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
           const clerkSk = process.env.CLERK_SECRET_KEY || '';
@@ -2669,7 +2669,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           }
 
           const envVars = [
-            // Clerk — Dynasty's managed instance (real keys that work immediately)
+            // Clerk — Your Deputy's managed instance (real keys that work immediately)
             ...(clerkPk ? [{key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:clerkPk,type:'encrypted'}] : [{key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:'pk_test_placeholder',type:'plain'}]),
             ...(clerkSk ? [{key:'CLERK_SECRET_KEY',value:clerkSk,type:'encrypted'}] : [{key:'CLERK_SECRET_KEY',value:'sk_test_placeholder',type:'encrypted'}]),
             {key:'NEXT_PUBLIC_CLERK_SIGN_IN_URL',value:'/en/sign-in',type:'plain'},
@@ -2805,7 +2805,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         const r=await fetch('https://acumbamail.com/api/1/createList/',{
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({auth_token:config.comms.acumbamail,
-            name:`${name} - Dynasty`,from_email:'hello@dynastyempire.com',from_name:'Dynasty Empire',country:'US'})
+            name:`${name} - Your Deputy`,from_email:'hello@dynastyempire.com',from_name:'Dynasty Empire',country:'US'})
         }).then(r=>r.json());
         results.acumbamail={ok:true, list_id:r.id||r.list_id||r.result, raw:r};
       }catch(e){results.acumbamail={error:e.message};}
@@ -2821,7 +2821,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           headers: { 'Authorization': `Bearer ${PULSETIC_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             url: monitorUrl,
-            name: `${name} — Dynasty`,
+            name: `${name} — Your Deputy`,
             interval: 300, // check every 5 minutes
             type: 'http',
           }),
@@ -2997,7 +2997,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       const tr = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: CHAT_ID, text: message || 'Dynasty build notification', parse_mode: 'Markdown' }),
+        body: JSON.stringify({ chat_id: CHAT_ID, text: message || 'Your Deputy build notification', parse_mode: 'Markdown' }),
       });
       const td = await tr.json();
       return res.json({ ok: td.ok, message_id: td.result?.message_id });
