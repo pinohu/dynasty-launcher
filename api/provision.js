@@ -992,7 +992,13 @@ async function mod_docs(config, project) {
         { file: 'docs/PRIVACY-POLICY.md', name: 'Privacy Policy' },
         { file: 'docs/SERVICE-AGREEMENT.md', name: 'Service Agreement' }
       ];
-      const legalRaw = await aiGenerate(config, `Generate 3 legal documents for "${project.name}" (${project.type || 'business'}) at ${domain}. Contact: ${email}. Jurisdiction: United States.
+      const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+      let legalRaw = '';
+      if (ANTHROPIC_KEY) {
+        const aiResp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 6000, messages: [{ role: 'user', content: `Generate 3 legal documents for "${project.name}" (${project.type || 'business'}) at ${domain}. Contact: ${email}. Jurisdiction: United States.
 
 Return in this exact format:
 ---BEGIN:tos---
@@ -1003,7 +1009,11 @@ Return in this exact format:
 ---END:privacy---
 ---BEGIN:sla---
 [Complete Service Agreement - 1500+ words, covering: scope of services, deliverables, timeline, compensation, confidentiality, IP assignment, warranties, limitation of liability, termination, force majeure]
----END:sla---`, 6000);
+---END:sla---` }] })
+        });
+        const aiData = await aiResp.json();
+        legalRaw = aiData.content?.[0]?.text || '';
+      }
 
       const sections = { tos: '', privacy: '', sla: '' };
       for (const key of Object.keys(sections)) {
