@@ -44,6 +44,9 @@
     "api/admin.js": {
       "maxDuration": 60
     },
+    "api/docgen.js": {
+      "maxDuration": 60
+    },
     "api/checkout.js": {
       "maxDuration": 30
     }

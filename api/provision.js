@@ -1,8 +1,8 @@
 export const maxDuration = 300; // 5 min — AI content generation takes time
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-async function pushFile(ghToken, org, repo, path, content, message) {
-  const b64 = Buffer.from(content).toString('base64');
+async function pushFile(ghToken, org, repo, path, content, message, isBase64 = false) {
+  const b64 = isBase64 ? content : Buffer.from(content).toString('base64');
   const h = { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json',
                'Accept': 'application/vnd.github.v3+json' };
   let sha;
@@ -1788,6 +1788,36 @@ async function runModules(config, project, liveUrl, enabledModules) {
       const failMods = Object.entries(results).filter(([,r]) => r && !r.ok && r.error).map(([k]) => k);
       const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>${project.name} — V3 Build Report</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0A0A0A;color:#EEEDE8;padding:2rem;max-width:700px;margin:0 auto;line-height:1.6}h1{font-size:1.8rem;margin-bottom:.5rem}h2{color:#C9A84C;font-size:1rem;margin:1.5rem 0 .5rem;border-bottom:1px solid #222;padding-bottom:4px}.meta{color:#666;font-size:13px}.card{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:1rem;margin:8px 0}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ok{color:#22C55E}.fail{color:#F87171}</style></head><body><h1>${project.name}</h1><p class="meta">V3 Build Report · ${new Date().toISOString().split('T')[0]} · ${okMods.length}/${Object.keys(results).length} modules</p><h2>Modules Provisioned (${okMods.length})</h2><div class="g">${okMods.map(m => `<div class="card"><strong class="ok">✓ ${m}</strong></div>`).join('')}</div>${failMods.length ? `<h2>Failed (${failMods.length})</h2>${failMods.map(m => `<div class="card"><strong class="fail">✗ ${m}</strong><div style="font-size:12px;color:#888">${results[m].fallback || results[m].error}</div></div>`).join('')}` : ''}<h2>Documents</h2><div class="g"><div class="card"><a href="OPERATIONS.md" style="color:#C9A84C">OPERATIONS.md</a></div><div class="card"><a href="CREDENTIALS.md" style="color:#C9A84C">CREDENTIALS.md</a></div><div class="card"><a href="BUILD-REPORT.json" style="color:#C9A84C">BUILD-REPORT.json</a></div></div><h2>Quick Start</h2><pre style="background:#111;padding:12px;border-radius:6px;font-size:12px;color:#C9A84C">gh repo clone pinohu/${project.slug} && cd ${project.slug} && claude</pre><p style="margin-top:2rem;text-align:center;color:#333;font-size:11px">Built with Your Deputy V3</p></body></html>`;
       await pushFile(GH_TOKEN, 'pinohu', project.slug, 'REPORT.html', reportHtml, 'docs: V3 build report');
+    } catch {}
+
+    // ── Multi-format document generation (.docx + .pdf for key documents) ──
+    try {
+      const { generateDocx, generatePdf } = await import('./docgen.js');
+      const branding = { name: project.name, accent: project.accent || '#C9A84C' };
+      const docsToConvert = ['OPERATIONS.md', 'CREDENTIALS.md'];
+
+      for (const docFile of docsToConvert) {
+        try {
+          // Fetch the markdown content from the repo
+          const mdResp = await fetch(`https://api.github.com/repos/pinohu/${project.slug}/contents/${docFile}`, {
+            headers: { 'Authorization': `token ${GH_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+          });
+          if (!mdResp.ok) continue;
+          const mdData = await mdResp.json();
+          const mdContent = Buffer.from(mdData.content, 'base64').toString('utf8');
+          const title = docFile.replace('.md', '').replace(/-/g, ' ');
+
+          // Generate .docx
+          const docxBuffer = await generateDocx(title, mdContent, branding);
+          const docxBase64 = docxBuffer.toString('base64');
+          await pushFile(GH_TOKEN, 'pinohu', project.slug, docFile.replace('.md', '.docx'), docxBase64, `docs: ${title} (Word format)`, true);
+
+          // Generate .pdf
+          const pdfBuffer = await generatePdf(title, mdContent, branding);
+          const pdfBase64 = pdfBuffer.toString('base64');
+          await pushFile(GH_TOKEN, 'pinohu', project.slug, docFile.replace('.md', '.pdf'), pdfBase64, `docs: ${title} (PDF format)`, true);
+        } catch (docErr) { /* Non-critical — skip if format generation fails */ }
+      }
     } catch {}
   }
 
