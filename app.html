@@ -4565,13 +4565,123 @@ const sl=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 async function gh(path,method='GET',body=null){
   return fetch(`/api/github?path=${encodeURIComponent(path)}`,{method,headers:{'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
 }
+// Retry wrapper with exponential backoff. Used for any GitHub write op that
+// can hit secondary rate limits or transient 5xx. Throws the last error if
+// all retries exhaust.
+async function withRetry(fn, label='op', maxRetries=3, baseDelayMs=1500){
+  let lastErr;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try { return await fn(); }
+    catch (e) {
+      lastErr = e;
+      if (attempt === maxRetries) break;
+      const delay = baseDelayMs * Math.pow(2, attempt);
+      console.warn(`[retry] ${label} failed (attempt ${attempt+1}/${maxRetries+1}): ${e.message}. Waiting ${delay}ms`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  throw lastErr;
+}
+
 async function pushF(repo,path,content,msg){
-  const enc=btoa(unescape(encodeURIComponent(content)));
-  const c=await gh(`/repos/${repo}/contents/${path}`);
-  const pl={message:msg,content:enc};
-  if(c.ok){const x=await c.json();pl.sha=x.sha;}
-  const r=await gh(`/repos/${repo}/contents/${path}`,'PUT',pl);
-  if(!r.ok)throw new Error(`Push failed: ${path}`);
+  return withRetry(async () => {
+    const enc=btoa(unescape(encodeURIComponent(content)));
+    const c=await gh(`/repos/${repo}/contents/${path}`);
+    const pl={message:msg,content:enc};
+    if(c.ok){const x=await c.json();pl.sha=x.sha;}
+    const r=await gh(`/repos/${repo}/contents/${path}`,'PUT',pl);
+    if(!r.ok){
+      const errBody = await r.text().catch(()=> '');
+      throw new Error(`Push failed: ${path} (${r.status}) ${errBody.slice(0,120)}`);
+    }
+  }, `pushF ${path}`, 3, 1500);
+}
+
+// Batch push multiple files in a SINGLE git commit via the git-data API.
+// Massively faster and far less rate-limited than calling pushF per file.
+// On failure the caller should fall back to per-file pushF.
+// Returns { ok: true, commit_sha, file_count } on success, throws on error.
+async function pushFiles(repo, fileMap, message){
+  const entries = Object.entries(fileMap).filter(([p,c]) => typeof c === 'string' && c.length > 0 && !c.includes('[Generation incomplete]'));
+  if (entries.length === 0) return { ok: true, commit_sha: null, file_count: 0, skipped: 'empty' };
+
+  return withRetry(async () => {
+    // 1. Get current HEAD of main
+    const refR = await gh(`/repos/${repo}/git/ref/heads/main`);
+    if (!refR.ok) throw new Error(`pushFiles getRef failed: ${refR.status}`);
+    const ref = await refR.json();
+    const parentSha = ref.object.sha;
+
+    // 2. Get the base tree sha from the parent commit
+    const cmR = await gh(`/repos/${repo}/git/commits/${parentSha}`);
+    if (!cmR.ok) throw new Error(`pushFiles getCommit failed: ${cmR.status}`);
+    const parentCommit = await cmR.json();
+    const baseTreeSha = parentCommit.tree.sha;
+
+    // 3. Build tree with inline blob content (UTF-8 text). GitHub accepts
+    //    `content` directly on tree items, creating the blobs server-side.
+    //    Chunk into multiple tree updates if > 300 files to stay under
+    //    request size limits (each chunk rebases onto the previous).
+    const CHUNK_SIZE = 300;
+    let currentTreeSha = baseTreeSha;
+    let currentParentSha = parentSha;
+    let finalCommitSha = parentSha;
+
+    for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+      const chunk = entries.slice(i, i + CHUNK_SIZE);
+      const treeItems = chunk.map(([path, content]) => ({
+        path, mode: '100644', type: 'blob', content
+      }));
+
+      const tR = await gh(`/repos/${repo}/git/trees`, 'POST', {
+        base_tree: currentTreeSha, tree: treeItems
+      });
+      if (!tR.ok) {
+        const errBody = await tR.text().catch(()=> '');
+        throw new Error(`pushFiles createTree chunk ${i} failed: ${tR.status} ${errBody.slice(0,200)}`);
+      }
+      const newTree = await tR.json();
+
+      const isLastChunk = i + CHUNK_SIZE >= entries.length;
+      const commitMsg = isLastChunk ? message : `${message} (chunk ${Math.floor(i/CHUNK_SIZE)+1})`;
+      const ncR = await gh(`/repos/${repo}/git/commits`, 'POST', {
+        message: commitMsg, tree: newTree.sha, parents: [currentParentSha]
+      });
+      if (!ncR.ok) {
+        const errBody = await ncR.text().catch(()=> '');
+        throw new Error(`pushFiles createCommit chunk ${i} failed: ${ncR.status} ${errBody.slice(0,200)}`);
+      }
+      const newCommit = await ncR.json();
+      currentTreeSha = newTree.sha;
+      currentParentSha = newCommit.sha;
+      finalCommitSha = newCommit.sha;
+    }
+
+    // 4. Update main to point at the final commit
+    const updR = await gh(`/repos/${repo}/git/refs/heads/main`, 'PATCH', {
+      sha: finalCommitSha, force: false
+    });
+    if (!updR.ok) {
+      const errBody = await updR.text().catch(()=> '');
+      throw new Error(`pushFiles updateRef failed: ${updR.status} ${errBody.slice(0,200)}`);
+    }
+
+    return { ok: true, commit_sha: finalCommitSha, file_count: entries.length };
+  }, `pushFiles(${entries.length} files)`, 2, 3000);
+}
+
+// Files that MUST be present in the deployed repo for the Next.js build to
+// succeed. If any of these fail to push after all retries the build should
+// hard-fail instead of producing a broken "live" URL.
+const CRITICAL_FILE_PATHS = [
+  'package.json',
+  'src/app/page.tsx',
+  'src/app/globals.css',
+  'src/app/layout.tsx',
+];
+const CRITICAL_CONFIG_FILES = ['next.config.js', 'next.config.ts', 'next.config.mjs'];
+function isCriticalPath(p){
+  return CRITICAL_FILE_PATHS.includes(p) || CRITICAL_CONFIG_FILES.includes(p);
 }
 async function parseDelimited(text,keys){
   const result={};
@@ -6804,10 +6914,40 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         }
 
         // ── Post-generation build safety checks ──────────────────────────────
-        // globals.css: AI-generated version is unreliable (often Tailwind v3 syntax).
-        // The validation gate (section 3) pushes a clean Tailwind v4 globals.css.
-        // Delete the AI-generated version here so the gate's clean version takes priority.
-        delete feFiles['src/app/globals.css'];
+        // globals.css: AI-generated version is unreliable. Overwrite with a known-good
+        // Tailwind v3 stylesheet (package.json below pins tailwindcss ^3.4.1). Without
+        // this file the Next.js build fails with "Cannot find module './globals.css'"
+        // and the whole deploy serves a template or 404s.
+        feFiles['src/app/globals.css'] = `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --accent: ${(inf.accent || '#C9A84C').replace('#', '')};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+  }
+}
+
+@layer base {
+  * { border-color: hsl(var(--foreground) / 0.1); }
+  body {
+    @apply bg-white text-gray-900 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1, h2, h3, h4, h5, h6 { @apply font-semibold tracking-tight; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+}
+`;
         // Fix 3: Replace @heroicons/react with lucide-react in all TSX files
         for (const fpath of ['src/app/page.tsx', 'src/app/dashboard/page.tsx', 'src/app/layout.tsx', 'src/app/[locale]/(marketing)/page.tsx', 'src/app/[locale]/(auth)/dashboard/page.tsx']) {
           if (feFiles[fpath] && feFiles[fpath].includes('@heroicons/react')) {
@@ -9992,22 +10132,72 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       setP('review', 'ok', `${fl.filter(([,c])=>c&&!c.includes('[Generation incomplete]')).length} files verified · ${Math.round(fl.reduce((sum,[,c])=>(c||'').length+sum,0)/5).toLocaleString()} words total`);
 
       updateEduCard('pf');
-    addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`0/${fl.length}…`);
+    addP('pf',`Pushing ${fl.length} files`);setP('pf','run',`batching into 1 commit…`);
       updateGlobalProgress(8, 12, 'Phase 8 of 14 \u00b7 Pushing Files');
+
+      // Strategy: push ALL files in ONE git-tree commit. 10-20x faster than
+      // per-file content API and dodges GitHub's secondary rate limits.
+      // On batch failure, fall back to per-file pushF with retries so we
+      // still land as much as possible, then report which critical files
+      // are missing.
       let pushFails = 0;
-      for(let i=0;i<fl.length;i++){
-        const[p,c]=fl[i];
-        if(!c||c.includes('[Generation incomplete]'))continue;
-        try {
-          await pushF(`${ORG}/${inf.repo}`, p, c, `feat: dynasty scaffold — ${p}`);
-        } catch(pushErr) {
-          pushFails++;
-          console.warn(`Push failed for ${p}: ${pushErr.message}`);
-          // Continue pushing remaining files — don't kill the entire build
-        }
-        setP('pf','run',`${i+1}/${fl.length} — ${p}`);
+      const pushedPaths = new Set();
+      const failedPaths = [];
+      const batchFileMap = {};
+      for (const [p, c] of fl) {
+        if (c && !c.includes('[Generation incomplete]')) batchFileMap[p] = c;
       }
-      setP('pf', pushFails > 0 ? 'sk' : 'ok', pushFails > 0 ? `${fl.length - pushFails} files pushed · ${pushFails} failed` : `${fl.length} files live`);
+
+      let batchOk = false;
+      try {
+        const batchResult = await pushFiles(`${ORG}/${inf.repo}`, batchFileMap, `feat: dynasty scaffold — ${Object.keys(batchFileMap).length} files`);
+        if (batchResult.ok && batchResult.file_count > 0) {
+          batchOk = true;
+          for (const p of Object.keys(batchFileMap)) pushedPaths.add(p);
+          setP('pf', 'ok', `${batchResult.file_count} files live · 1 commit (${(batchResult.commit_sha||'').slice(0,7)})`);
+        }
+      } catch (batchErr) {
+        console.warn(`[pushFiles] batch commit failed, falling back to per-file: ${batchErr.message}`);
+        setP('pf', 'run', 'Batch failed, falling back to per-file…');
+      }
+
+      if (!batchOk) {
+        // Fallback: per-file pushF with retries (pushF already wraps withRetry)
+        for (let i = 0; i < fl.length; i++) {
+          const [p, c] = fl[i];
+          if (!c || c.includes('[Generation incomplete]')) continue;
+          try {
+            await pushF(`${ORG}/${inf.repo}`, p, c, `feat: dynasty scaffold — ${p}`);
+            pushedPaths.add(p);
+          } catch (pushErr) {
+            pushFails++;
+            failedPaths.push(p);
+            console.warn(`Push failed for ${p}: ${pushErr.message}`);
+          }
+          setP('pf', 'run', `${i+1}/${fl.length} — ${p}`);
+        }
+        setP('pf', pushFails > 0 ? 'sk' : 'ok',
+          pushFails > 0 ? `${fl.length - pushFails} files pushed · ${pushFails} failed (fallback)` : `${fl.length} files live (fallback)`);
+      }
+
+      // ── HARD-FAIL if any critical file is missing ──────────────────────
+      // Without package.json / src/app/page.tsx / src/app/globals.css the
+      // Next.js build cannot succeed, so surface this as a real error rather
+      // than silently proceeding and letting the verification gate bypass it.
+      const missingCritical = failedPaths.filter(isCriticalPath);
+      // Also check paths that weren't in the generated set at all
+      const expectedCritical = CRITICAL_FILE_PATHS.filter(p => batchFileMap[p]);
+      const hasAnyNextConfig = CRITICAL_CONFIG_FILES.some(p => pushedPaths.has(p) || batchFileMap[p]);
+      if (!hasAnyNextConfig) {
+        missingCritical.push('next.config.{js,ts,mjs} (none generated)');
+      }
+      for (const p of expectedCritical) {
+        if (!pushedPaths.has(p) && !missingCritical.includes(p)) missingCritical.push(p);
+      }
+      if (missingCritical.length > 0 && V2_DEPLOY_TARGET === 'fullstack') {
+        setP('pf', 'er', `CRITICAL: missing ${missingCritical.join(', ')} — build will fail`);
+        throw new Error(`Critical files missing from repo: ${missingCritical.join(', ')}. Aborting build — fix pushF errors or re-run.`);
+      }
 
       // ── Push shareable report HTML to repo ────────────────────────────
       try {
@@ -10214,32 +10404,49 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       addP(`verify-pass-${pass}`, `${passLabel} pass`);
       setP(`verify-pass-${pass}`, 'run');
 
-      // ── CHECK 1: GitHub repo has files ──────────────────────────────────
+      // ── CHECK 1: GitHub repo has critical Next.js files ─────────────────
+      // Old check just counted repo-root entries >= 5 — trivially passes on
+      // a bare template fork. Instead verify each critical path exists.
       if (!verifyResults.github) {
         try {
-          // Use gh() proxy for private repos (direct GitHub API returns 404 without auth)
-          const ghCheck = await gh(`/repos/${ORG}/${inf.repo}/contents/`);
-          if (ghCheck.ok) {
-            const contents = await ghCheck.json();
-            const fileCount = Array.isArray(contents) ? contents.length : 0;
-            if (fileCount >= 5) {
-              verifyResults.github = true;
-            } else if (pass === 2) {
-              // FIX: push a marker file to confirm repo write access
-              verifyResults.fixes_applied.push('Pushed verification marker to repo');
+          const isFullstackBuild = V2_DEPLOY_TARGET === 'fullstack';
+          const criticalPaths = isFullstackBuild
+            ? ['package.json', 'src/app/page.tsx', 'src/app/layout.tsx', 'src/app/globals.css']
+            : ['package.json']; // static/authority/backend have simpler requirements
+          const missing = [];
+          for (const p of criticalPaths) {
+            try {
+              const r = await gh(`/repos/${ORG}/${inf.repo}/contents/${p}`);
+              if (!r.ok) missing.push(p);
+            } catch { missing.push(p); }
+          }
+          // Also verify at least one next.config.* exists for fullstack
+          if (isFullstackBuild) {
+            let hasConfig = false;
+            for (const cfg of ['next.config.js', 'next.config.ts', 'next.config.mjs']) {
               try {
-                await pushF(`${ORG}/${inf.repo}`, 'DYNASTY-VERIFIED.md',
-                  `# Build Verified\nTimestamp: ${new Date().toISOString()}\nFiles at verification: ${fileCount}\n`,
-                  'chore: deployment verification marker');
-                await new Promise(r => setTimeout(r, 3000));
+                const r = await gh(`/repos/${ORG}/${inf.repo}/contents/${cfg}`);
+                if (r.ok) { hasConfig = true; break; }
               } catch {}
-            } else {
-              verifyResults.issues.push(`GitHub: ${fileCount} files (pass ${pass})`);
             }
-          } else if (pass === 2 && ghCheck.status === 404) {
-            // FIX: repo doesn't exist — something went very wrong
-            verifyResults.issues.push('GitHub: repo not found — creation may have failed');
-            verifyResults.fixes_applied.push('GitHub repo missing — cannot fix automatically');
+            if (!hasConfig) missing.push('next.config.{js,ts,mjs}');
+          }
+
+          if (missing.length === 0) {
+            verifyResults.github = true;
+          } else if (pass === 2) {
+            // FIX pass: attempt to re-push the critical files from the in-memory
+            // build. If any are missing in memory too, record and continue.
+            verifyResults.fixes_applied.push(`Re-pushing ${missing.length} missing critical files`);
+            for (const p of missing) {
+              const content = (window._buildFiles || {})[p];
+              if (content) {
+                try { await pushF(`${ORG}/${inf.repo}`, p, content, `fix: re-push missing ${p}`); } catch {}
+              }
+            }
+            await new Promise(r => setTimeout(r, 3000));
+          } else {
+            verifyResults.issues.push(`GitHub missing (pass ${pass}): ${missing.join(', ')}`);
           }
         } catch (e) {
           if (pass < 3) await new Promise(r => setTimeout(r, 5000)); // wait and retry
@@ -10304,7 +10511,11 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
         verifyResults.vercel = true; // no project ID but URL exists (manual deploy)
       }
 
-      // ── CHECK 3: Live URL returns real content ──────────────────────────
+      // ── CHECK 3: Live URL serves real, project-specific content ────────
+      // Strict criteria: must be 200, must contain the project name, and
+      // must NOT contain template-branding leaks. Removes the previous
+      // "200 but thin content → still live" bypass that let bare template
+      // pages pass as "live".
       if (!verifyResults.live && vercelUrl && verifyResults.vercel) {
         try {
           if (pass > 1) await new Promise(r => setTimeout(r, 8000)); // DNS propagation
@@ -10314,13 +10525,35 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
           });
           const liveData = await liveCheck.json();
 
-          if (liveData.ok && liveData.status === 200 && liveData.has_content) {
+          const strictOk = liveData.ok
+            && liveData.status === 200
+            && liveData.has_content
+            && liveData.has_project_name
+            && !liveData.has_template_branding;
+
+          if (strictOk) {
             verifyResults.live = true;
             verifyResults.content_verified = true;
           } else if (liveData.ok && liveData.status === 200) {
-            // 200 but thin content — might be a bare template page
-            verifyResults.live = true;
-            if (pass === 2) verifyResults.fixes_applied.push('Live URL serves 200 but content is thin');
+            // 200 but failing strict criteria — do NOT mark live. Record why.
+            const whyFailed = [];
+            if (!liveData.has_content) whyFailed.push('thin body');
+            if (!liveData.has_project_name) whyFailed.push('project name missing from homepage');
+            if (liveData.has_template_branding) whyFailed.push('template branding leaked (SaaS Template / Ixartz / nextjs-boilerplate)');
+            verifyResults.issues.push(`Live: 200 but ${whyFailed.join(', ')}`);
+            if (pass === 2 && liveData.has_template_branding) {
+              // FIX: trigger a retry deploy — may pick up newer files
+              verifyResults.fixes_applied.push('Template branding leaked — triggering retry_deploy');
+              if (vercelProjectId) {
+                try {
+                  await fetch('/api/provision?action=retry_deploy', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
+                  });
+                  await new Promise(r => setTimeout(r, 25000));
+                } catch {}
+              }
+            }
           } else if (pass === 2) {
             // FIX: check if it's a 500 (code error) vs 404 (not deployed yet)
             if (liveData.status >= 500) {
@@ -10331,7 +10564,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
               // Nothing to fix — just needs time
             }
           } else if (pass === 3) {
-            // Final chance — wait 20s more
+            // Final chance — wait 20s more and recheck with strict criteria
             await new Promise(r => setTimeout(r, 20000));
             try {
               const rc = await fetch(`/api/provision?action=verify_live`, {
@@ -10339,7 +10572,9 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
                 body: JSON.stringify({ url: vercelUrl, project_name: inf.name })
               });
               const rd = await rc.json();
-              if (rd.ok && rd.status === 200) verifyResults.live = true;
+              if (rd.ok && rd.status === 200 && rd.has_content && rd.has_project_name && !rd.has_template_branding) {
+                verifyResults.live = true;
+              }
             } catch {}
           }
         } catch {}
@@ -10391,25 +10626,53 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     }
 
     // ── PHASE 12: Definition of Done Summary ─────────────────────────────────
+    // HARD FAIL if any critical check is false for a project that expected
+    // Vercel deployment. Previous behavior: skip checks for missing Vercel URL
+    // and silently showed a "complete" UI even when the homepage was broken.
     addP('done-gate', 'Build Completion Check');
+    const expectsLiveSite = !!vercelProjectId && !!vercelUrl;
     const doneChecks = {
       github: verifyResults.github,
-      vercel: verifyResults.vercel || !vercelProjectId,
-      live: verifyResults.live || !vercelUrl,
+      // If a Vercel project was created, it MUST reach READY — no "skip if none"
+      vercel: expectsLiveSite ? verifyResults.vercel : true,
+      // If a live URL exists, it MUST serve project-specific content
+      live: expectsLiveSite ? verifyResults.live : true,
       files: Object.keys(files).length >= 10,
     };
     const doneCount = Object.values(doneChecks).filter(Boolean).length;
     const doneTotal = Object.keys(doneChecks).length;
+    const failed = Object.entries(doneChecks).filter(([,v]) => !v).map(([k]) => k);
     if (doneCount === doneTotal) {
       setP('done-gate', 'ok', `${doneCount}/${doneTotal} checks passed — build complete`);
     } else {
-      const failed = Object.entries(doneChecks).filter(([,v]) => !v).map(([k]) => k);
       setP('done-gate', 'er', `${doneCount}/${doneTotal} passed · Failed: ${failed.join(', ')}`);
     }
 
     updateGlobalProgress(12, 12, 'Complete!');
     document.getElementById('global-progress').style.display = 'none';
+
+    // If the build actually failed, render the done-screen as usual so the
+    // user can still inspect what DID generate, then prepend a red error
+    // banner with actionable next steps (err-box lives inside prog-screen
+    // which showDone hides, so we inject directly into done-screen).
     showDone(inf,repo,isAuthority ? 0 : Object.keys(files).length,inf.manual_svcs||[]);
+
+    if (doneCount < doneTotal && expectsLiveSite) {
+      const nextSteps = [];
+      if (!doneChecks.github) nextSteps.push('Missing critical files in GitHub repo — inspect Vercel build logs or re-run the build.');
+      if (!doneChecks.vercel) nextSteps.push(`Vercel deployment did not reach READY. Check https://vercel.com/polycarpohu-gmails-projects/${inf.repo}/deployments for the build error.`);
+      if (!doneChecks.live) nextSteps.push(`Live URL ${vercelUrl || ''} did not return project-specific content. Common causes: build error, template branding leak, or DNS still propagating.`);
+      if (verifyResults.issues?.length) nextSteps.push('Issues detected: ' + verifyResults.issues.join(' · '));
+
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:rgba(229,83,75,0.08);border:1px solid #E5534B;border-radius:var(--rl,8px);padding:1rem 1.25rem;margin-bottom:1.25rem;color:#EEEDE8';
+      banner.innerHTML = `<div style="font-size:13px;font-weight:700;color:#F87171;margin-bottom:.5rem">&#9888;&#65039; Build did not complete successfully (${failed.join(', ')} failed)</div>` +
+        '<ul style="font-size:12px;color:var(--sec);line-height:1.6;margin:0;padding-left:1rem">' +
+        nextSteps.map(s => `<li>${s}</li>`).join('') +
+        '</ul>';
+      const doneScreen = document.getElementById('done-screen');
+      if (doneScreen) doneScreen.insertBefore(banner, doneScreen.firstChild);
+    }
   }catch(e){
     const eb=document.getElementById('err-box');
     eb.style.display='block';eb.textContent=e.message||'Unknown error';

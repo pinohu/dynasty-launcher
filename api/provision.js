@@ -2690,9 +2690,54 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         }
 
         // ── TRIGGER INITIAL DEPLOYMENT from the GitHub repo ──────────────────
-        // Wait for GitHub to finish processing the pushed files
+        // Wait for GitHub to finish processing the pushed files, then verify
+        // the critical Next.js files are actually present before telling Vercel
+        // to build. A 10s wait was too short on large repos — 25s gives the
+        // CDN time to propagate and catches 99% of races.
         if(vercelProjectId){
-          await new Promise(r => setTimeout(r, 10000)); // 10s delay for GitHub propagation across CDN
+          await new Promise(r => setTimeout(r, 25000)); // 25s delay for GitHub propagation across CDN
+
+          // ── Pre-deploy critical-file check (fullstack only) ──────────────
+          // If package.json or src/app/page.tsx isn't reachable on the repo,
+          // do NOT trigger a Vercel build — it will 100% fail and waste a
+          // deploy slot. Surface the issue instead.
+          if (isFullstack) {
+            const criticalPaths = ['package.json', 'src/app/page.tsx', 'src/app/layout.tsx', 'src/app/globals.css'];
+            const missing = [];
+            for (const p of criticalPaths) {
+              try {
+                const r = await fetch(`https://api.github.com/repos/${ORG}/${slug}/contents/${p}`, {
+                  headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (!r.ok) missing.push(p);
+              } catch { missing.push(p); }
+            }
+            // Also require at least one next.config.*
+            let hasConfig = false;
+            for (const cfg of ['next.config.js', 'next.config.ts', 'next.config.mjs']) {
+              try {
+                const r = await fetch(`https://api.github.com/repos/${ORG}/${slug}/contents/${cfg}`, {
+                  headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+                if (r.ok) { hasConfig = true; break; }
+              } catch {}
+            }
+            if (!hasConfig) missing.push('next.config.{js,ts,mjs}');
+
+            if (missing.length > 0) {
+              results.vercel = {
+                ok: false,
+                project_id: vercelProjectId,
+                url: `https://${slug}.vercel.app`,
+                error: 'repo-missing-critical-files',
+                missing,
+                note: `Skipping Vercel deploy — repo is missing: ${missing.join(', ')}. Fix push errors and POST /api/provision?action=retry_deploy.`
+              };
+              // Return early so we don't trigger a guaranteed-failing deploy
+              return res.json({ ok: false, results, error: 'repo-missing-critical-files', missing });
+            }
+          }
+
           let deployOk = false;
           for (let attempt = 0; attempt < 3; attempt++) {
             try{
@@ -3054,16 +3099,29 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       const status = resp.status;
       let has_content = false;
       let has_project_name = false;
+      let has_template_branding = false;
+      let body_length = 0;
       if (status === 200) {
         const text = await resp.text();
+        body_length = text.length;
         has_content = text.length > 500; // More than a bare error page
         has_project_name = project_name ? text.toLowerCase().includes(project_name.toLowerCase()) : false;
         // Check for common error indicators
         const isErrorPage = text.includes('Application error') || text.includes('500 Internal Server Error') ||
                            text.includes('NEXT_NOT_FOUND') || text.includes('This page could not be found');
         if (isErrorPage) has_content = false;
+        // Template branding leak detection — if these strings appear, the
+        // Dynasty-generated content did not override the template defaults
+        const templateMarkers = [
+          /SaaS ?Boilerplate/i,
+          /SaaS ?Template/i,
+          /@?Ixartz/i,
+          /nextjs-boilerplate\.com/i,
+          /Demo of SaaS/i,
+        ];
+        has_template_branding = templateMarkers.some(rx => rx.test(text));
       }
-      return res.json({ ok: true, status, has_content, has_project_name, url: resp.url });
+      return res.json({ ok: true, status, has_content, has_project_name, has_template_branding, body_length, url: resp.url });
     } catch (e) {
       return res.json({ ok: false, status: 0, error: e.message });
     }
@@ -3074,6 +3132,42 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     const { project_id, repo, org } = req.body || {};
     if (!project_id || !repo) return res.status(400).json({ error: 'project_id and repo required' });
     try {
+      // ── Pre-retry critical-file check ─────────────────────────────────
+      // A retry only makes sense if the repo actually has the files needed
+      // to build. Otherwise we're just re-triggering the same guaranteed
+      // failure. Fail fast with a structured error so the client can show
+      // an actionable message.
+      const repoOrg = org || ORG;
+      const criticalPaths = ['package.json', 'src/app/page.tsx', 'src/app/layout.tsx', 'src/app/globals.css'];
+      const missing = [];
+      for (const p of criticalPaths) {
+        try {
+          const r = await fetch(`https://api.github.com/repos/${repoOrg}/${repo}/contents/${p}`, {
+            headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+          });
+          if (!r.ok) missing.push(p);
+        } catch { missing.push(p); }
+      }
+      let hasConfig = false;
+      for (const cfg of ['next.config.js', 'next.config.ts', 'next.config.mjs']) {
+        try {
+          const r = await fetch(`https://api.github.com/repos/${repoOrg}/${repo}/contents/${cfg}`, {
+            headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+          });
+          if (r.ok) { hasConfig = true; break; }
+        } catch {}
+      }
+      if (!hasConfig) missing.push('next.config.{js,ts,mjs}');
+
+      if (missing.length > 0) {
+        return res.json({
+          ok: false,
+          error: 'repo-missing-critical-files',
+          missing,
+          note: `Cannot retry deploy — repo is missing: ${missing.join(', ')}. Push the missing files first, then retry.`
+        });
+      }
+
       // Check current framework — don't override if already set correctly
       const projResp = await fetch(`https://api.vercel.com/v9/projects/${project_id}?teamId=${VERCEL_TEAM}`, {
         headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` }
@@ -3096,7 +3190,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           name: repo,
           project: project_id,
           target: 'production',
-          gitSource: { type: 'github', org: org || ORG, repo, ref: 'main' }
+          gitSource: { type: 'github', org: repoOrg, repo, ref: 'main' }
         })
       });
       const dd = await dr.json();
