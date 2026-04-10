@@ -12,9 +12,9 @@ export default function middleware(request) {
 
   // ── /admin route — require admin key in URL or let page handle token check ──
   if (url.pathname === '/admin') {
-    const adminKey = process.env.ADMIN_KEY || 'DYNASTY2026';
-    // Allow with key in URL
-    if (params.get('k') && params.get('k') === adminKey) return;
+    const adminKey = process.env.ADMIN_KEY;
+    // Allow with key in URL (only if ADMIN_KEY is configured)
+    if (adminKey && params.get('k') && params.get('k') === adminKey) return;
     // Allow if page will check localStorage token (admin.html handles auth)
     if (params.get('auth') === 'token') return;
     // Block with a minimal auth page
@@ -35,8 +35,8 @@ else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{doc
   }
 
   // Allow admin access with server-side key (never hardcoded in client)
-  const adminKey = process.env.ADMIN_KEY || 'DYNASTY2026';
-  if (params.get('k') && params.get('k') === adminKey) {
+  const adminKey = process.env.ADMIN_KEY;
+  if (adminKey && params.get('k') && params.get('k') === adminKey) {
     return; // Pass through — app.html will verify server-side
   }
 
