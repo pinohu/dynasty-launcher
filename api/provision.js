@@ -219,15 +219,31 @@ async function mod_billing(config, project, liveUrl) {
   const enc = (s) => encodeURIComponent(s);
 
   try {
-    // 1. Create a Stripe Connected Account (Express type — client gets a dashboard)
-    const acct = await fetch('https://api.stripe.com/v1/accounts', { method: 'POST', headers: sh,
-      body: `type=express&country=US&business_type=company&company[name]=${enc(project.name)}&capabilities[card_payments][requested]=true&capabilities[transfers][requested]=true&metadata[dynasty_slug]=${enc(project.slug)}&metadata[dynasty_type]=${enc(project.type || '')}`
-    }).then(r => r.json());
-    if (!acct.id) throw new Error('Connected account creation failed: ' + (acct.error?.message || 'unknown'));
-    results.details.stripe_account_id = acct.id;
+    // 1. Try to create a Stripe Connected Account (Express type — client gets own dashboard)
+    let acctId = null;
+    let connSh = sh; // Default to main account headers
+    let isConnected = false;
 
-    // 2. Create products and prices ON the connected account
-    const connSh = { ...sh, 'Stripe-Account': acct.id };
+    try {
+      const acct = await fetch('https://api.stripe.com/v1/accounts', { method: 'POST', headers: sh,
+        body: `type=express&country=US&business_type=company&company[name]=${enc(project.name)}&capabilities[card_payments][requested]=true&capabilities[transfers][requested]=true&metadata[dynasty_slug]=${enc(project.slug)}&metadata[dynasty_type]=${enc(project.type || '')}`
+      }).then(r => r.json());
+      if (acct.id) {
+        acctId = acct.id;
+        connSh = { ...sh, 'Stripe-Account': acct.id };
+        isConnected = true;
+        results.details.stripe_account_id = acct.id;
+        results.details.mode = 'connected_account';
+      }
+    } catch {}
+
+    // Fallback: if Connect not enabled, create products on main account
+    if (!isConnected) {
+      results.details.mode = 'direct';
+      results.details.note = 'Products created on main Stripe account (enable Connect at dashboard.stripe.com/connect for per-client accounts)';
+    }
+
+    // 2. Create products and prices (on connected account if available, else main account)
     const proPriceCents = project.price_pro_cents || 4900;
     const entPriceCents = project.price_enterprise_cents || 19900;
 
@@ -264,20 +280,22 @@ async function mod_billing(config, project, liveUrl) {
       } catch {}
     }
 
-    // 4. Generate onboarding link so client can complete Stripe Express setup
-    try {
-      const link = await fetch('https://api.stripe.com/v1/account_links', { method: 'POST', headers: sh,
-        body: `account=${acct.id}&refresh_url=${enc(liveUrl || 'https://yourdeputy.com')}&return_url=${enc(liveUrl || 'https://yourdeputy.com')}&type=account_onboarding`
-      }).then(r => r.json());
-      if (link.url) results.details.onboarding_url = link.url;
-    } catch {}
+    // 4. Generate onboarding link (only for connected accounts)
+    if (isConnected && acctId) {
+      try {
+        const link = await fetch('https://api.stripe.com/v1/account_links', { method: 'POST', headers: sh,
+          body: `account=${acctId}&refresh_url=${enc(liveUrl || 'https://yourdeputy.com')}&return_url=${enc(liveUrl || 'https://yourdeputy.com')}&type=account_onboarding`
+        }).then(r => r.json());
+        if (link.url) results.details.onboarding_url = link.url;
+      } catch {}
+    }
 
     // 5. Push Stripe keys to the client's Vercel project
     const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN || config.infrastructure?.vercel;
     if (VERCEL_TOKEN && project.vercel_project_id) {
       try {
         const envVars = [
-          { key: 'STRIPE_ACCOUNT_ID', value: acct.id, type: 'plain' },
+          ...(acctId ? [{ key: 'STRIPE_ACCOUNT_ID', value: acctId, type: 'plain' }] : []),
           ...(prod?.id ? [{ key: 'STRIPE_PRODUCT_ID', value: prod.id, type: 'plain' }] : []),
           ...(results.details.prices?.pro ? [{ key: 'STRIPE_PRICE_PRO_MONTHLY', value: results.details.prices.pro, type: 'plain' }] : []),
           ...(results.details.prices?.enterprise ? [{ key: 'STRIPE_PRICE_ENTERPRISE_MONTHLY', value: results.details.prices.enterprise, type: 'plain' }] : []),
@@ -1497,7 +1515,7 @@ async function runModules(config, project, liveUrl, enabledModules) {
   // Overall budget: 240s max (leaves 60s for post-module operations within 300s limit).
   const AI_MODULES = new Set(['chatbot', 'seo', 'video']); // These call AI APIs (slow)
   const MODULE_TIMEOUT_DEFAULT = 20000; // 20s for API-only modules
-  const MODULE_TIMEOUT_AI = 60000;      // 60s for AI-generating modules
+  const MODULE_TIMEOUT_AI = 120000;     // 120s for AI-generating modules (SEO generates 5 blog posts)
   const startTime = Date.now();
   const MAX_TOTAL_MS = 240000;
   for (const [name, fn] of Object.entries(moduleMap)) {
