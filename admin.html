@@ -111,21 +111,21 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
       <div class="card">
         <h3>Quick Reference</h3>
         <p style="color:var(--dim);margin-bottom:8px">API keys are stored in the DYNASTY_TOOL_CONFIG environment variable on Vercel. To update keys, go to Vercel Dashboard → Settings → Environment Variables.</p>
-        <a href="https://vercel.com/polycarpohu-gmailcoms-projects/dynasty-launcher/settings/environment-variables" target="_blank" class="btn primary" style="display:inline-block;text-decoration:none">Open Vercel Env Vars</a>
+        <a href="https://vercel.com/polycarpohu-gmailcoms-projects/dynasty-launcher/settings/environment-variables" target="_blank" rel="noopener noreferrer" class="btn primary" style="display:inline-block;text-decoration:none">Open Vercel Env Vars</a>
       </div>
       <div class="card">
         <h3>System Links</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
-          <a href="https://vercel.com/polycarpohu-gmailcoms-projects/dynasty-launcher" target="_blank" style="color:var(--blue)">Vercel Dashboard</a>
-          <a href="https://github.com/pinohu/dynasty-launcher" target="_blank" style="color:var(--blue)">GitHub Repo</a>
-          <a href="https://dashboard.stripe.com" target="_blank" style="color:var(--blue)">Stripe Dashboard</a>
-          <a href="https://dashboard.clerk.com" target="_blank" style="color:var(--blue)">Clerk Dashboard</a>
-          <a href="https://console.neon.tech" target="_blank" style="color:var(--blue)">Neon Database</a>
-          <a href="https://my.20i.com" target="_blank" style="color:var(--blue)">20i Hosting</a>
-          <a href="https://pinohu.app.n8n.cloud" target="_blank" style="color:var(--blue)">n8n Workflows</a>
-          <a href="https://app.posthog.com" target="_blank" style="color:var(--blue)">PostHog Analytics</a>
-          <a href="https://acumbamail.com" target="_blank" style="color:var(--blue)">Acumbamail</a>
-          <a href="https://app.suitedash.com" target="_blank" style="color:var(--blue)">SuiteDash CRM</a>
+          <a href="https://vercel.com/polycarpohu-gmailcoms-projects/dynasty-launcher" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">Vercel Dashboard</a>
+          <a href="https://github.com/pinohu/dynasty-launcher" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">GitHub Repo</a>
+          <a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">Stripe Dashboard</a>
+          <a href="https://dashboard.clerk.com" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">Clerk Dashboard</a>
+          <a href="https://console.neon.tech" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">Neon Database</a>
+          <a href="https://my.20i.com" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">20i Hosting</a>
+          <a href="https://pinohu.app.n8n.cloud" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">n8n Workflows</a>
+          <a href="https://app.posthog.com" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">PostHog Analytics</a>
+          <a href="https://acumbamail.com" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">Acumbamail</a>
+          <a href="https://app.suitedash.com" target="_blank" rel="noopener noreferrer" style="color:var(--blue)">SuiteDash CRM</a>
         </div>
       </div>
     </div>
@@ -391,7 +391,7 @@ async function loadProjects() {
   document.getElementById('projects-table').innerHTML = `<table><tr><th>Name</th><th>Framework</th><th>Status</th><th>URL</th><th>Actions</th></tr>` +
     d.projects.map(p => `<tr><td><strong>${p.name}</strong></td><td>${p.framework || '—'}</td>
     <td><span class="pill ${p.state === 'READY' ? 'ok' : p.state === 'ERROR' ? 'err' : 'warn'}">${p.state || '—'}</span></td>
-    <td>${p.url ? `<a href="${p.url}" target="_blank" style="color:var(--blue);font-size:11px">${p.url.replace('https://','').slice(0,30)}...</a>` : '—'}</td>
+    <td>${p.url ? `<a href="${p.url}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-size:11px">${p.url.replace('https://','').slice(0,30)}...</a>` : '—'}</td>
     <td style="display:flex;gap:4px">
       <button class="btn" onclick="redeploy('${p.id}','${p.name}')">Redeploy</button>
       <button class="btn danger" onclick="deleteProject('${p.id}','${p.name}')">Delete</button>

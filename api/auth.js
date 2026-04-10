@@ -20,12 +20,14 @@ export default async function handler(req, res) {
   if (action === 'user') {
     const CLERK_SECRET = process.env.CLERK_SECRET_KEY;
     if (!CLERK_SECRET) return res.json({ ok: false, error: 'Clerk not configured' });
-    
+
     const { user_id } = req.body || {};
-    if (!user_id) return res.json({ ok: false, error: 'user_id required' });
+    if (!user_id || typeof user_id !== 'string' || !/^user_[a-zA-Z0-9]{20,40}$/.test(user_id)) {
+      return res.status(400).json({ ok: false, error: 'valid user_id required' });
+    }
 
     try {
-      const resp = await fetch(`https://api.clerk.com/v1/users/${user_id}`, {
+      const resp = await fetch(`https://api.clerk.com/v1/users/${encodeURIComponent(user_id)}`, {
         headers: { 'Authorization': `Bearer ${CLERK_SECRET}` },
       });
       const user = await resp.json();
@@ -45,12 +47,17 @@ export default async function handler(req, res) {
   if (action === 'update_user') {
     const CLERK_SECRET = process.env.CLERK_SECRET_KEY;
     if (!CLERK_SECRET) return res.json({ ok: false, error: 'Clerk not configured' });
-    
+
     const { user_id, metadata } = req.body || {};
-    if (!user_id || !metadata) return res.json({ ok: false, error: 'user_id and metadata required' });
+    if (!user_id || typeof user_id !== 'string' || !/^user_[a-zA-Z0-9]{20,40}$/.test(user_id)) {
+      return res.status(400).json({ ok: false, error: 'valid user_id required' });
+    }
+    if (!metadata || typeof metadata !== 'object') {
+      return res.status(400).json({ ok: false, error: 'metadata object required' });
+    }
 
     try {
-      const resp = await fetch(`https://api.clerk.com/v1/users/${user_id}`, {
+      const resp = await fetch(`https://api.clerk.com/v1/users/${encodeURIComponent(user_id)}`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${CLERK_SECRET}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ public_metadata: metadata }),

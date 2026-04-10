@@ -135,9 +135,10 @@ export default async function handler(req, res) {
   // ── BUILDS LIST (from Neon) ─────────────────────────────────────────
   if (action === 'builds') {
     try {
+      const limit = Math.min(Math.max(parseInt(req.query?.limit || '50') || 50, 1), 500);
       const { Pool } = await import('pg');
       const pool = new Pool({ connectionString: process.env.NEON_STORE_ID });
-      const result = await pool.query(`SELECT * FROM dynasty_builds ORDER BY created_at DESC LIMIT $1`, [parseInt(req.query?.limit || '50')]);
+      const result = await pool.query(`SELECT * FROM dynasty_builds ORDER BY created_at DESC LIMIT $1`, [limit]);
       await pool.end();
       return res.json({ ok: true, builds: result.rows, total: result.rowCount });
     } catch (e) {
@@ -216,7 +217,13 @@ export default async function handler(req, res) {
     const sk = process.env.CLERK_SECRET_KEY;
     if (!sk) return res.json({ ok: false, error: 'Clerk not configured' });
     const { email, first_name, last_name, tier, password, username } = req.body || {};
-    if (!email) return res.json({ ok: false, error: 'email required' });
+    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+      return res.status(400).json({ ok: false, error: 'valid email required' });
+    }
+    const validTiers = ['free', 'foundation', 'starter', 'professional', 'enterprise', 'managed'];
+    if (tier && !validTiers.includes(tier)) {
+      return res.status(400).json({ ok: false, error: 'invalid tier' });
+    }
     // Auto-generate username from email if not provided
     const uname = username || email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
     try {
@@ -245,13 +252,15 @@ export default async function handler(req, res) {
     const sk = process.env.CLERK_SECRET_KEY;
     if (!sk) return res.json({ ok: false, error: 'Clerk not configured' });
     const { user_id } = req.body || {};
-    if (!user_id) return res.json({ ok: false, error: 'user_id required' });
+    if (!user_id || typeof user_id !== 'string' || !/^user_[a-zA-Z0-9]{20,40}$/.test(user_id)) {
+      return res.status(400).json({ ok: false, error: 'valid user_id required' });
+    }
     try {
-      const r = await fetch(`https://api.clerk.com/v1/users/${user_id}`, {
+      const r = await fetch(`https://api.clerk.com/v1/users/${encodeURIComponent(user_id)}`, {
         method: 'DELETE', headers: { 'Authorization': `Bearer ${sk}` },
       });
       return res.json({ ok: r.ok || r.status === 200, deleted: user_id });
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.status(500).json({ ok: false, error: e.message }); }
   }
 
   // ── UPDATE USER TIER ────────────────────────────────────────────────
@@ -259,7 +268,13 @@ export default async function handler(req, res) {
     const sk = process.env.CLERK_SECRET_KEY;
     if (!sk) return res.json({ ok: false, error: 'Clerk not configured' });
     const { user_id, tier, builds_remaining } = req.body || {};
-    if (!user_id) return res.json({ ok: false, error: 'user_id required' });
+    if (!user_id || typeof user_id !== 'string' || !/^user_[a-zA-Z0-9]{20,40}$/.test(user_id)) {
+      return res.status(400).json({ ok: false, error: 'valid user_id required' });
+    }
+    const validTiers = ['free', 'foundation', 'starter', 'professional', 'enterprise', 'managed'];
+    if (tier && !validTiers.includes(tier)) {
+      return res.status(400).json({ ok: false, error: 'invalid tier' });
+    }
     try {
       const metadata = {};
       if (tier) metadata.plan = tier;

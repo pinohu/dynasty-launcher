@@ -1,6 +1,7 @@
 // Your Deputy — Service Worker
 // Cache-first for static assets, network-first for API calls
-const CACHE_NAME = 'deputy-v1';
+// Bump CACHE_NAME on every deploy that changes the cached static files.
+const CACHE_NAME = 'deputy-v2-2026-04-10';
 const STATIC_ASSETS = ['/', '/privacy', '/terms'];
 
 self.addEventListener('install', event => {
