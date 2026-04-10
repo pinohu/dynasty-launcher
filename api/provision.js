@@ -1795,6 +1795,21 @@ async function runModules(config, project, liveUrl, enabledModules) {
       const { generateDocx, generatePdf } = await import('./docgen.js');
       const branding = { name: project.name, accent: project.accent || '#C9A84C' };
       const docsToConvert = ['OPERATIONS.md', 'CREDENTIALS.md'];
+      // Financial docs get Excel workbooks
+      const excelDocs = ['THREE-STATEMENT-MODEL.md', 'CAP-TABLE-MODEL.md', 'RUNWAY-CALCULATOR.md', 'VALUATION-MODEL.md', 'DILUTION-MODEL.md', 'COHORT-ANALYSIS.md', 'COMPENSATION-BENCHMARKS.md', 'WEEKLY-METRICS.md'];
+      const { generateExcel } = await import('./docgen.js');
+      for (const xlFile of excelDocs) {
+        try {
+          const mdResp = await fetch(`https://api.github.com/repos/pinohu/${project.slug}/contents/${xlFile}`, {
+            headers: { 'Authorization': `token ${GH_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+          });
+          if (!mdResp.ok) continue;
+          const mdData = await mdResp.json();
+          const mdContent = Buffer.from(mdData.content, 'base64').toString('utf8');
+          const xlBuffer = await generateExcel(xlFile.replace('.md', '').replace(/-/g, ' '), mdContent, branding);
+          await pushFile(GH_TOKEN, 'pinohu', project.slug, xlFile.replace('.md', '.xlsx'), Buffer.from(xlBuffer).toString('base64'), `docs: ${xlFile.replace('.md', '')} (Excel workbook)`, true);
+        } catch {}
+      }
 
       for (const docFile of docsToConvert) {
         try {
