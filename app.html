@@ -2153,9 +2153,9 @@ const V3_TIERS = {
   free: { price: 0, label: 'Free Scoring', modules: [] },
   foundation: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
   starter: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
-  professional: { price: 4997, label: 'Professional ($4,997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'] },
-  enterprise: { price: 9997, label: 'Enterprise ($9,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] },
-  managed: { price: 497, label: 'Managed Ops ($497/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] }
+  professional: { price: 4997, label: 'Professional ($4,997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads'] },
+  enterprise: { price: 9997, label: 'Enterprise ($9,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify'] },
+  managed: { price: 497, label: 'Managed Ops ($497/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify'] }
 };
 function getUserTier() {
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
