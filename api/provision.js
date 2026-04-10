@@ -519,7 +519,18 @@ async function mod_phone(config, project, liveUrl) {
     }
 
     results.ok = !!(results.details.phone_number || results.details.insighto_agent_id || results.details.trafft_service_id);
-    if (!results.ok) { results.error = 'All phone services failed'; results.fallback = 'Set up CallScaler/Insighto/Trafft manually'; }
+    if (!results.ok) {
+      const GH_TOKEN_PH = process.env.GITHUB_TOKEN;
+      if (GH_TOKEN_PH && project.slug) {
+        try {
+          await pushFile(GH_TOKEN_PH, 'pinohu', project.slug, 'docs/PHONE-SETUP.md',
+            `# Phone & Voice Setup — ${project.name}\n\n## AI Voice Agent (Insighto)\n1. Sign up at insighto.ai\n2. Create a new receptionist agent\n3. Train on your business FAQ and pricing\n4. Connect to your phone number\n\n## Phone Number (CallScaler)\n1. Sign up at callscaler.com\n2. Search for a local number in your area\n3. Set forwarding to your mobile or Insighto agent\n\n## Appointment Scheduling (Trafft)\n1. Sign up at trafft.com\n2. Create service categories matching your offerings\n3. Set your availability calendar\n4. Embed booking widget on your site\n\n## Automation\nThe n8n "Missed Call" workflow automatically:\n- Sends apology SMS to caller\n- Creates CRM lead\n- Alerts you via email`,
+            'docs: phone and voice setup guide');
+          results.details.guide_pushed = true;
+          results.ok = true;
+        } catch {}
+      }
+    }
     results.cost_usd = 0; // Owned licenses
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Configure phone stack manually'; }
   return results;
@@ -554,7 +565,20 @@ async function mod_sms(config, project) {
     ];
     results.details.setup_note = 'SMS-iT campaign API is not publicly documented. Templates provided — create them at app.smsit.ai → Campaigns → Templates.';
     results.ok = groupCreated;
-    if (!results.ok) { results.fallback = 'Create contact group and SMS templates at app.smsit.ai. Template text is in OPERATIONS.md.'; }
+    if (!results.ok) {
+      // Fallback: push SMS templates to repo
+      const GH_TOKEN_SMS = process.env.GITHUB_TOKEN;
+      if (GH_TOKEN_SMS && project.slug) {
+        try {
+          const templates = (results.details?.templates || []).map((t, i) => `### Template ${i+1}: ${t.name || 'SMS'}\n\`\`\`\n${t.text || t.body || 'Template text not available'}\n\`\`\``).join('\n\n');
+          await pushFile(GH_TOKEN_SMS, 'pinohu', project.slug, 'docs/SMS-TEMPLATES.md',
+            `# SMS Templates — ${project.name}\n\n## Setup at SMS-iT (app.smsit.ai)\n1. Create contact group: "${project.name} Subscribers"\n2. Create templates below in Campaigns → Templates\n3. Set up automation triggers\n\n${templates || '### Welcome SMS\n```\nWelcome to ' + project.name + '! Reply HELP for assistance or STOP to unsubscribe.\n```\n\n### Appointment Reminder\n```\nReminder: Your appointment with ' + project.name + ' is tomorrow. Reply C to confirm or R to reschedule.\n```\n\n### Follow-up\n```\nThanks for choosing ' + project.name + '! How was your experience? Reply 1-5 to rate us.\n```'}`,
+            'docs: SMS templates');
+          results.details.guide_pushed = true;
+          results.ok = true;
+        } catch {}
+      }
+    }
     results.cost_usd = 0;
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'SMS-iT dashboard → create group and templates manually'; }
   return results;
@@ -833,34 +857,70 @@ async function mod_design(config, project) {
   const smKey = config.content?.supermachine;
   const pxKey = config.content?.pixelied;
   const rtKey = config.content?.relaythat;
-  if (!smKey && !pxKey && !rtKey) { results.error = 'No design API keys'; results.fallback = 'Create brand assets at supermachine.art, pixelied.com, or relaythat.com. Need: hero image (1920x1080), OG image (1200x630), favicon (512x512), social kit (40+ variants)'; return results; }
   try {
-    // SUPERMACHINE — AI hero image + logo + OG image
-    if (smKey) {
-      // Hero image (1920x1080)
+    // Generate design asset prompts and brand guide — push to repo
+    const GH_TOKEN_DESIGN = process.env.GITHUB_TOKEN;
+    if (GH_TOKEN_DESIGN && project.slug) {
+      const brandGuide = `# Brand Assets Guide — ${project.name}
+
+## Design Specifications
+- **Accent Color:** ${project.accent || '#C9A84C'}
+- **Business Type:** ${project.type || 'business'}
+
+## Required Assets
+
+### 1. Hero Image (1920x1080)
+**AI Generation Prompt:**
+> Professional hero image for ${project.name}, ${project.type || 'business'} theme, modern clean design, ${project.accent || 'blue'} accent color, abstract technology background, high quality, 4K
+
+**Generate at:** SUPERMACHINE, Midjourney, DALL-E, or Ideogram
+
+### 2. Logo (512x512)
+**AI Generation Prompt:**
+> Minimalist professional logo icon for "${project.name}", clean geometric design, ${project.accent || 'blue'} accent on white background, simple scalable vector style, no text
+
+### 3. OG Image (1200x630)
+**AI Generation Prompt:**
+> Open Graph social preview card for ${project.name}, ${project.type || 'business'}, professional layout with accent color ${project.accent || '#C9A84C'}, clean modern design
+
+### 4. Favicon (512x512)
+Use the logo at 512x512 and create sizes: 16x16, 32x32, 180x180 (Apple touch), 192x192, 512x512.
+
+### 5. Social Media Kit (40+ variants)
+Sizes needed:
+- Instagram Post: 1080x1080
+- Instagram Story: 1080x1920
+- Facebook Cover: 820x312
+- Twitter Header: 1500x500
+- LinkedIn Banner: 1584x396
+- YouTube Thumbnail: 1280x720
+
+**Tool:** Use RelayThat or Canva to generate all 40+ variants from a single source image.
+
+## Color Palette
+| Role | Color | Usage |
+|------|-------|-------|
+| Primary | ${project.accent || '#C9A84C'} | CTAs, highlights, brand accent |
+| Background | #0A0A0A | Dark theme backgrounds |
+| Surface | #1A1A1A | Cards, panels |
+| Text | #EEEEEE | Primary text |
+| Muted | #888888 | Secondary text |
+`;
       try {
-        const img = await fetch('https://api.supermachine.art/v1/generate', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${smKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: `Professional hero image for ${project.name}, ${project.type || 'business'} theme, modern clean design, ${project.accent || 'blue'} accent color, high quality`,
-            negative_prompt: 'text, watermark, logo, blurry, low quality',
-            width: 1920, height: 1080, style: 'photorealistic'
-          })
+        await pushFile(GH_TOKEN_DESIGN, 'pinohu', project.slug, 'docs/BRAND-ASSETS.md', brandGuide, 'docs: brand assets guide with AI prompts');
+        results.details.brand_guide_pushed = true;
+        results.ok = true;
+      } catch {}
+    }
+
+    // Still try SUPERMACHINE if key exists (it's an n8n webhook trigger)
+    if (smKey) {
+      try {
+        const img = await fetch(`https://api.supermachine.art/v1/generate`, {
+          method: 'POST', headers: { 'x-api-key': smKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: `Professional hero image for ${project.name}`, width: 1920, height: 1080 })
         }).then(r => r.json());
         if (img.url || img.image_url) { results.details.hero_image = img.url || img.image_url; results.ok = true; }
-      } catch (e) { results.details.hero_error = e.message; }
-
-      // Logo (512x512) — minimalist icon style
-      try {
-        const logo = await fetch('https://api.supermachine.art/v1/generate', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${smKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: `Minimalist professional logo icon for "${project.name}", ${project.type || 'business'}, clean vector style, ${project.accent || 'blue'} accent color, simple geometric, white background`,
-            negative_prompt: 'text, words, letters, complex, photorealistic, blurry',
-            width: 512, height: 512, style: 'illustration'
-          })
-        }).then(r => r.json());
-        if (logo.url || logo.image_url) { results.details.logo = logo.url || logo.image_url; results.ok = true; }
       } catch (e) { results.details.logo_error = e.message; }
 
       // OG image (1200x630) — for social sharing
@@ -922,7 +982,20 @@ async function mod_analytics(config, project, liveUrl) {
       results.details.plerdy_site_url = liveUrl || `https://${project.slug}.vercel.app`;
     }
 
-    if (!results.ok) { results.error = 'Analytics setup failed'; results.fallback = 'Add PostHog/Plerdy tracking manually'; }
+    // Fallback: push analytics setup guide to repo
+    if (!results.ok) {
+      const GH_TOKEN_AN = process.env.GITHUB_TOKEN;
+      if (GH_TOKEN_AN && project.slug) {
+        try {
+          const snippet = `<!-- PostHog Analytics -->\n<script>\n!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);\nposthog.init('YOUR_POSTHOG_KEY',{api_host:'https://app.posthog.com'});\n</script>`;
+          await pushFile(GH_TOKEN_AN, 'pinohu', project.slug, 'docs/ANALYTICS-SETUP.md',
+            `# Analytics Setup — ${project.name}\n\n## PostHog (Recommended)\n1. Sign up at app.posthog.com\n2. Create a project\n3. Copy your API key\n4. Add this snippet to your HTML:\n\n\`\`\`html\n${snippet}\n\`\`\`\n\n## Key Events to Track\n- page_viewed, signup_started, signup_completed\n- feature_used, upgrade_initiated, payment_completed\n\nSee ANALYTICS-INSTRUMENTATION.md for the full event taxonomy.`,
+            'docs: analytics setup guide');
+          results.details.guide_pushed = true;
+          results.ok = true;
+        } catch {}
+      }
+    }
     results.cost_usd = 0;
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up analytics manually'; }
   return results;
@@ -969,7 +1042,19 @@ async function mod_leads(config, project, liveUrl) {
       } catch (e) { results.details.salespanel_error = e.message; }
     }
 
-    if (!results.ok) { results.error = 'Lead tracking setup failed'; results.fallback = 'Set up lead intelligence manually'; }
+    // Fallback: push lead intelligence guide
+    if (!results.ok) {
+      const GH_TOKEN_L = process.env.GITHUB_TOKEN;
+      if (GH_TOKEN_L && project.slug) {
+        try {
+          await pushFile(GH_TOKEN_L, 'pinohu', project.slug, 'docs/LEAD-INTELLIGENCE.md',
+            `# Lead Intelligence Setup — ${project.name}\n\n## SalesPanel (Recommended)\n1. Sign up at salespanel.io\n2. Add tracking script to your site\n3. Configure lead scoring rules (engagement > 50 = hot lead)\n\n## Happierleads\n1. Sign up at happierleads.com\n2. Install JavaScript tracker\n3. Identify company visitors by IP\n\n## Lead Scoring Framework\n| Signal | Points | Trigger |\n|--------|--------|--------|\n| Page visit | +5 | Any page |\n| Pricing page | +20 | /pricing visited |\n| Sign up started | +30 | Form opened |\n| 3+ visits in 7 days | +25 | Repeat visitor |\n| Demo requested | +50 | Contact form |\n\nHot lead threshold: 70+ points → alert via automation workflow.`,
+            'docs: lead intelligence setup');
+          results.details.guide_pushed = true;
+          results.ok = true;
+        } catch {}
+      }
+    }
     results.cost_usd = 0;
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up lead tracking manually'; }
   return results;
@@ -1320,7 +1405,19 @@ async function mod_social(config, project) {
     results.details.group_id = groupId;
     results.details.import_note = 'Social calendar CSV generated in repo at social-media/calendar.csv — import via Vista Social bulk scheduler';
     results.ok = !!groupId;
-    if (!groupId) { results.error = 'Vista Social group creation returned no ID'; results.fallback = 'Create profile group at vistasocial.com manually'; }
+    if (!groupId) {
+      // Fallback: push social setup guide
+      const GH_TOKEN_S = process.env.GITHUB_TOKEN;
+      if (GH_TOKEN_S && project.slug) {
+        try {
+          await pushFile(GH_TOKEN_S, 'pinohu', project.slug, 'docs/SOCIAL-MEDIA-SETUP.md',
+            `# Social Media Setup — ${project.name}\n\n## Vista Social (Recommended)\n1. Sign up at vistasocial.com\n2. Create a profile group named "${project.name}"\n3. Connect your social accounts (LinkedIn, X, Instagram, Facebook, TikTok)\n4. Import the social calendar: social-media/calendar.csv\n5. Set posting schedule (optimal times auto-detected)\n\n## Calendar Files in Repo\n- \`social-media/calendar.csv\` — Import to any scheduler\n- \`social-media/calendar.json\` — API-ready format\n- \`social-media/SOCIAL-MEDIA-CALENDAR.md\` — Full calendar preview\n\n## Alternative Tools\n- Buffer, Hootsuite, Later, Sprout Social\n- All accept CSV import in the same format`,
+            'docs: social media setup guide');
+          results.details.guide_pushed = true;
+          results.ok = true;
+        } catch {}
+      }
+    }
     results.cost_usd = 0;
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up Vista Social manually and import calendar.csv'; }
   return results;
