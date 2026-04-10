@@ -3031,6 +3031,44 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     }
   }
 
+  // ── FETCH VERCEL BUILD LOGS ─────────────────────────────────────────────
+  // Debug endpoint: returns events/logs from a Vercel deployment so the
+  // build error can be diagnosed without CLI access.
+  if (action === 'fetch_vercel_logs') {
+    const { deployment_id } = req.body || {};
+    if (!deployment_id) return res.status(400).json({ error: 'deployment_id required' });
+    try {
+      const depResp = await fetch(`https://api.vercel.com/v13/deployments/${deployment_id}?teamId=${VERCEL_TEAM}`, {
+        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` }
+      });
+      const dep = await depResp.json();
+      const evResp = await fetch(`https://api.vercel.com/v3/deployments/${deployment_id}/events?teamId=${VERCEL_TEAM}&direction=forward&follow=0&limit=500`, {
+        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` }
+      });
+      let events = [];
+      if (evResp.ok) {
+        const raw = await evResp.text();
+        try { events = JSON.parse(raw); }
+        catch {
+          // NDJSON or text format
+          events = raw.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return { text: l }; } });
+        }
+      }
+      return res.json({
+        ok: true,
+        deployment: {
+          id: dep.id, url: dep.url, readyState: dep.readyState, state: dep.state,
+          errorMessage: dep.errorMessage, errorStep: dep.errorStep, errorCode: dep.errorCode,
+          buildingAt: dep.buildingAt, ready: dep.ready, created: dep.created,
+        },
+        events: events.slice(-300), // tail
+        event_count: events.length,
+      });
+    } catch (e) {
+      return res.json({ ok: false, error: e.message });
+    }
+  }
+
   // ── TELEGRAM NOTIFICATION ───────────────────────────────────────────────
   if (action === 'telegram_notify') {
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
