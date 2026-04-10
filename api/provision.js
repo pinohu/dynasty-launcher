@@ -797,14 +797,11 @@ async function mod_video(config, project) {
         const vid = await fetch('https://aiapi.vadoo.tv/api/generate_video', {
           method: 'POST', headers: { 'X-Api-Key': vadooKey, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            topic: `${project.name}: ${(project.description || '').slice(0, 200)}`,
-            voice: 'en-US-male', theme: 'professional', language: 'English',
-            duration: 60, aspect_ratio: '16:9'
+            text: `${project.name}: ${(project.description || '').slice(0, 300)}`
           })
         }).then(r => r.json());
-        if (vid.id || vid.video_id) {
-          results.details.vadoo_video_id = vid.id || vid.video_id;
-          results.details.vadoo_url = vid.url || vid.video_url;
+        if (vid.vid || vid.id || vid.video_id) {
+          results.details.vadoo_video_id = vid.vid || vid.id || vid.video_id;
           results.ok = true;
         }
       } catch (e) { results.details.vadoo_error = e.message; }
@@ -985,27 +982,50 @@ async function mod_docs(config, project) {
   const sparkKey = config.data_research?.sparkreceipt;
   if (!docKey && !sparkKey) { results.error = 'No document API keys'; results.fallback = 'Generate legal documents at documentero.com. Need: Terms of Service, Privacy Policy, Service Agreement.'; return results; }
   try {
-    // Documentero — generate legal PDFs
-    if (docKey) {
-      const docs = [
-        { name: 'Terms of Service', template: 'terms-of-service', data: { company_name: project.name, website: `https://${project.domain || project.slug + '.vercel.app'}`, email: `hello@${project.domain || 'dynastyempire.com'}`, jurisdiction: 'United States' } },
-        { name: 'Privacy Policy', template: 'privacy-policy', data: { company_name: project.name, website: `https://${project.domain || project.slug + '.vercel.app'}`, email: `hello@${project.domain || 'dynastyempire.com'}`, jurisdiction: 'United States', data_collected: 'name, email, usage data' } },
-        { name: 'Service Agreement', template: 'service-agreement', data: { company_name: project.name, services: project.description || project.type || 'professional services' } }
+    // Legal docs — generate via AI and push to repo (Documentero templates not configured)
+    const GH_TOKEN_DOCS = process.env.GITHUB_TOKEN;
+    if (GH_TOKEN_DOCS && project.slug) {
+      const domain = project.domain || `${project.slug}.vercel.app`;
+      const email = `hello@${domain}`;
+      const legalDocs = [
+        { file: 'docs/TERMS-OF-SERVICE.md', name: 'Terms of Service' },
+        { file: 'docs/PRIVACY-POLICY.md', name: 'Privacy Policy' },
+        { file: 'docs/SERVICE-AGREEMENT.md', name: 'Service Agreement' }
       ];
+      const legalRaw = await aiGenerate(config, `Generate 3 legal documents for "${project.name}" (${project.type || 'business'}) at ${domain}. Contact: ${email}. Jurisdiction: United States.
+
+Return in this exact format:
+---BEGIN:tos---
+[Complete Terms of Service - 2000+ words, covering: acceptance, services, user obligations, payment terms, IP ownership, limitation of liability, indemnification, termination, governing law, dispute resolution, modifications, contact]
+---END:tos---
+---BEGIN:privacy---
+[Complete Privacy Policy - 1500+ words, covering: info collected, how used, cookies, third parties, data retention, security, rights (GDPR/CCPA), children, changes, contact]
+---END:privacy---
+---BEGIN:sla---
+[Complete Service Agreement - 1500+ words, covering: scope of services, deliverables, timeline, compensation, confidentiality, IP assignment, warranties, limitation of liability, termination, force majeure]
+---END:sla---`, 6000);
+
+      const sections = { tos: '', privacy: '', sla: '' };
+      for (const key of Object.keys(sections)) {
+        const match = legalRaw.match(new RegExp(`---BEGIN:${key}---([\\s\\S]*?)---END:${key}---`));
+        if (match) sections[key] = match[1].trim();
+      }
+
       results.details.documents = [];
-      for (const doc of docs) {
-        try {
-          const resp = await fetch('https://app.documentero.com/api', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ document: doc.template, apiKey: docKey, data: doc.data, format: 'pdf' })
-          });
-          if (resp.ok) {
-            const d = await resp.json();
-            results.details.documents.push({ name: doc.name, url: d.url || d.download_url, id: d.id });
-          }
-        } catch {}
+      const pairs = [['tos', legalDocs[0]], ['privacy', legalDocs[1]], ['sla', legalDocs[2]]];
+      for (const [key, doc] of pairs) {
+        if (sections[key]?.length > 500) {
+          try {
+            await pushFile(GH_TOKEN_DOCS, 'pinohu', project.slug, doc.file,
+              `# ${doc.name} — ${project.name}\n\n> Generated: ${new Date().toISOString().split('T')[0]}\n> DISCLAIMER: Review with legal counsel before publishing.\n\n${sections[key]}`,
+              `docs: ${doc.name.toLowerCase()}`);
+            results.details.documents.push({ name: doc.name, file: doc.file });
+          } catch {}
+        }
       }
       results.ok = results.details.documents.length > 0;
+      results.details.provider = 'ai-generated';
+      results.details.note = 'Legal docs generated via AI and pushed to repo. Review with legal counsel.';
     }
 
     // SparkReceipt — NO PUBLIC API. Provide manual setup instructions.
