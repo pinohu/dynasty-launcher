@@ -1,4 +1,4 @@
-# Deploying the Your Deputy
+# Deploying Your Deputy
 
 Two ways to deploy. Pick one.
 

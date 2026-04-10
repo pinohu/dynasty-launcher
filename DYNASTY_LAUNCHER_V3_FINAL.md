@@ -8,7 +8,7 @@
 
 ## 1. VISION
 
-User describes a business idea in one prompt → Dynasty provisions a **complete operating business** within 5 minutes: live website on custom domain, business email with SPF/DKIM/DMARC, phone number with AI receptionist, CRM with client portal, email marketing sequences active and deliverable, SMS campaigns, 5 SEO blog posts published, explainer video, brand asset library, booking system, real Stripe billing accepting payments, legal PDFs, analytics with heatmaps, lead intelligence, chatbot, review collection, automated workflows connecting everything, database with tables and seed data, post-deploy smoke test passing, and a complete Operations Manual + Credentials Document.
+User describes a business idea in one prompt → Your Deputy provisions a **complete operating business** within 5 minutes: live website on custom domain, business email with SPF/DKIM/DMARC, phone number with AI receptionist, CRM with client portal, email marketing sequences active and deliverable, SMS campaigns, 5 SEO blog posts published, explainer video, brand asset library, booking system, real Stripe billing accepting payments, legal PDFs, analytics with heatmaps, lead intelligence, chatbot, review collection, automated workflows connecting everything, database with tables and seed data, post-deploy smoke test passing, and a complete Operations Manual + Credentials Document.
 
 ---
 
@@ -205,7 +205,7 @@ Generated apps include `src/app/api/setup/route.ts`:
 - Sets `setup_complete` flag in DB
 - Self-disables after first successful run
 
-Dynasty calls `POST /api/setup` after deployment succeeds (Phase 19).
+Your Deputy calls `POST /api/setup` after deployment succeeds (Phase 19).
 
 ---
 
@@ -546,16 +546,16 @@ Keys with `""` = need to collect from tool dashboards.
 
 **Goal:** Acquire open-source assets that accelerate Sprints 1-6. No code writing — just forking, organizing, and extracting reusable patterns.
 
-| Task | Repo | What Dynasty Gets | Hours |
+| Task | Repo | What Your Deputy Gets | Hours |
 |------|------|-------------------|-------|
 | Fork n8n workflow library | `ritik-prog/n8n-automation-templates-5000` | 5,000+ workflow JSONs. mod_automation.js selects + customizes proven templates instead of generating from scratch | 2 |
 | Fork curated n8n templates | `enescingoz/awesome-n8n-templates` | 280+ curated workflows for email, WhatsApp, Telegram, RAG chatbots, social media | 1 |
 | Fork n8n searchable library | `Zie619/n8n-workflows` | 4,343 workflows with FastAPI search server. Deploy on Flint VM for instant lookup | 2 |
 | Study Stripe subscription starter | `vercel/nextjs-subscription-payments` | Battle-tested webhook handlers, customer portal, dunning, subscription lifecycle. Extract patterns for mod_billing.js | 1 |
 | Study enterprise SaaS kit | `boxyhq/saas-starter-kit` | SSO, SAML, directory sync, audit logs, team management. Add as template option for B2B projects | 1 |
-| Study AI website builder | `Ratna-Babu/Ai-Website-Builder` | Convex backend + Gemini AI + theme customization + export-ready code. Architecture reference for Dynasty's code generation | 1 |
-| Study AI landing page generator | `zinedkaloc/aipage.dev` | Prompt → HTML/Tailwind generation patterns. Improve Dynasty's page generation quality | 1 |
-| Create dynasty-n8n-library | New repo: `pinohu/dynasty-n8n-library` | Curated subset of workflows tagged by Dynasty project type (saas, directory, service, ecom). Each workflow has placeholder variables for project-specific webhook URLs and API keys | 2 |
+| Study AI website builder | `Ratna-Babu/Ai-Website-Builder` | Convex backend + Gemini AI + theme customization + export-ready code. Architecture reference for Your Deputy's code generation | 1 |
+| Study AI landing page generator | `zinedkaloc/aipage.dev` | Prompt → HTML/Tailwind generation patterns. Improve Your Deputy's page generation quality | 1 |
+| Create dynasty-n8n-library | New repo: `pinohu/dynasty-n8n-library` | Curated subset of workflows tagged by Your Deputy project type (saas, directory, service, ecom). Each workflow has placeholder variables for project-specific webhook URLs and API keys | 2 |
 | Extract Stripe patterns | From `vercel/nextjs-subscription-payments` | Create `templates/stripe-billing/` in dynasty-launcher with webhook handler, customer portal route, subscription status component, dunning email templates | 1 |
 
 **Sprint 0 Deliverables:**
@@ -719,16 +719,16 @@ Before Sprint 3 starts, collect these API keys:
 ### Pricing Tiers
 | Tier | Price | Modules Included |
 |------|-------|-----------------|
-| **Starter** | $297 | Code + docs + Vercel deploy (Phases 1-8) |
-| **Professional** | $997 | + Domain/email + Stripe + CRM + email marketing + chatbot (+ Phases 9-12, 15) |
-| **Enterprise** | $2,497 | + Phone/voice + SEO + video + design + analytics + leads + automation (all phases) |
-| **Portfolio** | $197/mo | Ongoing monitoring, monthly content, campaign management |
+| **Foundation** | $1,997 | 90+ strategy documents + code + Vercel deployment (Phases 1-8) |
+| **Professional** | $4,997 | + Domain/email + Stripe + CRM + email marketing + chatbot + analytics + leads + automation |
+| **Enterprise** | $9,997 | All 17 modules — phone/voice + SMS + SEO + video + design + docs + directory + social |
+| **Managed Operations** | $497/mo | Weekly reports, priority support, automation monitoring, ongoing content |
 
 ### Unit Economics
 | Item | Cost | Revenue | Margin |
 |------|------|---------|--------|
-| API costs per build | ~$5 | $297-$2,497 | 98-99% |
-| CallScaler per number | $2/mo | $50/mo (in portfolio) | 96% |
+| API costs per build | ~$5-10 | $1,997-$9,997 | 99%+ |
+| CallScaler per number | $2/mo | $497/mo (in managed ops) | 99% |
 | Total tool licenses | $0 (owned) | $590K+ inventory | 100% |
 
 ---
@@ -761,7 +761,7 @@ Your Deputy V3 is **complete** when:
 2. **Brilliant Directories programmatic provisioning** — does BD API support creating new directory instances, or manual-only?
 3. **Vadoo AI async vs sync** — if async, need polling/webhook mechanism.
 4. **n8n credential creation** — can n8n API create credentials, or must they be pre-configured?
-5. **Domain registration** — should Dynasty auto-purchase domains via 20i reseller API? (Involves real money — requires explicit confirmation.)
+5. **Domain registration** — should Your Deputy auto-purchase domains via 20i reseller API? (Involves real money — requires explicit confirmation.)
 
 ---
 

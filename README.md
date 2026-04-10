@@ -46,15 +46,17 @@ api/orchestrate.js      <- Compaction engine + smart routing
 api/memory.js           <- Project history (Neon)
 api/flags.js            <- Feature flags
 api/health.js           <- Credential health checks
-api/checkout.js         <- Stripe checkout for Dynasty tiers
+api/checkout.js         <- Stripe checkout for Your Deputy tiers
 vercel.json             <- Vercel config (300s timeout for modules)
 ```
 
 ## Pricing Tiers
 
-- **Foundation** ($497/build): Strategy docs + code + deployment (Phases 1-8)
-- **Professional** ($1,497/build): + domain, email, billing, CRM, marketing, chatbot, analytics
-- **Enterprise** ($2,997/build): All 17 modules + managed operations available
+- **Free Scoring** ($0): 8-framework viability scorecard, up to 14 AI models, no credit card
+- **Foundation** ($1,997/build): 90+ consulting-grade documents + deployed application (Phases 1-8)
+- **Professional** ($4,997/build): Everything in Foundation + domain, email, billing, CRM, marketing, chatbot, analytics, leads, automation
+- **Enterprise** ($9,997/build): Everything in Professional + phone/voice, SMS, SEO, video, design, legal docs, directory, social — all 17 modules
+- **Managed Operations** ($497/mo, add-on): Weekly reports, priority support, automation monitoring, ongoing SEO/content
 
 ## Deploy
 

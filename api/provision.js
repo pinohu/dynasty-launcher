@@ -683,7 +683,7 @@ function dcSend(){
     // Push chatbot widget to the project repo
     if (GH_TOKEN && project.slug) {
       try {
-        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'public/chatbot.html', embedWidget, 'feat: dynasty chatbot widget (FAQ-powered, no API key needed)');
+        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'public/chatbot.html', embedWidget, 'feat: your deputy chatbot widget (FAQ-powered, no API key needed)');
         results.details.files_pushed = ['public/chatbot.html'];
       } catch {}
     }
@@ -1986,7 +1986,7 @@ export default async function handler(req, res) {
       const GET_RE=/^export const (getConfig|getSiteConfig|getBrandingConfig|getSEOConfig|getNicheConfig|getNavigationConfig|getSocialConfig|getFeaturesConfig|getDirectoryConfig|getContentConfig|getMonetizationConfig)\s*=/m;
       let core=niche_config; const gm=core.match(GET_RE);
       if(gm) core=core.substring(0,gm.index).trimEnd();
-      await pushFile(GH_TOKEN,ORG,project_slug,'src/config/niche.config.ts',core+'\n'+EXPORTS,'feat: dynasty niche configuration');
+      await pushFile(GH_TOKEN,ORG,project_slug,'src/config/niche.config.ts',core+'\n'+EXPORTS,'feat: your deputy niche configuration');
       await new Promise(r=>setTimeout(r,400));
     }
 
@@ -2014,7 +2014,7 @@ Each headline should be under 60 chars. Subtitles under 120 chars. Target primar
 
     // 7. Push theme CSS
     const css=theme_css||(accent_hex?generateThemeCss(accent_hex):null);
-    if(css){await pushFile(GH_TOKEN,ORG,project_slug,'src/styles/theme.generated.css',css,'feat: dynasty theme');await new Promise(r=>setTimeout(r,400));}
+    if(css){await pushFile(GH_TOKEN,ORG,project_slug,'src/styles/theme.generated.css',css,'feat: your deputy theme');await new Promise(r=>setTimeout(r,400));}
 
     // 7.1 Push updated manifest.json
     try {
