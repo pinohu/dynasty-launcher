@@ -2150,12 +2150,12 @@ function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 
 // ── V3 Tier Gating ─────────────────────────────────────────────────
 const V3_TIERS = {
-  free: { price: 0, label: 'Free Scoring', modules: [] }, // Viability scoring only — no build
-  foundation: { price: 497, label: 'Foundation ($497)', modules: [] }, // Strategy docs + deployment, no integration modules
-  starter: { price: 497, label: 'Foundation ($497)', modules: [] }, // Alias for legacy starter references
-  professional: { price: 1497, label: 'Professional ($1,497)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'] },
-  enterprise: { price: 2997, label: 'Enterprise ($2,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] },
-  managed: { price: 197, label: 'Managed Ops ($197/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] }
+  free: { price: 0, label: 'Free Scoring', modules: [] },
+  foundation: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
+  starter: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
+  professional: { price: 4997, label: 'Professional ($4,997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics'] },
+  enterprise: { price: 9997, label: 'Enterprise ($9,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] },
+  managed: { price: 497, label: 'Managed Ops ($497/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'] }
 };
 function getUserTier() {
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
@@ -3673,14 +3673,14 @@ async function startBuild() {
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   if (!isAdmin && !hasPaid) {
     // Free tier can score but not build — show upgrade prompt
-    const action = confirm('Free tier includes viability scoring only.\n\nUpgrade to Foundation ($497) to get strategy documents + deployed application.\n\nClick OK to view plans.');
+    const action = confirm('Free tier includes viability scoring only.\n\nUpgrade to Foundation ($1,997) to get strategy documents + deployed application.\n\nClick OK to view plans.');
     if (action) { window.location.href = '/#pricing'; }
     return;
   }
 
   // ── Build gating: check if user has builds remaining ────────────
   if (getBuildsRemaining() <= 0) {
-    const action = confirm('You\'ve used your build credit. Purchase a Foundation build for $497?\n\nClick OK to go to checkout, or Cancel to return.');
+    const action = confirm('You\'ve used your build credit. Purchase a Foundation build for $1,997?\n\nClick OK to go to checkout, or Cancel to return.');
     if (action) { startCheckout('foundation'); return; }
     else return;
   }
@@ -10459,7 +10459,7 @@ ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see M
     <span style="color:var(--sec)">Analytics + lead intelligence</span><span style="color:var(--dim)">MarTech equiv.</span><span style="color:var(--gold);font-weight:600">$1,000–3,000</span>
     <span style="color:var(--sec)">Legal PDFs + operations manual</span><span style="color:var(--dim)">Attorney equiv.</span><span style="color:var(--gold);font-weight:600">$2,000–5,000</span>
     <span style="color:var(--sec)">Social calendar (260 posts)</span><span style="color:var(--dim)">Agency equiv.</span><span style="color:var(--gold);font-weight:600">$1,500–3,000</span>
-    <span style="color:var(--sec);font-weight:600;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px;grid-column:1/3">Total equivalent value</span><span style="color:var(--gold);font-weight:700;font-size:14px;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px">$45,000–112,000</span>
+    <span style="color:var(--sec);font-weight:600;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px;grid-column:1/3">Total equivalent value</span><span style="color:var(--gold);font-weight:700;font-size:14px;border-top:1px solid rgba(201,168,76,0.15);padding-top:6px">$71,000–194,000</span>
   </div>
   <div style="font-size:10px;color:var(--dim);margin-top:8px">Built with Your Deputy</div>
 </div>

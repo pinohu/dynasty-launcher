@@ -40,10 +40,10 @@ export default async function handler(req, res) {
     const { plan, email } = req.body || {};
 
     const tiers = {
-      foundation: { amount: 49700, name: 'Your Deputy — Foundation', desc: '9 consulting-grade strategy documents, SBA business plan, investor readiness package, 8-framework viability scorecard, production application deployed to your domain, 65+ files, private code repository + PostgreSQL database.' },
-      starter: { amount: 49700, name: 'Your Deputy — Foundation', desc: '9 consulting-grade strategy documents, SBA business plan, investor readiness package, 8-framework viability scorecard, production application deployed to your domain, 65+ files, private code repository + PostgreSQL database.' },
-      professional: { amount: 149700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus: custom domain + authenticated business email (SPF/DKIM), connected payment account, CRM + client portal, 5-email marketing automation, AI chatbot, behavioral analytics + lead tracking.' },
-      enterprise: { amount: 299700, name: 'Your Deputy — Enterprise', desc: 'Complete operational business: all 17 modules including AI voice agent, SMS campaigns, SEO content, explainer video, design assets, 7 automation workflows, legal documents, 260-post social calendar, and more.' }
+      foundation: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations). SBA business plan, investor readiness package, cap table model, tax strategy. Production app deployed to your domain with database + CI/CD. $71K–$131K equivalent value.' },
+      starter: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations). SBA business plan, investor readiness package, cap table model, tax strategy. Production app deployed to your domain with database + CI/CD. $71K–$131K equivalent value.' },
+      professional: { amount: 499700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus: custom domain, authenticated business email (SPF/DKIM/DMARC), connected payment account with 3 tiers, CRM + client portal, 5-email marketing automation, AI chatbot, behavioral analytics, 7 automation workflows. $100K–$170K equivalent value.' },
+      enterprise: { amount: 999700, name: 'Your Deputy — Enterprise', desc: 'Complete operational business: 140+ deliverables, 17 live services, AI-generated images + video, SEO content, legal documents, 260-post social calendar. Everything you need to launch, raise funding, or close your first customer. $71K–$194K equivalent value.' }
     };
     const tierDef = tiers[plan] || tiers.foundation;
     const enc = (s) => encodeURIComponent(s);
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
           'metadata[source]=your-deputy',
           'metadata[plan]=managed',
           'line_items[0][price_data][currency]=usd',
-          'line_items[0][price_data][unit_amount]=19700',
+          'line_items[0][price_data][unit_amount]=49700',
           `line_items[0][price_data][product_data][name]=${enc('Your Deputy — Managed Operations')}`,
           `line_items[0][price_data][product_data][description]=${enc('Monthly managed operations: weekly performance reports, priority support, automation monitoring, quarterly strategy refresh, ongoing optimization.')}`,
           'line_items[0][price_data][recurring][interval]=month',

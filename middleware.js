@@ -114,7 +114,7 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
 <p>Build a complete operating business from one prompt. Score your idea free, or choose a plan to build.</p>
 <div class="btns">
   <a href="/app?plan=free">Score Free</a>
-  <a href="/app?plan=professional" class="primary">Build — $1,497</a>
+  <a href="/app?plan=professional" class="primary">Build — $4,997</a>
 </div>
 <div class="btns" style="margin-top:8px">
   <a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>
