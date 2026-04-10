@@ -32,7 +32,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--gold:#C9A84C;--gdim:rgba(201,168,76,0.08);--gb:rgba(201,168,76,0.2);--ink:#0A0A0A;--panel:#181818;--card:#1E1E1E;--card2:#252525;--bdr:rgba(255,255,255,0.07);--bmd:rgba(255,255,255,0.13);--tx:#EEEDE8;--sec:#908D86;--dim:#4A4845;--grn:#3ECF8E;--pur:#635BFF;--red:#E5534B;--r:8px;--rl:12px}
+:root{--gold:#C9A84C;--gdim:rgba(201,168,76,0.08);--gb:rgba(201,168,76,0.2);--ink:#0A0A0A;--panel:#181818;--card:#1E1E1E;--card2:#252525;--bdr:rgba(255,255,255,0.07);--bmd:rgba(255,255,255,0.13);--tx:#EEEDE8;--sec:#908D86;--dim:#8A8780;--grn:#3ECF8E;--pur:#635BFF;--red:#E5534B;--r:8px;--rl:12px}
 html,body{min-height:100vh;scroll-behavior:smooth;background:#0D0D0D;color:var(--tx);font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px}
 .page{max-width:680px;margin:0 auto;padding:3rem 1.5rem 4rem}
 .logo{display:flex;align-items:center;gap:10px;margin-bottom:3rem}
@@ -59,6 +59,9 @@ html,body{min-height:100vh;scroll-behavior:smooth;background:#0D0D0D;color:var(-
 .big-input:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(201,168,76,0.06)}
 .big-input::placeholder{color:var(--dim)}
 .input-meta{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{position:absolute;top:-40px;left:0;background:var(--gold);color:#000;padding:8px 16px;z-index:10000;font-weight:600;border-radius:0 0 8px 0;transition:.2s}.skip-link:focus{top:0}
+*:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
 .char-hint{font-size:11px;color:var(--dim)}
 .examples{display:flex;gap:6px;flex-wrap:wrap}
 .ex{padding:3px 9px;border:1px solid var(--bdr);border-radius:9999px;font-size:11px;color:var(--dim);cursor:pointer;transition:.12s}
@@ -119,7 +122,7 @@ html,body{min-height:100vh;scroll-behavior:smooth;background:#0D0D0D;color:var(-
 .again{font-size:12px;color:var(--dim);cursor:pointer;text-decoration:underline;margin-top:.75rem;display:inline-block}
 /* Build layout — progress + education side by side */
 .build-layout{display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start}
-@media(max-width:700px){.build-layout{grid-template-columns:1fr}}
+@media(max-width:700px){.build-layout{grid-template-columns:1fr}.model-cards{grid-template-columns:repeat(3,1fr)}.sc-actions{grid-template-columns:1fr}.mode-cards{grid-template-columns:1fr}.fw-grid{grid-template-columns:1fr}.inf-grid{grid-template-columns:1fr}.tinputs{grid-template-columns:1fr}.consensus-meta{grid-template-columns:1fr}.phase-models{grid-template-columns:1fr}}
 .edu-card{position:sticky;top:80px;background:var(--card);border:1px solid var(--gb);border-radius:var(--rl);padding:1.1rem;transition:all .4s ease;overflow:hidden}
 .edu-phase{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--gold);margin-bottom:6px}
 .edu-title{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:8px;line-height:1.3}
@@ -611,6 +614,7 @@ html,body{overflow-x:hidden}
 <script defer src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
 </head>
 <body>
+<a href="#project-desc" class="skip-link">Skip to main content</a>
 <div class="page">
   <div class="logo" id="builder-header">
     <div class="lm">⚡</div>
@@ -656,7 +660,8 @@ html,body{overflow-x:hidden}
     </div>
 
     <div class="input-area">
-      <textarea class="big-input" id="project-desc" placeholder="e.g. A Pennsylvania government compliance platform that files annual reports and UCC documents for LLC owners across all 67 counties. Targeting small business owners who don't have time to deal with the state."></textarea>
+      <label for="project-desc" class="sr-only">Describe your business idea</label>
+      <textarea class="big-input" id="project-desc" aria-label="Describe your business idea" placeholder="e.g. A Pennsylvania government compliance platform that files annual reports and UCC documents for LLC owners across all 67 counties. Targeting small business owners who don't have time to deal with the state."></textarea>
 
       <!-- ── Input Methods ─────────────────────────────────────────────────── -->
       <div class="input-methods">
