@@ -1591,7 +1591,7 @@ async function runModules(config, project, liveUrl, enabledModules) {
 
   // Per-module timeout — AI-heavy modules get more time, API-only modules get less.
   // Overall budget: 240s max (leaves 60s for post-module operations within 300s limit).
-  const AI_MODULES = new Set(['chatbot', 'seo', 'video']); // These call AI APIs (slow)
+  const AI_MODULES = new Set(['chatbot', 'seo', 'video', 'docs']); // These call AI APIs (slow)
   const MODULE_TIMEOUT_DEFAULT = 20000; // 20s for API-only modules
   const MODULE_TIMEOUT_AI = 120000;     // 120s for AI-generating modules (SEO generates 5 blog posts)
   const startTime = Date.now();
