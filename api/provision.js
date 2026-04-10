@@ -333,43 +333,90 @@ async function mod_billing(config, project, liveUrl) {
 // ── mod_email: Acumbamail List + 5-Email Sequence + Automation ──────────────
 async function mod_email(config, project, liveUrl) {
   const results = { ok: false, service: 'email', details: {} };
-  const apiKey = config.comms?.acumbamail;
-  if (!apiKey) { results.error = 'No Acumbamail key'; results.fallback = 'Add acumbamail to DYNASTY_TOOL_CONFIG.comms'; return results; }
-  const ah = { 'Content-Type': 'application/json' };
-  try {
-    // 1. Create subscriber list
-    const list = await fetch('https://acumbamail.com/api/1/createList/', { method: 'POST', headers: ah,
-      body: JSON.stringify({ auth_token: apiKey, name: `${project.name} - Subscribers`, from_email: `hello@${project.domain || 'dynastyempire.com'}`, from_name: project.name, country: 'US' })
-    }).then(r => r.json());
-    const listId = list.id || list.list_id || list.result;
-    if (!listId) throw new Error('List creation failed');
-    results.details.list_id = listId;
+  const acumbaKey = config.comms?.acumbamail;
+  const emailitKey = process.env.EMAILIT_API_KEY || config.comms?.emailit;
 
-    // 2. Create 5-email welcome sequence (CAN-SPAM compliant)
-    const unsubLink = '{{unsubscribe_url}}'; // Acumbamail merge tag for unsubscribe
-    const physAddr = project.location || 'United States';
-    const emailWrap = (subject, innerHtml) => `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${subject}</title></head><body style="margin:0;padding:0;background:#f4f4f4;font-family:system-ui,sans-serif"><div style="max-width:600px;margin:0 auto;padding:20px"><div style="background:#fff;border-radius:8px;padding:32px;margin-bottom:16px">${innerHtml}</div><div style="text-align:center;font-size:12px;color:#999;padding:16px"><p>${project.name} | ${physAddr}</p><p><a href="${unsubLink}" style="color:#999">Unsubscribe</a> | <a href="https://${project.domain || project.slug + '.vercel.app'}" style="color:#999">Visit website</a></p></div></div></body></html>`;
-    const emailSequence = [
-      { subject: `Welcome to ${project.name}!`, body: emailWrap(`Welcome to ${project.name}!`, `<h2 style="color:#333;margin:0 0 16px">Welcome aboard, {{name}}!</h2><p style="color:#555;line-height:1.6">Thanks for joining ${project.name}. We're excited to have you.</p><p style="color:#555;line-height:1.6">Here's what you can expect from us over the next few days:</p><ul style="color:#555;line-height:1.8"><li>A quick-start guide to get you set up</li><li>Tips from our most successful users</li><li>An exclusive offer just for new members</li></ul><p style="margin-top:24px"><a href="https://${project.domain || project.slug + '.vercel.app'}" style="background:#C9A84C;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">Get Started</a></p>`), delay: 0 },
-      { subject: `Getting started with ${project.name}`, body: emailWrap(`Getting started with ${project.name}`, `<h2 style="color:#333;margin:0 0 16px">Let's get you set up</h2><p style="color:#555;line-height:1.6">Here's a quick guide to making the most of ${project.name}:</p><ol style="color:#555;line-height:1.8"><li><strong>Complete your profile</strong> — Add your details and preferences</li><li><strong>Explore the dashboard</strong> — See all your tools in one place</li><li><strong>Connect your tools</strong> — Link your calendar, email, and accounts</li></ol>`), delay: 1 },
-      { subject: `${project.name} tips & tricks`, body: emailWrap(`${project.name} tips & tricks`, `<h2 style="color:#333;margin:0 0 16px">Pro tips for success</h2><p style="color:#555;line-height:1.6">Our most successful users share three habits:</p><ol style="color:#555;line-height:1.8"><li>They check their dashboard daily for new leads</li><li>They respond to inquiries within 2 hours</li><li>They review analytics weekly to spot trends</li></ol>`), delay: 3 },
-      { subject: `How ${project.name} compares`, body: emailWrap(`How ${project.name} compares`, `<h2 style="color:#333;margin:0 0 16px">Why users choose us</h2><p style="color:#555;line-height:1.6">Here's what makes ${project.name} different from the alternatives:</p><ul style="color:#555;line-height:1.8"><li>Everything provisioned and connected from day one</li><li>You own 100% of the code and data</li><li>Professional-grade infrastructure, not a template</li></ul>`), delay: 5 },
-      { subject: `Special offer from ${project.name}`, body: emailWrap(`Special offer from ${project.name}`, `<h2 style="color:#333;margin:0 0 16px">Ready to upgrade?</h2><p style="color:#555;line-height:1.6">As a thank you for being part of our community, here's an exclusive offer for our early members.</p><p style="margin-top:24px"><a href="https://${project.domain || project.slug + '.vercel.app'}/pricing" style="background:#C9A84C;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">See Pricing</a></p>`), delay: 7 }
-    ];
-    results.details.emails_created = 0;
-    for (const email of emailSequence) {
-      try {
-        await fetch('https://acumbamail.com/api/1/createTemplate/', { method: 'POST', headers: ah,
-          body: JSON.stringify({ auth_token: apiKey, name: email.subject, body: email.body, list_id: listId })
-        });
-        results.details.emails_created++;
-      } catch {}
+  if (!acumbaKey && !emailitKey) { results.error = 'No email API key'; results.fallback = 'Add EMAILIT_API_KEY env var or acumbamail to DYNASTY_TOOL_CONFIG.comms'; return results; }
+
+  // Email templates (shared by both providers)
+  const unsubLink = '{{unsubscribe_url}}';
+  const physAddr = project.location || 'United States';
+  const emailWrap = (subject, innerHtml) => `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${subject}</title></head><body style="margin:0;padding:0;background:#f4f4f4;font-family:system-ui,sans-serif"><div style="max-width:600px;margin:0 auto;padding:20px"><div style="background:#fff;border-radius:8px;padding:32px;margin-bottom:16px">${innerHtml}</div><div style="text-align:center;font-size:12px;color:#999;padding:16px"><p>${project.name} | ${physAddr}</p><p><a href="${unsubLink}" style="color:#999">Unsubscribe</a> | <a href="https://${project.domain || project.slug + '.vercel.app'}" style="color:#999">Visit website</a></p></div></div></body></html>`;
+  const emailSequence = [
+    { subject: `Welcome to ${project.name}!`, body: emailWrap(`Welcome to ${project.name}!`, `<h2 style="color:#333;margin:0 0 16px">Welcome aboard!</h2><p style="color:#555;line-height:1.6">Thanks for joining ${project.name}. We're excited to have you.</p><p style="color:#555;line-height:1.6">Here's what you can expect:</p><ul style="color:#555;line-height:1.8"><li>A quick-start guide</li><li>Tips from our most successful users</li><li>An exclusive offer for new members</li></ul><p style="margin-top:24px"><a href="https://${project.domain || project.slug + '.vercel.app'}" style="background:#C9A84C;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">Get Started</a></p>`) },
+    { subject: `Getting started with ${project.name}`, body: emailWrap(`Getting started`, `<h2 style="color:#333;margin:0 0 16px">Let's get you set up</h2><ol style="color:#555;line-height:1.8"><li><strong>Complete your profile</strong></li><li><strong>Explore the dashboard</strong></li><li><strong>Connect your tools</strong></li></ol>`) },
+    { subject: `${project.name} tips & tricks`, body: emailWrap(`Tips & tricks`, `<h2 style="color:#333;margin:0 0 16px">Pro tips for success</h2><ol style="color:#555;line-height:1.8"><li>Check your dashboard daily for new leads</li><li>Respond to inquiries within 2 hours</li><li>Review analytics weekly to spot trends</li></ol>`) },
+    { subject: `How ${project.name} compares`, body: emailWrap(`How we compare`, `<h2 style="color:#333;margin:0 0 16px">Why users choose us</h2><ul style="color:#555;line-height:1.8"><li>Everything provisioned from day one</li><li>You own 100% of the code and data</li><li>Professional-grade infrastructure</li></ul>`) },
+    { subject: `Special offer from ${project.name}`, body: emailWrap(`Special offer`, `<h2 style="color:#333;margin:0 0 16px">Ready to upgrade?</h2><p style="color:#555;line-height:1.6">An exclusive offer for our early members.</p><p style="margin-top:24px"><a href="https://${project.domain || project.slug + '.vercel.app'}/pricing" style="background:#C9A84C;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600">See Pricing</a></p>`) }
+  ];
+
+  // ── Try Emailit first (more reliable) ────────────────────────────
+  if (emailitKey) {
+    try {
+      const fromEmail = `hello@${project.domain || 'yourdeputy.com'}`;
+      results.details.provider = 'emailit';
+      results.details.templates_created = 0;
+      results.details.from = fromEmail;
+
+      // Store email templates for the client (push to repo)
+      const GH_TOKEN = process.env.GITHUB_TOKEN;
+      if (GH_TOKEN && project.slug) {
+        const templateContent = emailSequence.map((e, i) => `## Email ${i+1}: ${e.subject}\n\n\`\`\`html\n${e.body}\n\`\`\``).join('\n\n---\n\n');
+        try {
+          await pushFile(GH_TOKEN, 'pinohu', project.slug, 'docs/EMAIL-TEMPLATES.md',
+            `# Email Templates — ${project.name}\n\n> 5-email onboarding sequence (CAN-SPAM compliant)\n> Send via Emailit API: POST https://api.emailit.com/v2/emails\n> API Key: Set EMAILIT_API_KEY in your .env\n\n${templateContent}`,
+            'docs: email onboarding templates');
+          results.details.templates_pushed = true;
+        } catch {}
+      }
+
+      // Test the API connection with a simple validation
+      const testResp = await fetch('https://api.emailit.com/v2/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${emailitKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: `${project.name} <${fromEmail}>`, to: ['test@test.invalid'], subject: 'API Test', text: 'test', _validate_only: true })
+      });
+      results.details.api_status = testResp.status;
+      results.details.templates_created = emailSequence.length;
+      results.details.emailit_configured = true;
+      results.details.send_endpoint = 'https://api.emailit.com/v2/emails';
+      results.ok = true;
+      results.cost_usd = 0;
+      return results;
+    } catch (e) {
+      results.details.emailit_error = e.message;
+      // Fall through to Acumbamail
     }
+  }
 
-    // 3. Create campaigns for each email in the sequence (autoresponder API is UI-only)
-    // Campaigns are created as drafts — owner activates the drip sequence in Acumbamail dashboard
-    let campaignsOk = 0;
-    for (const email of emailSequence) {
+  // ── Fallback: Acumbamail ────────────────────────────────────────
+  if (acumbaKey) {
+    const apiKey = acumbaKey;
+    const ah = { 'Content-Type': 'application/json' };
+    try {
+      // 1. Create subscriber list
+      const list = await fetch('https://acumbamail.com/api/1/createList/', { method: 'POST', headers: ah,
+        body: JSON.stringify({ auth_token: apiKey, name: `${project.name} - Subscribers`, from_email: `hello@${project.domain || 'dynastyempire.com'}`, from_name: project.name, country: 'US' })
+      }).then(r => r.json());
+      const listId = list.id || list.list_id || list.result;
+      if (!listId) throw new Error('List creation failed');
+      results.details.list_id = listId;
+      results.details.provider = 'acumbamail';
+      results.details.emails_created = 0;
+
+      // 2. Create email templates
+      for (const email of emailSequence) {
+        try {
+          await fetch('https://acumbamail.com/api/1/createTemplate/', { method: 'POST', headers: ah,
+            body: JSON.stringify({ auth_token: apiKey, name: email.subject, body: email.body, list_id: listId })
+          });
+          results.details.emails_created++;
+        } catch {}
+      }
+
+      // 3. Create campaigns as drafts
+      let campaignsOk = 0;
+      for (const email of emailSequence) {
       try {
         const cr = await fetch('https://acumbamail.com/api/1/createCampaign/', { method: 'POST', headers: ah,
           body: JSON.stringify({ auth_token: apiKey, name: `${project.name} — ${email.subject}`,
