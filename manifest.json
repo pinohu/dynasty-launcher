@@ -1,0 +1,21 @@
+{
+  "name": "Your Deputy",
+  "short_name": "Deputy",
+  "description": "Deploy a fully operational business from a single brief. 90+ documents, 17 live services, $71K-$194K equivalent value.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0C0C14",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "en-US"
+}
