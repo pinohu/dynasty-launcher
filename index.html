@@ -137,32 +137,47 @@ footer{border-top:1px solid rgba(255,255,255,.12);max-width:1080px;margin:0 auto
 .fc a:hover{color:var(--gold)}
 .fbt{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--bdr);font-size:12px;color:var(--dim)}
 @media(max-width:768px){
-.nav-links{display:none}.hamburger{display:block}
-.hero{padding:110px 20px 60px}.hero h1{font-size:32px}
-.hero-ctas{flex-direction:column}.hero-ctas a{width:100%;padding:12px 20px;font-size:14px}
-.demo-body{grid-template-columns:1fr}.demo-sidebar{border-left:none;border-top:1px solid var(--bdr);padding-left:0;padding-top:16px}
-.stats-grid{grid-template-columns:1fr 1fr}.stat{border-bottom:1px solid var(--bdr)}
-.compare{grid-template-columns:1fr}.cv{text-align:center}
-.features{grid-template-columns:1fr}.ft.w{grid-column:span 1}
-.steps{grid-template-columns:1fr}
-.pricing{grid-template-columns:1fr 1fr}
-.fg{grid-template-columns:1fr 1fr;gap:24px}
+.nav-links{display:none;position:fixed;top:60px;left:0;right:0;background:#0D0D15;border-bottom:1px solid rgba(255,255,255,.1);flex-direction:column;padding:16px 24px;gap:0;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.nav-links a{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:15px}
+.nav-links a:last-child{border-bottom:none}
+nav{height:56px;padding:0 16px}
+.nav-logo{font-size:14px}.nav-logo svg{width:24px;height:24px}
+.hamburger{display:block;font-size:20px}
+.nav-right{display:none}
+.hero{padding:80px 16px 32px}.hero h1{font-size:28px}
+.hero p{font-size:15px;margin-bottom:24px}
+.hero-badge{font-size:10px;padding:5px 12px;flex-wrap:wrap;justify-content:center;text-align:center;line-height:1.5}
+.hero-ctas{flex-direction:column;gap:10px}.hero-ctas a{width:100%;padding:12px 20px;font-size:14px}
+.demo-wrap{padding:0 16px}.demo-body{grid-template-columns:1fr;padding:20px 16px;min-height:auto}.demo-sidebar{border-left:none;border-top:1px solid var(--bdr);padding-left:0;padding-top:12px}
+.demo-phase{font-size:12px;padding:5px 8px}
+.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:20px 16px;border-bottom:1px solid var(--bdr)}.stat .num{font-size:28px}
+.compare{grid-template-columns:1fr}.cv{text-align:center;font-size:18px;padding:4px 0}
+.cc{padding:20px}
+.features{grid-template-columns:1fr}.ft.w{grid-column:span 1}.ft{padding:20px 18px}
+.steps{grid-template-columns:1fr}.stp{padding:20px 16px}
+.pricing{grid-template-columns:1fr}.pl{padding:24px 20px}.pl .pr{font-size:32px}
+.fg{grid-template-columns:1fr;gap:28px;text-align:center}
+.fb+p{max-width:none;margin:0 auto}
+.fc{text-align:center}
+.fc a{padding:8px 0;font-size:14px;min-height:44px;display:flex;align-items:center;justify-content:center}
 .fbt{flex-direction:column;gap:8px;text-align:center}
-section{padding:40px 20px}
+section{padding:32px 16px}
+.sl{font-size:11px}.ss{font-size:14px;margin-bottom:24px}
+.cta-s{padding:32px 16px}.cta-s h2{font-size:24px}.cta-s p{font-size:14px;margin-bottom:20px}
+.trust-logos{gap:16px}.trust-logos span{font-size:11px}
 }
-@media(max-width:480px){.pricing{grid-template-columns:1fr}}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
 .skip-link:focus{position:fixed;left:16px;top:16px;width:auto;height:auto;overflow:visible;background:var(--gold);color:var(--ink);padding:8px 16px;border-radius:8px;font-weight:600;font-size:14px;z-index:9999}
-@media(max-width:480px){.fg{grid-template-columns:1fr}.trust-logos{gap:24px}.stats-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:380px){.hero h1{font-size:24px}.hero-badge{font-size:9px}.stat .num{font-size:24px}.pl .pr{font-size:28px}.ci{flex-direction:column;gap:2px}.ci strong{font-size:13px}}
 </style>
 </head>
 <body>
 <a href="#features" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999">Skip to content</a>
 <nav id="nav" role="navigation" aria-label="Main navigation">
 <a href="/" class="nav-logo"><svg viewBox="0 0 28 28" fill="none"><path d="M14 2L26 14L14 26L2 14L14 2Z" fill="#C9A84C" opacity=".2"/><path d="M14 6L22 14L14 22L6 14L14 6Z" fill="#C9A84C"/></svg> Your Deputy</a>
-<div class="nav-links"><a href="#features">Features</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div>
+<div class="nav-links" id="mobile-nav"><a href="#features" onclick="closeNav()">Features</a><a href="#how" onclick="closeNav()">How it works</a><a href="#pricing" onclick="closeNav()">Pricing</a><a href="#faq" onclick="closeNav()">FAQ</a><a href="app?returning=1" onclick="closeNav()" style="color:var(--gold);font-weight:600">Sign in</a><a href="app?plan=professional" onclick="closeNav()" style="background:var(--gold);color:#000;border-radius:8px;text-align:center;font-weight:600;padding:12px;margin-top:8px">Request a build</a></div>
 <div class="nav-right"><a href="app?returning=1" class="nav-signin">Sign in</a><a href="app?plan=professional" class="nav-cta">Request a build</a></div>
-<button class="hamburger" aria-label="Toggle navigation menu" onclick="document.querySelector('.nav-links').style.display=document.querySelector('.nav-links').style.display==='flex'?'none':'flex'">☰</button>
+<button class="hamburger" aria-label="Toggle navigation menu" onclick="var n=document.getElementById('mobile-nav');n.style.display=n.style.display==='flex'?'none':'flex';this.textContent=n.style.display==='flex'?'✕':'☰'">☰</button>
 </nav>
 <div class="hero">
 <div class="hero-badge"><span class="dot"></span> 140+ deliverables · 90+ documents · 17 live services · $71K–$194K equivalent value</div>
@@ -190,6 +205,7 @@ section{padding:40px 20px}
 <footer><div class="fg"><div><div class="fb">⚡ Your Deputy</div><p>Describe your business. We build it — strategy, infrastructure, compliance, and operations. Ready to operate, raise, or sell.</p></div><div class="fc"><h4>Product</h4><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#how">How it works</a><a href="#faq">FAQ</a></div><div class="fc"><h4>Resources</h4><a href="app?plan=free">Score free</a><a href="#faq">FAQ</a></div><div class="fc"><h4>Company</h4><a href="https://dynastyempire.com" target="_blank">Dynasty Empire</a><a href="mailto:ikeohu@dynastyempire.com">Contact</a></div><div class="fc"><h4>Legal</h4><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="app?returning=1">Sign in</a></div></div><div class="fbt"><p>© 2026 Dynasty Empire LLC</p><div style="display:flex;gap:20px"><a href="https://github.com/pinohu" target="_blank" style="color:var(--dim);text-decoration:none;font-size:13px">GitHub</a><a href="https://linkedin.com/in/ikeohu" target="_blank" style="color:var(--dim);text-decoration:none;font-size:13px">LinkedIn</a></div></div></footer>
 <script>
 addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',scrollY>50)});
+function closeNav(){var n=document.getElementById('mobile-nav');n.style.display='none';document.querySelector('.hamburger').textContent='☰';}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
 </script>
 <script type="application/ld+json">
