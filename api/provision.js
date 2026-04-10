@@ -913,28 +913,44 @@ Sizes needed:
       } catch {}
     }
 
-    // Still try SUPERMACHINE if key exists (it's an n8n webhook trigger)
+    // SUPERMACHINE — real API at dev.supermachine.art
     if (smKey) {
-      try {
-        const img = await fetch(`https://api.supermachine.art/v1/generate`, {
-          method: 'POST', headers: { 'x-api-key': smKey, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: `Professional hero image for ${project.name}`, width: 1920, height: 1080 })
-        }).then(r => r.json());
-        if (img.url || img.image_url) { results.details.hero_image = img.url || img.image_url; results.ok = true; }
-      } catch (e) { results.details.logo_error = e.message; }
+      const smHeaders = { 'Authorization': `Bearer ${smKey}`, 'Content-Type': 'application/json' };
+      const smBase = 'https://dev.supermachine.art/v1';
 
-      // OG image (1200x630) — for social sharing
-      try {
-        const og = await fetch('https://api.supermachine.art/v1/generate', {
-          method: 'POST', headers: { 'Authorization': `Bearer ${smKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: `Social media preview card for "${project.name}", ${project.type || 'business'}, professional banner style, ${project.accent || 'blue'} accent, modern design`,
-            negative_prompt: 'text, watermark, blurry',
-            width: 1200, height: 630, style: 'photorealistic'
-          })
+      // Helper: generate image and poll for completion
+      async function smGenerate(prompt, width, height) {
+        const gen = await fetch(`${smBase}/generate`, {
+          method: 'POST', headers: smHeaders,
+          body: JSON.stringify({ model: 'Supermachine NextGen', prompt, negativePrompt: 'text, watermark, logo, blurry, low quality', width, height, steps: 20, guidance: 7 })
         }).then(r => r.json());
-        if (og.url || og.image_url) { results.details.og_image = og.url || og.image_url; results.ok = true; }
-      } catch (e) { results.details.og_error = e.message; }
+        if (!gen.batchId) return null;
+        // Poll for completion (max 30s, every 3s)
+        for (let i = 0; i < 10; i++) {
+          await new Promise(r => setTimeout(r, 3000));
+          const poll = await fetch(`${smBase}/images?batchId=${gen.batchId}`, { headers: smHeaders }).then(r => r.json());
+          if (poll.items?.[0]?.status === 'completed' && poll.items[0].url) return poll.items[0].url;
+        }
+        return null;
+      }
+
+      // Hero image (1024x768 — SDXL supported resolution)
+      try {
+        const heroUrl = await smGenerate(
+          `Professional hero image for ${project.name}, ${project.type || 'business'} theme, modern clean design, ${project.accent || 'blue'} accent color, high quality, corporate`,
+          1024, 768
+        );
+        if (heroUrl) { results.details.hero_image = heroUrl; results.ok = true; }
+      } catch (e) { results.details.hero_error = sanitizeError(e.message); }
+
+      // OG image (1024x768 then note to crop to 1200x630)
+      try {
+        const ogUrl = await smGenerate(
+          `Social media preview card for "${project.name}", ${project.type || 'business'}, professional banner, ${project.accent || 'blue'} accent, modern design`,
+          1024, 768
+        );
+        if (ogUrl) { results.details.og_image = ogUrl; results.ok = true; }
+      } catch (e) { results.details.og_error = sanitizeError(e.message); }
     }
 
     // Pixelied — NO PUBLIC API (browser-based design tool only)
@@ -1688,7 +1704,7 @@ async function runModules(config, project, liveUrl, enabledModules) {
 
   // Per-module timeout — AI-heavy modules get more time, API-only modules get less.
   // Overall budget: 240s max (leaves 60s for post-module operations within 300s limit).
-  const AI_MODULES = new Set(['chatbot', 'seo', 'video', 'docs']); // These call AI APIs (slow)
+  const AI_MODULES = new Set(['chatbot', 'seo', 'video', 'docs', 'design']); // These call AI APIs or poll (slow)
   const MODULE_TIMEOUT_DEFAULT = 20000; // 20s for API-only modules
   const MODULE_TIMEOUT_AI = 120000;     // 120s for AI-generating modules (SEO generates 5 blog posts)
   const startTime = Date.now();
