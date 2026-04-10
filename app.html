@@ -619,7 +619,7 @@ html,body{overflow-x:hidden}
   <div class="logo" id="builder-header">
     <div class="lm">⚡</div>
     <div><div class="lt">Your Deputy</div><div class="ls">Describe your project — everything else is inferred and built automatically</div></div>
-    <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:60px">Sign In</button>
+    <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:70px;background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600" onclick="handleSignIn()">Sign In</button>
     <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">📊</button>
     <button class="lset" id="settings-btn" title="Settings">⚙</button>
   </div>
@@ -1246,6 +1246,20 @@ let ORG=localStorage.getItem('dynasty_gh_org')||ORG_DEFAULT;
 let CLERK_INSTANCE = null;
 let CLERK_USER = null;
 
+function handleSignIn() {
+  if (CLERK_INSTANCE && CLERK_USER) {
+    CLERK_INSTANCE.openUserProfile();
+  } else if (CLERK_INSTANCE) {
+    CLERK_INSTANCE.openSignIn();
+  } else {
+    // Clerk not loaded yet — try initializing then opening
+    initClerk().then(() => {
+      if (CLERK_INSTANCE) CLERK_INSTANCE.openSignIn();
+      else alert('Authentication is loading. Please try again in a moment.');
+    });
+  }
+}
+
 async function initClerk() {
   try {
     const configResp = await fetch('/api/auth?action=config');
@@ -1317,8 +1331,10 @@ async function requireAuth() {
   });
 }
 
-// Initialize Clerk on page load
-initClerk();
+// Initialize Clerk once the deferred script has loaded
+if (window.Clerk) { initClerk(); }
+else { document.addEventListener('DOMContentLoaded', () => { setTimeout(initClerk, 500); }); }
+window.addEventListener('load', () => { if (!CLERK_INSTANCE) initClerk(); });
 // ── Safe JSON Parser (repairs truncated AI responses) ─────────────────────────
 // Strip markdown code fences from AI responses before JSON parsing
 function stripFences(s) {
