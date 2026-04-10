@@ -214,11 +214,14 @@ export default async function handler(req, res) {
   if (action === 'create_user') {
     const sk = process.env.CLERK_SECRET_KEY;
     if (!sk) return res.json({ ok: false, error: 'Clerk not configured' });
-    const { email, first_name, last_name, tier, password } = req.body || {};
+    const { email, first_name, last_name, tier, password, username } = req.body || {};
     if (!email) return res.json({ ok: false, error: 'email required' });
+    // Auto-generate username from email if not provided
+    const uname = username || email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
     try {
       const body = {
         email_address: [email],
+        username: uname,
         ...(first_name ? { first_name } : {}),
         ...(last_name ? { last_name } : {}),
         ...(password ? { password } : {}),

@@ -142,11 +142,12 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
       <div id="add-user-form" style="display:none" class="card">
         <h3>Create New User</h3>
         <div class="form-row"><label>Email *</label><input type="text" id="new-email" placeholder="user@example.com"></div>
+        <div class="form-row"><label>Username</label><input type="text" id="new-username" placeholder="Auto-generated from email if blank"></div>
         <div class="form-row"><label>First Name</label><input type="text" id="new-fname" placeholder="John"></div>
         <div class="form-row"><label>Last Name</label><input type="text" id="new-lname" placeholder="Doe"></div>
         <div class="form-row"><label>Password</label><input type="password" id="new-pass" placeholder="Optional — user can set via email"></div>
         <div class="form-row"><label>Tier</label>
-          <select id="new-tier"><option value="free">Free</option><option value="foundation">Foundation ($497)</option><option value="professional" selected>Professional ($1,497)</option><option value="enterprise">Enterprise ($2,997)</option><option value="managed">Managed ($197/mo)</option></select>
+          <select id="new-tier"><option value="free">Free</option><option value="foundation">Foundation ($1,997)</option><option value="professional" selected>Professional ($4,997)</option><option value="enterprise">Enterprise ($9,997)</option><option value="managed">Managed ($497/mo)</option></select>
         </div>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn primary" onclick="createUser()">Create User</button>
@@ -305,6 +306,7 @@ function showAddUser() {
 
 async function createUser() {
   const email = document.getElementById('new-email').value.trim();
+  const username = document.getElementById('new-username').value.trim();
   const first_name = document.getElementById('new-fname').value.trim();
   const last_name = document.getElementById('new-lname').value.trim();
   const password = document.getElementById('new-pass').value;
@@ -312,11 +314,12 @@ async function createUser() {
   const errEl = document.getElementById('add-user-error');
   if (!email) { errEl.textContent = 'Email is required'; errEl.style.display = 'block'; return; }
   errEl.style.display = 'none';
-  const d = await api('create_user', { email, first_name, last_name, password: password || undefined, tier });
+  const d = await api('create_user', { email, username: username || undefined, first_name, last_name, password: password || undefined, tier });
   if (d.ok) {
     toast(`User ${email} created with ${tier} tier`);
     document.getElementById('add-user-form').style.display = 'none';
     document.getElementById('new-email').value = '';
+    document.getElementById('new-username').value = '';
     document.getElementById('new-fname').value = '';
     document.getElementById('new-lname').value = '';
     document.getElementById('new-pass').value = '';
