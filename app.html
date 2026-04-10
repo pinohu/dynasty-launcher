@@ -1250,17 +1250,43 @@ function handleSignIn() {
   if (CLERK_INSTANCE && CLERK_USER) {
     CLERK_INSTANCE.openUserProfile();
   } else if (CLERK_INSTANCE) {
-    CLERK_INSTANCE.openSignIn();
+    CLERK_INSTANCE.openSignIn({
+      afterSignInUrl: window.location.href,
+      afterSignUpUrl: window.location.href,
+    });
   } else {
-    // Clerk not loaded yet — try initializing then opening
-    initClerk().then(() => {
-      if (CLERK_INSTANCE) CLERK_INSTANCE.openSignIn();
-      else alert('Authentication is loading. Please try again in a moment.');
+    // Clerk not loaded yet — show status and retry
+    const btn = document.getElementById('auth-btn');
+    if (btn) btn.textContent = 'Loading...';
+    waitForClerk().then(() => {
+      if (CLERK_INSTANCE) {
+        CLERK_INSTANCE.openSignIn({
+          afterSignInUrl: window.location.href,
+          afterSignUpUrl: window.location.href,
+        });
+      } else {
+        if (btn) btn.textContent = 'Sign In';
+        alert('Sign-in is temporarily unavailable. Please refresh and try again.');
+      }
     });
   }
 }
 
+// Wait for the Clerk script to load (deferred script)
+function waitForClerk() {
+  return new Promise((resolve) => {
+    if (window.Clerk) { initClerk().then(resolve); return; }
+    let attempts = 0;
+    const poll = setInterval(() => {
+      attempts++;
+      if (window.Clerk) { clearInterval(poll); initClerk().then(resolve); }
+      else if (attempts > 20) { clearInterval(poll); resolve(); } // 10s max
+    }, 500);
+  });
+}
+
 async function initClerk() {
+  if (CLERK_INSTANCE) return; // Already initialized
   try {
     const configResp = await fetch('/api/auth?action=config');
     const config = await configResp.json();
@@ -1268,21 +1294,22 @@ async function initClerk() {
       console.warn('Clerk not configured — running in open access mode');
       return;
     }
-    
+
     const clerk = new window.Clerk(config.publishableKey);
     await clerk.load();
     CLERK_INSTANCE = clerk;
-    
+
     if (clerk.user) {
       CLERK_USER = clerk.user;
       updateAuthUI();
     }
-    
+
     // Listen for auth state changes
-    clerk.addListener((event) => {
+    clerk.addListener(() => {
       CLERK_USER = clerk.user;
       updateAuthUI();
     });
+    console.log('Clerk initialized successfully');
   } catch (e) {
     console.warn('Clerk init failed:', e.message, '— running in open access mode');
   }
@@ -1331,10 +1358,8 @@ async function requireAuth() {
   });
 }
 
-// Initialize Clerk once the deferred script has loaded
-if (window.Clerk) { initClerk(); }
-else { document.addEventListener('DOMContentLoaded', () => { setTimeout(initClerk, 500); }); }
-window.addEventListener('load', () => { if (!CLERK_INSTANCE) initClerk(); });
+// Initialize Clerk — wait for deferred script to load
+waitForClerk();
 // ── Safe JSON Parser (repairs truncated AI responses) ─────────────────────────
 // Strip markdown code fences from AI responses before JSON parsing
 function stripFences(s) {
