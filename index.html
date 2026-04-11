@@ -258,7 +258,41 @@ section{padding:32px 16px}
 <script>
 addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',scrollY>50)});
 function closeNav(){var n=document.getElementById('mobile-nav');n.style.display='none';document.querySelector('.hamburger').textContent='☰';}
+function applyPersonaPricingPresentation(){
+  var pricing=document.getElementById('pricing');
+  if(!pricing)return;
+  var label=pricing.querySelector('h3.sl');
+  var title=pricing.querySelector('h2.st');
+  var lead=pricing.querySelector('div.ss');
+  if(label)label.textContent='Persona-based pricing';
+  if(title)title.textContent='Price by bottleneck and business stage';
+  if(lead)lead.textContent='No one-size-fits-all pricing. Start with a free score or the $297 blueprint, then choose the outcome package that matches your bottleneck.';
+  var info=pricing.querySelector('div[style*="max-width:720px"]');
+  if(info)info.innerHTML='<strong style="color:var(--gold)">How pricing works:</strong> start with <strong>free scoring</strong> or the <strong>$297 blueprint</strong>. Then your build price is matched to persona scope and execution depth. High-throughput channels remain reserved for custom volume onboarding.';
+
+  var cards=pricing.querySelectorAll('.pricing .pl');
+  if(cards.length>=4){
+    cards[1].querySelector('h3').textContent='Core Build Pack';
+    cards[1].querySelector('.pr').innerHTML='$1,497+<span>/build</span>';
+    cards[1].querySelector('.ds').textContent='Best for first launch with full decision pack';
+    var b1=cards[1].querySelector('a');
+    if(b1)b1.textContent='Start Core Build';
+
+    cards[2].querySelector('h3').textContent='Revenue Ops Pack';
+    cards[2].querySelector('.pr').innerHTML='$3,997+<span>/build</span>';
+    cards[2].querySelector('.ds').textContent='Best for lead-to-cash bottlenecks';
+    var b2=cards[2].querySelector('a');
+    if(b2)b2.textContent='Start Revenue Ops';
+
+    cards[3].querySelector('h3').textContent='Scale & Authority Pack';
+    cards[3].querySelector('.pr').innerHTML='$6,997+<span>/build</span>';
+    cards[3].querySelector('.ds').textContent='Best for expansion and high-confidence growth';
+    var b3=cards[3].querySelector('a');
+    if(b3)b3.textContent='Start Scale Pack';
+  }
+}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
+applyPersonaPricingPresentation();
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Your Deputy","description":"Turn a business idea into bank-ready plans, a live customer-facing product, and optional operational connections — priced as a small fraction of equivalent specialist work.","url":"https://yourdeputy.com","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":[{"@type":"Offer","name":"Free Scoring","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Diagnostic + Execution Blueprint","price":"297","priceCurrency":"USD"},{"@type":"Offer","name":"Foundation","price":"1997","priceCurrency":"USD"},{"@type":"Offer","name":"Professional","price":"4997","priceCurrency":"USD"},{"@type":"Offer","name":"Enterprise","price":"9997","priceCurrency":"USD"}]}
