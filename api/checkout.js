@@ -51,6 +51,15 @@ export default async function handler(req, res) {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Stripe not configured' });
 
     const { plan, email, user_id, training_opt_in, build_archetype, source_segment, diagnostic_session_id, recommended_plan } = req.body || {};
+    const normalizedPlan = (plan || 'foundation').toString().toLowerCase();
+    if (normalizedPlan === 'custom_volume') {
+      return res.json({
+        ok: false,
+        contact_required: true,
+        error: 'Custom volume plans are configured through sales onboarding.',
+        contact_email: 'ikeohu@dynastyempire.com'
+      });
+    }
 
     const tiers = {
       foundation: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations; typically tens of thousands of words, varies by session). SBA business plan, investor readiness, cap table themes, tax strategy. Production app + repo deploy. No automatic server-side integration module provisioning on Foundation — use OPERATIONS.md or upgrade to Professional+. $71K–$131K equivalent value.' },
@@ -58,17 +67,17 @@ export default async function handler(req, res) {
       professional: { amount: 499700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus attempts at core live stack where APIs succeed: domain/email patterns, connected payments, CRM, marketing sequences, chatbot, analytics, automation (subject to keys and archetype deferrals). $100K–$170K equivalent value.' },
       enterprise: { amount: 999700, name: 'Your Deputy — Enterprise', desc: 'Broadest integration attempts: up to 17 module types when your site package does not skip them — subject to API success, keys, and implementation status. Plus creative, SEO, social calendar, and directory/WP paths per spec. See BUILD-MANIFEST.json for your build. $71K–$194K equivalent value.' }
     };
-    const tierDef = tiers[plan] || tiers.foundation;
+    const tierDef = tiers[normalizedPlan] || tiers.foundation;
     const enc = (s) => encodeURIComponent(s);
 
     try {
       const params = [
         'payment_method_types[0]=card',
         'mode=payment',
-        `success_url=${enc(`${APP_URL}/app?payment=success&session_id={CHECKOUT_SESSION_ID}&tier=${plan || 'foundation'}`)}`,
+        `success_url=${enc(`${APP_URL}/app?payment=success&session_id={CHECKOUT_SESSION_ID}&tier=${normalizedPlan || 'foundation'}`)}`,
         `cancel_url=${enc(`${APP_URL}/app?payment=cancelled`)}`,
         `metadata[source]=your-deputy`,
-        `metadata[plan]=${plan || 'foundation'}`,
+        `metadata[plan]=${normalizedPlan || 'foundation'}`,
         `metadata[training_opt_in]=${training_opt_in ? 'yes' : 'no'}`,
         `metadata[build_archetype]=${enc((build_archetype || '').slice(0, 64))}`,
         `metadata[source_segment]=${enc((source_segment || '').slice(0, 64))}`,
@@ -84,7 +93,7 @@ export default async function handler(req, res) {
       if (email) params.push(`customer_email=${enc(email)}`);
 
       // Managed Automation Runtime is a $497/mo subscription — use Stripe subscription mode
-      if (plan === 'managed') {
+      if (normalizedPlan === 'managed') {
         const subParams = [
           'payment_method_types[0]=card',
           'mode=subscription',

@@ -1390,6 +1390,19 @@ function updateAuthUI() {
     authBtn.innerHTML = 'Sign In';
     authBtn.onclick = () => CLERK_INSTANCE?.openSignIn();
   }
+  updateHistoryButtonVisibility();
+}
+
+function hasHistoryAccess() {
+  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  const hasPaid = !!localStorage.getItem('dynasty_paid_session');
+  return isAdmin || hasPaid || !!CLERK_USER;
+}
+
+function updateHistoryButtonVisibility() {
+  const btn = document.getElementById('history-btn');
+  if (!btn) return;
+  btn.style.display = hasHistoryAccess() ? 'inline-block' : 'none';
 }
 
 async function requireAuth() {
@@ -1420,6 +1433,8 @@ async function requireAuth() {
 
 // Initialize Clerk — wait for deferred script to load
 waitForClerk();
+updateHistoryButtonVisibility();
+loadBuildHistory();
 // ── Safe JSON Parser (repairs truncated AI responses) ─────────────────────────
 // Strip markdown code fences from AI responses before JSON parsing
 function stripFences(s) {
@@ -2606,9 +2621,10 @@ const V3_TIERS = {
   /* Foundation: must match api/provision.js TIER_MODULES.foundation — docs + deploy, no mod_* auto-provision */
   foundation: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
   starter: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
-  professional: { price: 4997, label: 'Professional Automation Capacity ($4,997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads', 'vertical_tool'] },
-  enterprise: { price: 9997, label: 'Enterprise Automation Capacity ($9,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] },
-  managed: { price: 497, label: 'Managed Automation Runtime ($497/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] }
+  professional: { price: 4997, label: 'Professional Automation Capacity ($4,997)', modules: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'social', 'vertical_tool'] },
+  enterprise: { price: 9997, label: 'Enterprise Automation Capacity ($9,997)', modules: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'wordpress', 'social', 'verify', 'vertical_tool'] },
+  managed: { price: 497, label: 'Managed Automation Runtime ($497/mo)', modules: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'wordpress', 'social', 'verify', 'vertical_tool'] },
+  custom_volume: { price: null, label: 'Custom Volume (Contact Sales)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] }
 };
 function getUserTier() {
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
@@ -2733,10 +2749,20 @@ async function enterBuilder() {
   if (header) header.style.display = 'flex';
   const modeScreen = document.getElementById('mode-screen');
   if (modeScreen) modeScreen.style.display = 'block';
+  updateHistoryButtonVisibility();
+  loadBuildHistory();
   try { applyBuildPackageTierConstraints(); } catch {}
 }
 
 async function startCheckout(plan) {
+  if (plan === 'custom_volume') {
+    trackEvent('custom_volume_contact_requested', {
+      source_segment: (new URLSearchParams(window.location.search)).get('segment') || '',
+      selected_plan: 'custom_volume'
+    });
+    window.location.href = 'mailto:ikeohu@dynastyempire.com?subject=Custom%20Volume%20Plan%20Request&body=I%20want%20to%20discuss%20Custom%20Volume%20automation%20capacity.';
+    return;
+  }
   try {
     const bp = getBuildProfile();
     const diag = getDiagnosticContext();
@@ -2814,7 +2840,7 @@ async function startCheckout(plan) {
     enterBuilder();
     return;
   }
-  if (plan && ['foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(plan) && !params.get('payment')) {
+  if (plan && ['foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'].includes(plan) && !params.get('payment')) {
     // Don't store tier yet — wait for payment confirmation in checkPaymentReturn
     startCheckout(plan === 'starter' ? 'foundation' : plan);
   }
@@ -11701,6 +11727,7 @@ ${window._buildHistory?.length > 1 ? '<span class="again" onclick="showBuildComp
 
 // ── Build History Dashboard ─────────────────────────────────────
 function showBuildHistory() {
+  if (!hasHistoryAccess()) { alert('Build history is available only for signed-in, paid, or admin sessions.'); return; }
   const hist = window._buildHistory || [];
   if (!hist.length) { alert('No build history yet.'); return; }
   
@@ -11721,7 +11748,7 @@ function showBuildHistory() {
   modal.innerHTML = `<div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;max-width:900px;width:95%;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
       <h3 style="font-size:14px;font-weight:700;color:var(--gold)">📊 Build History (${hist.length} builds)</h3>
-      <button onclick="if(confirm('Clear all build history?')){localStorage.removeItem('dynasty_build_history');window._buildHistory=[];this.closest('div[style]').parentElement.remove()}" style="font-size:10px;color:var(--dim);background:none;border:none;cursor:pointer">Clear history</button>
+      <button onclick="if(confirm('Clear all build history?')){clearBuildHistory();this.closest('div[style]').parentElement.remove()}" style="font-size:10px;color:var(--dim);background:none;border:none;cursor:pointer">Clear history</button>
     </div>
     <table style="width:100%;border-collapse:collapse">
       <thead><tr>
@@ -11772,11 +11799,32 @@ function sendWebhook(inf, repo, fc, provRes) {
 }
 
 // ── Build History: store for comparison ─────────────────────────
-if (!window._buildHistory) {
-  try { window._buildHistory = JSON.parse(localStorage.getItem('dynasty_build_history') || '[]'); } catch { window._buildHistory = []; }
+function getBuildHistoryStorageKey() {
+  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  if (isAdmin) return 'dynasty_build_history_admin';
+  if (CLERK_USER?.id) return `dynasty_build_history_user_${CLERK_USER.id}`;
+  const paidSession = localStorage.getItem('dynasty_paid_session') || '';
+  if (paidSession) return `dynasty_build_history_paid_${paidSession}`;
+  return null;
 }
 
+function loadBuildHistory() {
+  const key = getBuildHistoryStorageKey();
+  if (!key) { window._buildHistory = []; return; }
+  try { window._buildHistory = JSON.parse(localStorage.getItem(key) || '[]'); } catch { window._buildHistory = []; }
+}
+
+function clearBuildHistory() {
+  const key = getBuildHistoryStorageKey();
+  if (key) localStorage.removeItem(key);
+  window._buildHistory = [];
+}
+
+if (!window._buildHistory) loadBuildHistory();
+
 function saveBuildHistory(inf, repo, fc) {
+  const key = getBuildHistoryStorageKey();
+  if (!key) return;
   const entry = {
     id: Date.now(),
     name: inf.name,
@@ -11802,7 +11850,7 @@ function saveBuildHistory(inf, repo, fc) {
   window._buildHistory.push(entry);
   // Keep last 20 builds
   if (window._buildHistory.length > 20) window._buildHistory = window._buildHistory.slice(-20);
-  localStorage.setItem('dynasty_build_history', JSON.stringify(window._buildHistory));
+  localStorage.setItem(key, JSON.stringify(window._buildHistory));
 }
 
 // ── Compare Builds: side-by-side modal ──────────────────────────

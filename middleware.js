@@ -52,6 +52,9 @@ else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{doc
 
   // Plan purchase URLs — redirect to Stripe checkout at the edge (don't serve app.html)
   const plan = params.get('plan');
+  if (plan === 'custom_volume') {
+    return Response.redirect(new URL('/#pricing', request.url), 307);
+  }
   if (plan && ['foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(plan)) {
     // Redirect to checkout API which creates Stripe session and redirects to Stripe
     const checkoutUrl = new URL('/api/checkout', request.url);

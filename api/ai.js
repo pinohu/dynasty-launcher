@@ -51,7 +51,7 @@ const PROVIDERS = {
 
 const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_DAILY_LIMIT || '30', 10));
 const USAGE_TABLE = 'dynasty_ai_usage_daily';
-const PAID_TIERS = new Set(['foundation', 'starter', 'professional', 'enterprise', 'managed']);
+const PAID_TIERS = new Set(['foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume']);
 
 async function isValidAdminToken(token) {
   if (!token) return false;

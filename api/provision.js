@@ -58,6 +58,15 @@ async function ensureDynastyOpsTables(pool) {
       target TEXT NOT NULL, expected_value TEXT, status TEXT DEFAULT 'pending',
       created_at TIMESTAMPTZ DEFAULT NOW(), checked_at TIMESTAMPTZ, resolved_at TIMESTAMPTZ
     );
+    CREATE TABLE IF NOT EXISTS dynasty_module_usage_daily (
+      id SERIAL PRIMARY KEY,
+      day_key TEXT NOT NULL,
+      module_name TEXT NOT NULL,
+      tier TEXT NOT NULL,
+      usage_count INTEGER NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(day_key, module_name, tier)
+    );
   `);
 }
 
@@ -88,6 +97,46 @@ async function addDeferredCheck(pool, projectSlug, checkType, target, expectedVa
   } catch { return null; }
 }
 
+function getDayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+const MODULE_USAGE_MEMORY = new Map();
+
+async function consumeTierModuleQuota(pool, { tier, moduleName, limit }) {
+  if (!limit || limit < 1) return { allowed: false, used: 0, limit: 0 };
+  const dayKey = getDayKey();
+
+  if (pool) {
+    await ensureDynastyOpsTables(pool);
+    await pool.query(`
+      INSERT INTO dynasty_module_usage_daily (day_key, module_name, tier, usage_count)
+      VALUES ($1, $2, $3, 0)
+      ON CONFLICT (day_key, module_name, tier) DO NOTHING
+    `, [dayKey, moduleName, tier]);
+
+    const row = await pool.query(
+      'SELECT usage_count FROM dynasty_module_usage_daily WHERE day_key=$1 AND module_name=$2 AND tier=$3 LIMIT 1',
+      [dayKey, moduleName, tier]
+    );
+    const current = parseInt(row.rows[0]?.usage_count || '0', 10);
+    if (current >= limit) return { allowed: false, used: current, limit };
+
+    const updated = await pool.query(
+      'UPDATE dynasty_module_usage_daily SET usage_count=usage_count+1, updated_at=NOW() WHERE day_key=$1 AND module_name=$2 AND tier=$3 RETURNING usage_count',
+      [dayKey, moduleName, tier]
+    );
+    const used = parseInt(updated.rows[0]?.usage_count || String(current + 1), 10);
+    return { allowed: true, used, limit };
+  }
+
+  const memoryKey = `${dayKey}:${moduleName}:${tier}`;
+  const current = parseInt(MODULE_USAGE_MEMORY.get(memoryKey) || '0', 10);
+  if (current >= limit) return { allowed: false, used: current, limit };
+  MODULE_USAGE_MEMORY.set(memoryKey, String(current + 1));
+  return { allowed: true, used: current + 1, limit };
+}
+
 // ── Error sanitization — strip potential API keys from error messages ────────
 function sanitizeError(msg) {
   if (!msg || typeof msg !== 'string') return msg || 'Unknown error';
@@ -96,8 +145,14 @@ function sanitizeError(msg) {
     .replace(/key=[a-zA-Z0-9._-]+/g, 'key=***').replace(/ghp_[a-zA-Z0-9]+/g, 'ghp_***').slice(0, 200);
 }
 
-const PROVISION_TIER_VALID = ['free', 'foundation', 'starter', 'professional', 'enterprise', 'managed'];
+const PROVISION_TIER_VALID = ['free', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'];
 const AUTOMATION_ONLY_MODE = (process.env.AUTOMATION_ONLY_MODE || 'true') !== 'false';
+const CONTACT_ONLY_MODULES = new Set(['phone', 'sms', 'video', 'leads', 'crm', 'directory']);
+const TIER_MODULE_DAILY_LIMITS = {
+  professional: { hosting: 2, wordpress: 0 },
+  enterprise: { hosting: 6, wordpress: 2 },
+  managed: { hosting: 6, wordpress: 2 },
+};
 const ZERO_COST_SKIP_MODULES = new Set([
   'hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design',
   'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social'
@@ -212,7 +267,7 @@ async function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
 async function mod_hosting(config, project, liveUrl) {
   const results = { ok: false, service: 'hosting', details: {} };
   const apiKey = config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
-  if (!apiKey) { results.error = 'No 20i API key'; results.fallback = 'Add twentyi_general to DYNASTY_TOOL_CONFIG'; return results; }
+  if (!apiKey) { results.error = 'No hosting API key'; results.fallback = 'Add infrastructure hosting credentials to configuration.'; return results; }
   const auth = `Bearer ${Buffer.from(apiKey).toString('base64')}`;
   const domain = project.domain || `${project.slug}.com`;
   const resellerId = config.infrastructure?.twentyi_reseller_id || '10455';
@@ -223,7 +278,7 @@ async function mod_hosting(config, project, liveUrl) {
       body: JSON.stringify({ domain_name: domain, type: '80359' })
     });
     const addData = await addResp.json();
-    if (!addResp.ok || !addData?.result) { results.error = `20i addWeb failed: ${JSON.stringify(addData).slice(0,120)}`; results.fallback = '20i panel → Add Package manually'; return results; }
+    if (!addResp.ok || !addData?.result) { results.error = `hosting addWeb failed: ${JSON.stringify(addData).slice(0,120)}`; results.fallback = 'Create hosting package manually in your infrastructure panel.'; return results; }
     const packageId = addData.result;
     results.details.package_id = packageId;
     results.details.domain = domain;
@@ -310,7 +365,7 @@ async function mod_hosting(config, project, liveUrl) {
 
     results.ok = true;
     results.cost_usd = 0; // 20i is owned license
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = '20i Reseller Panel → manage package manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Manage hosting package manually in your infrastructure panel.'; }
   return results;
 }
 
@@ -560,7 +615,7 @@ async function mod_phone(config, project, liveUrl) {
   const csKey = config.comms?.callscaler;
   const inKey = config.comms?.insighto;
   const trafftId = config.comms?.trafft_client_id;
-  if (!csKey && !inKey && !trafftId) { results.error = 'No phone/voice keys'; results.fallback = 'Add callscaler, insighto, trafft_client_id to DYNASTY_TOOL_CONFIG.comms'; return results; }
+  if (!csKey && !inKey && !trafftId) { results.error = 'No voice channel keys'; results.fallback = 'Add voice and booking credentials in communications settings.'; return results; }
   try {
     // 1. CallScaler — API is read-only (no number provisioning endpoint)
     // List existing numbers to verify account access, provide manual setup instructions
@@ -641,7 +696,7 @@ async function mod_phone(config, project, liveUrl) {
       }
     }
     results.cost_usd = 0; // Owned licenses
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Configure phone stack manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Configure voice intake and booking manually.'; }
   return results;
 }
 
@@ -649,7 +704,7 @@ async function mod_phone(config, project, liveUrl) {
 async function mod_sms(config, project) {
   const results = { ok: false, service: 'sms', details: {} };
   const apiKey = config.comms?.smsit;
-  if (!apiKey) { results.error = 'No SMS-iT key'; results.fallback = 'Add smsit to DYNASTY_TOOL_CONFIG.comms'; return results; }
+  if (!apiKey) { results.error = 'No SMS channel key'; results.fallback = 'Add SMS channel credentials in communications settings.'; return results; }
   // Note: SMS-iT's public API (tool-it.smsit.ai) is for their link shortener tool.
   // The core SMS CRM platform (app.smsit.ai) campaign endpoints are not publicly documented.
   // We attempt the known endpoints and fall back to manual setup instructions.
@@ -689,7 +744,7 @@ async function mod_sms(config, project) {
       }
     }
     results.cost_usd = 0;
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'SMS-iT dashboard → create group and templates manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Configure SMS groups and templates manually.'; }
   return results;
 }
 
@@ -922,7 +977,7 @@ async function mod_video(config, project) {
   const results = { ok: false, service: 'video', details: {} };
   const vadooKey = config.content?.vadoo_ai;
   const flikiKey = config.content?.fliki;
-  if (!vadooKey && !flikiKey) { results.error = 'No video API keys'; results.fallback = 'Create explainer video at vadoo.tv or fliki.ai manually. Script: "Introduce your business, explain key services, show benefits, include CTA"'; return results; }
+  if (!vadooKey && !flikiKey) { results.error = 'No video generation keys'; results.fallback = 'Create explainer video assets manually using your preferred video workflow.'; return results; }
   try {
     // Vadoo AI — create explainer video
     if (vadooKey) {
@@ -954,9 +1009,9 @@ async function mod_video(config, project) {
       } catch (e) { results.details.fliki_error = e.message; }
     }
 
-    if (!results.ok) { results.error = 'Video generation failed'; results.fallback = 'Create videos at vadoo.tv or fliki.ai manually'; }
+    if (!results.ok) { results.error = 'Video generation failed'; results.fallback = 'Create video assets manually.'; }
     results.cost_usd = 0; // Owned licenses
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create explainer video manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create explainer video assets manually.'; }
   return results;
 }
 
@@ -1131,7 +1186,7 @@ async function mod_leads(config, project, liveUrl) {
   const results = { ok: false, service: 'leads', details: {} };
   const hlKey = config.data_research?.happierleads;
   const spKey = config.data_research?.salespanel;
-  if (!hlKey && !spKey) { results.error = 'No lead intelligence keys'; results.fallback = 'Set up Happierleads at happierleads.com and Salespanel at salespanel.io. Both offer visitor identification and lead scoring.'; return results; }
+  if (!hlKey && !spKey) { results.error = 'No lead intelligence keys'; results.fallback = 'Set up lead identification and scoring credentials in data settings.'; return results; }
   try {
     // Happierleads — visitor identification
     if (hlKey) {
@@ -1358,7 +1413,7 @@ async function mod_crm(config, project) {
   const results = { ok: false, service: 'crm', details: {} };
   const apiKey = config.crm_pm?.suitedash_api;
   const baseUrl = config.crm_pm?.suitedash_url || 'https://app.suitedash.com';
-  if (!apiKey) { results.error = 'No SuiteDash API key'; results.fallback = 'Set up SuiteDash workspace at app.suitedash.com manually'; return results; }
+  if (!apiKey) { results.error = 'No client workspace API key'; results.fallback = 'Set up client workspace credentials manually.'; return results; }
 
   // License check via Neon DB
   const total = config.suitedash?.licenses_total || 136;
@@ -1367,7 +1422,7 @@ async function mod_crm(config, project) {
     const pool = await getPool();
     if (pool) { await ensureDynastyOpsTables(pool); used = await getLicenseCount(pool, 'suitedash'); await pool.end(); }
   } catch {}
-  if (used >= total) { results.error = `SuiteDash license limit reached (${used}/${total})`; results.fallback = 'All SuiteDash licenses allocated. Purchase more or reclaim unused.'; return results; }
+  if (used >= total) { results.error = `Client workspace license limit reached (${used}/${total})`; results.fallback = 'All client workspace licenses are allocated. Increase capacity or reclaim unused allocations.'; return results; }
 
   // SuiteDash API uses custom X-Public-ID and X-Secret-Key headers
   // API is limited to contacts/companies — no projects, invoicing, or portal creation endpoints
@@ -1400,7 +1455,7 @@ async function mod_crm(config, project) {
     results.details.licenses_used = used + 1;
     results.ok = true;
     results.cost_usd = 0;
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up SuiteDash workspace manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up client workspace manually.'; }
   return results;
 }
 
@@ -1408,13 +1463,13 @@ async function mod_crm(config, project) {
 async function mod_directory(config, project) {
   const results = { ok: false, service: 'directory', details: {} };
   const apiKey = config.directories?.brilliant_api;
-  if (!apiKey) { results.error = 'No Brilliant Directories API key'; results.fallback = 'Set up directory at brilliantdirectories.com manually'; return results; }
+  if (!apiKey) { results.error = 'No directory API key'; results.fallback = 'Set up directory credentials manually.'; return results; }
 
   // License check via Neon DB
   const total = config.directories?.brilliant_licenses || 100;
   let used = config.directories?.brilliant_licenses_used || 0;
   try { const pool = await getPool(); if (pool) { await ensureDynastyOpsTables(pool); used = await getLicenseCount(pool, 'brilliant_directories'); await pool.end(); } } catch {}
-  if (used >= total) { results.error = `BD license limit reached (${used}/${total})`; results.fallback = 'All Brilliant Directories licenses allocated.'; return results; }
+  if (used >= total) { results.error = `Directory license limit reached (${used}/${total})`; results.fallback = 'All directory licenses are allocated.'; return results; }
 
   // Note: Brilliant Directories API is per-site (manages content within an existing directory).
   // There is NO endpoint to provision a brand new directory site — that's done via the BD dashboard.
@@ -1451,7 +1506,7 @@ async function mod_directory(config, project) {
     results.details.licenses_used = used + 1;
     results.ok = true;
     results.cost_usd = 0;
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create directory at brilliantdirectories.com manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create directory manually.'; }
   return results;
 }
 
@@ -1459,7 +1514,7 @@ async function mod_directory(config, project) {
 async function mod_wordpress(config, project) {
   const results = { ok: false, service: 'wordpress', details: {} };
   const apiKey = config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
-  if (!apiKey) { results.error = 'No 20i API key'; results.fallback = 'Add twentyi_general to DYNASTY_TOOL_CONFIG.infrastructure'; return results; }
+  if (!apiKey) { results.error = 'No managed CMS hosting API key'; results.fallback = 'Add managed CMS hosting credentials to infrastructure settings.'; return results; }
   const auth = `Bearer ${Buffer.from(apiKey).toString('base64')}`;
   const domain = project.domain || `${project.slug}.com`;
   const resellerId = config.infrastructure?.twentyi_reseller_id || '10455';
@@ -1511,7 +1566,7 @@ async function mod_wordpress(config, project) {
 
     results.ok = true;
     results.cost_usd = 0;
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = '20i Reseller Panel → create WordPress package manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create managed CMS package manually in infrastructure panel.'; }
   return results;
 }
 
@@ -1774,7 +1829,7 @@ Ship **assistive** UX only — no guaranteed estimates.
 }
 
 // ── Module Orchestrator ─────────────────────────────────────────────────────
-async function runModules(config, project, liveUrl, enabledModules) {
+async function runModules(config, project, liveUrl, enabledModules, userTier) {
   const moduleMap = {
     hosting: mod_hosting, billing: mod_billing, email: mod_email,
     phone: mod_phone, sms: mod_sms, chatbot: mod_chatbot,
@@ -1797,8 +1852,36 @@ async function runModules(config, project, liveUrl, enabledModules) {
   const MAX_TOTAL_MS = 240000;
   const zeroCostMode = project?.automation_mode === 'zero_cost';
   const automationOnly = AUTOMATION_ONLY_MODE || zeroCostMode;
+  const tierName = (userTier || 'foundation').toLowerCase();
+  const quotaPool = await getPool();
+  if (quotaPool) {
+    try { await ensureDynastyOpsTables(quotaPool); } catch {}
+  }
   for (const [name, fn] of Object.entries(moduleMap)) {
     if (!enabledModules[name]) continue;
+    if (CONTACT_ONLY_MODULES.has(name) && tierName !== 'custom_volume') {
+      results[name] = normalizeModuleResult(name, {
+        ok: false,
+        service: name,
+        error: 'Reserved for custom volume plans',
+        fallback: 'Contact sales to unlock this outcome set at higher throughput.'
+      }, { automationOnly, zeroCostMode });
+      continue;
+    }
+    const tierLimits = TIER_MODULE_DAILY_LIMITS[tierName] || {};
+    const limit = tierLimits[name];
+    if (limit !== undefined && tierName !== 'custom_volume') {
+      const quota = await consumeTierModuleQuota(quotaPool, { tier: tierName, moduleName: name, limit });
+      if (!quota.allowed) {
+        results[name] = normalizeModuleResult(name, {
+          ok: false,
+          service: name,
+          error: `Daily volume cap reached for ${name}`,
+          fallback: `Daily cap reached (${quota.used}/${quota.limit}). Upgrade to custom volume for higher limits.`
+        }, { automationOnly, zeroCostMode });
+        continue;
+      }
+    }
     if (zeroCostMode && ZERO_COST_SKIP_MODULES.has(name)) {
       results[name] = normalizeModuleResult(name, {
         ok: false,
@@ -1837,6 +1920,9 @@ async function runModules(config, project, liveUrl, enabledModules) {
   // Accumulate cost from each module
   for (const [, r] of Object.entries(results)) {
     if (r?.cost_usd) totalCost += r.cost_usd;
+  }
+  if (quotaPool) {
+    try { await quotaPool.end(); } catch {}
   }
 
   // Generate OPERATIONS.md and CREDENTIALS.md
@@ -2063,7 +2149,7 @@ export default async function handler(req, res) {
         });
       }
     }
-    const isPaidTier = ['foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(access.userTier);
+    const isPaidTier = ['foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'].includes(access.userTier);
     if (!isAdminRequest && !isPaidTier) {
       return res.status(402).json({
         ok: false,
@@ -3140,9 +3226,10 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       free: [], // Viability scoring only — no build, no modules
       foundation: [], // Strategy docs + deployment only, no integration modules
       starter: [], // Legacy alias for foundation
-      professional: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads', 'vertical_tool'],
-      enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'],
-      managed: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool']
+      professional: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'social', 'vertical_tool'],
+      enterprise: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'wordpress', 'social', 'verify', 'vertical_tool'],
+      managed: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'wordpress', 'social', 'verify', 'vertical_tool'],
+      custom_volume: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool']
     };
     const bypassStripeVerify = !!dry_run || !!req._dynastyAccess?.isAdminRequest;
     const tierAccess = req._dynastyAccess || await resolveProvisionUserTier({
@@ -3187,7 +3274,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
 
     const provisionT0 = Date.now();
     try {
-      const { results: moduleResults, totalCost } = await runModules(config, project, liveUrl, enabledAfterArchetype);
+      const { results: moduleResults, totalCost } = await runModules(config, project, liveUrl, enabledAfterArchetype, userTier);
       const succeeded = Object.entries(moduleResults).filter(([, r]) => r.ok).map(([k]) => k);
       const failed = Object.entries(moduleResults).filter(([, r]) => !r.ok && r.error).map(([k, r]) => `${k}: ${r.error}`);
       const fallbacks = Object.entries(moduleResults).filter(([, r]) => !r.ok && r.fallback).map(([k, r]) => ({ module: k, instruction: r.fallback }));
@@ -3230,7 +3317,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         build_profile: buildProfile,
         archetype: { skipped: skippedByArchetype, deferred: deferredByArchetype },
         build_manifest: buildManifest,
-        gated: gatedOut.length > 0 ? { modules: gatedOut, message: `${gatedOut.length} module(s) require ${['free','foundation','starter'].includes(userTier) ? 'Professional' : 'Enterprise'} tier: ${gatedOut.join(', ')}` } : null,
+        gated: gatedOut.length > 0 ? { modules: gatedOut, message: `${gatedOut.length} module(s) require a higher automation tier or custom volume access: ${gatedOut.join(', ')}` } : null,
         note: `${succeeded.length} modules provisioned${failed.length ? `, ${failed.length} need manual setup` : ''}${gatedOut.length ? ` (${gatedOut.length} gated by tier)` : ''}${skippedByArchetype.length ? ` · ${skippedByArchetype.length} skipped by build profile` : ''}${deferredByArchetype.length ? ` · ${deferredByArchetype.length} deferred (finish in dashboard)` : ''}`
       });
     } catch (e) {
