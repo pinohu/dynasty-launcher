@@ -5169,8 +5169,12 @@ async function inferConfig(desc){
   const toolContext=TOOL_INVENTORY?`
 Available Dynasty tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TOOL_INVENTORY.payments||[]).join(',')}) Comms(${(TOOL_INVENTORY.comms||[]).join(',')}) Infra(${(TOOL_INVENTORY.infrastructure||[]).join(',')}) SuiteDash(${TOOL_INVENTORY.suitedash_licenses} licenses) BD(${TOOL_INVENTORY.brilliant_licenses} licenses)`:'';
 
+  let timeoutId = null;
   try{
+    const ctl = new AbortController();
+    timeoutId = setTimeout(() => ctl.abort(), 45000);
     const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},
+      signal: ctl.signal,
       body:JSON.stringify({model:V2_MODEL,max_tokens:1200,
         ...getAiAuthPayload(),
         usage_context: isFreeTier() ? 'free_scoring' : 'standard',
@@ -5196,17 +5200,23 @@ Return:
   "manual_svcs": ["clerk","stripe","gsc"],
   "reasoning": "2 sentences on why these choices fit the description"
 }`}]})});
+    if(!r.ok) throw new Error(`Analysis request failed (${r.status})`);
     const d=await r.json();
+    if (d?.error) throw new Error(typeof d.error === 'string' ? d.error : (d.error.message || 'Analysis failed'));
     const txt=d.content?.find(b=>b.type==='text')?.text||'';
     const m=txt.match(/\{[\s\S]*\}/);
-    if(!m)return;
+    if(!m) throw new Error('Could not parse analysis response');
     INFERRED=safeJsonParse(m[0]); if (!INFERRED) throw new Error("Inference JSON repair failed");
-    hideLoadingOverlay();
     showPreview(INFERRED);
     updateLaunchBtn();
   }catch(e){
+    INFERRED = null;
+    console.warn('Idea analysis failed:', e?.message || e);
+    const btn = document.getElementById('launch-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Analyze & Build →'; }
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
     hideLoadingOverlay();
-    document.getElementById('launch-btn').textContent='Describe your project above to begin';
   }
 }
 
