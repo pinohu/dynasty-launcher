@@ -1773,7 +1773,7 @@ Deployed URL: ${liveUrl || '(pending)'}
 Ship **assistive** UX only — no guaranteed estimates.
 `;
     await pushFile(GH_TOKEN, ORG_U, project.slug, 'src/app/tool/takeoff/README.md', readme, 'feat: vertical tool scaffold (V4)');
-    const envEx = `# Vercel env (vertical tool)\nPOSTGRES_URL=postgres://...\nBLOB_READ_WRITE_TOKEN=vercel_blob_...\n`;
+    const envEx = `# Vercel env (vertical tool)\n# @vercel/postgres uses POSTGRES_URL; mirror DATABASE_URL if your app expects it.\nPOSTGRES_URL=postgres://...\nDATABASE_URL=postgres://...\nBLOB_READ_WRITE_TOKEN=vercel_blob_rw_...\n`;
     await pushFile(GH_TOKEN, ORG_U, project.slug, 'docs/VERTICAL-ENV.example', envEx, 'docs: vertical tool env (V4)');
     results.details.paths = ['docs/VERTICAL-TOOL-SCOPE.md', 'src/app/tool/takeoff/README.md', 'docs/VERTICAL-ENV.example'];
   } catch (e) {
