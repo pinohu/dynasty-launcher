@@ -2349,6 +2349,7 @@ function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 // ── V3 Tier Gating ─────────────────────────────────────────────────
 const V3_TIERS = {
   free: { price: 0, label: 'Free Scoring', modules: [] },
+  /* Foundation: must match api/provision.js TIER_MODULES.foundation — docs + deploy, no mod_* auto-provision */
   foundation: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
   starter: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
   professional: { price: 4997, label: 'Professional ($4,997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads', 'vertical_tool'] },
@@ -2403,9 +2404,13 @@ function updateBuildScopePreview() {
   const tier = getUserTier();
   const tierLabel = (V3_TIERS[tier] && V3_TIERS[tier].label) || tier;
   const lines = [];
+  const tierBlocksMods = tier === 'free' || tier === 'foundation' || tier === 'starter';
   lines.push('<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);margin-bottom:8px">Expected scope (honest preview)</div>');
-  lines.push('<p style="font-size:11px;color:var(--dim);margin:0 0 10px;line-height:1.5">Defaults from your <strong>build package</strong>. <strong>R</strong> = we attempt when your <strong>paid tier</strong> allows; <strong>D</strong> = usually post-build / OPERATIONS; <strong>S</strong> = not in this package unless you change tier or package. Final truth: <code style="font-size:10px">BUILD-MANIFEST.json</code> in the repo.</p>');
+  lines.push('<p style="font-size:11px;color:var(--dim);margin:0 0 10px;line-height:1.5"><strong>Two knobs:</strong> <em>site package</em> (below) sets run/defer/skip defaults; <em>paid tier</em> gates whether live integration APIs run. Final truth: <code style="font-size:10px">BUILD-MANIFEST.json</code>.</p>');
   lines.push('<p style="font-size:11px;color:var(--sec);margin:0 0 8px">Current tier: <strong style="color:var(--tx)">' + tierLabel + '</strong></p>');
+  if (tierBlocksMods) {
+    lines.push('<div style="font-size:11px;color:#FDE68A;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5"><strong>Foundation / free:</strong> the server <strong>does not auto-provision integration modules</strong> (Stripe, CRM, email vendor APIs, etc.) — same as <code style="font-size:10px">provision.js</code> <code style="font-size:10px">TIER_MODULES.foundation</code>. You still get the <strong>document + code + deploy</strong> bundle; lists below show <strong>archetype intent</strong> for when you upgrade to <strong>Professional+</strong> or finish setup in <code style="font-size:10px">OPERATIONS.md</code>.</div>');
+  }
   function ul(title, color, items) {
     if (!items.length) return '';
     let h = '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:600;color:' + color + ';margin-bottom:4px">' + title + '</div><ul style="margin:0;padding-left:18px;font-size:11px;color:var(--sec);line-height:1.45">';
@@ -2413,7 +2418,8 @@ function updateBuildScopePreview() {
     h += '</ul></div>';
     return h;
   }
-  lines.push(ul('Run path (when tier + keys allow)', 'var(--grn)', run));
+  const runTitle = tierBlocksMods ? 'Archetype “run” list (live APIs need Professional+)' : 'Run path (when tier + keys allow)';
+  lines.push(ul(runTitle, 'var(--grn)', run));
   lines.push(ul('Defer path (finish after deploy)', '#FBBF24', defer));
   lines.push(ul('Skipped in this package', 'var(--dim)', skip));
   if (bp.plainLanguage) {

@@ -146,3 +146,4 @@ See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:
 - **`maturity.html`** — “What ships today” truth deck (live vs partial vs spec); linked from landing nav as **What ships**.
 - **`PAIN_POINT_MASTER_MAP.md`** + **`PAIN_POINT_MASTER_MAP.csv`** — exhaustive pain taxonomy + traceability matrix for sales/RevOps.
 - **Builder:** `app.html` includes **Expected scope (honest preview)** under build package (V4 R/D/S matrix + tier caveat).
+- **Tier truth:** **`index.html`** states that **Foundation** does **not** auto-provision integration modules, matching **`api/provision.js`** `TIER_MODULES.foundation: []` and **`app.html`** `V3_TIERS.foundation.modules: []`.

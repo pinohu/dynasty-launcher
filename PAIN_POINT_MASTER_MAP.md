@@ -4,6 +4,8 @@
 
 **Scope boundary — “full designed output”:** This map follows **`DYNASTY_LAUNCHER_V3_FINAL.md`**, **`CLAUDE.md`**, **`V4_INVESTOR_FEEDBACK.md`**, and **`index.html`** / FAQ positioning. It describes **intent and specified artifacts**, not a guarantee that every row is **fully automated in production today** (see `CLAUDE.md`: Phases 9–20 and several `mod_*` integrations remain **to build or partial**). Use **`BUILD-MANIFEST.json`**, **`OPERATIONS.md`**, and tier/archetype **run / defer / skip** defaults to see what a **given session** actually shipped.
 
+**Commercial / server alignment:** **`Foundation`** (and **`starter`**) match **`api/provision.js`** — **`TIER_MODULES.foundation` is `[]`**: no automatic integration module provisioning; **Professional+** unlocks the `allowedModules` list. Marketing on **`index.html`** is aligned to that gate. **Non-US** buyers and **enterprise procurement** (MSA/SSO) are **out of scope** for self-serve unless added explicitly.
+
 **Reading the delivery-mode column:**
 
 | Code | Meaning |
