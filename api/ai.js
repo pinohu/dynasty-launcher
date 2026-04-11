@@ -50,8 +50,12 @@ const PROVIDERS = {
 };
 
 const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_DAILY_LIMIT || '30', 10));
+const FREE_GUEST_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_GUEST_SCORING_LIMIT || '1', 10));
+const FREE_REGISTERED_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_REGISTERED_SCORING_LIMIT || '3', 10));
+const SCORING_PRO_MONTHLY_LIMIT = Math.max(50, parseInt(process.env.SCORING_PRO_MONTHLY_LIMIT || '200', 10));
 const USAGE_TABLE = 'dynasty_ai_usage_daily';
-const PAID_TIERS = new Set(['foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume']);
+const QUOTA_TABLE = 'dynasty_ai_quota_usage';
+const PAID_TIERS = new Set(['foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume', 'scoring_pro']);
 
 async function isValidAdminToken(token) {
   if (!token) return false;
@@ -105,6 +109,47 @@ async function ensureUsageTable(pool) {
     );
   `);
   globalThis.__dynastyAiUsageReady = true;
+}
+
+async function ensureQuotaTable(pool) {
+  if (globalThis.__dynastyAiQuotaReady) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ${QUOTA_TABLE} (
+      window_key TEXT NOT NULL,
+      actor_key TEXT NOT NULL,
+      usage_bucket TEXT NOT NULL,
+      requests INTEGER NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (window_key, actor_key, usage_bucket)
+    );
+  `);
+  globalThis.__dynastyAiQuotaReady = true;
+}
+
+function getMonthKey() {
+  return new Date().toISOString().slice(0, 7); // YYYY-MM
+}
+
+async function incrementQuotaUsage(windowKey, actorKey, usageBucket) {
+  const pool = await getUsagePool();
+  if (pool) {
+    await ensureQuotaTable(pool);
+    const r = await pool.query(
+      `INSERT INTO ${QUOTA_TABLE} (window_key, actor_key, usage_bucket, requests, updated_at)
+       VALUES ($1, $2, $3, 1, NOW())
+       ON CONFLICT (window_key, actor_key, usage_bucket)
+       DO UPDATE SET requests = ${QUOTA_TABLE}.requests + 1, updated_at = NOW()
+       RETURNING requests`,
+      [windowKey, actorKey, usageBucket]
+    );
+    return r.rows?.[0]?.requests || 1;
+  }
+  if (!globalThis.__dynastyAiQuotaMem) globalThis.__dynastyAiQuotaMem = new Map();
+  const map = globalThis.__dynastyAiQuotaMem;
+  const key = `${windowKey}:${actorKey}:${usageBucket}`;
+  const next = (map.get(key) || 0) + 1;
+  map.set(key, next);
+  return next;
 }
 
 async function incrementUsage(actorKey) {
@@ -366,6 +411,11 @@ export default async function handler(req, res) {
         error: 'Invalid paid access token. Re-verify checkout session.',
       });
     }
+    if (paidTier === 'scoring_pro') {
+      return res.status(403).json({
+        error: 'Scoring Pro only allows free_scoring usage context.',
+      });
+    }
     if (claimedTier !== 'free' && claimedTier !== paidTier && !(claimedTier === 'starter' && paidTier === 'foundation')) {
       return res.status(403).json({
         error: `Tier mismatch: session allows ${paidTier}, but request claimed ${claimedTier}.`,
@@ -374,13 +424,80 @@ export default async function handler(req, res) {
   }
 
   if (usageContext === 'free_scoring') {
+    let scoringPlan = 'guest';
+    let limit = FREE_GUEST_MONTHLY_LIMIT;
+    let periodKey = getMonthKey();
+    let quotaBucket = 'free_guest_monthly';
+    let quotaActorKey = userId ? `u:${userId}` : `ip:${getClientIp(req)}`;
+
+    if (userId) {
+      scoringPlan = 'registered';
+      limit = FREE_REGISTERED_MONTHLY_LIMIT;
+      quotaBucket = 'free_registered_monthly';
+    }
+
+    if (!adminBypass && claimedTier === 'scoring_pro') {
+      const session = await fetchStripeCheckoutSession(stripeSessionId);
+      const paidTier = paidTierFromSession(session);
+      if (paidTier !== 'scoring_pro') {
+        return res.status(402).json({
+          error: 'Scoring Pro verification required for unlimited scoring access.',
+          code: 'scoring_pro_verification_required',
+        });
+      }
+      const tokenOk = await isValidPaidAccessToken({
+        token: accessToken,
+        sessionId: stripeSessionId,
+        userId,
+        tier: paidTier,
+      });
+      if (!tokenOk) {
+        return res.status(401).json({
+          error: 'Invalid Scoring Pro token. Re-verify your subscription session.',
+          code: 'scoring_pro_token_invalid',
+        });
+      }
+      scoringPlan = 'scoring_pro';
+      limit = SCORING_PRO_MONTHLY_LIMIT;
+      quotaBucket = 'scoring_pro_monthly';
+      quotaActorKey = userId ? `u:${userId}` : `pay:${stripeSessionId}`;
+    }
+
+    const requestsInPeriod = await incrementQuotaUsage(periodKey, quotaActorKey, quotaBucket);
+    const remaining = Math.max(0, limit - requestsInPeriod);
+    res.setHeader('X-Scoring-Plan', scoringPlan);
+    res.setHeader('X-Scoring-Limit', String(limit));
+    res.setHeader('X-Scoring-Remaining', String(remaining));
+    if (requestsInPeriod > limit) {
+      if (scoringPlan === 'guest') {
+        return res.status(429).json({
+          error: 'Your first free score is used. Sign in with email to unlock 3 more scores this month.',
+          code: 'scoring_guest_limit_reached',
+          limit,
+        });
+      }
+      if (scoringPlan === 'registered') {
+        return res.status(429).json({
+          error: 'You have used your 3 registered free scores this month. Upgrade to Scoring Pro for ongoing access.',
+          code: 'scoring_registered_limit_reached',
+          limit,
+        });
+      }
+      return res.status(429).json({
+        error: `Scoring Pro fair-use limit reached (${SCORING_PRO_MONTHLY_LIMIT}/month). Contact support to raise your limit.`,
+        code: 'scoring_pro_fair_use_reached',
+        limit: SCORING_PRO_MONTHLY_LIMIT,
+      });
+    }
+
     const requestsToday = await incrementUsage(actorKey);
-    const remaining = Math.max(0, FREE_SCORING_DAILY_LIMIT - requestsToday);
+    const dailyRemaining = Math.max(0, FREE_SCORING_DAILY_LIMIT - requestsToday);
     res.setHeader('X-Free-Scoring-Limit', String(FREE_SCORING_DAILY_LIMIT));
-    res.setHeader('X-Free-Scoring-Remaining', String(remaining));
+    res.setHeader('X-Free-Scoring-Remaining', String(dailyRemaining));
     if (requestsToday > FREE_SCORING_DAILY_LIMIT) {
       return res.status(429).json({
-        error: `Free scoring limit reached (${FREE_SCORING_DAILY_LIMIT}/day). Try again tomorrow or upgrade.`,
+        error: `Daily scoring throttle reached (${FREE_SCORING_DAILY_LIMIT}/day). Try again tomorrow.`,
+        code: 'scoring_daily_throttle_reached',
         limit: FREE_SCORING_DAILY_LIMIT
       });
     }

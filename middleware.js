@@ -55,7 +55,7 @@ else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{doc
   if (plan === 'custom_volume') {
     return Response.redirect(new URL('/#pricing', request.url), 307);
   }
-  if (plan && ['blueprint', 'foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(plan)) {
+  if (plan && ['blueprint', 'scoring_pro', 'foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(plan)) {
     // Redirect to checkout API which creates Stripe session and redirects to Stripe
     const checkoutUrl = new URL('/api/checkout', request.url);
     checkoutUrl.searchParams.set('action', 'create_session');
@@ -114,10 +114,11 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
 <body>
 <div style="font-size:2.5rem">⚡</div>
 <h2>Your Deputy</h2>
-<p>Build a complete operating business from one prompt. Score free, or start with a low-risk $297 execution blueprint.</p>
+<p>Build a complete operating business from one prompt. Score free, start with a low-risk $297 blueprint, or unlock ongoing scoring for $19/mo.</p>
 <div class="btns">
   <a href="/app?plan=free">Score Free</a>
   <a href="/app?plan=blueprint">Blueprint — $297</a>
+  <a href="/app?plan=scoring_pro">Scoring Pro — $19/mo</a>
   <a href="/app?plan=professional" class="primary">Build — $4,997</a>
 </div>
 <div class="btns" style="margin-top:8px">

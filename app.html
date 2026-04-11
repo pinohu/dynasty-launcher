@@ -2619,6 +2619,7 @@ function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 const V3_TIERS = {
   free: { price: 0, label: 'Free Scoring', modules: [] },
   blueprint: { price: 297, label: 'Diagnostic + Execution Blueprint ($297)', modules: [] },
+  scoring_pro: { price: 19, label: 'Scoring Pro ($19/mo)', modules: [] },
   /* Foundation: must match api/provision.js TIER_MODULES.foundation — docs + deploy, no mod_* auto-provision */
   foundation: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
   starter: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
@@ -2655,6 +2656,7 @@ function getAiAuthPayload() {
 function isFreeTier() {
   const t = getUserTier();
   if (t === 'blueprint') return true; // Blueprint includes scoring/recommendation flow, not full build execution
+  if (t === 'scoring_pro') return true; // Scoring Pro uses scoring quota path, not standard build-runtime path
   return t === 'free' && !localStorage.getItem('dynasty_paid_session');
 }
 function isModuleAllowed(moduleName) {
@@ -2844,7 +2846,7 @@ async function startCheckout(plan) {
     enterBuilder();
     return;
   }
-  if (plan && ['blueprint', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'].includes(plan) && !params.get('payment')) {
+  if (plan && ['blueprint', 'scoring_pro', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'].includes(plan) && !params.get('payment')) {
     // Don't store tier yet — wait for payment confirmation in checkPaymentReturn
     startCheckout(plan === 'starter' ? 'foundation' : plan);
   }
@@ -2909,8 +2911,9 @@ async function startCheckout(plan) {
 function getBuildsRemaining() {
   const used = parseInt(localStorage.getItem('dynasty_builds_used') || '0');
   const paid = localStorage.getItem('dynasty_paid_session');
-  if (paid && getUserTier() !== 'blueprint') return 999; // paid users get unlimited except blueprint-only entry
-  if (getUserTier() === 'blueprint') return 0; // blueprint is discovery-only; upgrade required to run builds
+  const tier = getUserTier();
+  if (tier === 'blueprint' || tier === 'scoring_pro') return 0; // discovery/scoring-only plans cannot run full builds
+  if (paid) return 999; // paid build tiers get unlimited for now
   return Math.max(0, 1 - used); // 1 free build
 }
 function recordBuildUsed() {
@@ -3214,6 +3217,21 @@ All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base 
   } catch (e) {
     hideLoadingOverlay();
     console.error('Scoring error:', e);
+    const msg = String(e?.message || '');
+    if (msg.includes('first free score is used')) {
+      const shouldSignIn = confirm('You used your first free score.\n\nSign in with your email to unlock 3 more scores this month.\n\nClick OK to sign in now.');
+      if (shouldSignIn) {
+        try {
+          const authed = await requireAuth();
+          if (authed) alert('Scoring unlocked: you now have 3 additional scores this month.');
+        } catch {}
+      }
+    } else if (msg.includes('3 registered free scores')) {
+      const shouldUpgrade = confirm('You used your 3 registered free scores this month.\n\nUpgrade to Scoring Pro ($19/month) for ongoing scoring access.\n\nClick OK to continue.');
+      if (shouldUpgrade) startCheckout('scoring_pro');
+    } else if (msg.includes('Scoring Pro fair-use limit reached')) {
+      alert('Your Scoring Pro fair-use threshold is reached for this month. Contact support to raise your scoring limit.');
+    }
     btn.textContent = 'Scoring failed — try again';
     btn.title = e.message || 'Unknown error';
     btn.disabled = false;
@@ -3699,9 +3717,20 @@ async function aiRawWithModel(prompt, modelId, max = 4000) {
           usage_context: freeTier ? 'free_scoring' : 'standard'
         })
       });
-      if (r.status === 429) { await new Promise(r=>setTimeout(r, 3000*(attempt+1))); continue; }
-      if (!r.ok) { if (attempt < fallbackModels.length-1) { await new Promise(r=>setTimeout(r,2000)); continue; } throw new Error('AI API ' + r.status); }
-      const d = await r.json();
+      let d = null;
+      try { d = await r.json(); } catch {}
+      if (r.status === 429) {
+        const errMsg = d?.error || d?.message || '';
+        if (String(errMsg).includes('first free score is used') || String(errMsg).includes('3 registered free scores') || String(errMsg).includes('Scoring Pro fair-use limit')) {
+          throw new Error(errMsg);
+        }
+        await new Promise(r=>setTimeout(r, 3000*(attempt+1))); continue;
+      }
+      if (!r.ok) {
+        const errMsg = d?.error || d?.message || ('AI API ' + r.status);
+        if (attempt < fallbackModels.length-1) { await new Promise(r=>setTimeout(r,2000)); continue; }
+        throw new Error(errMsg);
+      }
       if (d.error) {
         if (d.error.message?.includes('overloaded') || d.error.message?.includes('rate')) { await new Promise(r=>setTimeout(r,3000)); continue; }
         if (attempt < fallbackModels.length-1) { await new Promise(r=>setTimeout(r,2000)); continue; }
@@ -4350,6 +4379,11 @@ async function startBuild() {
   }
   if (!isAdmin && getUserTier() === 'blueprint') {
     const action = confirm('Your Diagnostic + Execution Blueprint is complete.\n\nTo run full generation and deployment, upgrade to Foundation ($1,997). If purchased within 14 days, your $297 blueprint fee is credited at checkout.\n\nClick OK to continue to paid plans.');
+    if (action) { startCheckout('foundation'); }
+    return;
+  }
+  if (!isAdmin && getUserTier() === 'scoring_pro') {
+    const action = confirm('Scoring Pro unlocks ongoing scoring access, not full build execution.\n\nTo run full generation and deployment, upgrade to Foundation ($1,997).\n\nClick OK to continue to paid plans.');
     if (action) { startCheckout('foundation'); }
     return;
   }
@@ -5516,9 +5550,20 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
           usage_context: isFreeTier() ? 'free_scoring' : 'standard'
         })
       });
-      if (r.status === 429) { await new Promise(r => setTimeout(r, 3000 * (attempt + 1))); continue; }
-      if (!r.ok) { if (attempt < fallbackModels.length - 1) continue; throw new Error('AI API ' + r.status); }
-      const d = await r.json();
+      let d = null;
+      try { d = await r.json(); } catch {}
+      if (r.status === 429) {
+        const errMsg = d?.error || d?.message || '';
+        if (String(errMsg).includes('first free score is used') || String(errMsg).includes('3 registered free scores') || String(errMsg).includes('Scoring Pro fair-use limit')) {
+          throw new Error(errMsg);
+        }
+        await new Promise(r => setTimeout(r, 3000 * (attempt + 1))); continue;
+      }
+      if (!r.ok) {
+        const errMsg = d?.error || d?.message || ('AI API ' + r.status);
+        if (attempt < fallbackModels.length - 1) continue;
+        throw new Error(errMsg);
+      }
       if (d.error) {
         if (d.error.message?.includes('overloaded') || d.error.message?.includes('rate')) { await new Promise(r => setTimeout(r, 3000)); continue; }
         if (attempt < fallbackModels.length - 1) continue;

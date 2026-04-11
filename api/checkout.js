@@ -63,13 +63,14 @@ export default async function handler(req, res) {
 
     const tiers = {
       blueprint: { amount: 29700, name: 'Your Deputy — Diagnostic + Execution Blueprint', desc: 'Conversion-grade execution blueprint: risk map, priority sequence, execution path, and persona-matched package recommendation. 100% creditable toward a paid build started within 14 days.' },
+      scoring_pro: { amount: 1900, name: 'Your Deputy — Scoring Pro', desc: 'Monthly scoring access with higher monthly limits, account-level history, and fair-use safeguards.' },
       foundation: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations; typically tens of thousands of words, varies by session). SBA business plan, investor readiness, cap table themes, tax strategy. Production app + repo deploy. No automatic server-side integration module provisioning on Foundation — use OPERATIONS.md or upgrade to Professional+. $71K–$131K equivalent value.' },
       starter: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations; typically tens of thousands of words, varies by session). SBA business plan, investor readiness, cap table themes, tax strategy. Production app + repo deploy. No automatic server-side integration module provisioning on Foundation — use OPERATIONS.md or upgrade to Professional+. $71K–$131K equivalent value.' },
       professional: { amount: 499700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus attempts at core live stack where APIs succeed: domain/email patterns, connected payments, CRM, marketing sequences, chatbot, analytics, automation (subject to keys and archetype deferrals). $100K–$170K equivalent value.' },
       enterprise: { amount: 999700, name: 'Your Deputy — Enterprise', desc: 'Broadest integration attempts: up to 17 module types when your site package does not skip them — subject to API success, keys, and implementation status. Plus creative, SEO, social calendar, and directory/WP paths per spec. See BUILD-MANIFEST.json for your build. $71K–$194K equivalent value.' }
     };
     const tierDef = tiers[normalizedPlan] || tiers.foundation;
-    const isBlueprintCreditablePlan = !['blueprint', 'managed'].includes(normalizedPlan);
+    const isBlueprintCreditablePlan = !['blueprint', 'managed', 'scoring_pro'].includes(normalizedPlan);
     const wantsBlueprintCredit = !!apply_blueprint_credit && isBlueprintCreditablePlan;
     const blueprintCreditCents = wantsBlueprintCredit ? Math.min(29700, Math.max(0, tierDef.amount - 5000)) : 0;
     const finalAmount = Math.max(5000, tierDef.amount - blueprintCreditCents);
@@ -100,14 +101,14 @@ export default async function handler(req, res) {
       if (email) params.push(`customer_email=${enc(email)}`);
 
       // Managed Automation Runtime is a $497/mo subscription — use Stripe subscription mode
-      if (normalizedPlan === 'managed') {
+      if (normalizedPlan === 'managed' || normalizedPlan === 'scoring_pro') {
         const subParams = [
           'payment_method_types[0]=card',
           'mode=subscription',
-          `success_url=${enc(`${APP_URL}/app?payment=success&session_id={CHECKOUT_SESSION_ID}&tier=managed`)}`,
+          `success_url=${enc(`${APP_URL}/app?payment=success&session_id={CHECKOUT_SESSION_ID}&tier=${normalizedPlan}`)}`,
           `cancel_url=${enc(`${APP_URL}/app?payment=cancelled`)}`,
           'metadata[source]=your-deputy',
-          'metadata[plan]=managed',
+          `metadata[plan]=${normalizedPlan}`,
           `metadata[training_opt_in]=${training_opt_in ? 'yes' : 'no'}`,
           `metadata[build_archetype]=${enc((build_archetype || '').slice(0, 64))}`,
           `metadata[source_segment]=${enc((source_segment || '').slice(0, 64))}`,
@@ -115,9 +116,11 @@ export default async function handler(req, res) {
           `metadata[recommended_plan]=${enc((recommended_plan || '').slice(0, 48))}`,
           `metadata[user_id]=${enc((user_id || '').slice(0, 96))}`,
           'line_items[0][price_data][currency]=usd',
-          'line_items[0][price_data][unit_amount]=49700',
-          `line_items[0][price_data][product_data][name]=${enc('Your Deputy — Managed Automation Runtime')}`,
-          `line_items[0][price_data][product_data][description]=${enc('Monthly autonomous runtime monitoring, retry queues, optimization reports, and system health checks.')}`,
+          `line_items[0][price_data][unit_amount]=${normalizedPlan === 'managed' ? 49700 : 1900}`,
+          `line_items[0][price_data][product_data][name]=${enc(normalizedPlan === 'managed' ? 'Your Deputy — Managed Automation Runtime' : 'Your Deputy — Scoring Pro')}`,
+          `line_items[0][price_data][product_data][description]=${enc(normalizedPlan === 'managed'
+            ? 'Monthly autonomous runtime monitoring, retry queues, optimization reports, and system health checks.'
+            : 'Monthly scoring access with expanded limits and fair-use controls.')}`,
           'line_items[0][price_data][recurring][interval]=month',
           'line_items[0][quantity]=1'
         ];
