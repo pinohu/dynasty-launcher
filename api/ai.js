@@ -51,6 +51,7 @@ const PROVIDERS = {
 
 const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_DAILY_LIMIT || '30', 10));
 const USAGE_TABLE = 'dynasty_ai_usage_daily';
+const PAID_TIERS = new Set(['foundation', 'starter', 'professional', 'enterprise', 'managed']);
 
 function getClientIp(req) {
   const fwd = req.headers['x-forwarded-for'];
@@ -126,6 +127,31 @@ function resolveFreeModel(config) {
     if (getApiKey(info.provider, config)) return model;
   }
   return null;
+}
+
+async function fetchStripeCheckoutSession(sessionId) {
+  const sk = process.env.STRIPE_SECRET_KEY;
+  if (!sk || !sessionId) return null;
+  const auth = Buffer.from(`${sk}:`).toString('base64');
+  try {
+    const resp = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+      headers: { Authorization: `Basic ${auth}` },
+    });
+    const data = await resp.json();
+    if (!resp.ok || data.error) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function paidTierFromSession(session) {
+  if (!session) return null;
+  const isPaid = session.payment_status === 'paid' || (session.mode === 'subscription' && session.status === 'complete');
+  if (!isPaid) return null;
+  const plan = String(session.metadata?.plan || 'foundation').toLowerCase();
+  if (!PAID_TIERS.has(plan)) return null;
+  return plan;
 }
 
 function getApiKey(provider, config) {
@@ -276,9 +302,26 @@ export default async function handler(req, res) {
   const body = req.body || {};
   const usageContext = (body.usage_context || 'standard').toString();
   const requestedModel = (body.model || 'claude-sonnet-4-20250514').toString();
+  const claimedTier = (body.tier || 'free').toString().toLowerCase();
+  const stripeSessionId = (body.stripe_session_id || body.session_id || '').toString().trim();
   const userId = (body.user_id || '').toString().trim();
   const actorKey = userId ? `u:${userId}` : `ip:${getClientIp(req)}`;
   let model = requestedModel;
+
+  if (usageContext !== 'free_scoring') {
+    const session = await fetchStripeCheckoutSession(stripeSessionId);
+    const paidTier = paidTierFromSession(session);
+    if (!paidTier) {
+      return res.status(402).json({
+        error: 'Paid access verification required for non-free AI usage.',
+      });
+    }
+    if (claimedTier !== 'free' && claimedTier !== paidTier && !(claimedTier === 'starter' && paidTier === 'foundation')) {
+      return res.status(403).json({
+        error: `Tier mismatch: session allows ${paidTier}, but request claimed ${claimedTier}.`,
+      });
+    }
+  }
 
   if (usageContext === 'free_scoring') {
     const requestsToday = await incrementUsage(actorKey);

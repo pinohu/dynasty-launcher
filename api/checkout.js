@@ -69,7 +69,7 @@ export default async function handler(req, res) {
       ];
       if (email) params.push(`customer_email=${enc(email)}`);
 
-      // Managed Operations is a $197/mo subscription — use Stripe subscription mode
+      // Managed Automation Runtime is a $497/mo subscription — use Stripe subscription mode
       if (plan === 'managed') {
         const subParams = [
           'payment_method_types[0]=card',
@@ -85,8 +85,8 @@ export default async function handler(req, res) {
           `metadata[recommended_plan]=${enc((recommended_plan || '').slice(0, 48))}`,
           'line_items[0][price_data][currency]=usd',
           'line_items[0][price_data][unit_amount]=49700',
-          `line_items[0][price_data][product_data][name]=${enc('Your Deputy — Managed Operations')}`,
-          `line_items[0][price_data][product_data][description]=${enc('Monthly managed operations: weekly performance reports, priority support, automation monitoring, quarterly strategy refresh, ongoing optimization.')}`,
+          `line_items[0][price_data][product_data][name]=${enc('Your Deputy — Managed Automation Runtime')}`,
+          `line_items[0][price_data][product_data][description]=${enc('Monthly autonomous runtime monitoring, retry queues, optimization reports, and system health checks.')}`,
           'line_items[0][price_data][recurring][interval]=month',
           'line_items[0][quantity]=1'
         ];

@@ -153,25 +153,38 @@ async function resolveProvisionUserTier({ tier, stripeSessionId, bypassStripe })
   if (bypassStripe) return { userTier: claim, tierSource: 'dry_run' };
   const trustClient = process.env.PROVISION_TIER_TRUST_CLIENT === '1' || process.env.PROVISION_TIER_TRUST_CLIENT === 'true';
   const sk = process.env.STRIPE_SECRET_KEY;
-  if (trustClient || !sk) {
-    return { userTier: claim, tierSource: trustClient ? 'client_trust_env' : 'client_no_stripe_key' };
-  }
+  if (trustClient) return { userTier: claim, tierSource: 'client_trust_env' };
+  if (!sk) return { userTier: 'free', tierSource: 'missing_stripe_secret' };
   const sid = (stripeSessionId || '').trim();
-  if (!sid) {
-    if (['professional', 'enterprise', 'managed'].includes(claim)) {
-      return { userTier: 'foundation', tierSource: 'capped_missing_checkout_session' };
-    }
-    return { userTier: claim, tierSource: 'client' };
-  }
+  if (!sid) return { userTier: 'free', tierSource: 'missing_checkout_session' };
   const session = await fetchStripeCheckoutSession(sid, sk);
   const fromStripe = tierFromStripeCheckoutSession(session);
-  if (!fromStripe) {
-    if (['professional', 'enterprise', 'managed'].includes(claim)) {
-      return { userTier: 'foundation', tierSource: 'capped_session_not_paid' };
-    }
-    return { userTier: claim, tierSource: 'client' };
-  }
+  if (!fromStripe) return { userTier: 'free', tierSource: 'session_not_paid_or_invalid' };
   return { userTier: fromStripe, tierSource: 'stripe_checkout' };
+}
+
+function readAdminTokenFromRequest(req) {
+  const hdr = (req.headers['x-dynasty-admin-token'] || '').toString().trim();
+  if (hdr) return hdr;
+  const auth = (req.headers.authorization || '').toString();
+  if (auth.startsWith('Bearer ')) return auth.slice('Bearer '.length).trim();
+  return '';
+}
+
+async function isValidAdminToken(token) {
+  if (!token) return false;
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) return false;
+  const parts = token.split(':');
+  if (parts.length !== 3) return false;
+  const [prefix, expiry, hash] = parts;
+  if (prefix !== 'admin') return false;
+  const exp = parseInt(expiry, 10);
+  if (!Number.isFinite(exp) || Date.now() > exp) return false;
+  const { createHmac } = await import('crypto');
+  const payload = `${prefix}:${expiry}`;
+  const expected = createHmac('sha256', adminKey).update(payload).digest('hex');
+  return expected === hash;
 }
 
 // ── V3 INTEGRATION MODULES ──────────────────────────────────────────────────
@@ -1989,6 +2002,43 @@ export default async function handler(req, res) {
   const VERCEL_TEAM  = 'team_fuTLGjBMk3NAD32Bm5hA7wkr';
   const NEON_STORE   = process.env.NEON_STORE_ID || 'store_dlRpluZOBH0L34D3';
   const ORG          = 'pinohu';
+  const adminToken = readAdminTokenFromRequest(req);
+  const isAdminRequest = await isValidAdminToken(adminToken);
+
+  const sensitiveActions = new Set([
+    'authority_deploy',
+    'provision',
+    'provision_modules',
+    'fetch_vercel_logs',
+    'verify_deploy',
+    'retry_deploy',
+    'verify_live',
+  ]);
+  if (sensitiveActions.has(action)) {
+    const payload = req.body || {};
+    const claimTier = String(payload.tier || payload?.project?.tier || 'foundation');
+    const stripeSessionId = String(
+      payload.stripe_session_id ||
+      payload.session_id ||
+      payload?.project?.stripe_session_id ||
+      ''
+    );
+    const access = await resolveProvisionUserTier({
+      tier: claimTier,
+      stripeSessionId,
+      bypassStripe: isAdminRequest,
+    });
+    req._dynastyAccess = { ...access, isAdminRequest };
+    const isPaidTier = ['foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(access.userTier);
+    if (!isAdminRequest && !isPaidTier) {
+      return res.status(402).json({
+        ok: false,
+        error: 'Paid checkout verification required for provisioning and deployment actions.',
+        tier: access.userTier,
+        tier_source: access.tierSource,
+      });
+    }
+  }
 
   // ── INVENTORY ─────────────────────────────────────────────────────────────
   if (action==='inventory') {
@@ -3060,12 +3110,14 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'],
       managed: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool']
     };
-    const bypassStripeVerify = !!dry_run;
-    const { userTier, tierSource } = await resolveProvisionUserTier({
+    const bypassStripeVerify = !!dry_run || !!req._dynastyAccess?.isAdminRequest;
+    const tierAccess = req._dynastyAccess || await resolveProvisionUserTier({
       tier,
       stripeSessionId: stripe_session_id || session_id,
       bypassStripe: bypassStripeVerify,
     });
+    const userTier = tierAccess.userTier;
+    const tierSource = tierAccess.tierSource;
     const allowedModules = TIER_MODULES[userTier] || TIER_MODULES.foundation;
     const rawEnabled = modules_enabled || config.modules_enabled || {};
     const enabled = {};

@@ -1,6 +1,37 @@
 // Your Deputy — Clerk Auth API
 // Returns publishable key for frontend, verifies sessions, manages user metadata
 
+const ADMIN_ATTEMPTS = new Map();
+const ADMIN_MAX_ATTEMPTS = 8;
+const ADMIN_WINDOW_MS = 15 * 60 * 1000;
+
+function getClientIp(req) {
+  const xf = (req.headers['x-forwarded-for'] || '').toString();
+  return xf.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
+}
+
+function isAdminRateLimited(req) {
+  const ip = getClientIp(req);
+  const now = Date.now();
+  const existing = ADMIN_ATTEMPTS.get(ip);
+  if (!existing || now - existing.windowStart > ADMIN_WINDOW_MS) {
+    ADMIN_ATTEMPTS.set(ip, { windowStart: now, attempts: 1 });
+    return false;
+  }
+  existing.attempts += 1;
+  ADMIN_ATTEMPTS.set(ip, existing);
+  return existing.attempts > ADMIN_MAX_ATTEMPTS;
+}
+
+async function timingSafeEqualString(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const { timingSafeEqual } = await import('crypto');
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -18,56 +49,23 @@ export default async function handler(req, res) {
 
   // ── Get user metadata (subscription status, build count) ───────────
   if (action === 'user') {
-    const CLERK_SECRET = process.env.CLERK_SECRET_KEY;
-    if (!CLERK_SECRET) return res.json({ ok: false, error: 'Clerk not configured' });
-    
-    const { user_id } = req.body || {};
-    if (!user_id) return res.json({ ok: false, error: 'user_id required' });
-
-    try {
-      const resp = await fetch(`https://api.clerk.com/v1/users/${user_id}`, {
-        headers: { 'Authorization': `Bearer ${CLERK_SECRET}` },
-      });
-      const user = await resp.json();
-      return res.json({
-        ok: true,
-        email: user.email_addresses?.[0]?.email_address,
-        name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
-        plan: user.public_metadata?.plan || 'free',
-        builds_used: user.public_metadata?.builds_used || 0,
-      });
-    } catch (e) {
-      return res.json({ ok: false, error: e.message });
-    }
+    return res.status(403).json({ ok: false, error: 'User metadata endpoint disabled for security hardening' });
   }
 
   // ── Update user metadata (after build or payment) ──────────────────
   if (action === 'update_user') {
-    const CLERK_SECRET = process.env.CLERK_SECRET_KEY;
-    if (!CLERK_SECRET) return res.json({ ok: false, error: 'Clerk not configured' });
-    
-    const { user_id, metadata } = req.body || {};
-    if (!user_id || !metadata) return res.json({ ok: false, error: 'user_id and metadata required' });
-
-    try {
-      const resp = await fetch(`https://api.clerk.com/v1/users/${user_id}`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${CLERK_SECRET}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ public_metadata: metadata }),
-      });
-      const user = await resp.json();
-      return res.json({ ok: true, metadata: user.public_metadata });
-    } catch (e) {
-      return res.json({ ok: false, error: e.message });
-    }
+    return res.status(403).json({ ok: false, error: 'Metadata update endpoint disabled for security hardening' });
   }
 
   // ── Verify admin key (server-side — key never exposed in client code) ──
   if (action === 'verify_admin') {
     const { key } = req.body || {};
-    const ADMIN_KEY = process.env.ADMIN_KEY || 'DYNASTY2026';
+    const ADMIN_KEY = process.env.ADMIN_KEY;
+    if (!ADMIN_KEY) return res.status(503).json({ ok: false, error: 'Admin auth unavailable: ADMIN_KEY not configured' });
+    if (isAdminRateLimited(req)) return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
     if (!key) return res.json({ ok: false, error: 'key required' });
-    if (key !== ADMIN_KEY) return res.json({ ok: false, error: 'Invalid admin key' });
+    const keyOk = await timingSafeEqualString(key, ADMIN_KEY);
+    if (!keyOk) return res.json({ ok: false, error: 'Invalid admin key' });
     // Generate a time-limited admin token (valid 30 days)
     const crypto = await import('crypto');
     const expiry = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days
@@ -91,7 +89,8 @@ export default async function handler(req, res) {
   // ── Validate existing admin token ──────────────────────────────────
   if (action === 'validate_admin') {
     const { token } = req.body || {};
-    const ADMIN_KEY = process.env.ADMIN_KEY || 'DYNASTY2026';
+    const ADMIN_KEY = process.env.ADMIN_KEY;
+    if (!ADMIN_KEY) return res.status(503).json({ ok: false, valid: false, error: 'ADMIN_KEY not configured' });
     if (!token) return res.json({ ok: false, valid: false });
     try {
       const parts = token.split(':');

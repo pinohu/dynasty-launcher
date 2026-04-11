@@ -2604,6 +2604,16 @@ function getUserTier() {
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
   return localStorage.getItem('dynasty_tier') || 'free';
 }
+function getProvisionAuthPayload() {
+  return {
+    tier: getUserTier(),
+    stripe_session_id: localStorage.getItem('dynasty_paid_session') || ''
+  };
+}
+function getProvisionAuthHeaders() {
+  const adminToken = localStorage.getItem('dynasty_admin_token') || '';
+  return adminToken ? { 'x-dynasty-admin-token': adminToken } : {};
+}
 function isFreeTier() {
   return getUserTier() === 'free' && !localStorage.getItem('dynasty_paid_session');
 }
@@ -3623,6 +3633,7 @@ async function aiRawWithModel(prompt, modelId, max = 4000) {
           max_tokens: max,
           messages: [{ role: 'user', content: prompt }],
           tier: getUserTier(),
+          stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
           user_id: CLERK_USER?.id || '',
           usage_context: freeTier ? 'free_scoring' : 'standard'
         })
@@ -4529,6 +4540,10 @@ async function handleImageUpload(file) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1500,
+        tier: getUserTier(),
+        stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
+        user_id: CLERK_USER?.id || '',
+        usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         messages: [{
           role: 'user',
           content: [
@@ -4702,6 +4717,10 @@ async function handleVideoUpload(file) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
+        tier: getUserTier(),
+        stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
+        user_id: CLERK_USER?.id || '',
+        usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         messages: [{
           role: 'user',
           content: [
@@ -4741,6 +4760,10 @@ async function handleDocUpload(file) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514', max_tokens: 1500,
+          tier: getUserTier(),
+          stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
+          user_id: CLERK_USER?.id || '',
+          usage_context: isFreeTier() ? 'free_scoring' : 'standard',
           messages: [{
             role: 'user',
             content: [
@@ -4804,6 +4827,10 @@ Ask ONE question at a time. Be conversational and encouraging. After 3-5 exchang
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514', max_tokens: 500,
+        tier: getUserTier(),
+        stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
+        user_id: CLERK_USER?.id || '',
+        usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         system: systemPrompt,
         messages: convoHistory,
       })
@@ -5016,6 +5043,10 @@ Available Dynasty tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TO
   try{
     const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:V2_MODEL,max_tokens:1200,
+        tier: getUserTier(),
+        stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
+        user_id: CLERK_USER?.id || '',
+        usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         messages:[{role:'user',content:`Analyze this project description and infer all configuration. Return ONLY valid JSON.
 
 Description: "${desc}"${toolContext}
@@ -5333,7 +5364,7 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
 ` : '';
       const r = await fetch('/api/ai', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: useModel, max_tokens: max, messages: [{ role: 'user', content: qualityPrimer + prompt }] })
+        body: JSON.stringify({ model: useModel, max_tokens: max, tier: getUserTier(), stripe_session_id: localStorage.getItem('dynasty_paid_session') || '', user_id: CLERK_USER?.id || '', usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: qualityPrimer + prompt }] })
       });
       if (r.status === 429) {
         // Rate limited — wait and try next model
@@ -5380,7 +5411,7 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
       try {
         const qr = await fetch('/api/ai', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: max, messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: max, tier: getUserTier(), stripe_session_id: localStorage.getItem('dynasty_paid_session') || '', user_id: CLERK_USER?.id || '', usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: prompt }] })
         });
         if (qr.ok) {
           const qd = await qr.json();
@@ -5426,6 +5457,7 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
           max_tokens: max,
           messages: [{ role: 'user', content: prompt }],
           tier: getUserTier(),
+          stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
           user_id: CLERK_USER?.id || '',
           usage_context: isFreeTier() ? 'free_scoring' : 'standard'
         })
@@ -11044,8 +11076,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       updateGlobalProgress(9, 12, 'Phase 9 of 14 \u00b7 Provisioning');
       try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ inf: {...inf, deploy_target: V2_DEPLOY_TARGET}, svcs:provisionSvcs, custom_domain: localStorage.getItem('dynasty_custom_domain') || null })});
+          headers:{'Content-Type':'application/json', ...getProvisionAuthHeaders()},
+          body:JSON.stringify({ inf: {...inf, deploy_target: V2_DEPLOY_TARGET}, svcs:provisionSvcs, custom_domain: localStorage.getItem('dynasty_custom_domain') || null, ...getProvisionAuthPayload() })});
         const pd=await pr.json(); provRes=pd;
         if(pd.ok){
           const done=Object.entries(pd.results||{})
@@ -11064,7 +11096,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       updateGlobalProgress(10, 12, 'Phase 10 of 14 \u00b7 Deploying');
       try{
         const deployResp=await fetch('/api/provision',{method:'POST',
-          headers:{'Content-Type':'application/json'},
+          headers:{'Content-Type':'application/json', ...getProvisionAuthHeaders()},
           body:JSON.stringify({
             action:'authority_deploy',
             project_slug:inf.repo,
@@ -11072,7 +11104,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
             niche_config:nc?.niche_config||'',
             theme_css:null,
             accent_hex:inf.accent,
-            domain:inf.domain||`${inf.repo}.vercel.app`
+            domain:inf.domain||`${inf.repo}.vercel.app`,
+            ...getProvisionAuthPayload()
           })});
         const dd=await deployResp.json();
         if(dd.ok){
@@ -11142,13 +11175,12 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
 
       try {
         const v3Resp = await fetch('/api/provision?action=provision_modules', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
           body: JSON.stringify({
             project: v3Project,
             liveUrl,
             modules_enabled: v3Modules,
-            tier: localStorage.getItem('dynasty_tier') || 'foundation',
-            stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
+            ...getProvisionAuthPayload(),
             build_profile: getBuildProfile(),
           })
         });
@@ -11255,8 +11287,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       if (!verifyResults.vercel && vercelProjectId) {
         try {
           const depCheck = await fetch(`/api/provision?action=verify_deploy`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: vercelProjectId })
+            method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+            body: JSON.stringify({ project_id: vercelProjectId, ...getProvisionAuthPayload() })
           });
           const depData = await depCheck.json();
 
@@ -11268,16 +11300,16 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
               verifyResults.fixes_applied.push('Vercel deploy ERROR — triggering retry with framework fix');
               setP(`verify-pass-${pass}`, 'run', 'Deploy failed — retrying...');
               await fetch('/api/provision?action=retry_deploy', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
+                method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+                body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG, ...getProvisionAuthPayload() })
               });
               await new Promise(r => setTimeout(r, 20000)); // wait for retry to build
             } else if (depData.state === 'NOT_FOUND' || !depData.state) {
               verifyResults.fixes_applied.push('No deployment found — triggering fresh deploy');
               setP(`verify-pass-${pass}`, 'run', 'No deployment — triggering...');
               await fetch('/api/provision?action=retry_deploy', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
+                method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+                body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG, ...getProvisionAuthPayload() })
               });
               await new Promise(r => setTimeout(r, 20000));
             } else {
@@ -11291,8 +11323,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
               await new Promise(r => setTimeout(r, 15000));
               try {
                 const rc = await fetch(`/api/provision?action=verify_deploy`, {
-                  method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ project_id: vercelProjectId })
+                  method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+                  body: JSON.stringify({ project_id: vercelProjectId, ...getProvisionAuthPayload() })
                 });
                 const rd = await rc.json();
                 setP(`verify-pass-${pass}`, 'run', `Recheck: Vercel ${rd.state} (${(poll+1)*15}s)`);
@@ -11318,8 +11350,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
         try {
           if (pass > 1) await new Promise(r => setTimeout(r, 8000)); // DNS propagation
           const liveCheck = await fetch(`/api/provision?action=verify_live`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: vercelUrl, project_name: inf.name })
+            method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+            body: JSON.stringify({ url: vercelUrl, project_name: inf.name, ...getProvisionAuthPayload() })
           });
           const liveData = await liveCheck.json();
 
@@ -11345,8 +11377,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
               if (vercelProjectId) {
                 try {
                   await fetch('/api/provision?action=retry_deploy', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG })
+                    method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+                    body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG, ...getProvisionAuthPayload() })
                   });
                   await new Promise(r => setTimeout(r, 25000));
                 } catch {}
@@ -11366,8 +11398,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
             await new Promise(r => setTimeout(r, 20000));
             try {
               const rc = await fetch(`/api/provision?action=verify_live`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: vercelUrl, project_name: inf.name })
+                method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+                body: JSON.stringify({ url: vercelUrl, project_name: inf.name, ...getProvisionAuthPayload() })
               });
               const rd = await rc.json();
               if (rd.ok && rd.status === 200 && rd.has_content && rd.has_project_name && !rd.has_template_branding) {
