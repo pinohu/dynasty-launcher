@@ -802,6 +802,7 @@ html,body{overflow-x:hidden}
     </div>
 
     <button class="launch" id="launch-btn" disabled>Describe your project above to begin</button>
+    <div id="tier-access-notice" style="display:none;max-width:760px;margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);font-size:11px;line-height:1.5;color:#FDE68A"></div>
 
     <!-- ── Flags & Memory Panel (Claude Code Patterns) ────────────────────── -->
     <div class="fm-panel" id="fm-panel" style="display:none">
@@ -1042,6 +1043,7 @@ html,body{overflow-x:hidden}
         <option value="demo_express">Demo / Express — fastest path for proof builds</option>
       </select>
       <p id="dynasty-archetype-hint" style="display:none;font-size:11px;color:var(--gold);margin:0 0 10px;max-width:420px;line-height:1.45">Enterprise full and Authority packages require Professional tier or higher.</p>
+      <div id="dynasty-tier-lock-notice" style="display:none;max-width:520px;font-size:11px;line-height:1.5;color:#FDE68A;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:10px 12px;margin:0 0 10px"></div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
           <input type="checkbox" id="dynasty-plain-lang" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
@@ -2094,8 +2096,6 @@ loadFlags().then(() => {
       if (!memEl || !s.total_builds || s.total_builds === '0') return;
       memEl.innerHTML = `
         <h4 style="margin-top:12px">📊 Build Memory</h4>
-        <div class="fm-stat"><span>Total builds</span><span class="fm-val">${s.total_builds}</span></div>
-        <div class="fm-stat"><span>Lifetime cost</span><span class="fm-val">$${parseFloat(s.lifetime_cost||0).toFixed(2)}</span></div>
         <div class="fm-stat"><span>Avg build time</span><span class="fm-val">${Math.round((s.avg_build_ms||0)/1000)}s</span></div>
         <div class="fm-stat"><span>Most used model</span><span class="fm-val">${(s.most_used_model||'').split('-').slice(0,2).join(' ')}</span></div>
       `;
@@ -2525,15 +2525,40 @@ function archetypeMinTierRank(arch) {
   if (arch === 'enterprise_full' || arch === 'authority_site') return 2;
   return 0;
 }
+function refreshTierAccessNotice() {
+  const el = document.getElementById('tier-access-notice');
+  if (!el) return;
+  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  if (isAdmin) { el.style.display = 'none'; return; }
+  const tier = getUserTier();
+  const hasPaid = !!localStorage.getItem('dynasty_paid_session');
+  let html = '';
+  if (!hasPaid || tier === 'free') {
+    html = `<strong>Free tier access:</strong> idea scoring is enabled, but full generation + deployment is locked until you upgrade.
+      <div style="margin-top:6px"><button onclick="startCheckout('foundation')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer">Unlock full build</button></div>`;
+  } else if (tier === 'blueprint') {
+    html = `<strong>Blueprint access:</strong> diagnostics and planning are enabled. Full generation + deployment requires Foundation or higher.
+      <div style="margin-top:6px"><button onclick="startCheckout('foundation')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer">Upgrade to Foundation</button></div>`;
+  } else if (tier === 'scoring_pro') {
+    html = `<strong>Scoring Pro access:</strong> recurring scoring is enabled. Full generation + deployment requires Foundation or higher.
+      <div style="margin-top:6px"><button onclick="startCheckout('foundation')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer">Upgrade to Foundation</button></div>`;
+  }
+  if (!html) { el.style.display = 'none'; return; }
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
 function applyBuildPackageTierConstraints() {
   const tr = tierRank(getUserTier());
   const sel = document.getElementById('dynasty-archetype');
   const hint = document.getElementById('dynasty-archetype-hint');
+  const lockNotice = document.getElementById('dynasty-tier-lock-notice');
   if (!sel) return;
   let needReset = false;
+  const locked = [];
   for (const opt of sel.options) {
     const need = archetypeMinTierRank(opt.value);
     opt.disabled = tr < need;
+    if (opt.disabled) locked.push(opt.textContent.trim());
     if (opt.disabled && opt.selected) needReset = true;
   }
   if (needReset) {
@@ -2541,6 +2566,10 @@ function applyBuildPackageTierConstraints() {
     if (first) {
       sel.value = first.value;
       saveBuildProfileToStorage();
+      if (lockNotice) {
+        lockNotice.innerHTML = `<strong>Package switched:</strong> your current tier cannot run your previously selected package, so we moved you to an allowed package. Upgrade to Professional+ to unlock all packages.`;
+        lockNotice.style.display = 'block';
+      }
     }
   }
   if (hint) {
@@ -2558,6 +2587,20 @@ function applyBuildPackageTierConstraints() {
     }
     if (vw) vw.style.opacity = allow ? '1' : '0.5';
   }
+  if (lockNotice && !needReset) {
+    const verticalBlocked = tr < 2;
+    if (locked.length || verticalBlocked) {
+      const lockBits = [];
+      if (locked.length) lockBits.push(`locked packages: ${locked.slice(0, 3).join(', ')}${locked.length > 3 ? ` +${locked.length - 3} more` : ''}`);
+      if (verticalBlocked) lockBits.push('vertical tool add-on');
+      lockNotice.innerHTML = `<strong>Tier restrictions active:</strong> ${lockBits.join(' · ')}.<br>Upgrade to Professional+ to unlock these options. <button onclick="startCheckout('professional')" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer;margin-left:6px">Upgrade</button>`;
+      lockNotice.style.display = 'block';
+    } else {
+      lockNotice.style.display = 'none';
+      lockNotice.innerHTML = '';
+    }
+  }
+  refreshTierAccessNotice();
   try { updateBuildScopePreview(); } catch {}
 }
 function countSyllablesInWord(word) {
