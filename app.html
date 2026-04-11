@@ -4534,6 +4534,13 @@ async function proceedToBuild(desc) {
 let voiceRecognition = null;
 let voiceActive = false;
 
+function setInputStatus(id, message, show = true) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message || '';
+  el.style.display = show ? 'block' : 'none';
+}
+
 function toggleVoiceInput() {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     alert('Voice input is not supported in this browser. Try Chrome or Edge.');
@@ -4577,7 +4584,12 @@ function toggleVoiceInput() {
   };
 
   voiceRecognition.onend = () => { if (voiceActive) voiceRecognition.start(); };
-  voiceRecognition.start();
+  try {
+    voiceRecognition.start();
+  } catch (e) {
+    setInputStatus('im-voice-status', 'Voice input could not start. Check microphone permission and try again.');
+    stopVoice();
+  }
 }
 
 function stopVoice() {
@@ -4675,6 +4687,10 @@ async function openCamera(facing) {
   const buttons = document.getElementById('cam-buttons');
   const status = document.getElementById('im-camera-status');
   try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (status) status.textContent = 'Camera is not available in this browser. Use Upload photo instead.';
+      return;
+    }
     if (_camStream) _camStream.getTracks().forEach(t => t.stop());
     _camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: _camFacing, width: { ideal: 1920 }, height: { ideal: 1080 } } });
     document.getElementById('cam-preview').srcObject = _camStream;
@@ -4721,6 +4737,10 @@ async function startVideoPreview() {
   const buttons = document.getElementById('vid-buttons');
   const status = document.getElementById('im-video-status');
   try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (status) status.textContent = 'Video capture is not available in this browser. Use Upload video instead.';
+      return;
+    }
     _vidStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true });
     document.getElementById('vid-preview').srcObject = _vidStream;
     container.style.display = 'block';
@@ -4743,13 +4763,27 @@ function stopVideoPreview() {
 }
 
 function toggleVideoRecording() {
+  const status = document.getElementById('im-video-status');
+  if (!_vidStream) {
+    if (status) status.textContent = 'Camera preview is not active. Click "Record video" first.';
+    return;
+  }
+  if (typeof MediaRecorder === 'undefined') {
+    if (status) status.textContent = 'Recording is not supported in this browser. Use Upload video instead.';
+    return;
+  }
   if (!_vidRecording) {
     // Start recording
     _vidChunks = [];
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus'
       : MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ? 'video/webm;codecs=vp8,opus'
       : 'video/webm';
-    _vidRecorder = new MediaRecorder(_vidStream, { mimeType });
+    try {
+      _vidRecorder = new MediaRecorder(_vidStream, { mimeType });
+    } catch (e) {
+      if (status) status.textContent = 'Could not start recording. Try Upload video instead.';
+      return;
+    }
     _vidRecorder.ondataavailable = (e) => { if (e.data.size > 0) _vidChunks.push(e.data); };
     _vidRecorder.onstop = () => {
       const blob = new Blob(_vidChunks, { type: 'video/webm' });
@@ -5041,6 +5075,9 @@ function togglePanel(name) {
     panel.classList.add('visible');
     const btn = document.getElementById(`im-${name === 'templates' ? 'tpl' : name === 'convo' ? 'convo-btn' : name}`);
     if (btn) btn.classList.add('active');
+    if (name === 'voice') setInputStatus('im-voice-status', 'Voice ready. Click Voice again to stop recording.');
+    if (name === 'camera') setInputStatus('im-camera-status', 'Camera panel ready. Click Open camera or upload a photo.');
+    if (name === 'video') setInputStatus('im-video-status', 'Video panel ready. Record or upload a short clip.');
   }
 }
 
