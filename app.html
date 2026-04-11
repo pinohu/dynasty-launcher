@@ -8669,7 +8669,7 @@ INTERVIEW LOGISTICS: Where to find interviewees (5 specific sources for ${inf.ty
 ];
 await Promise.allSettled(groupC);
 
-// ── Group D — Financial (2 docs) ────────────
+// ── Group D — Financial (3 docs) ────────────
 const groupD = [
   (async () => {
     addP('tax_strategy', 'Tax Strategy', '', '⬡ Phase 5c');
@@ -8737,6 +8737,35 @@ Build a comprehensive pricing optimization system:
       if (raw?.length > 500) { files['PRICING-STRATEGY.md'] = `# Pricing Strategy — ${inf.name}\n\n${raw}`; setP('pricing_strategy', 'ok', 'Done'); }
       else { setP('pricing_strategy', 'sk', 'Skipped'); }
     } catch(e) { setP('pricing_strategy', 'sk', e.message); }
+  })(),
+  (async () => {
+    addP('robs_checklist', 'ROBS checklist', '', '\u2b21 Phase 5c');
+    setP('robs_checklist', 'run');
+    try {
+      const raw = await aiRaw(`You are an ERISA-aware business attorney working with a ROBS third-party administrator (TPA). Produce a single founder-facing checklist for "${inf.name}" (${inf.type_label}, ${inf.revenue_model}).
+
+Output markdown for file docs/ROBS-CHECKLIST.md with these sections only (use ## headings):
+
+1. **What ROBS is (one paragraph)** — C corporation + new qualified plan + rollover + plan purchases employer stock; not an "LLC pyramid."
+
+2. **Before you start (go / no-go)** — minimum rollover size worth admin cost, appetite for corporate formalities, need for W-2 reasonable compensation if you are an employee.
+
+3. **Questions for your TPA / counsel (numbered)** — at least 12 specific questions (FMV of stock, prohibited transactions, unrelated business income nuances at high level, Form 5500, fidelity bond, plan document, stock valuation cadence, exit if company is sold, diversification rules, corrective actions if misstep).
+
+4. **Implementation sequence (checkboxes)** — ordered steps from entity formation through first payroll if applicable.
+
+5. **Ongoing compliance calendar** — annual and quarterly reminders (5500, plan review, corporate minutes, compensation review).
+
+6. **Red flags** — informal loans between plan and company, personal use of plan assets, ignoring FMV, mixing personal expenses, skipping documentation.
+
+7. **Related docs** — point readers to ENTITY-SELECTION.md and TAX-STRATEGY.md in this bundle.
+
+End with a bold disclaimer: not legal or tax advice; ROBS requires a specialized administrator and counsel.
+
+Keep total length under ~900 words; dense bullets OK.`, 3500);
+      if (raw?.length > 400) { files['docs/ROBS-CHECKLIST.md'] = `# ROBS checklist — ${inf.name}\n\n${raw}`; setP('robs_checklist', 'ok', 'Done'); }
+      else { setP('robs_checklist', 'sk', 'Skipped'); }
+    } catch(e) { setP('robs_checklist', 'sk', e.message); }
   })()
 ];
 await Promise.allSettled(groupD);
@@ -10973,7 +11002,7 @@ function showDone(inf,repo,fc,mtasks){
   const beFiles=['backend/main.py','backend/requirements.txt','backend/Dockerfile','docker-compose.yml'];
   const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
   const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];
-  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','BANK-FUNDING-PLAYBOOK.md','docs/VERTICAL-TOOL-SCHEMA.sql','docs/SITE-ARCHETYPE-LANDING.md','docs/plain/QA-NOTES.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html','PMF-MEASUREMENT.md','UNSCALABLE-PLAYBOOK.md','docs/OPERATING-AGREEMENT-TEMPLATE.md','docs/IP-ASSIGNMENT.md','ENTITY-SELECTION.md','RUNWAY-CALCULATOR.md','CUSTOMER-SUCCESS.md','HIRING-PLAN.md','FOUNDER-AGREEMENT.md','FUNDRAISING-STRATEGY.md','ORG-DESIGN.md','OPERATIONS-PLAYBOOK.md','PIVOT-FRAMEWORK.md','COHORT-ANALYSIS.md','RETENTION-PLAYBOOK.md','CAP-TABLE-MODEL.md','TERM-SHEET-TEMPLATES.md','CRISIS-PLAYBOOK.md','EXPERIMENT-FRAMEWORK.md','GROWTH-EXPERIMENTS.md','CUSTOMER-DEVELOPMENT.md','TAX-STRATEGY.md','PRICING-STRATEGY.md','docs/NDA-TEMPLATE.md','docs/CONTRACTOR-AGREEMENT.md','docs/OFFER-LETTER-TEMPLATE.md','docs/GDPR-IMPLEMENTATION.md','CHANNEL-PLAYBOOKS.md','REFERRAL-PROGRAM.md','LAUNCH-CHECKLIST.md','CHURN-REDUCTION.md','CULTURE.md','EQUITY-GUIDE.md','PERFORMANCE-FRAMEWORK.md','REMOTE-WORK-POLICY.md','ANALYTICS-INSTRUMENTATION.md','ACCESSIBILITY-PLAN.md','VALUATION-MODEL.md','SCENARIO-PLANNING.md','PARTNERSHIP-STRATEGY.md','NEGOTIATION-GUIDE.md','GOVERNANCE.md','INVESTOR-UPDATE-TEMPLATE.md','BOARD-DECK-TEMPLATE.md','WEEKLY-METRICS.md','PITCH-SCRIPT.md','NETWORK-EFFECTS.md','MARKETPLACE-STRATEGY.md','FINANCIAL-CONTROLS.md','DILUTION-MODEL.md','THREE-STATEMENT-MODEL.md','COMMUNITY-STRATEGY.md','CONTENT-MARKETING-PLAN.md','JTBD-INTERVIEW-GUIDE.md','PRODUCT-STRATEGY.md','AB-TESTING-FRAMEWORK.md','USER-RESEARCH-PLAN.md','TECH-DEBT-FRAMEWORK.md','I18N-STRATEGY.md','docs/BOARD-RESOLUTIONS.md','docs/DPA-TEMPLATE.md','ONBOARDING-CHECKLIST.md','COMPENSATION-BENCHMARKS.md','SUPPLY-CHAIN.md','REVENUE-RECOGNITION.md','CUSTOMER-JOURNEY-MAP.md','ZERO-TO-ONE-ASSESSMENT.md'].filter(f=>window._buildFiles?.[f]);
+  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','BANK-FUNDING-PLAYBOOK.md','docs/VERTICAL-TOOL-SCHEMA.sql','docs/SITE-ARCHETYPE-LANDING.md','docs/ROBS-CHECKLIST.md','docs/plain/QA-NOTES.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html','PMF-MEASUREMENT.md','UNSCALABLE-PLAYBOOK.md','docs/OPERATING-AGREEMENT-TEMPLATE.md','docs/IP-ASSIGNMENT.md','ENTITY-SELECTION.md','RUNWAY-CALCULATOR.md','CUSTOMER-SUCCESS.md','HIRING-PLAN.md','FOUNDER-AGREEMENT.md','FUNDRAISING-STRATEGY.md','ORG-DESIGN.md','OPERATIONS-PLAYBOOK.md','PIVOT-FRAMEWORK.md','COHORT-ANALYSIS.md','RETENTION-PLAYBOOK.md','CAP-TABLE-MODEL.md','TERM-SHEET-TEMPLATES.md','CRISIS-PLAYBOOK.md','EXPERIMENT-FRAMEWORK.md','GROWTH-EXPERIMENTS.md','CUSTOMER-DEVELOPMENT.md','TAX-STRATEGY.md','PRICING-STRATEGY.md','docs/NDA-TEMPLATE.md','docs/CONTRACTOR-AGREEMENT.md','docs/OFFER-LETTER-TEMPLATE.md','docs/GDPR-IMPLEMENTATION.md','CHANNEL-PLAYBOOKS.md','REFERRAL-PROGRAM.md','LAUNCH-CHECKLIST.md','CHURN-REDUCTION.md','CULTURE.md','EQUITY-GUIDE.md','PERFORMANCE-FRAMEWORK.md','REMOTE-WORK-POLICY.md','ANALYTICS-INSTRUMENTATION.md','ACCESSIBILITY-PLAN.md','VALUATION-MODEL.md','SCENARIO-PLANNING.md','PARTNERSHIP-STRATEGY.md','NEGOTIATION-GUIDE.md','GOVERNANCE.md','INVESTOR-UPDATE-TEMPLATE.md','BOARD-DECK-TEMPLATE.md','WEEKLY-METRICS.md','PITCH-SCRIPT.md','NETWORK-EFFECTS.md','MARKETPLACE-STRATEGY.md','FINANCIAL-CONTROLS.md','DILUTION-MODEL.md','THREE-STATEMENT-MODEL.md','COMMUNITY-STRATEGY.md','CONTENT-MARKETING-PLAN.md','JTBD-INTERVIEW-GUIDE.md','PRODUCT-STRATEGY.md','AB-TESTING-FRAMEWORK.md','USER-RESEARCH-PLAN.md','TECH-DEBT-FRAMEWORK.md','I18N-STRATEGY.md','docs/BOARD-RESOLUTIONS.md','docs/DPA-TEMPLATE.md','ONBOARDING-CHECKLIST.md','COMPENSATION-BENCHMARKS.md','SUPPLY-CHAIN.md','REVENUE-RECOGNITION.md','CUSTOMER-JOURNEY-MAP.md','ZERO-TO-ONE-ASSESSMENT.md'].filter(f=>window._buildFiles?.[f]);
   const buildDuration = ((Date.now() - BUILD_START_TIME) / 1000).toFixed(0);
   const compactionsUsed = BUILD_COMPACTIONS.length;
   const intelligenceNote = [
