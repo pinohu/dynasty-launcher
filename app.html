@@ -11045,24 +11045,78 @@ await Promise.allSettled([
       const _safeName = String(inf.name || 'Your Business').replace(/`/g, '\\`').replace(/'/g, "\\'");
       const _safeDesc = String(desc || `${_safeName} platform`).slice(0, 280).replace(/`/g, '\\`').replace(/'/g, "\\'");
       const _safePrice = String(inf.price || '$49/mo').replace(/`/g, '\\`').replace(/'/g, "\\'");
+      const _safeType = String(inf.type_label || 'Specialized service').replace(/`/g, '\\`').replace(/'/g, "\\'");
+      const _safeRevenue = String(inf.revenue_model || 'Subscription').replace(/`/g, '\\`').replace(/'/g, "\\'");
       const _brandingLeakRe = /(SaaS Template|SaaS Boilerplate|Ixartz|nextjs-boilerplate)/i;
       const _mkMarketingPage = (title, subtitle, body, ctaHref = '/pricing', ctaText = 'Get Started') => `import Link from 'next/link';
 
 export const metadata = {
   title: '${title} · ${_safeName}',
-  description: '${subtitle}'
+  description: '${subtitle}',
+  openGraph: {
+    title: '${title} · ${_safeName}',
+    description: '${subtitle}',
+    type: 'website'
+  }
 };
 
 export default function Page() {
+  const painPoints = [
+    '${_safeType} teams lose momentum when workflows are fragmented',
+    'Buyers need clear proof, not vague promises',
+    'Operational handoff breaks when process is undocumented'
+  ]
+  const deliveryModel = [
+    'Define outcome, scope, and conversion path',
+    'Implement pages, workflows, and automation hooks',
+    'Verify routes, content integrity, and launch readiness'
+  ]
+  const faq = [
+    { q: 'Who is this built for?', a: '${_safeType} buyers and operators who need predictable execution.' },
+    { q: 'What do we receive?', a: 'A complete delivery package with production-oriented assets and documentation.' },
+    { q: 'How do we get started?', a: 'Use the guided path in pricing, choose scope, and launch with a verified build flow.' }
+  ]
   return (
-    <main className="max-w-5xl mx-auto px-4 py-16">
-      <p className="text-sm text-amber-600 font-medium">${subtitle}</p>
-      <h1 className="text-4xl font-bold mt-3 text-zinc-900">${title}</h1>
-      <p className="mt-5 text-zinc-600 max-w-3xl leading-7">${body}</p>
-      <div className="mt-8 flex gap-3 flex-wrap">
-        <Link href="${ctaHref}" className="inline-flex items-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white">${ctaText}</Link>
-        <Link href="/docs" className="inline-flex items-center rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700">Documentation</Link>
-      </div>
+    <main className="max-w-6xl mx-auto px-4 py-14 md:py-20">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-8 md:p-12 shadow-sm">
+        <p className="text-xs tracking-[0.12em] uppercase text-amber-700 font-semibold">${subtitle}</p>
+        <h1 className="text-4xl md:text-5xl font-bold mt-3 text-zinc-900 leading-tight">${title}</h1>
+        <p className="mt-5 text-zinc-600 max-w-3xl leading-7">${body}</p>
+        <div className="mt-8 flex gap-3 flex-wrap">
+          <Link href="${ctaHref}" className="inline-flex items-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white">${ctaText}</Link>
+        <Link href="/docs" className="inline-flex items-center rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700">Read docs</Link>
+        </div>
+      </section>
+
+      <section className="mt-10 grid gap-4 md:grid-cols-3">
+        {painPoints.map((item) => (
+          <div key={item} className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 text-sm leading-6 text-zinc-700">{item}</div>
+        ))}
+      </section>
+
+      <section className="mt-10 rounded-2xl border border-zinc-200 p-7">
+        <h2 className="text-2xl font-semibold text-zinc-900">How delivery works</h2>
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          {deliveryModel.map((step, idx) => (
+            <div key={step} className="rounded-xl border border-zinc-200 p-4">
+              <p className="text-xs font-semibold text-amber-700">Step {idx + 1}</p>
+              <p className="mt-2 text-sm text-zinc-700">{step}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-10 rounded-2xl border border-zinc-200 p-7">
+        <h2 className="text-2xl font-semibold text-zinc-900">Common questions</h2>
+        <div className="mt-4 space-y-4">
+          {faq.map((item) => (
+            <details key={item.q} className="rounded-lg border border-zinc-200 p-4 bg-zinc-50">
+              <summary className="cursor-pointer font-medium text-zinc-900">{item.q}</summary>
+              <p className="mt-2 text-sm text-zinc-700 leading-6">{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }
@@ -11071,25 +11125,81 @@ export default function Page() {
 
 export const metadata = {
   title: '${_safeName}',
-  description: '${_safeDesc}'
+  description: '${_safeDesc}',
+  openGraph: {
+    title: '${_safeName}',
+    description: '${_safeDesc}',
+    type: 'website'
+  }
 };
 
 export default function HomePage() {
+  const coreOutcomes = [
+    'Niche-specific positioning and conversion architecture',
+    'Production-ready pages, offers, and launch assets',
+    'Operational clarity: delivery scope, checkpoints, and handoff documentation'
+  ]
+  const trustSignals = [
+    'Outcome-first architecture aligned to ${_safeType}',
+    'Route and content verification before completion',
+    'Transparent scope across package and tier constraints'
+  ]
+  const faq = [
+    { q: 'What exactly is this?', a: '${_safeName} is a ${_safeType} execution system focused on clear business outcomes.' },
+    { q: 'Who should use it?', a: 'Operators and founders who need complete launch assets without ambiguous scope.' },
+    { q: 'How is value delivered?', a: 'Through prioritized outputs, validated route coverage, and conversion-focused page structure.' },
+    { q: 'How do we proceed?', a: 'Start from pricing, select the package depth, and launch with the guided build flow.' }
+  ]
   return (
-    <main className="max-w-6xl mx-auto px-4 py-16">
-      <section className="mb-14">
-        <p className="text-sm font-medium text-amber-600">Built for ${String(inf.type_label || 'modern teams').replace(/`/g, '\\`')}</p>
-        <h1 className="text-5xl font-bold mt-3 leading-tight text-zinc-900">${_safeName}</h1>
+    <main className="max-w-6xl mx-auto px-4 py-14 md:py-20">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-8 md:p-12 shadow-sm">
+        <p className="text-xs tracking-[0.12em] uppercase text-amber-700 font-semibold">Built for ${_safeType}</p>
+        <h1 className="text-5xl md:text-6xl font-bold mt-3 leading-tight text-zinc-900">${_safeName}</h1>
         <p className="mt-6 max-w-3xl text-zinc-600 leading-7">${_safeDesc}</p>
         <div className="mt-8 flex gap-3 flex-wrap">
-          <Link href="/pricing" className="inline-flex items-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white">Start now</Link>
-          <Link href="/docs" className="inline-flex items-center rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700">See docs</Link>
+          <Link href="/pricing" className="inline-flex items-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white">See package options</Link>
+          <Link href="/contact" className="inline-flex items-center rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700">Speak with an operator</Link>
         </div>
       </section>
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-xl border border-zinc-200 p-5"><h2 className="font-semibold text-zinc-900">What it does</h2><p className="mt-2 text-sm text-zinc-600">${_safeName} delivers the exact outputs selected in your build profile and tier.</p></div>
-        <div className="rounded-xl border border-zinc-200 p-5"><h2 className="font-semibold text-zinc-900">Who it serves</h2><p className="mt-2 text-sm text-zinc-600">${String(inf.type_label || 'Businesses').replace(/`/g, '\\`')} teams that need launch-ready systems without guesswork.</p></div>
-        <div className="rounded-xl border border-zinc-200 p-5"><h2 className="font-semibold text-zinc-900">Commercial model</h2><p className="mt-2 text-sm text-zinc-600">${String(inf.revenue_model || 'Subscription').replace(/`/g, '\\`')} · ${_safePrice}</p></div>
+
+      <section className="mt-10 grid gap-4 md:grid-cols-3">
+        {coreOutcomes.map((item) => (
+          <div key={item} className="rounded-xl border border-zinc-200 p-5">
+            <h2 className="font-semibold text-zinc-900">Outcome</h2>
+            <p className="mt-2 text-sm text-zinc-600 leading-6">{item}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="mt-10 rounded-2xl border border-zinc-200 p-7">
+        <h2 className="text-2xl font-semibold text-zinc-900">Why this converts in your niche</h2>
+        <p className="mt-3 text-zinc-600 leading-7">Audience fit is driven by direct, niche-specific messaging and offer clarity. Commercial model: ${_safeRevenue} · ${_safePrice}.</p>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {trustSignals.map((signal) => (
+            <div key={signal} className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">{signal}</div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-10 rounded-2xl border border-zinc-200 p-7">
+        <h2 className="text-2xl font-semibold text-zinc-900">FAQ</h2>
+        <div className="mt-4 space-y-4">
+          {faq.map((item) => (
+            <details key={item.q} className="rounded-lg border border-zinc-200 p-4 bg-zinc-50">
+              <summary className="cursor-pointer font-medium text-zinc-900">{item.q}</summary>
+              <p className="mt-2 text-sm text-zinc-700 leading-6">{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-10 rounded-2xl border border-zinc-200 p-7 text-center">
+        <h2 className="text-2xl font-semibold text-zinc-900">Ready to launch ${_safeName}?</h2>
+        <p className="mt-3 text-zinc-600 leading-7">Choose your package, lock scope, and move to execution with full transparency.</p>
+        <div className="mt-6 flex justify-center gap-3 flex-wrap">
+          <Link href="/pricing" className="inline-flex items-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white">View pricing</Link>
+          <Link href="/docs" className="inline-flex items-center rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700">Read documentation</Link>
+        </div>
       </section>
     </main>
   );
@@ -11126,11 +11236,11 @@ export default function NotFound() {
         }
 
         const _routeDefs = [
-          { key: 'docs', title: 'Documentation', subtitle: `How to use ${_safeName}`, body: `Get started quickly with ${_safeName}. This page explains setup, workflows, and expected outputs for your selected package.` },
-          { key: 'pricing', title: 'Pricing', subtitle: 'Transparent pricing', body: `Plans for ${_safeName} are aligned to scope and automation depth. Reference price anchor: ${_safePrice}.` },
-          { key: 'about', title: 'About', subtitle: `Why ${_safeName} exists`, body: `${_safeName} helps teams launch with clear deliverables, reliable execution paths, and auditable output quality.` },
-          { key: 'services', title: 'Services', subtitle: 'What is included', body: `${_safeName} provides strategy, implementation scaffolds, and deployment-oriented outputs matched to your selected build profile.` },
-          { key: 'contact', title: 'Contact', subtitle: 'Get support', body: `Need a custom implementation path for ${_safeName}? Reach support to align delivery scope and automation constraints.` }
+          { key: 'docs', title: 'Documentation', subtitle: `How ${_safeName} is delivered`, body: `Use this guide to understand deployment flow, route expectations, validation checks, and package-specific outputs for ${_safeType}.` },
+          { key: 'pricing', title: 'Pricing', subtitle: 'Scope-aligned pricing', body: `Each ${_safeName} package maps to execution depth and measurable outcomes. Commercial frame: ${_safeRevenue} · ${_safePrice}.` },
+          { key: 'about', title: 'About', subtitle: `Execution partner for ${_safeType}`, body: `${_safeName} exists to remove ambiguity and convert strategy into production-ready outcomes with transparent validation.` },
+          { key: 'services', title: 'Services', subtitle: 'Niche-specific deliverables', body: `Service delivery includes audience-fit messaging, conversion architecture, implementation scaffolds, and go-live verification for ${_safeType}.` },
+          { key: 'contact', title: 'Contact', subtitle: 'Direct operator support', body: `Get implementation guidance for your selected scope, timeline, and verification requirements.` }
         ];
         const _alwaysRequired = new Set(['docs', 'pricing']);
         const _archetypeRequiresFive = ['starter_5p', 'growth', 'authority_site', 'enterprise_full'].includes(_bpLocal?.archetype || '');
