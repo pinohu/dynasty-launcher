@@ -50,7 +50,7 @@ export default async function handler(req, res) {
   if (action === 'create_session') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Stripe not configured' });
 
-    const { plan, email, user_id, training_opt_in, build_archetype, source_segment, diagnostic_session_id, recommended_plan } = req.body || {};
+    const { plan, email, user_id, training_opt_in, build_archetype, source_segment, diagnostic_session_id, recommended_plan, apply_blueprint_credit } = req.body || {};
     const normalizedPlan = (plan || 'foundation').toString().toLowerCase();
     if (normalizedPlan === 'custom_volume') {
       return res.json({
@@ -62,12 +62,17 @@ export default async function handler(req, res) {
     }
 
     const tiers = {
+      blueprint: { amount: 29700, name: 'Your Deputy — Diagnostic + Execution Blueprint', desc: 'Conversion-grade execution blueprint: risk map, priority sequence, execution path, and persona-matched package recommendation. 100% creditable toward a paid build started within 14 days.' },
       foundation: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations; typically tens of thousands of words, varies by session). SBA business plan, investor readiness, cap table themes, tax strategy. Production app + repo deploy. No automatic server-side integration module provisioning on Foundation — use OPERATIONS.md or upgrade to Professional+. $71K–$131K equivalent value.' },
       starter: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations; typically tens of thousands of words, varies by session). SBA business plan, investor readiness, cap table themes, tax strategy. Production app + repo deploy. No automatic server-side integration module provisioning on Foundation — use OPERATIONS.md or upgrade to Professional+. $71K–$131K equivalent value.' },
       professional: { amount: 499700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus attempts at core live stack where APIs succeed: domain/email patterns, connected payments, CRM, marketing sequences, chatbot, analytics, automation (subject to keys and archetype deferrals). $100K–$170K equivalent value.' },
       enterprise: { amount: 999700, name: 'Your Deputy — Enterprise', desc: 'Broadest integration attempts: up to 17 module types when your site package does not skip them — subject to API success, keys, and implementation status. Plus creative, SEO, social calendar, and directory/WP paths per spec. See BUILD-MANIFEST.json for your build. $71K–$194K equivalent value.' }
     };
     const tierDef = tiers[normalizedPlan] || tiers.foundation;
+    const isBlueprintCreditablePlan = !['blueprint', 'managed'].includes(normalizedPlan);
+    const wantsBlueprintCredit = !!apply_blueprint_credit && isBlueprintCreditablePlan;
+    const blueprintCreditCents = wantsBlueprintCredit ? Math.min(29700, Math.max(0, tierDef.amount - 5000)) : 0;
+    const finalAmount = Math.max(5000, tierDef.amount - blueprintCreditCents);
     const enc = (s) => encodeURIComponent(s);
 
     try {
@@ -84,8 +89,10 @@ export default async function handler(req, res) {
         `metadata[diagnostic_session_id]=${enc((diagnostic_session_id || '').slice(0, 96))}`,
         `metadata[recommended_plan]=${enc((recommended_plan || '').slice(0, 48))}`,
         `metadata[user_id]=${enc((user_id || '').slice(0, 96))}`,
+        `metadata[blueprint_credit_applied]=${blueprintCreditCents > 0 ? 'yes' : 'no'}`,
+        `metadata[blueprint_credit_amount]=${blueprintCreditCents}`,
         `line_items[0][price_data][currency]=usd`,
-        `line_items[0][price_data][unit_amount]=${tierDef.amount}`,
+        `line_items[0][price_data][unit_amount]=${finalAmount}`,
         `line_items[0][price_data][product_data][name]=${enc(tierDef.name)}`,
         `line_items[0][price_data][product_data][description]=${enc(tierDef.desc)}`,
         `line_items[0][quantity]=1`

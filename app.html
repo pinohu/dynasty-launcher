@@ -2618,6 +2618,7 @@ function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 // ── V3 Tier Gating ─────────────────────────────────────────────────
 const V3_TIERS = {
   free: { price: 0, label: 'Free Scoring', modules: [] },
+  blueprint: { price: 297, label: 'Diagnostic + Execution Blueprint ($297)', modules: [] },
   /* Foundation: must match api/provision.js TIER_MODULES.foundation — docs + deploy, no mod_* auto-provision */
   foundation: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
   starter: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
@@ -2652,7 +2653,9 @@ function getAiAuthPayload() {
   };
 }
 function isFreeTier() {
-  return getUserTier() === 'free' && !localStorage.getItem('dynasty_paid_session');
+  const t = getUserTier();
+  if (t === 'blueprint') return true; // Blueprint includes scoring/recommendation flow, not full build execution
+  return t === 'free' && !localStorage.getItem('dynasty_paid_session');
 }
 function isModuleAllowed(moduleName) {
   const tier = getUserTier();
@@ -2782,6 +2785,7 @@ async function startCheckout(plan) {
       body: JSON.stringify({
         plan,
         user_id: CLERK_USER?.id || '',
+        apply_blueprint_credit: plan !== 'blueprint' && parseInt(localStorage.getItem('dynasty_blueprint_credit_remaining') || '0', 10) > 0,
         training_opt_in: !!bp.aiTrainingOptIn,
         build_archetype: bp.archetype || '',
         source_segment: sourceSegment,
@@ -2840,7 +2844,7 @@ async function startCheckout(plan) {
     enterBuilder();
     return;
   }
-  if (plan && ['foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'].includes(plan) && !params.get('payment')) {
+  if (plan && ['blueprint', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'].includes(plan) && !params.get('payment')) {
     // Don't store tier yet — wait for payment confirmation in checkPaymentReturn
     startCheckout(plan === 'starter' ? 'foundation' : plan);
   }
@@ -2868,6 +2872,12 @@ async function startCheckout(plan) {
           if (vd.access_token) localStorage.setItem('dynasty_paid_token', vd.access_token);
           localStorage.setItem('dynasty_paid_at', new Date().toISOString());
           localStorage.setItem('dynasty_tier', vd.plan || 'foundation');
+          if ((vd.plan || '').toLowerCase() === 'blueprint') {
+            localStorage.setItem('dynasty_blueprint_credit_remaining', '297');
+          }
+          if ((vd.metadata?.blueprint_credit_applied || '').toLowerCase() === 'yes') {
+            localStorage.removeItem('dynasty_blueprint_credit_remaining');
+          }
           trackEvent('checkout_paid_verified', {
             paid_plan: vd.plan || 'foundation',
             amount: vd.amount || 0,
@@ -2899,7 +2909,8 @@ async function startCheckout(plan) {
 function getBuildsRemaining() {
   const used = parseInt(localStorage.getItem('dynasty_builds_used') || '0');
   const paid = localStorage.getItem('dynasty_paid_session');
-  if (paid) return 999; // paid users get unlimited for now
+  if (paid && getUserTier() !== 'blueprint') return 999; // paid users get unlimited except blueprint-only entry
+  if (getUserTier() === 'blueprint') return 0; // blueprint is discovery-only; upgrade required to run builds
   return Math.max(0, 1 - used); // 1 free build
 }
 function recordBuildUsed() {
@@ -4335,6 +4346,11 @@ async function startBuild() {
     // Free tier can score but not build — show upgrade prompt
     const action = confirm('Free tier includes viability scoring only.\n\nUpgrade to Foundation Automation Capacity ($1,997) to generate strategy docs + deployed application.\n\nClick OK to view plans.');
     if (action) { window.location.href = '/#pricing'; }
+    return;
+  }
+  if (!isAdmin && getUserTier() === 'blueprint') {
+    const action = confirm('Your Diagnostic + Execution Blueprint is complete.\n\nTo run full generation and deployment, upgrade to Foundation ($1,997). If purchased within 14 days, your $297 blueprint fee is credited at checkout.\n\nClick OK to continue to paid plans.');
+    if (action) { startCheckout('foundation'); }
     return;
   }
 
