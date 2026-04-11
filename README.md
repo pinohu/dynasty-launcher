@@ -1,18 +1,21 @@
 # Your Deputy V3
 
-> One prompt deploys a complete operating business in under 10 minutes. Website, domain, email, phone, CRM, billing, marketing, SEO, video, design, analytics, automation, and legal docs — all provisioned automatically.
+> One prompt generates consulting-grade documents, application code, and deployment (**Phases 1–8**). **Foundation** matches the server: **no automatic `mod_*` integration provisioning** (`TIER_MODULES.foundation` is empty). **Professional** and **Enterprise** unlock live integration attempts where APIs, keys, and your **site package** allow; see `maturity.html` and `BUILD-MANIFEST.json` for what a given build actually shipped.
 
 ## What It Does
 
-Your Deputy takes a plain-English business description and provisions:
+Your Deputy takes a plain-English business description and generates:
 
-**Infrastructure** (Phase 8)
-- GitHub repo with 30+ production files
-- Vercel/20i deployment with custom domain + SSL
-- Neon PostgreSQL database
-- Business email with SPF/DKIM/DMARC
+**Always (paid build, Phases 1–8)**
+- GitHub repo with many production files (archetype-dependent counts)
+- Vercel deployment path + strategy/technical document set
+- Application code and owner runbooks (`OPERATIONS.md`, etc.)
 
-**17 Integration Modules** (Phases 9-20)
+**When tier + package + provisioning succeed (Phases 9–20, not all automatic today)**
+- Optional: database, domain/email patterns, and third-party integrations per module
+
+**17 Integration Modules** (target design — **Enterprise tier** attempts the broadest set; **Foundation** does **not** auto-run these on the server)
+
 | Module | Service | What It Provisions |
 |--------|---------|-------------------|
 | mod_hosting | 20i | Domain, DNS, email, SSL, SPF/DKIM/DMARC |
@@ -33,7 +36,7 @@ Your Deputy takes a plain-English business description and provisions:
 | mod_wordpress | 20i | WordPress package, theme, plugins (WordPress projects) |
 | mod_social | Vista Social | 260-post social calendar import |
 
-**Plus:** 13+ strategy documents, 8-framework viability analysis, OPERATIONS.md owner's manual, CREDENTIALS.md service credentials.
+**Plus:** 8-framework viability analysis, large strategy + technical document set (counts vary by archetype), `OPERATIONS.md`, and `CREDENTIALS.md` when integrations are actually provisioned.
 
 ## Architecture
 
@@ -50,11 +53,12 @@ api/checkout.js         <- Stripe checkout for Dynasty tiers
 vercel.json             <- Vercel config (300s timeout for modules)
 ```
 
-## Pricing Tiers
+## Pricing Tiers (see `index.html` / checkout for live SKUs)
 
-- **Foundation** ($497/build): Strategy docs + code + deployment (Phases 1-8)
-- **Professional** ($1,497/build): + domain, email, billing, CRM, marketing, chatbot, analytics
-- **Enterprise** ($2,997/build): All 17 modules + managed operations available
+- **Foundation** ($1,997/build): Strategy docs + code + deployment; **no** server-side auto `mod_*` provisioning
+- **Professional** ($4,997/build): Foundation + core live integrations **where APIs succeed** (domain/email, payments, CRM, marketing, chatbot, analytics, automation — subject to keys and deferrals)
+- **Enterprise** ($9,997/build): Broadest integration set (up to **17 module types** when not skipped by package); **not** a guarantee every vendor API succeeds — see `maturity.html`
+- **Managed Operations** ($497/mo): Add-on subscription after a build ships
 
 ## Deploy
 
