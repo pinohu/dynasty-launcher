@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>2-minute diagnostic — Your Deputy</title>
-<meta name="description" content="Answer a short diagnostic checklist and get a recommended path plus tier, prefilled for your build session.">
+<title>2-minute business path diagnostic — Your Deputy</title>
+<meta name="description" content="Answer four questions and get a recommended path, tier, and build shape with a prefilled launch session.">
 <link rel="canonical" href="https://yourdeputy.com/quiz">
 <style>
 :root{--gold:#C9A84C;--tx:#FAFAF9;--sub:#A1A1AA;--dim:#71717A;--bg:#0C0C14;--card:#1E1E2A;--bdr:rgba(255,255,255,.12)}
@@ -37,8 +37,8 @@ small{display:block;margin-top:12px;color:var(--dim);font-size:12px}
 </head>
 <body>
 <a class="back" href="/">← Back home</a>
-<h1>Find your best path in 2 minutes</h1>
-<p class="lead">This checklist recommends the best pain-point path and depth tier for your current stage, then opens the builder prefilled so you do not guess.</p>
+<h1>Find the right build path in 2 minutes</h1>
+<p class="lead">Answer four questions and get a clear recommendation for your path, tier, and build shape, then open the app with everything prefilled.</p>
 
 <form id="quiz-form">
   <div class="grid">
@@ -70,7 +70,7 @@ small{display:block;margin-top:12px;color:var(--dim);font-size:12px}
       <div class="opts">
         <label class="opt"><input type="radio" name="delivery" value="diy" checked><span>I can activate some tools myself if I have clear docs</span></label>
         <label class="opt"><input type="radio" name="delivery" value="assisted"><span>I want core ops connected for me where possible</span></label>
-        <label class="opt"><input type="radio" name="delivery" value="full"><span>I want the broadest done-for-you push now</span></label>
+        <label class="opt"><input type="radio" name="delivery" value="full"><span>I want the broadest automation capacity now</span></label>
       </div>
     </section>
 
@@ -145,7 +145,7 @@ const SEGMENTS = {
   authority_seo: { label: 'Authority / SEO growth', guide: '/for/authority-seo', plan: 'enterprise', archetype: 'authority_site', cta: 'Start authority path' },
   trades_vertical: { label: 'Vertical workflow assist', guide: '/for/trades-vertical', plan: 'professional', archetype: 'growth', cta: 'Start vertical assist path' },
   directory: { label: 'Directory/community model', guide: '/for/directory', plan: 'enterprise', archetype: 'enterprise_full', cta: 'Start directory path' },
-  managed_ops: { label: 'Post-launch management', guide: '/for/managed', plan: 'managed', archetype: 'growth', cta: 'Add managed operations' }
+  managed_ops: { label: 'Post-launch runtime stability', guide: '/for/managed', plan: 'managed', archetype: 'growth', cta: 'Add managed runtime mode' }
 }
 
 const PAIN_LABELS = {
