@@ -128,7 +128,7 @@ function tierFromStripeCheckoutSession(session) {
 async function resolveProvisionUserTier({ tier, stripeSessionId, bypassStripe }) {
   const claimRaw = (tier || 'foundation').toLowerCase();
   const claim = PROVISION_TIER_VALID.includes(claimRaw) ? claimRaw : 'foundation';
-  if (bypassStripe) return { userTier: claim, tierSource: 'bypass_dry_run_or_test_slug' };
+  if (bypassStripe) return { userTier: claim, tierSource: 'dry_run' };
   const trustClient = process.env.PROVISION_TIER_TRUST_CLIENT === '1' || process.env.PROVISION_TIER_TRUST_CLIENT === 'true';
   const sk = process.env.STRIPE_SECRET_KEY;
   if (trustClient || !sk) {
