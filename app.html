@@ -1161,7 +1161,26 @@ html,body{overflow-x:hidden}
   <div id="done-screen" style="display:none"></div>
 </div>
 
-<script>// ── Access Gate — server-verified admin + payment check ─────────────────────────────────────
+<script>// ── Funnel params — persist archetype / segment before checkout or gate ───────────────────
+(function applyFunnelParamsFromUrl() {
+  try {
+    var p = new URLSearchParams(window.location.search);
+    var arch = p.get('archetype');
+    var valid = { enterprise_full: 1, authority_site: 1, growth: 1, starter_5p: 1, landing_1p: 1, demo_express: 1 };
+    var seg = (p.get('segment') || '').trim().slice(0, 64);
+    var vTool = p.get('vertical');
+    var stored = {};
+    try { stored = JSON.parse(localStorage.getItem('dynasty_build_profile') || '{}'); } catch (e) { stored = {}; }
+    if (!stored || typeof stored !== 'object') stored = {};
+    if (!stored.v) stored.v = 1;
+    if (arch && valid[arch]) stored.archetype = arch;
+    if (vTool === '1' || vTool === 'true') stored.verticalTool = true;
+    localStorage.setItem('dynasty_build_profile', JSON.stringify(stored));
+    if (seg) localStorage.setItem('dynasty_funnel_segment', seg);
+  } catch (e) {}
+})();
+
+// ── Access Gate — server-verified admin + payment check ─────────────────────────────────────
 (function(){
   var params = new URLSearchParams(window.location.search);
 
