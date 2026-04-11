@@ -1,7 +1,7 @@
 // Your Deputy — Service Worker
 // Network-first for HTML navigations (homepage must update after deploy).
 // Cache-first for other same-origin GETs. Network-first for /api, /app, /admin.
-const CACHE_NAME = 'deputy-v3';
+const CACHE_NAME = 'deputy-v4';
 // Do not precache '/' — it caused stale homepages until users cleared site data.
 const STATIC_ASSETS = ['/privacy', '/terms', '/quiz'];
 
