@@ -618,7 +618,7 @@ html,body{overflow-x:hidden}
 <div class="page">
   <div class="logo" id="builder-header">
     <div class="lm">⚡</div>
-    <div><div class="lt">Your Deputy</div><div class="ls">Describe your project — everything else is inferred and built automatically</div></div>
+    <div><div class="lt">Your Deputy</div><div class="ls">Describe your project — we infer the setup, generate deliverables, and run in-scope automation with clear status reporting</div></div>
     <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:70px;background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600" onclick="handleSignIn()">Sign In</button>
     <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">📊</button>
     <button class="lset" id="settings-btn" title="Settings">⚙</button>
@@ -656,7 +656,7 @@ html,body{overflow-x:hidden}
     <div id="input-screen" style="display:none">
     <div class="hero">
       <h1>What are you <span>building?</span></h1>
-      <p>Describe your project in plain English. The system infers the type, tech stack, business model, acquisition channel, and pricing — then generates 30+ files and provisions infrastructure automatically.</p>
+      <p>Describe your project in plain English. The system infers the type, tech stack, business model, acquisition channel, and pricing — then generates 30+ files and provisions infrastructure with a live run log and explicit skips/deferred items.</p>
     </div>
 
     <div class="input-area">
@@ -1002,7 +1002,7 @@ html,body{overflow-x:hidden}
           <div class="dc-icon">📄</div>
           <h4>Landing Page</h4>
           <p>Single-page lead capture, waitlist, or coming-soon page.</p>
-          <div class="dc-extra" style="color:var(--dim)">AI-generated HTML · instant</div>
+          <div class="dc-extra" style="color:var(--dim)">AI-generated HTML · fast path</div>
         </div>
 
         <div class="deploy-card" data-target="wordpress" data-category="wordpress" onclick="selectCategory(this,'wordpress','wordpress')">
@@ -6144,7 +6144,7 @@ ${(inf.manual_svcs||[]).length > 0 ? (inf.manual_svcs||[]).map((k, i) => `## ${i
 
 **Verification:** [How to confirm this is working — "Visit /api/health and confirm [service] returns 'connected'"]
 
----`).join('\n\n') : '✅ No manual actions required — all services were fully automated during provisioning.'}
+---`).join('\n\n') : '✅ No manual actions required for this run. All in-scope services completed through automation for this build profile/tier.'}
 ---END:manual_md---
 
 ---BEGIN:env_ex---

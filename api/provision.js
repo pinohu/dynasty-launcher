@@ -146,14 +146,12 @@ function tierFromStripeCheckoutSession(session) {
   return p;
 }
 
-/** When STRIPE_SECRET_KEY is set, paid tiers require a verified Checkout session unless PROVISION_TIER_TRUST_CLIENT=1 */
+/** Paid tiers require verified Stripe session; no client-trust bypass in production. */
 async function resolveProvisionUserTier({ tier, stripeSessionId, bypassStripe }) {
   const claimRaw = (tier || 'foundation').toLowerCase();
   const claim = PROVISION_TIER_VALID.includes(claimRaw) ? claimRaw : 'foundation';
   if (bypassStripe) return { userTier: claim, tierSource: 'dry_run' };
-  const trustClient = process.env.PROVISION_TIER_TRUST_CLIENT === '1' || process.env.PROVISION_TIER_TRUST_CLIENT === 'true';
   const sk = process.env.STRIPE_SECRET_KEY;
-  if (trustClient) return { userTier: claim, tierSource: 'client_trust_env' };
   if (!sk) return { userTier: 'free', tierSource: 'missing_stripe_secret' };
   const sid = (stripeSessionId || '').trim();
   if (!sid) return { userTier: 'free', tierSource: 'missing_checkout_session' };

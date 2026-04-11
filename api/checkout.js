@@ -6,11 +6,6 @@ const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://yourdeputy.com';
 const ACCESS_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-function getClientIp(req) {
-  const fwd = (req.headers['x-forwarded-for'] || '').toString();
-  return fwd.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
-}
-
 async function signPaidAccessToken({ sessionId, userId, plan }) {
   const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET || '';
   if (!secret || !sessionId) return null;
