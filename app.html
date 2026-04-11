@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Your Deputy — Strategy, Code &amp; Deploy</title>
-<meta name="description" content="One prompt generates documents, code, and deployment. Foundation: no auto integration modules on the server. Professional+ attempts live integrations (up to 17 module types on Enterprise) when keys and APIs allow.">
+<meta name="description" content="Autonomous business launch runtime: generate documents, code, and deployment. Automation-only by default, with BYO-key integrations and zero-cost autopilot controls.">
 <meta name="theme-color" content="#0A0A0A">
 <link rel="manifest" href="/manifest.json">
 <meta name="keywords" content="AI business generator, SaaS launcher, startup builder, business system, automated deployment, strategic analysis">
@@ -2079,12 +2079,133 @@ loadFlags().then(() => {
 });
 
 // Settings — only org name needed now (token is server-side)
+const PRICING_GUARDRAIL_DEFAULTS = {
+  aiCostPerBuild: 2.5,
+  opsOverhead: 180,
+  supportRate: 85,
+  cacAlloc: 120,
+  paymentFeePct: 3.2,
+  failureBufferPct: 12,
+  tierMultiplierFoundation: 1.0,
+  tierMultiplierProfessional: 1.8,
+  tierMultiplierEnterprise: 2.8,
+  supportHoursFoundation: 1.5,
+  supportHoursProfessional: 3.0,
+  supportHoursEnterprise: 6.0,
+  targetMarginFoundation: 80,
+  targetMarginProfessional: 85,
+  targetMarginEnterprise: 88
+};
+
+function getGuardrailNumber(id, fallback) {
+  const v = parseFloat(document.getElementById(id)?.value || '');
+  return Number.isFinite(v) ? v : fallback;
+}
+
+function renderPricingGuardrail() {
+  const out = document.getElementById('pricing-guardrail-results');
+  if (!out) return;
+
+  const prices = {
+    foundation: getGuardrailNumber('gr-price-foundation', 1997),
+    professional: getGuardrailNumber('gr-price-professional', 4997),
+    enterprise: getGuardrailNumber('gr-price-enterprise', 9997)
+  };
+
+  const aiCost = getGuardrailNumber('gr-ai-cost', PRICING_GUARDRAIL_DEFAULTS.aiCostPerBuild);
+  const opsOverhead = getGuardrailNumber('gr-ops-overhead', PRICING_GUARDRAIL_DEFAULTS.opsOverhead);
+  const supportRate = getGuardrailNumber('gr-support-rate', PRICING_GUARDRAIL_DEFAULTS.supportRate);
+  const cacAlloc = getGuardrailNumber('gr-cac', PRICING_GUARDRAIL_DEFAULTS.cacAlloc);
+  const feePct = Math.max(0, getGuardrailNumber('gr-fee-pct', PRICING_GUARDRAIL_DEFAULTS.paymentFeePct)) / 100;
+  const failurePct = Math.max(0, getGuardrailNumber('gr-failure-pct', PRICING_GUARDRAIL_DEFAULTS.failureBufferPct)) / 100;
+
+  const settings = [
+    {
+      key: 'foundation',
+      label: 'Foundation',
+      multiplier: getGuardrailNumber('gr-mult-foundation', PRICING_GUARDRAIL_DEFAULTS.tierMultiplierFoundation),
+      supportHours: getGuardrailNumber('gr-support-foundation', PRICING_GUARDRAIL_DEFAULTS.supportHoursFoundation),
+      targetMargin: getGuardrailNumber('gr-target-foundation', PRICING_GUARDRAIL_DEFAULTS.targetMarginFoundation) / 100
+    },
+    {
+      key: 'professional',
+      label: 'Professional',
+      multiplier: getGuardrailNumber('gr-mult-professional', PRICING_GUARDRAIL_DEFAULTS.tierMultiplierProfessional),
+      supportHours: getGuardrailNumber('gr-support-professional', PRICING_GUARDRAIL_DEFAULTS.supportHoursProfessional),
+      targetMargin: getGuardrailNumber('gr-target-professional', PRICING_GUARDRAIL_DEFAULTS.targetMarginProfessional) / 100
+    },
+    {
+      key: 'enterprise',
+      label: 'Enterprise',
+      multiplier: getGuardrailNumber('gr-mult-enterprise', PRICING_GUARDRAIL_DEFAULTS.tierMultiplierEnterprise),
+      supportHours: getGuardrailNumber('gr-support-enterprise', PRICING_GUARDRAIL_DEFAULTS.supportHoursEnterprise),
+      targetMargin: getGuardrailNumber('gr-target-enterprise', PRICING_GUARDRAIL_DEFAULTS.targetMarginEnterprise) / 100
+    }
+  ];
+
+  const rows = settings.map((s) => {
+    const baseCost = (aiCost * s.multiplier) + opsOverhead + (s.supportHours * supportRate) + cacAlloc;
+    const fullyLoaded = baseCost * (1 + failurePct);
+    const denom = 1 - feePct - s.targetMargin;
+    const floor = denom > 0 ? (fullyLoaded / denom) : Infinity;
+    const price = prices[s.key] || 0;
+    const currentMargin = price > 0 ? (1 - feePct - (fullyLoaded / price)) : -1;
+    const healthy = Number.isFinite(floor) && price >= floor;
+    const chipBg = healthy ? 'rgba(34,197,94,.15)' : 'rgba(239,68,68,.15)';
+    const chipColor = healthy ? '#22c55e' : '#ef4444';
+    const status = healthy ? 'Healthy' : 'Below guardrail';
+    return `
+      <div style="border:1px solid var(--bdr);border-radius:10px;padding:10px;background:rgba(255,255,255,.02)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">
+          <strong style="font-size:12px;color:var(--tx)">${s.label}</strong>
+          <span style="font-size:10px;padding:3px 8px;border-radius:999px;background:${chipBg};color:${chipColor};font-weight:600">${status}</span>
+        </div>
+        <div style="font-size:11px;color:var(--sec);line-height:1.5">Current: <strong style="color:var(--tx)">$${Math.round(price).toLocaleString()}</strong> · Floor: <strong style="color:${Number.isFinite(floor) ? (healthy ? '#22c55e' : '#ef4444') : '#ef4444'}">$${Number.isFinite(floor) ? Math.round(floor).toLocaleString() : 'N/A'}</strong></div>
+        <div style="font-size:10px;color:var(--dim);line-height:1.5">Est. fully-loaded cost: $${Math.round(fullyLoaded).toLocaleString()} · Margin @ current: ${(currentMargin * 100).toFixed(1)}%</div>
+      </div>
+    `;
+  }).join('');
+
+  out.innerHTML = rows;
+}
+
+function wirePricingGuardrailInputs() {
+  const ids = [
+    'gr-price-foundation','gr-price-professional','gr-price-enterprise',
+    'gr-ai-cost','gr-ops-overhead','gr-support-rate','gr-cac','gr-fee-pct','gr-failure-pct',
+    'gr-mult-foundation','gr-mult-professional','gr-mult-enterprise',
+    'gr-support-foundation','gr-support-professional','gr-support-enterprise',
+    'gr-target-foundation','gr-target-professional','gr-target-enterprise'
+  ];
+  ids.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', renderPricingGuardrail);
+  });
+}
+
+async function hydratePricingGuardrailFromMemory() {
+  try {
+    const r = await fetch('/api/memory?action=stats');
+    const d = await r.json();
+    const observed = parseFloat(d?.stats?.avg_cost_per_build || '0');
+    if (!Number.isFinite(observed) || observed <= 0) return;
+    const obsEl = document.getElementById('gr-observed-ai');
+    if (obsEl) obsEl.textContent = `$${observed.toFixed(2)}`;
+    const input = document.getElementById('gr-ai-cost');
+    if (input && (!input.value || parseFloat(input.value) <= 0)) input.value = observed.toFixed(2);
+    renderPricingGuardrail();
+  } catch {}
+}
+
 document.getElementById('settings-btn').onclick=()=>{
   const existingModal = document.getElementById('settings-modal');
   if (existingModal) { existingModal.remove(); return; }
   
   const webhookUrl = localStorage.getItem('dynasty_webhook_url') || '';
   const whiteLabel = localStorage.getItem('dynasty_white_label') === 'true';
+  const byoKeysRequired = localStorage.getItem('dynasty_byo_keys') !== 'false';
+  const automationMode = localStorage.getItem('dynasty_automation_mode') || 'zero_cost';
   const customDomain = localStorage.getItem('dynasty_custom_domain') || '';
   const savedLocation = localStorage.getItem('dynasty_location') || '';
   const pricePro = localStorage.getItem('dynasty_price_pro') || '49';
@@ -2131,9 +2252,52 @@ document.getElementById('settings-btn').onclick=()=>{
         </div>
       </div>
 
+      <div style="border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:12px;background:rgba(255,255,255,.02)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+          <h4 style="font-size:12px;font-weight:700;color:var(--gold);margin:0">Anchor Guardrails</h4>
+          <div style="font-size:10px;color:var(--dim)">Observed avg AI/build: <strong id="gr-observed-ai" style="color:var(--tx)">$0.00</strong></div>
+        </div>
+        <div style="font-size:10px;color:var(--dim);line-height:1.45;margin-bottom:10px">Floor formula uses fully-loaded cost and target margin: floor = cost / (1 - fee% - targetMargin).</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">Foundation Price</label><input id="gr-price-foundation" class="ti" type="number" value="${localStorage.getItem('dynasty_anchor_foundation') || '1997'}" style="width:100%" /></div>
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">Professional Price</label><input id="gr-price-professional" class="ti" type="number" value="${localStorage.getItem('dynasty_anchor_professional') || '4997'}" style="width:100%" /></div>
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">Enterprise Price</label><input id="gr-price-enterprise" class="ti" type="number" value="${localStorage.getItem('dynasty_anchor_enterprise') || '9997'}" style="width:100%" /></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">AI Cost / Build</label><input id="gr-ai-cost" class="ti" type="number" step="0.01" value="${localStorage.getItem('dynasty_gr_ai_cost') || PRICING_GUARDRAIL_DEFAULTS.aiCostPerBuild}" style="width:100%" /></div>
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">Ops Overhead / Build</label><input id="gr-ops-overhead" class="ti" type="number" step="0.01" value="${localStorage.getItem('dynasty_gr_ops_overhead') || PRICING_GUARDRAIL_DEFAULTS.opsOverhead}" style="width:100%" /></div>
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">Support Rate ($/hr)</label><input id="gr-support-rate" class="ti" type="number" step="0.01" value="${localStorage.getItem('dynasty_gr_support_rate') || PRICING_GUARDRAIL_DEFAULTS.supportRate}" style="width:100%" /></div>
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">CAC Allocation</label><input id="gr-cac" class="ti" type="number" step="0.01" value="${localStorage.getItem('dynasty_gr_cac') || PRICING_GUARDRAIL_DEFAULTS.cacAlloc}" style="width:100%" /></div>
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">Payment Fee %</label><input id="gr-fee-pct" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_fee_pct') || PRICING_GUARDRAIL_DEFAULTS.paymentFeePct}" style="width:100%" /></div>
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">Failure Buffer %</label><input id="gr-failure-pct" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_failure_pct') || PRICING_GUARDRAIL_DEFAULTS.failureBufferPct}" style="width:100%" /></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">F Support Hrs / Mult / Target %</label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px"><input id="gr-support-foundation" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_support_foundation') || PRICING_GUARDRAIL_DEFAULTS.supportHoursFoundation}" /><input id="gr-mult-foundation" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_mult_foundation') || PRICING_GUARDRAIL_DEFAULTS.tierMultiplierFoundation}" /><input id="gr-target-foundation" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_target_foundation') || PRICING_GUARDRAIL_DEFAULTS.targetMarginFoundation}" /></div></div>
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">P Support Hrs / Mult / Target %</label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px"><input id="gr-support-professional" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_support_professional') || PRICING_GUARDRAIL_DEFAULTS.supportHoursProfessional}" /><input id="gr-mult-professional" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_mult_professional') || PRICING_GUARDRAIL_DEFAULTS.tierMultiplierProfessional}" /><input id="gr-target-professional" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_target_professional') || PRICING_GUARDRAIL_DEFAULTS.targetMarginProfessional}" /></div></div>
+          <div><label style="font-size:10px;color:var(--dim);display:block;margin-bottom:4px">E Support Hrs / Mult / Target %</label><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px"><input id="gr-support-enterprise" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_support_enterprise') || PRICING_GUARDRAIL_DEFAULTS.supportHoursEnterprise}" /><input id="gr-mult-enterprise" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_mult_enterprise') || PRICING_GUARDRAIL_DEFAULTS.tierMultiplierEnterprise}" /><input id="gr-target-enterprise" class="ti" type="number" step="0.1" value="${localStorage.getItem('dynasty_gr_target_enterprise') || PRICING_GUARDRAIL_DEFAULTS.targetMarginEnterprise}" /></div></div>
+        </div>
+
+        <div id="pricing-guardrail-results" style="display:grid;grid-template-columns:1fr;gap:8px"></div>
+      </div>
+
       <div style="margin-bottom:16px;display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="set-whitelabel" ${whiteLabel ? 'checked' : ''} style="accent-color:var(--gold)" />
         <label for="set-whitelabel" style="font-size:11px;color:var(--sec)">White-label mode <span style="color:var(--dim)">(removes Dynasty branding)</span></label>
+      </div>
+
+      <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="set-byo-keys" ${byoKeysRequired ? 'checked' : ''} style="accent-color:var(--gold)" />
+        <label for="set-byo-keys" style="font-size:11px;color:var(--sec)">Require BYO API keys for external integrations <span style="color:var(--dim)">(recommended for self-serve)</span></label>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Automation Mode</label>
+        <select id="set-automation-mode" class="ti" style="width:100%">
+          <option value="zero_cost" ${automationMode === 'zero_cost' ? 'selected' : ''}>Zero-cost autopilot (auto-skip paid integrations)</option>
+          <option value="balanced" ${automationMode === 'balanced' ? 'selected' : ''}>Balanced (run integrations when keys exist)</option>
+        </select>
       </div>
 
       <div style="border-top:1px solid var(--bdr);padding-top:12px;margin-bottom:12px">
@@ -2171,6 +2335,9 @@ document.getElementById('settings-btn').onclick=()=>{
     </div>`;
   document.body.appendChild(modal);
   modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  wirePricingGuardrailInputs();
+  renderPricingGuardrail();
+  hydratePricingGuardrailFromMemory();
 };
 
 function saveSettings() {
@@ -2178,6 +2345,8 @@ function saveSettings() {
   const webhook = document.getElementById('set-webhook')?.value?.trim();
   const domain = document.getElementById('set-domain')?.value?.trim();
   const whiteLabel = document.getElementById('set-whitelabel')?.checked;
+  const byoKeys = document.getElementById('set-byo-keys')?.checked;
+  const automationMode = document.getElementById('set-automation-mode')?.value || 'zero_cost';
   const location = document.getElementById('set-location')?.value?.trim();
   const pricePro = document.getElementById('set-price-pro')?.value?.trim();
   const priceEnterprise = document.getElementById('set-price-enterprise')?.value?.trim();
@@ -2186,9 +2355,29 @@ function saveSettings() {
   if (webhook !== undefined) localStorage.setItem('dynasty_webhook_url', webhook);
   if (domain !== undefined) localStorage.setItem('dynasty_custom_domain', domain);
   localStorage.setItem('dynasty_white_label', whiteLabel ? 'true' : 'false');
+  localStorage.setItem('dynasty_byo_keys', byoKeys ? 'true' : 'false');
+  localStorage.setItem('dynasty_automation_mode', automationMode);
   if (location !== undefined) localStorage.setItem('dynasty_location', location);
   if (pricePro) localStorage.setItem('dynasty_price_pro', pricePro);
   if (priceEnterprise) localStorage.setItem('dynasty_price_enterprise', priceEnterprise);
+
+  // Save pricing guardrail assumptions and anchor prices
+  const guardrailIds = [
+    'gr-ai-cost','gr-ops-overhead','gr-support-rate','gr-cac','gr-fee-pct','gr-failure-pct',
+    'gr-mult-foundation','gr-mult-professional','gr-mult-enterprise',
+    'gr-support-foundation','gr-support-professional','gr-support-enterprise',
+    'gr-target-foundation','gr-target-professional','gr-target-enterprise'
+  ];
+  guardrailIds.forEach((id) => {
+    const val = document.getElementById(id)?.value?.trim();
+    if (val !== undefined && val !== '') localStorage.setItem(`dynasty_${id.replace(/-/g, '_')}`, val);
+  });
+  const fAnchor = document.getElementById('gr-price-foundation')?.value?.trim();
+  const pAnchor = document.getElementById('gr-price-professional')?.value?.trim();
+  const eAnchor = document.getElementById('gr-price-enterprise')?.value?.trim();
+  if (fAnchor) localStorage.setItem('dynasty_anchor_foundation', fAnchor);
+  if (pAnchor) localStorage.setItem('dynasty_anchor_professional', pAnchor);
+  if (eAnchor) localStorage.setItem('dynasty_anchor_enterprise', eAnchor);
 
   // Save module toggles
   const moduleKeys = ['hosting','billing','email','phone','sms','chatbot','seo','video','design','analytics','leads','automation','docs','crm','directory','wordpress','social'];
@@ -2243,7 +2432,9 @@ function getV3Project(inf) {
     price_enterprise_cents: (parseInt(localStorage.getItem('dynasty_price_enterprise') || '199') || 199) * 100,
     services: inf.type_label || '',
     vercel_project_id: provRes?.results?.vercel?.project_id || null,
-    vertical_tool_spec: bp.verticalToolSpec || ''
+    vertical_tool_spec: bp.verticalToolSpec || '',
+    byo_keys_required: localStorage.getItem('dynasty_byo_keys') !== 'false',
+    automation_mode: localStorage.getItem('dynasty_automation_mode') || 'zero_cost'
   };
 }
 
@@ -2403,11 +2594,11 @@ function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
 const V3_TIERS = {
   free: { price: 0, label: 'Free Scoring', modules: [] },
   /* Foundation: must match api/provision.js TIER_MODULES.foundation — docs + deploy, no mod_* auto-provision */
-  foundation: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
-  starter: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
-  professional: { price: 4997, label: 'Professional ($4,997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads', 'vertical_tool'] },
-  enterprise: { price: 9997, label: 'Enterprise ($9,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] },
-  managed: { price: 497, label: 'Managed Ops ($497/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] }
+  foundation: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
+  starter: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
+  professional: { price: 4997, label: 'Professional Automation Capacity ($4,997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads', 'vertical_tool'] },
+  enterprise: { price: 9997, label: 'Enterprise Automation Capacity ($9,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] },
+  managed: { price: 497, label: 'Managed Automation Runtime ($497/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] }
 };
 function getUserTier() {
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
@@ -3399,6 +3590,12 @@ async function initReviewModels() {
     const data = await loadModels();
     const available = data.models || {};
     const working = REVIEW_MODELS_POOL.filter(m => available[m.id]?.available);
+    const freeOnly = REVIEW_MODELS_POOL.filter(m => available[m.id]?.available && available[m.id]?.free);
+    if (isFreeTier() && freeOnly.length >= 3) {
+      REVIEW_MODELS = freeOnly;
+      console.log(`Review pipeline (free tier): ${REVIEW_MODELS.length} free models`);
+      return REVIEW_MODELS;
+    }
     if (working.length >= 3) {
       REVIEW_MODELS = working; // USE ALL AVAILABLE — more voters = better consensus
       console.log(`Review pipeline: ${REVIEW_MODELS.length} models available — ${REVIEW_MODELS.map(m => m.label).join(', ')}`);
@@ -3411,14 +3608,24 @@ async function initReviewModels() {
 }
 
 async function aiRawWithModel(prompt, modelId, max = 4000) {
-  const fallbackModels = [modelId, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
+  const freeTier = isFreeTier();
+  const fallbackModels = freeTier
+    ? [modelId, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'llama-3.1-8b-instant']
+    : [modelId, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
     try {
       if (attempt > 0) console.warn(`aiRawWithModel fallback: ${useModel}`);
       const r = await fetch('/api/ai', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: useModel, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
+        body: JSON.stringify({
+          model: useModel,
+          max_tokens: max,
+          messages: [{ role: 'user', content: prompt }],
+          tier: getUserTier(),
+          user_id: CLERK_USER?.id || '',
+          usage_context: freeTier ? 'free_scoring' : 'standard'
+        })
       });
       if (r.status === 429) { await new Promise(r=>setTimeout(r, 3000*(attempt+1))); continue; }
       if (!r.ok) { if (attempt < fallbackModels.length-1) { await new Promise(r=>setTimeout(r,2000)); continue; } throw new Error('AI API ' + r.status); }
@@ -4065,14 +4272,14 @@ async function startBuild() {
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   if (!isAdmin && !hasPaid) {
     // Free tier can score but not build — show upgrade prompt
-    const action = confirm('Free tier includes viability scoring only.\n\nUpgrade to Foundation ($1,997) to get strategy documents + deployed application.\n\nClick OK to view plans.');
+    const action = confirm('Free tier includes viability scoring only.\n\nUpgrade to Foundation Automation Capacity ($1,997) to generate strategy docs + deployed application.\n\nClick OK to view plans.');
     if (action) { window.location.href = '/#pricing'; }
     return;
   }
 
   // ── Build gating: check if user has builds remaining ────────────
   if (getBuildsRemaining() <= 0) {
-    const action = confirm('You\'ve used your build credit. Purchase a Foundation build for $1,997?\n\nClick OK to go to checkout, or Cancel to return.');
+    const action = confirm('You\'ve used your build credit. Purchase Foundation Automation Capacity for $1,997?\n\nClick OK to go to checkout, or Cancel to return.');
     if (action) { startCheckout('foundation'); return; }
     else return;
   }
@@ -5214,7 +5421,14 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
     try {
       const r = await fetch('/api/ai', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: useModel, max_tokens: max, messages: [{ role: 'user', content: prompt }] })
+        body: JSON.stringify({
+          model: useModel,
+          max_tokens: max,
+          messages: [{ role: 'user', content: prompt }],
+          tier: getUserTier(),
+          user_id: CLERK_USER?.id || '',
+          usage_context: isFreeTier() ? 'free_scoring' : 'standard'
+        })
       });
       if (r.status === 429) { await new Promise(r => setTimeout(r, 3000 * (attempt + 1))); continue; }
       if (!r.ok) { if (attempt < fallbackModels.length - 1) continue; throw new Error('AI API ' + r.status); }
@@ -10920,6 +11134,10 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       const enabledList = Object.entries(v3Modules).filter(([,v]) => v).map(([k]) => moduleNames[k] || k);
       addP('v3-start', `V3 Modules — ${enabledList.length} integrations`, enabledList.join(', '));
       setP('v3-start', 'run', 'Provisioning external services...');
+      if ((localStorage.getItem('dynasty_automation_mode') || 'zero_cost') === 'zero_cost') {
+        addP('v3-mode', 'Zero-cost autopilot');
+        setP('v3-mode', 'sk', 'Paid integrations auto-skip in this mode to keep marginal cost near zero.');
+      }
       updateGlobalProgress(10, 14, 'Phase 10 of 14 · V3 Module Provisioning');
 
       try {
@@ -10961,7 +11179,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
           setP('v3-start', 'sk', v3Results.error || 'Module provisioning failed');
         }
       } catch (e) {
-        setP('v3-start', 'sk', 'Module API error — services can be provisioned manually');
+        setP('v3-start', 'sk', 'Module API error — skipped in automation-only mode');
       }
     }
 

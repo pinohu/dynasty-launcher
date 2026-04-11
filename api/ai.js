@@ -49,6 +49,85 @@ const PROVIDERS = {
   'ollama/mistral':               { provider: 'ollama', label: 'Mistral (Ollama)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
 };
 
+const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_DAILY_LIMIT || '30', 10));
+const USAGE_TABLE = 'dynasty_ai_usage_daily';
+
+function getClientIp(req) {
+  const fwd = req.headers['x-forwarded-for'];
+  if (typeof fwd === 'string' && fwd.trim()) return fwd.split(',')[0].trim();
+  return (req.headers['x-real-ip'] || 'unknown').toString();
+}
+
+function getDayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function getUsagePool() {
+  const connStr = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+  if (!connStr) return null;
+  if (globalThis.__dynastyAiUsagePool) return globalThis.__dynastyAiUsagePool;
+  try {
+    const { Pool } = await import('pg');
+    const pool = new Pool({ connectionString: connStr, max: 3, idleTimeoutMillis: 5000 });
+    globalThis.__dynastyAiUsagePool = pool;
+    return pool;
+  } catch {
+    return null;
+  }
+}
+
+async function ensureUsageTable(pool) {
+  if (globalThis.__dynastyAiUsageReady) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ${USAGE_TABLE} (
+      day_key DATE NOT NULL,
+      actor_key TEXT NOT NULL,
+      requests INTEGER NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (day_key, actor_key)
+    );
+  `);
+  globalThis.__dynastyAiUsageReady = true;
+}
+
+async function incrementUsage(actorKey) {
+  const dayKey = getDayKey();
+  const pool = await getUsagePool();
+  if (pool) {
+    await ensureUsageTable(pool);
+    const r = await pool.query(
+      `INSERT INTO ${USAGE_TABLE} (day_key, actor_key, requests, updated_at)
+       VALUES ($1, $2, 1, NOW())
+       ON CONFLICT (day_key, actor_key)
+       DO UPDATE SET requests = ${USAGE_TABLE}.requests + 1, updated_at = NOW()
+       RETURNING requests`,
+      [dayKey, actorKey]
+    );
+    return r.rows?.[0]?.requests || 1;
+  }
+  // Fallback for environments without DB (best-effort in-memory)
+  if (!globalThis.__dynastyAiUsageMem) globalThis.__dynastyAiUsageMem = new Map();
+  const map = globalThis.__dynastyAiUsageMem;
+  const key = `${dayKey}:${actorKey}`;
+  const next = (map.get(key) || 0) + 1;
+  map.set(key, next);
+  return next;
+}
+
+function resolveFreeModel(config) {
+  const preferred = ['gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
+  for (const model of preferred) {
+    const info = PROVIDERS[model];
+    if (!info || !info.free) continue;
+    if (getApiKey(info.provider, config)) return model;
+  }
+  for (const [model, info] of Object.entries(PROVIDERS)) {
+    if (!info.free) continue;
+    if (getApiKey(info.provider, config)) return model;
+  }
+  return null;
+}
+
 function getApiKey(provider, config) {
   const keys = {
     anthropic:   process.env.ANTHROPIC_API_KEY,
@@ -195,7 +274,30 @@ export default async function handler(req, res) {
 
   const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
   const body = req.body || {};
-  const model = body.model || 'claude-sonnet-4-20250514';
+  const usageContext = (body.usage_context || 'standard').toString();
+  const requestedModel = (body.model || 'claude-sonnet-4-20250514').toString();
+  const userId = (body.user_id || '').toString().trim();
+  const actorKey = userId ? `u:${userId}` : `ip:${getClientIp(req)}`;
+  let model = requestedModel;
+
+  if (usageContext === 'free_scoring') {
+    const requestsToday = await incrementUsage(actorKey);
+    const remaining = Math.max(0, FREE_SCORING_DAILY_LIMIT - requestsToday);
+    res.setHeader('X-Free-Scoring-Limit', String(FREE_SCORING_DAILY_LIMIT));
+    res.setHeader('X-Free-Scoring-Remaining', String(remaining));
+    if (requestsToday > FREE_SCORING_DAILY_LIMIT) {
+      return res.status(429).json({
+        error: `Free scoring limit reached (${FREE_SCORING_DAILY_LIMIT}/day). Try again tomorrow or upgrade.`,
+        limit: FREE_SCORING_DAILY_LIMIT
+      });
+    }
+    const chosenFree = resolveFreeModel(config);
+    if (!chosenFree) {
+      return res.status(503).json({ error: 'No free scoring models are currently available. Please try again shortly.' });
+    }
+    if (!PROVIDERS[model]?.free) model = chosenFree;
+  }
+
   const info = PROVIDERS[model];
 
   if (!info) return res.status(400).json({ error: `Unknown model: ${model}`, available: Object.keys(PROVIDERS) });
@@ -207,7 +309,8 @@ export default async function handler(req, res) {
   if (!caller) return res.status(500).json({ error: `No caller for provider: ${info.provider}` });
 
   try {
-    const result = await caller(apiKey, body);
+    const normalizedBody = { ...body, model };
+    const result = await caller(apiKey, normalizedBody);
     // Attach cost estimate to response
     const inputTokens = result.usage?.input_tokens || result.usage?.prompt_tokens || 0;
     const outputTokens = result.usage?.output_tokens || result.usage?.completion_tokens || 0;
