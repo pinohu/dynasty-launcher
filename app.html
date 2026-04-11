@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Your Deputy — Build &amp; Deploy a Business in Minutes</title>
+<title>Your Deputy — Strategy, Code &amp; Deploy</title>
 <meta name="description" content="One prompt generates documents, code, and deployment. Foundation: no auto integration modules on the server. Professional+ attempts live integrations (up to 17 module types on Enterprise) when keys and APIs allow.">
 <meta name="theme-color" content="#0A0A0A">
 <link rel="manifest" href="/manifest.json">
@@ -14,14 +14,14 @@
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Your Deputy — Deploy a Business in 12 Minutes">
+<meta property="og:title" content="Your Deputy — Build from One Prompt">
 <meta property="og:description" content="Consulting-grade analysis, generated code, and deploy. Live vendor hooks scale with paid tier (Foundation = docs + app + deploy only).">
 <meta property="og:url" content="https://yourdeputy.com">
 <meta property="og:site_name" content="Your Deputy">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Your Deputy — Deploy a Business in 12 Minutes">
+<meta name="twitter:title" content="Your Deputy — Build from One Prompt">
 <meta name="twitter:description" content="Strategy, codegen, and deployment from one prompt. Foundation skips server-side mod_* provisioning; upgrade for live integration attempts.">
 
 <!-- Favicon -->
@@ -1064,7 +1064,7 @@ html,body{overflow-x:hidden}
 
     <div style="display:flex;gap:10px;margin-top:1rem">
       <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="backToFrameworks()">← Back</button>
-      <button class="launch" style="flex:3" id="cfg-build-btn" onclick="startBuild()">Generate complete business system →</button>
+      <button class="launch" style="flex:3" id="cfg-build-btn" onclick="startBuild()">Run full build pipeline →</button>
     </div>
   </div>
 
@@ -1148,7 +1148,7 @@ html,body{overflow-x:hidden}
       <div class="edu-card" id="edu-card">
         <div class="edu-phase" id="edu-phase">Getting Ready</div>
         <div class="edu-title" id="edu-title">Your business system is being built<span class="edu-spinner-mini"><span></span><span></span><span></span></span></div>
-        <div class="edu-body" id="edu-body">The AI is analyzing your description and will generate a complete business system — design, strategy, code, and infrastructure — all customized to your specific niche.</div>
+        <div class="edu-body" id="edu-body">The AI is analyzing your description and will generate your document set, application code, and deployment path. Live vendor integrations run when your paid tier and site package allow — Foundation is docs + app + deploy only (no server auto mod_* provisioning).</div>
         <div class="edu-progress"><div class="edu-progress-fill" id="edu-progress-fill"></div></div>
         <div class="edu-facts" id="edu-facts"></div>
         <div class="edu-file-preview" id="edu-file-preview" style="display:none"></div>
@@ -5217,15 +5217,15 @@ const EDU_CONTENT = {
     title: 'Building your business engine',
     body: 'BUSINESS-SYSTEM.md is your complete operating manual — market positioning, automation workflows, revenue projections, pricing tiers, and scale plan. REVENUE-MODEL.md shows month-by-month MRR growth with bottoms-up unit economics. GTM-PLAYBOOK.md gives you a day-by-day 90-day launch sprint. Strategy firms charge $8,000–15,000 for a business system of this depth.',
     tip: '💡 The business system includes actual sales scripts, email sequences, KPI targets with specific numbers, and real competitor pricing.',
-    facts: ['Building 12-month bottoms-up revenue model...','Writing word-for-word sales scripts...','Mapping 7 automation workflows to provisioned services...','Calculating unit economics: CAC, LTV, payback period...','Designing 3-tier pricing with feature gates...'],
+    facts: ['Building 12-month bottoms-up revenue model...','Writing word-for-word sales scripts...','Mapping automation workflow patterns (tier permitting)...','Calculating unit economics: CAC, LTV, payback period...','Designing 3-tier pricing with feature gates...'],
     preview: ['## Revenue Model','| Month | MRR | Customers |','| 1     | $0  | 0         |','| 3     | $2.9K | 30      |','| 12    | $29K  | 300     |']
   },
   g4b: {
     phase: '⬡ Agent System',
     title: 'Designing your AI workforce',
-    body: 'AGENT-SYSTEM.md specifies your automation workforce — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. 7 of these map directly to n8n workflows provisioned in your build. FAILURE-MODES.md anticipates 10 specific failure scenarios with recovery playbooks.',
-    tip: '💡 7 workflows are auto-provisioned: signup→CRM, booking→confirm, payment→receipt, hot lead→deal, missed call→SMS, dunning→escalate, post-service→review. An AI consultancy charges $5,000–12,000 for this architecture.',
-    facts: ['Configuring intake → evaluation → decision pipeline...','Setting up circuit breakers for each failure mode...','Defining agent triggers, inputs, and outputs...','Mapping 7 automation workflows to provisioned services...'],
+    body: 'AGENT-SYSTEM.md specifies your automation workforce — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. Seven workflow patterns map to n8n when your tier allows integration provisioning. FAILURE-MODES.md anticipates failure scenarios with recovery playbooks.',
+    tip: '💡 On Professional+, the orchestrator attempts automation workflows where APIs succeed; Foundation receives the architecture in-repo and manual steps in OPERATIONS.md. An AI consultancy charges $5,000–12,000 for comparable architecture.',
+    facts: ['Configuring intake → evaluation → decision pipeline...','Setting up circuit breakers for each failure mode...','Defining agent triggers, inputs, and outputs...','Mapping workflow patterns to services when tier permits...'],
     preview: ['## Agent: Lead Intake','Trigger: New form submission','Tool: Phone + AI Voice','Output: Qualified lead object','Fallback: Manual review queue']
   },
   g5: {
@@ -5255,16 +5255,16 @@ const EDU_CONTENT = {
   prov: {
     phase: '⬡ Infrastructure',
     title: 'Provisioning your tech stack',
-    body: 'Real infrastructure is being set up right now — payment processing, cloud hosting, your database, and email marketing. These are production services, not sandboxes.',
-    tip: '💡 Your payment product and price tiers are already created. Your project is linked to your repo for auto-deploy on every push.',
-    facts: ['Creating payment product and monthly price...','Setting up cloud project with auto-deploy...','Provisioning PostgreSQL database...','Creating email marketing list...','Configuring uptime monitoring...'],
+    body: 'When your paid tier allows it, we attempt live hooks — payments, hosting linkage, database, email lists, and related modules. Foundation focuses on deploy + docs; vendor integrations follow OPERATIONS.md or an upgrade.',
+    tip: '💡 Stripe products and webhooks appear when billing provisioning succeeds and your tier permits. BUILD-MANIFEST.json records what ran vs deferred.',
+    facts: ['Attempting payment product linkage (tier permitting)...','Setting up cloud project with auto-deploy...','Provisioning database when in scope...','Email/marketing lists when tier + keys allow...','Configuring monitoring when enabled...'],
     preview: ['✓ Payments: product created','✓ Hosting: project linked','✓ Database: ready','✓ Email: list configured','⟳ Monitoring: active...']
   },
   deploy: {
     phase: '⬡ Deployment',
     title: 'Launching your authority site',
-    body: 'Your complete authority website is being deployed right now. It includes AI-generated blog articles, FAQ content, testimonials, case studies, and a directory of real local businesses scraped from Google Maps.',
-    tip: '💡 The site will be live at your URL in about 90 seconds. Every page is SEO-optimized with Schema.org markup.',
+    body: 'For authority-site archetypes, we deploy the expanded template path — AI content, FAQs, and niche pages when that package is selected. Other archetypes deploy a leaner app; scope is reflected in your repo manifest.',
+    tip: '💡 Time-to-URL depends on Vercel build and archetype. SEO depth matches package; see BUILD-MANIFEST.json for what this session shipped.',
     facts: ['Forking authority site template (80 files)...','AI writing 6 blog articles (800-1200 words each)...','Generating 15 FAQ items with detailed answers...','Creating 6 customer testimonials...','Scraping 20 real businesses from Google Maps...','Building 10 location-specific landing pages...','Generating social media calendar (260 posts)...'],
     preview: ['→ Forking template...','→ Pushing niche config...','→ AI generating content...','→ Scraping local businesses...','→ Deploying to production...']
   },

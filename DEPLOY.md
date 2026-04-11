@@ -16,7 +16,9 @@ Two ways to deploy. Pick one.
    ```
 6. Click **Deploy**
 
-Done. Your URL: `dynasty-launcher.vercel.app`
+Done. Default Vercel URL: `dynasty-launcher.vercel.app`
+
+**Product domain vs Vercel URL:** Marketing canonicals and `sitemap.xml` use **`https://yourdeputy.com`**. Point that domain (CNAME/A) at the same Vercel project so SEO and checkout redirects stay consistent; until then, testers use the `.vercel.app` host.
 
 To add a custom domain like `launch.sitbid.com`:
 - Vercel dashboard → Project → Settings → Domains → Add `launch.sitbid.com`

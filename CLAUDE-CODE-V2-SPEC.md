@@ -543,7 +543,7 @@ This adds a configuration screen between framework scoring and the build. In Qui
 
   <div style="display:flex;gap:10px;margin-top:1rem">
     <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="backToFrameworks()">← Back</button>
-    <button class="launch" style="flex:3" id="cfg-build-btn" onclick="startBuild()">Generate complete business system →</button>
+    <button class="launch" style="flex:3" id="cfg-build-btn" onclick="startBuild()">Run full build pipeline →</button>
   </div>
 </div>
 ```
@@ -686,7 +686,7 @@ async function startBuild() {
 }
 ```
 
-**Test**: Strategic mode full flow → describe → infer → frameworks → score → configure (models load, deploy options visible) → click "Generate complete business system" → build pipeline runs.
+**Test**: Strategic mode full flow → describe → infer → frameworks → score → configure (models load, deploy options visible) → click "Run full build pipeline" → build pipeline runs.
 
 ---
 
@@ -891,7 +891,7 @@ After all phases are complete, verify:
 - [ ] Per-phase model assignment dropdown works
 - [ ] Deployment target cards selectable
 - [ ] Review section shows INFERRED data + framework count + viability score
-- [ ] "Generate complete business system" → full build pipeline runs
+- [ ] "Run full build pipeline" → full build pipeline runs
 - [ ] Build cost displays and updates during generation
 - [ ] Done screen shows build cost
 - [ ] "Start over" returns to mode selection

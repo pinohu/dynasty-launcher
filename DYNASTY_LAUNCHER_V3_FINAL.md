@@ -225,10 +225,12 @@ New inputs in the builder before build starts:
 │             ○ Brilliant Directory                │
 │             ○ Static Landing Page                │
 │                                                  │
-│ Pricing (for Stripe):                            │
-│   Free tier:  [$0   /mo]                         │
-│   Pro tier:   [$49  /mo]                         │
-│   Enterprise: [$199 /mo]                         │
+│ GTM pricing (per build — see index.html): │
+│   Free scoring: [$0]                             │
+│   Foundation:   [$1,997 /build]                  │
+│   Professional: [$4,997 /build]                  │
+│   Enterprise:   [$9,997 /build]                  │
+│   Managed Ops:  [$497 /mo] add-on                │
 │                                                  │
 │ INTEGRATIONS (toggle on/off):                    │
 │ ☑ Custom domain + business email                 │
@@ -716,24 +718,30 @@ Before Sprint 3 starts, collect these API keys:
 
 ## 17. REVENUE MODEL
 
-### Pricing Tiers
-| Tier | Price | Modules Included |
-|------|-------|-----------------|
-| **Starter** | $297 | Code + docs + Vercel deploy (Phases 1-8) |
-| **Professional** | $997 | + Domain/email + Stripe + CRM + email marketing + chatbot (+ Phases 9-12, 15) |
-| **Enterprise** | $2,497 | + Phone/voice + SEO + video + design + analytics + leads + automation (all phases) |
-| **Portfolio** | $197/mo | Ongoing monitoring, monthly content, campaign management |
+### Pricing Tiers (aligned with live product: `index.html`, `api/checkout.js`)
 
-### Unit Economics
-| Item | Cost | Revenue | Margin |
-|------|------|---------|--------|
-| API costs per build | ~$5 | $297-$2,497 | 98-99% |
-| CallScaler per number | $2/mo | $50/mo (in portfolio) | 96% |
-| Total tool licenses | $0 (owned) | $590K+ inventory | 100% |
+| Tier | Price | What it includes (summary) |
+|------|-------|------------------------------|
+| **Free scoring** | $0 | Viability analysis only — no full build |
+| **Foundation** | $1,997/build | Phases 1–8: documents + generated app + deploy; **no** server auto `mod_*` (`TIER_MODULES.foundation: []`) |
+| **Professional** | $4,997/build | Foundation + core live integration **attempts** where APIs/keys succeed (domain/email, payments, CRM, marketing, chatbot, analytics, automation — subject to deferrals) |
+| **Enterprise** | $9,997/build | Broadest module attempts (up to **17 module types** when package does not skip them) — not a guarantee every vendor call succeeds |
+| **Managed Operations** | $497/mo | Post-build subscription (monitoring, support, content cadence — see marketing) |
+
+*Legacy rows in older drafts that showed $297 / $997 / $2,497 or $49/mo SaaS diagrams are **superseded** by the table above.*
+
+### Unit Economics (illustrative — update with real COGS)
+| Item | Cost | Revenue (per-build SKUs) | Margin |
+|------|------|--------------------------|--------|
+| API costs per build | ~$5–15 | $1,997–$9,997 | varies |
+| CallScaler per number | $2/mo | n/a (usage) | n/a |
+| Total tool licenses | $0 (owned inventory) | — | — |
 
 ---
 
 ## 18. SUCCESS CRITERIA
+
+*Items below are **target** acceptance for the **fully integrated** product. Items 3–10 assume a paid tier and site package that enable those modules (not a Foundation-only build). Current coverage: see `maturity.html` and `BUILD-MANIFEST.json` per session.*
 
 Your Deputy V3 is **complete** when:
 
@@ -783,7 +791,7 @@ Your Deputy V3 is **complete** when:
 | **Automation workflows per build** | 7 |
 | **Estimated build time** | 4-5 minutes |
 | **Estimated build cost** | $5-10 |
-| **Revenue per build** | $297-$2,497 |
+| **Revenue per build (SKUs)** | $1,997–$9,997 |
 
 ---
 

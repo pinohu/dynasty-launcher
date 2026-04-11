@@ -266,6 +266,8 @@ Each item is a **pain statement** the designed system **can touch** (address, re
 
 Below, **Arche** shows **defaults** (R/D/S). **Tier** shows **minimum tier where marketing typically promises** the capability (your SKU may vary).
 
+**As-built vs target:** Rows describe the **designed** product and **target** L/D/G/M behavior. Not every `mod_*` path is fully automated in production today — use **`maturity.html`**, **`BUILD-MANIFEST.json`**, and **`api/provision?action=inventory`** for what is live in the orchestrator and which keys exist.
+
 | ID | Primary personas | Key deliverables / modules (designed) | Tier | Archetype default (R/D/S) | Mode |
 |----|------------------|----------------------------------------|------|---------------------------|------|
 | A1–A8 | P1,P2,P5,P11 | Multi-modal intake → structured brief; conversational refinement in builder | F–E | All | G + session |
