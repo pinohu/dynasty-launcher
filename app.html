@@ -2288,9 +2288,34 @@ function applyBuildPackageTierConstraints() {
     if (vw) vw.style.opacity = allow ? '1' : '0.5';
   }
 }
+function countSyllablesInWord(word) {
+  const w = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (w.length <= 2) return 1;
+  const vowels = w.match(/[aeiouy]+/g);
+  let n = vowels ? vowels.length : 1;
+  if (w.endsWith('e')) n = Math.max(1, n - 1);
+  return Math.max(1, n);
+}
+function fleschKincaidMetrics(text) {
+  const clean = (text || '').replace(/\s+/g, ' ').trim();
+  if (clean.length < 50) return null;
+  const words = clean.split(/\s+/).filter(Boolean);
+  const sentences = clean.split(/[.!?]+/).filter(s => s.trim().length > 3);
+  const sc = sentences.length || 1;
+  const wc = words.length || 1;
+  let syllables = 0;
+  for (const raw of words) syllables += countSyllablesInWord(raw.replace(/[^a-zA-Z]/g, ''));
+  if (syllables < wc) syllables = wc;
+  const asl = wc / sc;
+  const asw = syllables / wc;
+  const grade = 0.39 * asl + 11.8 * asw - 15.59;
+  const fre = 206.835 - 1.015 * asl - 84.6 * asw;
+  return { grade: Math.max(0, Math.min(20, grade)), fre: Math.max(0, Math.min(100, fre)), words: wc, sentences: sc, syllables };
+}
 function qaPlainLanguageHeuristic(files) {
   const whitelist = new Set(['LLC','EIN','URL','SEO','IRS','SBA','GDP','KPI','API','USA','COGS','CAC','LTV','MRR','ARR','NDA','DPA','GDPR','CCPA','PCI','B2B','B2C','SMB','ROI','EBITDA','VC','IPO','RFP','SKU','FAQ','UI','UX','AI','ML','HR','IT','OKR','YoY','QoQ','CAGR','NPS','CSAT','ROBS','ERISA','DOL','QSBS']);
   const notes = [];
+  const fkLines = [];
   for (const path of Object.keys(files)) {
     if (!path.startsWith('docs/plain/') || !path.endsWith('.md') || path.includes('QA-NOTES') || path.includes('START-HERE')) continue;
     const text = files[path] || '';
@@ -2300,10 +2325,17 @@ function qaPlainLanguageHeuristic(files) {
     const uniq = [...new Set(acr)].slice(0, 12);
     if (avgLen > 22) notes.push(path + ': avg ~' + avgLen.toFixed(0) + ' words/sentence — simplify for 8th–10th grade');
     if (uniq.length) notes.push(path + ': possible unexplained acronyms: ' + uniq.join(', '));
+    const fk = fleschKincaidMetrics(text.replace(/[#*`_[\]()]/g, ' '));
+    if (fk) {
+      fkLines.push('- `' + path + '`: **Flesch–Kincaid grade ~' + fk.grade.toFixed(1) + '** (target 8–10) · Reading ease ~' + fk.fre.toFixed(0) + ' (higher is easier)');
+      if (fk.grade > 10.5) notes.push(path + ': FK grade ' + fk.grade.toFixed(1) + ' — shorten sentences or define terms (target ≤10)');
+      if (fk.grade < 6 && fk.words > 80) notes.push(path + ': FK grade ' + fk.grade.toFixed(1) + ' unusually low — verify plain language still precise');
+    }
   }
-  if (notes.length) {
-    files['docs/plain/QA-NOTES.md'] = '# Plain-language QA (heuristic)\n\n' + notes.map(n => '- ' + n).join('\n') + '\n\nThis is automated screening only — not a readability certificate. Technical sources in `/` and `docs/` remain authoritative.\n';
-  }
+  let body = '';
+  if (fkLines.length) body += '## Readability (Flesch–Kincaid estimates)\n\n' + fkLines.join('\n') + '\n\n*Syllables are approximated; use human review for compliance copy.*\n\n';
+  if (notes.length) body += '## Heuristic flags\n\n' + notes.map(n => '- ' + n).join('\n') + '\n\n';
+  if (body) files['docs/plain/QA-NOTES.md'] = '# Plain-language QA\n\n' + body + 'Automated screening only — not a readability certificate. Technical sources in `/` and `docs/` remain authoritative.\n';
 }
 
 // White-label helper
@@ -3958,6 +3990,12 @@ async function skipPlanAndBuild() {
 async function proceedToBuild(desc) {
   document.getElementById('prog-screen').style.display = 'block';
   document.getElementById('prog-title').textContent = `Building ${INFERRED.name}…`;
+  try {
+    if (getBuildProfile().archetype === 'demo_express') {
+      window._V4_DEMO_T0 = Date.now();
+      window._v4Phase8DoneAt = null;
+    }
+  } catch {}
   V2_BUILD_COST = 0;
   PRGS = [];
   renderProg();
@@ -7600,8 +7638,19 @@ export const nicheConfig = {
       const _nm = String(inf.name || 'Project').replace(/`/g, '\\`');
       if (_v4BpFe.verticalTool) {
         feFiles['src/app/tool/takeoff/layout.tsx'] = `import type { Metadata } from 'next';\nexport const metadata: Metadata = { title: 'Takeoff assist — ${_nm}' };\nexport default function TakeoffLayout({ children }: { children: React.ReactNode }) {\n  return <div className="min-h-screen bg-zinc-950 text-zinc-100 antialiased">{children}</div>;\n}\n`;
-        feFiles['src/app/tool/takeoff/page.tsx'] = `'use client';\nimport { useState } from 'react';\nimport { AlertTriangle, FileUp } from 'lucide-react';\nexport default function TakeoffAssistPage() {\n  const [note, setNote] = useState('');\n  return (\n    <main className="max-w-3xl mx-auto px-4 py-10">\n      <h1 className="text-2xl font-semibold text-white mb-2">Takeoff assist (draft)</h1>\n      <p className="text-sm text-amber-400 mb-6 flex gap-2 items-start"><AlertTriangle className="shrink-0 mt-0.5" size={18} aria-hidden /> Not a binding bid or engineered estimate. A qualified operator must confirm quantities and pricing before quoting.</p>\n      <label className="block text-sm text-zinc-400 mb-2">Job notes (optional)</label>\n      <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded border border-zinc-700 bg-zinc-900 p-3 text-sm text-zinc-200 mb-6 min-h-[100px]" />\n      <div className="border border-dashed border-zinc-600 rounded-lg p-8 text-center text-zinc-500 text-sm">\n        <FileUp className="mx-auto mb-2 opacity-60" aria-hidden />\n        Wire uploads to object storage + vision API — see docs/VERTICAL-TOOL-SCOPE.md\n      </div>\n    </main>\n  );\n}\n`;
-        feFiles['docs/VERTICAL-TOOL-SCHEMA.sql'] = `-- V4 vertical tool reference (apply with your migration tool)\nCREATE TABLE IF NOT EXISTS vertical_jobs (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  created_at TIMESTAMPTZ DEFAULT now(),\n  status TEXT DEFAULT 'draft',\n  title TEXT,\n  meta JSONB DEFAULT '{}'\n);\nCREATE TABLE IF NOT EXISTS vertical_line_items (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  job_id UUID REFERENCES vertical_jobs(id) ON DELETE CASCADE,\n  label TEXT,\n  quantity NUMERIC,\n  unit TEXT,\n  confidence NUMERIC,\n  user_verified BOOLEAN DEFAULT false,\n  sort_order INT DEFAULT 0\n);\n`;
+        feFiles['src/app/tool/takeoff/page.tsx'] = `'use client';\nimport { useCallback, useEffect, useState } from 'react';\nimport { AlertTriangle, FileUp, Plus } from 'lucide-react';\ninterface JobRow { id: string; created_at?: string; status?: string; title?: string }\nexport default function TakeoffAssistPage() {\n  const [note, setNote] = useState('');\n  const [jobs, setJobs] = useState<JobRow[]>([]);\n  const [uploadMsg, setUploadMsg] = useState('');\n  const [err, setErr] = useState('');\n  const load = useCallback(async () => {\n    setErr('');\n    try {\n      const r = await fetch('/api/vertical/jobs');\n      const j = await r.json();\n      if (j.ok && Array.isArray(j.jobs)) setJobs(j.jobs);\n      else if (!j.ok) setErr(j.setup || j.error || 'DB not ready — apply docs/VERTICAL-TOOL-SCHEMA.sql');\n    } catch { setErr('Could not reach /api/vertical/jobs'); }\n  }, []);\n  useEffect(() => { load(); }, [load]);\n  async function createJob() {\n    setErr('');\n    try {\n      const r = await fetch('/api/vertical/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: note.slice(0, 200) || 'Draft takeoff' }) });\n      const j = await r.json();\n      if (j.ok) { setNote(''); load(); }\n      else setErr(j.setup || j.error || 'Create failed');\n    } catch { setErr('Create failed'); }\n  }\n  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {\n    const f = e.target.files?.[0];\n    if (!f) return;\n    setUploadMsg('Uploading…');\n    try {\n      const fd = new FormData();\n      fd.append('file', f);\n      const r = await fetch('/api/vertical/upload', { method: 'POST', body: fd });\n      const j = await r.json();\n      if (j.ok && j.url) setUploadMsg('Stored: ' + j.url.slice(0, 48) + '…');\n      else setUploadMsg(j.error || 'Upload unavailable — set BLOB_READ_WRITE_TOKEN');\n    } catch { setUploadMsg('Upload failed'); }\n    e.target.value = '';\n  }\n  return (\n    <main className="max-w-3xl mx-auto px-4 py-10">\n      <h1 className="text-2xl font-semibold text-white mb-2">Takeoff assist</h1>\n      <p className="text-sm text-amber-400 mb-2 flex gap-2 items-start"><AlertTriangle className="shrink-0 mt-0.5" size={18} aria-hidden /> <span><strong>Not</strong> a binding bid, engineered estimate, or code-compliant quantity survey. Output is an <strong>assistive</strong> workbook; a qualified operator must confirm quantities and pricing before quoting third parties.</span></p>\n      <p className="text-xs text-zinc-500 mb-6">See <code className="text-zinc-400">docs/templates/VERTICAL-CONCRETE-TAKEOFF.md</code> for niche prompt patterns.</p>\n      {err ? <p className="text-sm text-red-400 mb-4">{err}</p> : null}\n      <label className="block text-sm text-zinc-400 mb-2">Job title / notes</label>\n      <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded border border-zinc-700 bg-zinc-900 p-3 text-sm text-zinc-200 mb-3 min-h-[88px]" />\n      <button type="button" onClick={createJob} className="inline-flex items-center gap-2 rounded bg-amber-600/90 px-4 py-2 text-sm font-medium text-zinc-950 mb-6"><Plus size={18} /> Save draft job</button>\n      <div className="border border-dashed border-zinc-600 rounded-lg p-6 mb-8">\n        <label className="flex cursor-pointer flex-col items-center gap-2 text-zinc-400 text-sm">\n          <FileUp className="opacity-60" aria-hidden />\n          <span>Upload blueprint PDF / image (Vercel Blob)</span>\n          <input type="file" className="hidden" accept="image/*,.pdf" onChange={onFile} />\n        </label>\n        {uploadMsg ? <p className="text-xs text-zinc-500 mt-3 text-center">{uploadMsg}</p> : null}\n      </div>\n      <h2 className="text-sm font-medium text-zinc-300 mb-2">Recent jobs</h2>\n      <ul className="space-y-2 text-sm text-zinc-400">\n        {jobs.length === 0 ? <li>No jobs yet (database tables may need migration).</li> : jobs.map((j) => (\n          <li key={j.id} className="rounded border border-zinc-800 bg-zinc-900/50 px-3 py-2">{j.title || 'Untitled'} <span className="text-zinc-600">· {j.status}</span></li>\n        ))}\n      </ul>\n    </main>\n  );\n}\n`;
+        feFiles['src/app/api/vertical/jobs/route.ts'] = `import { NextResponse } from 'next/server';\nimport { sql } from '@vercel/postgres';\n\nexport async function GET() {\n  try {\n    const { rows } = await sql\`SELECT id, created_at, status, title FROM vertical_jobs ORDER BY created_at DESC LIMIT 50\`;\n    return NextResponse.json({ ok: true, jobs: rows });\n  } catch (e) {\n    const msg = e instanceof Error ? e.message : 'db_error';\n    return NextResponse.json({ ok: false, error: msg, setup: 'Apply docs/VERTICAL-TOOL-SCHEMA.sql and set POSTGRES_URL on Vercel (Neon).' }, { status: 503 });\n  }\n}\n\nexport async function POST(req: Request) {\n  try {\n    const body = await req.json().catch(() => ({}));\n    const title = typeof body.title === 'string' ? body.title.slice(0, 500) : 'Untitled job';\n    const r = await sql\`INSERT INTO vertical_jobs (title, status) VALUES (\${title}, 'draft') RETURNING id, created_at, status, title\`;\n    return NextResponse.json({ ok: true, job: r.rows[0] });\n  } catch (e) {\n    const msg = e instanceof Error ? e.message : 'db_error';\n    return NextResponse.json({ ok: false, error: msg, setup: 'Apply docs/VERTICAL-TOOL-SCHEMA.sql and set POSTGRES_URL on Vercel.' }, { status: 503 });\n  }\n}\n`;
+        feFiles['src/app/api/vertical/upload/route.ts'] = `import { put } from '@vercel/blob';\nimport { NextResponse } from 'next/server';\n\nexport async function POST(req: Request) {\n  const token = process.env.BLOB_READ_WRITE_TOKEN;\n  if (!token) return NextResponse.json({ ok: false, error: 'BLOB_READ_WRITE_TOKEN missing on Vercel' }, { status: 501 });\n  const form = await req.formData();\n  const raw = form.get('file');\n  if (!raw || typeof raw === 'string') return NextResponse.json({ ok: false, error: 'no file' }, { status: 400 });\n  const name = raw instanceof File && raw.name ? raw.name : 'upload';\n  const blob = await put(name, raw, { access: 'public', token });\n  return NextResponse.json({ ok: true, url: blob.url });\n}\n`;
+        feFiles['docs/VERTICAL-TOOL-SCHEMA.sql'] = `-- V4 vertical tool — run against your Neon / Postgres (Vercel integrates via POSTGRES_URL)\nCREATE TABLE IF NOT EXISTS vertical_jobs (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  created_at TIMESTAMPTZ DEFAULT now(),\n  status TEXT DEFAULT 'draft',\n  title TEXT,\n  meta JSONB DEFAULT '{}'\n);\nCREATE INDEX IF NOT EXISTS idx_vertical_jobs_created ON vertical_jobs (created_at DESC);\nCREATE TABLE IF NOT EXISTS vertical_line_items (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  job_id UUID REFERENCES vertical_jobs(id) ON DELETE CASCADE,\n  label TEXT,\n  quantity NUMERIC,\n  unit TEXT,\n  confidence NUMERIC,\n  user_verified BOOLEAN DEFAULT false,\n  sort_order INT DEFAULT 0\n);\nCREATE INDEX IF NOT EXISTS idx_vertical_line_items_job ON vertical_line_items (job_id);\n`;
+        feFiles['docs/VERTICAL-ENV.example'] = `# Add to Vercel project environment\nPOSTGRES_URL=postgres://... # Neon or Vercel Postgres — required for /api/vertical/jobs\nBLOB_READ_WRITE_TOKEN=...     # Vercel Blob — required for uploads\n`;
+        feFiles['docs/templates/VERTICAL-CONCRETE-TAKEOFF.md'] = `# Vertical template: concrete / construction takeoff assist (prompt pack)\n\n**Regulatory / liability:** This workflow produces **draft line items** for internal review only. It is **not** a licensed estimate, bid bond, or code compliance review. Operators must validate against local codes, site conditions, and supplier quotes.\n\n## Inputs (multi-modal)\n- Blueprint PDF or site photo set\n- Optional: job notes (jurisdiction, finish spec)\n\n## Model instructions (high level)\n1. Extract **measurable** quantities only; flag illegible areas.\n2. Output table: label, quantity, unit, confidence 0–1, assumptions.\n3. Never output a **binding** dollar total; if asked, return **ranges** with explicit assumption bullets.\n4. Prefer **human-in-the-loop**: user checks each line before export.\n\n## Example line items\n| label | qty | unit | confidence | assumption |\n|-------|-----|------|------------|------------|\n| Slab area (main) | 1240 | sq ft | 0.72 | From sheet A2; scale verified |\n| Rebar #4 | — | lbs | 0.4 | Spacing assumed 18 in o.c. — verify |\n\n## Export\n- CSV for estimator tools\n- PDF summary with disclaimer header\n\n## Integration\n- Store uploads via \`BLOB_READ_WRITE_TOKEN\`\n- Persist jobs via tables in \`docs/VERTICAL-TOOL-SCHEMA.sql\`\n- Wire vision model in a server action (not generated here) — keep API keys server-side only.\n`;
+        try {
+          const pkg = JSON.parse(feFiles['package.json'] || '{}');
+          pkg.dependencies = pkg.dependencies || {};
+          pkg.dependencies['@vercel/blob'] = '^0.27.0';
+          pkg.dependencies['@vercel/postgres'] = '^0.10.0';
+          feFiles['package.json'] = JSON.stringify(pkg, null, 2);
+        } catch {}
       }
       if (_v4BpFe.archetype === 'starter_5p') {
         const mk = (title, body) => `import Link from 'next/link';\nexport default function Page() {\n  return (\n    <main className="max-w-3xl mx-auto px-4 py-16">\n      <Link href="/" className="text-sm text-gray-500 hover:text-gray-800">Home</Link>\n      <h1 className="text-3xl font-bold mt-4 text-gray-900">${title}</h1>\n      <p className="mt-4 text-gray-600">${body}</p>\n    </main>\n  );\n}\n`;
@@ -7699,6 +7748,22 @@ Then read DESIGN.md for visual design rules.
     if(dy)files['DYNASTY-DESIGN.md']=dy;
     // Store all generated files globally for ZIP download
     window._buildFiles = files;
+    files['docs/V4-ARCHETYPE-FILE-COUNTS.md'] = `# V4 archetype — indicative file counts (sales parity)
+
+These ranges **approximate** what the generator targets before bonus/depth packs. Actual counts depend on tier, toggles, and template. **Authority** and **Enterprise Full** both ship the largest bundles; Authority emphasizes site factory + SEO cluster; Enterprise Full emphasizes the full integration module run.
+
+| Archetype | Indicative total files | Strategy + ops docs (indicative) | Notes |
+|-----------|------------------------|-----------------------------------|--------|
+| Demo / Express | ~28–42 | 3–8 | Skips ~78-doc depth pack; defers modules per matrix |
+| Landing (1-page) | ~45–70 | 10–20 | Minimal routes; many integrations deferred |
+| Starter (5-page) | ~55–85 | 15–28 | Extra marketing routes |
+| Growth | ~85–120 | 25–45 | Near-full doc set; some media deferred |
+| Authority site | ~95–140+ | 30–50+ | Authority content + niche config |
+| Enterprise Full | ~120–165+ | 90+ incl. depth | Full module surface when tier allows |
+
+Module **run / defer / skip** matrix is enforced in \`api/provision.js\` (\`ARCHETYPE_MODULE_POLICY\`) and the builder UI.
+
+*§8 marketing alignment — file count transparency.*`;
 
     const _v4SkipHeavy = getBuildProfile().archetype === 'demo_express';
 
@@ -10504,6 +10569,21 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
         setP('pf', 'er', `CRITICAL: missing ${missingCritical.join(', ')} — build will fail`);
         throw new Error(`Critical files missing from repo: ${missingCritical.join(', ')}. Aborting build — fix pushF errors or re-run.`);
       }
+      try {
+        if (getBuildProfile().archetype === 'demo_express') {
+          window._v4Phase8DoneAt = Date.now();
+          if (window._buildFiles) {
+            const _t0 = window._V4_DEMO_T0 || BUILD_START_TIME || Date.now();
+            const _p8 = window._v4Phase8DoneAt;
+            const _sec = ((_p8 - _t0) / 1000).toFixed(1);
+            const _met = (_p8 - _t0) / 1000 <= 300;
+            window._buildFiles['docs/V4-DEMO-SLA.md'] = '# Demo / Express — SLA telemetry\n\n**Target:** ≤5 minutes from **start of code pipeline** (`proceedToBuild`) to **Git push complete** (Vercel build follows).\n\n| Metric | Value |\n|--------|-------|\n| Pipeline start (epoch ms) | ' + _t0 + ' |\n| Phase 8 complete (epoch ms) | ' + _p8 + ' |\n| Seconds to push | ' + _sec + ' |\n| ≤300s | ' + (_met ? 'Met' : 'Not met') + ' |\n\nDeferred modules: `BUILD-MANIFEST.json`.\n';
+            try {
+              await pushF(`${ORG}/${inf.repo}`, 'docs/V4-DEMO-SLA.md', window._buildFiles['docs/V4-DEMO-SLA.md'], 'docs: V4 demo SLA telemetry');
+            } catch {}
+          }
+        }
+      } catch {}
 
       // ── Push shareable report HTML to repo ────────────────────────────
       try {
@@ -11002,7 +11082,7 @@ function showDone(inf,repo,fc,mtasks){
   const beFiles=['backend/main.py','backend/requirements.txt','backend/Dockerfile','docker-compose.yml'];
   const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
   const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];
-  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','BANK-FUNDING-PLAYBOOK.md','docs/VERTICAL-TOOL-SCHEMA.sql','docs/SITE-ARCHETYPE-LANDING.md','docs/ROBS-CHECKLIST.md','docs/plain/QA-NOTES.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html','PMF-MEASUREMENT.md','UNSCALABLE-PLAYBOOK.md','docs/OPERATING-AGREEMENT-TEMPLATE.md','docs/IP-ASSIGNMENT.md','ENTITY-SELECTION.md','RUNWAY-CALCULATOR.md','CUSTOMER-SUCCESS.md','HIRING-PLAN.md','FOUNDER-AGREEMENT.md','FUNDRAISING-STRATEGY.md','ORG-DESIGN.md','OPERATIONS-PLAYBOOK.md','PIVOT-FRAMEWORK.md','COHORT-ANALYSIS.md','RETENTION-PLAYBOOK.md','CAP-TABLE-MODEL.md','TERM-SHEET-TEMPLATES.md','CRISIS-PLAYBOOK.md','EXPERIMENT-FRAMEWORK.md','GROWTH-EXPERIMENTS.md','CUSTOMER-DEVELOPMENT.md','TAX-STRATEGY.md','PRICING-STRATEGY.md','docs/NDA-TEMPLATE.md','docs/CONTRACTOR-AGREEMENT.md','docs/OFFER-LETTER-TEMPLATE.md','docs/GDPR-IMPLEMENTATION.md','CHANNEL-PLAYBOOKS.md','REFERRAL-PROGRAM.md','LAUNCH-CHECKLIST.md','CHURN-REDUCTION.md','CULTURE.md','EQUITY-GUIDE.md','PERFORMANCE-FRAMEWORK.md','REMOTE-WORK-POLICY.md','ANALYTICS-INSTRUMENTATION.md','ACCESSIBILITY-PLAN.md','VALUATION-MODEL.md','SCENARIO-PLANNING.md','PARTNERSHIP-STRATEGY.md','NEGOTIATION-GUIDE.md','GOVERNANCE.md','INVESTOR-UPDATE-TEMPLATE.md','BOARD-DECK-TEMPLATE.md','WEEKLY-METRICS.md','PITCH-SCRIPT.md','NETWORK-EFFECTS.md','MARKETPLACE-STRATEGY.md','FINANCIAL-CONTROLS.md','DILUTION-MODEL.md','THREE-STATEMENT-MODEL.md','COMMUNITY-STRATEGY.md','CONTENT-MARKETING-PLAN.md','JTBD-INTERVIEW-GUIDE.md','PRODUCT-STRATEGY.md','AB-TESTING-FRAMEWORK.md','USER-RESEARCH-PLAN.md','TECH-DEBT-FRAMEWORK.md','I18N-STRATEGY.md','docs/BOARD-RESOLUTIONS.md','docs/DPA-TEMPLATE.md','ONBOARDING-CHECKLIST.md','COMPENSATION-BENCHMARKS.md','SUPPLY-CHAIN.md','REVENUE-RECOGNITION.md','CUSTOMER-JOURNEY-MAP.md','ZERO-TO-ONE-ASSESSMENT.md'].filter(f=>window._buildFiles?.[f]);
+  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','BANK-FUNDING-PLAYBOOK.md','docs/VERTICAL-TOOL-SCHEMA.sql','docs/VERTICAL-ENV.example','docs/SITE-ARCHETYPE-LANDING.md','docs/V4-ARCHETYPE-FILE-COUNTS.md','docs/V4-DEMO-SLA.md','docs/templates/VERTICAL-CONCRETE-TAKEOFF.md','docs/ROBS-CHECKLIST.md','docs/plain/QA-NOTES.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html','PMF-MEASUREMENT.md','UNSCALABLE-PLAYBOOK.md','docs/OPERATING-AGREEMENT-TEMPLATE.md','docs/IP-ASSIGNMENT.md','ENTITY-SELECTION.md','RUNWAY-CALCULATOR.md','CUSTOMER-SUCCESS.md','HIRING-PLAN.md','FOUNDER-AGREEMENT.md','FUNDRAISING-STRATEGY.md','ORG-DESIGN.md','OPERATIONS-PLAYBOOK.md','PIVOT-FRAMEWORK.md','COHORT-ANALYSIS.md','RETENTION-PLAYBOOK.md','CAP-TABLE-MODEL.md','TERM-SHEET-TEMPLATES.md','CRISIS-PLAYBOOK.md','EXPERIMENT-FRAMEWORK.md','GROWTH-EXPERIMENTS.md','CUSTOMER-DEVELOPMENT.md','TAX-STRATEGY.md','PRICING-STRATEGY.md','docs/NDA-TEMPLATE.md','docs/CONTRACTOR-AGREEMENT.md','docs/OFFER-LETTER-TEMPLATE.md','docs/GDPR-IMPLEMENTATION.md','CHANNEL-PLAYBOOKS.md','REFERRAL-PROGRAM.md','LAUNCH-CHECKLIST.md','CHURN-REDUCTION.md','CULTURE.md','EQUITY-GUIDE.md','PERFORMANCE-FRAMEWORK.md','REMOTE-WORK-POLICY.md','ANALYTICS-INSTRUMENTATION.md','ACCESSIBILITY-PLAN.md','VALUATION-MODEL.md','SCENARIO-PLANNING.md','PARTNERSHIP-STRATEGY.md','NEGOTIATION-GUIDE.md','GOVERNANCE.md','INVESTOR-UPDATE-TEMPLATE.md','BOARD-DECK-TEMPLATE.md','WEEKLY-METRICS.md','PITCH-SCRIPT.md','NETWORK-EFFECTS.md','MARKETPLACE-STRATEGY.md','FINANCIAL-CONTROLS.md','DILUTION-MODEL.md','THREE-STATEMENT-MODEL.md','COMMUNITY-STRATEGY.md','CONTENT-MARKETING-PLAN.md','JTBD-INTERVIEW-GUIDE.md','PRODUCT-STRATEGY.md','AB-TESTING-FRAMEWORK.md','USER-RESEARCH-PLAN.md','TECH-DEBT-FRAMEWORK.md','I18N-STRATEGY.md','docs/BOARD-RESOLUTIONS.md','docs/DPA-TEMPLATE.md','ONBOARDING-CHECKLIST.md','COMPENSATION-BENCHMARKS.md','SUPPLY-CHAIN.md','REVENUE-RECOGNITION.md','CUSTOMER-JOURNEY-MAP.md','ZERO-TO-ONE-ASSESSMENT.md'].filter(f=>window._buildFiles?.[f]);
   const buildDuration = ((Date.now() - BUILD_START_TIME) / 1000).toFixed(0);
   const compactionsUsed = BUILD_COMPACTIONS.length;
   const intelligenceNote = [
@@ -11015,9 +11095,19 @@ function showDone(inf,repo,fc,mtasks){
   try {
     const _bpD = JSON.parse(localStorage.getItem('dynasty_build_profile') || '{}');
     if (_bpD.archetype === 'demo_express' && typeof BUILD_START_TIME !== 'undefined') {
-      const _sec = (Date.now() - BUILD_START_TIME) / 1000;
-      const _ok = _sec <= 300;
-      _v4DemoBanner = '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:var(--rl);padding:12px 14px;margin-bottom:1rem;font-size:12px;line-height:1.55;color:var(--sec)"><strong style="color:var(--gold)">Demo / Express profile</strong> — Wall time ' + (_sec / 60).toFixed(1) + ' min · Target ≤5 min for first-pass live demo ' + (_ok ? '<span style="color:var(--grn)">(within target)</span>' : '<span style="color:var(--gold)">(over target)</span>') + '. Deferred modules: <code style="font-size:11px">BUILD-MANIFEST.json</code>.</div>';
+      const _t0 = window._V4_DEMO_T0 || BUILD_START_TIME;
+      const _totalSec = (Date.now() - BUILD_START_TIME) / 1000;
+      const _pipelineSec = (Date.now() - _t0) / 1000;
+      let _pushSec = null;
+      let _pushOk = null;
+      if (window._v4Phase8DoneAt && _t0) {
+        _pushSec = (window._v4Phase8DoneAt - _t0) / 1000;
+        _pushOk = _pushSec <= 300;
+      }
+      const _pushLine = _pushSec != null
+        ? ' · <strong>SLA (deploy trigger)</strong>: ' + (_pushSec / 60).toFixed(2) + ' min from build start to Git push (Vercel builds after) — target ≤5 min ' + (_pushOk ? '<span style="color:var(--grn)">(met)</span>' : '<span style="color:var(--gold)">(not met)</span>')
+        : ' · <strong>SLA</strong>: push timestamp not recorded (older client)';
+      _v4DemoBanner = '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:var(--rl);padding:12px 14px;margin-bottom:1rem;font-size:12px;line-height:1.55;color:var(--sec)"><strong style="color:var(--gold)">Demo / Express profile</strong> — Session wall ' + (_totalSec / 60).toFixed(1) + ' min (includes pre-build steps) · Pipeline ' + (_pipelineSec / 60).toFixed(1) + ' min' + _pushLine + '. Deferred modules: <code style="font-size:11px">BUILD-MANIFEST.json</code>. See <code style="font-size:11px">docs/V4-DEMO-SLA.md</code> in repo.</div>';
     }
   } catch {}
   let _v4QueueBanner = '';

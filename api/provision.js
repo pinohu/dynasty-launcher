@@ -1693,8 +1693,8 @@ function generateCredentialsMd(project, moduleResults) {
 const ARCHETYPE_KEYS = ['demo_express', 'landing_1p', 'starter_5p', 'growth', 'authority_site', 'enterprise_full'];
 const ARCHETYPE_MODULE_POLICY = {
   demo_express: { hosting: 'R', billing: 'D', email: 'S', crm: 'S', phone: 'S', sms: 'S', chatbot: 'S', seo: 'S', video: 'S', design: 'S', analytics: 'S', leads: 'S', automation: 'S', docs: 'D', directory: 'S', wordpress: 'S', social: 'S', verify: 'R' },
-  landing_1p: { hosting: 'R', billing: 'D', email: 'D', crm: 'S', phone: 'S', sms: 'S', chatbot: 'S', seo: 'S', video: 'S', design: 'S', analytics: 'D', leads: 'S', automation: 'S', docs: 'D', directory: 'S', wordpress: 'S', social: 'S', verify: 'R' },
-  starter_5p: { hosting: 'R', billing: 'R', email: 'R', crm: 'D', phone: 'S', sms: 'S', chatbot: 'R', seo: 'D', video: 'S', design: 'S', analytics: 'R', leads: 'R', automation: 'D', docs: 'R', directory: 'S', wordpress: 'S', social: 'D', verify: 'R' },
+  landing_1p: { hosting: 'R', billing: 'D', email: 'D', crm: 'S', phone: 'S', sms: 'S', chatbot: 'D', seo: 'S', video: 'S', design: 'S', analytics: 'D', leads: 'D', automation: 'S', docs: 'D', directory: 'S', wordpress: 'S', social: 'S', verify: 'R' },
+  starter_5p: { hosting: 'R', billing: 'R', email: 'R', crm: 'D', phone: 'S', sms: 'R', chatbot: 'R', seo: 'D', video: 'S', design: 'S', analytics: 'R', leads: 'R', automation: 'D', docs: 'R', directory: 'S', wordpress: 'S', social: 'D', verify: 'R' },
   growth: { hosting: 'R', billing: 'R', email: 'R', crm: 'R', phone: 'D', sms: 'R', chatbot: 'R', seo: 'R', video: 'D', design: 'D', analytics: 'R', leads: 'R', automation: 'R', docs: 'R', directory: 'D', wordpress: 'R', social: 'R', verify: 'R' },
   authority_site: { hosting: 'R', billing: 'R', email: 'R', crm: 'R', phone: 'R', sms: 'R', chatbot: 'R', seo: 'R', video: 'R', design: 'R', analytics: 'R', leads: 'R', automation: 'R', docs: 'R', directory: 'R', wordpress: 'R', social: 'R', verify: 'R' },
   enterprise_full: {},
@@ -1773,7 +1773,9 @@ Deployed URL: ${liveUrl || '(pending)'}
 Ship **assistive** UX only — no guaranteed estimates.
 `;
     await pushFile(GH_TOKEN, ORG_U, project.slug, 'src/app/tool/takeoff/README.md', readme, 'feat: vertical tool scaffold (V4)');
-    results.details.paths = ['docs/VERTICAL-TOOL-SCOPE.md', 'src/app/tool/takeoff/README.md'];
+    const envEx = `# Vercel env (vertical tool)\nPOSTGRES_URL=postgres://...\nBLOB_READ_WRITE_TOKEN=vercel_blob_...\n`;
+    await pushFile(GH_TOKEN, ORG_U, project.slug, 'docs/VERTICAL-ENV.example', envEx, 'docs: vertical tool env (V4)');
+    results.details.paths = ['docs/VERTICAL-TOOL-SCOPE.md', 'src/app/tool/takeoff/README.md', 'docs/VERTICAL-ENV.example'];
   } catch (e) {
     results.ok = false;
     results.error = sanitizeError(e.message);
