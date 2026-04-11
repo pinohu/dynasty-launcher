@@ -1053,6 +1053,7 @@ html,body{overflow-x:hidden}
         </label>
       </div>
       <textarea id="dynasty-vertical-spec" class="ti" rows="3" placeholder="Optional: describe the niche workflow (e.g. Erie concrete — blueprint photos → quantity line items + editable assumptions)" style="width:100%;margin-top:10px;font-size:12px" onblur="saveBuildProfileToStorage()"></textarea>
+      <div id="cfg-build-scope-preview" style="margin-top:14px;padding:14px 16px;background:var(--card);border:1px solid var(--bdr);border-radius:12px;max-width:520px"></div>
     </div>
 
     <!-- Review -->
@@ -2244,6 +2245,7 @@ function getBuildProfile() {
 
 function saveBuildProfileToStorage() {
   try { localStorage.setItem('dynasty_build_profile', JSON.stringify(getBuildProfile())); } catch {}
+  try { updateBuildScopePreview(); } catch {}
 }
 
 function tierRank(t) {
@@ -2287,6 +2289,7 @@ function applyBuildPackageTierConstraints() {
     }
     if (vw) vw.style.opacity = allow ? '1' : '0.5';
   }
+  try { updateBuildScopePreview(); } catch {}
 }
 function countSyllablesInWord(word) {
   const w = word.toLowerCase().replace(/[^a-z]/g, '');
@@ -2363,6 +2366,63 @@ function isModuleAllowed(moduleName) {
   const tier = getUserTier();
   const tierDef = V3_TIERS[tier] || V3_TIERS.enterprise;
   return tierDef.modules.includes(moduleName);
+}
+
+// V4 default module matrix (R=run when tier allows, D=defer, S=skip) — columns: Demo, 1p, 5p, Growth, Authority, Full
+const V4_ARCHETYPE_COL = { demo_express: 0, landing_1p: 1, starter_5p: 2, growth: 3, authority_site: 4, enterprise_full: 5 };
+const V4_SCOPE_ROWS = [
+  { label: 'Hosting, SSL, email DNS', codes: 'RRRRRR' },
+  { label: 'Stripe billing', codes: 'DDRRRR' },
+  { label: 'CRM / client portal', codes: 'SSDRRR' },
+  { label: 'Phone / AI voice / booking', codes: 'SSSDRR' },
+  { label: 'Email + SMS marketing', codes: 'SDRRRR' },
+  { label: 'SEO posts (e.g. 5)', codes: 'SSDRRR' },
+  { label: 'Video + design kit', codes: 'SSSDDR' },
+  { label: 'Analytics + leads + chatbot', codes: 'SDRRRR' },
+  { label: 'Legal PDFs', codes: 'DDRRRR' },
+  { label: 'n8n automation (7 workflows)', codes: 'SSDRRR' },
+  { label: 'Directory / WordPress', codes: 'SSSDDR' },
+  { label: 'Social calendar', codes: 'SSDRRR' }
+];
+function getArchetypeScopeLists(arch) {
+  const idx = V4_ARCHETYPE_COL[arch] != null ? V4_ARCHETYPE_COL[arch] : 5;
+  const run = [], defer = [], skip = [];
+  for (const row of V4_SCOPE_ROWS) {
+    const c = row.codes[idx] || 'R';
+    if (c === 'R') run.push(row.label);
+    else if (c === 'D') defer.push(row.label);
+    else skip.push(row.label);
+  }
+  return { run, defer, skip };
+}
+function updateBuildScopePreview() {
+  const box = document.getElementById('cfg-build-scope-preview');
+  if (!box) return;
+  const bp = getBuildProfile();
+  const { run, defer, skip } = getArchetypeScopeLists(bp.archetype);
+  const tier = getUserTier();
+  const tierLabel = (V3_TIERS[tier] && V3_TIERS[tier].label) || tier;
+  const lines = [];
+  lines.push('<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);margin-bottom:8px">Expected scope (honest preview)</div>');
+  lines.push('<p style="font-size:11px;color:var(--dim);margin:0 0 10px;line-height:1.5">Defaults from your <strong>build package</strong>. <strong>R</strong> = we attempt when your <strong>paid tier</strong> allows; <strong>D</strong> = usually post-build / OPERATIONS; <strong>S</strong> = not in this package unless you change tier or package. Final truth: <code style="font-size:10px">BUILD-MANIFEST.json</code> in the repo.</p>');
+  lines.push('<p style="font-size:11px;color:var(--sec);margin:0 0 8px">Current tier: <strong style="color:var(--tx)">' + tierLabel + '</strong></p>');
+  function ul(title, color, items) {
+    if (!items.length) return '';
+    let h = '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:600;color:' + color + ';margin-bottom:4px">' + title + '</div><ul style="margin:0;padding-left:18px;font-size:11px;color:var(--sec);line-height:1.45">';
+    for (const x of items) h += '<li>' + x + '</li>';
+    h += '</ul></div>';
+    return h;
+  }
+  lines.push(ul('Run path (when tier + keys allow)', 'var(--grn)', run));
+  lines.push(ul('Defer path (finish after deploy)', '#FBBF24', defer));
+  lines.push(ul('Skipped in this package', 'var(--dim)', skip));
+  if (bp.plainLanguage) {
+    lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px;padding-top:8px;border-top:1px solid var(--bdr)"><strong>+ Plain-language companion</strong> — <code style="font-size:10px">docs/plain/</code> + START-HERE</div>');
+  }
+  if (bp.verticalTool) {
+    lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px"><strong>+ Vertical tool scaffold</strong> — assistive workflow (not a binding bid). Professional+ only.</div>');
+  }
+  box.innerHTML = lines.join('');
 }
 
 // ── Builder Entry + Payment Flow ────────────────────────────────────

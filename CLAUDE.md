@@ -141,3 +141,8 @@ See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:
 - Error handling, fallbacks, rollback strategy
 - Revenue model ($1,997-$9,997 per build)
 - Success criteria and testing strategy
+
+## Public GTM / trust artifacts (keep in sync when maturity changes)
+- **`maturity.html`** — “What ships today” truth deck (live vs partial vs spec); linked from landing nav as **What ships**.
+- **`PAIN_POINT_MASTER_MAP.md`** + **`PAIN_POINT_MASTER_MAP.csv`** — exhaustive pain taxonomy + traceability matrix for sales/RevOps.
+- **Builder:** `app.html` includes **Expected scope (honest preview)** under build package (V4 R/D/S matrix + tier caveat).

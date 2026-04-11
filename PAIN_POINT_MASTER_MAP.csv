@@ -1,0 +1,22 @@
+pain_cluster_id,primary_personas,key_deliverables,min_tier,archetype_default,mode
+A1-A8,"P1,P2,P5,P11","Intake to structured brief; multi-modal builder",F-E,All,"G,session"
+B1-B14,"P1,P7,P10","Scoring; strategy doc set; adversarial critique",Free-E,"A subset F full",G
+C1-C8,"P2,P7","SBA-shaped plan; investor readiness; pitch content",F-E,B-F,G
+D1-D6,"P2,P3,P4","Legal MD templates; mod_docs PDFs; OPERATIONS",F-E,C-F,"G,L,M"
+E1-E4,"P2","Hiring; culture; tax themes; CUSTOMER-DISCOVERY",F-E,D-F,G
+F1-F9,"P2,P11","SPEC; DATA-MODEL; API; DESIGN; Next.js; validation gate",F-E,B-F,G
+G1-G10,"P2,P4","Deploy; GitHub; Vercel; hosting path; verify spec",F-E,"A minimal F full","L,G,D,M"
+H1-H5,"P3,P4","Stripe products; webhooks; dunning flows",P-E,"B D C R","L,D"
+I1-I4,"P3,P4","SuiteDash CRM portal pipeline",P-E,"A S C D D R","L,D"
+J1-J5,"P3,P4,P5","Phone AI voice booking Trafft",E,"A S D D","L,D"
+K1-K4,"P3,P4","Acumbamail SMS-iT sequences",P-E,"A S D","L,D"
+L1-L6,"P3,P4","Chatbase Plerdy PostHog Happierleads Salespanel",P-E,"A S D","L,D"
+M1-M8,"P4,P8,P9","SEO Vista Social directory WordPress",E,"A S E R","L,D,G"
+N1-N5,"P4,P8","mod_design mod_video",E,"A S D D","L,D"
+O1-O8,"P3,P4","n8n seven workflows",P-E,"A S D D","L,D"
+P1-P2,"P3,P4","SparkReceipt CREDENTIALS",E,D defer,"L,M"
+Q1-Q6,"P5,P6","Vertical tool scaffold; disclaimers",P-E,Add-on,"G,L,M"
+R1-R4,"P6,P7","docs/plain START-HERE QA-NOTES",F-E,Toggle,G
+S1-S4,"P10","BUILD-MANIFEST V4-DEMO-SLA demo path",All,A,G
+T1-T3,"P12","Managed Operations subscription",Add-on,All,Service
+U1,"P4","Heartbeat community toggle",Key-gated,Optional,"L,M"

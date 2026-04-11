@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>What ships today — Your Deputy</title>
+<meta name="description" content="Honest implementation status: codegen, deploy, and live integrations vs roadmap. Same engine — transparent scope.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://dynasty-launcher.vercel.app/maturity">
+<style>
+:root{--gold:#C9A84C;--ink:#09090B;--panel:#16161B;--card:#1E1E2A;--bdr:rgba(255,255,255,.12);--tx:#FAFAF9;--sub:#A1A1AA;--dim:#71717A;--live:#22C55E;--partial:#FBBF24;--spec:#60A5FA}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0C0C14;color:var(--tx);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.6;padding:24px;max-width:1100px;margin:0 auto}
+a{color:var(--gold)}
+h1{font-size:clamp(26px,4vw,36px);font-weight:600;margin-bottom:8px}
+.lead{color:var(--sub);max-width:720px;margin-bottom:28px;font-size:15px}
+.note{font-size:12px;color:var(--dim);margin-bottom:32px;padding:12px 14px;background:var(--card);border-radius:10px;border:1px solid var(--bdr)}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:40px}
+th,td{border:1px solid var(--bdr);padding:10px 12px;text-align:left;vertical-align:top}
+th{background:var(--card);color:var(--gold);font-weight:600}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
+.tag.live{background:rgba(34,197,94,.15);color:var(--live)}
+.tag.partial{background:rgba(251,191,36,.12);color:var(--partial)}
+.tag.spec{background:rgba(96,165,250,.12);color:var(--spec)}
+.tag.gen{background:rgba(161,161,170,.2);color:var(--sub)}
+ul{margin:12px 0 24px 20px;color:var(--sub);font-size:14px}
+.nav{margin-bottom:28px;font-size:14px}
+h2{font-size:18px;margin:28px 0 12px;color:var(--tx)}
+</style>
+</head>
+<body>
+<p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/#outcome-packages">Outcome packages</a> · <a href="/PAIN_POINT_MASTER_MAP.csv">Pain map (CSV)</a></p>
+<h1>What ships today (implementation truth deck)</h1>
+<p class="lead">Buyers deserve one honest page: what the <strong>builder and provisioner do in production now</strong>, what is <strong>partially live</strong>, and what remains <strong>specified in V3/V4</strong> for rollout. This page tracks <em>categories of capability</em>; your repo’s <code>BUILD-MANIFEST.json</code> and <code>OPERATIONS.md</code> are the per-build source of truth.</p>
+<p class="note">Updated from internal docs (<code>CLAUDE.md</code>, <code>DYNASTY_LAUNCHER_V3_FINAL.md</code>, <code>V4_INVESTOR_FEEDBACK.md</code>). When in doubt, the repository beats marketing — ask for a redacted manifest sample in sales.</p>
+
+<h2>Status legend</h2>
+<ul>
+<li><span class="tag live">Live</span> — In active use for paying builds, subject to tier, keys, and API health.</li>
+<li><span class="tag partial">Partial</span> — Some paths work; full V3 spec not complete or keys missing.</li>
+<li><span class="tag gen">Codegen</span> — Client-side generation + repo files; no external API required.</li>
+<li><span class="tag spec">Spec</span> — Designed (modules, phases); implementation or keys still landing.</li>
+</ul>
+
+<table>
+<thead>
+<tr><th>Outcome area</th><th>Status</th><th>Customer-visible proof</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td>Multi-model viability scoring + adversarial critique</td><td><span class="tag live">Live</span></td><td>Scorecard in app; exported narrative in docs</td><td>Free tier for scoring; depth scales with path.</td></tr>
+<tr><td>Strategy & business document generation</td><td><span class="tag gen">Codegen</span></td><td>Markdown in repo (SPEC, GTM, revenue, investor, SBA-shaped content, etc.)</td><td>Volume gated by <strong>build archetype</strong>; not legal/financial advice.</td></tr>
+<tr><td>Plain-language companion (<code>docs/plain/</code>)</td><td><span class="tag partial">Partial</span></td><td>Toggle in builder; QA heuristics in pipeline</td><td>Additive to technical originals.</td></tr>
+<tr><td>Design system + CLAUDE.md per project</td><td><span class="tag gen">Codegen</span></td><td><code>DESIGN.md</code>, <code>CLAUDE.md</code></td><td>—</td></tr>
+<tr><td>Next.js app + validation gate (icons, branding, i18n, etc.)</td><td><span class="tag gen">Codegen</span></td><td>Runnable repo; 8-check gate in builder</td><td>—</td></tr>
+<tr><td>Vertical niche tool scaffold (e.g. takeoff assist)</td><td><span class="tag partial">Partial</span></td><td>Routes, schema SQL, env examples; Blob/Postgres wired when configured</td><td>Assist-only positioning; not a licensed bid.</td></tr>
+<tr><td>GitHub repo + push + Vercel deploy (Phase 8 class)</td><td><span class="tag live">Live</span></td><td>Private repo, preview URL, env scaffolding</td><td>CDN build follows push.</td></tr>
+<tr><td>Demo / Express timing + deferred honesty</td><td><span class="tag live">Live</span></td><td><code>docs/V4-DEMO-SLA.md</code>, <code>BUILD-MANIFEST.json</code></td><td>Sub–5 min targets pipeline to push; modules may defer.</td></tr>
+<tr><td>Build scope preview (before generate)</td><td><span class="tag live">Live</span></td><td>Builder UI “Expected scope” panel</td><td>Maps V4 R/D/S defaults + tier caveat.</td></tr>
+<tr><td>Hosting / domain / email DNS (20i class)</td><td><span class="tag spec">Spec</span></td><td><code>mod_hosting</code> in <code>provision.js</code></td><td>Phases 9–20 rollout per <code>CLAUDE.md</code>.</td></tr>
+<tr><td>Stripe billing + webhooks</td><td><span class="tag spec">Spec</span></td><td><code>mod_billing</code></td><td>Tier + archetype may defer.</td></tr>
+<tr><td>Email marketing (Acumbamail)</td><td><span class="tag spec">Spec</span></td><td><code>mod_email</code></td><td>—</td></tr>
+<tr><td>Phone + AI voice + booking</td><td><span class="tag spec">Spec</span></td><td><code>mod_phone</code></td><td>—</td></tr>
+<tr><td>SMS (SMS-iT)</td><td><span class="tag spec">Spec</span></td><td><code>mod_sms</code></td><td>—</td></tr>
+<tr><td>Chatbot (Chatbase)</td><td><span class="tag spec">Spec</span></td><td><code>mod_chatbot</code></td><td>Key often empty in config inventory.</td></tr>
+<tr><td>SEO tools +5 posts (WriterZen / NeuronWriter)</td><td><span class="tag spec">Spec</span></td><td><code>mod_seo</code></td><td>Keys often needed.</td></tr>
+<tr><td>Video + design APIs</td><td><span class="tag spec">Spec</span></td><td><code>mod_video</code>, <code>mod_design</code></td><td>Keys often needed.</td></tr>
+<tr><td>Analytics (Plerdy + PostHog)</td><td><span class="tag partial">Partial</span></td><td><code>mod_analytics</code></td><td>PostHog key present in config; Plerdy may need key.</td></tr>
+<tr><td>Lead intel (Happierleads + Salespanel)</td><td><span class="tag spec">Spec</span></td><td><code>mod_leads</code></td><td>—</td></tr>
+<tr><td>Legal PDFs + expense (Documentero + SparkReceipt)</td><td><span class="tag partial">Partial</span></td><td><code>mod_docs</code></td><td>Documentero listed; SparkReceipt often needs key.</td></tr>
+<tr><td>n8n — 7 workflows</td><td><span class="tag spec">Spec</span></td><td><code>mod_automation</code></td><td>JWT listed in config shape.</td></tr>
+<tr><td>Social calendar (Vista Social)</td><td><span class="tag spec">Spec</span></td><td><code>mod_social</code></td><td>—</td></tr>
+<tr><td>CRM (SuiteDash)</td><td><span class="tag spec">Spec</span></td><td><code>mod_crm</code></td><td>—</td></tr>
+<tr><td>Directory (Brilliant Directories)</td><td><span class="tag spec">Spec</span></td><td><code>mod_directory</code></td><td>—</td></tr>
+<tr><td>WordPress on 20i</td><td><span class="tag spec">Spec</span></td><td><code>mod_wordpress</code></td><td>—</td></tr>
+<tr><td>Post-deploy verify + BUILD-REPORT + Lighthouse class checks</td><td><span class="tag spec">Spec</span></td><td>Phase 20 in V3 spec</td><td>Smoke routes listed in spec.</td></tr>
+<tr><td>Community (Heartbeat)</td><td><span class="tag spec">Spec</span></td><td>UI toggle in V3 wireframe</td><td>Optional / key-gated.</td></tr>
+</tbody>
+</table>
+
+<h2>Blue-ocean positioning (why this page exists)</h2>
+<p class="lead" style="margin-bottom:16px">Most “AI business” tools hide the gap between <strong>demo</strong> and <strong>durable operations</strong>. You win long-term trust by making <strong>deferrals and activation</strong> part of the product story — not an apology. This deck is a <strong>conversion asset</strong> for sophisticated buyers and a <strong>risk reducer</strong> for everyone else.</p>
+
+<p class="nav"><a href="/PAIN_POINT_MASTER_MAP.md">Full pain map (Markdown)</a> · <a href="mailto:ikeohu@dynastyempire.com">Contact</a></p>
+</body>
+</html>
