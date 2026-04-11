@@ -4860,12 +4860,32 @@ function toggleVideoRecording() {
 // ── 3c. Video Upload (extract frame → AI analysis) ─────────────────────────
 async function handleVideoUpload(file, options = {}) {
   if (!file) return;
-  const transcript = (options.transcript || '').trim();
+  let transcript = (options.transcript || '').trim();
   const status = document.getElementById('im-video-status') || document.getElementById('im-image-status');
   if (file.size > 50 * 1024 * 1024) { status.textContent = 'Video too large (max 50MB). Try a shorter clip.'; return; }
   status.textContent = `⏳ Processing ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)...`;
 
   try {
+    if (!transcript) {
+      try {
+        status.textContent = '⏳ Extracting speech from video audio...';
+        const audioBase64 = await fileToBase64(file);
+        const tr = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'transcribe_audio',
+            audio_base64: audioBase64,
+            mime_type: file.type || 'video/webm',
+            ...getAiAuthPayload(),
+            usage_context: 'free_scoring'
+          })
+        });
+        const trData = await tr.json();
+        if (tr.ok && trData?.text) transcript = String(trData.text).trim();
+      } catch {}
+    }
+
     const videoUrl = URL.createObjectURL(file);
     const video = document.createElement('video');
     video.src = videoUrl;

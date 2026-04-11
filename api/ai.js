@@ -272,6 +272,38 @@ async function callOpenAI(apiKey, body) {
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
 
+async function callOpenAITranscription(apiKey, { audioBase64, mimeType, prompt }) {
+  if (!audioBase64) throw new Error('Missing audio payload');
+  const audioBuffer = Buffer.from(audioBase64, 'base64');
+  if (!audioBuffer.length) throw new Error('Empty audio payload');
+  const model = process.env.OPENAI_TRANSCRIBE_MODEL || 'gpt-4o-mini-transcribe';
+  const extMap = {
+    'audio/webm': 'webm',
+    'video/webm': 'webm',
+    'audio/mp4': 'mp4',
+    'video/mp4': 'mp4',
+    'audio/mpeg': 'mp3',
+    'audio/wav': 'wav',
+    'video/quicktime': 'mov',
+  };
+  const normalizedMime = (mimeType || 'audio/webm').toLowerCase();
+  const ext = extMap[normalizedMime] || 'webm';
+  const form = new FormData();
+  form.set('model', model);
+  if (prompt) form.set('prompt', String(prompt));
+  form.set('response_format', 'json');
+  form.set('temperature', '0');
+  form.set('file', new Blob([audioBuffer], { type: normalizedMime }), `input.${ext}`);
+  const r = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}` },
+    body: form,
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d?.error?.message || `Transcription failed (${r.status})`);
+  return (d?.text || '').trim();
+}
+
 async function callGoogle(apiKey, body) {
   const model = body.model;
   const prompt = body.messages.map(m => m.content).join('\n\n');
@@ -391,6 +423,46 @@ export default async function handler(req, res) {
   const actorKey = userId ? `u:${userId}` : `ip:${getClientIp(req)}`;
   let model = requestedModel;
   const adminBypass = await isValidAdminToken(adminToken);
+
+  if (body.action === 'transcribe_audio') {
+    if (usageContext !== 'free_scoring' && !adminBypass) {
+      return res.status(400).json({
+        error: 'Audio transcription is only available in free_scoring context.',
+        code: 'transcription_context_invalid',
+      });
+    }
+    const requestsToday = await incrementUsage(actorKey);
+    const dailyRemaining = Math.max(0, FREE_SCORING_DAILY_LIMIT - requestsToday);
+    res.setHeader('X-Free-Scoring-Limit', String(FREE_SCORING_DAILY_LIMIT));
+    res.setHeader('X-Free-Scoring-Remaining', String(dailyRemaining));
+    if (requestsToday > FREE_SCORING_DAILY_LIMIT) {
+      return res.status(429).json({
+        error: `Daily scoring throttle reached (${FREE_SCORING_DAILY_LIMIT}/day). Try again tomorrow.`,
+        code: 'scoring_daily_throttle_reached',
+        limit: FREE_SCORING_DAILY_LIMIT
+      });
+    }
+    const openaiKey = getApiKey('openai', config);
+    if (!openaiKey) {
+      return res.status(503).json({
+        error: 'Audio transcription is temporarily unavailable (missing OpenAI key).',
+        code: 'transcription_provider_unavailable',
+      });
+    }
+    try {
+      const text = await callOpenAITranscription(openaiKey, {
+        audioBase64: String(body.audio_base64 || ''),
+        mimeType: String(body.mime_type || 'audio/webm'),
+        prompt: body.prompt || 'Transcribe spoken business ideas clearly and accurately.',
+      });
+      return res.status(200).json({ text, content: [{ type: 'text', text }] });
+    } catch (err) {
+      return res.status(500).json({
+        error: err?.message || 'Audio transcription failed',
+        code: 'transcription_failed',
+      });
+    }
+  }
 
   if (usageContext !== 'free_scoring' && !adminBypass) {
     const session = await fetchStripeCheckoutSession(stripeSessionId);
