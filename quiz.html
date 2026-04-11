@@ -148,6 +148,24 @@ const SEGMENTS = {
   managed_ops: { label: 'Post-launch management', guide: '/for/managed', plan: 'managed', archetype: 'growth', cta: 'Add managed operations' }
 }
 
+const PAIN_LABELS = {
+  viability: 'Proof before spending',
+  capital: 'Funding-ready materials',
+  ops: 'Revenue operations',
+  authority: 'Authority and SEO growth',
+  vertical: 'Vertical workflow assist',
+  directory: 'Directory/community model'
+}
+
+const ARCHETYPE_LABELS = {
+  demo_express: 'Fast proof',
+  landing_1p: 'Lean launch',
+  starter_5p: '5-page launch',
+  growth: 'Growth stack',
+  authority_site: 'Authority SEO',
+  enterprise_full: 'Full launch'
+}
+
 sendTelemetry('diagnostic_viewed', { version: 1 })
 
 function getFormValue(name) {
@@ -216,10 +234,8 @@ function pickRecommendation() {
   const rec = SEGMENTS[key]
 
   const reasons = []
-  if (pains.length) reasons.push(`Primary blocker selected: ${pains.join(' + ')}`)
-  reasons.push(`Current stage detected: ${stage}`)
-  reasons.push(`Delivery preference: ${delivery}`)
-  reasons.push(`Budget comfort: ${budget}`)
+  if (pains.length) reasons.push(`Primary blocker selected: ${pains.map(p => PAIN_LABELS[p] || p).join(' + ')}`)
+  reasons.push(`Stage: ${stage}; delivery: ${delivery}; budget: ${budget}`)
   return { key, rec, reasons }
 }
 
@@ -238,7 +254,7 @@ document.getElementById('run-quiz').addEventListener('click', () => {
   document.getElementById('res-title').textContent = `Recommended: ${rec.label}`
   document.getElementById('res-path').textContent = `Path: ${key.replace('_', ' ')}`
   document.getElementById('res-tier').textContent = `Tier: ${planLabel}`
-  document.getElementById('res-shape').textContent = `Site shape: ${rec.archetype}`
+  document.getElementById('res-shape').textContent = `Site shape: ${ARCHETYPE_LABELS[rec.archetype] || rec.archetype}`
   const why = document.getElementById('res-why')
   why.innerHTML = reasons.map(r => `<li>${r}</li>`).join('')
 

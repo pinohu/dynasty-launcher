@@ -26,13 +26,17 @@ th{background:var(--card);color:var(--gold);font-weight:600}
 ul{margin:12px 0 24px 20px;color:var(--sub);font-size:14px}
 .nav{margin-bottom:28px;font-size:14px}
 h2{font-size:18px;margin:28px 0 12px;color:var(--tx)}
+.sum{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 24px}
+.sum span{font-size:12px;padding:7px 10px;border-radius:999px;background:var(--card);border:1px solid var(--bdr);color:var(--sub)}
+details.matrix{margin:8px 0 24px}
+details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bottom:12px}
 </style>
 </head>
 <body>
 <p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/#outcome-packages">Outcome packages</a></p>
 <h1>What’s included today</h1>
 <p class="lead">This page exists for one reason: <strong>clarity before purchase</strong>. It shows what is live now, what is partial, and what is still planned so you can decide with confidence and zero surprises.</p>
-<p class="note"><strong>Last reviewed:</strong> 2026-04-10 · Foundation focuses on strategy + product + deployment. Higher tiers add broader live operational connections where available. Some integrations always require third-party approval or owner action. You can verify current inventory at <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
+<p class="note"><strong>Last reviewed:</strong> 2026-04-10. Foundation focuses on strategy + product + deployment, while higher tiers add broader live operational connections where available. Some integrations always require third-party approval or owner action.<br><br>Technical verification endpoint: <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
 
 <h2>Status legend</h2>
 <ul>
@@ -42,6 +46,15 @@ h2{font-size:18px;margin:28px 0 12px;color:var(--tx)}
 <li><span class="tag spec">Spec</span> — Designed (modules, phases); implementation or keys still landing.</li>
 </ul>
 
+<div class="sum">
+<span><strong style="color:var(--live)">Live:</strong> 4</span>
+<span><strong style="color:var(--partial)">Partial:</strong> 4</span>
+<span><strong style="color:var(--sub)">Codegen:</strong> 3</span>
+<span><strong style="color:var(--spec)">Spec:</strong> 16</span>
+</div>
+
+<details class="matrix">
+<summary>Detailed technical matrix (27 rows)</summary>
 <table>
 <thead>
 <tr><th>Outcome area</th><th>Status</th><th>Customer-visible proof</th><th>Notes</th></tr>
@@ -76,6 +89,7 @@ h2{font-size:18px;margin:28px 0 12px;color:var(--tx)}
 <tr><td>Community (Heartbeat)</td><td><span class="tag spec">Spec</span></td><td>UI toggle in V3 wireframe</td><td>Optional / key-gated.</td></tr>
 </tbody>
 </table>
+</details>
 
 <h2>Why this page matters</h2>
 <p class="lead" style="margin-bottom:16px">Most platforms oversell. We don’t. Transparent scope builds trust, reduces risk, and helps you choose the right package for your stage.</p>
