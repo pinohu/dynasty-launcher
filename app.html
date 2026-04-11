@@ -11041,6 +11041,119 @@ await Promise.allSettled([
       files['src/locales/en.json'] = JSON.stringify(fullTranslation, null, 2);
       files['src/locales/fr.json'] = JSON.stringify(fullTranslation, null, 2);
 
+      // ── 8. Deterministic route hardening (prevents vanilla/404 deployments) ──
+      const _safeName = String(inf.name || 'Your Business').replace(/`/g, '\\`').replace(/'/g, "\\'");
+      const _safeDesc = String(desc || `${_safeName} platform`).slice(0, 280).replace(/`/g, '\\`').replace(/'/g, "\\'");
+      const _safePrice = String(inf.price || '$49/mo').replace(/`/g, '\\`').replace(/'/g, "\\'");
+      const _brandingLeakRe = /(SaaS Template|SaaS Boilerplate|Ixartz|nextjs-boilerplate)/i;
+      const _mkMarketingPage = (title, subtitle, body, ctaHref = '/pricing', ctaText = 'Get Started') => `import Link from 'next/link';
+
+export const metadata = {
+  title: '${title} · ${_safeName}',
+  description: '${subtitle}'
+};
+
+export default function Page() {
+  return (
+    <main className="max-w-5xl mx-auto px-4 py-16">
+      <p className="text-sm text-amber-600 font-medium">${subtitle}</p>
+      <h1 className="text-4xl font-bold mt-3 text-zinc-900">${title}</h1>
+      <p className="mt-5 text-zinc-600 max-w-3xl leading-7">${body}</p>
+      <div className="mt-8 flex gap-3 flex-wrap">
+        <Link href="${ctaHref}" className="inline-flex items-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white">${ctaText}</Link>
+        <Link href="/docs" className="inline-flex items-center rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700">Documentation</Link>
+      </div>
+    </main>
+  );
+}
+`;
+      const _mkHomePage = () => `import Link from 'next/link';
+
+export const metadata = {
+  title: '${_safeName}',
+  description: '${_safeDesc}'
+};
+
+export default function HomePage() {
+  return (
+    <main className="max-w-6xl mx-auto px-4 py-16">
+      <section className="mb-14">
+        <p className="text-sm font-medium text-amber-600">Built for ${String(inf.type_label || 'modern teams').replace(/`/g, '\\`')}</p>
+        <h1 className="text-5xl font-bold mt-3 leading-tight text-zinc-900">${_safeName}</h1>
+        <p className="mt-6 max-w-3xl text-zinc-600 leading-7">${_safeDesc}</p>
+        <div className="mt-8 flex gap-3 flex-wrap">
+          <Link href="/pricing" className="inline-flex items-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white">Start now</Link>
+          <Link href="/docs" className="inline-flex items-center rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700">See docs</Link>
+        </div>
+      </section>
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-xl border border-zinc-200 p-5"><h2 className="font-semibold text-zinc-900">What it does</h2><p className="mt-2 text-sm text-zinc-600">${_safeName} delivers the exact outputs selected in your build profile and tier.</p></div>
+        <div className="rounded-xl border border-zinc-200 p-5"><h2 className="font-semibold text-zinc-900">Who it serves</h2><p className="mt-2 text-sm text-zinc-600">${String(inf.type_label || 'Businesses').replace(/`/g, '\\`')} teams that need launch-ready systems without guesswork.</p></div>
+        <div className="rounded-xl border border-zinc-200 p-5"><h2 className="font-semibold text-zinc-900">Commercial model</h2><p className="mt-2 text-sm text-zinc-600">${String(inf.revenue_model || 'Subscription').replace(/`/g, '\\`')} · ${_safePrice}</p></div>
+      </section>
+    </main>
+  );
+}
+`;
+      const _mkNotFoundPage = () => `import Link from 'next/link';
+
+export default function NotFound() {
+  return (
+    <main className="min-h-[70vh] flex items-center justify-center px-4">
+      <div className="max-w-xl text-center">
+        <p className="text-sm font-medium text-amber-600">404</p>
+        <h1 className="mt-2 text-3xl font-bold text-zinc-900">Page not found</h1>
+        <p className="mt-3 text-zinc-600">The page you requested is unavailable right now. Continue with ${_safeName} using the links below.</p>
+        <div className="mt-6 flex justify-center gap-3 flex-wrap">
+          <Link href="/" className="inline-flex items-center rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white">Go home</Link>
+          <Link href="/pricing" className="inline-flex items-center rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700">View pricing</Link>
+          <Link href="/docs" className="inline-flex items-center rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700">Documentation</Link>
+        </div>
+      </div>
+    </main>
+  );
+}
+`;
+
+      if (isNextJs) {
+        const _bpLocal = getBuildProfile();
+        const _existingHome = files['src/app/page.tsx'] || '';
+        const _needsHomeRepair = !_existingHome || _existingHome.length < 300 || _brandingLeakRe.test(_existingHome) || !_existingHome.includes(inf.name || '');
+        if (_needsHomeRepair) {
+          const _home = _mkHomePage();
+          files['src/app/page.tsx'] = _home;
+          files['src/app/[locale]/(marketing)/page.tsx'] = _home;
+        }
+
+        const _routeDefs = [
+          { key: 'docs', title: 'Documentation', subtitle: `How to use ${_safeName}`, body: `Get started quickly with ${_safeName}. This page explains setup, workflows, and expected outputs for your selected package.` },
+          { key: 'pricing', title: 'Pricing', subtitle: 'Transparent pricing', body: `Plans for ${_safeName} are aligned to scope and automation depth. Reference price anchor: ${_safePrice}.` },
+          { key: 'about', title: 'About', subtitle: `Why ${_safeName} exists`, body: `${_safeName} helps teams launch with clear deliverables, reliable execution paths, and auditable output quality.` },
+          { key: 'services', title: 'Services', subtitle: 'What is included', body: `${_safeName} provides strategy, implementation scaffolds, and deployment-oriented outputs matched to your selected build profile.` },
+          { key: 'contact', title: 'Contact', subtitle: 'Get support', body: `Need a custom implementation path for ${_safeName}? Reach support to align delivery scope and automation constraints.` }
+        ];
+        const _alwaysRequired = new Set(['docs', 'pricing']);
+        const _archetypeRequiresFive = ['starter_5p', 'growth', 'authority_site', 'enterprise_full'].includes(_bpLocal?.archetype || '');
+        for (const _r of _routeDefs) {
+          if (!_alwaysRequired.has(_r.key) && !_archetypeRequiresFive) continue;
+          const _primaryPath = `src/app/${_r.key}/page.tsx`;
+          const _localePath = `src/app/[locale]/(marketing)/${_r.key}/page.tsx`;
+          const _current = files[_primaryPath] || '';
+          const _needsRepair = !_current || _current.length < 220 || _brandingLeakRe.test(_current) || !_current.includes(inf.name || '');
+          if (_needsRepair) {
+            const _code = _mkMarketingPage(_r.title, _r.subtitle, _r.body, _r.key === 'pricing' ? '/sign-up' : '/pricing', _r.key === 'pricing' ? 'Choose plan' : 'View pricing');
+            files[_primaryPath] = _code;
+            files[_localePath] = _code;
+          } else if (!files[_localePath]) {
+            files[_localePath] = _current;
+          }
+        }
+
+        const _nf = _mkNotFoundPage();
+        files['src/app/not-found.tsx'] = _nf;
+        files['src/app/[locale]/not-found.tsx'] = _nf;
+      }
+
       // ── Fix auth links: /auth/login → /sign-in, /auth/signup → /sign-up ──
       for (const [fp, content] of Object.entries(files)) {
         if (typeof content === 'string' && (content.includes('/auth/login') || content.includes('/auth/signup'))) {
@@ -11512,7 +11625,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
 
     const vercelUrl = provRes?.results?.vercel?.url;
     const vercelProjectId = provRes?.results?.vercel?.project_id;
-    const verifyResults = { github: false, vercel: false, live: false, issues: [], fixes_applied: [] };
+    const verifyResults = { github: false, vercel: false, live: false, route_coverage: false, issues: [], fixes_applied: [] };
 
     for (let pass = 1; pass <= 3; pass++) {
       const passLabel = pass === 1 ? 'Audit' : pass === 2 ? 'Fix' : 'Recheck';
@@ -11527,7 +11640,15 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
         try {
           const isFullstackBuild = V2_DEPLOY_TARGET === 'fullstack';
           const criticalPaths = isFullstackBuild
-            ? ['package.json', 'src/app/page.tsx', 'src/app/layout.tsx', 'src/app/globals.css']
+            ? [
+              'package.json',
+              'src/app/page.tsx',
+              'src/app/layout.tsx',
+              'src/app/globals.css',
+              'src/app/not-found.tsx',
+              'src/app/docs/page.tsx',
+              'src/app/pricing/page.tsx'
+            ]
             : ['package.json']; // static/authority/backend have simpler requirements
           const missing = [];
           for (const p of criticalPaths) {
@@ -11647,19 +11768,60 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
             && liveData.has_project_name
             && !liveData.has_template_branding;
 
+          let routesOk = true;
+          const routeFailures = [];
           if (strictOk) {
+            const bpNow = getBuildProfile();
+            const expectedRoutePaths = ['/docs', '/pricing'];
+            if (['starter_5p', 'growth', 'authority_site', 'enterprise_full'].includes(bpNow?.archetype || '')) {
+              expectedRoutePaths.push('/about', '/services', '/contact');
+            }
+            for (const path of expectedRoutePaths) {
+              try {
+                const routeCheck = await fetch(`/api/provision?action=verify_live`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+                  body: JSON.stringify({ url: `${String(vercelUrl).replace(/\/$/, '')}${path}`, project_name: inf.name, ...getProvisionAuthPayload() })
+                });
+                const routeData = await routeCheck.json();
+                const routePass = routeData.ok && routeData.status === 200 && routeData.has_content && !routeData.has_template_branding;
+                if (!routePass) {
+                  routesOk = false;
+                  routeFailures.push(`${path} (${routeData.status || 0})`);
+                }
+              } catch {
+                routesOk = false;
+                routeFailures.push(`${path} (check failed)`);
+              }
+            }
+          }
+
+          if (strictOk && routesOk) {
             verifyResults.live = true;
             verifyResults.content_verified = true;
+            verifyResults.route_coverage = true;
           } else if (liveData.ok && liveData.status === 200) {
             // 200 but failing strict criteria — do NOT mark live. Record why.
             const whyFailed = [];
             if (!liveData.has_content) whyFailed.push('thin body');
             if (!liveData.has_project_name) whyFailed.push('project name missing from homepage');
             if (liveData.has_template_branding) whyFailed.push('template branding leaked (SaaS Template / Ixartz / nextjs-boilerplate)');
+            if (routeFailures.length) whyFailed.push(`route coverage failed: ${routeFailures.join(', ')}`);
             verifyResults.issues.push(`Live: 200 but ${whyFailed.join(', ')}`);
             if (pass === 2 && liveData.has_template_branding) {
               // FIX: trigger a retry deploy — may pick up newer files
               verifyResults.fixes_applied.push('Template branding leaked — triggering retry_deploy');
+              if (vercelProjectId) {
+                try {
+                  await fetch('/api/provision?action=retry_deploy', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+                    body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG, ...getProvisionAuthPayload() })
+                  });
+                  await new Promise(r => setTimeout(r, 25000));
+                } catch {}
+              }
+            } else if (pass === 2 && routeFailures.length) {
+              verifyResults.fixes_applied.push('Route coverage failed — triggering retry_deploy');
               if (vercelProjectId) {
                 try {
                   await fetch('/api/provision?action=retry_deploy', {
@@ -11700,9 +11862,10 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       const passChecks = [
         verifyResults.github ? '✓ GitHub' : '✗ GitHub',
         (verifyResults.vercel || !vercelProjectId) ? '✓ Vercel' : '✗ Vercel',
-        (verifyResults.live || !vercelUrl) ? '✓ Live' : '✗ Live'
+        (verifyResults.live || !vercelUrl) ? '✓ Live' : '✗ Live',
+        (verifyResults.route_coverage || !vercelUrl) ? '✓ Routes' : '✗ Routes'
       ];
-      const allPassed = verifyResults.github && (verifyResults.vercel || !vercelProjectId) && (verifyResults.live || !vercelUrl);
+      const allPassed = verifyResults.github && (verifyResults.vercel || !vercelProjectId) && (verifyResults.live || !vercelUrl) && (verifyResults.route_coverage || !vercelUrl);
 
       if (allPassed) {
         setP(`verify-pass-${pass}`, 'ok', passChecks.join(' · '));
@@ -11726,7 +11889,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     }
 
     // ── Final verification summary ────────────────────────────────────────
-    const finalGood = verifyResults.github && (verifyResults.vercel || !vercelProjectId) && (verifyResults.live || !vercelUrl);
+    const finalGood = verifyResults.github && (verifyResults.vercel || !vercelProjectId) && (verifyResults.live || !vercelUrl) && (verifyResults.route_coverage || !vercelUrl);
     if (finalGood) {
       setP('verify', 'ok', '3-pass verification complete — all systems confirmed live');
     } else {
@@ -11734,6 +11897,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       if (!verifyResults.github) stillFailing.push('GitHub');
       if (!verifyResults.vercel && vercelProjectId) stillFailing.push('Vercel');
       if (!verifyResults.live && vercelUrl) stillFailing.push('Live URL');
+      if (!verifyResults.route_coverage && vercelUrl) stillFailing.push('Route coverage');
       setP('verify', 'er', `Verification incomplete after 3 passes — ${stillFailing.join(', ')} failed`);
       if (verifyResults.fixes_applied.length) {
         addP('verify-fixes', `${verifyResults.fixes_applied.length} fixes attempted`);
@@ -11753,6 +11917,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       vercel: expectsLiveSite ? verifyResults.vercel : true,
       // If a live URL exists, it MUST serve project-specific content
       live: expectsLiveSite ? verifyResults.live : true,
+      routes: expectsLiveSite ? verifyResults.route_coverage : true,
       files: Object.keys(files).length >= 10,
     };
     const doneCount = Object.values(doneChecks).filter(Boolean).length;
@@ -11778,6 +11943,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       if (!doneChecks.github) nextSteps.push('Missing critical files in GitHub repo — inspect Vercel build logs or re-run the build.');
       if (!doneChecks.vercel) nextSteps.push(`Vercel deployment did not reach READY. Check https://vercel.com/polycarpohu-gmails-projects/${inf.repo}/deployments for the build error.`);
       if (!doneChecks.live) nextSteps.push(`Live URL ${vercelUrl || ''} did not return project-specific content. Common causes: build error, template branding leak, or DNS still propagating.`);
+      if (!doneChecks.routes) nextSteps.push('Required routes failed content checks (e.g., /docs or /pricing or package routes).');
       if (verifyResults.issues?.length) nextSteps.push('Issues detected: ' + verifyResults.issues.join(' · '));
 
       const banner = document.createElement('div');
