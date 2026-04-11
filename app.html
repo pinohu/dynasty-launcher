@@ -22,7 +22,7 @@
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Your Deputy — Build from One Prompt">
-<meta name="twitter:description" content="Strategy, codegen, and deployment from one prompt. Foundation skips server-side mod_* provisioning; upgrade for live integration attempts.">
+<meta name="twitter:description" content="Move from idea to launch-ready plans, product, and deployment. Start simple, then add live business connections when you need them.">
 
 <!-- Favicon -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
@@ -628,20 +628,20 @@ html,body{overflow-x:hidden}
   <div id="mode-screen">
     <div class="hero">
       <h1>Your Deputy <span>Platform</span></h1>
-      <p>Describe a business idea. Get multi-model viability scoring, a large strategy + technical document set, generated code, and deployment. <strong>Live integrations</strong> (billing, CRM, email vendors, etc.) run when your <strong>paid tier</strong> allows — <strong>Foundation</strong> is documents + app + deploy only (no server auto <code style="font-size:11px;opacity:.9">mod_*</code> provisioning).</p>
+      <p>Describe your business idea. Get a rigorous viability read, a complete execution package, a working product, and deployment. Add live business connections (payments, CRM, messaging, and more) when your selected tier includes them.</p>
     </div>
 
     <div class="mode-cards">
       <div class="mode-card" id="mode-quick" onclick="selectMode('quick')">
         <div class="mc-icon">⚡</div>
         <h3>Quick Build</h3>
-        <p>Describe your idea → AI analyzes and generates documents + code → deployed. Vendor integrations follow your tier and site package (Foundation: manual path in OPERATIONS.md or upgrade).</p>
+        <p>Describe your idea → we generate plans + product assets → your build is deployed. Start lean, then add deeper operational connections when you are ready.</p>
         <div class="mc-tag">~3 min target to push · varies</div>
       </div>
       <div class="mode-card" id="mode-strategic" onclick="selectMode('strategic')">
         <div class="mc-icon">🏛️</div>
         <h3>Strategic Build</h3>
-        <p>Choose AI models, score across 8 frameworks (Porter's, 7 Powers, Blue Ocean, JTBD), configure deployment target, review viability — then run the same codegen + deploy pipeline as Quick Build. <strong>Live vendor modules</strong> still follow your <strong>paid tier</strong> and site package (Foundation = no server <code style="font-size:11px">mod_*</code> auto-provision).</p>
+        <p>Choose analysis depth, review viability and strategy, then launch through the same build pipeline. This mode is for buyers who want more planning confidence before execution.</p>
         <div class="mc-tag">Longer run · analysis before build · time varies</div>
       </div>
     </div>
@@ -1031,25 +1031,29 @@ html,body{overflow-x:hidden}
 
     <!-- V4: build package + plain language + vertical tool -->
     <div class="cfg-section" id="cfg-build-profile">
-      <h3 class="cfg-label">Build package (V4)</h3>
-      <p class="cfg-desc">Pick site depth and add-ons. Smaller packages skip or defer heavy integrations — see <code style="font-size:11px">BUILD-MANIFEST.json</code> in the repo after provision.</p>
+      <h3 class="cfg-label">Build package</h3>
+      <p class="cfg-desc">Pick how large your first release should be, plus optional add-ons. Lean packages prioritize speed; larger packages prioritize breadth.</p>
       <select id="dynasty-archetype" class="ti" style="width:100%;max-width:420px;padding:10px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--bdr);color:var(--tx);font-size:13px;margin-bottom:8px" onchange="saveBuildProfileToStorage()">
-        <option value="enterprise_full">Enterprise full — all modules (default)</option>
+        <option value="enterprise_full">Enterprise full — broadest launch depth (default)</option>
         <option value="authority_site">Authority / SEO-heavy site</option>
-        <option value="growth">Growth — app + most integrations</option>
+        <option value="growth">Growth — app + core operations stack</option>
         <option value="starter_5p">Starter — 5-page marketing site depth</option>
-        <option value="landing_1p">Landing — 1-page + light integrations</option>
-        <option value="demo_express">Demo / Express — sub–5 min path (skips heavy content + defers modules)</option>
+        <option value="landing_1p">Landing — 1-page + light setup</option>
+        <option value="demo_express">Demo / Express — fastest path for proof builds</option>
       </select>
       <p id="dynasty-archetype-hint" style="display:none;font-size:11px;color:var(--gold);margin:0 0 10px;max-width:420px;line-height:1.45">Enterprise full and Authority packages require Professional tier or higher.</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
           <input type="checkbox" id="dynasty-plain-lang" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
-          <span><strong style="color:var(--tx)">Plain-language companion docs</strong> — adds <code style="font-size:10px">docs/plain/</code> summaries (technical originals unchanged).</span>
+          <span><strong style="color:var(--tx)">Plain-language companion docs</strong> — adds owner-friendly summaries for faster handoff and decision-making (technical originals are preserved).</span>
         </label>
         <label id="dynasty-vertical-tool-wrap" style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
           <input type="checkbox" id="dynasty-vertical-tool" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
           <span><strong style="color:var(--tx)">Niche vertical tool add-on</strong> — scaffold for a pain-point workflow (e.g. blueprint takeoff <em>assist</em>). Professional+ tiers. Not a binding bid.</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
+          <input type="checkbox" id="dynasty-ai-train-optin" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
+          <span><strong style="color:var(--tx)">AI training opt-in (optional)</strong> — allow use of your identifiable project content for model-improvement research. Default is off.</span>
         </label>
       </div>
       <textarea id="dynasty-vertical-spec" class="ti" rows="3" placeholder="Optional: describe the niche workflow (e.g. Erie concrete — blueprint photos → quantity line items + editable assumptions)" style="width:100%;margin-top:10px;font-size:12px" onblur="saveBuildProfileToStorage()"></textarea>
@@ -1148,7 +1152,7 @@ html,body{overflow-x:hidden}
       <div class="edu-card" id="edu-card">
         <div class="edu-phase" id="edu-phase">Getting Ready</div>
         <div class="edu-title" id="edu-title">Your business system is being built<span class="edu-spinner-mini"><span></span><span></span><span></span></span></div>
-        <div class="edu-body" id="edu-body">The AI is analyzing your description and will generate your document set, application code, and deployment path. Live vendor integrations run when your paid tier and site package allow — Foundation is docs + app + deploy only (no server auto mod_* provisioning).</div>
+        <div class="edu-body" id="edu-body">Your idea is being analyzed and turned into a launch-ready package: plans, product assets, and deployment. Operational connections are added based on the tier and package you selected.</div>
         <div class="edu-progress"><div class="edu-progress-fill" id="edu-progress-fill"></div></div>
         <div class="edu-facts" id="edu-facts"></div>
         <div class="edu-file-preview" id="edu-file-preview" style="display:none"></div>
@@ -2250,7 +2254,8 @@ function getBuildProfile() {
       plainLanguage: !!(document.getElementById('dynasty-plain-lang')?.checked ?? stored.plainLanguage),
       verticalTool: !!(document.getElementById('dynasty-vertical-tool')?.checked ?? stored.verticalTool),
       verticalToolSpec: (document.getElementById('dynasty-vertical-spec')?.value ?? stored.verticalToolSpec ?? '').trim().slice(0, 8000),
-      v: 1
+      aiTrainingOptIn: !!(document.getElementById('dynasty-ai-train-optin')?.checked ?? stored.aiTrainingOptIn),
+      v: 2
     };
   }
   return {
@@ -2258,13 +2263,39 @@ function getBuildProfile() {
     plainLanguage: !!stored.plainLanguage,
     verticalTool: !!stored.verticalTool,
     verticalToolSpec: (stored.verticalToolSpec || '').trim().slice(0, 8000),
-    v: 1
+    aiTrainingOptIn: !!stored.aiTrainingOptIn,
+    v: 2
   };
 }
 
 function saveBuildProfileToStorage() {
   try { localStorage.setItem('dynasty_build_profile', JSON.stringify(getBuildProfile())); } catch {}
   try { updateBuildScopePreview(); } catch {}
+}
+
+function getDiagnosticContext() {
+  try {
+    return JSON.parse(localStorage.getItem('dynasty_diagnostic_recommendation') || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function trackEvent(eventName, properties) {
+  fetch('/api/telemetry', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event: eventName,
+      distinct_id: localStorage.getItem('dynasty_diag_session_id') || localStorage.getItem('dynasty_paid_session') || 'anon',
+      properties: {
+        source: 'app',
+        path: '/app',
+        tier: getUserTier(),
+        ...properties
+      }
+    })
+  }).catch(() => {});
 }
 
 function tierRank(t) {
@@ -2479,18 +2510,42 @@ async function enterBuilder() {
 
 async function startCheckout(plan) {
   try {
+    const bp = getBuildProfile();
+    const diag = getDiagnosticContext();
+    const params = new URLSearchParams(window.location.search);
+    const sourceSegment = params.get('segment') || diag.recommended_segment || '';
+    const diagId = params.get('diag_id') || diag.session_id || localStorage.getItem('dynasty_diag_session_id') || '';
+    trackEvent('checkout_started', {
+      selected_plan: plan,
+      source_segment: sourceSegment,
+      build_archetype: bp.archetype || '',
+      training_opt_in: !!bp.aiTrainingOptIn,
+      diagnostic_session_id: diagId || ''
+    });
     const resp = await fetch('/api/checkout?action=create_session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan })
+      body: JSON.stringify({
+        plan,
+        training_opt_in: !!bp.aiTrainingOptIn,
+        build_archetype: bp.archetype || '',
+        source_segment: sourceSegment,
+        diagnostic_session_id: diagId,
+        recommended_plan: diag.recommended_plan || ''
+      })
     });
     const data = await resp.json();
     if (data.ok && data.url) {
       window.location.href = data.url;
     } else {
+      trackEvent('checkout_failed_to_start', {
+        selected_plan: plan,
+        error: (data && data.error) ? String(data.error).slice(0, 180) : 'unknown'
+      });
       alert(data.error || 'Checkout unavailable. Please try again or contact support at ikeohu@dynastyempire.com');
     }
   } catch {
+    trackEvent('checkout_start_exception', { selected_plan: plan });
     alert('Payment system temporarily unavailable. Please try again later.');
   }
 }
@@ -2498,10 +2553,35 @@ async function startCheckout(plan) {
 // Check for plan purchase redirect from homepage (e.g. ?plan=professional)
 (function checkPlanPurchase() {
   const params = new URLSearchParams(window.location.search);
+  if (params.get('source') === 'quiz') {
+    try {
+      const existing = getDiagnosticContext();
+      localStorage.setItem('dynasty_diagnostic_recommendation', JSON.stringify({
+        ...existing,
+        session_id: params.get('diag_id') || existing.session_id || localStorage.getItem('dynasty_diag_session_id') || '',
+        ts: existing.ts || new Date().toISOString(),
+        recommended_segment: params.get('segment') || existing.recommended_segment || '',
+        recommended_plan: params.get('plan') || existing.recommended_plan || '',
+        recommended_archetype: params.get('archetype') || existing.recommended_archetype || ''
+      }));
+      if (params.get('diag_id')) localStorage.setItem('dynasty_diag_session_id', params.get('diag_id'));
+    } catch {}
+    trackEvent('diagnostic_recommendation_accepted', {
+      source_segment: params.get('segment') || '',
+      selected_plan: params.get('plan') || '',
+      selected_archetype: params.get('archetype') || '',
+      diagnostic_session_id: params.get('diag_id') || ''
+    });
+  }
   const plan = params.get('plan');
   if (plan === 'free' && !params.get('payment')) {
     // Free scoring — enter builder without checkout
     localStorage.setItem('dynasty_tier', 'free');
+    trackEvent('free_builder_started', {
+      source_segment: params.get('segment') || getDiagnosticContext().recommended_segment || '',
+      selected_archetype: params.get('archetype') || getBuildProfile().archetype || '',
+      source: params.get('source') || ''
+    });
     enterBuilder();
     return;
   }
@@ -2532,6 +2612,13 @@ async function startCheckout(plan) {
           localStorage.setItem('dynasty_paid_session', sessionId);
           localStorage.setItem('dynasty_paid_at', new Date().toISOString());
           localStorage.setItem('dynasty_tier', vd.plan || 'foundation');
+          trackEvent('checkout_paid_verified', {
+            paid_plan: vd.plan || 'foundation',
+            amount: vd.amount || 0,
+            currency: vd.currency || 'usd',
+            mode: vd.mode || 'payment',
+            customer_email_present: !!vd.customer_email
+          });
           enterBuilder();
         } else {
           alert('Payment verification failed. Please contact support if you were charged.');
@@ -2541,6 +2628,10 @@ async function startCheckout(plan) {
       }
     })();
   } else if (payment === 'cancelled') {
+    trackEvent('checkout_cancelled', {
+      source_segment: params.get('segment') || '',
+      selected_plan: params.get('plan') || ''
+    });
     window.history.replaceState({}, '', window.location.pathname);
   }
 })();
@@ -3156,6 +3247,8 @@ function showConfigScreen() {
     if (vt && bp.verticalTool) vt.checked = true;
     const vs = document.getElementById('dynasty-vertical-spec');
     if (vs && bp.verticalToolSpec) vs.value = bp.verticalToolSpec;
+    const aiOpt = document.getElementById('dynasty-ai-train-optin');
+    if (aiOpt && bp.aiTrainingOptIn) aiOpt.checked = true;
   } catch {}
   applyBuildPackageTierConstraints();
 }

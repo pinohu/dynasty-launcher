@@ -29,15 +29,15 @@ h2{font-size:18px;margin:28px 0 12px;color:var(--tx)}
 </style>
 </head>
 <body>
-<p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/#outcome-packages">Outcome packages</a> · <a href="/PAIN_POINT_MASTER_MAP.csv">Pain map (CSV)</a></p>
-<h1>What ships today (implementation truth deck)</h1>
-<p class="lead">Buyers deserve one honest page: what the <strong>builder and provisioner do in production now</strong>, what is <strong>partially live</strong>, and what remains <strong>specified in V3/V4</strong> for rollout. This page tracks <em>categories of capability</em>; your repo’s <code>BUILD-MANIFEST.json</code> and <code>OPERATIONS.md</code> are the per-build source of truth.</p>
-<p class="note"><strong>Last reviewed:</strong> 2026-04-10 · Sourced from <code>CLAUDE.md</code>, <code>DYNASTY_LAUNCHER_V3_FINAL.md</code>, <code>V4_INVESTOR_FEEDBACK.md</code>, and <code>api/provision.js</code> tier gates. <strong>Live tool inventory:</strong> <a href="/api/provision?action=inventory">/api/provision?action=inventory</a> (JSON). <strong>Foundation tier:</strong> <code>TIER_MODULES.foundation</code> is an empty array — no automatic <code>mod_*</code> provisioning; docs + generated app + deploy only.</p>
+<p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/#outcome-packages">Outcome packages</a></p>
+<h1>What’s included today</h1>
+<p class="lead">This page exists for one reason: <strong>clarity before purchase</strong>. It shows what is live now, what is partial, and what is still planned so you can decide with confidence and zero surprises.</p>
+<p class="note"><strong>Last reviewed:</strong> 2026-04-10 · Foundation focuses on strategy + product + deployment. Higher tiers add broader live operational connections where available. Some integrations always require third-party approval or owner action. You can verify current inventory at <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
 
 <h2>Status legend</h2>
 <ul>
 <li><span class="tag live">Live</span> — In active use for paying builds, subject to tier, keys, and API health.</li>
-<li><span class="tag partial">Partial</span> — Some paths work; full V3 spec not complete or keys missing.</li>
+<li><span class="tag partial">Partial</span> — Some paths work; full rollout is not complete or keys are missing.</li>
 <li><span class="tag gen">Codegen</span> — Client-side generation + repo files; no external API required.</li>
 <li><span class="tag spec">Spec</span> — Designed (modules, phases); implementation or keys still landing.</li>
 </ul>
@@ -48,16 +48,16 @@ h2{font-size:18px;margin:28px 0 12px;color:var(--tx)}
 </thead>
 <tbody>
 <tr><td>Multi-model viability scoring + adversarial critique</td><td><span class="tag live">Live</span></td><td>Scorecard in app; exported narrative in docs</td><td>Free tier for scoring; depth scales with path.</td></tr>
-<tr><td>Strategy & business document generation</td><td><span class="tag gen">Codegen</span></td><td>Markdown in repo (SPEC, GTM, revenue, investor, SBA-shaped content, etc.)</td><td>Volume gated by <strong>build archetype</strong>; not legal/financial advice.</td></tr>
+<tr><td>Strategy & business document generation</td><td><span class="tag gen">Codegen</span></td><td>Markdown in repo (SPEC, GTM, revenue, investor, SBA-shaped content, etc.)</td><td>Volume scales with your selected package depth; not legal/financial advice.</td></tr>
 <tr><td>Plain-language companion (<code>docs/plain/</code>)</td><td><span class="tag partial">Partial</span></td><td>Toggle in builder; QA heuristics in pipeline</td><td>Additive to technical originals.</td></tr>
 <tr><td>Design system + CLAUDE.md per project</td><td><span class="tag gen">Codegen</span></td><td><code>DESIGN.md</code>, <code>CLAUDE.md</code></td><td>—</td></tr>
 <tr><td>Next.js app + validation gate (icons, branding, i18n, etc.)</td><td><span class="tag gen">Codegen</span></td><td>Runnable repo; 8-check gate in builder</td><td>—</td></tr>
 <tr><td>Vertical niche tool scaffold (e.g. takeoff assist)</td><td><span class="tag partial">Partial</span></td><td>Routes, schema SQL, env examples; Blob/Postgres wired when configured</td><td>Assist-only positioning; not a licensed bid.</td></tr>
 <tr><td>GitHub repo + push + Vercel deploy (Phase 8 class)</td><td><span class="tag live">Live</span></td><td>Private repo, preview URL, env scaffolding</td><td>CDN build follows push.</td></tr>
-<tr><td>Demo / Express timing + deferred honesty</td><td><span class="tag live">Live</span></td><td><code>docs/V4-DEMO-SLA.md</code>, <code>BUILD-MANIFEST.json</code></td><td>Sub–5 min targets pipeline to push; modules may defer.</td></tr>
-<tr><td>Build scope preview (before generate)</td><td><span class="tag live">Live</span></td><td>Builder UI “Expected scope” panel</td><td>Maps V4 R/D/S defaults + tier caveat.</td></tr>
+<tr><td>Express path speed + clear deferrals</td><td><span class="tag live">Live</span></td><td><code>docs/V4-DEMO-SLA.md</code>, <code>BUILD-MANIFEST.json</code></td><td>Sub–5 min targets pipeline to push; some modules may defer.</td></tr>
+<tr><td>Build scope preview (before generate)</td><td><span class="tag live">Live</span></td><td>Builder UI “Expected scope” panel</td><td>Shows run / defer / skip expectations by package and tier.</td></tr>
 <tr><td>Hosting / domain / email DNS (20i class)</td><td><span class="tag spec">Spec</span></td><td><code>mod_hosting</code> in <code>provision.js</code></td><td>Phases 9–20 rollout per <code>CLAUDE.md</code>.</td></tr>
-<tr><td>Stripe billing + webhooks</td><td><span class="tag spec">Spec</span></td><td><code>mod_billing</code></td><td>Tier + archetype may defer.</td></tr>
+<tr><td>Stripe billing + webhooks</td><td><span class="tag spec">Spec</span></td><td><code>mod_billing</code></td><td>Tier + package depth may defer.</td></tr>
 <tr><td>Email marketing (Acumbamail)</td><td><span class="tag spec">Spec</span></td><td><code>mod_email</code></td><td>—</td></tr>
 <tr><td>Phone + AI voice + booking</td><td><span class="tag spec">Spec</span></td><td><code>mod_phone</code></td><td>—</td></tr>
 <tr><td>SMS (SMS-iT)</td><td><span class="tag spec">Spec</span></td><td><code>mod_sms</code></td><td>—</td></tr>
@@ -77,9 +77,9 @@ h2{font-size:18px;margin:28px 0 12px;color:var(--tx)}
 </tbody>
 </table>
 
-<h2>Blue-ocean positioning (why this page exists)</h2>
-<p class="lead" style="margin-bottom:16px">Most “AI business” tools hide the gap between <strong>demo</strong> and <strong>durable operations</strong>. You win long-term trust by making <strong>deferrals and activation</strong> part of the product story — not an apology. This deck is a <strong>conversion asset</strong> for sophisticated buyers and a <strong>risk reducer</strong> for everyone else.</p>
+<h2>Why this page matters</h2>
+<p class="lead" style="margin-bottom:16px">Most platforms oversell. We don’t. Transparent scope builds trust, reduces risk, and helps you choose the right package for your stage.</p>
 
-<p class="nav"><a href="/PAIN_POINT_MASTER_MAP.md">Full pain map (Markdown)</a> · <a href="mailto:ikeohu@dynastyempire.com">Contact</a></p>
+<p class="nav"><a href="/for/">Guide pages</a> · <a href="mailto:ikeohu@dynastyempire.com">Contact</a></p>
 </body>
 </html>

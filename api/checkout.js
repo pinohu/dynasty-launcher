@@ -37,7 +37,7 @@ export default async function handler(req, res) {
   if (action === 'create_session') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Stripe not configured' });
 
-    const { plan, email } = req.body || {};
+    const { plan, email, training_opt_in, build_archetype, source_segment, diagnostic_session_id, recommended_plan } = req.body || {};
 
     const tiers = {
       foundation: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations; typically tens of thousands of words, varies by session). SBA business plan, investor readiness, cap table themes, tax strategy. Production app + repo deploy. No automatic server-side integration module provisioning on Foundation — use OPERATIONS.md or upgrade to Professional+. $71K–$131K equivalent value.' },
@@ -56,6 +56,11 @@ export default async function handler(req, res) {
         `cancel_url=${enc(`${APP_URL}/app?payment=cancelled`)}`,
         `metadata[source]=your-deputy`,
         `metadata[plan]=${plan || 'foundation'}`,
+        `metadata[training_opt_in]=${training_opt_in ? 'yes' : 'no'}`,
+        `metadata[build_archetype]=${enc((build_archetype || '').slice(0, 64))}`,
+        `metadata[source_segment]=${enc((source_segment || '').slice(0, 64))}`,
+        `metadata[diagnostic_session_id]=${enc((diagnostic_session_id || '').slice(0, 96))}`,
+        `metadata[recommended_plan]=${enc((recommended_plan || '').slice(0, 48))}`,
         `line_items[0][price_data][currency]=usd`,
         `line_items[0][price_data][unit_amount]=${tierDef.amount}`,
         `line_items[0][price_data][product_data][name]=${enc(tierDef.name)}`,
@@ -73,6 +78,11 @@ export default async function handler(req, res) {
           `cancel_url=${enc(`${APP_URL}/app?payment=cancelled`)}`,
           'metadata[source]=your-deputy',
           'metadata[plan]=managed',
+          `metadata[training_opt_in]=${training_opt_in ? 'yes' : 'no'}`,
+          `metadata[build_archetype]=${enc((build_archetype || '').slice(0, 64))}`,
+          `metadata[source_segment]=${enc((source_segment || '').slice(0, 64))}`,
+          `metadata[diagnostic_session_id]=${enc((diagnostic_session_id || '').slice(0, 96))}`,
+          `metadata[recommended_plan]=${enc((recommended_plan || '').slice(0, 48))}`,
           'line_items[0][price_data][currency]=usd',
           'line_items[0][price_data][unit_amount]=49700',
           `line_items[0][price_data][product_data][name]=${enc('Your Deputy — Managed Operations')}`,
@@ -110,6 +120,7 @@ export default async function handler(req, res) {
         ok: true,
         paid: isPaid,
         plan: session.metadata?.plan || 'foundation',
+        metadata: session.metadata || {},
         mode: session.mode,
         customer_email: session.customer_email || session.customer_details?.email,
         amount: session.amount_total,

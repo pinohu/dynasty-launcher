@@ -3,7 +3,7 @@
 // Cache-first for other same-origin GETs. Network-first for /api, /app, /admin.
 const CACHE_NAME = 'deputy-v3';
 // Do not precache '/' — it caused stale homepages until users cleared site data.
-const STATIC_ASSETS = ['/privacy', '/terms'];
+const STATIC_ASSETS = ['/privacy', '/terms', '/quiz'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
