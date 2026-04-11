@@ -121,6 +121,8 @@ After any change:
 2. `curl -s -o /dev/null -w "%{http_code}" https://dynasty-launcher.vercel.app/app` → 200
 3. `curl -s https://dynasty-launcher.vercel.app/api/provision?action=inventory` → JSON with tool status
 
+On **Windows PowerShell**, `curl` is an alias for `Invoke-WebRequest` — use **`curl.exe`** with the same flags, or `Invoke-WebRequest` equivalents.
+
 ## Key Files to Edit
 - **app.html lines 5900-6060**: Frontend generation (phases g7, g7b, g7c)
 - **app.html lines 6700-7000**: Build validation gate (8 checks)
