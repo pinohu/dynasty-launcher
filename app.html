@@ -1033,7 +1033,7 @@ html,body{overflow-x:hidden}
     <div class="cfg-section" id="cfg-build-profile">
       <h3 class="cfg-label">Build package (V4)</h3>
       <p class="cfg-desc">Pick site depth and add-ons. Smaller packages skip or defer heavy integrations — see <code style="font-size:11px">BUILD-MANIFEST.json</code> in the repo after provision.</p>
-      <select id="dynasty-archetype" class="ti" style="width:100%;max-width:420px;padding:10px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--bdr);color:var(--tx);font-size:13px;margin-bottom:12px">
+      <select id="dynasty-archetype" class="ti" style="width:100%;max-width:420px;padding:10px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--bdr);color:var(--tx);font-size:13px;margin-bottom:8px" onchange="saveBuildProfileToStorage()">
         <option value="enterprise_full">Enterprise full — all modules (default)</option>
         <option value="authority_site">Authority / SEO-heavy site</option>
         <option value="growth">Growth — app + most integrations</option>
@@ -1041,17 +1041,18 @@ html,body{overflow-x:hidden}
         <option value="landing_1p">Landing — 1-page + light integrations</option>
         <option value="demo_express">Demo / Express — sub–5 min path (skips heavy content + defers modules)</option>
       </select>
+      <p id="dynasty-archetype-hint" style="display:none;font-size:11px;color:var(--gold);margin:0 0 10px;max-width:420px;line-height:1.45">Enterprise full and Authority packages require Professional tier or higher.</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
-          <input type="checkbox" id="dynasty-plain-lang" style="accent-color:var(--gold);margin-top:2px" />
+          <input type="checkbox" id="dynasty-plain-lang" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
           <span><strong style="color:var(--tx)">Plain-language companion docs</strong> — adds <code style="font-size:10px">docs/plain/</code> summaries (technical originals unchanged).</span>
         </label>
-        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
-          <input type="checkbox" id="dynasty-vertical-tool" style="accent-color:var(--gold);margin-top:2px" />
+        <label id="dynasty-vertical-tool-wrap" style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
+          <input type="checkbox" id="dynasty-vertical-tool" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
           <span><strong style="color:var(--tx)">Niche vertical tool add-on</strong> — scaffold for a pain-point workflow (e.g. blueprint takeoff <em>assist</em>). Professional+ tiers. Not a binding bid.</span>
         </label>
       </div>
-      <textarea id="dynasty-vertical-spec" class="ti" rows="3" placeholder="Optional: describe the niche workflow (e.g. Erie concrete — blueprint photos → quantity line items + editable assumptions)" style="width:100%;margin-top:10px;font-size:12px"></textarea>
+      <textarea id="dynasty-vertical-spec" class="ti" rows="3" placeholder="Optional: describe the niche workflow (e.g. Erie concrete — blueprint photos → quantity line items + editable assumptions)" style="width:100%;margin-top:10px;font-size:12px" onblur="saveBuildProfileToStorage()"></textarea>
     </div>
 
     <!-- Review -->
@@ -2245,6 +2246,66 @@ function saveBuildProfileToStorage() {
   try { localStorage.setItem('dynasty_build_profile', JSON.stringify(getBuildProfile())); } catch {}
 }
 
+function tierRank(t) {
+  const r = { free: 0, foundation: 1, starter: 1, professional: 2, enterprise: 3, managed: 3 };
+  return r[t] ?? 0;
+}
+function archetypeMinTierRank(arch) {
+  if (arch === 'enterprise_full' || arch === 'authority_site') return 2;
+  return 0;
+}
+function applyBuildPackageTierConstraints() {
+  const tr = tierRank(getUserTier());
+  const sel = document.getElementById('dynasty-archetype');
+  const hint = document.getElementById('dynasty-archetype-hint');
+  if (!sel) return;
+  let needReset = false;
+  for (const opt of sel.options) {
+    const need = archetypeMinTierRank(opt.value);
+    opt.disabled = tr < need;
+    if (opt.disabled && opt.selected) needReset = true;
+  }
+  if (needReset) {
+    const first = [...sel.options].find(o => !o.disabled);
+    if (first) {
+      sel.value = first.value;
+      saveBuildProfileToStorage();
+    }
+  }
+  if (hint) {
+    const show = tr < 2;
+    hint.style.display = show ? 'block' : 'none';
+  }
+  const vt = document.getElementById('dynasty-vertical-tool');
+  const vw = document.getElementById('dynasty-vertical-tool-wrap');
+  if (vt) {
+    const allow = tr >= 2;
+    vt.disabled = !allow;
+    if (!allow && vt.checked) {
+      vt.checked = false;
+      saveBuildProfileToStorage();
+    }
+    if (vw) vw.style.opacity = allow ? '1' : '0.5';
+  }
+}
+function qaPlainLanguageHeuristic(files) {
+  const whitelist = new Set(['LLC','EIN','URL','SEO','IRS','SBA','GDP','KPI','API','USA','COGS','CAC','LTV','MRR','ARR','NDA','DPA','GDPR','CCPA','PCI','B2B','B2C','SMB','ROI','EBITDA','VC','IPO','RFP','SKU','FAQ','UI','UX','AI','ML','HR','IT','OKR','YoY','QoQ','CAGR','NPS','CSAT']);
+  const notes = [];
+  for (const path of Object.keys(files)) {
+    if (!path.startsWith('docs/plain/') || !path.endsWith('.md') || path.includes('QA-NOTES') || path.includes('START-HERE')) continue;
+    const text = files[path] || '';
+    const chunks = text.split(/[.!?]+\s+/).filter(s => s.trim().length > 30);
+    const avgLen = chunks.length ? chunks.reduce((a, s) => a + s.trim().split(/\s+/).length, 0) / chunks.length : 0;
+    const acr = [...text.matchAll(/\b([A-Z]{2,6})\b/g)].map(m => m[1]).filter(w => !whitelist.has(w) && /^[A-Z]+$/.test(w));
+    const uniq = [...new Set(acr)].slice(0, 12);
+    if (avgLen > 22) notes.push(path + ': avg ~' + avgLen.toFixed(0) + ' words/sentence — simplify for 8th–10th grade');
+    if (uniq.length) notes.push(path + ': possible unexplained acronyms: ' + uniq.join(', '));
+  }
+  if (notes.length) {
+    files['docs/plain/QA-NOTES.md'] = '# Plain-language QA (heuristic)\n\n' + notes.map(n => '- ' + n).join('\n') + '\n\nThis is automated screening only — not a readability certificate. Technical sources in `/` and `docs/` remain authoritative.\n';
+  }
+}
+
 // White-label helper
 function isWhiteLabel() { return localStorage.getItem('dynasty_white_label') === 'true'; }
 function getBrand() { return isWhiteLabel() ? '' : 'Dynasty Empire'; }
@@ -2295,6 +2356,7 @@ async function enterBuilder() {
   if (header) header.style.display = 'flex';
   const modeScreen = document.getElementById('mode-screen');
   if (modeScreen) modeScreen.style.display = 'block';
+  try { applyBuildPackageTierConstraints(); } catch {}
 }
 
 async function startCheckout(plan) {
@@ -2977,6 +3039,7 @@ function showConfigScreen() {
     const vs = document.getElementById('dynasty-vertical-spec');
     if (vs && bp.verticalToolSpec) vs.value = bp.verticalToolSpec;
   } catch {}
+  applyBuildPackageTierConstraints();
 }
 
 function advanceFromFrameworks() {
@@ -7532,6 +7595,26 @@ export const nicheConfig = {
       }catch(e){setP('niche','sk',e.message);}
     }
 
+    const _v4BpFe = getBuildProfile();
+    if (V2_DEPLOY_TARGET === 'fullstack' && feFiles && feFiles['src/app/page.tsx']) {
+      const _nm = String(inf.name || 'Project').replace(/`/g, '\\`');
+      if (_v4BpFe.verticalTool) {
+        feFiles['src/app/tool/takeoff/layout.tsx'] = `import type { Metadata } from 'next';\nexport const metadata: Metadata = { title: 'Takeoff assist — ${_nm}' };\nexport default function TakeoffLayout({ children }: { children: React.ReactNode }) {\n  return <div className="min-h-screen bg-zinc-950 text-zinc-100 antialiased">{children}</div>;\n}\n`;
+        feFiles['src/app/tool/takeoff/page.tsx'] = `'use client';\nimport { useState } from 'react';\nimport { AlertTriangle, FileUp } from 'lucide-react';\nexport default function TakeoffAssistPage() {\n  const [note, setNote] = useState('');\n  return (\n    <main className="max-w-3xl mx-auto px-4 py-10">\n      <h1 className="text-2xl font-semibold text-white mb-2">Takeoff assist (draft)</h1>\n      <p className="text-sm text-amber-400 mb-6 flex gap-2 items-start"><AlertTriangle className="shrink-0 mt-0.5" size={18} aria-hidden /> Not a binding bid or engineered estimate. A qualified operator must confirm quantities and pricing before quoting.</p>\n      <label className="block text-sm text-zinc-400 mb-2">Job notes (optional)</label>\n      <textarea value={note} onChange={(e) => setNote(e.target.value)} className="w-full rounded border border-zinc-700 bg-zinc-900 p-3 text-sm text-zinc-200 mb-6 min-h-[100px]" />\n      <div className="border border-dashed border-zinc-600 rounded-lg p-8 text-center text-zinc-500 text-sm">\n        <FileUp className="mx-auto mb-2 opacity-60" aria-hidden />\n        Wire uploads to object storage + vision API — see docs/VERTICAL-TOOL-SCOPE.md\n      </div>\n    </main>\n  );\n}\n`;
+        feFiles['docs/VERTICAL-TOOL-SCHEMA.sql'] = `-- V4 vertical tool reference (apply with your migration tool)\nCREATE TABLE IF NOT EXISTS vertical_jobs (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  created_at TIMESTAMPTZ DEFAULT now(),\n  status TEXT DEFAULT 'draft',\n  title TEXT,\n  meta JSONB DEFAULT '{}'\n);\nCREATE TABLE IF NOT EXISTS vertical_line_items (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  job_id UUID REFERENCES vertical_jobs(id) ON DELETE CASCADE,\n  label TEXT,\n  quantity NUMERIC,\n  unit TEXT,\n  confidence NUMERIC,\n  user_verified BOOLEAN DEFAULT false,\n  sort_order INT DEFAULT 0\n);\n`;
+      }
+      if (_v4BpFe.archetype === 'starter_5p') {
+        const mk = (title, body) => `import Link from 'next/link';\nexport default function Page() {\n  return (\n    <main className="max-w-3xl mx-auto px-4 py-16">\n      <Link href="/" className="text-sm text-gray-500 hover:text-gray-800">Home</Link>\n      <h1 className="text-3xl font-bold mt-4 text-gray-900">${title}</h1>\n      <p className="mt-4 text-gray-600">${body}</p>\n    </main>\n  );\n}\n`;
+        feFiles['src/app/about/page.tsx'] = mk('About', _nm + ' — replace with your story and credentials.');
+        feFiles['src/app/services/page.tsx'] = mk('Services', 'List services and packages; align with GTM-PLAYBOOK.md.');
+        feFiles['src/app/pricing/page.tsx'] = mk('Pricing', 'Publish tiers; sync with REVENUE-MODEL.md and live billing.');
+        feFiles['src/app/contact/page.tsx'] = mk('Contact', 'Add your form, booking link, or support email.');
+      }
+      if (_v4BpFe.archetype === 'landing_1p') {
+        feFiles['docs/SITE-ARCHETYPE-LANDING.md'] = `# Landing (1-page) package\n\nPrimary story lives on \`/\`. Remove or hide secondary marketing routes if you want a strict single-page experience; keep any required legal links.\n`;
+      }
+    }
+
     const files={
       'DESIGN.md':df.design_md,'CLAUDE.md':df.claude_md,
       ...(isAuthority&&nc?.niche_config?{'src/config/niche.config.ts':nc.niche_config}:{}),
@@ -8078,9 +8161,13 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
     // Documents are generated in parallel batches using Promise.allSettled.
 
     updateGlobalProgress(9, 14, 'Phase 9 of 14 · Business Depth Documents');
+    let depthDocsGenerated = 0;
+    if (_v4SkipHeavy) {
+      addP('depth-docs', 'Business depth documents', 'Skipped (Demo / Express — lean bundle)');
+      setP('depth-docs', 'sk', 'Full ~78-doc depth pack deferred; switch archetype for complete export');
+    } else {
     addP('depth-docs', 'Generating business depth documents', '78 documents across 8 domains');
     setP('depth-docs', 'run');
-    let depthDocsGenerated = 0;
 
     // ── CRITICAL: 9 foundational business documents ────────────────────────
     const criticalDocs = [
@@ -9861,7 +9948,7 @@ await Promise.allSettled([
 // ── END: All 78 business depth documents implemented ────────────
 
     setP("depth-docs", "ok", `${depthDocsGenerated} business depth documents generated`);
-
+    }
 
     // ── Apply white-label if configured ─────────────────────────────────
     if (typeof isWhiteLabel === 'function' && isWhiteLabel()) {
@@ -10304,6 +10391,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
 - [Revenue model](./REVENUE-MODEL.md)
 - [Go-to-market](./GTM-PLAYBOOK.md)
 `;
+        qaPlainLanguageHeuristic(files);
         setP('plain', 'ok', 'docs/plain/*');
       }
 
@@ -10883,7 +10971,7 @@ function showDone(inf,repo,fc,mtasks){
   const beFiles=['backend/main.py','backend/requirements.txt','backend/Dockerfile','docker-compose.yml'];
   const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
   const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];
-  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','BANK-FUNDING-PLAYBOOK.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html','PMF-MEASUREMENT.md','UNSCALABLE-PLAYBOOK.md','docs/OPERATING-AGREEMENT-TEMPLATE.md','docs/IP-ASSIGNMENT.md','ENTITY-SELECTION.md','RUNWAY-CALCULATOR.md','CUSTOMER-SUCCESS.md','HIRING-PLAN.md','FOUNDER-AGREEMENT.md','FUNDRAISING-STRATEGY.md','ORG-DESIGN.md','OPERATIONS-PLAYBOOK.md','PIVOT-FRAMEWORK.md','COHORT-ANALYSIS.md','RETENTION-PLAYBOOK.md','CAP-TABLE-MODEL.md','TERM-SHEET-TEMPLATES.md','CRISIS-PLAYBOOK.md','EXPERIMENT-FRAMEWORK.md','GROWTH-EXPERIMENTS.md','CUSTOMER-DEVELOPMENT.md','TAX-STRATEGY.md','PRICING-STRATEGY.md','docs/NDA-TEMPLATE.md','docs/CONTRACTOR-AGREEMENT.md','docs/OFFER-LETTER-TEMPLATE.md','docs/GDPR-IMPLEMENTATION.md','CHANNEL-PLAYBOOKS.md','REFERRAL-PROGRAM.md','LAUNCH-CHECKLIST.md','CHURN-REDUCTION.md','CULTURE.md','EQUITY-GUIDE.md','PERFORMANCE-FRAMEWORK.md','REMOTE-WORK-POLICY.md','ANALYTICS-INSTRUMENTATION.md','ACCESSIBILITY-PLAN.md','VALUATION-MODEL.md','SCENARIO-PLANNING.md','PARTNERSHIP-STRATEGY.md','NEGOTIATION-GUIDE.md','GOVERNANCE.md','INVESTOR-UPDATE-TEMPLATE.md','BOARD-DECK-TEMPLATE.md','WEEKLY-METRICS.md','PITCH-SCRIPT.md','NETWORK-EFFECTS.md','MARKETPLACE-STRATEGY.md','FINANCIAL-CONTROLS.md','DILUTION-MODEL.md','THREE-STATEMENT-MODEL.md','COMMUNITY-STRATEGY.md','CONTENT-MARKETING-PLAN.md','JTBD-INTERVIEW-GUIDE.md','PRODUCT-STRATEGY.md','AB-TESTING-FRAMEWORK.md','USER-RESEARCH-PLAN.md','TECH-DEBT-FRAMEWORK.md','I18N-STRATEGY.md','docs/BOARD-RESOLUTIONS.md','docs/DPA-TEMPLATE.md','ONBOARDING-CHECKLIST.md','COMPENSATION-BENCHMARKS.md','SUPPLY-CHAIN.md','REVENUE-RECOGNITION.md','CUSTOMER-JOURNEY-MAP.md','ZERO-TO-ONE-ASSESSMENT.md'].filter(f=>window._buildFiles?.[f]);
+  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','BANK-FUNDING-PLAYBOOK.md','docs/VERTICAL-TOOL-SCHEMA.sql','docs/SITE-ARCHETYPE-LANDING.md','docs/plain/QA-NOTES.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html','PMF-MEASUREMENT.md','UNSCALABLE-PLAYBOOK.md','docs/OPERATING-AGREEMENT-TEMPLATE.md','docs/IP-ASSIGNMENT.md','ENTITY-SELECTION.md','RUNWAY-CALCULATOR.md','CUSTOMER-SUCCESS.md','HIRING-PLAN.md','FOUNDER-AGREEMENT.md','FUNDRAISING-STRATEGY.md','ORG-DESIGN.md','OPERATIONS-PLAYBOOK.md','PIVOT-FRAMEWORK.md','COHORT-ANALYSIS.md','RETENTION-PLAYBOOK.md','CAP-TABLE-MODEL.md','TERM-SHEET-TEMPLATES.md','CRISIS-PLAYBOOK.md','EXPERIMENT-FRAMEWORK.md','GROWTH-EXPERIMENTS.md','CUSTOMER-DEVELOPMENT.md','TAX-STRATEGY.md','PRICING-STRATEGY.md','docs/NDA-TEMPLATE.md','docs/CONTRACTOR-AGREEMENT.md','docs/OFFER-LETTER-TEMPLATE.md','docs/GDPR-IMPLEMENTATION.md','CHANNEL-PLAYBOOKS.md','REFERRAL-PROGRAM.md','LAUNCH-CHECKLIST.md','CHURN-REDUCTION.md','CULTURE.md','EQUITY-GUIDE.md','PERFORMANCE-FRAMEWORK.md','REMOTE-WORK-POLICY.md','ANALYTICS-INSTRUMENTATION.md','ACCESSIBILITY-PLAN.md','VALUATION-MODEL.md','SCENARIO-PLANNING.md','PARTNERSHIP-STRATEGY.md','NEGOTIATION-GUIDE.md','GOVERNANCE.md','INVESTOR-UPDATE-TEMPLATE.md','BOARD-DECK-TEMPLATE.md','WEEKLY-METRICS.md','PITCH-SCRIPT.md','NETWORK-EFFECTS.md','MARKETPLACE-STRATEGY.md','FINANCIAL-CONTROLS.md','DILUTION-MODEL.md','THREE-STATEMENT-MODEL.md','COMMUNITY-STRATEGY.md','CONTENT-MARKETING-PLAN.md','JTBD-INTERVIEW-GUIDE.md','PRODUCT-STRATEGY.md','AB-TESTING-FRAMEWORK.md','USER-RESEARCH-PLAN.md','TECH-DEBT-FRAMEWORK.md','I18N-STRATEGY.md','docs/BOARD-RESOLUTIONS.md','docs/DPA-TEMPLATE.md','ONBOARDING-CHECKLIST.md','COMPENSATION-BENCHMARKS.md','SUPPLY-CHAIN.md','REVENUE-RECOGNITION.md','CUSTOMER-JOURNEY-MAP.md','ZERO-TO-ONE-ASSESSMENT.md'].filter(f=>window._buildFiles?.[f]);
   const buildDuration = ((Date.now() - BUILD_START_TIME) / 1000).toFixed(0);
   const compactionsUsed = BUILD_COMPACTIONS.length;
   const intelligenceNote = [
@@ -10901,8 +10989,20 @@ function showDone(inf,repo,fc,mtasks){
       _v4DemoBanner = '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:var(--rl);padding:12px 14px;margin-bottom:1rem;font-size:12px;line-height:1.55;color:var(--sec)"><strong style="color:var(--gold)">Demo / Express profile</strong> — Wall time ' + (_sec / 60).toFixed(1) + ' min · Target ≤5 min for first-pass live demo ' + (_ok ? '<span style="color:var(--grn)">(within target)</span>' : '<span style="color:var(--gold)">(over target)</span>') + '. Deferred modules: <code style="font-size:11px">BUILD-MANIFEST.json</code>.</div>';
     }
   } catch {}
+  let _v4QueueBanner = '';
+  try {
+    const def = provRes?.archetype?.deferred || [];
+    const sk = provRes?.archetype?.skipped || [];
+    if (def.length + sk.length > 0) {
+      const esc = (x) => String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const parts = [];
+      if (def.length) parts.push('<strong>Completing later</strong> (deferred modules): ' + def.map(esc).join(', '));
+      if (sk.length) parts.push('<strong>Skipped</strong> for this build profile: ' + sk.map(esc).join(', '));
+      _v4QueueBanner = '<div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.25);border-radius:var(--rl);padding:12px 14px;margin-bottom:1rem;font-size:12px;line-height:1.55;color:var(--sec)">' + parts.join('<br>') + '<br><span style="font-size:11px;color:var(--dim)">Details: <code style="font-size:11px">BUILD-MANIFEST.json</code> in your repo.</span></div>';
+    }
+  } catch {}
   d.innerHTML=`
-${_v4DemoBanner}
+${_v4DemoBanner}${_v4QueueBanner}
 <div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated · ${provRes?.results?Object.keys(provRes.results).length+' infrastructure services':''}${provRes?.modules?' + '+Object.values(provRes.modules).filter(m=>m?.ok).length+' V3 modules provisioned':' provisioned'} · ${mtasks.length} manual actions${intelligenceNote ? '<br><span style="color:var(--gold);font-size:0.78rem">' + intelligenceNote + '</span>' : ''}</p></div>
 
 ${V2_SCORECARD ? `<div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1rem">
