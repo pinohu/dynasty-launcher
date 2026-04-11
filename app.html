@@ -1029,6 +1029,31 @@ html,body{overflow-x:hidden}
       </div>
     </div>
 
+    <!-- V4: build package + plain language + vertical tool -->
+    <div class="cfg-section" id="cfg-build-profile">
+      <h3 class="cfg-label">Build package (V4)</h3>
+      <p class="cfg-desc">Pick site depth and add-ons. Smaller packages skip or defer heavy integrations — see <code style="font-size:11px">BUILD-MANIFEST.json</code> in the repo after provision.</p>
+      <select id="dynasty-archetype" class="ti" style="width:100%;max-width:420px;padding:10px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--bdr);color:var(--tx);font-size:13px;margin-bottom:12px">
+        <option value="enterprise_full">Enterprise full — all modules (default)</option>
+        <option value="authority_site">Authority / SEO-heavy site</option>
+        <option value="growth">Growth — app + most integrations</option>
+        <option value="starter_5p">Starter — 5-page marketing site depth</option>
+        <option value="landing_1p">Landing — 1-page + light integrations</option>
+        <option value="demo_express">Demo / Express — sub–5 min path (skips heavy content + defers modules)</option>
+      </select>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
+          <input type="checkbox" id="dynasty-plain-lang" style="accent-color:var(--gold);margin-top:2px" />
+          <span><strong style="color:var(--tx)">Plain-language companion docs</strong> — adds <code style="font-size:10px">docs/plain/</code> summaries (technical originals unchanged).</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
+          <input type="checkbox" id="dynasty-vertical-tool" style="accent-color:var(--gold);margin-top:2px" />
+          <span><strong style="color:var(--tx)">Niche vertical tool add-on</strong> — scaffold for a pain-point workflow (e.g. blueprint takeoff <em>assist</em>). Professional+ tiers. Not a binding bid.</span>
+        </label>
+      </div>
+      <textarea id="dynasty-vertical-spec" class="ti" rows="3" placeholder="Optional: describe the niche workflow (e.g. Erie concrete — blueprint photos → quantity line items + editable assumptions)" style="width:100%;margin-top:10px;font-size:12px"></textarea>
+    </div>
+
     <!-- Review -->
     <div class="cfg-section" id="cfg-review">
       <h3 class="cfg-label">Review</h3>
@@ -2181,6 +2206,7 @@ function autoSelectModules() {
   return mods;
 }
 function getV3Project(inf) {
+  const bp = getBuildProfile();
   return {
     name: inf.name || 'Dynasty Project', slug: inf.repo || 'dynasty-project',
     description: inf.reasoning || inf.type_label || '', type: inf.type_id || '', domain: localStorage.getItem('dynasty_custom_domain') || inf.domain || `${inf.repo}.vercel.app`,
@@ -2188,8 +2214,35 @@ function getV3Project(inf) {
     price_pro_cents: (parseInt(localStorage.getItem('dynasty_price_pro') || '49') || 49) * 100,
     price_enterprise_cents: (parseInt(localStorage.getItem('dynasty_price_enterprise') || '199') || 199) * 100,
     services: inf.type_label || '',
-    vercel_project_id: provRes?.results?.vercel?.project_id || null
+    vercel_project_id: provRes?.results?.vercel?.project_id || null,
+    vertical_tool_spec: bp.verticalToolSpec || ''
   };
+}
+
+function getBuildProfile() {
+  let stored = {};
+  try { stored = JSON.parse(localStorage.getItem('dynasty_build_profile') || '{}'); } catch { stored = {}; }
+  const elArch = document.getElementById('dynasty-archetype');
+  if (elArch) {
+    return {
+      archetype: elArch.value || stored.archetype || 'enterprise_full',
+      plainLanguage: !!(document.getElementById('dynasty-plain-lang')?.checked ?? stored.plainLanguage),
+      verticalTool: !!(document.getElementById('dynasty-vertical-tool')?.checked ?? stored.verticalTool),
+      verticalToolSpec: (document.getElementById('dynasty-vertical-spec')?.value ?? stored.verticalToolSpec ?? '').trim().slice(0, 8000),
+      v: 1
+    };
+  }
+  return {
+    archetype: stored.archetype || 'enterprise_full',
+    plainLanguage: !!stored.plainLanguage,
+    verticalTool: !!stored.verticalTool,
+    verticalToolSpec: (stored.verticalToolSpec || '').trim().slice(0, 8000),
+    v: 1
+  };
+}
+
+function saveBuildProfileToStorage() {
+  try { localStorage.setItem('dynasty_build_profile', JSON.stringify(getBuildProfile())); } catch {}
 }
 
 // White-label helper
@@ -2201,9 +2254,9 @@ const V3_TIERS = {
   free: { price: 0, label: 'Free Scoring', modules: [] },
   foundation: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
   starter: { price: 1997, label: 'Foundation ($1,997)', modules: [] },
-  professional: { price: 4997, label: 'Professional ($4,997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads'] },
-  enterprise: { price: 9997, label: 'Enterprise ($9,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify'] },
-  managed: { price: 497, label: 'Managed Ops ($497/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify'] }
+  professional: { price: 4997, label: 'Professional ($4,997)', modules: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads', 'vertical_tool'] },
+  enterprise: { price: 9997, label: 'Enterprise ($9,997)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] },
+  managed: { price: 497, label: 'Managed Ops ($497/mo)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] }
 };
 function getUserTier() {
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
@@ -2913,6 +2966,17 @@ function showConfigScreen() {
     `;
   }
   document.getElementById('config-screen').style.display = 'block';
+  try {
+    const bp = JSON.parse(localStorage.getItem('dynasty_build_profile') || '{}');
+    const a = document.getElementById('dynasty-archetype');
+    if (a && bp.archetype) a.value = bp.archetype;
+    const pl = document.getElementById('dynasty-plain-lang');
+    if (pl && bp.plainLanguage) pl.checked = true;
+    const vt = document.getElementById('dynasty-vertical-tool');
+    if (vt && bp.verticalTool) vt.checked = true;
+    const vs = document.getElementById('dynasty-vertical-spec');
+    if (vs && bp.verticalToolSpec) vs.value = bp.verticalToolSpec;
+  } catch {}
 }
 
 function advanceFromFrameworks() {
@@ -3734,6 +3798,7 @@ async function startBuild() {
   }
   
   const desc = document.getElementById('project-desc').value.trim();
+  saveBuildProfileToStorage();
   BUILD_START_TIME = Date.now();
   BUILD_COMPACTIONS = [];
   PREFLIGHT_APPROVED = false;
@@ -7552,9 +7617,14 @@ Then read DESIGN.md for visual design rules.
     // Store all generated files globally for ZIP download
     window._buildFiles = files;
 
+    const _v4SkipHeavy = getBuildProfile().archetype === 'demo_express';
+
     // ── Generate 1-Year Social Media Calendar (all build types) ──────────
     window._socialCalendarMd = '';
-    try {
+    if (_v4SkipHeavy) {
+      addP('social', 'Social media calendar', 'Skipped (Demo / Express — faster path)');
+      setP('social', 'sk', 'Use Enterprise full package for full calendar');
+    } else try {
       addP('social','Generating 1-year social media calendar (260 posts)','5 platforms × 52 weeks','⬡ Social Media');setP('social','run');
       updateEduCard('social');
       updateGlobalProgress(7, 12, 'Phase 7 of 14 · Social Media Calendar');
@@ -7609,7 +7679,10 @@ Image Prompt column: Describe a specific image that could be generated with AI (
     } catch(e) { setP('social','sk', e.message); }
 
     // ── Generate Video Walkthrough Script ───────────────────────────────
-    try {
+    if (_v4SkipHeavy) {
+      addP('video', 'Video script', 'Skipped (Demo / Express)');
+      setP('video', 'sk', 'Faster demo path');
+    } else try {
       addP('video', 'Generating video walkthrough script', '', '⬡ Video Script'); setP('video', 'run');
       updateGlobalProgress(7.5, 12, 'Phase 7.5 · Video Walkthrough Script');
       const videoScript = await aiRaw(`Generate a 5-minute Loom-style video walkthrough script for "${inf.name}" (${inf.type_label}).
@@ -7639,7 +7712,10 @@ MVP Timeline: ${inf.mvp}`, 3000, 'budget');
     } catch(e) { setP('video', 'sk', e.message); }
 
     // ── Generate A/B GTM Messaging Variants ─────────────────────────────
-    try {
+    if (_v4SkipHeavy) {
+      addP('ab', 'A/B messaging', 'Skipped (Demo / Express)');
+      setP('ab', 'sk', 'Faster demo path');
+    } else try {
       addP('ab', 'Generating A/B messaging variants', '', '⬡ A/B Test'); setP('ab', 'run');
       const abRaw = await aiRaw(`Generate 2 distinct messaging variants for "${inf.name}" (${inf.type_label}).
 
@@ -7673,7 +7749,10 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price} | Audience:
     } catch(e) { setP('ab', 'sk', e.message); }
 
     // ── Generate Investor Pitch Summary ──────────────────────────────────
-    try {
+    if (_v4SkipHeavy) {
+      addP('pitch', 'Pitch deck content', 'Skipped (Demo / Express)');
+      setP('pitch', 'sk', 'Faster demo path');
+    } else try {
       addP('pitch', 'Generating investor pitch summary', '', '⬡ Pitch Deck'); setP('pitch', 'run');
       const pitchRaw = await aiRaw(`Generate a 10-section investor pitch summary for "${inf.name}" (${inf.type_label}).
 
@@ -7701,7 +7780,10 @@ Format each section with ## heading and concise, data-rich content. No filler.`,
     } catch(e) { setP('pitch', 'sk', e.message); }
 
     // ── Generate Investor Readiness Assessment (Ben Franklin / CNP format) ──
-    try {
+    if (_v4SkipHeavy) {
+      addP('investor', 'Investor readiness', 'Skipped (Demo / Express)');
+      setP('investor', 'sk', 'Faster demo path');
+    } else try {
       addP('investor', 'Generating investor readiness assessment', '', '⬡ Investor Ready'); setP('investor', 'run');
       const scoreContext = V2_SCORECARD ? `Viability Score: ${V2_SCORECARD.composite?.toFixed?.(1) || 'N/A'}/10. Verdict: ${V2_SCORECARD.verdict || 'N/A'}. Scores: ${JSON.stringify(V2_SCORECARD.scores || {}).slice(0, 500)}` : '';
       const synthContext = FRAMEWORK_SYNTHESIS ? `Consensus: ${(FRAMEWORK_SYNTHESIS.consensus_signals || []).join('; ')}. Contradictions: ${(FRAMEWORK_SYNTHESIS.contradictions || []).join('; ')}` : '';
@@ -10120,6 +10202,50 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
         }
       }
 
+      if (getBuildProfile().plainLanguage) {
+        addP('plain', 'Plain-language companion docs', 'docs/plain/ — owner-friendly summaries');
+        setP('plain', 'run');
+        const _plainTargets = [
+          ['BUSINESS-SYSTEM.md', 'Business system'],
+          ['REVENUE-MODEL.md', 'Revenue model'],
+          ['GTM-PLAYBOOK.md', 'Go-to-market'],
+          ['SPEC.md', 'Product spec'],
+          ['FAILURE-MODES.md', 'Risk scenarios'],
+        ];
+        for (const [_pf, _plabel] of _plainTargets) {
+          if (!files[_pf]) continue;
+          try {
+            const _pout = await aiRaw(`You rewrite technical strategy content for a small business owner who is NOT an MBA.
+
+Rules:
+- 8th–10th grade reading level
+- Define acronyms on first use
+- Add a "What this means for you" bullet list at the end
+- Keep all numbers and facts; do not invent data
+
+Source (${_plabel}):
+
+${files[_pf].slice(0, 14000)}`, 6000, 'budget');
+            if (_pout && _pout.length > 200) {
+              files['docs/plain/' + _pf] = `# ${_plabel} — Plain language companion
+
+> Technical original: \`/${_pf}\` (repo root)
+
+${_pout}`;
+            }
+          } catch (_e) {}
+        }
+        files['docs/plain/START-HERE.md'] = `# Start here (plain language)
+
+Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder explains the same ideas in simpler language. For banks or investors, share the technical originals.
+
+- [Business system](./BUSINESS-SYSTEM.md)
+- [Revenue model](./REVENUE-MODEL.md)
+- [Go-to-market](./GTM-PLAYBOOK.md)
+`;
+        setP('plain', 'ok', 'docs/plain/*');
+      }
+
       const fl = Object.entries(files);
       
       // File review — show what's about to be pushed
@@ -10330,6 +10456,8 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     // ── V3 MODULE PROVISIONING ────────────────────────────────────────────
     // After deployment succeeds, provision all enabled V3 integration modules
     const v3ModulesRaw = getEnabledModules();
+    const _bpV3 = getBuildProfile();
+    if (_bpV3.verticalTool) v3ModulesRaw.vertical_tool = true;
     // Client-side tier filtering — only send modules allowed by user's tier
     const userTier = getUserTier();
     const tierAllowed = V3_TIERS[userTier]?.modules || [];
@@ -10343,7 +10471,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
     if (anyModulesEnabled) {
       const liveUrl = LAUNCH_URL || provRes?.results?.vercel?.url || `https://${inf.repo}.vercel.app`;
       const v3Project = getV3Project(inf);
-      const moduleNames = { hosting: 'Domain + Email', billing: 'Stripe Billing', email: 'Email Marketing', phone: 'Phone + Voice', sms: 'SMS Campaigns', chatbot: 'Website Chatbot', seo: 'SEO Content', video: 'Explainer Video', design: 'Design Assets', analytics: 'Analytics', leads: 'Lead Intelligence', automation: 'Automation Workflows', docs: 'Legal PDFs', crm: 'CRM Portal', directory: 'Directory', wordpress: 'WordPress', social: 'Social Scheduling' };
+      const moduleNames = { hosting: 'Domain + Email', billing: 'Stripe Billing', email: 'Email Marketing', phone: 'Phone + Voice', sms: 'SMS Campaigns', chatbot: 'Website Chatbot', seo: 'SEO Content', video: 'Explainer Video', design: 'Design Assets', analytics: 'Analytics', leads: 'Lead Intelligence', automation: 'Automation Workflows', docs: 'Legal PDFs', crm: 'CRM Portal', directory: 'Directory', wordpress: 'WordPress', social: 'Social Scheduling', vertical_tool: 'Niche vertical tool scaffold' };
       const enabledList = Object.entries(v3Modules).filter(([,v]) => v).map(([k]) => moduleNames[k] || k);
       addP('v3-start', `V3 Modules — ${enabledList.length} integrations`, enabledList.join(', '));
       setP('v3-start', 'run', 'Provisioning external services...');
@@ -10352,7 +10480,7 @@ a{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius
       try {
         const v3Resp = await fetch('/api/provision?action=provision_modules', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: localStorage.getItem('dynasty_tier') || 'foundation' })
+          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: localStorage.getItem('dynasty_tier') || 'foundation', build_profile: getBuildProfile() })
         });
         v3Results = await v3Resp.json();
         if (v3Results.ok) {
@@ -10703,7 +10831,17 @@ function showDone(inf,repo,fc,mtasks){
     compactionsUsed > 0 ? `🔗 ${compactionsUsed} phase compactions` : null,
     EXISTING_CLAUDE_MD ? '♻️ iterative update' : null,
   ].filter(Boolean).join(' · ');
+  let _v4DemoBanner = '';
+  try {
+    const _bpD = JSON.parse(localStorage.getItem('dynasty_build_profile') || '{}');
+    if (_bpD.archetype === 'demo_express' && typeof BUILD_START_TIME !== 'undefined') {
+      const _sec = (Date.now() - BUILD_START_TIME) / 1000;
+      const _ok = _sec <= 300;
+      _v4DemoBanner = '<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.35);border-radius:var(--rl);padding:12px 14px;margin-bottom:1rem;font-size:12px;line-height:1.55;color:var(--sec)"><strong style="color:var(--gold)">Demo / Express profile</strong> — Wall time ' + (_sec / 60).toFixed(1) + ' min · Target ≤5 min for first-pass live demo ' + (_ok ? '<span style="color:var(--grn)">(within target)</span>' : '<span style="color:var(--gold)">(over target)</span>') + '. Deferred modules: <code style="font-size:11px">BUILD-MANIFEST.json</code>.</div>';
+    }
+  } catch {}
   d.innerHTML=`
+${_v4DemoBanner}
 <div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated · ${provRes?.results?Object.keys(provRes.results).length+' infrastructure services':''}${provRes?.modules?' + '+Object.values(provRes.modules).filter(m=>m?.ok).length+' V3 modules provisioned':' provisioned'} · ${mtasks.length} manual actions${intelligenceNote ? '<br><span style="color:var(--gold);font-size:0.78rem">' + intelligenceNote + '</span>' : ''}</p></div>
 
 ${V2_SCORECARD ? `<div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1rem">

@@ -1689,6 +1689,99 @@ function generateCredentialsMd(project, moduleResults) {
   return lines.join('\n');
 }
 
+// ── V4: build profile + archetype gating ────────────────────────────────────
+const ARCHETYPE_KEYS = ['demo_express', 'landing_1p', 'starter_5p', 'growth', 'authority_site', 'enterprise_full'];
+const ARCHETYPE_MODULE_POLICY = {
+  demo_express: { hosting: 'R', billing: 'D', email: 'S', crm: 'S', phone: 'S', sms: 'S', chatbot: 'S', seo: 'S', video: 'S', design: 'S', analytics: 'S', leads: 'S', automation: 'S', docs: 'D', directory: 'S', wordpress: 'S', social: 'S', verify: 'R' },
+  landing_1p: { hosting: 'R', billing: 'D', email: 'D', crm: 'S', phone: 'S', sms: 'S', chatbot: 'S', seo: 'S', video: 'S', design: 'S', analytics: 'D', leads: 'S', automation: 'S', docs: 'D', directory: 'S', wordpress: 'S', social: 'S', verify: 'R' },
+  starter_5p: { hosting: 'R', billing: 'R', email: 'R', crm: 'D', phone: 'S', sms: 'S', chatbot: 'R', seo: 'D', video: 'S', design: 'S', analytics: 'R', leads: 'R', automation: 'D', docs: 'R', directory: 'S', wordpress: 'S', social: 'D', verify: 'R' },
+  growth: { hosting: 'R', billing: 'R', email: 'R', crm: 'R', phone: 'D', sms: 'R', chatbot: 'R', seo: 'R', video: 'D', design: 'D', analytics: 'R', leads: 'R', automation: 'R', docs: 'R', directory: 'D', wordpress: 'R', social: 'R', verify: 'R' },
+  authority_site: { hosting: 'R', billing: 'R', email: 'R', crm: 'R', phone: 'R', sms: 'R', chatbot: 'R', seo: 'R', video: 'R', design: 'R', analytics: 'R', leads: 'R', automation: 'R', docs: 'R', directory: 'R', wordpress: 'R', social: 'R', verify: 'R' },
+  enterprise_full: {},
+};
+
+function normalizeBuildProfile(raw) {
+  const a = raw && typeof raw === 'object' ? raw : {};
+  const arch = typeof a.archetype === 'string' ? a.archetype : 'enterprise_full';
+  const valid = ARCHETYPE_KEYS.includes(arch) ? arch : 'enterprise_full';
+  return {
+    archetype: valid,
+    plainLanguage: !!a.plainLanguage,
+    verticalTool: !!a.verticalTool,
+    verticalToolSpec: typeof a.verticalToolSpec === 'string' ? a.verticalToolSpec.slice(0, 8000) : '',
+    demoStartedAt: a.demoStartedAt || null,
+    v: 1,
+  };
+}
+
+function applyArchetypeModuleGating(enabledRaw, archetype) {
+  const policy = ARCHETYPE_MODULE_POLICY[archetype] || ARCHETYPE_MODULE_POLICY.enterprise_full;
+  const enabled = { ...enabledRaw };
+  const skipped = [];
+  const deferred = [];
+  for (const [mod, want] of Object.entries(enabledRaw)) {
+    if (mod === 'vertical_tool') continue;
+    if (!want) continue;
+    const rule = policy[mod];
+    if (rule === 'S') {
+      enabled[mod] = false;
+      skipped.push(mod);
+    } else if (rule === 'D') {
+      enabled[mod] = false;
+      deferred.push(mod);
+    }
+  }
+  return { enabled, skipped, deferred };
+}
+
+// ── mod_vertical_tool: niche pain-point scaffold (V4) ──────────────────────
+async function mod_vertical_tool(config, project, liveUrl) {
+  const results = { ok: true, service: 'vertical_tool', details: {} };
+  const GH_TOKEN = process.env.GITHUB_TOKEN;
+  const ORG_U = 'pinohu';
+  if (!GH_TOKEN || !project?.slug) {
+    results.ok = false;
+    results.error = 'GitHub token or project slug missing';
+    results.fallback = 'Add docs/VERTICAL-TOOL-SCOPE.md manually';
+    return results;
+  }
+  const ownerNotes = (project.vertical_tool_spec || '').trim();
+  const scopeMd = `# Vertical tool — scope (MVP)
+
+> **Not legal, engineering, or binding bid advice.** This scaffold supports an **assisted workflow** (e.g. blueprint takeoff) with **human review** before any dollar totals are shared with third parties.
+
+## What "assist" means
+- AI may propose **line items and quantities** with confidence scores.
+- A qualified operator must **confirm** waste %, local material pricing, and labor assumptions before quoting.
+
+## Suggested implementation
+- Route group \`src/app/tool/takeoff\` (or equivalent): uploads, review table, CSV export, on-page disclaimers.
+- Persist jobs in Postgres; use object storage for uploads.
+
+${ownerNotes ? `## Owner / niche notes\n\n${ownerNotes}\n` : ''}
+---
+*Your Deputy V4 — mod_vertical_tool*
+`;
+  try {
+    await pushFile(GH_TOKEN, ORG_U, project.slug, 'docs/VERTICAL-TOOL-SCOPE.md', scopeMd, 'docs: vertical tool scope (V4)');
+    const readme = `# Niche vertical tool (scaffold)
+
+Implement flows in \`docs/VERTICAL-TOOL-SCOPE.md\`.
+Deployed URL: ${liveUrl || '(pending)'}
+
+## Reminder
+Ship **assistive** UX only — no guaranteed estimates.
+`;
+    await pushFile(GH_TOKEN, ORG_U, project.slug, 'src/app/tool/takeoff/README.md', readme, 'feat: vertical tool scaffold (V4)');
+    results.details.paths = ['docs/VERTICAL-TOOL-SCOPE.md', 'src/app/tool/takeoff/README.md'];
+  } catch (e) {
+    results.ok = false;
+    results.error = sanitizeError(e.message);
+    results.fallback = 'Create docs/VERTICAL-TOOL-SCOPE.md manually';
+  }
+  return results;
+}
+
 // ── Module Orchestrator ─────────────────────────────────────────────────────
 async function runModules(config, project, liveUrl, enabledModules) {
   const moduleMap = {
@@ -1697,7 +1790,8 @@ async function runModules(config, project, liveUrl, enabledModules) {
     seo: mod_seo, video: mod_video, design: mod_design,
     analytics: mod_analytics, leads: mod_leads, automation: mod_automation,
     docs: mod_docs, crm: mod_crm, directory: mod_directory,
-    wordpress: mod_wordpress, social: mod_social, verify: mod_verify
+    wordpress: mod_wordpress, social: mod_social, verify: mod_verify,
+    vertical_tool: mod_vertical_tool,
   };
 
   const results = {};
@@ -1921,6 +2015,7 @@ export default async function handler(req, res) {
     return res.json({
       ai: Object.keys(config.ai||{}), comms: Object.keys(config.comms||{}),
       automation: Object.keys(config.automation||{}),
+      build_archetypes: ARCHETYPE_KEYS,
       modules_available: {
         hosting: !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
         billing: true, // Generates setup guide + .env template (no Dynasty Stripe key needed)
@@ -2967,17 +3062,22 @@ Return ONLY a valid JSON array (no markdown, no backticks):
   // ── PROVISION MODULES (V3) ──────────────────────────────────────────────
   // Called by app.html after deployment succeeds, with the live URL
   if (action === 'provision_modules') {
-    const { project, liveUrl, modules_enabled, tier, dry_run } = req.body || {};
+    const { project, liveUrl, modules_enabled, tier, dry_run, build_profile: buildProfileRaw } = req.body || {};
     if (!project || !project.slug) return res.status(400).json({ ok: false, error: 'project.slug required' });
+
+    const buildProfile = normalizeBuildProfile(buildProfileRaw || {});
+    if (project.vertical_tool_spec == null && buildProfile.verticalToolSpec) {
+      project.vertical_tool_spec = buildProfile.verticalToolSpec;
+    }
 
     // Server-side revenue gating: enforce tier limits FIRST (before dry_run)
     const TIER_MODULES = {
       free: [], // Viability scoring only — no build, no modules
       foundation: [], // Strategy docs + deployment only, no integration modules
       starter: [], // Legacy alias for foundation
-      professional: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads'],
-      enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify'],
-      managed: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify']
+      professional: ['hosting', 'billing', 'email', 'crm', 'chatbot', 'analytics', 'automation', 'leads', 'vertical_tool'],
+      enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'],
+      managed: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool']
     };
     // Server-side tier enforcement: default to foundation (most restrictive paid tier)
     // Client sends tier from localStorage, but we cap at max allowed
@@ -2993,16 +3093,34 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     }
     const gatedOut = Object.entries(rawEnabled).filter(([mod, on]) => on && !allowedModules.includes(mod)).map(([mod]) => mod);
 
+    const archetypeGating = applyArchetypeModuleGating(enabled, buildProfile.archetype);
+    let enabledAfterArchetype = archetypeGating.enabled;
+    const skippedByArchetype = archetypeGating.skipped;
+    const deferredByArchetype = archetypeGating.deferred;
+
     // Dry-run mode: return what WOULD be provisioned (with tier gating already applied)
     if (dry_run || project.slug.startsWith('test-') || project.slug === 'test') {
-      const wouldRun = Object.entries(enabled).filter(([, v]) => v).map(([k]) => k);
-      return res.json({ ok: true, dry_run: true, would_provision: wouldRun, tier: userTier,
+      const wouldRun = Object.entries(enabledAfterArchetype).filter(([, v]) => v).map(([k]) => k);
+      return res.json({
+        ok: true, dry_run: true, would_provision: wouldRun, tier: userTier, build_profile: buildProfile,
+        archetype: { skipped: skippedByArchetype, deferred: deferredByArchetype },
+        build_manifest: {
+          version: 4,
+          archetype: buildProfile.archetype,
+          plain_language: buildProfile.plainLanguage,
+          vertical_tool: buildProfile.verticalTool,
+          demo_sla_target_seconds: 300,
+          skipped_by_archetype: skippedByArchetype,
+          deferred_by_archetype: deferredByArchetype,
+        },
         gated: gatedOut.length > 0 ? { modules: gatedOut, message: `${gatedOut.length} module(s) blocked by ${userTier} tier` } : null,
-        note: 'Dry-run mode — no real API calls made. Remove dry_run flag or use a non-test slug to provision.' });
+        note: 'Dry-run mode — no real API calls made. Remove dry_run flag or use a non-test slug to provision.'
+      });
     }
 
+    const provisionT0 = Date.now();
     try {
-      const { results: moduleResults, totalCost } = await runModules(config, project, liveUrl, enabled);
+      const { results: moduleResults, totalCost } = await runModules(config, project, liveUrl, enabledAfterArchetype);
       const succeeded = Object.entries(moduleResults).filter(([, r]) => r.ok).map(([k]) => k);
       const failed = Object.entries(moduleResults).filter(([, r]) => !r.ok && r.error).map(([k, r]) => `${k}: ${r.error}`);
       const fallbacks = Object.entries(moduleResults).filter(([, r]) => !r.ok && r.fallback).map(([k, r]) => ({ module: k, instruction: r.fallback }));
@@ -3018,13 +3136,34 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         } catch {}
       }
 
+      const buildManifest = {
+        version: 4,
+        archetype: buildProfile.archetype,
+        plain_language: buildProfile.plainLanguage,
+        vertical_tool_requested: buildProfile.verticalTool,
+        tier: userTier,
+        skipped_by_archetype: skippedByArchetype,
+        deferred_by_archetype: deferredByArchetype,
+        demo_sla_target_seconds: 300,
+        provision_duration_ms: Date.now() - provisionT0,
+        generated_at: new Date().toISOString(),
+      };
+      if (GH_TOKEN && project.slug) {
+        try {
+          await pushFile(GH_TOKEN, ORG, project.slug, 'BUILD-MANIFEST.json', JSON.stringify(buildManifest, null, 2), 'docs: V4 BUILD-MANIFEST');
+        } catch {}
+      }
+
       return res.json({
         ok: true,
         modules: moduleResults,
         summary: { succeeded: succeeded.length, failed: failed.length, total: Object.keys(moduleResults).length },
         succeeded, failed, fallbacks, totalCost, tier: userTier,
+        build_profile: buildProfile,
+        archetype: { skipped: skippedByArchetype, deferred: deferredByArchetype },
+        build_manifest: buildManifest,
         gated: gatedOut.length > 0 ? { modules: gatedOut, message: `${gatedOut.length} module(s) require ${['free','foundation','starter'].includes(userTier) ? 'Professional' : 'Enterprise'} tier: ${gatedOut.join(', ')}` } : null,
-        note: `${succeeded.length} modules provisioned${failed.length ? `, ${failed.length} need manual setup` : ''}${gatedOut.length ? ` (${gatedOut.length} gated by tier)` : ''}`
+        note: `${succeeded.length} modules provisioned${failed.length ? `, ${failed.length} need manual setup` : ''}${gatedOut.length ? ` (${gatedOut.length} gated by tier)` : ''}${skippedByArchetype.length ? ` · ${skippedByArchetype.length} skipped by build profile` : ''}${deferredByArchetype.length ? ` · ${deferredByArchetype.length} deferred (finish in dashboard)` : ''}`
       });
     } catch (e) {
       return res.json({ ok: false, error: e.message, note: 'Module orchestration failed' });
