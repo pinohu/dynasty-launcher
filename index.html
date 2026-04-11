@@ -31,9 +31,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;display:flex;ali
 nav.scrolled{background:rgba(9,9,11,.95)}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--gold);font-weight:600;font-size:15px}
 .nav-logo svg{width:28px;height:28px}
-.nav-links{display:flex;gap:28px;margin:0 auto}
-.nav-links a{color:var(--sub);text-decoration:none;font-size:14px;font-weight:400;transition:color .2s}
-.nav-links a:hover{color:var(--tx)}
+.desktop-links{display:flex;gap:22px;margin:0 auto}
+.desktop-links a{color:var(--sub);text-decoration:none;font-size:14px;font-weight:400;transition:color .2s;white-space:nowrap}
+.desktop-links a:hover{color:var(--tx)}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:#0D0D15;border-bottom:1px solid rgba(255,255,255,.1);flex-direction:column;padding:16px 24px;gap:0;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.mobile-menu a{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:15px;text-decoration:none;color:var(--sub)}
+.mobile-menu a:last-child{border-bottom:none}
 .nav-right{display:flex;align-items:center;gap:16px}
 .nav-signin{color:var(--sub);font-size:14px;text-decoration:none;font-weight:400}
 .nav-signin:hover{color:var(--tx)}
@@ -42,7 +45,7 @@ nav.scrolled{background:rgba(9,9,11,.95)}
 .hamburger{display:none;background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer}
 @keyframes heroIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.hero h1,.hero .outcome-ribbon,.hero-badge{animation:none!important}}
-.hero{max-width:800px;margin:0 auto;text-align:center;padding:120px 24px 40px;position:relative}
+.hero{max-width:800px;margin:0 auto;text-align:center;padding:108px 24px 40px;position:relative}
 .outcome-ribbon{background:linear-gradient(135deg,rgba(201,168,76,.14),rgba(201,168,76,.05));border:1px solid rgba(201,168,76,.28);border-radius:14px;padding:16px 22px;max-width:620px;margin:0 auto 28px;font-size:15px;color:var(--tx);line-height:1.55;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.25);animation:heroIn .75s ease-out .05s both}
 .outcome-ribbon strong{color:var(--gold);font-weight:600}
 .hero-lead{font-size:clamp(17px,2.4vw,20px);color:var(--sub);max-width:580px;margin:0 auto 18px;font-weight:400;line-height:1.65}
@@ -51,10 +54,10 @@ nav.scrolled{background:rgba(9,9,11,.95)}
 .hero-assurance{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px auto 0;max-width:680px}
 .hero-assurance span{font-size:12px;color:var(--sub);border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.02);padding:6px 10px;border-radius:999px}
 .hero::before{content:'';position:absolute;top:20%;left:50%;width:600px;height:600px;transform:translateX(-50%);background:radial-gradient(circle,rgba(201,168,76,.04),transparent 70%);pointer-events:none;z-index:-1}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;font-size:12px;font-weight:500;color:var(--gold);border:1px solid rgba(201,168,76,.15);background:rgba(201,168,76,.05);margin-bottom:24px;animation:heroIn .6s ease-out both}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;font-size:12px;font-weight:500;color:var(--gold);border:1px solid rgba(201,168,76,.15);background:rgba(201,168,76,.05);margin-bottom:16px;animation:heroIn .6s ease-out both}
 .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.hero h1{font-family:'Playfair Display',serif;font-size:clamp(36px,6vw,72px);font-weight:400;line-height:1.08;letter-spacing:-.03em;margin-bottom:20px;animation:heroIn .7s ease-out both}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(34px,5.2vw,62px);font-weight:400;line-height:1.08;letter-spacing:-.03em;margin-bottom:16px;animation:heroIn .7s ease-out both}
 .hero h1 em{font-style:normal;color:var(--gold)}
 .hero p{font-size:18px;color:var(--sub);max-width:540px;margin:0 auto 40px;font-weight:300;line-height:1.7}
 .hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
@@ -161,9 +164,8 @@ footer{border-top:1px solid rgba(255,255,255,.12);max-width:1080px;margin:0 auto
 .fc a:hover{color:var(--gold)}
 .fbt{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--bdr);font-size:12px;color:var(--dim)}
 @media(max-width:768px){
-.nav-links{display:none;position:fixed;top:60px;left:0;right:0;background:#0D0D15;border-bottom:1px solid rgba(255,255,255,.1);flex-direction:column;padding:16px 24px;gap:0;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-.nav-links a{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:15px}
-.nav-links a:last-child{border-bottom:none}
+.desktop-links{display:none}
+.mobile-menu{top:56px}
 nav{height:56px;padding:0 16px}
 .nav-logo{font-size:14px}.nav-logo svg{width:24px;height:24px}
 .hamburger{display:block;font-size:20px}
@@ -193,6 +195,15 @@ section{padding:32px 16px}
 .cta-s{padding:32px 16px}.cta-s h2{font-size:24px}.cta-s p{font-size:14px;margin-bottom:20px}
 .trust-logos{gap:16px}.trust-logos span{font-size:11px}
 }
+@media(max-width:1200px){
+  .desktop-links{display:none}
+  .nav-right{display:none}
+  .hamburger{display:block}
+  nav{justify-content:space-between}
+}
+@media(min-width:1201px){
+  .mobile-menu{display:none!important}
+}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
 .skip-link:focus{position:fixed;left:16px;top:16px;width:auto;height:auto;overflow:visible;background:var(--gold);color:var(--ink);padding:8px 16px;border-radius:8px;font-weight:600;font-size:14px;z-index:9999}
 @media(max-width:380px){.hero h1{font-size:24px}.hero-badge{font-size:9px}.stat .num{font-size:24px}.pl .pr{font-size:28px}.ci{flex-direction:column;gap:2px}.ci strong{font-size:13px}}
@@ -202,13 +213,14 @@ section{padding:32px 16px}
 <a href="#who-its-for" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999">Skip to content</a>
 <nav id="nav" role="navigation" aria-label="Main navigation">
 <a href="/" class="nav-logo"><svg viewBox="0 0 28 28" fill="none"><path d="M14 2L26 14L14 26L2 14L14 2Z" fill="#C9A84C" opacity=".2"/><path d="M14 6L22 14L14 22L6 14L14 6Z" fill="#C9A84C"/></svg> Your Deputy</a>
-<div class="nav-links" id="mobile-nav"><a href="#who-its-for" onclick="closeNav()">Who it’s for</a><a href="/quiz" onclick="closeNav()">Diagnostic</a><a href="/for/" onclick="closeNav()">Guides</a><a href="#deliverables" onclick="closeNav()">What you get</a><a href="#how" onclick="closeNav()">How it works</a><a href="#pricing" onclick="closeNav()">Pricing</a><a href="maturity" onclick="closeNav()">What’s included</a><a href="#faq" onclick="closeNav()">FAQ</a><a href="app?returning=1" onclick="closeNav()" style="color:var(--gold);font-weight:600">Sign in</a><a href="/quiz" onclick="closeNav()" style="background:var(--gold);color:#000;border-radius:8px;text-align:center;font-weight:600;padding:12px;margin-top:8px">Take diagnostic</a></div>
+<div class="desktop-links"><a href="#who-its-for">Who it’s for</a><a href="/quiz">Diagnostic</a><a href="/for/">Guides</a><a href="#deliverables">What you get</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="maturity">What’s included</a><a href="#faq">FAQ</a></div>
 <div class="nav-right"><a href="app?returning=1" class="nav-signin">Sign in</a><a href="/quiz" class="nav-cta">Take diagnostic</a></div>
 <button class="hamburger" aria-label="Toggle navigation menu" onclick="var n=document.getElementById('mobile-nav');n.style.display=n.style.display==='flex'?'none':'flex';this.textContent=n.style.display==='flex'?'✕':'☰'">☰</button>
+<div class="mobile-menu" id="mobile-nav"><a href="#who-its-for" onclick="closeNav()">Who it’s for</a><a href="/quiz" onclick="closeNav()">Diagnostic</a><a href="/for/" onclick="closeNav()">Guides</a><a href="#deliverables" onclick="closeNav()">What you get</a><a href="#how" onclick="closeNav()">How it works</a><a href="#pricing" onclick="closeNav()">Pricing</a><a href="maturity" onclick="closeNav()">What’s included</a><a href="#faq" onclick="closeNav()">FAQ</a><a href="app?returning=1" onclick="closeNav()" style="color:var(--gold);font-weight:600">Sign in</a><a href="/quiz" onclick="closeNav()" style="background:var(--gold);color:#000;border-radius:8px;text-align:center;font-weight:600;padding:12px;margin-top:8px">Take diagnostic</a></div>
 </nav>
 <div class="hero">
 <div class="hero-badge"><span class="dot"></span> Plans lenders respect · Product customers can use · Transparent scope before you pay</div>
-<div class="outcome-ribbon">Buyers consistently say the investment feels small next to what they walk away with — <strong>often far less than 1% of the value</strong> when you count time saved, credibility gained, or capital unlocked.</div>
+<div class="outcome-ribbon">Buyers consistently say the investment feels small next to what they walk away with — <strong>often far less than 1% of equivalent value</strong>.</div>
 <h1>Your idea deserves more than <em>a pile of unfinished tasks.</em></h1>
 <p class="hero-lead">Within seconds you’ll know your best next move: prove viability, secure credibility, improve cash flow, or run a full launch.</p>
 <p class="hero-sub">Start with a free score in minutes. Buy only when the opportunity and scope are clear.</p>
