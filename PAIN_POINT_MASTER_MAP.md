@@ -4,7 +4,7 @@
 
 **Scope boundary — “full designed output”:** This map follows **`DYNASTY_LAUNCHER_V3_FINAL.md`**, **`CLAUDE.md`**, **`V4_INVESTOR_FEEDBACK.md`**, and **`index.html`** / FAQ positioning. It describes **intent and specified artifacts**, not a guarantee that every row is **fully automated in production today** (see `CLAUDE.md`: Phases 9–20 and several `mod_*` integrations remain **to build or partial**). Use **`BUILD-MANIFEST.json`**, **`OPERATIONS.md`**, and tier/archetype **run / defer / skip** defaults to see what a **given session** actually shipped.
 
-**Commercial / server alignment:** **`Foundation`** (and **`starter`**) match **`api/provision.js`** — **`TIER_MODULES.foundation` is `[]`**: no automatic integration module provisioning; **Professional+** unlocks the `allowedModules` list. Marketing on **`index.html`** is aligned to that gate. **Non-US** buyers and **enterprise procurement** (MSA/SSO) are **out of scope** for self-serve unless added explicitly.
+**Commercial / server alignment:** **`Foundation`** (and **`starter`**) match **`api/provision.js`** — **`TIER_MODULES.foundation` is `[]`**: no automatic integration module provisioning; **Professional+** unlocks the `allowedModules` list. Marketing on **`index.html`** is aligned to that gate. **Non-US** buyers and **enterprise procurement** (MSA/SSO) are **out of scope** for self-serve unless added explicitly. **Traceability:** same scope is row **`Z0`** in **`PAIN_POINT_MASTER_MAP.csv`** and Part 2 below.
 
 **Reading the delivery-mode column:**
 
@@ -289,6 +289,7 @@ Below, **Arche** shows **defaults** (R/D/S). **Tier** shows **minimum tier where
 | S1–S4 | P10 | Demo/Express archetype; `BUILD-MANIFEST.json`; `V4-DEMO-SLA.md` telemetry | All | A | G |
 | T1–T3 | P12 | Managed Operations subscription (positioning) | Add-on | All | Service |
 | U1 | P4 | Community module (Heartbeat) — config toggle | Key-gated | Optional | L/M |
+| Z0 | P1,P2,P4,P12 | Tier truth: `TIER_MODULES.foundation` []; no auto `mod_*`; non-US US-default; enterprise MSA/SSO not self-serve | F–E | All | G |
 
 ---
 
@@ -321,7 +322,9 @@ Below, **Arche** shows **defaults** (R/D/S). **Tier** shows **minimum tier where
 
 ---
 
-## Part 4 — Suggested use1. **Product:** Prioritize roadmap by counting which **IDs** are blocked by missing keys or unfinished `mod_*`.
+## Part 4 — Suggested use
+
+1. **Product:** Prioritize roadmap by counting which **IDs** are blocked by missing keys or unfinished `mod_*`.
 2. **Sales:** Map each prospect to **persona + archetype**; pre-fill **expected D/S** from V4 matrix to set expectations.
 3. **Legal/compliance:** Treat **D***, **Q***, and footer disclaimers as **non-negotiable** framing for vertical tools and AI docs.
 4. **Keep current:** When you add modules or archetypes, add **new pain IDs** and extend Part 2 rows — this file is the **single enumeration** unless superseded.
