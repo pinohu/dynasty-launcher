@@ -1400,6 +1400,9 @@ function hasHistoryAccess() {
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   return isAdmin || hasPaid || !!CLERK_USER;
 }
+function isAdminSession() {
+  return !!localStorage.getItem('dynasty_admin_token');
+}
 
 function updateHistoryButtonVisibility() {
   const btn = document.getElementById('history-btn');
@@ -11975,6 +11978,7 @@ function showBuildHistory() {
   if (!hasHistoryAccess()) { alert('Build history is available only for signed-in, paid, or admin sessions.'); return; }
   const hist = window._buildHistory || [];
   if (!hist.length) { alert('No build history yet.'); return; }
+  const canSeeInternalCost = isAdminSession();
   
   const rows = hist.slice().reverse().map((b, i) => `
     <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
@@ -11984,7 +11988,7 @@ function showBuildHistory() {
       <td style="padding:6px;font-size:12px;font-weight:700;color:${!b.composite_score?'var(--dim)':b.composite_score>=8?'var(--grn)':b.composite_score>=6?'var(--gold)':'var(--red)'}">${b.composite_score?.toFixed(1)||'—'}</td>
       <td style="padding:6px;font-size:11px;color:var(--dim)">${b.files_count} files</td>
       <td style="padding:6px;font-size:11px;color:var(--dim)">${b.words?.toLocaleString()||'—'} words</td>
-      <td style="padding:6px;font-size:11px;color:var(--dim)">$${(b.cost||0).toFixed(4)}</td>
+      ${canSeeInternalCost ? `<td style="padding:6px;font-size:11px;color:var(--dim)">$${(b.cost||0).toFixed(4)}</td>` : ''}
       <td style="padding:6px;font-size:11px">${b.live_url?'<a href="'+b.live_url+'" target="_blank" style="color:var(--gold)">Live</a>':'—'}</td>
     </tr>`).join('');
   
@@ -12003,7 +12007,7 @@ function showBuildHistory() {
         <th style="text-align:left;padding:6px;font-size:9px;color:var(--dim);text-transform:uppercase">Score</th>
         <th style="text-align:left;padding:6px;font-size:9px;color:var(--dim);text-transform:uppercase">Files</th>
         <th style="text-align:left;padding:6px;font-size:9px;color:var(--dim);text-transform:uppercase">Words</th>
-        <th style="text-align:left;padding:6px;font-size:9px;color:var(--dim);text-transform:uppercase">Cost</th>
+        ${canSeeInternalCost ? '<th style="text-align:left;padding:6px;font-size:9px;color:var(--dim);text-transform:uppercase">Cost</th>' : ''}
         <th style="text-align:left;padding:6px;font-size:9px;color:var(--dim);text-transform:uppercase">URL</th>
       </tr></thead>
       <tbody>${rows}</tbody>
@@ -12102,6 +12106,7 @@ function saveBuildHistory(inf, repo, fc) {
 function showBuildComparison() {
   const hist = window._buildHistory || [];
   if (hist.length < 2) { alert('Need at least 2 builds to compare.'); return; }
+  const canSeeInternalCost = isAdminSession();
   const a = hist[hist.length - 2];
   const b = hist[hist.length - 1];
   const row = (label, va, vb) => `<tr><td style="color:var(--dim);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;width:120px">${label}</td><td style="font-size:12px">${va}</td><td style="font-size:12px">${vb}</td></tr>`;
@@ -12120,7 +12125,7 @@ function showBuildComparison() {
         ${row('Verdict', a.verdict || '—', b.verdict || '—')}
         ${row('Files', a.files_count, b.files_count)}
         ${row('Words', a.words?.toLocaleString() || '—', b.words?.toLocaleString() || '—')}
-        ${row('Cost', '$' + (a.cost || 0).toFixed(4), '$' + (b.cost || 0).toFixed(4))}
+        ${canSeeInternalCost ? row('Cost', '$' + (a.cost || 0).toFixed(4), '$' + (b.cost || 0).toFixed(4)) : ''}
         ${row('Duration', a.duration + 's', b.duration + 's')}
         ${row('URL', a.live_url ? '<a href="' + a.live_url + '" target="_blank" style="color:var(--gold)">' + a.live_url.replace('https://','') + '</a>' : '—', b.live_url ? '<a href="' + b.live_url + '" target="_blank" style="color:var(--gold)">' + b.live_url.replace('https://','') + '</a>' : '—')}
         ${row('Infra', (a.infrastructure||[]).join(', ')||'—', (b.infrastructure||[]).join(', ')||'—')}
@@ -12136,6 +12141,7 @@ function showBuildComparison() {
 
 function generateBuildReport() {
   const inf = INFERRED;
+  const canSeeInternalCost = isAdminSession();
   const repo = `${ORG}/${inf.repo}`;
   const now = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const sc = V2_SCORECARD;
@@ -12193,7 +12199,7 @@ function generateBuildReport() {
       <tr><td class="meta-label">Template Used</td><td>${inf.type_id}</td></tr>
       <tr><td class="meta-label">Files Generated</td><td>${fileCount}</td></tr>
       <tr><td class="meta-label">Build Duration</td><td>${buildDuration}s</td></tr>
-      <tr><td class="meta-label">API Cost</td><td>$${V2_BUILD_COST?.toFixed(4) || '0.00'}</td></tr>
+      ${canSeeInternalCost ? `<tr><td class="meta-label">API Cost</td><td>$${V2_BUILD_COST?.toFixed(4) || '0.00'}</td></tr>` : ''}
       <tr><td class="meta-label">Research Sources</td><td>${research?.sources?.join(', ') || 'None'}</td></tr>
     </table>`;
 
