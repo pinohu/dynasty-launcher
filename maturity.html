@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>What ships today — Your Deputy</title>
-<meta name="description" content="Honest implementation status: codegen, deploy, and live integrations vs roadmap. Same engine — transparent scope.">
+<meta name="description" content="Honest implementation status: live, automation-ready, and key-gated integrations. Same engine — transparent scope.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://yourdeputy.com/maturity">
 <style>
-:root{--gold:#C9A84C;--ink:#09090B;--panel:#16161B;--card:#1E1E2A;--bdr:rgba(255,255,255,.12);--tx:#FAFAF9;--sub:#A1A1AA;--dim:#71717A;--live:#22C55E;--partial:#FBBF24;--spec:#60A5FA}
+:root{--gold:#C9A84C;--ink:#09090B;--panel:#16161B;--card:#1E1E2A;--bdr:rgba(255,255,255,.12);--tx:#FAFAF9;--sub:#A1A1AA;--dim:#71717A;--live:#22C55E;--partial:#FBBF24;--ready:#60A5FA}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0C0C14;color:var(--tx);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.6;padding:24px;max-width:1100px;margin:0 auto}
 a{color:var(--gold)}
@@ -21,7 +21,7 @@ th{background:var(--card);color:var(--gold);font-weight:600}
 .tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
 .tag.live{background:rgba(34,197,94,.15);color:var(--live)}
 .tag.partial{background:rgba(251,191,36,.12);color:var(--partial)}
-.tag.spec{background:rgba(96,165,250,.12);color:var(--spec)}
+.tag.ready{background:rgba(96,165,250,.12);color:var(--ready)}
 .tag.gen{background:rgba(161,161,170,.2);color:var(--sub)}
 ul{margin:12px 0 24px 20px;color:var(--sub);font-size:14px}
 .nav{margin-bottom:28px;font-size:14px}
@@ -35,22 +35,22 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 <body>
 <p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/#outcome-packages">Outcome packages</a></p>
 <h1>What’s included today</h1>
-<p class="lead">This page exists for one reason: <strong>clarity before purchase</strong>. It shows what is live now, what is partial, and what is still planned so you can decide with confidence and zero surprises.</p>
-<p class="note"><strong>Last reviewed:</strong> 2026-04-10. Foundation focuses on strategy + product + deployment, while higher tiers add broader live operational connections where available. Some integrations always require third-party approval or owner action.<br><br>Technical verification endpoint: <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
+<p class="lead">This page exists for one reason: <strong>clarity before purchase</strong>. It shows what is live now, what is automation-ready, and what is key-gated so you can decide with confidence and zero surprises.</p>
+<p class="note"><strong>Last reviewed:</strong> 2026-04-11. Foundation focuses on strategy + product + deployment, while higher tiers unlock broader autonomous runtime capacity. Integration modules are implemented in the orchestrator and run automatically; execution still depends on credentials, provider API health, and approvals.<br><br>Technical verification endpoint: <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
 
 <h2>Status legend</h2>
 <ul>
 <li><span class="tag live">Live</span> — In active use for paying builds, subject to tier, keys, and API health.</li>
-<li><span class="tag partial">Partial</span> — Some paths work; full rollout is not complete or keys are missing.</li>
+<li><span class="tag partial">Partial</span> — Works in many cases but has known provider/key dependencies or reduced fallback behavior.</li>
 <li><span class="tag gen">Codegen</span> — Client-side generation + repo files; no external API required.</li>
-<li><span class="tag spec">Spec</span> — Designed (modules, phases); implementation or keys still landing.</li>
+<li><span class="tag ready">Automation-ready</span> — Implemented server-side and auto-runs when credentials/provider APIs are available.</li>
 </ul>
 
 <div class="sum">
 <span><strong style="color:var(--live)">Live:</strong> 4</span>
-<span><strong style="color:var(--partial)">Partial:</strong> 4</span>
+<span><strong style="color:var(--partial)">Partial:</strong> 3</span>
 <span><strong style="color:var(--sub)">Codegen:</strong> 3</span>
-<span><strong style="color:var(--spec)">Spec:</strong> 16</span>
+<span><strong style="color:var(--ready)">Automation-ready:</strong> 17</span>
 </div>
 
 <details class="matrix">
@@ -69,24 +69,24 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 <tr><td>GitHub repo + push + Vercel deploy (Phase 8 class)</td><td><span class="tag live">Live</span></td><td>Private repo, preview URL, env scaffolding</td><td>CDN build follows push.</td></tr>
 <tr><td>Express path speed + clear deferrals</td><td><span class="tag live">Live</span></td><td><code>docs/V4-DEMO-SLA.md</code>, <code>BUILD-MANIFEST.json</code></td><td>Sub–5 min targets pipeline to push; some modules may defer.</td></tr>
 <tr><td>Build scope preview (before generate)</td><td><span class="tag live">Live</span></td><td>Builder UI “Expected scope” panel</td><td>Shows run / defer / skip expectations by package and tier.</td></tr>
-<tr><td>Hosting / domain / email DNS (20i class)</td><td><span class="tag spec">Spec</span></td><td><code>mod_hosting</code> in <code>provision.js</code></td><td>Phases 9–20 rollout per <code>CLAUDE.md</code>.</td></tr>
-<tr><td>Stripe billing + webhooks</td><td><span class="tag spec">Spec</span></td><td><code>mod_billing</code></td><td>Tier + package depth may defer.</td></tr>
-<tr><td>Email marketing (Acumbamail)</td><td><span class="tag spec">Spec</span></td><td><code>mod_email</code></td><td>—</td></tr>
-<tr><td>Phone + AI voice + booking</td><td><span class="tag spec">Spec</span></td><td><code>mod_phone</code></td><td>—</td></tr>
-<tr><td>SMS (SMS-iT)</td><td><span class="tag spec">Spec</span></td><td><code>mod_sms</code></td><td>—</td></tr>
-<tr><td>Chatbot (Chatbase)</td><td><span class="tag spec">Spec</span></td><td><code>mod_chatbot</code></td><td>Key often empty in config inventory.</td></tr>
-<tr><td>SEO tools +5 posts (WriterZen / NeuronWriter)</td><td><span class="tag spec">Spec</span></td><td><code>mod_seo</code></td><td>Keys often needed.</td></tr>
-<tr><td>Video + design APIs</td><td><span class="tag spec">Spec</span></td><td><code>mod_video</code>, <code>mod_design</code></td><td>Keys often needed.</td></tr>
+<tr><td>Hosting / domain / email DNS (20i class)</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_hosting</code> in <code>provision.js</code></td><td>Auto-runs when 20i credentials and domain conditions are valid.</td></tr>
+<tr><td>Stripe billing + webhooks</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_billing</code></td><td>Tier + package depth still control run/defer behavior.</td></tr>
+<tr><td>Email marketing (Acumbamail)</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_email</code></td><td>Runs with configured provider key.</td></tr>
+<tr><td>Phone + AI voice + booking</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_phone</code></td><td>Runs with supported phone/voice provider credentials.</td></tr>
+<tr><td>SMS (SMS-iT)</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_sms</code></td><td>Runs with SMS provider credentials.</td></tr>
+<tr><td>Chatbot (Chatbase)</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_chatbot</code></td><td>Runs when chatbot/LLM keys are available.</td></tr>
+<tr><td>SEO tools +5 posts (WriterZen / NeuronWriter)</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_seo</code></td><td>Runs autonomously with SEO/LLM keys.</td></tr>
+<tr><td>Video + design APIs</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_video</code>, <code>mod_design</code></td><td>Runs with creative provider keys.</td></tr>
 <tr><td>Analytics (Plerdy + PostHog)</td><td><span class="tag partial">Partial</span></td><td><code>mod_analytics</code></td><td>PostHog key present in config; Plerdy may need key.</td></tr>
-<tr><td>Lead intel (Happierleads + Salespanel)</td><td><span class="tag spec">Spec</span></td><td><code>mod_leads</code></td><td>—</td></tr>
-<tr><td>Legal PDFs + expense (Documentero + SparkReceipt)</td><td><span class="tag partial">Partial</span></td><td><code>mod_docs</code></td><td>Documentero listed; SparkReceipt often needs key.</td></tr>
-<tr><td>n8n — 7 workflows</td><td><span class="tag spec">Spec</span></td><td><code>mod_automation</code></td><td>JWT listed in config shape.</td></tr>
-<tr><td>Social calendar (Vista Social)</td><td><span class="tag spec">Spec</span></td><td><code>mod_social</code></td><td>—</td></tr>
-<tr><td>CRM (SuiteDash)</td><td><span class="tag spec">Spec</span></td><td><code>mod_crm</code></td><td>—</td></tr>
-<tr><td>Directory (Brilliant Directories)</td><td><span class="tag spec">Spec</span></td><td><code>mod_directory</code></td><td>—</td></tr>
-<tr><td>WordPress on 20i</td><td><span class="tag spec">Spec</span></td><td><code>mod_wordpress</code></td><td>—</td></tr>
-<tr><td>Post-deploy verify + BUILD-REPORT + Lighthouse class checks</td><td><span class="tag spec">Spec</span></td><td>Phase 20 in V3 spec</td><td>Smoke routes listed in spec.</td></tr>
-<tr><td>Community (Heartbeat)</td><td><span class="tag spec">Spec</span></td><td>UI toggle in V3 wireframe</td><td>Optional / key-gated.</td></tr>
+<tr><td>Lead intel (Happierleads + Salespanel)</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_leads</code></td><td>Runs with lead-intel provider keys.</td></tr>
+<tr><td>Legal PDFs + expense (Documentero + SparkReceipt)</td><td><span class="tag partial">Partial</span></td><td><code>mod_docs</code></td><td>Documentero flow is active; SparkReceipt remains key/provider-gated.</td></tr>
+<tr><td>n8n — 7 workflows</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_automation</code></td><td>Runs with n8n API credentials/JWT.</td></tr>
+<tr><td>Social calendar (Vista Social)</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_social</code></td><td>Runs with social provider key.</td></tr>
+<tr><td>CRM (SuiteDash)</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_crm</code></td><td>Runs with SuiteDash credentials and license availability.</td></tr>
+<tr><td>Directory (Brilliant Directories)</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_directory</code></td><td>Runs with directory credentials and license availability.</td></tr>
+<tr><td>WordPress on 20i</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_wordpress</code></td><td>Runs with 20i credentials and package support.</td></tr>
+<tr><td>Post-deploy verify + BUILD-REPORT + Lighthouse class checks</td><td><span class="tag ready">Automation-ready</span></td><td><code>mod_verify</code>, <code>BUILD-REPORT.json</code></td><td>Automated checks run within runtime/time budget constraints.</td></tr>
+<tr><td>Community (Heartbeat)</td><td><span class="tag ready">Automation-ready</span></td><td>UI toggle in V3 wireframe</td><td>Optional and key-gated.</td></tr>
 </tbody>
 </table>
 </details>
