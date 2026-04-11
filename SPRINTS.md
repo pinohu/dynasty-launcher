@@ -53,7 +53,7 @@
 
 ## Sprint 6: Revenue + Portfolio (Week 6, 22 hrs)
 - [ ] Your Deputy Stripe checkout (gate builds behind payment) (8h)
-- [ ] Tier gating (Starter $297 / Professional $997 / Enterprise $2,497) (4h)
+- [ ] Tier gating + Stripe-verified Checkout session for `provision_modules` (Foundation $1,997 / Professional $4,997 / Enterprise $9,997) (4h)
 - [ ] OPERATIONS.md generator (per-build, complete) (3h)
 - [ ] CREDENTIALS.md generator (masked + full versions) (2h)
 - [ ] GBP content generator (2h)

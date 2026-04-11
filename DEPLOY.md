@@ -67,5 +67,7 @@ Claude will create the project, set the API key, and trigger the first deploymen
 | Variable | Where to get it |
 |---|---|
 | `ANTHROPIC_API_KEY` | [console.anthropic.com/account/keys](https://console.anthropic.com/account/keys) |
+| `STRIPE_SECRET_KEY` | [Stripe Dashboard → API keys](https://dashboard.stripe.com/apikeys) — required for checkout and for **server-side** `provision_modules` tier verification (paid tiers must match a paid Checkout session). |
+| `PROVISION_TIER_TRUST_CLIENT` | Optional. Set to `1` only in private dev/staging to allow Professional/Enterprise module runs without a Checkout session when `STRIPE_SECRET_KEY` is set. Omit in production. |
 
 The GitHub token used by the launcher is entered in the UI settings panel — not stored in the deployment.

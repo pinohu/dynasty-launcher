@@ -10807,7 +10807,14 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       try {
         const v3Resp = await fetch('/api/provision?action=provision_modules', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ project: v3Project, liveUrl, modules_enabled: v3Modules, tier: localStorage.getItem('dynasty_tier') || 'foundation', build_profile: getBuildProfile() })
+          body: JSON.stringify({
+            project: v3Project,
+            liveUrl,
+            modules_enabled: v3Modules,
+            tier: localStorage.getItem('dynasty_tier') || 'foundation',
+            stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
+            build_profile: getBuildProfile(),
+          })
         });
         v3Results = await v3Resp.json();
         if (v3Results.ok) {

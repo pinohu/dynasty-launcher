@@ -96,6 +96,62 @@ function sanitizeError(msg) {
     .replace(/key=[a-zA-Z0-9._-]+/g, 'key=***').replace(/ghp_[a-zA-Z0-9]+/g, 'ghp_***').slice(0, 200);
 }
 
+const PROVISION_TIER_VALID = ['free', 'foundation', 'starter', 'professional', 'enterprise', 'managed'];
+
+async function fetchStripeCheckoutSession(sessionId, secretKey) {
+  if (!sessionId || !secretKey) return null;
+  const auth = Buffer.from(`${secretKey}:`).toString('base64');
+  try {
+    const r = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+      headers: { Authorization: `Basic ${auth}` },
+    });
+    const data = await r.json();
+    if (!r.ok || data.error) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function tierFromStripeCheckoutSession(session) {
+  if (!session) return null;
+  const isPaid = session.payment_status === 'paid' ||
+    (session.mode === 'subscription' && session.status === 'complete');
+  if (!isPaid) return null;
+  const plan = (session.metadata && session.metadata.plan) || 'foundation';
+  const p = String(plan).toLowerCase();
+  if (!PROVISION_TIER_VALID.includes(p)) return 'foundation';
+  return p;
+}
+
+/** When STRIPE_SECRET_KEY is set, paid tiers require a verified Checkout session unless PROVISION_TIER_TRUST_CLIENT=1 */
+async function resolveProvisionUserTier({ tier, stripeSessionId, bypassStripe }) {
+  const claimRaw = (tier || 'foundation').toLowerCase();
+  const claim = PROVISION_TIER_VALID.includes(claimRaw) ? claimRaw : 'foundation';
+  if (bypassStripe) return { userTier: claim, tierSource: 'bypass_dry_run_or_test_slug' };
+  const trustClient = process.env.PROVISION_TIER_TRUST_CLIENT === '1' || process.env.PROVISION_TIER_TRUST_CLIENT === 'true';
+  const sk = process.env.STRIPE_SECRET_KEY;
+  if (trustClient || !sk) {
+    return { userTier: claim, tierSource: trustClient ? 'client_trust_env' : 'client_no_stripe_key' };
+  }
+  const sid = (stripeSessionId || '').trim();
+  if (!sid) {
+    if (['professional', 'enterprise', 'managed'].includes(claim)) {
+      return { userTier: 'foundation', tierSource: 'capped_missing_checkout_session' };
+    }
+    return { userTier: claim, tierSource: 'client' };
+  }
+  const session = await fetchStripeCheckoutSession(sid, sk);
+  const fromStripe = tierFromStripeCheckoutSession(session);
+  if (!fromStripe) {
+    if (['professional', 'enterprise', 'managed'].includes(claim)) {
+      return { userTier: 'foundation', tierSource: 'capped_session_not_paid' };
+    }
+    return { userTier: claim, tierSource: 'client' };
+  }
+  return { userTier: fromStripe, tierSource: 'stripe_checkout' };
+}
+
 // ── V3 INTEGRATION MODULES ──────────────────────────────────────────────────
 // Each module follows: async function mod_xxx(config, project, liveUrl) → { ok, service, details, error?, fallback?, cleanup?, cost_usd? }
 
@@ -3064,7 +3120,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
   // ── PROVISION MODULES (V3) ──────────────────────────────────────────────
   // Called by app.html after deployment succeeds, with the live URL
   if (action === 'provision_modules') {
-    const { project, liveUrl, modules_enabled, tier, dry_run, build_profile: buildProfileRaw } = req.body || {};
+    const { project, liveUrl, modules_enabled, tier, dry_run, build_profile: buildProfileRaw, stripe_session_id, session_id } = req.body || {};
     if (!project || !project.slug) return res.status(400).json({ ok: false, error: 'project.slug required' });
 
     const buildProfile = normalizeBuildProfile(buildProfileRaw || {});
@@ -3081,12 +3137,12 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       enterprise: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'],
       managed: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool']
     };
-    // Server-side tier enforcement: default to foundation (most restrictive paid tier)
-    // Client sends tier from localStorage, but we cap at max allowed
-    // TODO: Verify tier against Stripe session_id for cryptographic guarantee
-    const claimedTier = tier || 'foundation';
-    const validTiers = ['free', 'foundation', 'starter', 'professional', 'enterprise', 'managed'];
-    const userTier = validTiers.includes(claimedTier) ? claimedTier : 'foundation';
+    const bypassStripeVerify = !!dry_run;
+    const { userTier, tierSource } = await resolveProvisionUserTier({
+      tier,
+      stripeSessionId: stripe_session_id || session_id,
+      bypassStripe: bypassStripeVerify,
+    });
     const allowedModules = TIER_MODULES[userTier] || TIER_MODULES.foundation;
     const rawEnabled = modules_enabled || config.modules_enabled || {};
     const enabled = {};
@@ -3104,7 +3160,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     if (dry_run || project.slug.startsWith('test-') || project.slug === 'test') {
       const wouldRun = Object.entries(enabledAfterArchetype).filter(([, v]) => v).map(([k]) => k);
       return res.json({
-        ok: true, dry_run: true, would_provision: wouldRun, tier: userTier, build_profile: buildProfile,
+        ok: true, dry_run: true, would_provision: wouldRun, tier: userTier, tier_source: tierSource, build_profile: buildProfile,
         archetype: { skipped: skippedByArchetype, deferred: deferredByArchetype },
         build_manifest: {
           version: 4,
@@ -3144,6 +3200,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         plain_language: buildProfile.plainLanguage,
         vertical_tool_requested: buildProfile.verticalTool,
         tier: userTier,
+        tier_source: tierSource,
         skipped_by_archetype: skippedByArchetype,
         deferred_by_archetype: deferredByArchetype,
         demo_sla_target_seconds: 300,
@@ -3160,7 +3217,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         ok: true,
         modules: moduleResults,
         summary: { succeeded: succeeded.length, failed: failed.length, total: Object.keys(moduleResults).length },
-        succeeded, failed, fallbacks, totalCost, tier: userTier,
+        succeeded, failed, fallbacks, totalCost, tier: userTier, tier_source: tierSource,
         build_profile: buildProfile,
         archetype: { skipped: skippedByArchetype, deferred: deferredByArchetype },
         build_manifest: buildManifest,

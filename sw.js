@@ -1,6 +1,6 @@
 // Your Deputy — Service Worker
 // Cache-first for static assets, network-first for API calls
-const CACHE_NAME = 'deputy-v1';
+const CACHE_NAME = 'deputy-v2';
 const STATIC_ASSETS = ['/', '/privacy', '/terms'];
 
 self.addEventListener('install', event => {
