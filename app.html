@@ -1224,6 +1224,7 @@ html,body{overflow-x:hidden}
         localStorage.removeItem('dynasty_admin_token');
         localStorage.removeItem('dynasty_tier');
         localStorage.removeItem('dynasty_paid_session');
+        localStorage.removeItem('dynasty_paid_token');
         window.location.href = '/';
       }
     }).catch(function() {});
@@ -1250,6 +1251,15 @@ html,body{overflow-x:hidden}
   var paidSession = localStorage.getItem('dynasty_paid_session');
   var paidAt = localStorage.getItem('dynasty_paid_at');
   if (paidSession && paidAt) {
+    if (!localStorage.getItem('dynasty_paid_token')) {
+      fetch('/api/checkout?action=verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: paidSession, user_id: CLERK_USER?.id || '' })
+      }).then(r => r.json()).then(v => {
+        if (v.ok && v.paid && v.access_token) localStorage.setItem('dynasty_paid_token', v.access_token)
+      }).catch(() => {});
+    }
     // Payment exists — allow access (server-side tier gating handles module limits)
     return;
   }
@@ -2607,12 +2617,23 @@ function getUserTier() {
 function getProvisionAuthPayload() {
   return {
     tier: getUserTier(),
-    stripe_session_id: localStorage.getItem('dynasty_paid_session') || ''
+    stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
+    access_token: localStorage.getItem('dynasty_paid_token') || '',
+    user_id: CLERK_USER?.id || ''
   };
 }
 function getProvisionAuthHeaders() {
   const adminToken = localStorage.getItem('dynasty_admin_token') || '';
   return adminToken ? { 'x-dynasty-admin-token': adminToken } : {};
+}
+function getAiAuthPayload() {
+  return {
+    tier: getUserTier(),
+    stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
+    access_token: localStorage.getItem('dynasty_paid_token') || '',
+    user_id: CLERK_USER?.id || '',
+    admin_token: localStorage.getItem('dynasty_admin_token') || ''
+  };
 }
 function isFreeTier() {
   return getUserTier() === 'free' && !localStorage.getItem('dynasty_paid_session');
@@ -2734,6 +2755,7 @@ async function startCheckout(plan) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         plan,
+        user_id: CLERK_USER?.id || '',
         training_opt_in: !!bp.aiTrainingOptIn,
         build_archetype: bp.archetype || '',
         source_segment: sourceSegment,
@@ -2811,12 +2833,13 @@ async function startCheckout(plan) {
       try {
         const verifyResp = await fetch('/api/checkout?action=verify', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sessionId })
+          body: JSON.stringify({ session_id: sessionId, user_id: CLERK_USER?.id || '' })
         });
         const vd = await verifyResp.json();
         if (vd.ok && vd.paid) {
           // Payment confirmed by Stripe — use tier from Stripe metadata, NOT URL
           localStorage.setItem('dynasty_paid_session', sessionId);
+          if (vd.access_token) localStorage.setItem('dynasty_paid_token', vd.access_token);
           localStorage.setItem('dynasty_paid_at', new Date().toISOString());
           localStorage.setItem('dynasty_tier', vd.plan || 'foundation');
           trackEvent('checkout_paid_verified', {
@@ -2828,13 +2851,16 @@ async function startCheckout(plan) {
           });
           enterBuilder();
         } else {
+          localStorage.removeItem('dynasty_paid_token');
           alert('Payment verification failed. Please contact support if you were charged.');
         }
       } catch (e) {
+        localStorage.removeItem('dynasty_paid_token');
         alert('Could not verify payment. Please try again or contact support.');
       }
     })();
   } else if (payment === 'cancelled') {
+    localStorage.removeItem('dynasty_paid_token');
     trackEvent('checkout_cancelled', {
       source_segment: params.get('segment') || '',
       selected_plan: params.get('plan') || ''
@@ -3632,9 +3658,7 @@ async function aiRawWithModel(prompt, modelId, max = 4000) {
           model: useModel,
           max_tokens: max,
           messages: [{ role: 'user', content: prompt }],
-          tier: getUserTier(),
-          stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
-          user_id: CLERK_USER?.id || '',
+          ...getAiAuthPayload(),
           usage_context: freeTier ? 'free_scoring' : 'standard'
         })
       });
@@ -4540,9 +4564,7 @@ async function handleImageUpload(file) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1500,
-        tier: getUserTier(),
-        stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
-        user_id: CLERK_USER?.id || '',
+        ...getAiAuthPayload(),
         usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         messages: [{
           role: 'user',
@@ -4717,9 +4739,7 @@ async function handleVideoUpload(file) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
-        tier: getUserTier(),
-        stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
-        user_id: CLERK_USER?.id || '',
+        ...getAiAuthPayload(),
         usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         messages: [{
           role: 'user',
@@ -4760,9 +4780,7 @@ async function handleDocUpload(file) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514', max_tokens: 1500,
-          tier: getUserTier(),
-          stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
-          user_id: CLERK_USER?.id || '',
+          ...getAiAuthPayload(),
           usage_context: isFreeTier() ? 'free_scoring' : 'standard',
           messages: [{
             role: 'user',
@@ -4827,9 +4845,7 @@ Ask ONE question at a time. Be conversational and encouraging. After 3-5 exchang
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514', max_tokens: 500,
-        tier: getUserTier(),
-        stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
-        user_id: CLERK_USER?.id || '',
+        ...getAiAuthPayload(),
         usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         system: systemPrompt,
         messages: convoHistory,
@@ -5043,9 +5059,7 @@ Available Dynasty tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TO
   try{
     const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:V2_MODEL,max_tokens:1200,
-        tier: getUserTier(),
-        stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
-        user_id: CLERK_USER?.id || '',
+        ...getAiAuthPayload(),
         usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         messages:[{role:'user',content:`Analyze this project description and infer all configuration. Return ONLY valid JSON.
 
@@ -5364,7 +5378,7 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
 ` : '';
       const r = await fetch('/api/ai', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: useModel, max_tokens: max, tier: getUserTier(), stripe_session_id: localStorage.getItem('dynasty_paid_session') || '', user_id: CLERK_USER?.id || '', usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: qualityPrimer + prompt }] })
+        body: JSON.stringify({ model: useModel, max_tokens: max, ...getAiAuthPayload(), usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: qualityPrimer + prompt }] })
       });
       if (r.status === 429) {
         // Rate limited — wait and try next model
@@ -5411,7 +5425,7 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
       try {
         const qr = await fetch('/api/ai', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: max, tier: getUserTier(), stripe_session_id: localStorage.getItem('dynasty_paid_session') || '', user_id: CLERK_USER?.id || '', usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: max, ...getAiAuthPayload(), usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: prompt }] })
         });
         if (qr.ok) {
           const qd = await qr.json();
@@ -5456,9 +5470,7 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
           model: useModel,
           max_tokens: max,
           messages: [{ role: 'user', content: prompt }],
-          tier: getUserTier(),
-          stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
-          user_id: CLERK_USER?.id || '',
+          ...getAiAuthPayload(),
           usage_context: isFreeTier() ? 'free_scoring' : 'standard'
         })
       });

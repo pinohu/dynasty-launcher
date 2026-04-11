@@ -187,6 +187,26 @@ async function isValidAdminToken(token) {
   return expected === hash;
 }
 
+async function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
+  if (!token) return false;
+  const secret = process.env.PAYMENT_ACCESS_SECRET || process.env.STRIPE_SECRET_KEY || '';
+  if (!secret) return false;
+  const parts = token.split(':');
+  if (parts.length !== 6) return false;
+  const [prefix, tokSessionId, tokUserId, tokTier, exp, sig] = parts;
+  if (prefix !== 'pay') return false;
+  if (tokSessionId !== (sessionId || '').trim()) return false;
+  if ((tier || '').trim() && tokTier !== String(tier).toLowerCase()) return false;
+  const reqUser = (userId || '').trim();
+  if (tokUserId !== 'anon' && reqUser && tokUserId !== reqUser) return false;
+  const expNum = parseInt(exp, 10);
+  if (!Number.isFinite(expNum) || Date.now() > expNum) return false;
+  const { createHmac } = await import('crypto');
+  const payload = `${prefix}:${tokSessionId}:${tokUserId}:${tokTier}:${exp}`;
+  const expected = createHmac('sha256', secret).update(payload).digest('hex');
+  return expected === sig;
+}
+
 // ── V3 INTEGRATION MODULES ──────────────────────────────────────────────────
 // Each module follows: async function mod_xxx(config, project, liveUrl) → { ok, service, details, error?, fallback?, cleanup?, cost_usd? }
 
@@ -2023,12 +2043,28 @@ export default async function handler(req, res) {
       payload?.project?.stripe_session_id ||
       ''
     );
+    const accessToken = String(payload.access_token || payload?.project?.access_token || '');
+    const userId = String(payload.user_id || payload?.project?.user_id || '');
     const access = await resolveProvisionUserTier({
       tier: claimTier,
       stripeSessionId,
       bypassStripe: isAdminRequest,
     });
     req._dynastyAccess = { ...access, isAdminRequest };
+    if (!isAdminRequest) {
+      const tokenOk = await isValidPaidAccessToken({
+        token: accessToken,
+        sessionId: stripeSessionId,
+        userId,
+        tier: access.userTier,
+      });
+      if (!tokenOk) {
+        return res.status(401).json({
+          ok: false,
+          error: 'Invalid paid access token. Re-verify checkout session.',
+        });
+      }
+    }
     const isPaidTier = ['foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(access.userTier);
     if (!isAdminRequest && !isPaidTier) {
       return res.status(402).json({

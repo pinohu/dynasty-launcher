@@ -53,6 +53,22 @@ const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_D
 const USAGE_TABLE = 'dynasty_ai_usage_daily';
 const PAID_TIERS = new Set(['foundation', 'starter', 'professional', 'enterprise', 'managed']);
 
+async function isValidAdminToken(token) {
+  if (!token) return false;
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey) return false;
+  const parts = token.split(':');
+  if (parts.length !== 3) return false;
+  const [prefix, expiry, hash] = parts;
+  if (prefix !== 'admin') return false;
+  const exp = parseInt(expiry, 10);
+  if (!Number.isFinite(exp) || Date.now() > exp) return false;
+  const { createHmac } = await import('crypto');
+  const payload = `${prefix}:${expiry}`;
+  const expected = createHmac('sha256', adminKey).update(payload).digest('hex');
+  return expected === hash;
+}
+
 function getClientIp(req) {
   const fwd = req.headers['x-forwarded-for'];
   if (typeof fwd === 'string' && fwd.trim()) return fwd.split(',')[0].trim();
@@ -152,6 +168,26 @@ function paidTierFromSession(session) {
   const plan = String(session.metadata?.plan || 'foundation').toLowerCase();
   if (!PAID_TIERS.has(plan)) return null;
   return plan;
+}
+
+async function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
+  if (!token) return false;
+  const secret = process.env.PAYMENT_ACCESS_SECRET || process.env.STRIPE_SECRET_KEY || '';
+  if (!secret) return false;
+  const parts = token.split(':');
+  if (parts.length !== 6) return false;
+  const [prefix, tokSessionId, tokUserId, tokTier, exp, sig] = parts;
+  if (prefix !== 'pay') return false;
+  if (tokSessionId !== (sessionId || '').trim()) return false;
+  if ((tier || '').trim() && tokTier !== String(tier).toLowerCase()) return false;
+  const reqUser = (userId || '').trim();
+  if (tokUserId !== 'anon' && reqUser && tokUserId !== reqUser) return false;
+  const expNum = parseInt(exp, 10);
+  if (!Number.isFinite(expNum) || Date.now() > expNum) return false;
+  const { createHmac } = await import('crypto');
+  const payload = `${prefix}:${tokSessionId}:${tokUserId}:${tokTier}:${exp}`;
+  const expected = createHmac('sha256', secret).update(payload).digest('hex');
+  return expected === sig;
 }
 
 function getApiKey(provider, config) {
@@ -304,16 +340,30 @@ export default async function handler(req, res) {
   const requestedModel = (body.model || 'claude-sonnet-4-20250514').toString();
   const claimedTier = (body.tier || 'free').toString().toLowerCase();
   const stripeSessionId = (body.stripe_session_id || body.session_id || '').toString().trim();
+  const accessToken = (body.access_token || '').toString().trim();
+  const adminToken = (body.admin_token || '').toString().trim();
   const userId = (body.user_id || '').toString().trim();
   const actorKey = userId ? `u:${userId}` : `ip:${getClientIp(req)}`;
   let model = requestedModel;
+  const adminBypass = await isValidAdminToken(adminToken);
 
-  if (usageContext !== 'free_scoring') {
+  if (usageContext !== 'free_scoring' && !adminBypass) {
     const session = await fetchStripeCheckoutSession(stripeSessionId);
     const paidTier = paidTierFromSession(session);
     if (!paidTier) {
       return res.status(402).json({
         error: 'Paid access verification required for non-free AI usage.',
+      });
+    }
+    const tokenOk = await isValidPaidAccessToken({
+      token: accessToken,
+      sessionId: stripeSessionId,
+      userId,
+      tier: paidTier,
+    });
+    if (!tokenOk) {
+      return res.status(401).json({
+        error: 'Invalid paid access token. Re-verify checkout session.',
       });
     }
     if (claimedTier !== 'free' && claimedTier !== paidTier && !(claimedTier === 'starter' && paidTier === 'foundation')) {

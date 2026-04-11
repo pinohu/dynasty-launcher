@@ -4,6 +4,24 @@
 
 const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://yourdeputy.com';
+const ACCESS_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+function getClientIp(req) {
+  const fwd = (req.headers['x-forwarded-for'] || '').toString();
+  return fwd.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
+}
+
+async function signPaidAccessToken({ sessionId, userId, plan }) {
+  const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET || '';
+  if (!secret || !sessionId) return null;
+  const uid = (userId || '').trim() || 'anon';
+  const tier = (plan || 'foundation').toString().toLowerCase();
+  const exp = Date.now() + ACCESS_TOKEN_TTL_MS;
+  const payload = `pay:${sessionId}:${uid}:${tier}:${exp}`;
+  const { createHmac } = await import('crypto');
+  const sig = createHmac('sha256', secret).update(payload).digest('hex');
+  return `${payload}:${sig}`;
+}
 
 async function stripePost(endpoint, params) {
   const auth = Buffer.from(`${STRIPE_SECRET}:`).toString('base64');
@@ -37,7 +55,7 @@ export default async function handler(req, res) {
   if (action === 'create_session') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Stripe not configured' });
 
-    const { plan, email, training_opt_in, build_archetype, source_segment, diagnostic_session_id, recommended_plan } = req.body || {};
+    const { plan, email, user_id, training_opt_in, build_archetype, source_segment, diagnostic_session_id, recommended_plan } = req.body || {};
 
     const tiers = {
       foundation: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations; typically tens of thousands of words, varies by session). SBA business plan, investor readiness, cap table themes, tax strategy. Production app + repo deploy. No automatic server-side integration module provisioning on Foundation — use OPERATIONS.md or upgrade to Professional+. $71K–$131K equivalent value.' },
@@ -61,6 +79,7 @@ export default async function handler(req, res) {
         `metadata[source_segment]=${enc((source_segment || '').slice(0, 64))}`,
         `metadata[diagnostic_session_id]=${enc((diagnostic_session_id || '').slice(0, 96))}`,
         `metadata[recommended_plan]=${enc((recommended_plan || '').slice(0, 48))}`,
+        `metadata[user_id]=${enc((user_id || '').slice(0, 96))}`,
         `line_items[0][price_data][currency]=usd`,
         `line_items[0][price_data][unit_amount]=${tierDef.amount}`,
         `line_items[0][price_data][product_data][name]=${enc(tierDef.name)}`,
@@ -83,6 +102,7 @@ export default async function handler(req, res) {
           `metadata[source_segment]=${enc((source_segment || '').slice(0, 64))}`,
           `metadata[diagnostic_session_id]=${enc((diagnostic_session_id || '').slice(0, 96))}`,
           `metadata[recommended_plan]=${enc((recommended_plan || '').slice(0, 48))}`,
+          `metadata[user_id]=${enc((user_id || '').slice(0, 96))}`,
           'line_items[0][price_data][currency]=usd',
           'line_items[0][price_data][unit_amount]=49700',
           `line_items[0][price_data][product_data][name]=${enc('Your Deputy — Managed Automation Runtime')}`,
@@ -108,14 +128,24 @@ export default async function handler(req, res) {
   if (action === 'verify') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Stripe not configured' });
 
-    const { session_id } = req.body || {};
+    const { session_id, user_id } = req.body || {};
     if (!session_id) return res.json({ ok: false, error: 'session_id required' });
 
     try {
       const session = await stripeGet(`checkout/sessions/${session_id}`);
       if (session.error) return res.json({ ok: false, error: session.error.message });
+      const sessionUserId = (session.metadata?.user_id || '').toString().trim();
+      const requestUserId = (user_id || '').toString().trim();
+      if (sessionUserId && requestUserId && sessionUserId !== requestUserId) {
+        return res.status(403).json({ ok: false, error: 'Session ownership mismatch' });
+      }
       const isPaid = session.payment_status === 'paid' ||
                      (session.mode === 'subscription' && session.status === 'complete');
+      const accessToken = isPaid ? await signPaidAccessToken({
+        sessionId: session_id,
+        userId: requestUserId || sessionUserId || '',
+        plan: session.metadata?.plan || 'foundation',
+      }) : null;
       return res.json({
         ok: true,
         paid: isPaid,
@@ -125,6 +155,8 @@ export default async function handler(req, res) {
         customer_email: session.customer_email || session.customer_details?.email,
         amount: session.amount_total,
         currency: session.currency,
+        access_token: accessToken,
+        access_token_expires_in_ms: accessToken ? ACCESS_TOKEN_TTL_MS : 0,
       });
     } catch (e) {
       return res.json({ ok: false, error: e.message });
