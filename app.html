@@ -10781,7 +10781,7 @@ await Promise.allSettled([
     // ── FINAL BUILD VALIDATION GATE — runs before ANY files are pushed ──────
     // This catches ALL known Vercel build-breaking patterns permanently.
     // ══════════════════════════════════════════════════════════════════════════
-    (function validateFilesBeforePush() {
+    await (async function validateFilesBeforePush() {
       const isNextJs = V2_DEPLOY_TARGET === 'fullstack' ||
         (inf.stack||[]).some(s => s.toLowerCase().includes('next'));
 
@@ -11262,6 +11262,149 @@ export default function NotFound() {
         const _nf = _mkNotFoundPage();
         files['src/app/not-found.tsx'] = _nf;
         files['src/app/[locale]/not-found.tsx'] = _nf;
+
+        // ── 9. Authority conversion quality gate (iterative until excellent) ──
+        const _qualityThreshold = Math.max(88, Math.min(98, Number(localStorage.getItem('dynasty_quality_threshold') || '92')));
+        const _qualityMaxPasses = 8;
+        const _readPage = (p) => String(files[p] || '').slice(0, 3500);
+        let _qualityScore = 0;
+        let _qualityVerdict = 'unknown';
+        addP('quality-gate', `Authority quality gate (target ${_qualityThreshold}/100)`, 'Scoring homepage and conversion routes');
+        setP('quality-gate', 'run', 'Pass 1 starting...');
+        for (let _pass = 1; _pass <= _qualityMaxPasses; _pass++) {
+          setP('quality-gate', 'run', `Pass ${_pass}/${_qualityMaxPasses} — scoring`);
+          const _auditPayload = {
+            niche: inf.type_label || 'Specialized service',
+            project: inf.name || 'Project',
+            revenue_model: inf.revenue_model || 'Subscription',
+            price_anchor: inf.price || '$49/mo',
+            pages: {
+              home: _readPage('src/app/page.tsx'),
+              pricing: _readPage('src/app/pricing/page.tsx'),
+              docs: _readPage('src/app/docs/page.tsx'),
+              about: _readPage('src/app/about/page.tsx'),
+              services: _readPage('src/app/services/page.tsx'),
+              contact: _readPage('src/app/contact/page.tsx')
+            }
+          };
+          let _recommendations = ['Increase niche specificity', 'Strengthen trust proof', 'Tighten CTA clarity'];
+          try {
+            const _raw = await aiRaw(`You are a principal CRO + UX + SEO auditor. Score this website draft for launch quality in its specific niche.
+
+Return ONLY valid JSON:
+{
+  "overall_score": 0-100,
+  "verdict": "excellent|good|weak",
+  "dimension_scores": {
+    "audience_fit": 0-100,
+    "clarity": 0-100,
+    "differentiation": 0-100,
+    "trust": 0-100,
+    "conversion": 0-100,
+    "seo_structure": 0-100,
+    "message_specificity": 0-100
+  },
+  "critical_gaps": ["... up to 6"],
+  "recommended_upgrades": ["... up to 8"]
+}
+
+Target audience and current page drafts:
+${JSON.stringify(_auditPayload, null, 2)}`, 1800, 'standard');
+            const _m = (_raw || '').match(/\{[\s\S]*\}/);
+            const _sc = _m ? safeJsonParse(_m[0]) : null;
+            _qualityScore = Number(_sc?.overall_score || 0);
+            _qualityVerdict = String(_sc?.verdict || 'unknown');
+            if (Array.isArray(_sc?.recommended_upgrades) && _sc.recommended_upgrades.length) {
+              _recommendations = _sc.recommended_upgrades.slice(0, 8);
+            }
+          } catch {}
+
+          const _recText = _recommendations.slice(0, 4).join(' · ');
+          setP(`quality-pass-${_pass}`, 'run', `Score ${_qualityScore || 0}/100 · ${_qualityVerdict || 'unknown'} · ${_recText}`);
+
+          if (_qualityScore >= _qualityThreshold && _qualityVerdict === 'excellent') {
+            setP('quality-gate', 'ok', `Passed at ${_qualityScore}/100 on pass ${_pass}`);
+            break;
+          }
+
+          setP('quality-gate', 'run', `Pass ${_pass}/${_qualityMaxPasses} scored ${_qualityScore}/100 — regenerating pages`);
+          try {
+            const _rewrite = await ai(`Regenerate high-converting, niche-specific authority pages for a Next.js App Router site.
+
+Project: ${_safeName}
+Niche: ${_safeType}
+Description: ${_safeDesc}
+Revenue model: ${_safeRevenue}
+Price anchor: ${_safePrice}
+
+Must-haves:
+1. Sound like a top-tier human copywriter, not AI boilerplate.
+2. Specific to this niche audience and pain points.
+3. Strong conversion architecture: intent-led hero, trust proof, offer clarity, objection handling, and precise CTAs.
+4. Include concrete differentiation and outcome framing.
+5. SEO-aware heading structure and metadata.
+6. No generic "SaaS template" language.
+7. Return production-quality TSX that compiles.
+
+Upgrades to enforce:
+${_recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n')}
+
+Return these files only using delimiters:
+---BEGIN:home_page_tsx---
+// src/app/page.tsx
+---END:home_page_tsx---
+
+---BEGIN:docs_page_tsx---
+// src/app/docs/page.tsx
+---END:docs_page_tsx---
+
+---BEGIN:pricing_page_tsx---
+// src/app/pricing/page.tsx
+---END:pricing_page_tsx---
+
+---BEGIN:about_page_tsx---
+// src/app/about/page.tsx
+---END:about_page_tsx---
+
+---BEGIN:services_page_tsx---
+// src/app/services/page.tsx
+---END:services_page_tsx---
+
+---BEGIN:contact_page_tsx---
+// src/app/contact/page.tsx
+---END:contact_page_tsx---`, ['home_page_tsx', 'docs_page_tsx', 'pricing_page_tsx', 'about_page_tsx', 'services_page_tsx', 'contact_page_tsx'], 9000, 'frontend');
+
+            if (_rewrite.home_page_tsx) {
+              files['src/app/page.tsx'] = _rewrite.home_page_tsx;
+              files['src/app/[locale]/(marketing)/page.tsx'] = _rewrite.home_page_tsx;
+            }
+            if (_rewrite.docs_page_tsx) {
+              files['src/app/docs/page.tsx'] = _rewrite.docs_page_tsx;
+              files['src/app/[locale]/(marketing)/docs/page.tsx'] = _rewrite.docs_page_tsx;
+            }
+            if (_rewrite.pricing_page_tsx) {
+              files['src/app/pricing/page.tsx'] = _rewrite.pricing_page_tsx;
+              files['src/app/[locale]/(marketing)/pricing/page.tsx'] = _rewrite.pricing_page_tsx;
+            }
+            if (_rewrite.about_page_tsx) {
+              files['src/app/about/page.tsx'] = _rewrite.about_page_tsx;
+              files['src/app/[locale]/(marketing)/about/page.tsx'] = _rewrite.about_page_tsx;
+            }
+            if (_rewrite.services_page_tsx) {
+              files['src/app/services/page.tsx'] = _rewrite.services_page_tsx;
+              files['src/app/[locale]/(marketing)/services/page.tsx'] = _rewrite.services_page_tsx;
+            }
+            if (_rewrite.contact_page_tsx) {
+              files['src/app/contact/page.tsx'] = _rewrite.contact_page_tsx;
+              files['src/app/[locale]/(marketing)/contact/page.tsx'] = _rewrite.contact_page_tsx;
+            }
+          } catch {}
+
+          if (_pass === _qualityMaxPasses) {
+            setP('quality-gate', 'er', `Failed quality threshold after ${_qualityMaxPasses} passes (score: ${_qualityScore}/100)`);
+            throw new Error(`Authority quality gate failed: ${_qualityScore}/100 (required ${_qualityThreshold}/100). Build halted to prevent low-quality deployment.`);
+          }
+        }
       }
 
       // ── Fix auth links: /auth/login → /sign-in, /auth/signup → /sign-up ──
