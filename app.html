@@ -5231,16 +5231,16 @@ const EDU_CONTENT = {
   g5: {
     phase: '⬡ Backend Code',
     title: 'Generating production-ready code',
-    body: 'A complete FastAPI Python backend with JWT authentication, rate limiting, CORS, Stripe webhooks, health checks, and database models. Includes Dockerfile for containerization and docker-compose for one-command deployment with PostgreSQL and Redis.',
-    tip: '💡 The backend is production-ready — not a prototype. Includes structured error handling, request ID tracking, dependency injection, and comprehensive health checks. A developer charges $5,000–15,000 for this code.',
-    facts: ['Writing JWT authentication with token refresh...','Setting up rate limiting (10 req/min on auth)...','Configuring CORS, logging, and health checks...','Building Stripe webhook handler...','Creating multi-stage Dockerfile (builder → slim)...'],
-    preview: ['from fastapi import FastAPI','app = FastAPI(title="API")','@app.post("/auth/register")','@app.get("/health")','# docker-compose up -d']
+    body: 'Most fullstack builds center on Next.js App Router plus API routes (Route Handlers) and the template data layer — not a required FastAPI service. If the fork is Python-first, you get that stack instead. SPEC.md and the repo are the source of truth; Foundation may ship stubs without live processor linkage.',
+    tip: '💡 Webhooks and billing routes appear when the tier and module run; otherwise OPERATIONS.md lists manual activation.',
+    facts: ['Scaffolding API surface per template (Next.js or forked backend)...','Wiring auth/session patterns when in scope...','Adding health or readiness routes where applicable...','Implementing or stubbing webhooks when billing is tier-gated...','Docker/compose only if this template includes them...'],
+    preview: ['// e.g. app/api/health/route.ts','export async function GET() {','  return Response.json({ ok: true })','}','// Exact paths: see SPEC.md + repo']
   },
   g7: {
     phase: '⬡ Frontend',
     title: 'Scaffolding your Next.js frontend',
     body: 'A Next.js 14 App Router frontend with TypeScript, Tailwind CSS, responsive layout, dashboard, and landing page. The design system colors and fonts from DESIGN.md are already wired into the Tailwind config.',
-    tip: '💡 Full-stack deploy means your frontend goes live immediately — real URL, real HTTPS, real CDN. A frontend developer charges $3,000–8,000 for this scaffold.',
+    tip: '💡 HTTPS and CDN apply after the host finishes the production build — latency is host-dependent, not instant from this UI.',
     facts: ['Generating responsive landing page with hero section...','Building authenticated dashboard with stat cards...','Wiring Tailwind config to your brand colors...','Setting up TypeScript with strict mode...'],
     preview: ['// src/app/page.tsx','export default function Home() {','  return (','    <Hero title={config.hero}','     cta={config.cta} />']
   },
@@ -5249,8 +5249,8 @@ const EDU_CONTENT = {
     title: 'Pushing files to your repository',
     body: 'Every generated file is being committed to your private GitHub repository. Once complete, you can clone it locally, invite collaborators, or hand it to a development team. The repo is ready for CI/CD.',
     tip: '💡 Run "gh repo clone [repo] && cd [repo] && claude" (or pi) to start building with AI assistance.',
-    facts: ['Committing design system files...','Pushing business strategy documents...','Uploading backend code and Docker configs...','Adding documentation and config files...'],
-    preview: ['feat: DESIGN.md ✓','feat: SPEC.md ✓','feat: BUSINESS-SYSTEM.md ✓','feat: backend/main.py ✓','feat: docker-compose.yml ✓']
+    facts: ['Committing design system files...','Pushing business strategy documents...','Uploading application code per template...','Adding documentation and config files...'],
+    preview: ['feat: DESIGN.md ✓','feat: SPEC.md ✓','feat: BUSINESS-SYSTEM.md ✓','feat: app/ + API routes ✓','feat: config as generated ✓']
   },
   prov: {
     phase: '⬡ Infrastructure',
@@ -5258,7 +5258,7 @@ const EDU_CONTENT = {
     body: 'When your paid tier allows it, we attempt live hooks — payments, hosting linkage, database, email lists, and related modules. Foundation focuses on deploy + docs; vendor integrations follow OPERATIONS.md or an upgrade.',
     tip: '💡 Stripe products and webhooks appear when billing provisioning succeeds and your tier permits. BUILD-MANIFEST.json records what ran vs deferred.',
     facts: ['Attempting payment product linkage (tier permitting)...','Setting up cloud project with auto-deploy...','Provisioning database when in scope...','Email/marketing lists when tier + keys allow...','Configuring monitoring when enabled...'],
-    preview: ['✓ Payments: product created','✓ Hosting: project linked','✓ Database: ready','✓ Email: list configured','⟳ Monitoring: active...']
+    preview: ['Payments: try / skip (tier + keys)...','Hosting: link or pending...','Database: if in scope...','Email/SMS: if module on...','Monitoring: optional...']
   },
   deploy: {
     phase: '⬡ Deployment',
@@ -5266,21 +5266,21 @@ const EDU_CONTENT = {
     body: 'For authority-site archetypes, we deploy the expanded template path — AI content, FAQs, and niche pages when that package is selected. Other archetypes deploy a leaner app; scope is reflected in your repo manifest.',
     tip: '💡 Time-to-URL depends on Vercel build and archetype. SEO depth matches package; see BUILD-MANIFEST.json for what this session shipped.',
     facts: ['Preparing deploy target for your site package...','Running build / template path when selected...','Writing or wiring content per archetype...','Applying SEO and schema when in scope...','Pushing to hosting and waiting on build...','Recording deferred work to BUILD-MANIFEST...'],
-    preview: ['→ Forking template...','→ Pushing niche config...','→ AI generating content...','→ Scraping local businesses...','→ Deploying to production...']
+    preview: ['→ Resolving template / archetype...','→ Applying site package config...','→ Generating or wiring routes + content...','→ Build queue on host...','→ Verify BUILD-MANIFEST + URLs...']
   },
   social: {
     phase: '⬡ Social Media',
     title: 'Creating your 1-year content calendar',
-    body: 'A complete social media strategy is being generated — 260+ posts across LinkedIn, Twitter/X, Instagram, Facebook, and TikTok. Each post is optimized for its platform with the right length, hashtags, and format.',
-    tip: '💡 The calendar exports as CSV for direct import into Buffer, Hootsuite, Later, or any scheduling tool. One year of content, ready to post.',
+    body: 'When your tier and site package include social output, we generate a large batch of platform-style posts (often 200+ ideas). Deferred or skipped modules leave partial files — check BUILD-MANIFEST and the repo.',
+    tip: '💡 CSV or bulk export depends on what this session wrote; confirm files before importing into a scheduler.',
     facts: ['Writing LinkedIn thought leadership posts...','Crafting Twitter/X hooks under 280 chars...','Creating Instagram captions with hashtag strategy...','Scripting TikTok hooks (Hook→Content→CTA)...','Generating Facebook engagement questions...'],
     preview: ['[LinkedIn] Week 1','Industry insight post...','#niche #authority #expert','','[Twitter] Week 1','Punchy hook under 280 chars']
   },
   niche: {
     phase: '⬡ Niche Config',
     title: 'Customizing for your market',
-    body: 'A complete niche configuration is being generated — SEO keywords, topic clusters, navigation structure, branding colors, author credentials, and directory categories. This single file drives every piece of content on your authority site.',
-    tip: '💡 One config file, 23 pages. Change niche.config.ts to instantly re-brand the entire site for a different market.',
+    body: 'For authority / multi-page archetypes, niche config drives SEO themes, navigation, and content scaffolding. Lean packages carry a smaller subset — compare outputs to your archetype file-count doc.',
+    tip: '💡 Page counts are indicative; V4 archetype matrices + BUILD-MANIFEST describe what shipped.',
     facts: ['Generating 12+ primary SEO keywords...','Building 5 topic cluster structures...','Setting up navigation with 5-7 main links...','Configuring directory categories...','Creating HSL color system from accent color...'],
     preview: ['site: {','  name: "Your Business"','  tagline: "Your tagline"','  domain: "yourdomain.com"','}']
   }

@@ -20,6 +20,14 @@ Done. Default Vercel URL: `dynasty-launcher.vercel.app`
 
 **Product domain vs Vercel URL:** Marketing canonicals and `sitemap.xml` use **`https://yourdeputy.com`**. Point that domain (CNAME/A) at the same Vercel project so SEO and checkout redirects stay consistent; until then, testers use the `.vercel.app` host.
 
+**Checklist (tighten production signals):**
+
+1. Vercel → Project → **Domains**: add `yourdeputy.com` (and `www` if you use it) → complete DNS at your registrar (A/CNAME as Vercel instructs).
+2. Set **`NEXT_PUBLIC_APP_URL`** (and **`CORS_ORIGIN`** if you use alternate frontends) to `https://yourdeputy.com` for Production (matches `api/checkout.js` default success URLs).
+3. Optional: **308 redirect** from `www` ↔ apex in Vercel so only one host is primary.
+4. After DNS propagates, hit `https://yourdeputy.com`, `https://yourdeputy.com/app`, and `https://yourdeputy.com/maturity` — they should match the same deployment as `dynasty-launcher.vercel.app`.
+5. Re-submit **`sitemap.xml`** in Search Console under the property you want to own (usually `https://yourdeputy.com`).
+
 To add a custom domain like `launch.sitbid.com`:
 - Vercel dashboard → Project → Settings → Domains → Add `launch.sitbid.com`
 - Add CNAME record in DNS: `launch` → `cname.vercel-dns.com`
