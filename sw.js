@@ -1,11 +1,13 @@
 // Your Deputy — Service Worker
-// Cache-first for static assets, network-first for API calls
-const CACHE_NAME = 'deputy-v2';
-const STATIC_ASSETS = ['/', '/privacy', '/terms'];
+// Network-first for HTML navigations (homepage must update after deploy).
+// Cache-first for other same-origin GETs. Network-first for /api, /app, /admin.
+const CACHE_NAME = 'deputy-v3';
+// Do not precache '/' — it caused stale homepages until users cleared site data.
+const STATIC_ASSETS = ['/privacy', '/terms'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS)).catch(() => {})
   );
   self.skipWaiting();
 });
@@ -21,18 +23,41 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  // Network-first for API calls and app (dynamic content)
+  if (url.origin !== self.location.origin) return;
+
   if (url.pathname.startsWith('/api/') || url.pathname === '/app' || url.pathname === '/admin') {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
-  // Cache-first for static pages
+
+  const accept = event.request.headers.get('accept') || '';
+  const isHtmlNavigation =
+    event.request.mode === 'navigate' ||
+    (event.request.method === 'GET' && accept.includes('text/html'));
+
+  if (isHtmlNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then(resp => {
+          const copy = resp.clone();
+          if (resp.ok) {
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)).catch(() => {});
+          }
+          return resp;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request).then(resp => {
       const clone = resp.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+      if (resp.ok) {
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+      }
       return resp;
     }))
   );
