@@ -252,12 +252,30 @@ function getApiKey(provider, config) {
 }
 
 async function callAnthropic(apiKey, body) {
+  // Never forward app auth fields (tier, admin_token, etc.) — Anthropic rejects unknown keys.
+  const payload = {
+    model: body.model,
+    max_tokens: body.max_tokens ?? 4096,
+    messages: Array.isArray(body.messages) ? body.messages : [],
+  };
+  if (body.system != null && String(body.system).length) payload.system = body.system;
+  if (typeof body.temperature === 'number') payload.temperature = body.temperature;
+  if (typeof body.top_p === 'number') payload.top_p = body.top_p;
+  if (typeof body.top_k === 'number') payload.top_k = body.top_k;
+  if (Array.isArray(body.stop_sequences) && body.stop_sequences.length) payload.stop_sequences = body.stop_sequences;
+  if (body.stream === true) payload.stream = true;
+  if (body.metadata && typeof body.metadata === 'object') payload.metadata = body.metadata;
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
-  return r.json();
+  const d = await r.json();
+  if (!r.ok) {
+    const msg = d?.error?.message || d?.message || `Anthropic request failed (${r.status})`;
+    throw new Error(msg);
+  }
+  return d;
 }
 
 async function callOpenAI(apiKey, body) {
@@ -595,6 +613,10 @@ export default async function handler(req, res) {
   try {
     const normalizedBody = { ...body, model };
     const result = await caller(apiKey, normalizedBody);
+    if (result?.error && !result?.content) {
+      const msg = typeof result.error === 'string' ? result.error : (result.error?.message || 'AI provider error');
+      return res.status(502).json({ error: msg, provider: info.provider, model });
+    }
     // Attach cost estimate to response
     const inputTokens = result.usage?.input_tokens || result.usage?.prompt_tokens || 0;
     const outputTokens = result.usage?.output_tokens || result.usage?.completion_tokens || 0;
