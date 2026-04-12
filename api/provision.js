@@ -2180,6 +2180,9 @@ export default async function handler(req, res) {
   // ── INVENTORY ─────────────────────────────────────────────────────────────
   if (action==='inventory') {
     return res.json({
+      ai: Object.keys(config.ai||{}).length ? ['available'] : [],
+      comms: Object.keys(config.comms||{}).length ? ['available'] : [],
+      automation: Object.keys(config.automation||{}).length ? ['available'] : [],
       build_archetypes: ARCHETYPE_KEYS,
       modules_available: {
         hosting: !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
@@ -2202,7 +2205,6 @@ export default async function handler(req, res) {
         verify: true
       },
       modules_enabled: config.modules_enabled || {},
-    });
     });
   }
 
