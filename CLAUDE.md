@@ -28,15 +28,16 @@ Keys in **DYNASTY_TOOL_CONFIG** (and related Vercel env vars on **dynasty-launch
 
 **Enforced in `api/provision.js`:** customer Vercel projects are **not** populated with real Clerk, Stripe, or Stripe-webhook secrets from the launcher; only **placeholders** plus non-secret routing (`NEXT_PUBLIC_APP_URL`, sign-in paths, etc.). **`api/neon.js`** `set_vercel_db` does **not** POST `DATABASE_URL` to Vercel — the customer adds it in their dashboard.
 
-## Current Build Pipeline (20 Phases)
+## Current Build Pipeline (20+ Phases)
 Phases 1-7c: Generate code + docs (client-side AI calls)
 Phase 8: Deploy to Vercel/20i (provision.js)
+Phase 8+ (Day-1 Success Kit): Onboarding dashboard, test suite, seed data, API collection, 90-day launch playbook
 Phases 9-17: Provision external services using live URL (TO BE BUILT)
 Phases 18-20: Automation, env update, verify (TO BE BUILT)
 
 ## What Exists vs What's Needed
 
-### ✅ EXISTS (Phases 1-8)
+### ✅ EXISTS (Phases 1-8+)
 - 7-model viability scoring with cross-framework synthesis
 - Design system generation (DESIGN.md, CLAUDE.md per project)
 - 13+ strategy documents (SPEC, GTM, competitive analysis, etc.)
@@ -46,6 +47,12 @@ Phases 18-20: Automation, env update, verify (TO BE BUILT)
 - GitHub repo creation + Vercel deployment + env var provisioning
 - /docs and /pricing page generation
 - .env.example generation
+- **Day-1 Success Kit** (5 AI-generated resources, no external dependencies):
+  - `public/onboard.html` — Interactive onboarding dashboard with checklist, progress bar, vendor links
+  - `src/__tests__/` + `e2e/` — Vitest unit tests, RTL component tests, Playwright e2e smoke tests
+  - `src/data/seed/` + `src/scripts/seed.ts` — Fictional seed data + executable seeder script
+  - `docs/openapi.json` + `docs/postman-collection.json` — OpenAPI 3.0 spec + Postman collection
+  - `LAUNCH-PLAYBOOK.md` — Tier-aware 90-day action plan referencing specific repo deliverables
 
 ### ❌ TO BUILD (V3 — 17 Integration Modules)
 Each module is a function in provision.js following this interface:
@@ -132,6 +139,7 @@ On **Windows PowerShell**, `curl` is an alias for `Invoke-WebRequest` — use **
 - **app.html lines 5900-6060**: Frontend generation (phases g7, g7b, g7c)
 - **app.html lines 6700-7000**: Build validation gate (8 checks)
 - **app.html lines 7100-7250**: Provisioning trigger (calls provision.js)
+- **app.html lines 9895-10291**: Day-1 Success Kit (g8_onboard, g8_tests, g8_seed, g8_api, g8_playbook)
 - **api/provision.js lines 40-65**: DYNASTY_TOOL_CONFIG parsing + inventory
 - **api/provision.js lines 735-810**: Fullstack deploy (project creation, env vars, deployment)
 - **api/provision.js lines 1030-1070**: Retry deploy logic

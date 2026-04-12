@@ -2861,6 +2861,7 @@ function updateBuildScopePreview() {
   if (bp.govContractingPack) {
     lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px"><strong>+ U.S. government contracting pack</strong> — <code style="font-size:10px">docs/GOV-READINESS.md</code> + NAICS/capabilities/RFP aids (informational; extra AI calls).</div>');
   }
+  lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px;padding-top:8px;border-top:1px solid var(--bdr)"><strong>+ Day-1 Success Kit</strong> — interactive onboarding dashboard, test suite, seed data, API collection, 90-day launch playbook (all generated, no external dependencies).</div>');
   box.innerHTML = lines.join('');
 }
 
@@ -6136,6 +6137,46 @@ const EDU_CONTENT = {
     tip: '💡 This card shows overall phase context — it will not list every sub-document.',
     facts: [],
     preview: []
+  },
+  g8ob: {
+    phase: '⬡ Onboarding',
+    title: 'Building your setup dashboard',
+    body: 'A self-contained HTML checklist that tracks which credentials and services still need setup. Open it locally or at /onboard on your site.',
+    tip: '💡 Progress is saved to localStorage — you can close and reopen without losing your place.',
+    facts: ['Mapping required credentials to checklist items...','Adding copy-to-clipboard for env var names...','Linking vendor dashboards (Clerk, Stripe, Neon)...','Generating status indicators for each service...'],
+    preview: ['☐ Set up Clerk authentication','  → clerk.com/dashboard','  → Copy: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY','☐ Connect Stripe payments']
+  },
+  g8ts: {
+    phase: '⬡ Testing',
+    title: 'Writing your test suite',
+    body: 'Vitest unit tests, React Testing Library component tests, and Playwright e2e smoke tests — all tailored to your generated code.',
+    tip: '💡 Run "npm test" to verify your code works. Run "npm run test:e2e" for browser-level smoke tests.',
+    facts: ['Writing API route tests with mock auth...','Building component render tests...','Creating data model validation tests...','Generating e2e smoke tests with Playwright...'],
+    preview: ['describe("API /v1", () => {','  it("returns 200", async () => {','    const res = await fetch("/api/v1");','    expect(res.status).toBe(200);','  });']
+  },
+  g8sd: {
+    phase: '⬡ Seed Data',
+    title: 'Generating demo content',
+    body: 'Realistic seed data for your business type — users, content, and transactions. Run the seeder script to populate your database immediately after setup.',
+    tip: '💡 Run "npm run db:seed" after connecting your database to see a populated dashboard.',
+    facts: ['Creating fictional users for your industry...','Generating sample content matching your business model...','Building transaction history for dashboard charts...','Writing executable seeder script...'],
+    preview: ['{ "name": "Jordan Rivera",','  "email": "jordan@example.com",','  "role": "admin",','  "plan": "pro" }']
+  },
+  g8api: {
+    phase: '⬡ API Docs',
+    title: 'Building API collection',
+    body: 'An OpenAPI 3.0 spec and Postman collection derived from your generated routes. Import into Postman, Bruno, or Hoppscotch to test your API immediately.',
+    tip: '💡 Import docs/postman-collection.json into Postman and set the baseUrl variable to your deployed URL.',
+    facts: ['Mapping API routes to OpenAPI paths...','Generating request/response schemas...','Building Postman collection with examples...','Adding auth header templates...'],
+    preview: ['{ "openapi": "3.0.3",','  "info": { "title": "Your API" },','  "paths": {','    "/api/v1": { "get": {...} }','  }']
+  },
+  g8pb: {
+    phase: '⬡ Launch Plan',
+    title: 'Writing your 90-day playbook',
+    body: 'A week-by-week action plan customized to your tier, business type, and what was provisioned. Every action item references a specific file in your repo.',
+    tip: '💡 This is a suggested playbook — adjust timelines based on your actual pace and resources.',
+    facts: ['Mapping Week 1 critical setup tasks...','Planning Weeks 2-4 validation milestones...','Defining Weeks 5-8 growth targets...','Setting Weeks 9-12 scale signals...'],
+    preview: ['## Week 1: Foundation','- Day 1: Open onboard.html','- Day 2: Run seed script','- Day 3: Run test suite','- Day 7: Soft launch']
   }
 };
 
@@ -9851,6 +9892,404 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
         setP('plain', 'ok', 'docs/plain/*');
       }
 
+      // ── g8_onboard: Interactive Onboarding Dashboard ───────────────────────
+      try {
+        addP('g8ob', 'Generating interactive onboarding dashboard', '', '⬡ Onboarding');
+        setP('g8ob', 'run');
+        const tier = getUserTier();
+        const moduleResults = window._dynastyModuleResults || {};
+        const provisionedServices = Object.entries(moduleResults)
+          .filter(([, v]) => v && v.ok)
+          .map(([k]) => k);
+        const deferredServices = Object.entries(moduleResults)
+          .filter(([, v]) => v && !v.ok)
+          .map(([k]) => k);
+        const envVars = files['.env.example'] || '';
+        const manualActions = files['MANUAL-ACTIONS.md'] || '';
+
+        const onboardPrompt = `Generate a self-contained HTML onboarding dashboard for "${inf.name}" (${inf.type_label}).
+
+CONTEXT:
+- Tier: ${tier}
+- Accent color: ${inf.accent}
+- Deployed URL: ${inf.url || 'https://your-app.vercel.app'}
+- Services provisioned: ${provisionedServices.join(', ') || 'none yet'}
+- Services deferred: ${deferredServices.join(', ') || 'none'}
+- Env vars needed (from .env.example): ${envVars.split('\n').filter(l => l.includes('=')).map(l => l.split('=')[0].trim()).slice(0, 20).join(', ')}
+
+REQUIREMENTS:
+Return a COMPLETE, self-contained HTML file (inline CSS + JS, no external dependencies).
+
+The page must include:
+1. A branded header with project name and accent color
+2. A progress bar that updates as items are checked off
+3. Checklist sections grouped by priority:
+   - CRITICAL (do first): Clerk auth keys, Stripe keys, Database URL
+   - IMPORTANT (do next): Domain setup, email service, analytics
+   - OPTIONAL (when ready): Social media, SEO tools, chatbot
+4. Each checklist item has:
+   - Checkbox (state saved to localStorage under key "onboard_${inf.repo}")
+   - Service name and what it does
+   - Expandable instructions (click to toggle) with step-by-step setup
+   - Copy-to-clipboard button for env var names
+   - Direct link to the vendor dashboard (Clerk: clerk.com/dashboard, Stripe: dashboard.stripe.com, Neon: console.neon.tech, Vercel: vercel.com/dashboard)
+   - Status indicator: green if provisioned, amber if deferred, red if critical and missing
+5. A "Verify Environment" section that explains how to check env vars are set
+6. Responsive design (works on mobile)
+7. Dark mode support via prefers-color-scheme
+8. A footer linking to MANUAL-ACTIONS.md and .env.example in the repo
+
+Style: Clean, modern, card-based layout. Use the accent color ${inf.accent} for primary actions. No external fonts — use system font stack.
+
+Return ONLY the complete HTML file content, no markdown fences.`;
+
+        const onboardHtml = await aiRaw(onboardPrompt, 6000, 'standard');
+        if (onboardHtml && (onboardHtml.includes('<html') || onboardHtml.includes('<!DOCTYPE') || onboardHtml.includes('localStorage'))) {
+          files['public/onboard.html'] = onboardHtml;
+          setP('g8ob', 'ok', 'public/onboard.html');
+        } else {
+          setP('g8ob', 'sk', 'Generation insufficient');
+        }
+      } catch (e) { setP('g8ob', 'sk', e.message); }
+
+      // ── g8_tests: Automated Test Suite ─────────────────────────────────────
+      try {
+        addP('g8ts', 'Generating automated test suite', '', '⬡ Testing');
+        setP('g8ts', 'run');
+        const apiContracts = files['docs/API-CONTRACTS.md'] || '';
+        const dataModel = files['docs/DATA-MODEL.md'] || '';
+        const specDoc = files['SPEC.md'] || '';
+        const generatedRoutes = Object.keys(files).filter(f => f.includes('/api/') || f.includes('route.ts') || f.includes('route.js'));
+        const generatedPages = Object.keys(files).filter(f => f.includes('/app/') && (f.includes('page.ts') || f.includes('page.js')));
+
+        const testPrompt = `Generate a comprehensive test suite for "${inf.name}" (Next.js 14 App Router, TypeScript).
+
+PROJECT CONTEXT:
+${cx(desc, inf)}
+
+GENERATED API ROUTES: ${generatedRoutes.join(', ') || 'src/app/api/v1/route.ts, src/app/api/data/route.ts'}
+GENERATED PAGES: ${generatedPages.join(', ') || 'src/app/page.tsx, src/app/dashboard/page.tsx, src/app/pricing/page.tsx'}
+
+DATA MODEL SUMMARY:
+${dataModel.slice(0, 1500)}
+
+API CONTRACTS SUMMARY:
+${apiContracts.slice(0, 1500)}
+
+Generate these files. Return in this exact delimiter format — one section per file:
+
+===FILE: src/__tests__/api.test.ts===
+[Vitest tests for API routes. Test each endpoint: correct status codes, response shape, error handling. Use fetch against relative URLs. Mock auth where needed.]
+
+===FILE: src/__tests__/pages.test.tsx===
+[React Testing Library tests for pages. Test that key elements render: headings, navigation, CTAs. Import from @testing-library/react. Use vi.mock for Next.js navigation.]
+
+===FILE: src/__tests__/schema.test.ts===
+[Validation tests for data model. Test required fields, type constraints, relationships using Zod or manual checks matching the data model.]
+
+===FILE: e2e/smoke.spec.ts===
+[Playwright e2e smoke tests. Test: homepage loads with correct title, navigation links work, sign-in page redirects unauthenticated users, dashboard is gated behind auth.]
+
+===FILE: playwright.config.ts===
+[Playwright config targeting http://localhost:3000, chromium only for CI speed, screenshot on failure.]
+
+===FILE: vitest.config.ts===
+[Vitest config with jsdom environment, path aliases matching tsconfig, coverage thresholds at 70%.]
+
+Rules:
+- Use Vitest (not Jest) with describe/it/expect
+- Use @testing-library/react for component tests
+- Use Playwright for e2e
+- All TypeScript, strict types
+- No real API keys or external calls — mock everything
+- Include setup for each test file (imports, mocks)
+- Return ONLY the delimited file content, no explanations`;
+
+        const testRaw = await aiRaw(testPrompt, 8000, 'standard');
+        let testFilesCount = 0;
+        if (testRaw) {
+          const testSections = testRaw.split(/===FILE:\s*/);
+          for (const section of testSections) {
+            if (!section.trim()) continue;
+            const match = section.match(/^([^\n=]+)===([\s\S]*)/);
+            if (match) {
+              const fpath = match[1].trim();
+              let content = match[2].trim();
+              content = content.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '').trim();
+              if (fpath && content.length > 50) {
+                files[fpath] = content;
+                testFilesCount++;
+              }
+            }
+          }
+        }
+        if (testFilesCount > 0) {
+          try {
+            const pkg = JSON.parse(files['package.json'] || '{}');
+            if (!pkg.devDependencies) pkg.devDependencies = {};
+            if (!pkg.scripts) pkg.scripts = {};
+            pkg.devDependencies['vitest'] = '^3.0.0';
+            pkg.devDependencies['@vitest/coverage-v8'] = '^3.0.0';
+            pkg.devDependencies['@testing-library/react'] = '^16.0.0';
+            pkg.devDependencies['@testing-library/jest-dom'] = '^6.6.0';
+            pkg.devDependencies['@playwright/test'] = '^1.48.0';
+            pkg.devDependencies['jsdom'] = '^25.0.0';
+            pkg.scripts['test'] = 'vitest run';
+            pkg.scripts['test:watch'] = 'vitest';
+            pkg.scripts['test:coverage'] = 'vitest run --coverage';
+            pkg.scripts['test:e2e'] = 'playwright test';
+            files['package.json'] = JSON.stringify(pkg, null, 2);
+          } catch (_pkgErr) {}
+          setP('g8ts', 'ok', `${testFilesCount} test files generated`);
+        } else {
+          setP('g8ts', 'sk', 'No test files parsed');
+        }
+      } catch (e) { setP('g8ts', 'sk', e.message); }
+
+      // ── g8_seed: Seed Data & Demo Content ──────────────────────────────────
+      try {
+        addP('g8sd', 'Generating seed data and demo content', '', '⬡ Seed Data');
+        setP('g8sd', 'run');
+        const dataModel = files['docs/DATA-MODEL.md'] || '';
+        const specDoc = files['SPEC.md'] || '';
+
+        const seedPrompt = `Generate seed data and a seeder script for "${inf.name}" (${inf.type_label}).
+
+PROJECT CONTEXT:
+- Business type: ${inf.type_label}
+- Revenue model: ${inf.revenue_model} at ${inf.price}
+- Stack: ${(inf.stack || []).join(', ')}
+- Accent: ${inf.accent}
+
+DATA MODEL:
+${dataModel.slice(0, 2000)}
+
+Generate these files in delimiter format:
+
+===FILE: src/data/seed/users.json===
+[Array of 8 fictional users appropriate for this ${inf.type_label} business. Include: id (uuid format), name, email (use @example.com), role (admin/user/manager), avatar placeholder URL, createdAt ISO date, plan tier. Make names and roles realistic for the industry.]
+
+===FILE: src/data/seed/content.json===
+[Array of 12 sample content items matching the business model. For SaaS: sample projects/workspaces. For marketplace: sample listings. For directory: sample entries. For service: sample service requests. Include: id, title, description, status, createdAt, authorId (reference user ids). Make content realistic and industry-specific.]
+
+===FILE: src/data/seed/transactions.json===
+[Array of 15 sample transactions for dashboard charts. Include: id, amount (realistic for ${inf.price} pricing), currency (USD), status (completed/pending/refunded), customerId (reference user ids), description, createdAt (spread across last 90 days). Mix of amounts to create interesting chart data.]
+
+===FILE: src/scripts/seed.ts===
+[TypeScript seeder script that:
+1. Reads the JSON files from src/data/seed/
+2. Uses Prisma client to upsert records (import { PrismaClient } from '@prisma/client')
+3. Handles errors gracefully with console output
+4. Runs as: npx tsx src/scripts/seed.ts
+5. Clears existing seed data before inserting (optional flag --clean)
+6. Logs progress: "Seeding users... ✓ 8 users", etc.
+Include proper TypeScript types for each data shape.]
+
+Rules:
+- All data must be fictional — no real emails, phones, or addresses
+- Use @example.com for all email addresses
+- Use realistic but obviously fake names
+- Amounts should be in cents (Stripe convention)
+- Dates should be ISO 8601 format
+- IDs should be UUID v4 format strings
+- Return ONLY the delimited content, no explanations`;
+
+        const seedRaw = await aiRaw(seedPrompt, 6000, 'standard');
+        let seedFilesCount = 0;
+        if (seedRaw) {
+          const seedSections = seedRaw.split(/===FILE:\s*/);
+          for (const section of seedSections) {
+            if (!section.trim()) continue;
+            const match = section.match(/^([^\n=]+)===([\s\S]*)/);
+            if (match) {
+              const fpath = match[1].trim();
+              let content = match[2].trim();
+              content = content.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '').trim();
+              if (fpath && content.length > 30) {
+                files[fpath] = content;
+                seedFilesCount++;
+              }
+            }
+          }
+        }
+        if (seedFilesCount > 0) {
+          try {
+            const pkg = JSON.parse(files['package.json'] || '{}');
+            if (!pkg.scripts) pkg.scripts = {};
+            pkg.scripts['db:seed'] = 'tsx src/scripts/seed.ts';
+            pkg.scripts['db:seed:clean'] = 'tsx src/scripts/seed.ts --clean';
+            if (!pkg.devDependencies) pkg.devDependencies = {};
+            if (!pkg.devDependencies['tsx']) pkg.devDependencies['tsx'] = '^4.19.0';
+            files['package.json'] = JSON.stringify(pkg, null, 2);
+          } catch (_pkgErr) {}
+          setP('g8sd', 'ok', `${seedFilesCount} seed files generated`);
+        } else {
+          setP('g8sd', 'sk', 'No seed files parsed');
+        }
+      } catch (e) { setP('g8sd', 'sk', e.message); }
+
+      // ── g8_api: API Collection (OpenAPI + Postman) ─────────────────────────
+      try {
+        addP('g8api', 'Generating API collection', '', '⬡ API Docs');
+        setP('g8api', 'run');
+        const apiContracts = files['docs/API-CONTRACTS.md'] || '';
+        const dataModel = files['docs/DATA-MODEL.md'] || '';
+
+        const apiCollectionPrompt = `Generate an OpenAPI 3.0 specification and Postman collection for "${inf.name}" (${inf.type_label}).
+
+PROJECT CONTEXT:
+- App name: ${inf.name}
+- Base URL variable: {{baseUrl}} (default: ${inf.url || 'http://localhost:3000'})
+- Auth: Bearer token in Authorization header
+
+API CONTRACTS:
+${apiContracts.slice(0, 2500)}
+
+DATA MODEL:
+${dataModel.slice(0, 1500)}
+
+Generate these files in delimiter format:
+
+===FILE: docs/openapi.json===
+[Complete OpenAPI 3.0.3 JSON spec. Include:
+- info: title, version 1.0.0, description
+- servers: [{url: "{{baseUrl}}", description: "Application server"}]
+- paths: Every API route with method, summary, parameters, requestBody (with JSON schema), responses (200, 400, 401, 404, 500)
+- components/schemas: Data model entities as JSON Schema objects
+- components/securitySchemes: bearerAuth (http, bearer, JWT)
+- security: [{bearerAuth: []}]
+Keep response examples realistic for this ${inf.type_label} business.]
+
+===FILE: docs/postman-collection.json===
+[Postman Collection v2.1 JSON. Include:
+- info: name "${inf.name} API", schema "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+- variable: [{key: "baseUrl", value: "${inf.url || 'http://localhost:3000'}"}, {key: "token", value: "your-jwt-token-here"}]
+- auth: {type: "bearer", bearer: [{key: "token", value: "{{token}}"}]}
+- item: Folders for each resource group (Auth, Users, Core Resource, Admin)
+- Each request: name, method, url with {{baseUrl}}, headers, body (raw JSON), example responses
+Make it immediately importable into Postman/Bruno/Hoppscotch.]
+
+Rules:
+- Valid JSON only (no trailing commas, no comments)
+- Use realistic example values matching the business domain
+- Include error response examples
+- Auth endpoints should show login/register flows
+- Return ONLY the delimited content, no explanations`;
+
+        const apiRaw = await aiRaw(apiCollectionPrompt, 8000, 'standard');
+        let apiFilesCount = 0;
+        if (apiRaw) {
+          const apiSections = apiRaw.split(/===FILE:\s*/);
+          for (const section of apiSections) {
+            if (!section.trim()) continue;
+            const match = section.match(/^([^\n=]+)===([\s\S]*)/);
+            if (match) {
+              const fpath = match[1].trim();
+              let content = match[2].trim();
+              content = content.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '').trim();
+              if (fpath && content.length > 50) {
+                try { JSON.parse(content); } catch { content = content; }
+                files[fpath] = content;
+                apiFilesCount++;
+              }
+            }
+          }
+        }
+        if (apiFilesCount > 0) {
+          setP('g8api', 'ok', `${apiFilesCount} API collection files`);
+        } else {
+          setP('g8api', 'sk', 'No API files parsed');
+        }
+      } catch (e) { setP('g8api', 'sk', e.message); }
+
+      // ── g8_playbook: 90-Day Launch Playbook ────────────────────────────────
+      try {
+        addP('g8pb', 'Generating 90-day launch playbook', '', '⬡ Launch Plan');
+        setP('g8pb', 'run');
+        const tier = getUserTier();
+        const tierConfig = V3_TIERS[tier] || V3_TIERS.foundation;
+        const moduleResults = window._dynastyModuleResults || {};
+        const provisionedList = Object.entries(moduleResults).filter(([, v]) => v && v.ok).map(([k]) => k);
+        const deferredList = Object.entries(moduleResults).filter(([, v]) => v && !v.ok).map(([k]) => k);
+        const deliverables = Object.keys(files).slice(0, 40);
+
+        const playbookPrompt = `Generate a 90-day launch playbook for "${inf.name}" (${inf.type_label}).
+
+PROJECT CONTEXT:
+- Tier: ${tier} (${tierConfig.label})
+- Revenue model: ${inf.revenue_model} at ${inf.price}
+- Services provisioned: ${provisionedList.join(', ') || 'none (Foundation tier — all manual setup)'}
+- Services deferred: ${deferredList.join(', ') || 'standard integrations'}
+- Key deliverables in repo: ${deliverables.join(', ')}
+- Has seed data: ${files['src/scripts/seed.ts'] ? 'yes' : 'no'}
+- Has test suite: ${files['src/__tests__/api.test.ts'] ? 'yes' : 'no'}
+- Has onboarding dashboard: ${files['public/onboard.html'] ? 'yes' : 'no'}
+
+Generate a detailed, actionable 90-day launch playbook in Markdown.
+
+Structure:
+# 90-Day Launch Playbook — ${inf.name}
+
+> Tier: ${tier} | Generated by Your Deputy | This is a suggested action plan, not professional advice.
+
+## Week 1: Foundation (Days 1-7)
+[Day-by-day checklist. Each item references a specific file in the repo.
+- Day 1: Open onboard.html, complete critical setup (Clerk, Stripe, Database)
+- Day 2: Run seed script, verify demo data appears in dashboard
+- Day 3: Run test suite, fix any failures
+- Day 4: Customize branding (logo, colors, copy in specific files)
+- Day 5: Set up domain and SSL
+- Day 6: Configure email service
+- Day 7: Soft launch — share with 3-5 trusted contacts for feedback]
+
+## Weeks 2-4: Validation (Days 8-28)
+[Weekly goals, not daily. Focus on:
+- Getting first real users/customers
+- Content creation using social media calendar (reference social-media/SOCIAL-MEDIA-CALENDAR.md)
+- Setting up analytics (reference MANUAL-ACTIONS.md for PostHog/Plerdy)
+- Collecting feedback
+${tier === 'foundation' ? '- DIY integration setup from MANUAL-ACTIONS.md (Foundation tier)' : '- Verify auto-provisioned integrations are working'}]
+
+## Weeks 5-8: Growth (Days 29-56)
+[Focus on:
+- First revenue milestone
+- Activating deferred modules/integrations
+- A/B testing messaging (reference AB-MESSAGING.md)
+- Building social proof / testimonials
+- SEO setup using generated content
+- When to consider upgrading tier]
+
+## Weeks 9-12: Scale (Days 57-90)
+[Focus on:
+- Revenue targets and KPIs
+- Hiring/outsourcing signals
+- Automation opportunities (reference n8n workflows if applicable)
+- When to upgrade tier based on revenue
+- 90-day retrospective checklist]
+
+## Key Files Reference
+[Table mapping action items to specific repo files]
+
+## Upgrade Triggers
+[Specific signals that indicate the customer should upgrade their tier]
+
+Rules:
+- Every action item must reference a specific file or URL
+- ${tier === 'foundation' ? 'Foundation tier: all integrations are manual — guide accordingly' : 'Professional+ tier: verify auto-provisioned services'}
+- Be specific: "Open MANUAL-ACTIONS.md section 3" not "set up email"
+- Include realistic time estimates per task
+- Label this as a "suggested playbook" not professional/financial advice
+- Return ONLY markdown content, no fences`;
+
+        const playbookMd = await aiRaw(playbookPrompt, 6000, 'standard');
+        if (playbookMd && playbookMd.length > 500) {
+          files['LAUNCH-PLAYBOOK.md'] = playbookMd;
+          setP('g8pb', 'ok', 'LAUNCH-PLAYBOOK.md');
+        } else {
+          setP('g8pb', 'sk', 'Generation insufficient');
+        }
+      } catch (e) { setP('g8pb', 'sk', e.message); }
+
       try { dynastyScheduleCheckpointSave(desc, inf, { gateCompleted: true, prePush: true }); } catch {}
       const fl = Object.entries(files);
       
@@ -12985,7 +13424,7 @@ function showDone(inf,repo,fc,mtasks){
   const beFiles=['backend/main.py','backend/requirements.txt','backend/Dockerfile','docker-compose.yml'];
   const designFiles=['DESIGN.md','CLAUDE.md','AGENTS.md','DYNASTY-DESIGN.md'];
   const docFiles=['SPEC.md','ROADMAP.md','README.md','MANUAL-ACTIONS.md','.env.example','docs/DATA-MODEL.md','docs/API-CONTRACTS.md','docs/KB-OUTLINES.md','docs/DESIGN-DECISIONS.md','.gitignore'];
-  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','BANK-FUNDING-PLAYBOOK.md','docs/VERTICAL-TOOL-SCHEMA.sql','docs/VERTICAL-ENV.example','docs/SITE-ARCHETYPE-LANDING.md','docs/V4-ARCHETYPE-FILE-COUNTS.md','docs/V4-DEMO-SLA.md','docs/templates/VERTICAL-CONCRETE-TAKEOFF.md','docs/ROBS-CHECKLIST.md','docs/NAICS-CANDIDATES.md','docs/GOV-READINESS.md','docs/CAPABILITIES-STATEMENT.template.md','docs/RFP-RESPONSE-OUTLINE.md','docs/plain/QA-NOTES.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html','PMF-MEASUREMENT.md','UNSCALABLE-PLAYBOOK.md','docs/OPERATING-AGREEMENT-TEMPLATE.md','docs/IP-ASSIGNMENT.md','ENTITY-SELECTION.md','RUNWAY-CALCULATOR.md','CUSTOMER-SUCCESS.md','HIRING-PLAN.md','FOUNDER-AGREEMENT.md','FUNDRAISING-STRATEGY.md','ORG-DESIGN.md','OPERATIONS-PLAYBOOK.md','PIVOT-FRAMEWORK.md','COHORT-ANALYSIS.md','RETENTION-PLAYBOOK.md','CAP-TABLE-MODEL.md','TERM-SHEET-TEMPLATES.md','CRISIS-PLAYBOOK.md','EXPERIMENT-FRAMEWORK.md','GROWTH-EXPERIMENTS.md','CUSTOMER-DEVELOPMENT.md','TAX-STRATEGY.md','PRICING-STRATEGY.md','docs/NDA-TEMPLATE.md','docs/CONTRACTOR-AGREEMENT.md','docs/OFFER-LETTER-TEMPLATE.md','docs/GDPR-IMPLEMENTATION.md','CHANNEL-PLAYBOOKS.md','REFERRAL-PROGRAM.md','LAUNCH-CHECKLIST.md','CHURN-REDUCTION.md','CULTURE.md','EQUITY-GUIDE.md','PERFORMANCE-FRAMEWORK.md','REMOTE-WORK-POLICY.md','ANALYTICS-INSTRUMENTATION.md','ACCESSIBILITY-PLAN.md','VALUATION-MODEL.md','SCENARIO-PLANNING.md','PARTNERSHIP-STRATEGY.md','NEGOTIATION-GUIDE.md','GOVERNANCE.md','INVESTOR-UPDATE-TEMPLATE.md','BOARD-DECK-TEMPLATE.md','WEEKLY-METRICS.md','PITCH-SCRIPT.md','NETWORK-EFFECTS.md','MARKETPLACE-STRATEGY.md','FINANCIAL-CONTROLS.md','DILUTION-MODEL.md','THREE-STATEMENT-MODEL.md','COMMUNITY-STRATEGY.md','CONTENT-MARKETING-PLAN.md','JTBD-INTERVIEW-GUIDE.md','PRODUCT-STRATEGY.md','AB-TESTING-FRAMEWORK.md','USER-RESEARCH-PLAN.md','TECH-DEBT-FRAMEWORK.md','I18N-STRATEGY.md','docs/BOARD-RESOLUTIONS.md','docs/DPA-TEMPLATE.md','ONBOARDING-CHECKLIST.md','COMPENSATION-BENCHMARKS.md','SUPPLY-CHAIN.md','REVENUE-RECOGNITION.md','CUSTOMER-JOURNEY-MAP.md','ZERO-TO-ONE-ASSESSMENT.md'].filter(f=>window._buildFiles?.[f]);
+  const bonusFiles=['VIDEO-SCRIPT.md','AB-MESSAGING.md','PITCH-DECK.md','INVESTOR-READINESS.md','BANK-FUNDING-PLAYBOOK.md','docs/VERTICAL-TOOL-SCHEMA.sql','docs/VERTICAL-ENV.example','docs/SITE-ARCHETYPE-LANDING.md','docs/V4-ARCHETYPE-FILE-COUNTS.md','docs/V4-DEMO-SLA.md','docs/templates/VERTICAL-CONCRETE-TAKEOFF.md','docs/ROBS-CHECKLIST.md','docs/NAICS-CANDIDATES.md','docs/GOV-READINESS.md','docs/CAPABILITIES-STATEMENT.template.md','docs/RFP-RESPONSE-OUTLINE.md','docs/plain/QA-NOTES.md','docs/LEGAL-TEMPLATES.md','docs/EMAIL-SEQUENCES.md','docs/CUSTOMER-DISCOVERY.md','docs/COMPETITIVE-ANALYSIS.md','.github/workflows/ci.yml','vercel.json','REPORT.html','PMF-MEASUREMENT.md','UNSCALABLE-PLAYBOOK.md','docs/OPERATING-AGREEMENT-TEMPLATE.md','docs/IP-ASSIGNMENT.md','ENTITY-SELECTION.md','RUNWAY-CALCULATOR.md','CUSTOMER-SUCCESS.md','HIRING-PLAN.md','FOUNDER-AGREEMENT.md','FUNDRAISING-STRATEGY.md','ORG-DESIGN.md','OPERATIONS-PLAYBOOK.md','PIVOT-FRAMEWORK.md','COHORT-ANALYSIS.md','RETENTION-PLAYBOOK.md','CAP-TABLE-MODEL.md','TERM-SHEET-TEMPLATES.md','CRISIS-PLAYBOOK.md','EXPERIMENT-FRAMEWORK.md','GROWTH-EXPERIMENTS.md','CUSTOMER-DEVELOPMENT.md','TAX-STRATEGY.md','PRICING-STRATEGY.md','docs/NDA-TEMPLATE.md','docs/CONTRACTOR-AGREEMENT.md','docs/OFFER-LETTER-TEMPLATE.md','docs/GDPR-IMPLEMENTATION.md','CHANNEL-PLAYBOOKS.md','REFERRAL-PROGRAM.md','LAUNCH-CHECKLIST.md','CHURN-REDUCTION.md','CULTURE.md','EQUITY-GUIDE.md','PERFORMANCE-FRAMEWORK.md','REMOTE-WORK-POLICY.md','ANALYTICS-INSTRUMENTATION.md','ACCESSIBILITY-PLAN.md','VALUATION-MODEL.md','SCENARIO-PLANNING.md','PARTNERSHIP-STRATEGY.md','NEGOTIATION-GUIDE.md','GOVERNANCE.md','INVESTOR-UPDATE-TEMPLATE.md','BOARD-DECK-TEMPLATE.md','WEEKLY-METRICS.md','PITCH-SCRIPT.md','NETWORK-EFFECTS.md','MARKETPLACE-STRATEGY.md','FINANCIAL-CONTROLS.md','DILUTION-MODEL.md','THREE-STATEMENT-MODEL.md','COMMUNITY-STRATEGY.md','CONTENT-MARKETING-PLAN.md','JTBD-INTERVIEW-GUIDE.md','PRODUCT-STRATEGY.md','AB-TESTING-FRAMEWORK.md','USER-RESEARCH-PLAN.md','TECH-DEBT-FRAMEWORK.md','I18N-STRATEGY.md','docs/BOARD-RESOLUTIONS.md','docs/DPA-TEMPLATE.md','ONBOARDING-CHECKLIST.md','COMPENSATION-BENCHMARKS.md','SUPPLY-CHAIN.md','REVENUE-RECOGNITION.md','CUSTOMER-JOURNEY-MAP.md','ZERO-TO-ONE-ASSESSMENT.md','public/onboard.html','LAUNCH-PLAYBOOK.md','docs/openapi.json','docs/postman-collection.json','src/__tests__/api.test.ts','src/__tests__/pages.test.tsx','src/__tests__/schema.test.ts','e2e/smoke.spec.ts','playwright.config.ts','vitest.config.ts','src/data/seed/users.json','src/data/seed/content.json','src/data/seed/transactions.json','src/scripts/seed.ts'].filter(f=>window._buildFiles?.[f]);
   const buildDuration = ((Date.now() - BUILD_START_TIME) / 1000).toFixed(0);
   const compactionsUsed = BUILD_COMPACTIONS.length;
   const intelligenceNote = [
