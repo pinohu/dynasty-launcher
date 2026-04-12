@@ -2,13 +2,30 @@
 // Runs at the edge BEFORE the static file is served
 
 export const config = {
-  matcher: ['/app/:path*', '/admin'],
+  // Match all paths so apex host (yourdeputy.com) can 308 to www before any static HTML.
+  // Builder/admin gate below only applies under /app and /admin.
+  matcher: ['/:path*'],
   runtime: 'edge',
 };
 
 export default function middleware(request) {
   const url = new URL(request.url);
+  const host = (request.headers.get('host') || '').split(':')[0].toLowerCase();
+
+  // ── Apex → canonical www (preserve path + query; HTTPS) ─────────────────
+  // DNS must point yourdeputy.com at Vercel (A 76.76.21.21 or ALIAS to cname.vercel-dns.com).
+  // Until then, upstream Apache may intercept apex and strip paths — fix DNS at registrar.
+  if (host === 'yourdeputy.com') {
+    const target = new URL(url.pathname + url.search, 'https://www.yourdeputy.com');
+    return Response.redirect(target.href, 308);
+  }
+
   const params = url.searchParams;
+
+  // Only gate the builder and admin routes; everything else passes through to static files.
+  if (url.pathname !== '/admin' && !url.pathname.startsWith('/app')) {
+    return;
+  }
 
   // ── /app/test-login helper — accepts raw key, encodes, redirects to /app ──
   if (url.pathname === '/app/test-login') {
