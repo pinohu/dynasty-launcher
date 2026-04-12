@@ -1,0 +1,9 @@
+# yourdeputy.com — apex → canonical www with full path + query preserved (HTTPS)
+# Deploy: upload/rename to `.htaccess` in the document root for yourdeputy.com on 20i/Apache
+# when apex DNS still points here instead of Vercel.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTP_HOST} ^yourdeputy\.com$ [NC]
+  RewriteRule ^ https://www.yourdeputy.com%{REQUEST_URI} [L,R=301,QSA]
+</IfModule>

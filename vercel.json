@@ -1,6 +1,14 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "yourdeputy.com" }],
+      "destination": "https://www.yourdeputy.com/:path*",
+      "permanent": true
+    }
+  ],
   "functions": {
     "api/claude.js": {
       "maxDuration": 300
