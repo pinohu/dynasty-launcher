@@ -1,0 +1,37 @@
+stage_code,journey_letter,persona_codes,pain_ids,system_outputs,sb_episodes
+A1,A,P-FOUNDER,"S2,S3,S4,B1","maturity.html;index claims;inventory API;for/;quiz",SB00
+A2,A,P-FOUNDER,"Z0,S2,S3","tier table;Foundation module truth;V3_TIERS copy",SB00;SB01
+A3,A,P-FOUNDER,"B1,S2","Stripe checkout/session;tier verification",SB01
+A4,A,"P-FOUNDER;P-CAPITAL","A1,A2,A7,B11","builder intake;archetype;Expected scope;gov toggle",SB02
+A5,A,P-FOUNDER,"B1,B2,B3,B4,B5,B6,B7,B8,B10,B12,B14","scorecard;frameworks;multi-model pivot pipeline",SB03
+A6,A,"P-FOUNDER;P-PROCURE","F1,C8,B11,R2","SPEC;ROADMAP;GTM;competitive/TAM narratives",SB04
+A7,A,P-FOUNDER,"F1,F2,F3,F4,F5,F6,F7,F8,F9,G1,G2","phases 1-7c;DESIGN;API/DATA docs;GitHub push",SB04
+A8,A,P-FOUNDER,"G1,G8,G10","provision.js repo+Vercel;deploy trigger;BUILD-REPORT path",SB06
+A9,A,"P-FOUNDER;P-OPERATOR","G6,G7,H1,P2","placeholder Vercel env;customer keys;.env.example;MANUAL-ACTIONS",SB06;SB08
+A10,A,P-FOUNDER,"H1,H2,H3,H4,H5,I1,I2,I3,I4,J1,J2,J3,J4,J5,K1,K2,K3,K4,L1,L2,L3,L4,L5,L6,M1,M2,M3,M4,M5,M6,M7,M8,N1,N2,N3,N4,N5,O1,O2,O3,O4,O5,O6,O7,O8","mod_* results;fallbacks in UI",SB07
+A11,A,"P-FOUNDER;P-OPERATOR","T1,T2,J21,G8","ops ownership docs;smoke/verify spec;support boundary",SB08
+B1,B,P-AGENCY,"G2,P2,S2,S3","maturity;CLAUDE credential policy",SB00
+B2,B,P-AGENCY,"Z0,S2,B1","kit vs launch SKU clarity",SB00;SB01
+B3,B,P-AGENCY,"S2,B1","checkout or Foundation;export-first expectation",SB01
+B4,B,P-AGENCY,"A7,J22,F4","intake;no accidental client deploy;scope preview",SB02
+B5,B,"P-AGENCY;P-PROCURE","B3,B4,C8,R2","strategy artifacts;plain-language toggle",SB03;SB04
+B6,B,P-AGENCY,"F4,R3,P2","SPEC;MANUAL-ACTIONS;.env.example;START-HERE",SB04
+B7,B,P-AGENCY,"F9,G2","validation gate;local/CI verify",SB05
+B8,B,P-AGENCY,"J22,J23,P2","export/repo handoff;liability in docs",SB06
+B9,B,"P-AGENCY;P-OPERATOR","G4,G5,G6,G7,H1,H2","client Vercel;DNS;Stripe webhook in client dashboard",SB06;SB08
+B10,B,"P-AGENCY;P-OPERATOR","J20,J21,F4","runbooks;optional managed narrative",SB08
+C1,C,P-PROCURE,"D6,J22,S4","public maturity;scope boundary",SB00
+C2,C,P-PROCURE,"J15,P2,J22","credential boundary doc;no customer secret injection",SB00;SB02;SB06
+C3,C,P-PROCURE,"J22,C8","PO path;versioned deliverable list",SB01
+C4,C,P-PROCURE,"A7,J22","redacted/constrained intake",SB02
+C5,C,P-PROCURE,"B5,B14,J22","auditable strategy outputs",SB03
+C6,C,P-PROCURE,"F1,F2,J22","SPEC;DATA-MODEL;API-CONTRACTS;integration map",SB04
+C7,C,P-PROCURE,"G1,J22","no auto-deploy or staging-only (product decision)",SB05;SB06
+C8,C,P-PROCURE,"J22,J23","sign-off handoff vs production",SB06
+C9,C,"P-PROCURE;P-OPERATOR","G4,G7,F4","IT deploy using shipped runbooks",SB08
+D1,D,P-OPERATOR,"R3,F4,P2","MANUAL-ACTIONS;.env.example;CREDENTIALS inventory",SB08
+D2,D,P-OPERATOR,"H2,H3,J21","Stripe/Clerk dashboards;webhook health",SB08
+D3,D,P-OPERATOR,"F9,J20","fork;template drift",SB08
+D4,D,P-OPERATOR,"M2,T2,J19","expectation: marketing not infinite",SB08
+D5,D,P-OPERATOR,J21,"support playbooks (generated hints)",SB08
+D6,D,P-OPERATOR,"D2,J22","legal updates post handoff (counsel)",SB08

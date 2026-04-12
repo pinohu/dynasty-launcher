@@ -45,6 +45,53 @@ Hub: **`/for`** lists all paths and links to the pain map CSV.
 3. **Product:** Builder reads **`dynasty_funnel_segment`** and **`dynasty_build_profile`** from URL on first touch (see `app.html`).
 4. **Review quarterly:** Retire landers with low traffic; add one only when a **new repeatable segment** appears (not one-off copy).
 
+## UTM → spoke → default tier reference
+
+Every spoke CTA links into `/app` with `plan`, `archetype`, `segment`, and `source=spoke`. The quiz adds `source=quiz` and `diag_id`. These params are captured in `localStorage` by `applyFunnelParamsFromUrl()` in `app.html` and surface in the Expected Scope preview so the user sees path confirmation.
+
+### Full param chain per spoke
+
+| Spoke path | `segment=` | `plan=` | `archetype=` | Extra params | Default tier |
+|---|---|---|---|---|---|
+| `/for/viability` | `viability` | `free` | `demo_express` | — | Free |
+| `/for/viability` (upgrade CTA) | `viability_buy` | `foundation` | `landing_1p` | — | Foundation |
+| `/for/capital` | `capital` | `foundation` | `starter_5p` | — | Foundation |
+| `/for/capital` (free first CTA) | `capital_prescore` | `free` | `demo_express` | — | Free |
+| `/for/foundation-diy` | `foundation_diy` | `foundation` | `landing_1p` | — | Foundation |
+| `/for/revenue-ops` | `revenue_ops` | `professional` | `growth` | — | Professional |
+| `/for/full-launch` | `full_launch` | `enterprise` | `enterprise_full` | — | Enterprise |
+| `/for/authority-seo` | `authority_seo` | `enterprise` | `authority_site` | — | Enterprise |
+| `/for/trades-vertical` | `trades_vertical` | `professional` | `growth` | `vertical=1` | Professional |
+| `/for/directory` | `directory` | `enterprise` | `enterprise_full` | — | Enterprise |
+| `/for/managed` | `managed_ops` | `managed` | — | — | Managed $497/mo |
+
+### Quiz routing
+
+The `/quiz` diagnostic resolves to one of the segments above using a weighted scoring algorithm across four inputs (stage, pain, delivery preference, budget). The result links to both the spoke guide page (`rec.guide`) and a prefilled builder URL with `source=quiz`.
+
+### UTM conventions for paid ads
+
+| Param | Purpose | Example |
+|---|---|---|
+| `utm_source` | Ad platform | `google`, `linkedin`, `meta` |
+| `utm_medium` | Campaign type | `cpc`, `social`, `email` |
+| `utm_campaign` | Campaign name | `revops_q2_2026` |
+| `utm_persona` | Target persona | `P-FOUNDER`, `P-AGENCY`, `P-OPERATOR` |
+| `segment` | Pre-set builder segment | `revenue_ops` |
+
+All UTM params pass through to the spoke page. When the user clicks the spoke CTA into `/app`, `source=spoke` is appended. If `utm_persona` is present in the URL, `app.html` stores it in `localStorage` for analytics continuity.
+
+### localStorage keys set by the funnel
+
+| Key | Set by | Purpose |
+|---|---|---|
+| `dynasty_build_profile` | `applyFunnelParamsFromUrl()` | Archetype, vertical tool flag |
+| `dynasty_funnel_segment` | `applyFunnelParamsFromUrl()` | Segment label for scope preview |
+| `dynasty_funnel_source` | `applyFunnelParamsFromUrl()` | Traffic source (`spoke`, `quiz`, etc.) |
+| `dynasty_utm_persona` | `applyFunnelParamsFromUrl()` | Persona tag from UTM |
+| `dynasty_diagnostic_recommendation` | `checkPlanPurchase()` | Full quiz context (quiz traffic only) |
+| `dynasty_diag_session_id` | Quiz / app | Diagnostic session continuity |
+
 ## What we are explicitly not doing (until data says otherwise)
 
 - Separate Stripe accounts or brands per persona.

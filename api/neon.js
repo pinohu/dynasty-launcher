@@ -109,31 +109,19 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── ADD DATABASE_URL TO VERCEL PROJECT ───────────────────────────────────
+  // ── ADD DATABASE_URL TO VERCEL PROJECT (handoff only — never auto-inject secrets) ──
   if (action === 'set_vercel_db') {
     const { vercel_project_id, database_url } = req.body || {};
     if (!vercel_project_id || !database_url) {
       return res.status(400).json({ ok: false, error: 'vercel_project_id and database_url required' });
     }
-    const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN || config.infrastructure?.vercel;
-    const VERCEL_TEAM = 'team_fuTLGjBMk3NAD32Bm5hA7wkr';
-
-    const payload = [{
-      key: 'DATABASE_URL',
-      value: database_url,
-      type: 'encrypted',
-      target: ['production', 'preview', 'development']
-    }];
-
-    const r = await fetch(
-      `https://api.vercel.com/v10/projects/${vercel_project_id}/env?teamId=${VERCEL_TEAM}`,
-      {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }
-    );
-    return res.json({ ok: r.ok, status: r.status });
+    return res.json({
+      ok: true,
+      pushed: false,
+      note:
+        'DATABASE_URL is not written to Vercel by this endpoint. Add it in the customer Vercel project (Settings → Environment Variables, encrypted) or follow MANUAL-ACTIONS.md.',
+      vercel_project_id,
+    });
   }
 
   return res.status(400).json({ ok: false, error: `Unknown action: ${action}` });

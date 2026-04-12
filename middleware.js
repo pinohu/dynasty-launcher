@@ -178,7 +178,7 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
 <body>
 <div style="font-size:2.5rem">⚡</div>
 <h2>Your Deputy</h2>
-<p>Build a complete operating business from one prompt. Score free, start with a low-risk $297 blueprint, or unlock ongoing scoring for $19/mo.</p>
+<p>Judgment on whether the business holds up, implementation you can ship, and accountable scope — not a menu of AI tasks. Score free, blueprint $297, or scoring from $19/mo.</p>
 <div class="btns">
   <a href="/app?plan=free">Score Free</a>
   <a href="/app?plan=blueprint">Blueprint — $297</a>

@@ -1,4 +1,8 @@
 export const maxDuration = 300; // 5 min — AI content generation takes time
+// Credential boundary: DYNASTY_TOOL_CONFIG keys serve build-time / one-time provisioning (derivative
+// creation and setup). Customer deploys must not rely on this pool for ongoing operation — use
+// customer-owned env vars (.env.example, MANUAL-ACTIONS) on their Vercel project.
+// Enforced: we do not POST real third-party secrets to customer Vercel projects (placeholders only).
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 async function pushFile(ghToken, org, repo, path, content, message, isBase64 = false) {
@@ -456,40 +460,21 @@ async function mod_billing(config, project, liveUrl) {
       } catch {}
     }
 
-    // 5. Push Stripe keys to the client's Vercel project
-    const VERCEL_TOKEN = process.env.VERCEL_API_TOKEN || config.infrastructure?.vercel;
-    if (VERCEL_TOKEN && project.vercel_project_id) {
-      try {
-        const envVars = [
-          ...(acctId ? [{ key: 'STRIPE_ACCOUNT_ID', value: acctId, type: 'plain' }] : []),
-          ...(prod?.id ? [{ key: 'STRIPE_PRODUCT_ID', value: prod.id, type: 'plain' }] : []),
-          ...(results.details.prices?.pro ? [{ key: 'STRIPE_PRICE_PRO_MONTHLY', value: results.details.prices.pro, type: 'plain' }] : []),
-          ...(results.details.prices?.enterprise ? [{ key: 'STRIPE_PRICE_ENTERPRISE_MONTHLY', value: results.details.prices.enterprise, type: 'plain' }] : []),
-          ...(results.details._webhook_secret ? [{ key: 'STRIPE_WEBHOOK_SECRET', value: results.details._webhook_secret, type: 'encrypted' }] : []),
-          // The connected account's keys are managed through Dynasty's platform
-          // Client accesses their dashboard via the onboarding link
-        ].map(v => ({ ...v, target: ['production', 'preview', 'development'] }));
-        await fetch(`https://api.vercel.com/v10/projects/${project.vercel_project_id}/env?teamId=team_fuTLGjBMk3NAD32Bm5hA7wkr`, {
-          method: 'POST', headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(envVars)
-        });
-        results.details.env_vars_pushed = true;
-      } catch {}
-    }
+    // 5. Do not push Stripe secrets or IDs to customer Vercel — handoff via repo only (option a).
 
-    // 6. Still push .env.example and setup guide to the repo
+    // 6. Push .env.example and setup guide to the repo
     if (GH_TOKEN && project.slug) {
       try {
         await pushFile(GH_TOKEN, 'pinohu', project.slug, '.env.example',
-          `# ${project.name} — Environment Variables\n# Stripe is managed by Dynasty (Stripe Connect)\n# Complete your Stripe onboarding: ${results.details.onboarding_url || 'Contact Dynasty support'}\n\nSTRIPE_ACCOUNT_ID=${acct.id}\nSTRIPE_PRODUCT_ID=${prod?.id || ''}\nSTRIPE_PRICE_PRO_MONTHLY=${results.details.prices?.pro || ''}\nSTRIPE_PRICE_ENTERPRISE_MONTHLY=${results.details.prices?.enterprise || ''}\n\n# Clerk Authentication\nNEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\nCLERK_SECRET_KEY=\nNEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in\nNEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up\n\n# Database\nDATABASE_URL=\nNEXT_PUBLIC_APP_URL=${liveUrl || ''}\nBILLING_PLAN_ENV=test\n`,
-          'docs: environment variables (Stripe managed by Dynasty)');
+          `# ${project.name} — Environment Variables\n# Add these to Vercel → Project → Settings → Environment Variables (never committed).\n# Stripe Connect onboarding: ${results.details.onboarding_url || 'Create at dashboard.stripe.com'}\n\nSTRIPE_ACCOUNT_ID=${acctId || ''}\nSTRIPE_PRODUCT_ID=${prod?.id || ''}\nSTRIPE_PRICE_PRO_MONTHLY=${results.details.prices?.pro || ''}\nSTRIPE_PRICE_ENTERPRISE_MONTHLY=${results.details.prices?.enterprise || ''}\nNEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=\nSTRIPE_SECRET_KEY=\n# Webhook signing secret from Stripe Dashboard → Developers → Webhooks (after you register ${liveUrl || ''}/api/webhooks/stripe)\nSTRIPE_WEBHOOK_SECRET=\n\n# Clerk (your Clerk application — dashboard.clerk.com)\nNEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\nCLERK_SECRET_KEY=\nNEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in\nNEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up\n\n# Database\nDATABASE_URL=\nNEXT_PUBLIC_APP_URL=${liveUrl || ''}\nBILLING_PLAN_ENV=test\n`,
+          'docs: environment variables (customer-owned keys; add in Vercel dashboard)');
       } catch {}
     }
 
     // Remove secret from response (only used for env var push)
     delete results.details._webhook_secret;
 
-    results.details.note = 'Stripe Connected Account created. Client completes onboarding at the provided URL. Products, prices, and webhooks are live on their connected account.';
+    results.details.note = 'Stripe Connected Account created. Client completes onboarding at the provided URL. Products, prices, and webhooks are on their connected account — add STRIPE_* and webhook secret to Vercel from .env.example (not auto-injected).';
     results.ok = true;
     results.cost_usd = 0;
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create Stripe account at dashboard.stripe.com — see docs/STRIPE-SETUP.md'; }
@@ -2896,39 +2881,17 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           });
         }
 
-        // ── Set env vars for fullstack build — use Dynasty's managed Clerk instance ──
-        // Dynasty provides auth via its Clerk account. Each client project is an Organization.
+        // ── Set env vars for fullstack build — placeholders only (option a: no real vendor secrets on customer Vercel)
         if(vercelProjectId && isFullstack){
-          const clerkPk = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
-          const clerkSk = process.env.CLERK_SECRET_KEY || '';
-          const stripePk = config.payments?.stripe_publishable || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
-
-          // Create a Clerk Organization for this project (isolates their users)
-          let clerkOrgId = null;
-          if (clerkSk) {
-            try {
-              const orgResp = await fetch('https://api.clerk.com/v1/organizations', {
-                method: 'POST', headers: { 'Authorization': `Bearer ${clerkSk}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: inf.name || slug, slug: slug, max_allowed_memberships: 100 })
-              });
-              const orgData = await orgResp.json();
-              clerkOrgId = orgData.id;
-            } catch {}
-          }
-
           const envVars = [
-            // Clerk — Dynasty's managed instance (real keys that work immediately)
-            ...(clerkPk ? [{key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:clerkPk,type:'encrypted'}] : [{key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:'pk_test_placeholder',type:'plain'}]),
-            ...(clerkSk ? [{key:'CLERK_SECRET_KEY',value:clerkSk,type:'encrypted'}] : [{key:'CLERK_SECRET_KEY',value:'sk_test_placeholder',type:'encrypted'}]),
+            {key:'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',value:'pk_test_placeholder',type:'plain'},
+            {key:'CLERK_SECRET_KEY',value:'sk_test_placeholder',type:'encrypted'},
             {key:'NEXT_PUBLIC_CLERK_SIGN_IN_URL',value:'/en/sign-in',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_SIGN_UP_URL',value:'/en/sign-up',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL',value:'/en/dashboard',type:'plain'},
             {key:'NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL',value:'/en/dashboard',type:'plain'},
-            ...(clerkOrgId ? [{key:'CLERK_ORGANIZATION_ID',value:clerkOrgId,type:'plain'}] : []),
-            // Stripe — publishable key for client-side checkout (connected account handles the rest)
-            ...(stripePk ? [{key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:stripePk,type:'encrypted'}] : [{key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:'pk_test_placeholder',type:'plain'}]),
+            {key:'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',value:'pk_test_placeholder',type:'plain'},
             {key:'STRIPE_WEBHOOK_SECRET',value:'whsec_placeholder',type:'encrypted'},
-            // App config
             {key:'BILLING_PLAN_ENV',value:'test',type:'plain'},
             {key:'NEXT_PUBLIC_APP_URL',value:`https://${slug}.vercel.app`,type:'plain'},
           ].map(v=>({...v,target:['production','preview','development']}));

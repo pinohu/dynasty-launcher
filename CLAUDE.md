@@ -23,6 +23,11 @@ dynasty-launcher/
 - **api/provision.js**: Vercel serverless function. Handles deployment: creates GitHub repos (via template fork), creates Vercel projects, sets env vars, triggers deployments. Also handles authority site deploys and retry logic.
 - **DYNASTY_TOOL_CONFIG**: Encrypted Vercel env var containing 50+ API keys organized by category (ai, payments, infrastructure, comms, content, crm_pm, automation, data_research, directories, suitedash, community, modules_enabled).
 
+### Third-party credential boundary
+Keys in **DYNASTY_TOOL_CONFIG** (and related Vercel env vars on **dynasty-launcher**) exist to **generate derivative work** and to **run one-time provisioning** (repos, deploys, `mod_*` setup) where the orchestrator calls vendor APIs. They are **not** the long-term operating substrate for customer deliverables. Shipped apps should **sustain themselves** on the **customer’s own** vendor accounts: values documented in **`.env.example`**, **MANUAL-ACTIONS.md**, and env vars on the **customer’s** Vercel/GitHub project — not a permanent dependency on the launcher’s shared key pool. When a module creates an external resource, prefer outcomes that **hand off** ownership (customer API keys, webhooks on their URL, their Stripe Connect, etc.) over routing all live traffic through Dynasty-held secrets.
+
+**Enforced in `api/provision.js`:** customer Vercel projects are **not** populated with real Clerk, Stripe, or Stripe-webhook secrets from the launcher; only **placeholders** plus non-secret routing (`NEXT_PUBLIC_APP_URL`, sign-in paths, etc.). **`api/neon.js`** `set_vercel_db` does **not** POST `DATABASE_URL` to Vercel — the customer adds it in their dashboard.
+
 ## Current Build Pipeline (20 Phases)
 Phases 1-7c: Generate code + docs (client-side AI calls)
 Phase 8: Deploy to Vercel/20i (provision.js)
@@ -143,6 +148,7 @@ See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:
 - Success criteria and testing strategy
 
 ## Public GTM / trust artifacts (keep in sync when maturity changes)
+- **`docs/JTBD_JOURNEYS_AND_SERVICE_BLUEPRINTS.md`** — all **JTBD clusters (J01–J26)** mapped to **journey maps** (A–D), **service blueprints** (SB00–SB08), coverage matrices, **persona ↔ pain ID ↔ outputs ↔ messaging** (§9–13), and a **conversation-sourced policy changelog**. **CSVs:** `docs/PERSONA_JOURNEY_STAGE_TRACE.csv`, `docs/PERSONA_SERVICE_BLUEPRINT_TRACE.csv`, `docs/PERSONA_HOMEPAGE_MESSAGING.csv`.
 - **`maturity.html`** — “What ships today” truth deck (live vs partial vs spec); linked from landing nav as **What ships**.
 - **`PAIN_POINT_MASTER_MAP.md`** + **`PAIN_POINT_MASTER_MAP.csv`** — exhaustive pain taxonomy + traceability matrix for sales/RevOps.
 - **Builder:** `app.html` includes **Expected scope (honest preview)** under build package (V4 R/D/S matrix + tier caveat).

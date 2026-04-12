@@ -339,6 +339,7 @@ Below, **Arche** shows **defaults** (R/D/S). **Tier** shows **minimum tier where
 2. **Sales:** Map each prospect to **persona + archetype**; pre-fill **expected D/S** from V4 matrix to set expectations.
 3. **Legal/compliance:** Treat **D***, **Q***, and footer disclaimers as **non-negotiable** framing for vertical tools and AI docs.
 4. **Keep current:** When you add modules or archetypes, add **new pain IDs** and extend Part 2 rows — this file is the **single enumeration** unless superseded.
+5. **Journeys, blueprints, homepage:** Persona ↔ journey stage ↔ service episode (**SB00–SB08**) ↔ pain IDs ↔ system outputs ↔ front-page messaging kits are maintained in **`docs/JTBD_JOURNEYS_AND_SERVICE_BLUEPRINTS.md`** (§9–13) and CSV traces in **`docs/PERSONA_*_TRACE.csv`**.
 
 ---
 

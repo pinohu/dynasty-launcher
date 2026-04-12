@@ -7,7 +7,7 @@
 <meta name="description" content="Get a free viability score with clear go/no-go reasoning before you pay for build and launch work.">
 <link rel="canonical" href="https://yourdeputy.com/for/viability">
 <style>
-:root{--gold:#C9A84C;--tx:#FAFAF9;--sub:#A1A1AA;--card:#1E1E2A;--bdr:rgba(255,255,255,.12)}
+:root{--gold:#C9A84C;--tx:#FAFAF9;--sub:#A1A1AA;--dim:#71717A;--card:#1E1E2A;--bdr:rgba(255,255,255,.12)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0C0C14;color:var(--tx);font-family:system-ui,sans-serif;font-size:15px;line-height:1.65;padding:28px 20px 48px;max-width:640px;margin:0 auto}
 a{color:var(--gold);font-weight:600}
@@ -20,18 +20,35 @@ h1{font-size:1.72rem;font-weight:600;margin:16px 0 12px;line-height:1.25}
 .btn-g{border:1px solid var(--bdr);color:var(--sub)}
 .back{font-size:14px;font-weight:500}
 small{display:block;margin-top:16px;font-size:12px;color:var(--sub)}
+.faq{margin-top:20px;border-top:1px solid var(--bdr);padding-top:16px}
+.faq h2{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.fq{border-bottom:1px solid rgba(255,255,255,.06);padding:10px 0}
+.fq summary{cursor:pointer;font-size:13px;font-weight:500;color:var(--tx);list-style:none}
+.fq summary::-webkit-details-marker{display:none}
+.fq summary::before{content:'+ ';color:var(--gold)}
+.fq[open] summary::before{content:'− '}
+.fq p{font-size:12px;color:var(--sub);margin:6px 0 2px;line-height:1.55}
+.promise{font-size:12px;color:var(--dim);border-top:1px solid var(--bdr);margin-top:18px;padding-top:12px;line-height:1.55}
+.promise a{font-weight:500}
 </style>
 </head>
 <body>
 <a class="back" href="/for/">← All situations</a>
 <h1>Get a clear go/no-go answer first</h1>
 <p class="lead">This path gives you a free, structured viability score before you commit budget to build, launch, or integrations.</p>
-<div class="box">You get an evidence-based read on demand, economics, competition, and risk. If the score is strong, you can move directly into Foundation and generate your full document + product + deployment package.</div>
+<div class="box">You get an evidence-based read on demand, economics, competition, and risk. If the score is strong, you can move directly into Foundation for the full document + product + deployment package.</div>
 <small style="margin-top:0">This path is designed to reduce regret: you only pay after clarity.</small>
 <div class="cta">
-<a class="btn btn-p" href="/app?plan=free&archetype=demo_express&segment=viability">Score free — $0</a>
-<a class="btn btn-g" href="/app?plan=foundation&archetype=landing_1p&segment=viability_buy">Move to Foundation — $1,997</a>
+<a class="btn btn-p" href="/app?plan=free&archetype=demo_express&segment=viability&source=spoke">Score free — $0</a>
+<a class="btn btn-g" href="/app?plan=foundation&archetype=landing_1p&segment=viability_buy&source=spoke">Move to Foundation — $1,997</a>
 </div>
-<small><a href="/">Home</a> · <a href="/maturity">See what’s included</a></small>
+<div class="faq">
+<h2>Common questions</h2>
+<details class="fq"><summary>What exactly does the free score include?</summary><p>A multi-lens viability scorecard covering demand, economics, competition, and risk — with independent stress testing. You see strengths and gaps before spending anything.</p></details>
+<details class="fq"><summary>What happens if the score says "no go"?</summary><p>You walk away smarter for $0. The analysis explains why, so you can pivot the idea or address specific weaknesses before revisiting.</p></details>
+<details class="fq"><summary>If the score is strong, what does Foundation add?</summary><p>Foundation implements 90+ strategy documents, a live deployed product on your domain, and clear activation guides — all in one build session. See <a href="/maturity">what ships today</a>.</p></details>
+</div>
+<p class="promise">Every path runs through the same product: judgment on the plan, implementation you own, and accountable scope. <a href="/maturity">See exactly what ships today</a>.</p>
+<small><a href="/">Home</a> · <a href="/maturity">What's included</a> · <a href="/#pricing">Pricing</a> · <a href="/quiz">Diagnostic</a></small>
 </body>
 </html>

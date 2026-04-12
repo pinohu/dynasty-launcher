@@ -1,5 +1,8 @@
 # Integration Module Interface
 
+## Credential boundary
+Use **Dynasty** (`DYNASTY_TOOL_CONFIG`) keys only to **create or configure** resources during provisioning (derivative output, one-time setup). The **delivered product** must **not** depend on those keys for day‑2 operation: document handoff in **MANUAL-ACTIONS.md**, map secrets to **customer-owned** env vars, and prefer vendor flows where the **customer account** owns billing, data, and API access. Do **not** POST real secrets to the **customer’s** Vercel project via API — placeholders + repo/docs only (see `api/provision.js`).
+
 Every module follows this exact interface. Copy this as the starting point for any new module.
 
 ```javascript
