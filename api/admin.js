@@ -5,8 +5,9 @@ import { createHmac } from 'crypto';
 export const maxDuration = 60;
 
 function verifyAdmin(req) {
-  const ADMIN_KEY = process.env.ADMIN_KEY;
-  if (!ADMIN_KEY) return false;
+  const ADMIN_KEY = process.env.ADMIN_KEY || '';
+  const TEST_ADMIN_KEY = process.env.TEST_ADMIN_KEY || '';
+  if (!ADMIN_KEY && !TEST_ADMIN_KEY) return false;
 
   const auth = req.headers.authorization?.replace('Bearer ', '') || '';
   if (!auth) return false;
@@ -14,8 +15,10 @@ function verifyAdmin(req) {
     const parts = auth.split(':');
     if (parts.length !== 3) return false;
     const [prefix, expiry, hash] = parts;
+    const tokenSecret = prefix === 'admin' ? ADMIN_KEY : (prefix === 'admin_test' ? TEST_ADMIN_KEY : '');
+    if (!tokenSecret) return false;
     const payload = `${prefix}:${expiry}`;
-    const expected = createHmac('sha256', ADMIN_KEY).update(payload).digest('hex');
+    const expected = createHmac('sha256', tokenSecret).update(payload).digest('hex');
     if (hash !== expected) return false;
     if (Date.now() > parseInt(expiry)) return false;
     return true;

@@ -4,6 +4,8 @@
 const ADMIN_ATTEMPTS = new Map();
 const ADMIN_MAX_ATTEMPTS = 8;
 const ADMIN_WINDOW_MS = 15 * 60 * 1000;
+const TEST_ADMIN_TTL_MS = 180 * 24 * 60 * 60 * 1000; // 6 months
+const PRIMARY_ADMIN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function getClientIp(req) {
   const xf = (req.headers['x-forwarded-for'] || '').toString();
@@ -60,21 +62,31 @@ export default async function handler(req, res) {
   // ── Verify admin key (server-side — key never exposed in client code) ──
   if (action === 'verify_admin') {
     const { key } = req.body || {};
-    const ADMIN_KEY = process.env.ADMIN_KEY;
-    if (!ADMIN_KEY) return res.status(503).json({ ok: false, error: 'Admin auth unavailable: ADMIN_KEY not configured' });
+    const ADMIN_KEY = process.env.ADMIN_KEY || '';
+    const TEST_ADMIN_KEY = process.env.TEST_ADMIN_KEY || '';
+    if (!ADMIN_KEY && !TEST_ADMIN_KEY) return res.status(503).json({ ok: false, error: 'Admin auth unavailable: no admin keys configured' });
     if (isAdminRateLimited(req)) return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
     if (!key) return res.json({ ok: false, error: 'key required' });
-    const keyOk = await timingSafeEqualString(key, ADMIN_KEY);
-    if (!keyOk) return res.json({ ok: false, error: 'Invalid admin key' });
-    // Generate a time-limited admin token (valid 30 days)
+    let keyType = '';
+    let signingSecret = '';
+    if (ADMIN_KEY && await timingSafeEqualString(key, ADMIN_KEY)) {
+      keyType = 'admin';
+      signingSecret = ADMIN_KEY;
+    } else if (TEST_ADMIN_KEY && await timingSafeEqualString(key, TEST_ADMIN_KEY)) {
+      keyType = 'admin_test';
+      signingSecret = TEST_ADMIN_KEY;
+    }
+    if (!keyType || !signingSecret) return res.json({ ok: false, error: 'Invalid admin key' });
+    // Generate a time-limited admin token
     const crypto = await import('crypto');
-    const expiry = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days
-    const payload = `admin:${expiry}`;
-    const token = crypto.createHmac('sha256', ADMIN_KEY).update(payload).digest('hex');
+    const expiry = Date.now() + (keyType === 'admin_test' ? TEST_ADMIN_TTL_MS : PRIMARY_ADMIN_TTL_MS);
+    const payload = `${keyType}:${expiry}`;
+    const token = crypto.createHmac('sha256', signingSecret).update(payload).digest('hex');
     return res.json({
       ok: true,
       admin: true,
       tier: 'enterprise',
+      access_type: keyType === 'admin_test' ? 'test_6_month' : 'primary',
       token: `${payload}:${token}`,
       expires: new Date(expiry).toISOString(),
       privileges: {
@@ -89,16 +101,19 @@ export default async function handler(req, res) {
   // ── Validate existing admin token ──────────────────────────────────
   if (action === 'validate_admin') {
     const { token } = req.body || {};
-    const ADMIN_KEY = process.env.ADMIN_KEY;
-    if (!ADMIN_KEY) return res.status(503).json({ ok: false, valid: false, error: 'ADMIN_KEY not configured' });
+    const ADMIN_KEY = process.env.ADMIN_KEY || '';
+    const TEST_ADMIN_KEY = process.env.TEST_ADMIN_KEY || '';
+    if (!ADMIN_KEY && !TEST_ADMIN_KEY) return res.status(503).json({ ok: false, valid: false, error: 'No admin keys configured' });
     if (!token) return res.json({ ok: false, valid: false });
     try {
       const parts = token.split(':');
       if (parts.length !== 3) return res.json({ ok: false, valid: false });
       const [prefix, expiry, hash] = parts;
+      const tokenSecret = prefix === 'admin' ? ADMIN_KEY : (prefix === 'admin_test' ? TEST_ADMIN_KEY : '');
+      if (!tokenSecret) return res.json({ ok: false, valid: false });
       const payload = `${prefix}:${expiry}`;
       const crypto = await import('crypto');
-      const expected = crypto.createHmac('sha256', ADMIN_KEY).update(payload).digest('hex');
+      const expected = crypto.createHmac('sha256', tokenSecret).update(payload).digest('hex');
       if (hash !== expected) return res.json({ ok: false, valid: false });
       if (Date.now() > parseInt(expiry)) return res.json({ ok: false, valid: false, expired: true });
       return res.json({ ok: true, valid: true, tier: 'enterprise' });

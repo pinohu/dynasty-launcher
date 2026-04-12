@@ -13,8 +13,9 @@ export default function middleware(request) {
   // ── /admin route — require admin key in URL or let page handle token check ──
   if (url.pathname === '/admin') {
     const adminKey = process.env.ADMIN_KEY || '';
+    const testAdminKey = process.env.TEST_ADMIN_KEY || '';
     // Allow with key in URL
-    if (adminKey && params.get('k') && params.get('k') === adminKey) return;
+    if (params.get('k') && ((adminKey && params.get('k') === adminKey) || (testAdminKey && params.get('k') === testAdminKey))) return;
     // Allow admin page to load after token bootstrap; admin.html still validates token server-side.
     if (params.get('auth') === 'token') return;
     // Block with a minimal auth page
@@ -36,7 +37,8 @@ else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{doc
 
   // Allow admin access with server-side key (never hardcoded in client)
   const adminKey = process.env.ADMIN_KEY || '';
-  if (adminKey && params.get('k') && params.get('k') === adminKey) {
+  const testAdminKey = process.env.TEST_ADMIN_KEY || '';
+  if (params.get('k') && ((adminKey && params.get('k') === adminKey) || (testAdminKey && params.get('k') === testAdminKey))) {
     return; // Pass through — app.html will verify server-side
   }
 
