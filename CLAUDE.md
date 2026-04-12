@@ -22,9 +22,13 @@ dynasty-launcher/
 ```
 
 ## Architecture
-- **app.html**: Single-file frontend. Contains the entire builder UI + AI generation pipeline + build validation gate. All phases run client-side calling the Anthropic API and GitHub API directly.
+- **app.html**: Single-file frontend. Contains the entire builder UI + AI generation pipeline + build validation gate. All phases run client-side calling the Anthropic API and GitHub API directly. **Viability scoring uses WebLLM (client-side WebGPU inference) as the primary path** — a Qwen2.5-3B model runs directly in the browser for zero-cost, unlimited, private scoring. Falls back to server-side `/api/ai` when WebGPU is unavailable.
 - **api/provision.js**: Vercel serverless function. Handles deployment: creates GitHub repos (via template fork), creates Vercel projects, sets env vars, triggers deployments. Also runs 17 `mod_*` integration modules (hosting, billing, email, phone, SMS, chatbot, SEO, video, design, analytics, leads, docs, automation, social, CRM, directory, WordPress) for Professional+ tiers. Handles authority site deploys and retry logic.
+- **api/ai.js**: AI router. Multi-provider (Anthropic, OpenAI, Google, Groq, DeepSeek, Mistral, OpenRouter, Ollama, Cerebras, SambaNova). Rate limiting + quota system. Cloud fallback for browsers without WebGPU.
 - **DYNASTY_TOOL_CONFIG**: Encrypted Vercel env var containing 50+ API keys organized by category (ai, payments, infrastructure, comms, content, crm_pm, automation, data_research, directories, suitedash, community, modules_enabled).
+
+### WebLLM / client-side inference
+Viability scoring defaults to **client-side WebLLM** (Qwen2.5-3B-Instruct, ~2 GB quantized). The model downloads once via CDN and is cached by the browser. Scoring then runs entirely in-browser using WebGPU — no server calls, no API keys, no cost. **Fallback chain:** WebLLM → server-side free models (Groq/Google/Cerebras/SambaNova) → paid models. The server-side quota system (3 guest / 6 registered / Scoring Pro $19/mo) only applies when the cloud fallback is used.
 
 ### Third-party credential boundary
 Keys in **DYNASTY_TOOL_CONFIG** (and related Vercel env vars on **dynasty-launcher**) exist to **generate derivative work** and to **run one-time provisioning** (repos, deploys, `mod_*` setup) where the orchestrator calls vendor APIs. They are **not** the long-term operating substrate for customer deliverables. Shipped apps should **sustain themselves** on the **customer’s own** vendor accounts: values documented in **`.env.example`**, **MANUAL-ACTIONS.md**, and env vars on the **customer’s** Vercel/GitHub project — not a permanent dependency on the launcher’s shared key pool. When a module creates an external resource, prefer outcomes that **hand off** ownership (customer API keys, webhooks on their URL, their Stripe Connect, etc.) over routing all live traffic through Dynasty-held secrets.

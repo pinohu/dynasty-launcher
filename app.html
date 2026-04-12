@@ -612,6 +612,11 @@ html,body{overflow-x:hidden}
 </style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"></script>
+<script type="module" id="webllm-loader">
+import { CreateMLCEngine, prebuiltAppConfig } from 'https://esm.run/@mlc-ai/web-llm';
+window.__webllm = { CreateMLCEngine, prebuiltAppConfig, engine: null, ready: false, loading: false, error: null, supported: false };
+try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.supported = false; }
+</script>
 </head>
 <body>
 <a href="#project-desc" class="skip-link">Skip to main content</a>
@@ -894,6 +899,7 @@ html,body{overflow-x:hidden}
     </div>
 
     <button class="launch" id="score-btn" onclick="scoreIdea()">Score this idea →</button>
+    <div id="webllm-badge" style="display:none;text-align:center;margin-top:6px;font-size:11px;color:var(--dim)"></div>
 
     <div id="scorecard-wrap" style="display:none">
       <div class="scorecard" id="scorecard"></div>
@@ -3257,6 +3263,118 @@ function renderSynthesis(syn) {
     </div>`;
 }
 
+// ── WebLLM: client-side inference for zero-cost scoring ─────────────────────
+const WEBLLM_MODEL = 'Qwen2.5-3B-Instruct-q4f16_1-MLC';
+let _webllmInitPromise = null;
+
+function webllmSupported() {
+  return !!(window.__webllm && window.__webllm.supported);
+}
+
+function getWebLLMStatusEl() {
+  let el = document.getElementById('webllm-status');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'webllm-status';
+    el.style.cssText = 'position:fixed;bottom:16px;right:16px;background:var(--bg2,#1a1a2e);border:1px solid var(--bdr,#333);border-radius:10px;padding:10px 16px;font-size:12px;color:var(--tx,#ccc);z-index:9999;display:none;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,0.4)';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function showWebLLMStatus(text, progress) {
+  const el = getWebLLMStatusEl();
+  el.style.display = 'block';
+  const pct = typeof progress === 'number' ? progress : -1;
+  el.innerHTML = pct >= 0
+    ? `<div style="margin-bottom:6px"><strong>🧠 Local AI</strong> — ${escapeHtml(text)}</div><div style="background:#333;border-radius:4px;height:6px;overflow:hidden"><div style="background:var(--acc,#6C63FF);height:100%;width:${Math.round(pct*100)}%;transition:width 0.3s"></div></div><div style="text-align:right;font-size:10px;margin-top:3px">${Math.round(pct*100)}%</div>`
+    : `<div><strong>🧠 Local AI</strong> — ${escapeHtml(text)}</div>`;
+}
+
+function hideWebLLMStatus() { const el = document.getElementById('webllm-status'); if (el) el.style.display = 'none'; }
+
+async function initWebLLM() {
+  if (!webllmSupported()) return false;
+  const wl = window.__webllm;
+  if (wl.ready && wl.engine) return true;
+  if (wl.loading) return _webllmInitPromise;
+  wl.loading = true;
+
+  _webllmInitPromise = (async () => {
+    try {
+      showWebLLMStatus('Checking GPU capabilities…');
+      const adapter = await navigator.gpu.requestAdapter();
+      if (!adapter) { wl.error = 'No WebGPU adapter'; wl.loading = false; hideWebLLMStatus(); return false; }
+
+      showWebLLMStatus('Downloading model (first time only)…', 0);
+      wl.engine = await wl.CreateMLCEngine(WEBLLM_MODEL, {
+        initProgressCallback: (report) => {
+          const pct = report.progress || 0;
+          const label = report.text || 'Loading…';
+          showWebLLMStatus(label.length > 60 ? label.slice(0, 57) + '…' : label, pct);
+        },
+        logLevel: 'SILENT',
+      }, {
+        context_window_size: 4096,
+      });
+
+      wl.ready = true;
+      wl.loading = false;
+      showWebLLMStatus('Ready — scoring runs locally on your device');
+      setTimeout(hideWebLLMStatus, 3000);
+      return true;
+    } catch (e) {
+      console.warn('WebLLM init failed:', e);
+      wl.error = e.message;
+      wl.loading = false;
+      hideWebLLMStatus();
+      return false;
+    }
+  })();
+
+  return _webllmInitPromise;
+}
+
+async function aiLocal(prompt, max = 3000) {
+  const wl = window.__webllm;
+  if (!wl?.ready || !wl.engine) throw new Error('WebLLM not ready');
+
+  const reply = await wl.engine.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: max,
+    temperature: 0.3,
+    response_format: { type: 'json_object' },
+  });
+
+  const text = reply.choices?.[0]?.message?.content || '';
+  if (!text || text.length < 50) throw new Error('Local model produced insufficient output');
+  return text;
+}
+
+// Pre-warm WebLLM in background when the page is idle
+function updateWebLLMBadge() {
+  const badge = document.getElementById('webllm-badge');
+  if (!badge) return;
+  const wl = window.__webllm;
+  if (!wl?.supported) { badge.style.display = 'none'; return; }
+  badge.style.display = 'block';
+  if (wl.ready) {
+    badge.innerHTML = '🧠 <span style="color:#4ade80">Local AI ready</span> — unlimited free scoring on your device';
+  } else if (wl.loading) {
+    badge.innerHTML = '🧠 Preparing local AI… <span style="color:var(--dim)">(first time only)</span>';
+  } else if (wl.error) {
+    badge.innerHTML = '☁️ Cloud scoring — your browser doesn\'t support local AI';
+  } else {
+    badge.innerHTML = '🧠 Local AI available — will download on first use';
+  }
+}
+if (typeof requestIdleCallback === 'function') {
+  requestIdleCallback(() => { if (webllmSupported()) initWebLLM().then(updateWebLLMBadge); else updateWebLLMBadge(); }, { timeout: 5000 });
+} else {
+  setTimeout(() => { if (webllmSupported()) initWebLLM().then(updateWebLLMBadge); else updateWebLLMBadge(); }, 3000);
+}
+setTimeout(updateWebLLMBadge, 1500);
+
 async function scoreIdea() {
   const desc = document.getElementById('project-desc').value.trim();
   if (!desc || !INFERRED) return;
@@ -3264,7 +3382,6 @@ async function scoreIdea() {
   btn.disabled = true; btn.textContent = 'Researching market data…';
   showLoadingOverlay('Researching market...', 'Pulling competitor data, market size, and SEO demand signals');
 
-  // Run pre-build research to get real market data
   const research = await runPreBuildResearch(INFERRED.name || desc.slice(0, 50), INFERRED.location || 'United States');
   const researchContext = research?.summary || '';
 
@@ -3274,19 +3391,18 @@ async function scoreIdea() {
   const fwList = V2_FRAMEWORKS.map(f => FW_PROMPTS[f] || '').filter(Boolean).join('\n\n');
   const depthMod = DEPTH_MODIFIERS[FW_DEPTH] || DEPTH_MODIFIERS.standard;
 
-  try {
-    const raw = await aiRaw(`${PROMPT_ARMOR}You are a world-class business strategist. Analyze this business idea using the specified frameworks and return a viability scorecard.
+  const scoringPrompt = `You are a business strategist. Analyze this business idea and return a viability scorecard.
 
-DEPTH LEVEL: ${FW_DEPTH.toUpperCase()} — ${depthMod}
+DEPTH: ${FW_DEPTH.toUpperCase()} — ${depthMod}
 
 PROJECT: ${sanitizePromptInput(desc)}
-INFERRED CONFIG: ${JSON.stringify(INFERRED, null, 2)}
-${researchContext ? `\nREAL MARKET DATA (from live research — use these numbers, cite them):\n${researchContext}` : ''}
+CONFIG: ${JSON.stringify(INFERRED, null, 2)}
+${researchContext ? `\nMARKET DATA:\n${researchContext}` : ''}
 
-FRAMEWORKS TO APPLY:
+FRAMEWORKS:
 ${fwList}
 
-Return ONLY valid JSON (no markdown, no backticks, no preamble):
+Return ONLY valid JSON:
 {
   "scores": {
     "market_hunger": { "score": 0.0, "rationale": "..." },
@@ -3311,36 +3427,57 @@ Return ONLY valid JSON (no markdown, no backticks, no preamble):
   }
 }
 
-All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base composite on weighted average (market_hunger 25%, blue_ocean 20%, moat 20%, revenue 20%, feasibility 15%).`, FW_DEPTH === 'deep' ? 8000 : FW_DEPTH === 'quick' ? 3000 : 6000);
+All scores 0.0-10.0. Be honest — do not inflate. Weighted average: market_hunger 25%, blue_ocean 20%, moat 20%, revenue 20%, feasibility 15%.`;
 
-    // Strip markdown code fences if present
+  let raw = '';
+  let scoredLocally = false;
+
+  try {
+    // Hybrid path: try WebLLM first (zero cost), fall back to server
+    const webllmReady = webllmSupported() && window.__webllm?.ready;
+    if (webllmReady) {
+      try {
+        showLoadingOverlay('Scoring locally...', 'Running AI analysis on your device — no server calls, unlimited usage');
+        btn.textContent = 'Scoring on your device…';
+        raw = await aiLocal(scoringPrompt, FW_DEPTH === 'deep' ? 4000 : FW_DEPTH === 'quick' ? 1500 : 3000);
+        scoredLocally = true;
+      } catch (localErr) {
+        console.warn('Local scoring failed, falling back to server:', localErr);
+        raw = '';
+      }
+    }
+
+    if (!raw) {
+      showLoadingOverlay('Scoring viability...', `Analyzing with ${V2_FRAMEWORKS.length} frameworks (cloud)`);
+      btn.textContent = 'Analyzing (cloud)…';
+      raw = await aiRaw(`${PROMPT_ARMOR}${scoringPrompt}`, FW_DEPTH === 'deep' ? 8000 : FW_DEPTH === 'quick' ? 3000 : 6000);
+    }
+
     let cleaned = (raw || '').replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
     const m = cleaned.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('No JSON in scorecard response (raw length: ' + (raw||'').length + ', first 100: ' + (raw||'').slice(0,100) + ')');
     V2_SCORECARD = safeJsonParse(m[0]);
     if (!V2_SCORECARD) throw new Error('JSON parse failed');
 
-    // Normalize scorecard fields — AI may use different field names
     if (!V2_SCORECARD.composite && V2_SCORECARD.composite_score) V2_SCORECARD.composite = V2_SCORECARD.composite_score;
     if (!V2_SCORECARD.composite && V2_SCORECARD.overall_score) V2_SCORECARD.composite = V2_SCORECARD.overall_score;
     if (!V2_SCORECARD.composite && V2_SCORECARD.viability_score) V2_SCORECARD.composite = V2_SCORECARD.viability_score;
     if (!V2_SCORECARD.composite && V2_SCORECARD.total_score) V2_SCORECARD.composite = V2_SCORECARD.total_score;
-    // Try to compute composite from scores if still missing
     if (!V2_SCORECARD.composite && V2_SCORECARD.scores) {
       const vals = Object.values(V2_SCORECARD.scores).map(v => typeof v === 'object' ? v.score : v).filter(n => typeof n === 'number');
       if (vals.length > 0) V2_SCORECARD.composite = vals.reduce((a, b) => a + b, 0) / vals.length;
     }
-    // Ensure composite is a number
     if (typeof V2_SCORECARD.composite === 'string') V2_SCORECARD.composite = parseFloat(V2_SCORECARD.composite) || 0;
     if (!V2_SCORECARD.composite) V2_SCORECARD.composite = 0;
     if (!V2_SCORECARD.scores) V2_SCORECARD.scores = {};
     if (!V2_SCORECARD.verdict) V2_SCORECARD.verdict = V2_SCORECARD.composite >= 8 ? 'STRONG BUILD CANDIDATE' : V2_SCORECARD.composite >= 6 ? 'VIABLE WITH CAVEATS' : 'NEEDS REFINEMENT';
 
+    V2_SCORECARD._scored_locally = scoredLocally;
+
     hideLoadingOverlay();
     renderScorecard(V2_SCORECARD);
     document.getElementById('scorecard-wrap').style.display = 'block';
 
-    // Cross-Framework Synthesis (if 3+ frameworks)
     if (V2_FRAMEWORKS.length >= 3 && FW_DEPTH !== 'quick') {
       showLoadingOverlay('Synthesizing...', 'Cross-referencing framework results for consensus signals and contradictions');
       const syn = await runCrossFrameworkSynthesis(V2_SCORECARD);
@@ -3348,7 +3485,7 @@ All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base 
       if (syn) renderSynthesis(syn);
     }
 
-    btn.textContent = 'Score again ↻';
+    btn.textContent = scoredLocally ? 'Score again ↻ (local)' : 'Score again ↻';
     btn.disabled = false;
   } catch (e) {
     hideLoadingOverlay();
@@ -3380,7 +3517,7 @@ function renderScorecard(sc) {
   const vcls = sc.composite >= 8 ? 'strong' : sc.composite >= 6 ? 'viable' : 'weak';
 
   document.getElementById('scorecard').innerHTML = `
-    <div class="sc-title">Dynasty Viability Scorecard</div>
+    <div class="sc-title">Dynasty Viability Scorecard${sc._scored_locally ? '<span style="display:inline-block;margin-left:10px;padding:2px 8px;font-size:10px;background:#1a3a1a;color:#4ade80;border-radius:20px;vertical-align:middle;font-weight:500">🧠 Scored locally</span>' : ''}</div>
     ${Object.entries(s).map(([k, v]) => `
       <div class="sc-row">
         <span class="sc-label">${escapeHtml(k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))}</span>

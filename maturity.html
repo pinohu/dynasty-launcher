@@ -47,20 +47,21 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 </ul>
 
 <div class="sum">
-<span><strong style="color:var(--live)">Live:</strong> 4</span>
-<span><strong style="color:var(--partial)">Partial:</strong> 4</span>
+<span><strong style="color:var(--live)">Live:</strong> 11</span>
+<span><strong style="color:var(--partial)">Partial:</strong> 6</span>
 <span><strong style="color:var(--sub)">Codegen:</strong> 4</span>
-<span><strong style="color:var(--ready)">Automation-ready:</strong> 17</span>
+<span><strong style="color:var(--ready)">Automation-ready:</strong> 15</span>
 </div>
 
 <details class="matrix">
-<summary>Detailed technical matrix (35 rows)</summary>
+<summary>Detailed technical matrix (36 rows)</summary>
 <table>
 <thead>
 <tr><th>Outcome area</th><th>Status</th><th>Customer-visible proof</th><th>Notes</th></tr>
 </thead>
 <tbody>
 <tr><td>Multi-model viability scoring + adversarial critique</td><td><span class="tag live">Live</span></td><td>Scorecard in app; exported narrative in docs</td><td>Free tier for scoring; depth scales with path.</td></tr>
+<tr><td>Local AI scoring (WebLLM/WebGPU)</td><td><span class="tag live">Live</span></td><td>Client-side Qwen2.5-3B; falls back to cloud</td><td>Unlimited, private, zero-cost scoring on devices with WebGPU. Cloud fallback for older browsers.</td></tr>
 <tr><td>Strategy & business document bundle</td><td><span class="tag gen">Codegen</span></td><td>Markdown in repo (SPEC, GTM, revenue, investor, SBA-shaped content, etc.)</td><td>Depth scales with package; advisor review still required — not legal/financial advice.</td></tr>
 <tr><td>Plain-language companion (<code>docs/plain/</code>)</td><td><span class="tag partial">Partial</span></td><td>Toggle in builder; QA heuristics in pipeline</td><td>Additive to technical originals.</td></tr>
 <tr><td>Design system + CLAUDE.md per project</td><td><span class="tag gen">Codegen</span></td><td><code>DESIGN.md</code>, <code>CLAUDE.md</code></td><td>—</td></tr>
