@@ -1261,14 +1261,18 @@ html,body{overflow-x:hidden}
     return; // Let checkPlanPurchase() handle (free → enter builder, paid → redirect to Stripe)
   }
 
-  // 3b. Returning user (linked from gate page / "Sign in")
+  var paidSession = localStorage.getItem('dynasty_paid_session');
+  var paidAt = localStorage.getItem('dynasty_paid_at');
+
+  // 3b. Returning user (gate "Sign in") — without stored payment, load full app so Clerk can run
   if (params.get('returning') === '1') {
-    // Falls through to check 4 (localStorage verification) below
+    try {
+      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+    } catch (e) {}
+    if (!(paidSession && paidAt)) return;
   }
 
   // 4. Verified paid user (has a confirmed Stripe session)
-  var paidSession = localStorage.getItem('dynasty_paid_session');
-  var paidAt = localStorage.getItem('dynasty_paid_at');
   if (paidSession && paidAt) {
     if (!localStorage.getItem('dynasty_paid_token')) {
       fetch('/api/checkout?action=verify', {
@@ -1417,7 +1421,7 @@ function updateAuthUI() {
     authBtn.onclick = () => CLERK_INSTANCE?.openUserProfile();
   } else {
     authBtn.innerHTML = 'Sign In';
-    authBtn.onclick = () => CLERK_INSTANCE?.openSignIn();
+    authBtn.onclick = () => handleSignIn();
   }
   updateHistoryButtonVisibility();
 }

@@ -145,11 +145,9 @@ fetch('/api/checkout?action=create_session', {
     });
   }
 
-  // Returning users: pass through with ?returning=1 so app.html can check localStorage
-  // The gate page links to this. If localStorage has no paid session, the JS access gate
-  // at line 1155 will reject them — so this is NOT a bypass.
+  // Returning users: pass through so app.html loads the builder shell (Clerk sign-in) or paid session
   if (params.get('returning') === '1') {
-    return; // Let app.html JS check localStorage for dynasty_paid_session
+    return;
   }
 
   // /app — always serve app.html; edge cannot read localStorage (admin token, paid session).
