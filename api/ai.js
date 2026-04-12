@@ -47,11 +47,17 @@ const PROVIDERS = {
   'ollama/deepseek-r1':           { provider: 'ollama', label: 'DeepSeek R1 (Ollama)', costPer1kIn: 0, costPer1kOut: 0, free: true },
   'ollama/qwen3':                 { provider: 'ollama', label: 'Qwen 3 (Ollama)',      costPer1kIn: 0, costPer1kOut: 0, free: true },
   'ollama/mistral':               { provider: 'ollama', label: 'Mistral (Ollama)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Cerebras (free tier — fast inference) ────────────────────────────
+  'llama-3.3-70b':                { provider: 'cerebras', label: 'Llama 3.3 70B (Cerebras)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── SambaNova (free tier — fast inference) ───────────────────────────
+  'Meta-Llama-3.3-70B-Instruct':  { provider: 'sambanova', label: 'Llama 3.3 70B (SambaNova)', costPer1kIn: 0, costPer1kOut: 0, free: true },
 };
 
 const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_DAILY_LIMIT || '30', 10));
-const FREE_GUEST_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_GUEST_SCORING_LIMIT || '1', 10));
-const FREE_REGISTERED_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_REGISTERED_SCORING_LIMIT || '3', 10));
+const FREE_GUEST_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_GUEST_SCORING_LIMIT || '3', 10));
+const FREE_REGISTERED_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_REGISTERED_SCORING_LIMIT || '6', 10));
 const SCORING_PRO_MONTHLY_LIMIT = Math.max(50, parseInt(process.env.SCORING_PRO_MONTHLY_LIMIT || '200', 10));
 const USAGE_TABLE = 'dynasty_ai_usage_daily';
 const QUOTA_TABLE = 'dynasty_ai_quota_usage';
@@ -179,7 +185,7 @@ async function incrementUsage(actorKey) {
 }
 
 function resolveFreeModel(config) {
-  const preferred = ['gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
+  const preferred = ['gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
   for (const model of preferred) {
     const info = PROVIDERS[model];
     if (!info || !info.free) continue;
@@ -246,7 +252,9 @@ function getApiKey(provider, config) {
     deepseek:    process.env.DEEPSEEK_API_KEY || config?.ai?.deepseek,
     mistral:     process.env.MISTRAL_API_KEY || config?.ai?.mistral,
     openrouter:  process.env.OPENROUTER_API_KEY || config?.ai?.openrouter,
-    ollama:      process.env.OLLAMA_URL || config?.ai?.ollama_url || null, // URL acts as the "key"
+    ollama:      process.env.OLLAMA_URL || config?.ai?.ollama_url || null,
+    cerebras:    process.env.CEREBRAS_API_KEY || config?.ai?.cerebras,
+    sambanova:   process.env.SAMBANOVA_API_KEY || config?.ai?.sambanova,
   };
   return keys[provider] || null;
 }
@@ -405,7 +413,33 @@ async function callOpenRouter(apiKey, body) {
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
 
-const CALLERS = { anthropic: callAnthropic, openai: callOpenAI, google: callGoogle, groq: callGroq, deepseek: callDeepSeek, mistral: callMistral, openrouter: callOpenRouter, ollama: callOllama };
+async function callCerebras(apiKey, body) {
+  const messages = (body.messages || []).map(m => ({ role: m.role, content: m.content }));
+  if (body.system) messages.unshift({ role: 'system', content: body.system });
+  const r = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d?.error?.message || `Cerebras request failed (${r.status})`);
+  return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
+}
+
+async function callSambaNova(apiKey, body) {
+  const messages = (body.messages || []).map(m => ({ role: m.role, content: m.content }));
+  if (body.system) messages.unshift({ role: 'system', content: body.system });
+  const r = await fetch('https://api.sambanova.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d?.error?.message || `SambaNova request failed (${r.status})`);
+  return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
+}
+
+const CALLERS = { anthropic: callAnthropic, openai: callOpenAI, google: callGoogle, groq: callGroq, deepseek: callDeepSeek, mistral: callMistral, openrouter: callOpenRouter, ollama: callOllama, cerebras: callCerebras, sambanova: callSambaNova };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
@@ -563,14 +597,14 @@ export default async function handler(req, res) {
     if (requestsInPeriod > limit) {
       if (scoringPlan === 'guest') {
         return res.status(429).json({
-          error: 'Your first free score is used. Sign in with email to unlock 3 more scores this month.',
+          error: 'You\u2019ve used your 3 guest scores this month. Sign in with email to unlock 6 scores per month.',
           code: 'scoring_guest_limit_reached',
           limit,
         });
       }
       if (scoringPlan === 'registered') {
         return res.status(429).json({
-          error: 'You have used your 3 registered free scores this month. Upgrade to Scoring Pro for ongoing access.',
+          error: 'You\u2019ve used your 6 registered free scores this month. Upgrade to Scoring Pro for ongoing access.',
           code: 'scoring_registered_limit_reached',
           limit,
         });

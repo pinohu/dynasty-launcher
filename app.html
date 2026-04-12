@@ -3354,16 +3354,16 @@ All scores are 0.0-10.0. Be honest and rigorous — do not inflate scores. Base 
     hideLoadingOverlay();
     console.error('Scoring error:', e);
     const msg = String(e?.message || '');
-    if (msg.includes('first free score is used')) {
-      const shouldSignIn = confirm('You used your first free score.\n\nSign in with your email to unlock 3 more scores this month.\n\nClick OK to sign in now.');
+    if (msg.includes('free score') && msg.includes('Sign in')) {
+      const shouldSignIn = confirm('You\u2019ve used your 3 guest scores this month.\n\nSign in with your email to unlock 6 scores per month.\n\nClick OK to sign in now.');
       if (shouldSignIn) {
         try {
           const authed = await requireAuth();
-          if (authed) alert('Scoring unlocked: you now have 3 additional scores this month.');
+          if (authed) alert('Scoring unlocked: you now have 6 scores this month.');
         } catch {}
       }
-    } else if (msg.includes('3 registered free scores')) {
-      const shouldUpgrade = confirm('You used your 3 registered free scores this month.\n\nUpgrade to Scoring Pro ($19/month) for ongoing scoring access.\n\nClick OK to continue.');
+    } else if (msg.includes('registered free scores')) {
+      const shouldUpgrade = confirm('You\u2019ve used your 6 registered scores this month.\n\nUpgrade to Scoring Pro ($19/month) for ongoing scoring access.\n\nClick OK to continue.');
       if (shouldUpgrade) startCheckout('scoring_pro');
     } else if (msg.includes('Scoring Pro fair-use limit reached')) {
       alert('Your Scoring Pro fair-use threshold is reached for this month. Contact support to raise your scoring limit.');
@@ -3859,7 +3859,7 @@ async function aiRawWithModel(prompt, modelId, max = 4000) {
       try { d = await r.json(); } catch {}
       if (r.status === 429) {
         const errMsg = d?.error || d?.message || '';
-        if (String(errMsg).includes('first free score is used') || String(errMsg).includes('3 registered free scores') || String(errMsg).includes('Scoring Pro fair-use limit')) {
+        if (String(errMsg).includes('guest scores') || String(errMsg).includes('registered free scores') || String(errMsg).includes('Scoring Pro fair-use limit')) {
           throw new Error(errMsg);
         }
         await new Promise(r=>setTimeout(r, 3000*(attempt+1))); continue;
@@ -5801,7 +5801,7 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
     model = V2_MODEL;
   }
   
-  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
+  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'claude-haiku-4-5-20251001'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
@@ -5902,7 +5902,7 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
     budget: 'gemini-2.0-flash',                      // FREE (Google) — for boilerplate
   };
   const model = COST_MODELS[costTier] || COST_MODELS.standard;
-  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
+  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'claude-haiku-4-5-20251001'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
@@ -5921,7 +5921,7 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
       try { d = await r.json(); } catch {}
       if (r.status === 429) {
         const errMsg = d?.error || d?.message || '';
-        if (String(errMsg).includes('first free score is used') || String(errMsg).includes('3 registered free scores') || String(errMsg).includes('Scoring Pro fair-use limit')) {
+        if (String(errMsg).includes('guest scores') || String(errMsg).includes('registered free scores') || String(errMsg).includes('Scoring Pro fair-use limit')) {
           throw new Error(errMsg);
         }
         await new Promise(r => setTimeout(r, 3000 * (attempt + 1))); continue;
