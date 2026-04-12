@@ -23,9 +23,18 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
+  let config = {};
+  try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { config = {}; }
   const NEON_API_KEY = process.env.NEON_API_KEY || config.infrastructure?.neon_api_key;
   const action = req.query?.action || req.body?.action;
+
+  // Auth: require admin token for mutating actions
+  const ADMIN_SECRET = process.env.DYNASTY_ADMIN_TOKEN || process.env.ADMIN_TOKEN || '';
+  const reqToken = req.headers['x-dynasty-admin-token'] || req.body?.admin_token || '';
+  const isMutating = action === 'create_project' || action === 'set_vercel_db';
+  if (isMutating && ADMIN_SECRET && reqToken !== ADMIN_SECRET) {
+    return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  }
 
   // ── CHECK / TEST KEY ─────────────────────────────────────────────────────
   if (action === 'check') {
@@ -35,7 +44,7 @@ export default async function handler(req, res) {
       action: 'Add NEON_API_KEY env var to dynasty-launcher Vercel project' });
     const r = await neonRequest(NEON_API_KEY, 'GET', '/projects');
     if (r.ok) {
-      return res.json({ ok: true, has_key: true, projects: r.data?.projects?.length || 0 });
+      return res.json({ ok: true, has_key: true });
     }
     return res.json({ ok: false, has_key: true, status: r.status, error: 'Key invalid or Neon API error' });
   }
@@ -44,6 +53,10 @@ export default async function handler(req, res) {
   if (action === 'create_project') {
     const { project_name, region = 'aws-us-east-2' } = req.body || {};
     if (!project_name) return res.status(400).json({ ok: false, error: 'project_name required' });
+    const safeName = String(project_name).replace(/[^a-zA-Z0-9 _-]/g, '').slice(0, 80);
+    if (!safeName) return res.status(400).json({ ok: false, error: 'Invalid project_name' });
+    const ALLOWED_REGIONS = ['aws-us-east-2', 'aws-us-east-1', 'aws-us-west-2', 'aws-eu-central-1', 'aws-ap-southeast-1'];
+    const safeRegion = ALLOWED_REGIONS.includes(region) ? region : 'aws-us-east-2';
 
     if (!NEON_API_KEY) {
       return res.json({
@@ -62,8 +75,8 @@ export default async function handler(req, res) {
     // Create Neon project
     const projResp = await neonRequest(NEON_API_KEY, 'POST', '/projects', {
       project: {
-        name: project_name,
-        region_id: region,
+        name: safeName,
+        region_id: safeRegion,
         pg_version: 16,
         autoscaling_limit_min_cu: 0.25,
         autoscaling_limit_max_cu: 0.5
@@ -73,7 +86,7 @@ export default async function handler(req, res) {
     if (!projResp.ok) {
       return res.json({
         ok: false,
-        error: `Neon project creation failed: ${JSON.stringify(projResp.data).slice(0, 150)}`
+        error: 'Neon project creation failed. Check API key and try again.'
       });
     }
 
@@ -103,9 +116,9 @@ export default async function handler(req, res) {
       project_id: projectId,
       project_name: project?.name,
       region: project?.region_id,
-      database_url: poolerUri || connectionUri,
+      database_url_set: !!(poolerUri || connectionUri),
       dashboard_url: `https://console.neon.tech/app/projects/${projectId}`,
-      note: 'Add DATABASE_URL to your Vercel project env vars'
+      note: 'Retrieve DATABASE_URL from the Neon dashboard and add it to your Vercel project env vars'
     });
   }
 

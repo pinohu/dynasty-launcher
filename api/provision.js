@@ -144,9 +144,22 @@ async function consumeTierModuleQuota(pool, { tier, moduleName, limit }) {
 // ── Error sanitization — strip potential API keys from error messages ────────
 function sanitizeError(msg) {
   if (!msg || typeof msg !== 'string') return msg || 'Unknown error';
-  return msg.replace(/sk_live_[a-zA-Z0-9]+/g, 'sk_live_***').replace(/sk_test_[a-zA-Z0-9]+/g, 'sk_test_***')
-    .replace(/Bearer [a-zA-Z0-9._-]+/g, 'Bearer ***').replace(/token [a-zA-Z0-9._-]+/g, 'token ***')
-    .replace(/key=[a-zA-Z0-9._-]+/g, 'key=***').replace(/ghp_[a-zA-Z0-9]+/g, 'ghp_***').slice(0, 200);
+  return msg
+    .replace(/sk_live_[a-zA-Z0-9]+/g, 'sk_live_***')
+    .replace(/sk_test_[a-zA-Z0-9]+/g, 'sk_test_***')
+    .replace(/sk-ant-[a-zA-Z0-9-]+/g, 'sk-ant-***')
+    .replace(/Bearer [a-zA-Z0-9._-]+/g, 'Bearer ***')
+    .replace(/token [a-zA-Z0-9._-]+/g, 'token ***')
+    .replace(/key=[a-zA-Z0-9._-]+/g, 'key=***')
+    .replace(/ghp_[a-zA-Z0-9]+/g, 'ghp_***')
+    .replace(/ghu_[a-zA-Z0-9]+/g, 'ghu_***')
+    .replace(/neon_[a-zA-Z0-9]+/g, 'neon_***')
+    .replace(/postgres(ql)?:\/\/[^\s]+/g, 'postgres://***')
+    .replace(/password[=:]\s*[^\s&]+/gi, 'password=***')
+    .replace(/secret[=:]\s*[^\s&]+/gi, 'secret=***')
+    .replace(/api[_-]?key[=:]\s*[^\s&]+/gi, 'api_key=***')
+    .replace(/[a-f0-9]{32,}/gi, (m) => m.slice(0, 6) + '***')
+    .slice(0, 200);
 }
 
 const PROVISION_TIER_VALID = ['free', 'blueprint', 'scoring_pro', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'];
@@ -240,10 +253,11 @@ async function isValidAdminToken(token) {
   if (!secret) return false;
   const exp = parseInt(expiry, 10);
   if (!Number.isFinite(exp) || Date.now() > exp) return false;
-  const { createHmac } = await import('crypto');
+  const { createHmac, timingSafeEqual } = await import('crypto');
   const payload = `${prefix}:${expiry}`;
   const expected = createHmac('sha256', secret).update(payload).digest('hex');
-  return expected === hash;
+  if (expected.length !== hash.length) return false;
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(hash));
 }
 
 async function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
@@ -260,10 +274,11 @@ async function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
   if (tokUserId !== 'anon' && reqUser && tokUserId !== reqUser) return false;
   const expNum = parseInt(exp, 10);
   if (!Number.isFinite(expNum) || Date.now() > expNum) return false;
-  const { createHmac } = await import('crypto');
+  const { createHmac, timingSafeEqual } = await import('crypto');
   const payload = `${prefix}:${tokSessionId}:${tokUserId}:${tokTier}:${exp}`;
   const expected = createHmac('sha256', secret).update(payload).digest('hex');
-  return expected === sig;
+  if (expected.length !== sig.length) return false;
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(sig));
 }
 
 // ── V3 INTEGRATION MODULES ──────────────────────────────────────────────────
@@ -307,7 +322,7 @@ async function mod_hosting(config, project, liveUrl) {
         body: JSON.stringify({ mailbox: `hello@${domain}`, password: emailPw })
       });
       results.details.email = `hello@${domain}`;
-      results.details.email_password = emailPw;
+      results.details.email_password_set = true;
       results.details.email_imap = `mail.${domain}`;
       results.details.email_smtp = `mail.${domain}`;
       results.details.email_ports = { imap: 993, smtp: 465, starttls: 587 };
@@ -825,7 +840,7 @@ function dcSend(){
   document.getElementById('dc-sugs').style.display='none';
   setTimeout(function(){
     var answer=findAnswer(msg);
-    msgs.innerHTML+='<div class="dc-m dc-bot">'+answer.replace(/\\n/g,'<br>')+'</div>';
+    msgs.innerHTML+='<div class="dc-m dc-bot">'+answer.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,'<br>')+'</div>';
     msgs.scrollTop=msgs.scrollHeight;
   },300+Math.random()*500);
 }
@@ -1462,6 +1477,13 @@ async function mod_directory(config, project) {
   // There is NO endpoint to provision a brand new directory site — that's done via the BD dashboard.
   // We document what needs to be set up manually and use the API to create initial content if site exists.
   const dirDomain = project.domain || `${project.slug}.brilliantdirectories.com`;
+  // SSRF protection: only allow *.brilliantdirectories.com domains
+  try {
+    const parsed = new URL(`https://${dirDomain}`);
+    if (!parsed.hostname.endsWith('.brilliantdirectories.com') && !parsed.hostname.endsWith('.vercel.app') && !parsed.hostname.endsWith('.yourdeputy.com')) {
+      results.error = 'Directory domain not in allowed list'; results.fallback = 'Use a *.brilliantdirectories.com domain'; return results;
+    }
+  } catch { results.error = 'Invalid directory domain'; return results; }
   try {
     // Attempt to create initial content via per-site API (requires existing BD site)
     let siteApiWorks = false;
@@ -1594,6 +1616,13 @@ async function mod_social(config, project) {
 async function mod_verify(config, project, liveUrl) {
   const results = { ok: false, service: 'verify', details: {} };
   const url = liveUrl || `https://${project.slug}.vercel.app`;
+  // SSRF protection: only allow HTTPS to known domains
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') { results.error = 'HTTPS required'; return results; }
+    const allowed = ['.vercel.app', '.yourdeputy.com', '.dynastyempire.com'];
+    if (!allowed.some(d => parsed.hostname.endsWith(d))) { results.error = 'URL domain not allowed for verification'; return results; }
+  } catch { results.error = 'Invalid URL'; return results; }
   const checks = [];
   const routes = ['/', '/docs', '/pricing'];
   for (const route of routes) {
@@ -1603,14 +1632,14 @@ async function mod_verify(config, project, liveUrl) {
       const hasName = html.includes(project.name) || html.includes(project.slug);
       const hasObjectObject = html.includes('[object Object]');
       checks.push({ route, status: r.status, ok: r.status === 200, has_project_name: hasName, has_object_object: hasObjectObject });
-    } catch (e) { checks.push({ route, status: 0, ok: false, error: e.message }); }
+    } catch (e) { checks.push({ route, status: 0, ok: false, error: sanitizeError(e.message) }); }
   }
 
   // API health check
   try {
     const api = await fetch(`${url}/api/v1`);
     checks.push({ route: '/api/v1', status: api.status, ok: api.status === 200 || api.status === 404 });
-  } catch (e) { checks.push({ route: '/api/v1', status: 0, ok: false, error: e.message }); }
+  } catch (e) { checks.push({ route: '/api/v1', status: 0, ok: false, error: sanitizeError(e.message) }); }
 
   // Security header check on homepage
   try {
@@ -2104,6 +2133,7 @@ export default async function handler(req, res) {
     'verify_deploy',
     'retry_deploy',
     'verify_live',
+    'telegram_notify',
   ]);
   if (sensitiveActions.has(action)) {
     const payload = req.body || {};
@@ -2149,18 +2179,15 @@ export default async function handler(req, res) {
 
   // ── INVENTORY ─────────────────────────────────────────────────────────────
   if (action==='inventory') {
-    // Check which modules have credentials configured
     return res.json({
-      ai: Object.keys(config.ai||{}), comms: Object.keys(config.comms||{}),
-      automation: Object.keys(config.automation||{}),
       build_archetypes: ARCHETYPE_KEYS,
       modules_available: {
         hosting: !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
-        billing: true, // Generates setup guide + .env template (no Dynasty Stripe key needed)
+        billing: true,
         email: !!(config.comms?.acumbamail),
         phone: !!(config.comms?.callscaler || config.comms?.insighto || config.comms?.trafft_client_id),
         sms: !!(config.comms?.smsit),
-        chatbot: !!(process.env.ANTHROPIC_API_KEY), // Self-hosted Claude chatbot, no Chatbase needed
+        chatbot: !!(process.env.ANTHROPIC_API_KEY),
         seo: !!(config.content?.writerzen || config.content?.neuronwriter || process.env.ANTHROPIC_API_KEY),
         video: !!(config.content?.vadoo_ai || config.content?.fliki),
         design: !!(config.content?.supermachine),
@@ -2175,13 +2202,7 @@ export default async function handler(req, res) {
         verify: true
       },
       modules_enabled: config.modules_enabled || {},
-      brilliant_licenses: config.directories?.brilliant_licenses||100,
-      suitedash_licenses: config.suitedash?.licenses_total||136,
-      stripe_active:   !!(config.payments?.stripe_live?.startsWith('sk_live')),
-      vercel_active:   !!VERCEL_TOKEN,
-      github_active:   !!GH_TOKEN,
-      neon_active:     !!NEON_STORE,
-      twentyi_active:  !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY)
+    });
     });
   }
 
@@ -2724,7 +2745,8 @@ Return ONLY a valid JSON array (no markdown, no backticks):
     // 7.2 Push updated index.html
     try {
       const descMatch = (niche_config||'').match(/description:\s*["']([^"']+)["']/);
-      const siteDesc = descMatch?.[1] || `${niche_name} — Authority site`;
+      const rawDesc = descMatch?.[1] || `${niche_name} — Authority site`;
+      const siteDesc = rawDesc.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       const indexHtml = `<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5" />\n    <meta name="theme-color" content="${accent_hex||'#0c6b8a'}" media="(prefers-color-scheme: light)" />\n    <meta name="theme-color" content="${accent_hex||'#0a4f66'}" media="(prefers-color-scheme: dark)" />\n    <meta name="mobile-web-app-capable" content="yes" />\n    <meta name="apple-mobile-web-app-capable" content="yes" />\n    <title>${niche_name}</title>\n    <meta name="description" content="${siteDesc}" />\n    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />\n    <link rel="manifest" href="/manifest.json" />\n    <link rel="icon" type="image/svg+xml" href="/og-image.svg" />\n    <link rel="apple-touch-icon" href="/og-image.svg" />\n    <link rel="alternate" type="application/rss+xml" title="${niche_name} RSS Feed" href="/rss.xml" />\n    <link rel="preconnect" href="https://fonts.googleapis.com" />\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />\n  </head>\n  <body>\n    <div id="root"></div>\n    <script type="module" src="/src/main.tsx"></script>\n  </body>\n</html>`;
       await pushFile(GH_TOKEN,ORG,project_slug,'index.html',indexHtml,'feat: niche index.html');
       await new Promise(r=>setTimeout(r,400));
@@ -3003,7 +3025,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           results.custom_domain = { manual: true, domain: req.body.custom_domain, 
             action: `Add DNS record: ${domainData?.error?.message || 'CNAME → cname.vercel-dns.com'}` };
         }
-      } catch(e) { results.custom_domain = { manual: true, error: e.message }; }
+      } catch(e) { results.custom_domain = { manual: true, error: sanitizeError(e.message) }; }
     }
 
     // ── NEON DB via Vercel storage integration (auto-sets DATABASE_URL etc.) ──
@@ -3129,7 +3151,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           results.n8n = { manual: true, error: JSON.stringify(wd).slice(0, 80) };
         }
       } catch (e) {
-        results.n8n = { manual: true, error: e.message };
+        results.n8n = { manual: true, error: sanitizeError(e.message) };
       }
     }
 
@@ -3140,7 +3162,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       const CS_KEY = process.env.CALLSCALER_API_KEY;
       if (CS_KEY) {
         try {
-          results.callscaler = { queued: true, note: `CallScaler provisioning available — configure at app.callscaler.com with key ending ...${CS_KEY.slice(-6)}` };
+          results.callscaler = { queued: true, note: 'CallScaler provisioning available — configure at app.callscaler.com' };
         } catch {}
       }
 
@@ -3288,7 +3310,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         note: `${succeeded.length} modules provisioned${failed.length ? `, ${failed.length} need manual setup` : ''}${gatedOut.length ? ` (${gatedOut.length} gated by tier)` : ''}${skippedByArchetype.length ? ` · ${skippedByArchetype.length} skipped by build profile` : ''}${deferredByArchetype.length ? ` · ${deferredByArchetype.length} deferred (finish in dashboard)` : ''}`
       });
     } catch (e) {
-      return res.json({ ok: false, error: e.message, note: 'Module orchestration failed' });
+      return res.json({ ok: false, error: sanitizeError(e.message), note: 'Module orchestration failed' });
     }
   }
 
@@ -3326,27 +3348,28 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         event_count: events.length,
       });
     } catch (e) {
-      return res.json({ ok: false, error: e.message });
+      return res.json({ ok: false, error: sanitizeError(e.message) });
     }
   }
 
   // ── TELEGRAM NOTIFICATION ───────────────────────────────────────────────
   if (action === 'telegram_notify') {
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    const CHAT_ID = process.env.TELEGRAM_CHAT_ID || ''; // Set this to your Telegram user ID
+    const CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
     if (!BOT_TOKEN) return res.json({ ok: false, error: 'No TELEGRAM_BOT_TOKEN' });
     if (!CHAT_ID) return res.json({ ok: false, error: 'No TELEGRAM_CHAT_ID — set it in Vercel env vars' });
     const { message } = req.body || {};
+    const safeMsg = (message || 'Dynasty build notification').replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, '\\$&').slice(0, 2000);
     try {
       const tr = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: CHAT_ID, text: message || 'Dynasty build notification', parse_mode: 'Markdown' }),
+        body: JSON.stringify({ chat_id: CHAT_ID, text: safeMsg }),
       });
       const td = await tr.json();
       return res.json({ ok: td.ok, message_id: td.result?.message_id });
     } catch (e) {
-      return res.json({ ok: false, error: e.message });
+      return res.json({ ok: false, error: sanitizeError(e.message) });
     }
   }
 
@@ -3369,7 +3392,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         created: dep.created,
       });
     } catch (e) {
-      return res.json({ state: 'UNKNOWN', error: e.message });
+      return res.json({ state: 'UNKNOWN', error: sanitizeError(e.message) });
     }
   }
 
@@ -3422,7 +3445,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       }
       return res.json({ ok: true, status, has_content, has_project_name, has_template_branding, body_length, url: resp.url });
     } catch (e) {
-      return res.json({ ok: false, status: 0, error: e.message });
+      return res.json({ ok: false, status: 0, error: sanitizeError(e.message) });
     }
   }
 
@@ -3430,18 +3453,19 @@ Return ONLY a valid JSON array (no markdown, no backticks):
   if (action === 'retry_deploy') {
     const { project_id, repo, org } = req.body || {};
     if (!project_id || !repo) return res.status(400).json({ error: 'project_id and repo required' });
+    const safeRepo = String(repo).replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 100);
+    const repoOrg = (org && /^[a-zA-Z0-9._-]+$/.test(org)) ? org : ORG;
     try {
       // ── Pre-retry critical-file check ─────────────────────────────────
       // A retry only makes sense if the repo actually has the files needed
       // to build. Otherwise we're just re-triggering the same guaranteed
       // failure. Fail fast with a structured error so the client can show
       // an actionable message.
-      const repoOrg = org || ORG;
       const criticalPaths = ['package.json', 'src/app/page.tsx', 'src/app/layout.tsx', 'src/app/globals.css'];
       const missing = [];
       for (const p of criticalPaths) {
         try {
-          const r = await fetch(`https://api.github.com/repos/${repoOrg}/${repo}/contents/${p}`, {
+          const r = await fetch(`https://api.github.com/repos/${repoOrg}/${safeRepo}/contents/${p}`, {
             headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
           });
           if (!r.ok) missing.push(p);
@@ -3450,7 +3474,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       let hasConfig = false;
       for (const cfg of ['next.config.js', 'next.config.ts', 'next.config.mjs']) {
         try {
-          const r = await fetch(`https://api.github.com/repos/${repoOrg}/${repo}/contents/${cfg}`, {
+          const r = await fetch(`https://api.github.com/repos/${repoOrg}/${safeRepo}/contents/${cfg}`, {
             headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
           });
           if (r.ok) { hasConfig = true; break; }
@@ -3486,10 +3510,10 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         method: 'POST',
         headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: repo,
+          name: safeRepo,
           project: project_id,
           target: 'production',
-          gitSource: { type: 'github', org: repoOrg, repo, ref: 'main' }
+          gitSource: { type: 'github', org: repoOrg, repo: safeRepo, ref: 'main' }
         })
       });
       const dd = await dr.json();
@@ -3499,7 +3523,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         url: dd.url ? `https://${dd.url}` : null,
       });
     } catch (e) {
-      return res.json({ ok: false, error: e.message });
+      return res.json({ ok: false, error: sanitizeError(e.message) });
     }
   }
 
