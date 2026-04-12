@@ -5573,6 +5573,62 @@ const CRITICAL_CONFIG_FILES = ['next.config.js', 'next.config.ts', 'next.config.
 function isCriticalPath(p){
   return CRITICAL_FILE_PATHS.includes(p) || CRITICAL_CONFIG_FILES.includes(p);
 }
+
+/** GitHub contents check targets: deploy target + category (fullstack gets optional route groups). */
+function buildGithubVerifyPlan() {
+  const dep = V2_DEPLOY_TARGET;
+  const cat = String(V2_CATEGORY || '').toLowerCase();
+  if (dep === 'fullstack') {
+    const required = [
+      'package.json',
+      'src/app/page.tsx',
+      'src/app/layout.tsx',
+      'src/app/globals.css',
+      'src/app/not-found.tsx',
+      'src/app/docs/page.tsx',
+      'src/app/pricing/page.tsx',
+    ];
+    const oneOfGroups = [];
+    if (cat === 'ai') {
+      oneOfGroups.push([
+        'src/app/api/chat/route.ts',
+        'src/app/api/v1/route.ts',
+        'src/app/api/route.ts',
+        'src/app/api/data/route.ts',
+      ]);
+    }
+    if (cat === 'dashboard') {
+      oneOfGroups.push([
+        'src/app/dashboard/page.tsx',
+        'src/app/[locale]/(auth)/dashboard/page.tsx',
+      ]);
+    }
+    return { required, oneOfGroups, needNextConfig: true };
+  }
+  if (dep === 'backend-only') {
+    return {
+      required: ['backend/main.py', 'README.md', 'SPEC.md'],
+      oneOfGroups: [['docker-compose.yml', 'docker-compose.yaml', 'compose.yml', 'backend/Dockerfile']],
+      needNextConfig: false,
+    };
+  }
+  if (dep === 'static') {
+    return {
+      required: ['package.json', 'index.html', 'README.md'],
+      oneOfGroups: [],
+      needNextConfig: false,
+    };
+  }
+  if (dep === 'wordpress') {
+    return { required: ['package.json', 'README.md', 'SPEC.md'], oneOfGroups: [], needNextConfig: false };
+  }
+  return { required: ['package.json'], oneOfGroups: [], needNextConfig: false };
+}
+
+function encodeGithubContentPath(p) {
+  return String(p).split('/').map((seg) => encodeURIComponent(seg)).join('/');
+}
+
 async function parseDelimited(text,keys){
   const result={};
   for(const key of keys){
@@ -11842,7 +11898,11 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     try {
       const vr = await fetch('/api/validate', {
         method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ files: criticalFiles })
+        body: JSON.stringify({
+          files: criticalFiles,
+          projectName: inf.name || '',
+          category: typeof V2_CATEGORY !== 'undefined' ? V2_CATEGORY : inf.type_id,
+        })
       });
       const vd = await vr.json();
       if (!vd.ok) {
@@ -11948,27 +12008,25 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       // a bare template fork. Instead verify each critical path exists.
       if (!verifyResults.github) {
         try {
-          const isFullstackBuild = V2_DEPLOY_TARGET === 'fullstack';
-          const criticalPaths = isFullstackBuild
-            ? [
-              'package.json',
-              'src/app/page.tsx',
-              'src/app/layout.tsx',
-              'src/app/globals.css',
-              'src/app/not-found.tsx',
-              'src/app/docs/page.tsx',
-              'src/app/pricing/page.tsx'
-            ]
-            : ['package.json']; // static/authority/backend have simpler requirements
+          const ghPlan = buildGithubVerifyPlan();
           const missing = [];
-          for (const p of criticalPaths) {
+          for (const p of ghPlan.required) {
             try {
-              const r = await gh(`/repos/${ORG}/${inf.repo}/contents/${p}`);
+              const r = await gh(`/repos/${ORG}/${inf.repo}/contents/${encodeGithubContentPath(p)}`);
               if (!r.ok) missing.push(p);
             } catch { missing.push(p); }
           }
-          // Also verify at least one next.config.* exists for fullstack
-          if (isFullstackBuild) {
+          for (const group of ghPlan.oneOfGroups) {
+            let anyOk = false;
+            for (const p of group) {
+              try {
+                const r = await gh(`/repos/${ORG}/${inf.repo}/contents/${encodeGithubContentPath(p)}`);
+                if (r.ok) { anyOk = true; break; }
+              } catch {}
+            }
+            if (!anyOk) missing.push(`one of: ${group.join(' | ')}`);
+          }
+          if (ghPlan.needNextConfig) {
             let hasConfig = false;
             for (const cfg of ['next.config.js', 'next.config.ts', 'next.config.mjs']) {
               try {
