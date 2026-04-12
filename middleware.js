@@ -2,13 +2,54 @@
 // Runs at the edge BEFORE the static file is served
 
 export const config = {
-  matcher: ['/app', '/admin'],
+  matcher: ['/app/:path*', '/admin'],
   runtime: 'edge',
 };
 
 export default function middleware(request) {
   const url = new URL(request.url);
   const params = url.searchParams;
+
+  // ── /app/test-login helper — accepts raw key, encodes, redirects to /app ──
+  if (url.pathname === '/app/test-login') {
+    const keyFromQuery = params.get('k') || '';
+    const safeQueryKey = keyFromQuery.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    return new Response(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Builder Test Login — Your Deputy</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;padding:20px}
+.card{width:min(520px,100%);background:#141414;border:1px solid #222;border-radius:12px;padding:22px}
+h1{font-size:18px;margin-bottom:8px;color:#C9A84C}p{color:#9b9b9b;font-size:13px;line-height:1.5;margin-bottom:14px}
+input{width:100%;padding:12px 14px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;margin-bottom:10px}
+button{padding:11px 16px;background:#C9A84C;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+button:hover{opacity:.92}.row{display:flex;gap:10px;align-items:center}.hint{font-size:12px;color:#777;margin-top:10px}</style></head><body>
+<div class="card">
+  <h1>Builder Test Login</h1>
+  <p>Paste your test admin key and continue to the builder with full privileges. No manual URL encoding required.</p>
+  <input id="k" type="password" autocomplete="off" placeholder="Paste TEST_ADMIN_KEY" value="${safeQueryKey}">
+  <div class="row">
+    <button onclick="go()">Continue to Builder</button>
+    <button onclick="window.location.href='/admin'" style="background:#1f1f1f;color:#ddd;border:1px solid #333">Open Admin</button>
+  </div>
+  <p class="hint">Tip: You can also open this page as <code>/app/test-login#yourKey</code>.</p>
+</div>
+<script>
+  (function prefillFromHash(){
+    try {
+      if (!document.getElementById('k').value && location.hash && location.hash.length > 1) {
+        document.getElementById('k').value = decodeURIComponent(location.hash.slice(1));
+      }
+    } catch (e) {}
+  })();
+  function go() {
+    const raw = (document.getElementById('k').value || '').trim();
+    if (!raw) return;
+    const enc = encodeURIComponent(raw);
+    window.location.href = '/app?k=' + enc;
+  }
+</script></body></html>`, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+    });
+  }
 
   // ── /admin route — require admin key in URL or let page handle token check ──
   if (url.pathname === '/admin') {
