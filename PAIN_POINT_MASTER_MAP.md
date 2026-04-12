@@ -257,6 +257,13 @@ Each item is a **pain statement** the designed system **can touch** (address, re
 |----|------|
 | U1 | “I want a community layer (Heartbeat) — not always on.” |
 
+### W. U.S. public-sector / federal contracting readiness (informational artifacts)
+
+| ID | Pain |
+|----|------|
+| W1 | “I don’t know where to start with SAM, NAICS, certifications, or opportunity research.” |
+| W2 | “I need a capabilities narrative and RFP response structure without fake solicitations or legal risk.” |
+
 ---
 
 ## Part 2 — Traceability matrix (pain → persona → deliverables → tier / archetype → mode)
@@ -292,6 +299,7 @@ Below, **Arche** shows **defaults** (R/D/S). **Tier** shows **minimum tier where
 | T1–T3 | P12 | Managed Operations subscription (positioning) | Add-on | All | Service |
 | U1 | P4 | Community module (Heartbeat) — config toggle | Key-gated | Optional | L/M |
 | Z0 | P1,P2,P4,P12 | Tier truth: `TIER_MODULES.foundation` []; no auto `mod_*`; non-US US-default; enterprise MSA/SSO not self-serve | F–E | All | G |
+| W1–W2 | P2,P3,P4,P7 | Gov pack (opt-in): `docs/GOV-READINESS.md`, `docs/NAICS-CANDIDATES.md`, `docs/CAPABILITIES-STATEMENT.template.md`, `docs/RFP-RESPONSE-OUTLINE.md`; `MANUAL-ACTIONS.md` pointer when pack runs; disclaimers on every file | F–E | All | G (toggle) |
 
 ---
 
@@ -321,6 +329,7 @@ Below, **Arche** shows **defaults** (R/D/S). **Tier** shows **minimum tier where
 | Scoring + strategy generation | B1–B14,A1 |
 | Core codegen + validation | F1–F9,G1–G3 |
 | Verify / report (spec) | G8,G9,S3 |
+| Gov contracting pack (informational, opt-in) | W1,W2 |
 
 ---
 

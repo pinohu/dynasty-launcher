@@ -36,7 +36,7 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 <p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/#outcome-packages">Outcome packages</a></p>
 <h1>What’s included today</h1>
 <p class="lead">This page exists for one reason: <strong>clarity before purchase</strong>. It shows what is live now, what is automation-ready, and what is key-gated so you can decide with confidence and zero surprises.</p>
-<p class="note"><strong>Last reviewed:</strong> 2026-04-11. Foundation focuses on strategy + product + deployment, while higher tiers unlock broader autonomous runtime capacity. Integration modules are implemented in the orchestrator and run automatically; execution still depends on credentials, provider API health, and approvals.<br><br>Technical verification endpoint: <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
+<p class="note"><strong>Last reviewed:</strong> 2026-04-12. Foundation focuses on strategy + product + deployment, while higher tiers unlock broader autonomous runtime capacity. Integration modules are implemented in the orchestrator and run automatically; execution still depends on credentials, provider API health, and approvals. The builder runs <strong>multi-pass post-deploy checks</strong> (repo paths, Vercel READY, strict live URL + routes) and an <strong>artifact quality gate</strong> on key docs (placeholders, template-leak patterns, niche grounding) before calling a deploy “ready.” The <strong>U.S. government contracting planning pack</strong> is <strong>opt-in</strong> in the builder and is informational only (verify on SAM, USASpending, SBA, Census NAICS).<br><br>Technical verification endpoint: <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
 
 <h2>Status legend</h2>
 <ul>
@@ -48,13 +48,13 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 
 <div class="sum">
 <span><strong style="color:var(--live)">Live:</strong> 4</span>
-<span><strong style="color:var(--partial)">Partial:</strong> 3</span>
-<span><strong style="color:var(--sub)">Codegen:</strong> 3</span>
+<span><strong style="color:var(--partial)">Partial:</strong> 4</span>
+<span><strong style="color:var(--sub)">Codegen:</strong> 4</span>
 <span><strong style="color:var(--ready)">Automation-ready:</strong> 17</span>
 </div>
 
 <details class="matrix">
-<summary>Detailed technical matrix (27 rows)</summary>
+<summary>Detailed technical matrix (30 rows)</summary>
 <table>
 <thead>
 <tr><th>Outcome area</th><th>Status</th><th>Customer-visible proof</th><th>Notes</th></tr>
@@ -65,6 +65,9 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 <tr><td>Plain-language companion (<code>docs/plain/</code>)</td><td><span class="tag partial">Partial</span></td><td>Toggle in builder; QA heuristics in pipeline</td><td>Additive to technical originals.</td></tr>
 <tr><td>Design system + CLAUDE.md per project</td><td><span class="tag gen">Codegen</span></td><td><code>DESIGN.md</code>, <code>CLAUDE.md</code></td><td>—</td></tr>
 <tr><td>Next.js app + validation gate (icons, branding, i18n, etc.)</td><td><span class="tag gen">Codegen</span></td><td>Runnable repo; 8-check gate in builder</td><td>—</td></tr>
+<tr><td>Artifact quality gate (critical docs / backend snippet)</td><td><span class="tag partial">Partial</span></td><td><code>/api/validate</code> + completion checklist</td><td>Placeholder &amp; template-leak patterns; project-name grounding in SPEC + BUSINESS-SYSTEM; not a compliance certification.</td></tr>
+<tr><td>Multi-pass deploy verification (GitHub, Vercel, live, routes)</td><td><span class="tag live">Live</span></td><td>Build log + honest done screen when checks fail</td><td>Strict live check (project name, no template branding leak on home + key routes). Retries/stabilization passes in client pipeline.</td></tr>
+<tr><td>U.S. government contracting planning pack</td><td><span class="tag gen">Codegen</span></td><td><code>docs/GOV-READINESS.md</code>, NAICS candidates, capabilities template, RFP outline</td><td><strong>Opt-in</strong> in builder; informational only; no fabricated solicitations or awards; verify on official .gov sources.</td></tr>
 <tr><td>Vertical niche tool scaffold (e.g. takeoff assist)</td><td><span class="tag partial">Partial</span></td><td>Routes, schema SQL, env examples; Blob/Postgres wired when configured</td><td>Assist-only positioning; not a licensed bid.</td></tr>
 <tr><td>GitHub repo + push + Vercel deploy (Phase 8 class)</td><td><span class="tag live">Live</span></td><td>Private repo, preview URL, env scaffolding</td><td>CDN build follows push.</td></tr>
 <tr><td>Express path speed + clear deferrals</td><td><span class="tag live">Live</span></td><td><code>docs/V4-DEMO-SLA.md</code>, <code>BUILD-MANIFEST.json</code></td><td>Sub–5 min targets pipeline to push; some modules may defer.</td></tr>
@@ -85,7 +88,7 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 <tr><td>Client workspace and pipeline automation</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Reserved for custom volume onboarding.</td></tr>
 <tr><td>Directory business model automation</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Reserved for custom volume onboarding.</td></tr>
 <tr><td>Managed CMS site path</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Runs with managed CMS credentials; daily volume caps apply by tier.</td></tr>
-<tr><td>Post-deploy quality verification</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector + build report</td><td>Automated checks run within runtime/time budget constraints.</td></tr>
+<tr><td>Post-deploy quality verification (orchestrator / modules)</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector + build report</td><td>Distinct from client multi-pass GitHub/Vercel/live verification above; both may apply in a full session.</td></tr>
 <tr><td>Community (Heartbeat)</td><td><span class="tag ready">Automation-ready</span></td><td>UI toggle in V3 wireframe</td><td>Optional and key-gated.</td></tr>
 </tbody>
 </table>

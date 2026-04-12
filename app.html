@@ -1058,6 +1058,10 @@ html,body{overflow-x:hidden}
           <input type="checkbox" id="dynasty-ai-train-optin" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
           <span><strong style="color:var(--tx)">AI training opt-in (optional)</strong> — allow use of your identifiable project content for model-improvement research. Default is off.</span>
         </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
+          <input type="checkbox" id="dynasty-gov-pack" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
+          <span><strong style="color:var(--tx)">U.S. government contracting planning pack</strong> — adds <code style="font-size:11px">docs/GOV-READINESS.md</code>, NAICS candidates, capabilities template, RFP outline (informational only; verify on SAM.gov, USASpending, SBA, Census NAICS). Extra AI calls when enabled.</span>
+        </label>
       </div>
       <textarea id="dynasty-vertical-spec" class="ti" rows="3" placeholder="Optional: describe the niche workflow (e.g. Erie concrete — blueprint photos → quantity line items + editable assumptions)" style="width:100%;margin-top:10px;font-size:12px" onblur="saveBuildProfileToStorage()"></textarea>
       <div id="cfg-build-scope-preview" style="margin-top:14px;padding:14px 16px;background:var(--card);border:1px solid var(--bdr);border-radius:12px;max-width:520px"></div>
@@ -1069,6 +1073,7 @@ html,body{overflow-x:hidden}
       <div class="inf-grid" id="cfg-inf-grid"></div>
     </div>
 
+    <p class="cfg-desc" style="margin-top:12px;max-width:640px">Before you run the pipeline: <strong>gov-facing materials</strong> (if you enabled the pack above) are <strong>planning aids only</strong> — not legal or procurement advice. <strong>Eligibility, NAICS, and solicitations</strong> must be confirmed on official government sites. Deployed sites are checked with multi-pass verification; “ready” still means you should review <code style="font-size:11px">MANUAL-ACTIONS.md</code> for keys and DNS.</p>
     <div style="display:flex;gap:10px;margin-top:1rem">
       <button class="launch" style="flex:1;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="backToFrameworks()">← Back</button>
       <button class="launch" style="flex:3" id="cfg-build-btn" onclick="startBuild()">Run full build pipeline →</button>
@@ -2488,6 +2493,7 @@ function getBuildProfile() {
       verticalTool: !!(document.getElementById('dynasty-vertical-tool')?.checked ?? stored.verticalTool),
       verticalToolSpec: (document.getElementById('dynasty-vertical-spec')?.value ?? stored.verticalToolSpec ?? '').trim().slice(0, 8000),
       aiTrainingOptIn: !!(document.getElementById('dynasty-ai-train-optin')?.checked ?? stored.aiTrainingOptIn),
+      govContractingPack: !!(document.getElementById('dynasty-gov-pack')?.checked ?? stored.govContractingPack),
       v: 2
     };
   }
@@ -2497,6 +2503,7 @@ function getBuildProfile() {
     verticalTool: !!stored.verticalTool,
     verticalToolSpec: (stored.verticalToolSpec || '').trim().slice(0, 8000),
     aiTrainingOptIn: !!stored.aiTrainingOptIn,
+    govContractingPack: !!stored.govContractingPack,
     v: 2
   };
 }
@@ -2783,6 +2790,9 @@ function updateBuildScopePreview() {
   }
   if (bp.verticalTool) {
     lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px"><strong>+ Vertical tool scaffold</strong> — assistive workflow (not a binding bid). Professional+ only.</div>');
+  }
+  if (bp.govContractingPack) {
+    lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px"><strong>+ U.S. government contracting pack</strong> — <code style="font-size:10px">docs/GOV-READINESS.md</code> + NAICS/capabilities/RFP aids (informational; extra AI calls).</div>');
   }
   box.innerHTML = lines.join('');
 }
@@ -3594,6 +3604,8 @@ function showConfigScreen() {
     if (vs && bp.verticalToolSpec) vs.value = bp.verticalToolSpec;
     const aiOpt = document.getElementById('dynasty-ai-train-optin');
     if (aiOpt && bp.aiTrainingOptIn) aiOpt.checked = true;
+    const govPk = document.getElementById('dynasty-gov-pack');
+    if (govPk && bp.govContractingPack) govPk.checked = true;
   } catch {}
   applyBuildPackageTierConstraints();
 }
@@ -9743,15 +9755,22 @@ Include implementation timelines, responsible parties, and compliance checklists
   })()
 ]);
 
-// ── Group E-b — U.S. government contracting readiness (informational only) ──
+// ── Group E-b — U.S. government contracting readiness (opt-in; informational only) ──
+const _govPackOn = !!getBuildProfile().govContractingPack;
 addP('gov_naics', 'NAICS candidates (gov)', '', '⬡ Gov readiness');
 addP('gov_readiness', 'Gov readiness checklist', '', '⬡ Gov readiness');
 addP('gov_cap', 'Capabilities statement template', '', '⬡ Gov readiness');
 addP('gov_rfp', 'RFP response outline', '', '⬡ Gov readiness');
-setP('gov_naics', 'run');
-setP('gov_readiness', 'run');
-setP('gov_cap', 'run');
-setP('gov_rfp', 'run');
+if (!_govPackOn) {
+  setP('gov_naics', 'sk', 'Skipped — enable “U.S. government contracting pack” under Build package');
+  setP('gov_readiness', 'sk', 'Skipped — enable “U.S. government contracting pack” under Build package');
+  setP('gov_cap', 'sk', 'Skipped — enable “U.S. government contracting pack” under Build package');
+  setP('gov_rfp', 'sk', 'Skipped — enable “U.S. government contracting pack” under Build package');
+} else {
+  setP('gov_naics', 'run');
+  setP('gov_readiness', 'run');
+  setP('gov_cap', 'run');
+  setP('gov_rfp', 'run');
 
 const _govCtx = `Project: ${inf.name}
 Type: ${inf.type_label}
@@ -9759,7 +9778,7 @@ Revenue model: ${inf.revenue_model} at ${inf.price}
 Build category: ${typeof V2_CATEGORY !== 'undefined' ? V2_CATEGORY : ''}
 Description (brief): ${(desc || '').slice(0, 1200)}`;
 
-const [govNaicsR, govReadR, govCapR, govRfpR] = await Promise.allSettled([
+await Promise.allSettled([
   (async () => {
     try {
       const raw = await aiRaw(`${_govCtx}
@@ -9845,8 +9864,9 @@ Create \`docs/RFP-RESPONSE-OUTLINE.md\` — a **generic outline** for responding
     } catch (e) { setP('gov_rfp', 'sk', e.message); }
   })()
 ]);
+}
 
-if (files['MANUAL-ACTIONS.md'] != null && typeof files['MANUAL-ACTIONS.md'] === 'string') {
+if (_govPackOn && files['MANUAL-ACTIONS.md'] != null && typeof files['MANUAL-ACTIONS.md'] === 'string' && files['docs/GOV-READINESS.md']) {
   files['MANUAL-ACTIONS.md'] += `
 
 ---

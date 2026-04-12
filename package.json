@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Business provisioning engine — one prompt deploys a complete operating company",
+  "scripts": {
+    "test:validate": "node scripts/validate-smoke.mjs"
+  },
   "engines": {
     "node": "20.x"
   },
