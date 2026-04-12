@@ -15,8 +15,9 @@ const ZERO_TOLERANCE = [
   { re: /\bIxartz\b/i, label: 'template branding (Ixartz)' },
   { re: /nextjs-boilerplate/i, label: 'template slug (nextjs-boilerplate)' },
   { re: /\blorem ipsum\b/i, label: 'lorem ipsum' },
-  { re: /\bCompany Name\b/i, label: 'generic Company Name' },
-  { re: /\bYour Company\b/i, label: 'generic Your Company' },
+  // Case-sensitive so prose like "your company name" in gov checklists is not flagged
+  { re: /\bCompany Name\b/, label: 'generic Company Name' },
+  { re: /\bYour Company\b/, label: 'generic Your Company' },
   { re: /\bMy Awesome SaaS\b/i, label: 'boilerplate product name' },
 ];
 
