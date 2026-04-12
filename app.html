@@ -11265,10 +11265,21 @@ export default function NotFound() {
 
         // ── 9. Authority conversion quality gate (iterative until excellent) ──
         const _qualityThreshold = Math.max(88, Math.min(98, Number(localStorage.getItem('dynasty_quality_threshold') || '92')));
+        const _dimensionFloors = {
+          audience_fit: 88,
+          clarity: 92,
+          differentiation: 88,
+          trust: 90,
+          conversion: 90,
+          seo_structure: 88,
+          message_specificity: 90
+        };
+        const _floorSummary = Object.entries(_dimensionFloors).map(([k, v]) => `${k}>=${v}`).join(', ');
         const _qualityMaxPasses = 8;
         const _readPage = (p) => String(files[p] || '').slice(0, 3500);
         let _qualityScore = 0;
         let _qualityVerdict = 'unknown';
+        let _dimensionScores = {};
         addP('quality-gate', `Authority quality gate (target ${_qualityThreshold}/100)`, 'Scoring homepage and conversion routes');
         setP('quality-gate', 'run', 'Pass 1 starting...');
         for (let _pass = 1; _pass <= _qualityMaxPasses; _pass++) {
@@ -11308,26 +11319,34 @@ Return ONLY valid JSON:
   "recommended_upgrades": ["... up to 8"]
 }
 
+Hard requirements:
+- overall_score >= ${_qualityThreshold}
+- verdict must be "excellent"
+- dimension floors: ${_floorSummary}
+
 Target audience and current page drafts:
 ${JSON.stringify(_auditPayload, null, 2)}`, 1800, 'standard');
             const _m = (_raw || '').match(/\{[\s\S]*\}/);
             const _sc = _m ? safeJsonParse(_m[0]) : null;
             _qualityScore = Number(_sc?.overall_score || 0);
             _qualityVerdict = String(_sc?.verdict || 'unknown');
+            _dimensionScores = _sc?.dimension_scores && typeof _sc.dimension_scores === 'object' ? _sc.dimension_scores : {};
             if (Array.isArray(_sc?.recommended_upgrades) && _sc.recommended_upgrades.length) {
               _recommendations = _sc.recommended_upgrades.slice(0, 8);
             }
           } catch {}
 
           const _recText = _recommendations.slice(0, 4).join(' · ');
-          setP(`quality-pass-${_pass}`, 'run', `Score ${_qualityScore || 0}/100 · ${_qualityVerdict || 'unknown'} · ${_recText}`);
+          const _failedFloors = Object.entries(_dimensionFloors).filter(([k, min]) => Number(_dimensionScores?.[k] ?? 0) < min);
+          const _failedFloorText = _failedFloors.length ? _failedFloors.map(([k, min]) => `${k}<${min}`).join(', ') : 'none';
+          setP(`quality-pass-${_pass}`, 'run', `Score ${_qualityScore || 0}/100 · ${_qualityVerdict || 'unknown'} · floor misses: ${_failedFloorText} · ${_recText}`);
 
-          if (_qualityScore >= _qualityThreshold && _qualityVerdict === 'excellent') {
+          if (_qualityScore >= _qualityThreshold && _qualityVerdict === 'excellent' && _failedFloors.length === 0) {
             setP('quality-gate', 'ok', `Passed at ${_qualityScore}/100 on pass ${_pass}`);
             break;
           }
 
-          setP('quality-gate', 'run', `Pass ${_pass}/${_qualityMaxPasses} scored ${_qualityScore}/100 — regenerating pages`);
+          setP('quality-gate', 'run', `Pass ${_pass}/${_qualityMaxPasses} scored ${_qualityScore}/100 (floor misses: ${_failedFloorText}) — regenerating pages`);
           try {
             const _rewrite = await ai(`Regenerate high-converting, niche-specific authority pages for a Next.js App Router site.
 
@@ -11345,6 +11364,7 @@ Must-haves:
 5. SEO-aware heading structure and metadata.
 6. No generic "SaaS template" language.
 7. Return production-quality TSX that compiles.
+8. Meet quality floors: ${_floorSummary}
 
 Upgrades to enforce:
 ${_recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n')}
@@ -11401,8 +11421,12 @@ Return these files only using delimiters:
           } catch {}
 
           if (_pass === _qualityMaxPasses) {
-            setP('quality-gate', 'er', `Failed quality threshold after ${_qualityMaxPasses} passes (score: ${_qualityScore}/100)`);
-            throw new Error(`Authority quality gate failed: ${_qualityScore}/100 (required ${_qualityThreshold}/100). Build halted to prevent low-quality deployment.`);
+            const _finalMisses = Object.entries(_dimensionFloors)
+              .filter(([k, min]) => Number(_dimensionScores?.[k] ?? 0) < min)
+              .map(([k, min]) => `${k}<${min}`)
+              .join(', ') || 'none';
+            setP('quality-gate', 'er', `Failed quality gate after ${_qualityMaxPasses} passes (score: ${_qualityScore}/100, floor misses: ${_finalMisses})`);
+            throw new Error(`Authority quality gate failed: score ${_qualityScore}/100 (required ${_qualityThreshold}/100), floor misses: ${_finalMisses}. Build halted to prevent low-quality deployment.`);
           }
         }
       }
