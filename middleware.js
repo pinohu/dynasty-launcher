@@ -152,6 +152,12 @@ fetch('/api/checkout?action=create_session', {
     return; // Let app.html JS check localStorage for dynasty_paid_session
   }
 
+  // /app — always serve app.html; edge cannot read localStorage (admin token, paid session).
+  // Client-side gate in app.html enforces access; without this, /app reload after ?k=… shows the edge gate.
+  if (url.pathname === '/app' || url.pathname.startsWith('/app/')) {
+    return;
+  }
+
   // No valid access — return a gate page that redirects to pricing
   return new Response(`<!DOCTYPE html>
 <html lang="en">

@@ -1240,7 +1240,7 @@ html,body{overflow-x:hidden}
 
   // 3. Plan purchase URLs redirect to Stripe checkout (user doesn't stay on /app)
   var plan = params.get('plan');
-  if (plan && ['free','foundation','starter','professional','enterprise','managed'].includes(plan)) {
+  if (plan && ['free','blueprint','scoring_pro','foundation','starter','professional','enterprise','managed'].includes(plan)) {
     return; // Let checkPlanPurchase() handle (free → enter builder, paid → redirect to Stripe)
   }
 
@@ -1272,19 +1272,29 @@ html,body{overflow-x:hidden}
     return;
   }
 
-  // 6. No valid access — redirect to homepage pricing
+  // 6. No valid access — same choices as edge gate (middleware passes /app through; client enforces)
   document.documentElement.innerHTML = [
-    '<html><head><title>Your Deputy</title>',
+    '<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
+    '<title>Your Deputy</title>',
     '<style>*{margin:0;padding:0;box-sizing:border-box}',
-    'body{background:#0a0a0a;color:#fff;display:flex;align-items:center;',
-    'justify-content:center;height:100vh;font-family:-apple-system,sans-serif;flex-direction:column;gap:16px}',
-    'h2{font-size:1.4rem;font-weight:600}p{color:rgba(255,255,255,0.4);font-size:0.9rem}',
-    'a{color:#C9A84C;text-decoration:none;font-weight:600;padding:10px 24px;border:1px solid #C9A84C;border-radius:8px;margin-top:8px;display:inline-block}',
-    'a:hover{background:#C9A84C;color:#000}</style></head>',
-    '<body><div style="font-size:2rem">⚡</div>',
-    '<h2>Your Deputy</h2>',
-    '<p>Purchase a build to get started.</p>',
-    '<a href="/#pricing">View Pricing</a>',
+    'body{background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;',
+    'font-family:system-ui,-apple-system,sans-serif;flex-direction:column;gap:20px;text-align:center;padding:24px}',
+    'h2{font-size:1.6rem;font-weight:600}p{color:rgba(255,255,255,0.5);font-size:1rem;max-width:400px;line-height:1.6}',
+    '.btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}',
+    'a{color:#C9A84C;text-decoration:none;font-weight:600;padding:12px 28px;border:1px solid #C9A84C;border-radius:10px;transition:all .2s;font-size:15px}',
+    'a:hover{background:#C9A84C;color:#000}a.primary{background:#C9A84C;color:#000}</style></head><body>',
+    '<div style="font-size:2.5rem">⚡</div><h2>Your Deputy</h2>',
+    '<p>Build a complete operating business from one prompt. Score free, start with a low-risk $297 blueprint, or unlock ongoing scoring for $19/mo.</p>',
+    '<div class="btns">',
+    '<a href="/app?plan=free">Score Free</a>',
+    '<a href="/app?plan=blueprint">Blueprint — $297</a>',
+    '<a href="/app?plan=scoring_pro">Scoring Pro — $19/mo</a>',
+    '<a href="/app?plan=professional" class="primary">Build — $4,997</a>',
+    '</div><div class="btns" style="margin-top:8px">',
+    '<a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>',
+    '</div>',
+    '<p style="font-size:13px;color:rgba(255,255,255,0.25);margin-top:12px">Already purchased? ',
+    '<a href="/app?returning=1" style="border:none;padding:0;font-size:13px;color:rgba(201,168,76,0.6)">Sign in</a></p>',
     '</body></html>'
   ].join('');
 })();
