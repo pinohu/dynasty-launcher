@@ -312,7 +312,7 @@ async function mod_hosting(config, project, liveUrl) {
         body: JSON.stringify({ new: { a: [{ host: '@', ip: '76.76.21.21' }], cname: [{ host: 'www', alias: 'cname.vercel-dns.com' }] } })
       });
       results.details.dns = { a: '76.76.21.21', cname: 'cname.vercel-dns.com' };
-    } catch (e) { results.details.dns_error = e.message; }
+    } catch (e) { results.details.dns_error = sanitizeError(e.message); }
 
     // 3. Create email mailbox
     try {
@@ -326,7 +326,7 @@ async function mod_hosting(config, project, liveUrl) {
       results.details.email_imap = `mail.${domain}`;
       results.details.email_smtp = `mail.${domain}`;
       results.details.email_ports = { imap: 993, smtp: 465, starttls: 587 };
-    } catch (e) { results.details.email_error = e.message; }
+    } catch (e) { results.details.email_error = sanitizeError(e.message); }
 
     // 4. SPF record
     try {
@@ -550,7 +550,7 @@ async function mod_email(config, project, liveUrl) {
       results.cost_usd = 0;
       return results;
     } catch (e) {
-      results.details.emailit_error = e.message;
+      results.details.emailit_error = sanitizeError(e.message);
       // Fall through to Acumbamail
     }
   }
@@ -637,7 +637,7 @@ async function mod_phone(config, project, liveUrl) {
           results.details.callscaler_note = 'CallScaler API is read-only. Purchase numbers at app.callscaler.com, then configure forwarding to your business line.';
           results.details.callscaler_numbers_found = existing.length;
         }
-      } catch (e) { results.details.callscaler_error = e.message; }
+      } catch (e) { results.details.callscaler_error = sanitizeError(e.message); }
     }
 
     // 2. Insighto — create AI voice agent
@@ -663,7 +663,7 @@ async function mod_phone(config, project, liveUrl) {
             });
           } catch {}
         }
-      } catch (e) { results.details.insighto_error = e.message; }
+      } catch (e) { results.details.insighto_error = sanitizeError(e.message); }
     }
 
     // 3. Trafft — create booking service
@@ -681,7 +681,7 @@ async function mod_phone(config, project, liveUrl) {
           results.details.trafft_service_id = svc.id || svc.data?.id;
           results.details.booking_url = `https://app.trafft.com/booking/${trafftId}`;
         }
-      } catch (e) { results.details.trafft_error = e.message; }
+      } catch (e) { results.details.trafft_error = sanitizeError(e.message); }
     }
 
     results.ok = !!(results.details.phone_number || results.details.insighto_agent_id || results.details.trafft_service_id);
@@ -994,7 +994,7 @@ async function mod_video(config, project) {
           results.details.vadoo_video_id = vid.vid || vid.id || vid.video_id;
           results.ok = true;
         }
-      } catch (e) { results.details.vadoo_error = e.message; }
+      } catch (e) { results.details.vadoo_error = sanitizeError(e.message); }
     }
 
     // Fliki — create social clips
@@ -1008,7 +1008,7 @@ async function mod_video(config, project) {
           })
         }).then(r => r.json());
         if (clip.id) { results.details.fliki_clip_id = clip.id; results.ok = true; }
-      } catch (e) { results.details.fliki_error = e.message; }
+      } catch (e) { results.details.fliki_error = sanitizeError(e.message); }
     }
 
     if (!results.ok) { results.error = 'Video generation failed'; results.fallback = 'Create video assets manually.'; }
@@ -1150,11 +1150,11 @@ async function mod_analytics(config, project, liveUrl) {
         if (proj.ok) {
           const pd = await proj.json();
           results.details.posthog_project_id = pd.id;
-          results.details.posthog_api_key = pd.api_token;
+          results.details.posthog_configured = true;
           results.details.posthog_snippet = `<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('${pd.api_token}',{api_host:'https://app.posthog.com'})</script>`;
           results.ok = true;
         }
-      } catch (e) { results.details.posthog_error = e.message; }
+      } catch (e) { results.details.posthog_error = sanitizeError(e.message); }
     }
 
     // Plerdy — NO REST API for site creation. Integration is via tracking script injection.
@@ -1203,7 +1203,7 @@ async function mod_leads(config, project, liveUrl) {
           results.details.happierleads_snippet = sd.tracking_code || sd.script;
           results.ok = true;
         }
-      } catch (e) { results.details.happierleads_error = e.message; }
+      } catch (e) { results.details.happierleads_error = sanitizeError(e.message); }
     }
 
     // Salespanel — lead scoring
@@ -1221,7 +1221,7 @@ async function mod_leads(config, project, liveUrl) {
           results.details.salespanel_snippet = td.tracking_code || td.script;
           results.ok = true;
         }
-      } catch (e) { results.details.salespanel_error = e.message; }
+      } catch (e) { results.details.salespanel_error = sanitizeError(e.message); }
     }
 
     // Fallback: push lead intelligence guide

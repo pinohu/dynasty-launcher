@@ -97,3 +97,15 @@ All UTM params pass through to the spoke page. When the user clicks the spoke CT
 - Separate Stripe accounts or brands per persona.
 - Microsites on new domains for each trade vertical.
 - Promising outcomes that **`maturity.html`** cannot support.
+
+
+## Day-1 Success Kit (cross-tier)
+
+Every paid build ships with:
+1. **Interactive onboarding dashboard** (`public/onboard.html`) — self-contained HTML with localStorage progress, vendor links, env var copy
+2. **Automated test suite** (`src/__tests__/`, `e2e/`) — Vitest unit, RTL component, Playwright e2e smoke tests
+3. **Seed data** (`src/data/seed/`, `src/scripts/seed.ts`) — fictional users, content, transactions; executable seeder
+4. **API collection** (`docs/openapi.json`, `docs/postman-collection.json`) — OpenAPI 3.0 + Postman v2.1
+5. **90-day launch playbook** (`LAUNCH-PLAYBOOK.md`) — tier-aware week-by-week action plan
+
+All AI-generated during the build, committed to the customer's repo, no external dependencies.

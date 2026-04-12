@@ -6,10 +6,13 @@ Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is 
 ## Repo Structure
 ```
 dynasty-launcher/
-├── index.html              # Landing page (standalone, 169 lines)
-├── app.html                # Builder app (monolith, ~8000 lines)
+├── index.html              # Landing page (standalone, ~280 lines)
+├── app.html                # Builder app (monolith, ~12500 lines)
+├── maturity.html           # "What ships today" truth deck (~100 lines)
 ├── api/
-│   └── provision.js        # Backend orchestrator (~1100 lines)
+│   ├── provision.js        # Backend orchestrator (~3200 lines, 17 mod_* functions)
+│   └── neon.js             # Neon DB provisioner (~130 lines)
+├── for/                    # Persona-specific funnel pages (8 pages)
 ├── DYNASTY_LAUNCHER_V3_FINAL.md  # Complete build specification
 ├── CLAUDE.md               # This file
 ├── vercel.json             # Deployment config (cleanUrls: true)
@@ -20,7 +23,7 @@ dynasty-launcher/
 
 ## Architecture
 - **app.html**: Single-file frontend. Contains the entire builder UI + AI generation pipeline + build validation gate. All phases run client-side calling the Anthropic API and GitHub API directly.
-- **api/provision.js**: Vercel serverless function. Handles deployment: creates GitHub repos (via template fork), creates Vercel projects, sets env vars, triggers deployments. Also handles authority site deploys and retry logic.
+- **api/provision.js**: Vercel serverless function. Handles deployment: creates GitHub repos (via template fork), creates Vercel projects, sets env vars, triggers deployments. Also runs 17 `mod_*` integration modules (hosting, billing, email, phone, SMS, chatbot, SEO, video, design, analytics, leads, docs, automation, social, CRM, directory, WordPress) for Professional+ tiers. Handles authority site deploys and retry logic.
 - **DYNASTY_TOOL_CONFIG**: Encrypted Vercel env var containing 50+ API keys organized by category (ai, payments, infrastructure, comms, content, crm_pm, automation, data_research, directories, suitedash, community, modules_enabled).
 
 ### Third-party credential boundary
@@ -30,10 +33,10 @@ Keys in **DYNASTY_TOOL_CONFIG** (and related Vercel env vars on **dynasty-launch
 
 ## Current Build Pipeline (20+ Phases)
 Phases 1-7c: Generate code + docs (client-side AI calls)
-Phase 8: Deploy to Vercel/20i (provision.js)
-Phase 8+ (Day-1 Success Kit): Onboarding dashboard, test suite, seed data, API collection, 90-day launch playbook
-Phases 9-17: Provision external services using live URL (TO BE BUILT)
-Phases 18-20: Automation, env update, verify (TO BE BUILT)
+Phase 8 (Day-1 Success Kit): Onboarding dashboard, test suite, seed data, API collection, 90-day launch playbook — runs for all build types
+Phase 8d: Deploy to Vercel/20i (provision.js)
+Phases 9-17: Provision external services using live URL (17 mod_* functions implemented in provision.js; run for Professional+ tiers when credentials allow)
+Phases 18-20: Automation, env update, verify (orchestrator logic exists; runs when all prerequisite modules succeed)
 
 ## What Exists vs What's Needed
 
@@ -54,8 +57,8 @@ Phases 18-20: Automation, env update, verify (TO BE BUILT)
   - `docs/openapi.json` + `docs/postman-collection.json` — OpenAPI 3.0 spec + Postman collection
   - `LAUNCH-PLAYBOOK.md` — Tier-aware 90-day action plan referencing specific repo deliverables
 
-### ❌ TO BUILD (V3 — 17 Integration Modules)
-Each module is a function in provision.js following this interface:
+### ✅ IMPLEMENTED (17 Integration Modules in provision.js)
+Each module follows this interface pattern:
 ```javascript
 async function mod_example(config, project) {
   // config = parsed DYNASTY_TOOL_CONFIG
@@ -73,7 +76,7 @@ async function mod_example(config, project) {
 }
 ```
 
-Modules to build (in sprint order):
+Modules implemented (run for Professional+ when credentials allow; Foundation defers to MANUAL-ACTIONS.md):
 1. mod_hosting (20i: domain, email, SPF/DKIM/DMARC, SSL)
 2. mod_billing (Stripe: real products, price tiers, webhooks, dunning)
 3. mod_email (Acumbamail: list, welcome sequence, automation)
@@ -136,13 +139,14 @@ After any change:
 On **Windows PowerShell**, `curl` is an alias for `Invoke-WebRequest` — use **`curl.exe`** with the same flags, or `Invoke-WebRequest` equivalents.
 
 ## Key Files to Edit
-- **app.html lines 5900-6060**: Frontend generation (phases g7, g7b, g7c)
-- **app.html lines 6700-7000**: Build validation gate (8 checks)
-- **app.html lines 7100-7250**: Provisioning trigger (calls provision.js)
-- **app.html lines 9895-10291**: Day-1 Success Kit (g8_onboard, g8_tests, g8_seed, g8_api, g8_playbook)
+- **app.html lines ~5900-6060**: Frontend generation (phases g7, g7b, g7c)
+- **app.html lines ~6700-7000**: Build validation gate (8 checks)
+- **app.html lines ~7100-7250**: Provisioning trigger (calls provision.js)
+- **app.html lines ~9770-10169**: Day-1 Success Kit (g8_onboard, g8_tests, g8_seed, g8_api, g8_playbook)
 - **api/provision.js lines 40-65**: DYNASTY_TOOL_CONFIG parsing + inventory
-- **api/provision.js lines 735-810**: Fullstack deploy (project creation, env vars, deployment)
-- **api/provision.js lines 1030-1070**: Retry deploy logic
+- **api/provision.js lines 288-1300**: 17 mod_* integration modules
+- **api/provision.js lines ~2200-2400**: Fullstack deploy (project creation, env vars, deployment)
+- **api/provision.js lines ~2800-2900**: Retry deploy logic
 
 ## V3 Specification
 See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:

@@ -104,7 +104,7 @@ Each cluster is referenced as **J01–J26** in matrices below.
 
 | Stage | Customer actions | Thoughts / needs | Pain risks | JTBD |
 |-------|------------------|------------------|------------|------|
-| D1 Onboard | Reads MANUAL-ACTIONS, `.env.example` | “What do I check weekly?” | Doc rot | J21,J23,J26 |
+| D1 Onboard | Reads MANUAL-ACTIONS, `.env.example`, interactive onboarding dashboard (`public/onboard.html`), 90-day launch playbook (`LAUNCH-PLAYBOOK.md`); runs test suite and seeds demo data | “What do I check weekly?” | Doc rot | J21,J23,J26 |
 | D2 Monitor | Logs, errors, billing portal | “Who owns Stripe/Clerk incidents?” | Vendor finger-pointing | J17,J21 |
 | D3 Change | Ships features outside launcher | “Fork drift.” | No upgrade path | J20,J12 |
 | D4 Market | SEO, campaigns, CRM | “Builder didn’t promise forever marketing.” | Expectation gap | J19,J20 |
@@ -429,7 +429,7 @@ Outputs use shorthand: **G** = generated file in repo, **L** = live provisioned 
 | C7 | P-PROCURE | G1,J22 | **No** auto-deploy or staging-only workflow (product decision) | SB05,SB06 |
 | C8 | P-PROCURE | J22,J23 | Sign-off on handoff vs production | SB06 |
 | C9 | P-PROCURE,P-OPERATOR | G4,G7,F4 | IT-run deploy using shipped runbooks | SB08 |
-| D1 | P-OPERATOR | R3,F4,P2 | MANUAL-ACTIONS, `.env.example`, CREDENTIALS inventory | SB08 |
+| D1 | P-OPERATOR | R3,F4,P2 | MANUAL-ACTIONS, `.env.example`, CREDENTIALS inventory, `public/onboard.html`, `LAUNCH-PLAYBOOK.md`, test suite (`src/__tests__/`), seed data (`src/data/seed/`), API collection (`docs/openapi.json`) | SB08 |
 | D2 | P-OPERATOR | H2,H3,J21 | Stripe/Clerk dashboards; webhook health | SB08 |
 | D3 | P-OPERATOR | F9,J20 | Fork; drift from template | SB08 |
 | D4 | P-OPERATOR | M2,T2,J19 | Expectation: marketing not infinite; docs pointer | SB08 |
