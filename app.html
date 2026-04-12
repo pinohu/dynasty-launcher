@@ -939,7 +939,7 @@ html,body{overflow-x:hidden}
     <!-- Project Category + Deployment Target -->
     <div class="cfg-section">
       <h3 class="cfg-label">What are you building?</h3>
-      <p class="cfg-desc">Pick the closest category. This selects the best template and infrastructure — the AI handles the rest.</p>
+      <p class="cfg-desc">Pick the closest category. It steers template, deploy target, and prompts toward that product shape. After generation we run multi-pass verification (repo, deploy, live URL, routes, docs quality) before we call a build &quot;ready.&quot;</p>
 
       <div class="deploy-grid" id="category-grid">
 
@@ -5856,6 +5856,14 @@ function cx(desc,inf){
   if (V2_SCORECARD?.framework_analyses?.unit_economics) {
     base += `\n\n## Unit Economics: ${typeof V2_SCORECARD.framework_analyses.unit_economics === 'string' ? V2_SCORECARD.framework_analyses.unit_economics.slice(0, 500) : ''}`;
   }
+  const _cat = typeof V2_CATEGORY !== 'undefined' ? V2_CATEGORY : (inf.type_id || 'unspecified');
+  const _dep = typeof V2_DEPLOY_TARGET !== 'undefined' ? V2_DEPLOY_TARGET : '';
+  base += `\n\n## OUTPUT BAR — NON-NEGOTIABLE (every artifact in this session):
+- **Niche-first for "${inf.name}"**: Copy, examples, labels, docs, and code comments must read like a specialist shipped this for this exact business — not a generic SaaS template. Ban placeholder names, "Acme", lorem, and template-vendor branding in user-visible surfaces.
+- **Category fit (${_cat}${_dep ? ` · deploy: ${_dep}` : ''})**: Depth and IA must match what this category implies (e.g. SaaS vs directory vs authority site); do not ship a thin generic subset when the category demands more.
+- **Documentation as product**: SPEC, BUSINESS-SYSTEM, GTM/runbooks, MANUAL-ACTIONS, README — must be actionable, niche-terminology correct, and consistent with generated code. No filler sections; every major claim should trace to something in the repo or MANUAL-ACTIONS.
+- **Honesty**: Do not claim live integrations, data, or compliance that are not implemented; route real gaps to MANUAL-ACTIONS with crisp steps.
+- **Ship mindset**: Assume strict post-deploy checks (build, key routes, branding leak scan, project name on pages). Write so those checks pass without customer manual cleanup.`;
   return base;
 }
 
@@ -11916,21 +11924,22 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ── PHASE 11-12: TRIPLE AUDIT-FIX-RECHECK VERIFICATION ──────────────────
-    // Each check runs 3 passes: AUDIT (detect) → FIX (remediate) → RECHECK (confirm)
-    // Build is NEVER marked done until all checks pass on the final recheck.
+    // ── PHASE 11-12: MULTI-PASS AUDIT-FIX-RECHECK VERIFICATION ──────────────
+    // Pass 1 AUDIT → pass 2 FIX → passes 3–5 RECHECK/stabilize (live + deploy can lag).
+    // UI must not claim "live / complete" unless completion gate + quality agree.
     // ══════════════════════════════════════════════════════════════════════════
-    addP('verify', 'Deployment Verification — 3-pass audit', 'Audit → Fix → Recheck for each system');
+    const VERIFY_MAX_PASS = 5;
+    addP('verify', `Deployment Verification — ${VERIFY_MAX_PASS}-pass audit`, 'Audit → Fix → Multi recheck for each system');
     setP('verify', 'run');
-    updateGlobalProgress(11, 14, 'Phase 11 of 14 · Triple Verification');
+    updateGlobalProgress(11, 14, 'Phase 11 of 14 · Multi-pass verification');
 
     const vercelUrl = provRes?.results?.vercel?.url;
     const vercelProjectId = provRes?.results?.vercel?.project_id;
     const verifyResults = { github: false, vercel: false, live: false, route_coverage: false, issues: [], fixes_applied: [] };
 
-    for (let pass = 1; pass <= 3; pass++) {
-      const passLabel = pass === 1 ? 'Audit' : pass === 2 ? 'Fix' : 'Recheck';
-      setP('verify', 'run', `Pass ${pass}/3: ${passLabel}...`);
+    for (let pass = 1; pass <= VERIFY_MAX_PASS; pass++) {
+      const passLabel = pass === 1 ? 'Audit' : pass === 2 ? 'Fix' : `Recheck (${pass - 2}/${VERIFY_MAX_PASS - 2})`;
+      setP('verify', 'run', `Pass ${pass}/${VERIFY_MAX_PASS}: ${passLabel}...`);
       addP(`verify-pass-${pass}`, `${passLabel} pass`);
       setP(`verify-pass-${pass}`, 'run');
 
@@ -11987,7 +11996,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
             verifyResults.issues.push(`GitHub missing (pass ${pass}): ${missing.join(', ')}`);
           }
         } catch (e) {
-          if (pass < 3) await new Promise(r => setTimeout(r, 5000)); // wait and retry
+          if (pass < VERIFY_MAX_PASS) await new Promise(r => setTimeout(r, 5000)); // wait and retry
         }
       }
 
@@ -12025,7 +12034,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
               setP(`verify-pass-${pass}`, 'run', `Vercel: ${depData.state} — waiting...`);
               await new Promise(r => setTimeout(r, 30000));
             }
-          } else if (pass === 3 && !verifyResults.vercel) {
+          } else if (pass >= 3 && pass <= VERIFY_MAX_PASS && !verifyResults.vercel) {
             // RECHECK: poll up to 60 more seconds
             for (let poll = 0; poll < 4; poll++) {
               await new Promise(r => setTimeout(r, 15000));
@@ -12142,9 +12151,9 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
               verifyResults.fixes_applied.push('Live URL not responding — DNS may still be propagating');
               // Nothing to fix — just needs time
             }
-          } else if (pass === 3) {
-            // Final chance — wait 20s more and recheck with strict criteria
-            await new Promise(r => setTimeout(r, 20000));
+          } else if (pass >= 3 && pass <= VERIFY_MAX_PASS) {
+            // Stabilization passes — wait longer each round, then strict homepage recheck
+            await new Promise(r => setTimeout(r, 12000 + (pass - 3) * 8000));
             try {
               const rc = await fetch(`/api/provision?action=verify_live`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
@@ -12171,8 +12180,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       if (allPassed) {
         setP(`verify-pass-${pass}`, 'ok', passChecks.join(' · '));
         // All checks passed — skip remaining passes
-        if (pass < 3) {
-          for (let skip = pass + 1; skip <= 3; skip++) {
+        if (pass < VERIFY_MAX_PASS) {
+          for (let skip = pass + 1; skip <= VERIFY_MAX_PASS; skip++) {
             addP(`verify-pass-${skip}`, skip === 2 ? 'Fix pass' : 'Recheck pass');
             setP(`verify-pass-${skip}`, 'ok', 'Skipped — all checks already passed');
           }
@@ -12182,24 +12191,24 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
         const fixNote = pass === 2 && verifyResults.fixes_applied.length
           ? ` · Fixes: ${verifyResults.fixes_applied.length}`
           : '';
-        setP(`verify-pass-${pass}`, pass === 3 ? 'er' : 'sk', passChecks.join(' · ') + fixNote);
+        setP(`verify-pass-${pass}`, pass === VERIFY_MAX_PASS ? 'er' : 'sk', passChecks.join(' · ') + fixNote);
       }
 
       // Brief pause between passes
-      if (pass < 3 && !allPassed) await new Promise(r => setTimeout(r, 3000));
+      if (pass < VERIFY_MAX_PASS && !allPassed) await new Promise(r => setTimeout(r, 3000));
     }
 
     // ── Final verification summary ────────────────────────────────────────
     const finalGood = verifyResults.github && (verifyResults.vercel || !vercelProjectId) && (verifyResults.live || !vercelUrl) && (verifyResults.route_coverage || !vercelUrl);
     if (finalGood) {
-      setP('verify', 'ok', '3-pass verification complete — all systems confirmed live');
+      setP('verify', 'ok', `${VERIFY_MAX_PASS}-pass verification complete — all systems confirmed live`);
     } else {
       const stillFailing = [];
       if (!verifyResults.github) stillFailing.push('GitHub');
       if (!verifyResults.vercel && vercelProjectId) stillFailing.push('Vercel');
       if (!verifyResults.live && vercelUrl) stillFailing.push('Live URL');
       if (!verifyResults.route_coverage && vercelUrl) stillFailing.push('Route coverage');
-      setP('verify', 'er', `Verification incomplete after 3 passes — ${stillFailing.join(', ')} failed`);
+      setP('verify', 'er', `Verification incomplete after ${VERIFY_MAX_PASS} passes — ${stillFailing.join(', ')} failed`);
       if (verifyResults.fixes_applied.length) {
         addP('verify-fixes', `${verifyResults.fixes_applied.length} fixes attempted`);
         setP('verify-fixes', 'sk', verifyResults.fixes_applied.join(' · '));
@@ -12220,12 +12229,13 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       live: expectsLiveSite ? verifyResults.live : true,
       routes: expectsLiveSite ? verifyResults.route_coverage : true,
       files: Object.keys(files).length >= 10,
+      quality: qualityOk,
     };
     const doneCount = Object.values(doneChecks).filter(Boolean).length;
     const doneTotal = Object.keys(doneChecks).length;
     const failed = Object.entries(doneChecks).filter(([,v]) => !v).map(([k]) => k);
     if (doneCount === doneTotal) {
-      setP('done-gate', 'ok', `${doneCount}/${doneTotal} checks passed — build complete`);
+      setP('done-gate', 'ok', `${doneCount}/${doneTotal} checks passed — all completion gates satisfied`);
     } else {
       setP('done-gate', 'er', `${doneCount}/${doneTotal} passed · Failed: ${failed.join(', ')}`);
     }
@@ -12237,14 +12247,28 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     // user can still inspect what DID generate, then prepend a red error
     // banner with actionable next steps (err-box lives inside prog-screen
     // which showDone hides, so we inject directly into done-screen).
+    const customerDeployReady = !expectsLiveSite || finalGood;
+    const customerFullReady = doneCount === doneTotal && customerDeployReady && qualityOk;
+    window._buildOutcome = {
+      expectsLiveSite,
+      finalGood,
+      doneCount,
+      doneTotal,
+      doneChecks,
+      failed,
+      qualityOk,
+      customerFullReady,
+      customerDeployReady,
+    };
     showDone(inf,repo,isAuthority ? 0 : Object.keys(files).length,inf.manual_svcs||[]);
 
-    if (doneCount < doneTotal && expectsLiveSite) {
+    if (doneCount < doneTotal) {
       const nextSteps = [];
       if (!doneChecks.github) nextSteps.push('Missing critical files in GitHub repo — inspect Vercel build logs or re-run the build.');
       if (!doneChecks.vercel) nextSteps.push(`Vercel deployment did not reach READY. Check https://vercel.com/polycarpohu-gmails-projects/${inf.repo}/deployments for the build error.`);
       if (!doneChecks.live) nextSteps.push(`Live URL ${vercelUrl || ''} did not return project-specific content. Common causes: build error, template branding leak, or DNS still propagating.`);
       if (!doneChecks.routes) nextSteps.push('Required routes failed content checks (e.g., /docs or /pricing or package routes).');
+      if (!doneChecks.quality) nextSteps.push('Quality gate flagged placeholders or invalid patterns in critical docs/code — expand the Quality step in the build log, fix in-repo, then redeploy if needed.');
       if (verifyResults.issues?.length) nextSteps.push('Issues detected: ' + verifyResults.issues.join(' · '));
 
       const banner = document.createElement('div');
@@ -12286,6 +12310,26 @@ function showDone(inf,repo,fc,mtasks){
     compactionsUsed > 0 ? `🔗 ${compactionsUsed} phase compactions` : null,
     EXISTING_CLAUDE_MD ? '♻️ iterative update' : null,
   ].filter(Boolean).join(' · ');
+  const bo = window._buildOutcome;
+  let doneH2 = `✓ ${inf.name} is live`;
+  let doneLead = '';
+  if (bo) {
+    if (bo.customerFullReady) {
+      doneH2 = bo.expectsLiveSite
+        ? `✓ ${inf.name} passed verification — live`
+        : `✓ ${inf.name} — outputs ready`;
+      doneLead = bo.expectsLiveSite
+        ? 'Deploy, routes, and quality checks passed. Confirm DNS and env keys from MANUAL-ACTIONS before customer handoff.'
+        : 'Completion checks passed for this deploy path (live URL not required). Review the repo and MANUAL-ACTIONS for keys and provider steps.';
+    } else {
+      doneH2 = bo.expectsLiveSite && !bo.finalGood
+        ? `⚠ ${inf.name} — session ended; live verification incomplete`
+        : !bo.qualityOk
+          ? `⚠ ${inf.name} — outputs saved; quality gate needs attention`
+          : `⚠ ${inf.name} — build incomplete`;
+      doneLead = `${bo.doneCount}/${bo.doneTotal} completion checks passed${bo.failed && bo.failed.length ? ' · Failed: ' + bo.failed.join(', ') : ''}. Full "ready" status requires every check — see the warning at the top when present.`;
+    }
+  }
   let _v4DemoBanner = '';
   try {
     const _bpD = JSON.parse(localStorage.getItem('dynasty_build_profile') || '{}');
@@ -12319,7 +12363,7 @@ function showDone(inf,repo,fc,mtasks){
   } catch {}
   d.innerHTML=`
 ${_v4DemoBanner}${_v4QueueBanner}
-<div class="done-head"><h2>✓ ${inf.name} is live</h2><p>${fc} files generated · ${provRes?.results?Object.keys(provRes.results).length+' infrastructure services':''}${provRes?.modules?' + '+Object.values(provRes.modules).filter(m=>m?.ok).length+' V3 modules provisioned':' provisioned'} · ${mtasks.length} manual actions${intelligenceNote ? '<br><span style="color:var(--gold);font-size:0.78rem">' + intelligenceNote + '</span>' : ''}</p></div>
+<div class="done-head"><h2>${doneH2}</h2><p>${doneLead ? '<span style="display:block;color:var(--sec);font-size:12px;line-height:1.5;margin-bottom:10px">' + doneLead + '</span>' : ''}${fc} files generated · ${provRes?.results?Object.keys(provRes.results).length+' infrastructure services':''}${provRes?.modules?' + '+Object.values(provRes.modules).filter(m=>m?.ok).length+' V3 modules provisioned':' provisioned'} · ${mtasks.length} manual actions${intelligenceNote ? '<br><span style="color:var(--gold);font-size:0.78rem">' + intelligenceNote + '</span>' : ''}</p></div>
 
 ${V2_SCORECARD ? `<div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem 1.25rem;margin-bottom:1rem">
   <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin-bottom:8px">Strategic Viability</div>
@@ -12914,6 +12958,7 @@ async function downloadAllFiles() {
 
 function reset(){
   INFERRED=null;PRGS=[];isAuthority=false;LAUNCH_URL=null;provRes=null;
+  window._buildOutcome=null;
   V2_SCORECARD=null;V2_BUILD_COST=0;V2_DEPLOY_TARGET='fullstack';V2_CATEGORY='saas';
   RESEARCH_DATA=null;FRAMEWORK_SYNTHESIS=null;
   document.getElementById('mode-screen').style.display='block';
