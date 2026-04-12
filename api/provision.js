@@ -226,17 +226,19 @@ function readAdminTokenFromRequest(req) {
 
 async function isValidAdminToken(token) {
   if (!token) return false;
-  const adminKey = process.env.ADMIN_KEY;
-  if (!adminKey) return false;
+  const adminKey = process.env.ADMIN_KEY || '';
+  const testAdminKey = process.env.TEST_ADMIN_KEY || '';
+  if (!adminKey && !testAdminKey) return false;
   const parts = token.split(':');
   if (parts.length !== 3) return false;
   const [prefix, expiry, hash] = parts;
-  if (prefix !== 'admin') return false;
+  const secret = prefix === 'admin' ? adminKey : (prefix === 'admin_test' ? testAdminKey : '');
+  if (!secret) return false;
   const exp = parseInt(expiry, 10);
   if (!Number.isFinite(exp) || Date.now() > exp) return false;
   const { createHmac } = await import('crypto');
   const payload = `${prefix}:${expiry}`;
-  const expected = createHmac('sha256', adminKey).update(payload).digest('hex');
+  const expected = createHmac('sha256', secret).update(payload).digest('hex');
   return expected === hash;
 }
 

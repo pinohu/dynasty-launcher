@@ -802,6 +802,7 @@ html,body{overflow-x:hidden}
     </div>
 
     <button class="launch" id="launch-btn" disabled>Describe your project above to begin</button>
+    <div id="analyze-err" style="display:none;max-width:760px;margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(229,83,75,0.35);background:rgba(229,83,75,0.08);font-size:12px;line-height:1.45;color:#FCA5A5"></div>
     <div id="tier-access-notice" style="display:none;max-width:760px;margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);font-size:11px;line-height:1.5;color:#FDE68A"></div>
 
     <!-- ── Flags & Memory Panel (Claude Code Patterns) ────────────────────── -->
@@ -5314,6 +5315,8 @@ async function loadInventory(){
   try{const r=await fetch('/api/provision?action=inventory');TOOL_INVENTORY=await r.json();}catch{}
 }
 async function inferConfig(desc){
+  const ae = document.getElementById('analyze-err');
+  if (ae) { ae.style.display = 'none'; ae.textContent = ''; }
   await loadInventory();
   showLoadingOverlay('Analyzing your idea...', 'AI is inferring project type, tech stack, business model, and pricing');
   const toolContext=TOOL_INVENTORY?`
@@ -5348,10 +5351,13 @@ Return:
   "mvp": "72h or 1w or 2w or 1m",
   "fonts": "font recommendation",
   "manual_svcs": ["clerk","stripe","gsc"],
-  "reasoning": "2 sentences on why these choices fit the description"
+        "reasoning": "2 sentences on why these choices fit the description"
 }`}]})});
-    if(!r.ok) throw new Error(`Analysis request failed (${r.status})`);
-    const d=await r.json();
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const msg = typeof d?.error === 'string' ? d.error : (d?.error?.message || `Analysis request failed (${r.status})`);
+      throw new Error(msg);
+    }
     if (d?.error) throw new Error(typeof d.error === 'string' ? d.error : (d.error.message || 'Analysis failed'));
     const txt=d.content?.find(b=>b.type==='text')?.text||'';
     const m=txt.match(/\{[\s\S]*\}/);
@@ -5359,11 +5365,19 @@ Return:
     INFERRED=safeJsonParse(m[0]); if (!INFERRED) throw new Error("Inference JSON repair failed");
     showPreview(INFERRED);
     updateLaunchBtn();
+    try {
+      document.getElementById('preview')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e2) {}
   }catch(e){
     INFERRED = null;
     console.warn('Idea analysis failed:', e?.message || e);
     const btn = document.getElementById('launch-btn');
     if (btn) { btn.disabled = false; btn.textContent = 'Analyze & Build →'; }
+    const aerr = document.getElementById('analyze-err');
+    if (aerr) {
+      aerr.style.display = 'block';
+      aerr.textContent = e?.message || 'Analysis failed. If you use a test admin key, redeploy after setting TEST_ADMIN_KEY. Otherwise try again or use Score Free.';
+    }
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
     hideLoadingOverlay();
