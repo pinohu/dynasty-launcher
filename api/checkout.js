@@ -1,10 +1,27 @@
 // Your Deputy — Stripe Checkout API
-// Handles: create checkout session, verify payment, usage tracking
+// Handles: create checkout session, verify payment, usage tracking, session recovery
 // Uses Stripe REST API directly (no SDK — no package.json in this project)
 
 const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://yourdeputy.com';
 const ACCESS_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+const RECOVER_ATTEMPTS = new Map();
+const RECOVER_MAX = 5;
+const RECOVER_WINDOW_MS = 15 * 60 * 1000;
+
+function isRecoverRateLimited(req) {
+  const xf = (req.headers['x-forwarded-for'] || '').toString();
+  const ip = xf.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
+  const now = Date.now();
+  const e = RECOVER_ATTEMPTS.get(ip);
+  if (!e || now - e.start > RECOVER_WINDOW_MS) {
+    RECOVER_ATTEMPTS.set(ip, { start: now, count: 1 });
+    return false;
+  }
+  e.count++;
+  return e.count > RECOVER_MAX;
+}
 
 async function signPaidAccessToken({ sessionId, userId, plan }) {
   const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET || '';
@@ -181,6 +198,7 @@ export default async function handler(req, res) {
   // ── Session Recovery — send a code to email ─────────────────────
   if (action === 'recover_start') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
+    if (isRecoverRateLimited(req)) return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
     const { email } = req.body || {};
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ ok: false, error: 'Valid email required' });
@@ -213,6 +231,7 @@ export default async function handler(req, res) {
   // ── Session Recovery — verify code and return session ──────────
   if (action === 'recover_verify') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
+    if (isRecoverRateLimited(req)) return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
     const { email, code } = req.body || {};
     if (!email || !code) return res.status(400).json({ ok: false, error: 'email and code required' });
     try {

@@ -135,7 +135,7 @@ fetch('/api/checkout?action=create_session', {
 .then(r => r.json())
 .then(d => {
   if (d.ok && d.url) { window.location.href = d.url; }
-  else { document.body.innerHTML = '<div style="text-align:center;padding:40px"><h2 style="color:#fff;font-size:1.4rem">⚡ Your Deputy</h2><p style="color:rgba(255,255,255,0.5);margin:16px 0">' + (d.error || 'Checkout unavailable') + '</p><a href="/#pricing" style="color:#C9A84C">&larr; Back to plans</a></div>'; }
+  else { document.body.innerHTML = '<div style="text-align:center;padding:40px"><h2 style="color:#fff;font-size:1.4rem">⚡ Your Deputy</h2><p style="color:rgba(255,255,255,0.5);margin:16px 0">' + (d.error || 'Checkout unavailable').replace(/[<>"'&]/g, '') + '</p><a href="/#pricing" style="color:#C9A84C">&larr; Back to plans</a></div>'; }
 })
 .catch(() => { window.location.href = '/#pricing'; });
 </script>

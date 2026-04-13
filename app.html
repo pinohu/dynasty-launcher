@@ -2884,7 +2884,7 @@ function isFreeTier() {
 }
 function isModuleAllowed(moduleName) {
   const tier = getUserTier();
-  const tierDef = V3_TIERS[tier] || V3_TIERS.enterprise;
+  const tierDef = V3_TIERS[tier] || V3_TIERS.free;
   return tierDef.modules.includes(moduleName);
 }
 
