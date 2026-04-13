@@ -221,8 +221,9 @@ export default async function handler(req, res) {
             text: `Your sign-in code is: ${code}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\nhttps://yourdeputy.com`
           })
         });
+        return res.json({ ok: true, sent: true });
       }
-      return res.json({ ok: true, sent: true });
+      return res.json({ ok: false, error: 'Email service not configured. Contact support.' });
     } catch (e) {
       return res.json({ ok: false, error: 'Could not send code. Try again.' });
     }
@@ -248,7 +249,7 @@ export default async function handler(req, res) {
       const enc = (s) => encodeURIComponent(s);
       const sessions = await stripeGet(`checkout/sessions?limit=10&customer_details%5Bemail%5D=${enc(email.toLowerCase())}`);
       const paid = (sessions.data || []).find(s => s.payment_status === 'paid' || (s.mode === 'subscription' && s.status === 'complete'));
-      if (!paid) return res.json({ ok: false, error: 'No paid session found for this email' });
+      if (!paid) return res.json({ ok: false, error: 'Could not verify. Check your email and try again.' });
 
       const accessToken = await signPaidAccessToken({
         sessionId: paid.id, userId: '', plan: paid.metadata?.plan || 'foundation'
@@ -262,7 +263,7 @@ export default async function handler(req, res) {
         customer_email: paid.customer_email || paid.customer_details?.email,
       });
     } catch (e) {
-      return res.json({ ok: false, error: e.message });
+      return res.json({ ok: false, error: 'Recovery failed. Please try again.' });
     }
   }
 

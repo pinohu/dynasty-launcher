@@ -494,7 +494,8 @@ export default async function handler(req, res) {
 
   // ── GET /api/ai?action=models — return available models with cost info ────
   if (req.method === 'GET' && req.query?.action === 'models') {
-    const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
+    let config = {};
+    try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { config = {}; }
     const available = {};
     for (const [model, info] of Object.entries(PROVIDERS)) {
       const key = getApiKey(info.provider, config);
@@ -510,7 +511,8 @@ export default async function handler(req, res) {
   // ── POST /api/ai — generate completion ────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
+  let config = {};
+  try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { config = {}; }
   const body = req.body || {};
   const usageContext = (body.usage_context || 'standard').toString();
   const requestedModel = (body.model || 'claude-sonnet-4-20250514').toString();

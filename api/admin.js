@@ -35,7 +35,8 @@ export default async function handler(req, res) {
   if (!verifyAdmin(req)) return res.status(401).json({ error: 'Unauthorized — valid admin token required' });
 
   const action = req.query?.action || req.body?.action;
-  const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
+  let config = {};
+  try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { config = {}; }
 
   // ── DASHBOARD OVERVIEW ──────────────────────────────────────────────
   if (action === 'overview') {
