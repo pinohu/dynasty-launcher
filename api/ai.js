@@ -20,6 +20,9 @@ const PROVIDERS = {
   'gemini-2.5-pro':             { provider: 'google', label: 'Gemini 2.5 Pro',   costPer1kIn: 0.00125, costPer1kOut: 0.01, free: false },
   'gemini-2.5-flash':           { provider: 'google', label: 'Gemini 2.5 Flash', costPer1kIn: 0.00015, costPer1kOut: 0.001, free: false },
   'gemini-2.0-flash':           { provider: 'google', label: 'Gemini 2.0 Flash', costPer1kIn: 0.0001, costPer1kOut: 0.0004, free: true },
+  'gemma-4-27b-it':             { provider: 'google', label: 'Gemma 4 27B',      costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'gemma-4-e4b-it':             { provider: 'google', label: 'Gemma 4 E4B',      costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'gemma-4-e2b-it':             { provider: 'google', label: 'Gemma 4 E2B',      costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── Groq (free tier) ──────────────────────────────────────────────────────
   'llama-3.3-70b-versatile':    { provider: 'groq', label: 'Llama 3.3 70B',  costPer1kIn: 0, costPer1kOut: 0, free: true },
@@ -185,7 +188,7 @@ async function incrementUsage(actorKey) {
 }
 
 function resolveFreeModel(config) {
-  const preferred = ['gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
+  const preferred = ['gemma-4-27b-it', 'gemma-4-e4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'gemma-4-e2b-it', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
   for (const model of preferred) {
     const info = PROVIDERS[model];
     if (!info || !info.free) continue;

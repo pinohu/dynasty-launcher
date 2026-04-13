@@ -3224,8 +3224,7 @@ async function runCrossFrameworkSynthesis(scorecard) {
   const analyses = scorecard.framework_analyses || {};
   if (Object.keys(analyses).length < 2) return null;
 
-  try {
-    const raw = await aiRaw(`You are a meta-analyst. Multiple strategy frameworks have been applied to a business idea. Your job: find where they AGREE (high-confidence signals), CONTRADICT (risk areas), and what they MISSED (blind spots).
+  const synthPrompt = `You are a meta-analyst. Multiple strategy frameworks have been applied to a business idea. Your job: find where they AGREE (high-confidence signals), CONTRADICT (risk areas), and what they MISSED (blind spots).
 
 FRAMEWORK ANALYSES:
 ${Object.entries(analyses).map(([k, v]) => `## ${k.replace(/_/g, ' ').toUpperCase()}\n${typeof v === 'string' ? v.slice(0, 600) : JSON.stringify(v).slice(0, 600)}`).join('\n\n')}
@@ -3239,7 +3238,15 @@ Return ONLY valid JSON:
   "blind_spots": ["What no framework addressed — needs investigation", "...up to 3"],
   "score_adjustment": {"direction": "up|down|none", "amount": 0.0, "reason": "Why the cross-framework evidence suggests adjusting the composite score"},
   "synthesis_summary": "2-3 sentence executive summary of what the combined frameworks reveal"
-}`, 2000);
+}`;
+
+  try {
+    let raw = '';
+    const webllmReady = webllmSupported() && window.__webllm?.ready;
+    if (webllmReady) {
+      try { raw = await aiLocal(synthPrompt, 2000); } catch { raw = ''; }
+    }
+    if (!raw) raw = await aiRaw(synthPrompt, 2000);
 
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) return null;
@@ -3264,7 +3271,10 @@ function renderSynthesis(syn) {
 }
 
 // ── WebLLM: client-side inference for zero-cost scoring ─────────────────────
-const WEBLLM_MODEL = 'Qwen2.5-3B-Instruct-q4f16_1-MLC';
+const WEBLLM_MODELS = [
+  'gemma-2-2b-it-q4f16_1-MLC',
+  'Qwen2.5-3B-Instruct-q4f16_1-MLC',
+];
 let _webllmInitPromise = null;
 
 function webllmSupported() {
@@ -3307,16 +3317,29 @@ async function initWebLLM() {
       if (!adapter) { wl.error = 'No WebGPU adapter'; wl.loading = false; hideWebLLMStatus(); return false; }
 
       showWebLLMStatus('Downloading model (first time only)…', 0);
-      wl.engine = await wl.CreateMLCEngine(WEBLLM_MODEL, {
-        initProgressCallback: (report) => {
-          const pct = report.progress || 0;
-          const label = report.text || 'Loading…';
-          showWebLLMStatus(label.length > 60 ? label.slice(0, 57) + '…' : label, pct);
-        },
-        logLevel: 'SILENT',
-      }, {
-        context_window_size: 4096,
-      });
+      let engine = null;
+      let loadedModel = '';
+      for (const modelId of WEBLLM_MODELS) {
+        try {
+          engine = await wl.CreateMLCEngine(modelId, {
+            initProgressCallback: (report) => {
+              const pct = report.progress || 0;
+              const label = report.text || 'Loading…';
+              showWebLLMStatus(label.length > 60 ? label.slice(0, 57) + '…' : label, pct);
+            },
+            logLevel: 'SILENT',
+          }, {
+            context_window_size: 4096,
+          });
+          loadedModel = modelId;
+          break;
+        } catch (modelErr) {
+          console.warn(`WebLLM: ${modelId} failed, trying next…`, modelErr.message);
+        }
+      }
+      if (!engine) throw new Error('All WebLLM models failed to load');
+      wl.engine = engine;
+      wl.modelId = loadedModel;
 
       wl.ready = true;
       wl.loading = false;
@@ -3976,8 +3999,8 @@ async function initReviewModels() {
 async function aiRawWithModel(prompt, modelId, max = 4000) {
   const freeTier = isFreeTier();
   const fallbackModels = freeTier
-    ? [modelId, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'llama-3.1-8b-instant']
-    : [modelId, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'claude-haiku-4-5-20251001'];
+    ? [modelId, 'gemma-4-27b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant']
+    : [modelId, 'gemma-4-27b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'claude-haiku-4-5-20251001'];
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
     try {
@@ -6034,12 +6057,12 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
   // Cost-optimized model selection
   // 100x Cost Mode: FREE → FREE → cheap fallback
   const COST_MODELS = {
-    premium: 'llama-3.3-70b-versatile',             // FREE (Groq) — best free model for analysis
-    standard: 'gemini-2.0-flash',                    // FREE (Google) — fast and capable
-    budget: 'gemini-2.0-flash',                      // FREE (Google) — for boilerplate
+    premium: 'gemma-4-27b-it',                       // FREE (Google AI Studio) — best free model for analysis
+    standard: 'gemma-4-27b-it',                      // FREE (Google AI Studio) — high quality
+    budget: 'gemini-2.0-flash',                      // FREE (Google) — fast for boilerplate
   };
   const model = COST_MODELS[costTier] || COST_MODELS.standard;
-  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'claude-haiku-4-5-20251001'];
+  const fallbackModels = [model, 'gemma-4-27b-it', 'gemma-4-e4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'claude-haiku-4-5-20251001'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
@@ -6889,16 +6912,24 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price} | Audience:
       } else { setP('ab', 'sk', 'A/B generation skipped'); }
     } catch(e) { setP('ab', 'sk', e.message); }
 
-    // ── Generate Investor Pitch Summary ──────────────────────────────────
+    // ── Generate Investor Pitch + Readiness + Legal (parallelized) ──────
     if (_v4SkipHeavy) {
       addP('pitch', 'Pitch deck content', 'Skipped (Demo / Express)');
       setP('pitch', 'sk', 'Faster demo path');
-    } else try {
+      addP('investor', 'Investor readiness', 'Skipped (Demo / Express)');
+      setP('investor', 'sk', 'Faster demo path');
+      addP('legal', 'Legal templates', 'Skipped (Demo / Express)');
+      setP('legal', 'sk', 'Faster demo path');
+    } else {
       addP('pitch', 'Generating investor pitch summary', '', '⬡ Pitch Deck'); setP('pitch', 'run');
-      const pitchRaw = await aiRaw(`Generate a 10-section investor pitch summary for "${inf.name}" (${inf.type_label}).
+      addP('investor', 'Generating investor readiness assessment', '', '⬡ Investor Ready'); setP('investor', 'run');
+      addP('legal', 'Generating legal templates', '', '⬡ Legal'); setP('legal', 'run');
+      const scoreContext = V2_SCORECARD ? `Viability Score: ${V2_SCORECARD.composite?.toFixed?.(1) || 'N/A'}/10. Verdict: ${V2_SCORECARD.verdict || 'N/A'}. Scores: ${JSON.stringify(V2_SCORECARD.scores || {}).slice(0, 500)}` : '';
+      const synthContext = FRAMEWORK_SYNTHESIS ? `Consensus: ${(FRAMEWORK_SYNTHESIS.consensus_signals || []).join('; ')}. Contradictions: ${(FRAMEWORK_SYNTHESIS.contradictions || []).join('; ')}` : '';
 
+      const [pitchR, investorR, legalR] = await Promise.allSettled([
+        aiRaw(`Generate a 10-section investor pitch summary for "${inf.name}" (${inf.type_label}).
 This is the content for a pitch deck — each section is one slide. Write as a founder pitching to an angel investor or seed fund.
-
 1. **Title Slide:** Product name, one-line value prop, founding team credential
 2. **Problem:** The specific pain (quantify with $ or hours lost). 3 bullet points.
 3. **Solution:** What the product does differently. 1 paragraph + 3 key features.
@@ -6909,27 +6940,11 @@ This is the content for a pitch deck — each section is one slide. Write as a f
 8. **Competition:** 3 competitors + positioning differentiator. Use a 2x2 matrix description.
 9. **The Ask:** What funding is needed, what it buys (runway, hires, marketing), expected milestones.
 10. **Team:** Why this team wins (credentials, domain expertise, unfair advantages).
-
 Revenue: ${inf.revenue_model} at ${inf.price} | Acquisition: ${inf.acquisition} | MVP: ${inf.mvp}
 ${V2_SCORECARD ? 'Viability Score: ' + V2_SCORECARD.composite.toFixed(1) + '/10 — ' + V2_SCORECARD.verdict : ''}
+Format each section with ## heading and concise, data-rich content. No filler.`, 4000, 'standard'),
 
-Format each section with ## heading and concise, data-rich content. No filler.`, 4000, 'standard');
-      if (pitchRaw?.length > 300) {
-        files['PITCH-DECK.md'] = `# Investor Pitch Summary — ${inf.name}\n\n> Seed-stage pitch content · ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n> Generated by Your Deputy Intelligence Engine\n\n${pitchRaw}`;
-        setP('pitch', 'ok', 'PITCH-DECK.md ready');
-      } else { setP('pitch', 'sk', 'Pitch generation skipped'); }
-    } catch(e) { setP('pitch', 'sk', e.message); }
-
-    // ── Generate Investor Readiness Assessment (Ben Franklin / CNP format) ──
-    if (_v4SkipHeavy) {
-      addP('investor', 'Investor readiness', 'Skipped (Demo / Express)');
-      setP('investor', 'sk', 'Faster demo path');
-    } else try {
-      addP('investor', 'Generating investor readiness assessment', '', '⬡ Investor Ready'); setP('investor', 'run');
-      const scoreContext = V2_SCORECARD ? `Viability Score: ${V2_SCORECARD.composite?.toFixed?.(1) || 'N/A'}/10. Verdict: ${V2_SCORECARD.verdict || 'N/A'}. Scores: ${JSON.stringify(V2_SCORECARD.scores || {}).slice(0, 500)}` : '';
-      const synthContext = FRAMEWORK_SYNTHESIS ? `Consensus: ${(FRAMEWORK_SYNTHESIS.consensus_signals || []).join('; ')}. Contradictions: ${(FRAMEWORK_SYNTHESIS.contradictions || []).join('; ')}` : '';
-      const investorRaw = await aiRaw(`You are a startup advisor preparing a founder for an investor due diligence meeting. Answer ALL of the following questions thoroughly for this business:
-
+        aiRaw(`You are a startup advisor preparing a founder for an investor due diligence meeting. Answer ALL of the following questions thoroughly for this business:
 Business: ${inf.name} (${inf.type_label})
 Description: ${desc}
 Revenue Model: ${inf.revenue_model} at ${inf.price}
@@ -6938,103 +6953,65 @@ MVP Timeline: ${inf.mvp}
 ${scoreContext}
 ${synthContext}
 
-Answer each question in detail. Be specific to THIS business — no generic answers. Use real competitor names, real market data, and concrete numbers where possible.
-
 ## 1. Overview
-a. What is the solution (product, service, platform)?
-b. How does it work, what does it do?
-c. What problem does it solve?
-d. Why would customers purchase this over competitors?
-
+a. What is the solution? b. How does it work? c. What problem does it solve? d. Why would customers purchase this over competitors?
 ## 2. Team & Capabilities
-a. What skills are required to bring this to market?
-b. What skill gaps exist and how should they be filled?
-c. What makes the founder/team the right people for this?
-
+a. Skills required? b. Skill gaps? c. Why this team?
 ## 3. Market Timing
-a. Why is NOW the perfect time?
-b. Why not before? What has changed?
-c. Why not wait 5 years? What is the cost of delay?
-
+a. Why now? b. Why not before? c. Cost of delay?
 ## 4. Product Validation
-a. How are prospective customers currently solving this problem?
-b. What would early customer feedback likely reveal?
-c. How would potential customers react to the pricing of ${inf.price}?
-d. What are the key assumptions that need to be validated?
-
+a. How are customers currently solving this? b. Early feedback expectations? c. Pricing reaction to ${inf.price}? d. Key assumptions to validate?
 ## 5. Target Market
-a. What is the primary market?
-b. What adjacent markets could this expand into?
-c. Name 3 specific companies or customer segments that need this most.
-
+a. Primary market? b. Adjacent markets? c. 3 specific customer segments?
 ## 6. Market Proof
-Identify 3+ external sources (industry reports, market trends, news articles, analyst predictions) that validate this market opportunity. Include specific data points.
-
+3+ external sources validating the opportunity.
 ## 7. Competitive Advantage
-a. Name the top 3 competing solutions.
-b. Compare and contrast each with this solution — features, pricing, approach.
-c. What is the sustainable competitive advantage (moat)?
-
+a. Top 3 competitors b. Compare each c. Sustainable moat?
 ## 8. Traction & Stage
-a. If starting from scratch: what are the steps from napkin to MVP?
-b. What are realistic Year 1, Year 2, Year 3 financial projections?
-c. What are the unit economics (CAC, LTV, margin)?
-d. What pricing strategy optimizes for growth vs. profitability?
-
+a. Steps from napkin to MVP b. Year 1-3 projections c. Unit economics d. Pricing strategy?
 ## 9. Intellectual Property
-a. What IP opportunities exist (patents, trademarks, trade secrets, copyrights)?
-b. What should be protected first and how?
-
+a. IP opportunities? b. What to protect first?
 ## 10. Funding
-a. How much capital is needed to reach key milestones?
-b. Recommended funding stages and amounts.
-c. Optimal use of funds at each stage.
-
+a. Capital needed? b. Stages and amounts? c. Use of funds?
 ## 11. Business Model
-Is this a product company, service company, marketplace, or hybrid? Why?
-
+Product, service, marketplace, or hybrid?
 ## 12. Founder Commitment
-a. What is the realistic time commitment needed?
-b. At what milestone could this support a full-time founder?
-c. What is the timeline to that milestone?
-
+a. Time commitment? b. Full-time milestone? c. Timeline?
 ## 13. Critical Needs
-a. What are the top 3 things needed immediately to advance?
-b. What are the key risks and how to mitigate each?
-
+a. Top 3 immediate needs? b. Key risks + mitigations?
 ## 14. Failure Risks
-What are the top 5 reasons this could fail, and what is the mitigation strategy for each?
-
+Top 5 reasons this could fail + mitigation.
 ## 15. Support Needed
-Beyond capital, what specific support (mentorship, introductions, technical resources, partnerships) would most accelerate this venture?
+Beyond capital, what accelerates this?
+Write thorough, specific answers. Use markdown formatting.`, 8000, 'standard'),
 
-Write thorough, specific answers. Use markdown formatting. Each section should be 2-4 paragraphs.`, 8000, 'standard');
+        aiRaw(`Generate Terms of Service and Privacy Policy templates for "${inf.name}" (${inf.type_label}).
+These are STARTER TEMPLATES — include a disclaimer that they should be reviewed by legal counsel.
+## Terms of Service
+Include: Acceptance of terms, Description of service, User accounts, Payment terms (${inf.revenue_model} at ${inf.price}), Cancellation/refund policy, Intellectual property, Limitation of liability, Governing law (Delaware), Modifications, Contact info placeholder.
+## Privacy Policy
+Include: Information collected (account data, usage data, cookies), How information is used, Third-party services (Stripe for payments, analytics), Data retention, User rights (access, deletion, portability), GDPR/CCPA compliance notes, Children's privacy (13+), Contact info placeholder.
+Write in professional legal language but keep it readable. Use numbered sections. Include [COMPANY NAME], [CONTACT EMAIL], and [EFFECTIVE DATE] as placeholders.`, 4000, 'budget'),
+      ]);
 
+      const pitchRaw = pitchR.status === 'fulfilled' ? pitchR.value : '';
+      if (pitchRaw?.length > 300) {
+        files['PITCH-DECK.md'] = `# Investor Pitch Summary — ${inf.name}\n\n> Seed-stage pitch content · ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n> Generated by Your Deputy Intelligence Engine\n\n${pitchRaw}`;
+        setP('pitch', 'ok', 'PITCH-DECK.md ready');
+      } else { setP('pitch', 'sk', 'Pitch generation skipped'); }
+
+      const investorRaw = investorR.status === 'fulfilled' ? investorR.value : '';
       if (investorRaw?.length > 500) {
         files['INVESTOR-READINESS.md'] = `# ${inf.name} — Investor Readiness Assessment\n\n> Due diligence preparation · ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n> Viability Score: ${V2_SCORECARD?.composite?.toFixed?.(1) || 'N/A'}/10\n> Generated by Your Deputy Intelligence Engine\n\n${investorRaw}`;
         setP('investor', 'ok', 'INVESTOR-READINESS.md ready');
       } else { setP('investor', 'sk', 'Investor assessment skipped'); }
-    } catch(e) { setP('investor', 'sk', e.message); }
 
-    // ── Generate Legal Templates ─────────────────────────────────────────
-    try {
-      addP('legal', 'Generating legal templates', '', '⬡ Legal'); setP('legal', 'run');
-      const legalRaw = await aiRaw(`Generate Terms of Service and Privacy Policy templates for "${inf.name}" (${inf.type_label}).
-
-These are STARTER TEMPLATES — include a disclaimer that they should be reviewed by legal counsel.
-
-## Terms of Service
-Include: Acceptance of terms, Description of service, User accounts, Payment terms (${inf.revenue_model} at ${inf.price}), Cancellation/refund policy, Intellectual property, Limitation of liability, Governing law (Delaware), Modifications, Contact info placeholder.
-
-## Privacy Policy
-Include: Information collected (account data, usage data, cookies), How information is used, Third-party services (Stripe for payments, analytics), Data retention, User rights (access, deletion, portability), GDPR/CCPA compliance notes, Children's privacy (13+), Contact info placeholder.
-
-Write in professional legal language but keep it readable. Use numbered sections. Include [COMPANY NAME], [CONTACT EMAIL], and [EFFECTIVE DATE] as placeholders.`, 4000, 'budget');
+      const legalRaw = legalR.status === 'fulfilled' ? legalR.value : '';
       if (legalRaw?.length > 500) {
         files['docs/LEGAL-TEMPLATES.md'] = `# Legal Templates — ${inf.name}\n\n> ⚠️ DISCLAIMER: These are starter templates. Have them reviewed by legal counsel before publishing.\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${legalRaw}`;
         setP('legal', 'ok', 'ToS + Privacy Policy ready');
       } else { setP('legal', 'sk', 'Legal generation skipped'); }
-    } catch(e) { setP('legal', 'sk', e.message); }
+    }
 
     // ── Generate CI/CD Pipeline Config ────────────────────────────────────
     try {
@@ -7103,112 +7080,58 @@ jobs:
       files['vercel.json'] = JSON.stringify(vconf, null, 2);
       setP('cicd', 'ok', 'GitHub Actions + vercel.json ready');
     } catch(e) { setP('cicd', 'sk', e.message); }
+    // ── Generate Email + Discovery + Competitive (parallelized) ──────────
+    addP('emails', 'Generating email onboarding sequence', '', '⬡ Email Drip'); setP('emails', 'run');
+    addP('discovery', 'Generating customer discovery script', '', '⬡ Discovery'); setP('discovery', 'run');
+    if (RESEARCH_DATA?.competitors?.length) { addP('compete', 'Generating competitive teardown', '', '⬡ Competitive Intel'); setP('compete', 'run'); }
 
-    // ── Generate Email Onboarding Sequence ────────────────────────────────
-    try {
-      addP('emails', 'Generating email onboarding sequence', '', '⬡ Email Drip'); setP('emails', 'run');
-      const emailRaw = await aiRaw(`Generate a 5-email welcome/onboarding sequence for "${inf.name}" (${inf.type_label}).
-
+    {
+      const _edcPromises = [
+        aiRaw(`Generate a 5-email welcome/onboarding sequence for "${inf.name}" (${inf.type_label}).
 These emails go to NEW CUSTOMERS who just signed up. Goal: activate them, show value, reduce churn.
+For EACH email provide: Send timing, Subject line (A/B variant), Preview text (40 chars), Body (150-200 words, conversational, one clear CTA), CTA button text, Goal.
+Email sequence: 1. Welcome + quick start (Immediate) 2. First value moment (+1 day) 3. Social proof (+3 days) 4. Pro tip (+7 days) 5. Check-in + upgrade nudge (+14 days)
+Product: ${inf.name} | Price: ${inf.price} | Revenue: ${inf.revenue_model}`, 3000, 'budget'),
 
-For EACH email provide:
-- **Send timing** (e.g., "Immediately", "+1 day", "+3 days", "+7 days", "+14 days")
-- **Subject line** (A/B variant: one direct, one curiosity)
-- **Preview text** (40 chars)
-- **Body** (150-200 words, conversational, one clear CTA)
-- **CTA button text**
-- **Goal** (what this email accomplishes)
+        aiRaw(`Generate a customer discovery interview script for "${inf.name}" (${inf.type_label}).
+This script is for the founder's FIRST 10 CUSTOMER INTERVIEWS. Goal: validate product-market fit.
+Include: ## Interview Setup (who, how to recruit, logistics) ## Interview Script (20 min): Warm-up (2 min, 2 questions), Problem Discovery (8 min, 5 open-ended questions + probes), Solution Validation (5 min, 3 questions + price sensitivity), Closing (5 min, referrals + thanks) ## Scoring Rubric (5 signals, strong vs weak PMF) ## After 10 Interviews (proceed/pivot/kill framework)
+Product: ${inf.name} | Target: ${inf.acquisition} | Price: ${inf.price}`, 3000, 'budget'),
+      ];
 
-Email sequence:
-1. Welcome + quick start (Immediate)
-2. First value moment — guide to key feature (+1 day)
-3. Social proof — case study or testimonial (+3 days)
-4. Pro tip — power user feature (+7 days)
-5. Check-in + upgrade nudge (+14 days)
-
-Product: ${inf.name} | Price: ${inf.price} | Revenue: ${inf.revenue_model}`, 3000, 'budget');
-      if (emailRaw?.length > 300) {
-        files['docs/EMAIL-SEQUENCES.md'] = `# Email Onboarding Sequence — ${inf.name}\n\n> 5-email welcome drip for new customers\n> Import to Acumbamail, Mailchimp, ConvertKit, or any ESP\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${emailRaw}`;
-        setP('emails', 'ok', '5-email sequence ready');
-      } else { setP('emails', 'sk', 'Email sequence skipped'); }
-    } catch(e) { setP('emails', 'sk', e.message); }
-
-    // ── Generate Customer Discovery Script ────────────────────────────────
-    try {
-      addP('discovery', 'Generating customer discovery script', '', '⬡ Discovery'); setP('discovery', 'run');
-      const discRaw = await aiRaw(`Generate a customer discovery interview script for "${inf.name}" (${inf.type_label}).
-
-This script is for the founder's FIRST 10 CUSTOMER INTERVIEWS. Goal: validate product-market fit before scaling.
-
-Include:
-## Interview Setup
-- Who to interview (profile of ideal interviewee)
-- How to recruit them (where to find them, outreach template)
-- Interview logistics (duration, recording consent, incentive)
-
-## Interview Script (20 minutes)
-### Warm-up (2 min)
-[2 rapport-building questions]
-
-### Problem Discovery (8 min)
-[5 open-ended questions about their current pain points, workflow, and workarounds]
-[For each: follow-up probe if they give a vague answer]
-
-### Solution Validation (5 min)
-[3 questions testing reaction to the solution concept — without pitching]
-[Price sensitivity question: "If this existed today, what would you expect to pay?"]
-
-### Closing (5 min)
-[Ask for referrals, set expectations, thank them]
-
-## Scoring Rubric
-| Signal | Strong PMF | Weak PMF |
-[5 signals to score each interview, with clear "strong" vs "weak" criteria]
-
-## After 10 Interviews
-[Decision framework: when to proceed, when to pivot, when to kill]
-
-Product: ${inf.name} | Target: ${inf.acquisition} | Price: ${inf.price}`, 3000, 'budget');
-      if (discRaw?.length > 300) {
-        files['docs/CUSTOMER-DISCOVERY.md'] = `# Customer Discovery Script — ${inf.name}\n\n> Interview guide for your first 10 customers\n> Validate product-market fit before scaling\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${discRaw}`;
-        setP('discovery', 'ok', 'Interview script + scoring rubric ready');
-      } else { setP('discovery', 'sk', 'Discovery script skipped'); }
-    } catch(e) { setP('discovery', 'sk', e.message); }
-
-    // ── Generate Competitive Teardown ─────────────────────────────────────
-    if (RESEARCH_DATA?.competitors?.length) {
-      try {
-        addP('compete', 'Generating competitive teardown', '', '⬡ Competitive Intel'); setP('compete', 'run');
+      if (RESEARCH_DATA?.competitors?.length) {
         const compList = RESEARCH_DATA.competitors.slice(0, 5).map(c => `- ${c.title}: ${c.url} — ${(c.snippet||'').slice(0, 100)}`).join('\n');
-        const compRaw = await aiRaw(`Generate a structured competitive analysis for "${inf.name}" (${inf.type_label}).
-
+        _edcPromises.push(
+          aiRaw(`Generate a structured competitive analysis for "${inf.name}" (${inf.type_label}).
 Known competitors from research:
 ${compList}
+For EACH competitor (up to 5): Name, URL, Pricing, Key Strength, Key Weakness, Our Advantage over them.
+Then provide: ## Positioning Matrix (2x2, place all competitors + us) ## Key Takeaways (3 bullets: copy, avoid, gap)
+Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'standard')
+        );
+      }
 
-For EACH competitor (up to 5):
-### [Competitor Name]
-| Attribute | Detail |
-|---|---|
-| **URL** | [website] |
-| **Founded/Est.** | [year if known, or "Unknown"] |
-| **Pricing** | [pricing model and range if known] |
-| **Key Strength** | [1 sentence] |
-| **Key Weakness** | [1 sentence] |
-| **Our Advantage** | [1 sentence — why ${inf.name} wins against this specific competitor] |
+      const [_emailsR, _discoveryR, _competeR] = await Promise.allSettled(_edcPromises);
 
-Then provide:
-## Positioning Matrix
-Describe a 2×2 matrix with two axes that best differentiate the market. Place each competitor and ${inf.name} on the matrix. Explain why ${inf.name}'s position is defensible.
+      const _emailRaw = _emailsR?.status === 'fulfilled' ? _emailsR.value : '';
+      if (_emailRaw?.length > 300) {
+        files['docs/EMAIL-SEQUENCES.md'] = `# Email Onboarding Sequence — ${inf.name}\n\n> 5-email welcome drip for new customers\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${_emailRaw}`;
+        setP('emails', 'ok', '5-email sequence ready');
+      } else { setP('emails', 'sk', 'Email sequence skipped'); }
 
-## Key Takeaways
-[3 bullet points: what to copy from competitors, what to avoid, and where the unserved gap is]
+      const _discRaw = _discoveryR?.status === 'fulfilled' ? _discoveryR.value : '';
+      if (_discRaw?.length > 300) {
+        files['docs/CUSTOMER-DISCOVERY.md'] = `# Customer Discovery Script — ${inf.name}\n\n> Interview guide for your first 10 customers\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${_discRaw}`;
+        setP('discovery', 'ok', 'Interview script + scoring rubric ready');
+      } else { setP('discovery', 'sk', 'Discovery script skipped'); }
 
-Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'standard');
-        if (compRaw?.length > 300) {
-          files['docs/COMPETITIVE-ANALYSIS.md'] = `# Competitive Teardown — ${inf.name}\n\n> Competitive intelligence from Exa.ai research\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${compRaw}`;
+      if (RESEARCH_DATA?.competitors?.length && _competeR) {
+        const _compRaw = _competeR?.status === 'fulfilled' ? _competeR.value : '';
+        if (_compRaw?.length > 300) {
+          files['docs/COMPETITIVE-ANALYSIS.md'] = `# Competitive Teardown — ${inf.name}\n\n> Competitive intelligence\n> Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}\n\n${_compRaw}`;
           setP('compete', 'ok', `${RESEARCH_DATA.competitors.slice(0,5).length} competitors analyzed`);
         } else { setP('compete', 'sk', 'Competitive analysis skipped'); }
-      } catch(e) { setP('compete', 'sk', e.message); }
+      }
     }
 
 
@@ -7240,10 +7163,8 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
       ['FOUNDER-AGREEMENT.md', 'founder', 'Founder Agreement', `Generate a Founder Operating Agreement for "${inf.name}". This is NOT the legal LLC agreement — it's the operational agreement between co-founders covering how they work together.\n\nInclude:\n1. ROLE MATRIX: CEO/CTO/COO responsibilities clearly delineated. Decision authority by domain (product, engineering, sales, finance, hiring, partnerships).\n2. DECISION FRAMEWORK: What needs consensus (fundraising, pivots, key hires, >$10K spend) vs individual authority (day-to-day operations in your domain).\n3. EQUITY SPLIT RATIONALE: Framework for determining fair split. Factors: idea (5-10%), execution capability (20-30%), domain expertise (15-20%), time commitment (20-30%), capital contribution (10-20%).\n4. VESTING: Standard 4-year / 1-year cliff. Reverse vesting for founder shares. What happens to unvested shares on departure.\n5. TIME COMMITMENT: Expected hours/week, moonlighting policy, outside board seats, competing interests disclosure.\n6. CONFLICT RESOLUTION: 3-tier process — direct conversation (48 hours), mediation with advisor/mentor, binding arbitration.\n7. DEPARTURE SCENARIOS: Voluntary (good leaver — vested shares retained, unvested forfeited), involuntary (bad leaver — board removal process, buyback at fair value or discount), death/disability (life insurance, buyback obligation).\n8. IP & NON-COMPETE: All founder work belongs to company. 12-month non-compete in same market post-departure.\n9. REVIEW CADENCE: Quarterly founder check-in agenda template.`]
     ];
 
-    // Generate critical docs in 3 parallel groups of 3
-    for (let g = 0; g < criticalDocs.length; g += 3) {
-      const batch = criticalDocs.slice(g, g + 3);
-      await Promise.allSettled(batch.map(async ([file, id, label, prompt]) => {
+    // Generate critical docs in one parallel batch (all 9 at once)
+    await Promise.allSettled(criticalDocs.map(async ([file, id, label, prompt]) => {
         addP(id, label, '', '⬡ Critical'); setP(id, 'run');
         try {
           const raw = await aiRaw(prompt, 6000);
@@ -7254,7 +7175,6 @@ Product: ${inf.name} | Revenue: ${inf.revenue_model} at ${inf.price}`, 3000, 'st
           } else { setP(id, 'sk', 'Insufficient content'); }
         } catch(e) { setP(id, 'sk', e.message); }
       }));
-    }
     // ── END: Critical business docs (9/78) ────────────
 
     // ── Bank-ready funding system (3 pillars vs broker ~10% success fee) ──
@@ -9904,120 +9824,72 @@ Return these files only using delimiters:
     })();
     try { dynastyScheduleCheckpointSave(desc, inf, { gateCompleted: true }); } catch {}
 
-    // ── g8_onboard: Interactive Onboarding Dashboard ───────────────────────
-    try {
-      addP('g8ob', 'Generating interactive onboarding dashboard', '', '⬡ Onboarding');
-      setP('g8ob', 'run');
-      const tier = getUserTier();
-      const moduleResults = window._dynastyModuleResults || {};
-      const provisionedServices = Object.entries(moduleResults)
-        .filter(([, v]) => v && v.ok)
-        .map(([k]) => k);
-      const deferredServices = Object.entries(moduleResults)
-        .filter(([, v]) => v && !v.ok)
-        .map(([k]) => k);
-      const envVars = files['.env.example'] || '';
-      const manualActions = files['MANUAL-ACTIONS.md'] || '';
+    // ── g8 Day-1 Kit: Parallelized (TurboQuant compression) ─────────────
+    // Group B: tests + seed + api (code-heavy, independent) — run in parallel
+    {
+      addP('g8ts', 'Generating automated test suite', '', '⬡ Testing'); setP('g8ts', 'run');
+      addP('g8sd', 'Generating seed data and demo content', '', '⬡ Seed Data'); setP('g8sd', 'run');
+      addP('g8api', 'Generating API collection', '', '⬡ API Docs'); setP('g8api', 'run');
 
-      const onboardPrompt = `Generate a self-contained HTML onboarding dashboard for "${inf.name}" (${inf.type_label}).
-
-CONTEXT:
-- Tier: ${tier}
-- Accent color: ${inf.accent}
-- Deployed URL: ${inf.url || 'https://your-app.vercel.app'}
-- Services provisioned: ${provisionedServices.join(', ') || 'none yet'}
-- Services deferred: ${deferredServices.join(', ') || 'none'}
-- Env vars needed (from .env.example): ${envVars.split('\n').filter(l => l.includes('=')).map(l => l.split('=')[0].trim()).slice(0, 20).join(', ')}
-
-REQUIREMENTS:
-Return a COMPLETE, self-contained HTML file (inline CSS + JS, no external dependencies).
-
-The page must include:
-1. A branded header with project name and accent color
-2. A progress bar that updates as items are checked off
-3. Checklist sections grouped by priority:
-   - CRITICAL (do first): Clerk auth keys, Stripe keys, Database URL
-   - IMPORTANT (do next): Domain setup, email service, analytics
-   - OPTIONAL (when ready): Social media, SEO tools, chatbot
-4. Each checklist item has:
-   - Checkbox (state saved to localStorage under key "onboard_${inf.repo}")
-   - Service name and what it does
-   - Expandable instructions (click to toggle) with step-by-step setup
-   - Copy-to-clipboard button for env var names
-   - Direct link to the vendor dashboard (Clerk: clerk.com/dashboard, Stripe: dashboard.stripe.com, Neon: console.neon.tech, Vercel: vercel.com/dashboard)
-   - Status indicator: green if provisioned, amber if deferred, red if critical and missing
-5. A "Verify Environment" section that explains how to check env vars are set
-6. Responsive design (works on mobile)
-7. Dark mode support via prefers-color-scheme
-8. A footer linking to MANUAL-ACTIONS.md and .env.example in the repo
-
-Style: Clean, modern, card-based layout. Use the accent color ${inf.accent} for primary actions. No external fonts — use system font stack.
-
-Return ONLY the complete HTML file content, no markdown fences.`;
-
-      const onboardHtml = await aiRaw(onboardPrompt, 6000, 'standard');
-      if (onboardHtml && (onboardHtml.includes('<html') || onboardHtml.includes('<!DOCTYPE') || onboardHtml.includes('localStorage'))) {
-        files['public/onboard.html'] = onboardHtml;
-        setP('g8ob', 'ok', 'public/onboard.html');
-      } else {
-        setP('g8ob', 'sk', 'Generation insufficient');
-      }
-    } catch (e) { setP('g8ob', 'sk', e.message); }
-
-    // ── g8_tests: Automated Test Suite ─────────────────────────────────────
-    try {
-      addP('g8ts', 'Generating automated test suite', '', '⬡ Testing');
-      setP('g8ts', 'run');
       const apiContracts = files['docs/API-CONTRACTS.md'] || '';
       const dataModel = files['docs/DATA-MODEL.md'] || '';
       const specDoc = files['SPEC.md'] || '';
       const generatedRoutes = Object.keys(files).filter(f => f.includes('/api/') || f.includes('route.ts') || f.includes('route.js'));
       const generatedPages = Object.keys(files).filter(f => f.includes('/app/') && (f.includes('page.ts') || f.includes('page.js')));
 
-      const testPrompt = `Generate a comprehensive test suite for "${inf.name}" (Next.js 14 App Router, TypeScript).
-
-PROJECT CONTEXT:
-${cx(desc, inf)}
-
+      const [_g8tsR, _g8sdR, _g8apiR] = await Promise.allSettled([
+        // ── g8_tests ──
+        aiRaw(`Generate a comprehensive test suite for "${inf.name}" (Next.js 14 App Router, TypeScript).
+PROJECT CONTEXT: ${cx(desc, inf)}
 GENERATED API ROUTES: ${generatedRoutes.join(', ') || 'src/app/api/v1/route.ts, src/app/api/data/route.ts'}
 GENERATED PAGES: ${generatedPages.join(', ') || 'src/app/page.tsx, src/app/dashboard/page.tsx, src/app/pricing/page.tsx'}
-
-DATA MODEL SUMMARY:
-${dataModel.slice(0, 1500)}
-
-API CONTRACTS SUMMARY:
-${apiContracts.slice(0, 1500)}
-
-Generate these files. Return in this exact delimiter format — one section per file:
-
+DATA MODEL SUMMARY: ${dataModel.slice(0, 1500)}
+API CONTRACTS SUMMARY: ${apiContracts.slice(0, 1500)}
+Generate these files in delimiter format:
 ===FILE: src/__tests__/api.test.ts===
-[Vitest tests for API routes. Test each endpoint: correct status codes, response shape, error handling. Use fetch against relative URLs. Mock auth where needed.]
-
+[Vitest tests for API routes. Test each endpoint: status codes, response shape, error handling. Use fetch. Mock auth.]
 ===FILE: src/__tests__/pages.test.tsx===
-[React Testing Library tests for pages. Test that key elements render: headings, navigation, CTAs. Import from @testing-library/react. Use vi.mock for Next.js navigation.]
-
+[React Testing Library tests for pages. Test key elements render: headings, navigation, CTAs.]
 ===FILE: src/__tests__/schema.test.ts===
-[Validation tests for data model. Test required fields, type constraints, relationships using Zod or manual checks matching the data model.]
-
+[Validation tests for data model. Test required fields, type constraints using Zod or manual checks.]
 ===FILE: e2e/smoke.spec.ts===
-[Playwright e2e smoke tests. Test: homepage loads with correct title, navigation links work, sign-in page redirects unauthenticated users, dashboard is gated behind auth.]
-
+[Playwright e2e smoke tests. Homepage loads, nav links work, sign-in redirects, dashboard gated.]
 ===FILE: playwright.config.ts===
-[Playwright config targeting http://localhost:3000, chromium only for CI speed, screenshot on failure.]
-
+[Playwright config: localhost:3000, chromium only, screenshot on failure.]
 ===FILE: vitest.config.ts===
-[Vitest config with jsdom environment, path aliases matching tsconfig, coverage thresholds at 70%.]
+[Vitest config: jsdom, path aliases, coverage thresholds 70%.]
+Rules: Use Vitest (not Jest), @testing-library/react, Playwright. All TypeScript. No real API keys. Return ONLY delimited content.`, 12000, 'standard'),
 
-Rules:
-- Use Vitest (not Jest) with describe/it/expect
-- Use @testing-library/react for component tests
-- Use Playwright for e2e
-- All TypeScript, strict types
-- No real API keys or external calls — mock everything
-- Include setup for each test file (imports, mocks)
-- Return ONLY the delimited file content, no explanations`;
+        // ── g8_seed ──
+        aiRaw(`Generate seed data and a seeder script for "${inf.name}" (${inf.type_label}).
+PROJECT: Business type: ${inf.type_label}, Revenue: ${inf.revenue_model} at ${inf.price}, Stack: ${(inf.stack||[]).join(', ')}, Accent: ${inf.accent}
+DATA MODEL: ${dataModel.slice(0, 2000)}
+Generate in delimiter format:
+===FILE: src/data/seed/users.json===
+[8 fictional users: id (uuid), name, email (@example.com), role (admin/user/manager), avatar URL, createdAt, plan tier.]
+===FILE: src/data/seed/content.json===
+[12 sample content items matching the business model. id, title, description, status, createdAt, authorId.]
+===FILE: src/data/seed/transactions.json===
+[15 sample transactions for charts. id, amount (cents), currency, status, customerId, description, createdAt (last 90 days).]
+===FILE: src/scripts/seed.ts===
+[TypeScript seeder: reads JSON files, detects ORM (Prisma/Drizzle/raw pg), upserts records. Runs as: npx tsx src/scripts/seed.ts. Supports --clean flag. Logs progress.]
+Rules: Fictional data only, @example.com emails, amounts in cents, UUIDs, ISO dates. Return ONLY delimited content.`, 6000, 'standard'),
 
-      const testRaw = await aiRaw(testPrompt, 12000, 'standard');
+        // ── g8_api ──
+        aiRaw(`Generate an OpenAPI 3.0 spec and Postman collection for "${inf.name}" (${inf.type_label}).
+PROJECT: App name: ${inf.name}, Base URL: \${baseUrl} (default: ${inf.url || 'http://localhost:3000'}), Auth: Bearer token.
+API CONTRACTS: ${apiContracts.slice(0, 2500)}
+DATA MODEL: ${dataModel.slice(0, 1500)}
+Generate in delimiter format:
+===FILE: docs/openapi.json===
+[OpenAPI 3.0.3 JSON: info, servers, paths (every route with method, params, requestBody, responses 200/400/401/404/500), components/schemas, securitySchemes (bearerAuth).]
+===FILE: docs/postman-collection.json===
+[Postman v2.1 JSON: variable (baseUrl, token), auth (bearer), item folders (Auth, Users, Core, Admin), each request with method, url, headers, body, examples. Importable into Postman/Bruno/Hoppscotch.]
+Rules: Valid JSON only, realistic examples, error responses, auth flows. Return ONLY delimited content.`, 12000, 'standard'),
+      ]);
+
+      // Process g8_tests result
+      const testRaw = _g8tsR?.status === 'fulfilled' ? _g8tsR.value : '';
       let testFilesCount = 0;
       if (testRaw) {
         const testSections = testRaw.split(/===FILE:\s*/);
@@ -10026,12 +9898,8 @@ Rules:
           const match = section.match(/^([^\n=]+)===([\s\S]*)/);
           if (match) {
             const fpath = match[1].trim();
-            let content = match[2].trim();
-            content = content.replace(/^```\w*\s*\n?/gm, '').replace(/\n?```\s*$/gm, '').trim();
-            if (fpath && content.length > 50) {
-              files[fpath] = content;
-              testFilesCount++;
-            }
+            let content = match[2].trim().replace(/^\`\`\`\w*\s*\n?/gm, '').replace(/\n?\`\`\`\s*$/gm, '').trim();
+            if (fpath && content.length > 50) { files[fpath] = content; testFilesCount++; }
           }
         }
       }
@@ -10053,63 +9921,10 @@ Rules:
           files['package.json'] = JSON.stringify(pkg, null, 2);
         } catch (_pkgErr) {}
         setP('g8ts', 'ok', `${testFilesCount} test files generated`);
-      } else {
-        setP('g8ts', 'sk', 'No test files parsed');
-      }
-    } catch (e) { setP('g8ts', 'sk', e.message); }
+      } else { setP('g8ts', 'sk', 'No test files parsed'); }
 
-    // ── g8_seed: Seed Data & Demo Content ──────────────────────────────────
-    try {
-      addP('g8sd', 'Generating seed data and demo content', '', '⬡ Seed Data');
-      setP('g8sd', 'run');
-      const dataModel = files['docs/DATA-MODEL.md'] || '';
-      const specDoc = files['SPEC.md'] || '';
-
-      const seedPrompt = `Generate seed data and a seeder script for "${inf.name}" (${inf.type_label}).
-
-PROJECT CONTEXT:
-- Business type: ${inf.type_label}
-- Revenue model: ${inf.revenue_model} at ${inf.price}
-- Stack: ${(inf.stack || []).join(', ')}
-- Accent: ${inf.accent}
-
-DATA MODEL:
-${dataModel.slice(0, 2000)}
-
-Generate these files in delimiter format:
-
-===FILE: src/data/seed/users.json===
-[Array of 8 fictional users appropriate for this ${inf.type_label} business. Include: id (uuid format), name, email (use @example.com), role (admin/user/manager), avatar placeholder URL, createdAt ISO date, plan tier. Make names and roles realistic for the industry.]
-
-===FILE: src/data/seed/content.json===
-[Array of 12 sample content items matching the business model. For SaaS: sample projects/workspaces. For marketplace: sample listings. For directory: sample entries. For service: sample service requests. Include: id, title, description, status, createdAt, authorId (reference user ids). Make content realistic and industry-specific.]
-
-===FILE: src/data/seed/transactions.json===
-[Array of 15 sample transactions for dashboard charts. Include: id, amount (realistic for ${inf.price} pricing), currency (USD), status (completed/pending/refunded), customerId (reference user ids), description, createdAt (spread across last 90 days). Mix of amounts to create interesting chart data.]
-
-===FILE: src/scripts/seed.ts===
-[TypeScript seeder script that:
-1. Reads the JSON files from src/data/seed/
-2. Detects the ORM in use: check for @prisma/client, drizzle-orm, or fall back to raw pg/postgres
-3. For Prisma: use PrismaClient to upsert records
-4. For Drizzle: use drizzle insert().values()
-5. For neither: output SQL INSERT statements to stdout so they can be piped to psql
-6. Handles errors gracefully with console output
-7. Runs as: npx tsx src/scripts/seed.ts
-8. Clears existing seed data before inserting (optional flag --clean)
-9. Logs progress: "Seeding users... ✓ 8 users", etc.
-Include proper TypeScript types for each data shape.]
-
-Rules:
-- All data must be fictional — no real emails, phones, or addresses
-- Use @example.com for all email addresses
-- Use realistic but obviously fake names
-- Amounts should be in cents (Stripe convention)
-- Dates should be ISO 8601 format
-- IDs should be UUID v4 format strings
-- Return ONLY the delimited content, no explanations`;
-
-      const seedRaw = await aiRaw(seedPrompt, 6000, 'standard');
+      // Process g8_seed result
+      const seedRaw = _g8sdR?.status === 'fulfilled' ? _g8sdR.value : '';
       let seedFilesCount = 0;
       if (seedRaw) {
         const seedSections = seedRaw.split(/===FILE:\s*/);
@@ -10118,12 +9933,8 @@ Rules:
           const match = section.match(/^([^\n=]+)===([\s\S]*)/);
           if (match) {
             const fpath = match[1].trim();
-            let content = match[2].trim();
-            content = content.replace(/^```\w*\s*\n?/gm, '').replace(/\n?```\s*$/gm, '').trim();
-            if (fpath && content.length > 30) {
-              files[fpath] = content;
-              seedFilesCount++;
-            }
+            let content = match[2].trim().replace(/^\`\`\`\w*\s*\n?/gm, '').replace(/\n?\`\`\`\s*$/gm, '').trim();
+            if (fpath && content.length > 30) { files[fpath] = content; seedFilesCount++; }
           }
         }
       }
@@ -10138,172 +9949,76 @@ Rules:
           files['package.json'] = JSON.stringify(pkg, null, 2);
         } catch (_pkgErr) {}
         setP('g8sd', 'ok', `${seedFilesCount} seed files generated`);
-      } else {
-        setP('g8sd', 'sk', 'No seed files parsed');
-      }
-    } catch (e) { setP('g8sd', 'sk', e.message); }
+      } else { setP('g8sd', 'sk', 'No seed files parsed'); }
 
-    // ── g8_api: API Collection (OpenAPI + Postman) ─────────────────────────
-    try {
-      addP('g8api', 'Generating API collection', '', '⬡ API Docs');
-      setP('g8api', 'run');
-      const apiContracts = files['docs/API-CONTRACTS.md'] || '';
-      const dataModel = files['docs/DATA-MODEL.md'] || '';
-
-      const apiCollectionPrompt = `Generate an OpenAPI 3.0 specification and Postman collection for "${inf.name}" (${inf.type_label}).
-
-PROJECT CONTEXT:
-- App name: ${inf.name}
-- Base URL variable: {{baseUrl}} (default: ${inf.url || 'http://localhost:3000'})
-- Auth: Bearer token in Authorization header
-
-API CONTRACTS:
-${apiContracts.slice(0, 2500)}
-
-DATA MODEL:
-${dataModel.slice(0, 1500)}
-
-Generate these files in delimiter format:
-
-===FILE: docs/openapi.json===
-[Complete OpenAPI 3.0.3 JSON spec. Include:
-- info: title, version 1.0.0, description
-- servers: [{url: "{{baseUrl}}", description: "Application server"}]
-- paths: Every API route with method, summary, parameters, requestBody (with JSON schema), responses (200, 400, 401, 404, 500)
-- components/schemas: Data model entities as JSON Schema objects
-- components/securitySchemes: bearerAuth (http, bearer, JWT)
-- security: [{bearerAuth: []}]
-Keep response examples realistic for this ${inf.type_label} business.]
-
-===FILE: docs/postman-collection.json===
-[Postman Collection v2.1 JSON. Include:
-- info: name "${inf.name} API", schema "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-- variable: [{key: "baseUrl", value: "${inf.url || 'http://localhost:3000'}"}, {key: "token", value: "your-jwt-token-here"}]
-- auth: {type: "bearer", bearer: [{key: "token", value: "{{token}}"}]}
-- item: Folders for each resource group (Auth, Users, Core Resource, Admin)
-- Each request: name, method, url with {{baseUrl}}, headers, body (raw JSON), example responses
-Make it immediately importable into Postman/Bruno/Hoppscotch.]
-
-Rules:
-- Valid JSON only (no trailing commas, no comments)
-- Use realistic example values matching the business domain
-- Include error response examples
-- Auth endpoints should show login/register flows
-- Return ONLY the delimited content, no explanations`;
-
-      const apiRaw = await aiRaw(apiCollectionPrompt, 12000, 'standard');
+      // Process g8_api result
+      const apiColRaw = _g8apiR?.status === 'fulfilled' ? _g8apiR.value : '';
       let apiFilesCount = 0;
-      if (apiRaw) {
-        const apiSections = apiRaw.split(/===FILE:\s*/);
+      if (apiColRaw) {
+        const apiSections = apiColRaw.split(/===FILE:\s*/);
         for (const section of apiSections) {
           if (!section.trim()) continue;
           const match = section.match(/^([^\n=]+)===([\s\S]*)/);
           if (match) {
             const fpath = match[1].trim();
-            let content = match[2].trim();
-            content = content.replace(/^```\w*\s*\n?/gm, '').replace(/\n?```\s*$/gm, '').trim();
-            if (fpath && content.length > 50) {
-              try { JSON.parse(content); } catch { content = content; }
-              files[fpath] = content;
-              apiFilesCount++;
-            }
+            let content = match[2].trim().replace(/^\`\`\`\w*\s*\n?/gm, '').replace(/\n?\`\`\`\s*$/gm, '').trim();
+            if (fpath && content.length > 50) { files[fpath] = content; apiFilesCount++; }
           }
         }
       }
       if (apiFilesCount > 0) {
         setP('g8api', 'ok', `${apiFilesCount} API collection files`);
-      } else {
-        setP('g8api', 'sk', 'No API files parsed');
-      }
-    } catch (e) { setP('g8api', 'sk', e.message); }
+      } else { setP('g8api', 'sk', 'No API files parsed'); }
+    }
 
-    // ── g8_playbook: 90-Day Launch Playbook ────────────────────────────────
-    try {
-      addP('g8pb', 'Generating 90-day launch playbook', '', '⬡ Launch Plan');
-      setP('g8pb', 'run');
+    // Group A: onboard + playbook (doc-heavy, independent) — run in parallel
+    {
+      addP('g8ob', 'Generating interactive onboarding dashboard', '', '⬡ Onboarding'); setP('g8ob', 'run');
+      addP('g8pb', 'Generating 90-day launch playbook', '', '⬡ Launch Plan'); setP('g8pb', 'run');
       const tier = getUserTier();
       const tierConfig = V3_TIERS[tier] || V3_TIERS.foundation;
       const moduleResults = window._dynastyModuleResults || {};
-      const provisionedList = Object.entries(moduleResults).filter(([, v]) => v && v.ok).map(([k]) => k);
-      const deferredList = Object.entries(moduleResults).filter(([, v]) => v && !v.ok).map(([k]) => k);
+      const provisionedServices = Object.entries(moduleResults).filter(([, v]) => v && v.ok).map(([k]) => k);
+      const deferredServices = Object.entries(moduleResults).filter(([, v]) => v && !v.ok).map(([k]) => k);
+      const envVars = files['.env.example'] || '';
+      const manualActions = files['MANUAL-ACTIONS.md'] || '';
       const deliverables = Object.keys(files).slice(0, 40);
 
-      const playbookPrompt = `Generate a 90-day launch playbook for "${inf.name}" (${inf.type_label}).
+      const [_g8obR, _g8pbR] = await Promise.allSettled([
+        // ── g8_onboard ──
+        aiRaw(`Generate a self-contained HTML onboarding dashboard for "${inf.name}" (${inf.type_label}).
+CONTEXT: Tier: ${tier}, Accent: ${inf.accent}, URL: ${inf.url || 'https://your-app.vercel.app'}, Provisioned: ${provisionedServices.join(', ') || 'none yet'}, Deferred: ${deferredServices.join(', ') || 'none'}, Env vars: ${envVars.split('\n').filter(l => l.includes('=')).map(l => l.split('=')[0].trim()).slice(0, 20).join(', ')}
+REQUIREMENTS: Complete self-contained HTML (inline CSS + JS, no external deps).
+Include: 1. Branded header with accent color ${inf.accent} 2. Progress bar updating as items checked 3. Checklist sections (CRITICAL: Clerk/Stripe/DB, IMPORTANT: domain/email/analytics, OPTIONAL: social/SEO/chatbot) 4. Each item: checkbox (localStorage "onboard_${inf.repo}"), service name, expandable instructions, copy-to-clipboard for env vars, vendor dashboard links, status indicator 5. Verify Environment section 6. Responsive + dark mode 7. Footer linking to MANUAL-ACTIONS.md and .env.example
+Style: Clean, modern, card-based. System font stack. Return ONLY HTML.`, 6000, 'standard'),
 
-PROJECT CONTEXT:
-- Tier: ${tier} (${tierConfig.label})
-- Revenue model: ${inf.revenue_model} at ${inf.price}
-- Services provisioned: ${provisionedList.join(', ') || 'none (Foundation tier — all manual setup)'}
-- Services deferred: ${deferredList.join(', ') || 'standard integrations'}
-- Key deliverables in repo: ${deliverables.join(', ')}
-- Has seed data: ${files['src/scripts/seed.ts'] ? 'yes' : 'no'}
-- Has test suite: ${files['src/__tests__/api.test.ts'] ? 'yes' : 'no'}
-- Has onboarding dashboard: ${files['public/onboard.html'] ? 'yes' : 'no'}
+        // ── g8_playbook ──
+        aiRaw(`Generate a 90-day launch playbook for "${inf.name}" (${inf.type_label}).
+CONTEXT: Tier: ${tier} (${tierConfig.label}), Revenue: ${inf.revenue_model} at ${inf.price}, Provisioned: ${provisionedServices.join(', ') || 'none (Foundation — all manual)'}, Deferred: ${deferredServices.join(', ') || 'standard integrations'}, Key files: ${deliverables.join(', ')}, Has seed data: ${files['src/scripts/seed.ts'] ? 'yes' : 'no'}, Has tests: ${files['src/__tests__/api.test.ts'] ? 'yes' : 'no'}, Has onboard: ${files['public/onboard.html'] ? 'yes' : 'no'}
+Structure: # 90-Day Launch Playbook
+## Week 1: Foundation (Days 1-7) [Day-by-day: onboard.html, seed script, test suite, branding, domain, email, soft launch]
+## Weeks 2-4: Validation (Days 8-28) [First users, social calendar, analytics, feedback. ${tier === 'foundation' ? 'DIY integrations from MANUAL-ACTIONS.md' : 'Verify auto-provisioned integrations'}]
+## Weeks 5-8: Growth (Days 29-56) [First revenue, activate deferred modules, A/B test messaging, social proof, SEO]
+## Weeks 9-12: Scale (Days 57-90) [Revenue targets, hiring signals, automation, tier upgrade triggers, retrospective]
+## Key Files Reference [Table: action → specific repo file]
+## Upgrade Triggers [Signals to upgrade tier]
+Rules: Every item references a specific file/URL. Be specific. Realistic time estimates. Label as "suggested playbook" not advice. Return ONLY markdown.`, 6000, 'standard'),
+      ]);
 
-Generate a detailed, actionable 90-day launch playbook in Markdown.
+      // Process onboard result
+      const onboardHtml = _g8obR?.status === 'fulfilled' ? _g8obR.value : '';
+      if (onboardHtml && (onboardHtml.includes('<html') || onboardHtml.includes('<!DOCTYPE') || onboardHtml.includes('localStorage'))) {
+        files['public/onboard.html'] = onboardHtml;
+        setP('g8ob', 'ok', 'public/onboard.html');
+      } else { setP('g8ob', 'sk', 'Generation insufficient'); }
 
-Structure:
-# 90-Day Launch Playbook — ${inf.name}
-
-> Tier: ${tier} | Generated by Your Deputy | This is a suggested action plan, not professional advice.
-
-## Week 1: Foundation (Days 1-7)
-[Day-by-day checklist. Each item references a specific file in the repo.
-- Day 1: Open onboard.html, complete critical setup (Clerk, Stripe, Database)
-- Day 2: Run seed script, verify demo data appears in dashboard
-- Day 3: Run test suite, fix any failures
-- Day 4: Customize branding (logo, colors, copy in specific files)
-- Day 5: Set up domain and SSL
-- Day 6: Configure email service
-- Day 7: Soft launch — share with 3-5 trusted contacts for feedback]
-
-## Weeks 2-4: Validation (Days 8-28)
-[Weekly goals, not daily. Focus on:
-- Getting first real users/customers
-- Content creation using social media calendar (reference social-media/SOCIAL-MEDIA-CALENDAR.md)
-- Setting up analytics (reference MANUAL-ACTIONS.md for PostHog/Plerdy)
-- Collecting feedback
-${tier === 'foundation' ? '- DIY integration setup from MANUAL-ACTIONS.md (Foundation tier)' : '- Verify auto-provisioned integrations are working'}]
-
-## Weeks 5-8: Growth (Days 29-56)
-[Focus on:
-- First revenue milestone
-- Activating deferred modules/integrations
-- A/B testing messaging (reference AB-MESSAGING.md)
-- Building social proof / testimonials
-- SEO setup using generated content
-- When to consider upgrading tier]
-
-## Weeks 9-12: Scale (Days 57-90)
-[Focus on:
-- Revenue targets and KPIs
-- Hiring/outsourcing signals
-- Automation opportunities (reference n8n workflows if applicable)
-- When to upgrade tier based on revenue
-- 90-day retrospective checklist]
-
-## Key Files Reference
-[Table mapping action items to specific repo files]
-
-## Upgrade Triggers
-[Specific signals that indicate the customer should upgrade their tier]
-
-Rules:
-- Every action item must reference a specific file or URL
-- ${tier === 'foundation' ? 'Foundation tier: all integrations are manual — guide accordingly' : 'Professional+ tier: verify auto-provisioned services'}
-- Be specific: "Open MANUAL-ACTIONS.md section 3" not "set up email"
-- Include realistic time estimates per task
-- Label this as a "suggested playbook" not professional/financial advice
-- Return ONLY markdown content, no fences`;
-
-      const playbookMd = await aiRaw(playbookPrompt, 6000, 'standard');
+      // Process playbook result
+      const playbookMd = _g8pbR?.status === 'fulfilled' ? _g8pbR.value : '';
       if (playbookMd && playbookMd.length > 500) {
         files['LAUNCH-PLAYBOOK.md'] = playbookMd;
         setP('g8pb', 'ok', 'LAUNCH-PLAYBOOK.md');
-      } else {
-        setP('g8pb', 'sk', 'Generation insufficient');
-      }
-    } catch (e) { setP('g8pb', 'sk', e.message); }
+      } else { setP('g8pb', 'sk', 'Generation insufficient'); }
+    }
 
     // Authority sites: content files pushed by authority_deploy in provision.js
     // Strategy docs still need to be pushed separately
