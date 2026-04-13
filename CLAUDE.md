@@ -35,7 +35,7 @@ The build pipeline applies Google TurboQuant's data-oblivious compression philos
 - **Parallel batches:** pitch + investor + legal run as one `Promise.allSettled`; emails + discovery + compete run as another; g8_* Day-1 Kit runs as two parallel groups (tests+seed+api, then onboard+playbook).
 - **Critical depth docs:** All 9 foundational business documents fire in a single parallel batch (previously 3 sequential groups of 3).
 - **Cross-framework synthesis** uses WebLLM first (zero cost), falling back to cloud.
-- **Free model priority:** `gemma-4-27b-it` → `gemma-4-e4b-it` → `gemini-2.0-flash` → Groq/Cerebras/SambaNova.
+- **Free model priority:** `gemma-4-31b-it` → `gemma-4-26b-a4b-it` → `gemini-2.0-flash` → Groq/Cerebras/SambaNova.
 
 ### Third-party credential boundary
 Keys in **DYNASTY_TOOL_CONFIG** (and related Vercel env vars on **dynasty-launcher**) exist to **generate derivative work** and to **run one-time provisioning** (repos, deploys, `mod_*` setup) where the orchestrator calls vendor APIs. They are **not** the long-term operating substrate for customer deliverables. Shipped apps should **sustain themselves** on the **customer’s own** vendor accounts: values documented in **`.env.example`**, **MANUAL-ACTIONS.md**, and env vars on the **customer’s** Vercel/GitHub project — not a permanent dependency on the launcher’s shared key pool. When a module creates an external resource, prefer outcomes that **hand off** ownership (customer API keys, webhooks on their URL, their Stripe Connect, etc.) over routing all live traffic through Dynasty-held secrets.
