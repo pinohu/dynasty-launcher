@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   const isMutating = action === 'create_project' || action === 'set_vercel_db';
   if (isMutating) {
     if (!ADMIN_SECRET) return res.status(500).json({ ok: false, error: 'Admin token not configured' });
-    if (reqToken !== ADMIN_SECRET) return res.status(401).json({ ok: false, error: 'Unauthorized' });
+    if ((() => { try { const { timingSafeEqual } = require("crypto"); const a = Buffer.from(String(reqToken)); const b = Buffer.from(String(ADMIN_SECRET)); return a.length !== b.length || !timingSafeEqual(a, b); } catch { return true; } })()) return res.status(401).json({ ok: false, error: 'Unauthorized' });
   }
 
   // ── CHECK / TEST KEY ─────────────────────────────────────────────────────

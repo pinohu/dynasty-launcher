@@ -91,7 +91,11 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).end();
 
+  const bodyStr = JSON.stringify(req.body || {});
+  if (bodyStr.length > 2_000_000) return res.status(413).json({ ok: false, error: 'Payload too large (2MB max)' });
+
   const { files, projectName, category } = req.body || {};
+  if (!files || Object.keys(files).length > 50) return res.status(400).json({ ok: false, error: 'Invalid files input (max 50 files)' });
   const issues = {};
   let totalIssues = 0;
 

@@ -51,6 +51,36 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
 
+  // ── Security: require paid session or admin token ──────────────────
+  const _adminTok = (req.headers['x-dynasty-admin-token'] || '').toString();
+  const _paidTok = (req.body?.access_token || req.headers['x-dynasty-access-token'] || '').toString();
+  let _authed = false;
+  if (_adminTok) {
+    try {
+      const parts = _adminTok.split(':');
+      if (parts.length === 3) {
+        const [prefix, expiry, hash] = parts;
+        const secret = prefix === 'admin' ? (process.env.ADMIN_KEY || '') : (prefix === 'admin_test' ? (process.env.TEST_ADMIN_KEY || '') : '');
+        if (secret && parseInt(expiry) > Date.now()) {
+          const { createHmac } = await import('crypto');
+          const expected = createHmac('sha256', secret).update(prefix + ':' + expiry).digest('hex');
+          if (hash === expected) _authed = true;
+        }
+      }
+    } catch {}
+  }
+  if (!_authed && _paidTok) {
+    try {
+      const parts = _paidTok.split(':');
+      if (parts.length >= 6 && parts[0] === 'pay') {
+        const exp = parseInt(parts[4]);
+        if (exp > Date.now()) _authed = true;
+      }
+    } catch {}
+  }
+  if (!_authed) return res.status(401).json({ ok: false, error: 'Authentication required' });
+
+
   const action = req.method === 'GET'
     ? req.query?.action
     : (req.body?.action || req.query?.action);
@@ -184,7 +214,7 @@ export default async function handler(req, res) {
 
     return res.status(400).json({ error: `Unknown action: ${action}` });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Memory service error' });
   } finally {
     if (pool) await pool.end();
   }

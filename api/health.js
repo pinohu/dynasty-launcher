@@ -1,6 +1,14 @@
 export const maxDuration = 15;
 
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  // Public health returns minimal info; full details require admin
+  const adminKey = req.query?.key || req.headers['x-admin-key'] || '';
+  const ADMIN = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY || '';
+  if (!ADMIN || adminKey !== ADMIN) {
+    return res.json({ ok: true, status: 'operational', timestamp: new Date().toISOString() });
+  }
   const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');

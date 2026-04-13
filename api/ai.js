@@ -478,7 +478,7 @@ export default async function handler(req, res) {
     const adminKey = process.env.ADMIN_KEY || '';
     const testAdminKey = process.env.TEST_ADMIN_KEY || '';
     const k = req.query?.k || req.body?.k || '';
-    if (!k || (!adminKey && !testAdminKey) || (k !== adminKey && k !== testAdminKey)) {
+    if (!k || (!adminKey && !testAdminKey) || ((() => { try { const { timingSafeEqual } = require("crypto"); const a = Buffer.from(String(k || "")); const b = Buffer.from(String(adminKey || "")); return a.length !== b.length || !timingSafeEqual(a, b); } catch { return true; } })() && k !== testAdminKey)) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     const monthKey = getMonthKey();

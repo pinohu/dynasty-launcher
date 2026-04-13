@@ -69,7 +69,7 @@ export default async function handler(req, res) {
         results.email_added = true;
       }
     } catch (e) {
-      results.acumba_error = e.message;
+      results.acumba_note = 'Email list service temporarily unavailable';
     }
   }
 
