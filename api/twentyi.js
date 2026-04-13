@@ -24,7 +24,9 @@ async function twentyiRequest(auth, method, path, body) {
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-dynasty-admin-token, x-dynasty-access-token');
+  if (req.method === 'OPTIONS') return res.status(204).end();
 
   // ── Security: require paid session or admin token (HMAC-verified) ──
   const _adminTok = (req.headers['x-dynasty-admin-token'] || '').toString();

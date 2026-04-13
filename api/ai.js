@@ -80,7 +80,9 @@ async function isValidAdminToken(token) {
   const { createHmac } = await import('crypto');
   const payload = `${prefix}:${expiry}`;
   const expected = createHmac('sha256', secret).update(payload).digest('hex');
-  return expected === hash;
+  if (expected.length !== hash.length) return false;
+  const { timingSafeEqual } = await import('crypto');
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(hash));
 }
 
 function getClientIp(req) {
@@ -257,7 +259,9 @@ async function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
   const { createHmac } = await import('crypto');
   const payload = `${prefix}:${tokSessionId}:${tokUserId}:${tokTier}:${exp}`;
   const expected = createHmac('sha256', secret).update(payload).digest('hex');
-  return expected === sig;
+  if (expected.length !== sig.length) return false;
+  const { timingSafeEqual: tse } = await import('crypto');
+  return tse(Buffer.from(expected), Buffer.from(sig));
 }
 
 function getApiKey(provider, config) {
@@ -312,8 +316,8 @@ async function callOpenAI(apiKey, body) {
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens, temperature: body.temperature || 0.7 }),
   });
+  if (!r.ok) { const errBody = await r.text().catch(() => ''); throw new Error(`OpenAI API error ${r.status}: ${errBody.slice(0, 200)}`); }
   const d = await r.json();
-  // Normalize to Anthropic response shape
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
 
@@ -564,7 +568,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ text, content: [{ type: 'text', text }] });
     } catch (err) {
       return res.status(500).json({
-        error: err?.message || 'Audio transcription failed',
+        error: 'Audio transcription failed',
         code: 'transcription_failed',
       });
     }
@@ -723,6 +727,6 @@ export default async function handler(req, res) {
     }
     return res.status(200).json(result);
   } catch (err) {
-    return res.status(500).json({ error: err.message || 'AI call failed', provider: info.provider, model });
+    return res.status(500).json({ error: 'AI call failed', provider: info.provider, model });
   }
 }

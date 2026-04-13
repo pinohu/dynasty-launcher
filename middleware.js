@@ -8,6 +8,15 @@ export const config = {
   runtime: 'edge',
 };
 
+const SEC_HEADERS = {
+  'Content-Type': 'text/html; charset=utf-8',
+  'Cache-Control': 'no-store',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'self'",
+};
+
 export default function middleware(request) {
   const url = new URL(request.url);
   const host = (request.headers.get('host') || '').split(':')[0].toLowerCase();
@@ -65,7 +74,7 @@ button:hover{opacity:.92}.row{display:flex;gap:10px;align-items:center}.hint{fon
   }
 </script></body></html>`, {
       status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+      headers: SEC_HEADERS,
     });
   }
 
@@ -91,7 +100,7 @@ button:hover{opacity:.9}p{color:#666;font-size:12px}</style></head><body>
 fetch('/api/auth?action=verify_admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k})})
 .then(r=>r.json()).then(d=>{if(d.ok&&d.admin){localStorage.setItem('dynasty_admin_token',d.token);window.location.href='/admin?auth=token';}
 else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{document.getElementById('err').textContent='Server error';});}</script>
-</body></html>`, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+</body></html>`, { status: 200, headers: SEC_HEADERS });
   }
 
   // Allow admin access with server-side key (never hardcoded in client)
@@ -142,7 +151,7 @@ fetch('/api/checkout?action=create_session', {
 </script>
 </body></html>`, {
       status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+      headers: SEC_HEADERS,
     });
   }
 
@@ -193,9 +202,6 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
 </body>
 </html>`, {
     status: 200,
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'no-store',
-    },
+    headers: SEC_HEADERS,
   });
 }
