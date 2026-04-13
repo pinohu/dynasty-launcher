@@ -65,7 +65,7 @@ export default async function handler(req, res) {
     const ADMIN_KEY = process.env.ADMIN_KEY || '';
     const TEST_ADMIN_KEY = process.env.TEST_ADMIN_KEY || '';
     if (!ADMIN_KEY && !TEST_ADMIN_KEY) return res.status(503).json({ ok: false, error: 'Admin auth unavailable: no admin keys configured' });
-    if (isAdminRateLimited(req)) return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
+    if (isAdminRateLimited(req)) res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
     if (!key) return res.json({ ok: false, error: 'key required' });
     let keyType = '';
     let signingSecret = '';

@@ -1,5 +1,20 @@
 export const maxDuration = 15;
 
+
+const WAITLIST_ATTEMPTS = new Map();
+const WAITLIST_MAX = 5;
+const WAITLIST_WINDOW_MS = 10 * 60 * 1000;
+function isWaitlistRateLimited(req) {
+  const xf = (req.headers['x-forwarded-for'] || '').toString();
+  const ip = xf.split(',')[0].trim() || 'unknown';
+  const now = Date.now();
+  const e = WAITLIST_ATTEMPTS.get(ip);
+  if (!e || now - e.start > WAITLIST_WINDOW_MS) { WAITLIST_ATTEMPTS.set(ip, { start: now, count: 1 }); return false; }
+  e.count++;
+  if (WAITLIST_ATTEMPTS.size > 5000) { for (const [k,v] of WAITLIST_ATTEMPTS) { if (now - v.start > WAITLIST_WINDOW_MS) WAITLIST_ATTEMPTS.delete(k); } }
+  return e.count > WAITLIST_MAX;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');

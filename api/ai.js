@@ -537,7 +537,7 @@ export default async function handler(req, res) {
     res.setHeader('X-Free-Scoring-Limit', String(FREE_SCORING_DAILY_LIMIT));
     res.setHeader('X-Free-Scoring-Remaining', String(dailyRemaining));
     if (requestsToday > FREE_SCORING_DAILY_LIMIT) {
-      return res.status(429).json({
+      res.setHeader('Retry-After', '60'); return res.status(429).json({
         error: `Daily scoring throttle reached (${FREE_SCORING_DAILY_LIMIT}/day). Try again tomorrow.`,
         code: 'scoring_daily_throttle_reached',
         limit: FREE_SCORING_DAILY_LIMIT
@@ -646,20 +646,20 @@ export default async function handler(req, res) {
     res.setHeader('X-Scoring-Remaining', String(remaining));
     if (requestsInPeriod >= limit) {
       if (scoringPlan === 'guest') {
-        return res.status(429).json({
+        res.setHeader('Retry-After', '60'); return res.status(429).json({
           error: 'You\u2019ve used your 3 guest scores this month. Sign in with email to unlock 6 scores per month.',
           code: 'scoring_guest_limit_reached',
           limit,
         });
       }
       if (scoringPlan === 'registered') {
-        return res.status(429).json({
+        res.setHeader('Retry-After', '60'); return res.status(429).json({
           error: 'You\u2019ve used your 6 registered free scores this month. Upgrade to Scoring Pro for ongoing access.',
           code: 'scoring_registered_limit_reached',
           limit,
         });
       }
-      return res.status(429).json({
+      res.setHeader('Retry-After', '60'); return res.status(429).json({
         error: `Scoring Pro fair-use limit reached (${SCORING_PRO_MONTHLY_LIMIT}/month). Contact support to raise your limit.`,
         code: 'scoring_pro_fair_use_reached',
         limit: SCORING_PRO_MONTHLY_LIMIT,
@@ -671,7 +671,7 @@ export default async function handler(req, res) {
     res.setHeader('X-Free-Scoring-Limit', String(FREE_SCORING_DAILY_LIMIT));
     res.setHeader('X-Free-Scoring-Remaining', String(dailyRemaining));
     if (requestsToday > FREE_SCORING_DAILY_LIMIT) {
-      return res.status(429).json({
+      res.setHeader('Retry-After', '60'); return res.status(429).json({
         error: `Daily scoring throttle reached (${FREE_SCORING_DAILY_LIMIT}/day). Try again tomorrow.`,
         code: 'scoring_daily_throttle_reached',
         limit: FREE_SCORING_DAILY_LIMIT

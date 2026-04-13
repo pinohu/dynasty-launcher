@@ -20,7 +20,8 @@ function isRecoverRateLimited(req) {
     return false;
   }
   e.count++;
-  return e.count > RECOVER_MAX;
+    if (RECOVER_ATTEMPTS.size > 5000) { const now = Date.now(); for (const [k,v] of RECOVER_ATTEMPTS) { if (now - v.start > RECOVER_WINDOW_MS) RECOVER_ATTEMPTS.delete(k); } }
+    return e.count > RECOVER_MAX;
 }
 
 async function signPaidAccessToken({ sessionId, userId, plan }) {
@@ -53,6 +54,21 @@ async function stripeGet(endpoint) {
   return resp.json();
 }
 
+
+const SESSION_ATTEMPTS = new Map();
+const SESSION_MAX = 10;
+const SESSION_WINDOW_MS = 15 * 60 * 1000;
+function isSessionRateLimited(req) {
+  const xf = (req.headers['x-forwarded-for'] || '').toString();
+  const ip = xf.split(',')[0].trim() || 'unknown';
+  const now = Date.now();
+  const e = SESSION_ATTEMPTS.get(ip);
+  if (!e || now - e.start > SESSION_WINDOW_MS) { SESSION_ATTEMPTS.set(ip, { start: now, count: 1 }); return false; }
+  e.count++;
+  if (SESSION_ATTEMPTS.size > 5000) { for (const [k,v] of SESSION_ATTEMPTS) { if (now - v.start > SESSION_WINDOW_MS) SESSION_ATTEMPTS.delete(k); } }
+  return e.count > SESSION_MAX;
+}
+
 export default async function handler(req, res) {
   const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
@@ -65,6 +81,7 @@ export default async function handler(req, res) {
 
   // ── Create Checkout Session ──────────────────────────────────────
   if (action === 'create_session') {
+    if (isSessionRateLimited(req)) { res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many checkout attempts. Try again later.' }); }
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Stripe not configured' });
 
     const { plan, email, user_id, training_opt_in, build_archetype, source_segment, diagnostic_session_id, recommended_plan, apply_blueprint_credit } = req.body || {};
@@ -153,7 +170,7 @@ export default async function handler(req, res) {
       if (session.error) return res.json({ ok: false, error: session.error.message });
       return res.json({ ok: true, url: session.url, session_id: session.id });
     } catch (e) {
-      return res.json({ ok: false, error: e.message });
+      return res.json({ ok: false, error: 'Checkout processing error. Please try again.' });
     }
   }
 
@@ -192,14 +209,14 @@ export default async function handler(req, res) {
         access_token_expires_in_ms: accessToken ? ACCESS_TOKEN_TTL_MS : 0,
       });
     } catch (e) {
-      return res.json({ ok: false, error: e.message });
+      return res.json({ ok: false, error: 'Checkout processing error. Please try again.' });
     }
   }
 
   // ── Session Recovery — send a code to email ─────────────────────
   if (action === 'recover_start') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
-    if (isRecoverRateLimited(req)) return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
+    if (isRecoverRateLimited(req)) res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
     const { email } = req.body || {};
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ ok: false, error: 'Valid email required' });
@@ -233,7 +250,7 @@ export default async function handler(req, res) {
   // ── Session Recovery — verify code and return session ──────────
   if (action === 'recover_verify') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
-    if (isRecoverRateLimited(req)) return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
+    if (isRecoverRateLimited(req)) res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
     const { email, code } = req.body || {};
     if (!email || !code) return res.status(400).json({ ok: false, error: 'email and code required' });
     try {
