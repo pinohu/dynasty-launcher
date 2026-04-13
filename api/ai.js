@@ -141,6 +141,21 @@ function getMonthKey() {
   return new Date().toISOString().slice(0, 7); // YYYY-MM
 }
 
+async function getQuotaUsage(windowKey, actorKey, usageBucket) {
+  const pool = await getUsagePool();
+  if (pool) {
+    await ensureQuotaTable(pool);
+    const r = await pool.query(
+      `SELECT requests FROM ${QUOTA_TABLE} WHERE window_key = $1 AND actor_key = $2 AND usage_bucket = $3`,
+      [windowKey, actorKey, usageBucket]
+    );
+    return r.rows?.[0]?.requests || 0;
+  }
+  if (!globalThis.__dynastyAiQuotaMem) globalThis.__dynastyAiQuotaMem = new Map();
+  const key = `${windowKey}:${actorKey}:${usageBucket}`;
+  return globalThis.__dynastyAiQuotaMem.get(key) || 0;
+}
+
 async function incrementQuotaUsage(windowKey, actorKey, usageBucket) {
   const pool = await getUsagePool();
   if (pool) {
@@ -450,6 +465,25 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
 
+  // ── POST /api/ai?action=reset_quota — admin-only quota reset ──────────────
+  if (req.query?.action === 'reset_quota') {
+    const adminKey = process.env.ADMIN_KEY || '';
+    const testAdminKey = process.env.TEST_ADMIN_KEY || '';
+    const k = req.query?.k || req.body?.k || '';
+    if (!k || (!adminKey && !testAdminKey) || (k !== adminKey && k !== testAdminKey)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    const monthKey = getMonthKey();
+    const pool = await getUsagePool();
+    if (pool) {
+      await ensureQuotaTable(pool);
+      const r = await pool.query(`DELETE FROM ${QUOTA_TABLE} WHERE window_key = $1`, [monthKey]);
+      return res.status(200).json({ ok: true, deleted: r.rowCount, month: monthKey });
+    }
+    if (globalThis.__dynastyAiQuotaMem) globalThis.__dynastyAiQuotaMem.clear();
+    return res.status(200).json({ ok: true, cleared: 'memory', month: monthKey });
+  }
+
   // ── GET /api/ai?action=models — return available models with cost info ────
   if (req.method === 'GET' && req.query?.action === 'models') {
     const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
@@ -552,6 +586,9 @@ export default async function handler(req, res) {
     }
   }
 
+  // Scoring quota context — increment only after a successful model call
+  let _scoringQuotaCtx = null;
+
   if (usageContext === 'free_scoring') {
     let scoringPlan = 'guest';
     let limit = FREE_GUEST_MONTHLY_LIMIT;
@@ -592,12 +629,12 @@ export default async function handler(req, res) {
       quotaActorKey = userId ? `u:${userId}` : `pay:${stripeSessionId}`;
     }
 
-    const requestsInPeriod = await incrementQuotaUsage(periodKey, quotaActorKey, quotaBucket);
+    const requestsInPeriod = await getQuotaUsage(periodKey, quotaActorKey, quotaBucket);
     const remaining = Math.max(0, limit - requestsInPeriod);
     res.setHeader('X-Scoring-Plan', scoringPlan);
     res.setHeader('X-Scoring-Limit', String(limit));
     res.setHeader('X-Scoring-Remaining', String(remaining));
-    if (requestsInPeriod > limit) {
+    if (requestsInPeriod >= limit) {
       if (scoringPlan === 'guest') {
         return res.status(429).json({
           error: 'You\u2019ve used your 3 guest scores this month. Sign in with email to unlock 6 scores per month.',
@@ -635,6 +672,7 @@ export default async function handler(req, res) {
       return res.status(503).json({ error: 'No free scoring models are currently available. Please try again shortly.' });
     }
     if (!PROVIDERS[model]?.free) model = chosenFree;
+    _scoringQuotaCtx = { periodKey, quotaActorKey, quotaBucket };
   }
 
   const info = PROVIDERS[model];
@@ -664,6 +702,10 @@ export default async function handler(req, res) {
       model,
       provider: info.provider,
     };
+    // Only count quota AFTER successful model call (failed calls shouldn't consume quota)
+    if (_scoringQuotaCtx) {
+      await incrementQuotaUsage(_scoringQuotaCtx.periodKey, _scoringQuotaCtx.quotaActorKey, _scoringQuotaCtx.quotaBucket).catch(() => {});
+    }
     return res.status(200).json(result);
   } catch (err) {
     return res.status(500).json({ error: err.message || 'AI call failed', provider: info.provider, model });
