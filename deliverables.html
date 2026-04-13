@@ -40,6 +40,8 @@ a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
 .section-icon{font-size:28px;line-height:1}
 .section-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,28px);font-weight:400}
 .section-count{font-size:12px;color:var(--dim);border:1px solid var(--bdr);border-radius:999px;padding:3px 10px}
+.section-link{font-size:13px;color:var(--gold);margin-left:auto;white-space:nowrap;font-weight:500}
+.section-link:hover{text-decoration:underline}
 .section-desc{color:var(--sub);font-size:14px;margin-bottom:24px;max-width:700px;line-height:1.6}
 
 .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
@@ -90,24 +92,26 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 </div>
 
 <div class="cats">
-<a href="#strategy">Strategy &amp; Planning</a>
-<a href="#legal">Legal &amp; Compliance</a>
-<a href="#frontend">Frontend Code</a>
-<a href="#backend">Backend &amp; Config</a>
-<a href="#financial">Financial Models</a>
-<a href="#marketing">Marketing &amp; Growth</a>
-<a href="#operations">Operations &amp; Team</a>
-<a href="#techdocs">Technical Docs</a>
-<a href="#testing">Testing &amp; QA</a>
-<a href="#launch">Day-1 Launch Kit</a>
+<a href="/deliverables/strategy">Strategy &amp; Planning</a>
+<a href="/deliverables/legal">Legal &amp; Compliance</a>
+<a href="/deliverables/frontend">Frontend Code</a>
+<a href="/deliverables/backend">Backend &amp; Config</a>
+<a href="/deliverables/financial">Financial Models</a>
+<a href="/deliverables/marketing">Marketing &amp; Growth</a>
+<a href="/deliverables/operations">Operations &amp; Team</a>
+<a href="/deliverables/technical">Technical Docs</a>
+<a href="/deliverables/testing">Testing &amp; QA</a>
+<a href="/deliverables/launch-kit">Day-1 Launch Kit</a>
 </div>
 
 <div class="wrap">
 
 <!-- 1. Strategy -->
 <div class="section" id="strategy">
-<div class="section-head"><span class="section-icon">📊</span><span class="section-title">Strategy &amp; Business Planning</span><span class="section-count">15 documents</span></div>
+<a href="/deliverables/strategy" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">📊</span><span class="section-title">Strategy &amp; Business Planning</span><span class="section-count">15 documents</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">High-level documents that define what the business is, how it operates, and where it's going. Built to survive a lender meeting, investor diligence, or internal planning session.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">SPEC.md</div><div class="desc">Full product specification — features, user stories, acceptance criteria, tech stack decisions</div></div>
 <div class="item"><div class="file">BUSINESS-SYSTEM.md</div><div class="desc">Board-style operating system — org structure, decision framework, KPIs, OKRs</div></div>
@@ -129,8 +133,10 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 
 <!-- 2. Legal -->
 <div class="section" id="legal">
-<div class="section-head"><span class="section-icon">⚖️</span><span class="section-title">Legal &amp; Compliance Templates</span><span class="section-count">15 documents</span></div>
+<a href="/deliverables/legal" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">⚖️</span><span class="section-title">Legal &amp; Compliance Templates</span><span class="section-count">15 documents</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">Ready-to-customize legal documents generated for your specific business type. Not a substitute for an attorney — but a strong starting draft that saves thousands in billable hours.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">docs/LEGAL-TEMPLATES.md</div><div class="desc">Terms of Service + Privacy Policy tailored to your business type</div></div>
 <div class="item"><div class="file">docs/OPERATING-AGREEMENT-TEMPLATE.md</div><div class="desc">LLC operating agreement — member roles, profit distribution, exit clauses</div></div>
@@ -152,8 +158,10 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 
 <!-- 3. Frontend -->
 <div class="section" id="frontend">
-<div class="section-head"><span class="section-icon">🖥️</span><span class="section-title">Frontend — Production Next.js Application</span><span class="section-count">15 files</span></div>
+<a href="/deliverables/frontend" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">🖥️</span><span class="section-title">Frontend — Production Next.js Application</span><span class="section-count">15 files</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">A real, deployable Next.js application with your design system, your content, and your branding — not a generic template with placeholder text.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">src/app/layout.tsx</div><div class="desc">Root layout with metadata, fonts, providers, global CSS import</div></div>
 <div class="item"><div class="file">src/app/page.tsx</div><div class="desc">Homepage with hero, features, social proof, and CTA sections</div></div>
@@ -175,8 +183,10 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 
 <!-- 4. Backend -->
 <div class="section" id="backend">
-<div class="section-head"><span class="section-icon">⚙️</span><span class="section-title">Backend, Infrastructure &amp; Configuration</span><span class="section-count">15 files</span></div>
+<a href="/deliverables/backend" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">⚙️</span><span class="section-title">Backend, Infrastructure &amp; Configuration</span><span class="section-count">15 files</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">Backend logic, database schemas, API routes, and infrastructure config — everything a developer needs to extend the product after handoff.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">backend/main.py</div><div class="desc">FastAPI application with CRUD endpoints, auth middleware, error handling</div></div>
 <div class="item"><div class="file">src/models/Schema.ts</div><div class="desc">Database schema with models, relations, indexes, and constraints</div></div>
@@ -198,8 +208,10 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 
 <!-- 5. Financial -->
 <div class="section" id="financial">
-<div class="section-head"><span class="section-icon">💰</span><span class="section-title">Financial Planning &amp; Modeling</span><span class="section-count">15 documents</span></div>
+<a href="/deliverables/financial" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">💰</span><span class="section-title">Financial Planning &amp; Modeling</span><span class="section-count">15 documents</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">Quantitative financial frameworks tailored to your business — the numbers lenders ask for and investors expect to see.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">RUNWAY-CALCULATOR.md</div><div class="desc">Monthly burn rate, runway projection, cash flow templates</div></div>
 <div class="item"><div class="file">CAP-TABLE-MODEL.md</div><div class="desc">Cap table with founder splits, option pool, dilution scenarios</div></div>
@@ -221,8 +233,10 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 
 <!-- 6. Marketing -->
 <div class="section" id="marketing">
-<div class="section-head"><span class="section-icon">📣</span><span class="section-title">Marketing &amp; Growth</span><span class="section-count">15 documents</span></div>
+<a href="/deliverables/marketing" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">📣</span><span class="section-title">Marketing &amp; Growth</span><span class="section-count">15 documents</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">Everything needed to acquire, convert, and retain customers — from social calendars to competitor analysis to referral programs.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">social-media/SOCIAL-MEDIA-CALENDAR.md</div><div class="desc">260-post content calendar across platforms with copy, hashtags, timing</div></div>
 <div class="item"><div class="file">social-media/calendar.csv</div><div class="desc">CSV import for Vista Social, Buffer, or Hootsuite</div></div>
@@ -244,8 +258,10 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 
 <!-- 7. Operations -->
 <div class="section" id="operations">
-<div class="section-head"><span class="section-icon">🏢</span><span class="section-title">Operations &amp; Team Building</span><span class="section-count">15 documents</span></div>
+<a href="/deliverables/operations" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">🏢</span><span class="section-title">Operations &amp; Team Building</span><span class="section-count">15 documents</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">Internal ops, culture, hiring, and team management — the playbooks that keep a business running after launch day.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">OPERATIONS-PLAYBOOK.md</div><div class="desc">SOPs for daily, weekly, and monthly operations — workflows, escalations</div></div>
 <div class="item"><div class="file">HIRING-PLAN.md</div><div class="desc">First 10 hires — roles, comp ranges, scorecards, interview guides</div></div>
@@ -267,8 +283,10 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 
 <!-- 8. Tech Docs -->
 <div class="section" id="techdocs">
-<div class="section-head"><span class="section-icon">📖</span><span class="section-title">Technical Documentation</span><span class="section-count">15 documents</span></div>
+<a href="/deliverables/technical" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">📖</span><span class="section-title">Technical Documentation</span><span class="section-count">15 documents</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">Developer-facing docs, API specs, and architecture references — everything a new developer or technical advisor needs to understand the system.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">DESIGN.md</div><div class="desc">Design system — colors, typography, spacing, component tokens</div></div>
 <div class="item"><div class="file">CLAUDE.md</div><div class="desc">Agent-facing project rules — repo structure, conventions, testing</div></div>
@@ -290,8 +308,10 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 
 <!-- 9. Testing -->
 <div class="section" id="testing">
-<div class="section-head"><span class="section-icon">🧪</span><span class="section-title">Testing &amp; Quality Assurance</span><span class="section-count">15 artifacts</span></div>
+<a href="/deliverables/testing" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">🧪</span><span class="section-title">Testing &amp; Quality Assurance</span><span class="section-count">15 artifacts</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">Automated tests, research frameworks, and quality playbooks — so the product works on day one and the business learns from real users.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">src/__tests__/api.test.ts</div><div class="desc">API route unit tests with mocked DB, auth, and error cases</div></div>
 <div class="item"><div class="file">src/__tests__/pages.test.tsx</div><div class="desc">React Testing Library component tests for all page routes</div></div>
@@ -313,8 +333,10 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 
 <!-- 10. Launch Kit -->
 <div class="section" id="launch">
-<div class="section-head"><span class="section-icon">🚀</span><span class="section-title">Day-1 Launch Kit &amp; Onboarding</span><span class="section-count">15 artifacts</span></div>
+<a href="/deliverables/launch-kit" style="text-decoration:none;color:inherit;display:block">
+<div class="section-head"><span class="section-icon">🚀</span><span class="section-title">Day-1 Launch Kit &amp; Onboarding</span><span class="section-count">15 artifacts</span><span class="section-link">Explore all 15 &rarr;</span></div>
 <p class="section-desc">Resources designed to get you productive from day one — not "read this later" documentation, but tools you use immediately.</p>
+</a>
 <div class="grid">
 <div class="item"><div class="file">public/onboard.html</div><div class="desc">Interactive HTML onboarding dashboard with checklist and progress tracking</div></div>
 <div class="item"><div class="file">LAUNCH-PLAYBOOK.md</div><div class="desc">Tier-aware 90-day launch playbook — week-by-week action items</div></div>
