@@ -78,7 +78,9 @@ small{display:block;margin-top:12px;color:var(--dim);font-size:12px}
       <h2>4) Budget comfort (now)</h2>
       <div class="opts">
         <label class="opt"><input type="radio" name="budget" value="free" checked><span>Start at $0 and decide after evidence</span></label>
-        <label class="opt"><input type="radio" name="budget" value="foundation"><span>Comfortable at Foundation ($1,997)</span></label>
+        <label class="opt"><input type="radio" name="budget" value="scoring_pro"><span>$19/mo for ongoing scoring access</span></label>
+        <label class="opt"><input type="radio" name="budget" value="blueprint"><span>$297 for a deep diagnostic + execution plan</span></label>
+        <label class="opt"><input type="radio" name="budget" value="foundation"><span>$1,997 for the full build + deployment</span></label>
       </div>
     </section>
   </div>
@@ -212,6 +214,8 @@ function pickRecommendation() {
   if (delivery === 'full') score.full_launch += 3
 
   if (budget === 'free') score.viability += 2
+  if (budget === 'scoring_pro') { score.viability += 2 }
+  if (budget === 'blueprint') { score.capital += 2; score.viability += 1 }
   if (budget === 'foundation') { score.capital += 1; score.foundation_diy += 2 }
   
   
@@ -244,7 +248,8 @@ document.getElementById('run-quiz').addEventListener('click', () => {
   const pains = getCheckedValues('pain').slice(0, 2)
   const { key, rec, reasons } = pickRecommendation()
   const res = document.getElementById('result')
-  const planLabel = rec.plan === 'foundation' ? 'Foundation ($1,997)' : 'Free scoring ($0)'
+  const planLabels = { foundation: 'Foundation ($1,997)', blueprint: 'Blueprint ($297)', scoring_pro: 'Scoring Pro ($19/mo)', free: 'Free scoring ($0)' }
+  const planLabel = planLabels[rec.plan] || 'Free scoring ($0)'
 
   document.getElementById('res-title').textContent = `Recommended: ${rec.label}`
   document.getElementById('res-path').textContent = `Path: ${key.replace('_', ' ')}`
