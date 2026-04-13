@@ -1066,7 +1066,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
         </label>
         <label id="dynasty-vertical-tool-wrap" style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
           <input type="checkbox" id="dynasty-vertical-tool" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
-          <span><strong style="color:var(--tx)">Niche vertical tool add-on</strong> — scaffold for a pain-point workflow (e.g. blueprint takeoff <em>assist</em>). Professional+ tiers. Not a binding bid.</span>
+          <span><strong style="color:var(--tx)">Niche vertical tool add-on</strong> — scaffold for a pain-point workflow (e.g. blueprint takeoff <em>assist</em>). Paid tiers. Not a binding bid.</span>
         </label>
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--sec);cursor:pointer">
           <input type="checkbox" id="dynasty-ai-train-optin" style="accent-color:var(--gold);margin-top:2px" onchange="saveBuildProfileToStorage()" />
@@ -2655,7 +2655,7 @@ function applyBuildPackageTierConstraints() {
       sel.value = first.value;
       saveBuildProfileToStorage();
       if (lockNotice) {
-        lockNotice.innerHTML = `<strong>Package switched:</strong> your current tier cannot run your previously selected package, so we moved you to an allowed package. Upgrade to Professional+ to unlock all packages.`;
+        lockNotice.innerHTML = `<strong>Package switched:</strong> your current tier cannot run your previously selected package, so we moved you to an allowed package.`;
         lockNotice.style.display = 'block';
       }
     }
@@ -2681,7 +2681,7 @@ function applyBuildPackageTierConstraints() {
       const lockBits = [];
       if (locked.length) lockBits.push(`locked packages: ${locked.slice(0, 3).join(', ')}${locked.length > 3 ? ` +${locked.length - 3} more` : ''}`);
       if (verticalBlocked) lockBits.push('vertical tool add-on');
-      lockNotice.innerHTML = `<strong>Tier restrictions active:</strong> ${lockBits.join(' · ')}.<br>Upgrade to Professional+ to unlock these options. <button onclick="startCheckout('professional')" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer;margin-left:6px">Upgrade</button>`;
+      lockNotice.innerHTML = `<strong>Tier restrictions active:</strong> ${lockBits.join(' · ')}.<br>Some features require a paid tier. <a href="/#pricing" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer;margin-left:6px;text-decoration:none">See pricing</a>`;
       lockNotice.style.display = 'block';
     } else {
       lockNotice.style.display = 'none';
@@ -2841,7 +2841,7 @@ function updateBuildScopePreview() {
   lines.push('<p style="font-size:11px;color:var(--dim);margin:0 0 10px;line-height:1.5">We combine your <strong>site package</strong> and <strong>tier</strong> to set what runs now versus later. Current tier: <strong style="color:var(--tx)">' + tierLabel + '</strong>.</p>');
   lines.push('<div style="font-size:11px;color:var(--sec);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.22);border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5"><strong>Vendor keys:</strong> Keys on our side are for <em>building</em> and <em>one-time provisioning</em> where we wire services. Your <strong>live</strong> product should run on <strong>your</strong> accounts — follow <code style="font-size:10px">.env.example</code> and <code style="font-size:10px">MANUAL-ACTIONS.md</code> on the repo we ship, not a permanent tie to our shared pool.</div>');
   if (tierBlocksMods) {
-    lines.push('<div style="font-size:11px;color:#FDE68A;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5"><strong>Foundation / free:</strong> you still get documents + code + deployment. Live third-party integrations are typically activated on Professional+ or completed manually.</div>');
+    lines.push('<div style="font-size:11px;color:#FDE68A;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5"><strong>Foundation / free:</strong> you still get documents + code + deployment. Live third-party integrations can be connected using the activation guides in your repo, or will be available in future operational tiers.</div>');
   }
   lines.push('<div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px"><span style="font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(34,197,94,.14);color:#22C55E;border:1px solid rgba(34,197,94,.35)">Run now: ' + run.length + '</span><span style="font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(251,191,36,.14);color:#FBBF24;border:1px solid rgba(251,191,36,.35)">Defer: ' + defer.length + '</span><span style="font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(161,161,170,.2);color:var(--sub);border:1px solid rgba(255,255,255,.12)">Skip: ' + skip.length + '</span></div>');
   function ul(title, color, items) {
@@ -2862,7 +2862,7 @@ function updateBuildScopePreview() {
     lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px;padding-top:8px;border-top:1px solid var(--bdr)"><strong>+ Plain-language companion</strong> — <code style="font-size:10px">docs/plain/</code> + START-HERE</div>');
   }
   if (bp.verticalTool) {
-    lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px"><strong>+ Vertical tool scaffold</strong> — assistive workflow (not a binding bid). Professional+ only.</div>');
+    lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px"><strong>+ Vertical tool scaffold</strong> — assistive workflow (not a binding bid). Paid builds only.</div>');
   }
   if (bp.govContractingPack) {
     lines.push('<div style="font-size:11px;color:var(--sec);margin-top:6px"><strong>+ U.S. government contracting pack</strong> — <code style="font-size:10px">docs/GOV-READINESS.md</code> + NAICS/capabilities/RFP aids (informational; extra AI calls).</div>');
@@ -5649,7 +5649,7 @@ function showPreview(inf){
     <div class="inf-item"><div class="inf-label">MVP</div><div class="inf-val">${inf.mvp}</div></div>
     <div class="inf-item"><div class="inf-label">Repo</div><div class="inf-val">${ORG}/${inf.repo}</div></div>
   `;
-  if(inf.reasoning){grid.innerHTML+=`<div class="inf-item" style="grid-column:1/-1"><div class="inf-label">Why</div><div class="inf-val" style="color:var(--sec);font-size:11px;font-weight:400">${inf.reasoning}</div></div>`;}
+  if(inf.reasoning){grid.innerHTML+=`<div class="inf-item" style="grid-column:1/-1"><div class="inf-label">Why</div><div class="inf-val" style="color:var(--sec);font-size:11px;font-weight:400">${escapeHtml(inf.reasoning)}</div></div>`;}
   document.getElementById('preview').style.display='block';
 }
 
@@ -6214,7 +6214,7 @@ const EDU_CONTENT = {
     phase: '⬡ Business Strategy',
     title: 'Building your business engine',
     body: 'BUSINESS-SYSTEM.md, REVENUE-MODEL.md, and GTM-PLAYBOOK.md bundle positioning, workflows, and illustrative financial narratives. Figures are AI-generated planning aids — not audited forecasts — until validated with finance and legal advisors.',
-    tip: '💡 Use for internal planning and fundraising prep; live automation in those docs maps to tiers — Foundation gets narratives, Professional+ gets provisioning attempts where APIs succeed.',
+    tip: '💡 Use for internal planning and fundraising prep; live automation in those docs maps to tiers — Foundation gets narratives, paid tiers get provisioning attempts where APIs succeed.',
     facts: ['Building illustrative revenue scenarios...','Drafting outreach / sales copy for review...','Mapping automation workflow patterns (tier permitting)...','Calculating unit economics: CAC, LTV, payback period...','Designing 3-tier pricing with feature gates...'],
     preview: ['## Revenue Model (illustrative)','| Month | MRR | Customers |','| 1     | $0  | 0         |','| 3     | $2.9K | 30      |','| 12    | $29K  | 300     |']
   },
@@ -6222,7 +6222,7 @@ const EDU_CONTENT = {
     phase: '⬡ Agent System',
     title: 'Designing your AI workforce',
     body: 'AGENT-SYSTEM.md specifies your automation workforce — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. Seven workflow patterns map to n8n when your tier allows integration provisioning. FAILURE-MODES.md anticipates failure scenarios with recovery playbooks.',
-    tip: '💡 On Professional+, the orchestrator attempts automation workflows where APIs succeed; Foundation receives the architecture in-repo and manual steps in OPERATIONS.md. An AI consultancy charges $5,000–12,000 for comparable architecture.',
+    tip: '💡 On paid tiers, the orchestrator attempts automation workflows where APIs succeed; Foundation receives the architecture in-repo and manual steps in OPERATIONS.md. An AI consultancy charges $5,000–12,000 for comparable architecture.',
     facts: ['Configuring intake → evaluation → decision pipeline...','Setting up circuit breakers for each failure mode...','Defining agent triggers, inputs, and outputs...','Mapping workflow patterns to services when tier permits...'],
     preview: ['## Agent: Lead Intake','Trigger: New form submission','Tool: tier-dependent (e.g. voice at Enterprise)','Output: Qualified lead object','Fallback: Manual review queue']
   },
@@ -13680,7 +13680,7 @@ function generateBuildReport() {
       <div class="card"><div class="label">Auth Strategy</div><div class="value">${bp.auth_pattern?.strategy || 'TBD'}</div></div>
       <div class="card"><div class="label">Integrations</div><div class="value">${bp.integrations?.length || 0} services</div></div>
     </div>
-    ${bp.key_decisions?.length ? '<h3>Key Architectural Decisions</h3><ol>' + bp.key_decisions.slice(0, 6).map(d => `<li>${d}</li>`).join('') + '</ol>' : ''}` : '';
+    ${bp.key_decisions?.length ? '<h3>Key Architectural Decisions</h3><ol>' + bp.key_decisions.slice(0, 6).map(d => `<li>${escapeHtml(d)}</li>`).join('') + '</ol>' : ''}` : '';
 
   // Build metadata
   const metaSection = `
@@ -13698,7 +13698,7 @@ function generateBuildReport() {
     </table>`;
 
   const reportHtml = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>${inf.name} — Dynasty Strategic Report</title>
+<html><head><meta charset="UTF-8"><title>${escapeHtml(inf.name)} — Dynasty Strategic Report</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -13768,8 +13768,8 @@ table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
 <div class="page">
   <div class="cover">
     <div style="font-size:36px;margin-bottom:16px">⚡</div>
-    <h1>${inf.name}</h1>
-    <div class="subtitle">${inf.type_label} · ${inf.revenue_model} · ${inf.price}</div>
+    <h1>${escapeHtml(inf.name)}</h1>
+    <div class="subtitle">${escapeHtml(inf.type_label)} · ${escapeHtml(inf.revenue_model)} · ${escapeHtml(inf.price)}</div>
     <div class="badge">Dynasty Empire Strategic Report</div>
     <div class="date">${now} · Confidential</div>
   </div>
@@ -13789,13 +13789,13 @@ table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
   </div>
 
   <h2 id="summary">1. Executive Summary</h2>
-  <p style="font-size:14px;color:#EEEDE8;line-height:1.8">${document.getElementById('project-desc')?.value || inf.name}</p>
+  <p style="font-size:14px;color:#EEEDE8;line-height:1.8">${escapeHtml(document.getElementById('project-desc')?.value || inf.name)}</p>
   <div class="grid-3">
-    <div class="card"><div class="label">Revenue Model</div><div class="value">${inf.revenue_model}</div></div>
-    <div class="card"><div class="label">Price Point</div><div class="value">${inf.price}</div></div>
-    <div class="card"><div class="label">Acquisition</div><div class="value">${inf.acquisition}</div></div>
-    <div class="card"><div class="label">MVP Timeline</div><div class="value">${inf.mvp}</div></div>
-    <div class="card"><div class="label">Stack</div><div class="value">${(inf.stack||[]).slice(0,3).join(', ')}</div></div>
+    <div class="card"><div class="label">Revenue Model</div><div class="value">${escapeHtml(inf.revenue_model)}</div></div>
+    <div class="card"><div class="label">Price Point</div><div class="value">${escapeHtml(inf.price)}</div></div>
+    <div class="card"><div class="label">Acquisition</div><div class="value">${escapeHtml(inf.acquisition)}</div></div>
+    <div class="card"><div class="label">MVP Timeline</div><div class="value">${escapeHtml(inf.mvp)}</div></div>
+    <div class="card"><div class="label">Stack</div><div class="value">${escapeHtml((inf.stack||[]).slice(0,3).join(', '))}</div></div>
     <div class="card"><div class="label">Accent</div><div class="value"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${inf.accent};margin-right:4px;vertical-align:middle"></span>${inf.accent}</div></div>
   </div>
 
