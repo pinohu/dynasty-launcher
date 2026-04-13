@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About Page — Frontend — Production Next.js Application — Your Deputy</title>
+<meta name="description" content="About page with company story, team, and values">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://yourdeputy.com/deliverables/frontend/about-page">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--ink:#09090B;--card:#1E1E2A;--bdr:rgba(255,255,255,.12);--tx:#FAFAF9;--sub:#A1A1AA;--dim:#71717A;--grn:#22C55E}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0C0C14;color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+.skip:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important}
+.wrap{max-width:740px;margin:0 auto;padding:0 24px}
+.topnav{padding:20px 24px;max-width:740px;margin:0 auto;font-size:13px;color:var(--dim)}
+.topnav a{margin-right:10px}
+.hero{padding:40px 0 24px}
+.hero .cat{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,36px);font-weight:400;letter-spacing:-.02em;margin-bottom:8px}
+.hero .file{font-size:12px;font-family:'SF Mono','Fira Code',monospace,system-ui;color:var(--dim);padding:4px 10px;border:1px solid var(--bdr);border-radius:6px;display:inline-block;margin-bottom:14px}
+.hero .short{color:var(--sub);font-size:15px;line-height:1.6}
+.detail{padding:24px 0;border-top:1px solid rgba(255,255,255,.06)}
+.detail p{color:var(--sub);font-size:14px;line-height:1.7;margin-bottom:20px}
+.detail h2{font-size:16px;font-weight:600;margin-bottom:12px;color:var(--tx)}
+.detail ol{list-style:none;counter-reset:s;padding:0;margin:0}
+.detail ol li{counter-increment:s;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:var(--sub);display:flex;align-items:center;gap:10px}
+.detail ol li::before{content:counter(s,decimal-leading-zero);font-size:11px;color:var(--gold);font-weight:600;min-width:22px}
+.detail ol li:last-child{border-bottom:none}
+.cta{text-align:center;padding:40px 0;border-top:1px solid rgba(255,255,255,.06)}
+.cta h2{font-family:'Playfair Display',serif;font-size:clamp(20px,3vw,28px);font-weight:400;margin-bottom:6px}
+.cta p{color:var(--sub);font-size:13px;margin-bottom:18px}
+.cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:11px 22px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;font-family:inherit}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3);text-decoration:none}
+footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center;font-size:11px;color:var(--dim);max-width:740px;margin:0 auto}
+@media(max-width:768px){.wrap{padding:0 16px}.hero{padding:28px 0 16px}}
+</style>
+</head>
+<body>
+<a href="#content" class="skip" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999;font-size:14px;padding:8px 16px;background:var(--gold);color:var(--ink);border-radius:8px;font-weight:600">Skip to content</a>
+<div class="topnav"><a href="/">&larr; Home</a> <a href="/deliverables">&larr; All deliverables</a> <a href="/deliverables/frontend">&larr; Frontend — Production Next.js Application</a></div>
+<main id="content" role="main">
+<div class="wrap">
+<div class="hero">
+<div class="cat"><span aria-hidden="true">🖥️</span> Frontend — Production Next.js Application</div>
+<h1>About Page</h1>
+<span class="file">src/app/about/page.tsx</span>
+<p class="short">About page with company story, team, and values</p>
+</div>
+<div class="detail">
+<p>An about page with your company story, team member profiles, core values, and mission statement. Builds trust with potential customers and partners by putting faces and values behind the product.</p>
+<h2>What's inside</h2>
+<ol>
+<li>Company Story</li>
+<li>Mission Statement</li>
+<li>Core Values</li>
+<li>Team Member Profiles</li>
+<li>Company Timeline</li>
+<li>Press & Media Kit</li>
+<li>Contact Information</li>
+<li>Social Media Links</li>
+<li>Open Positions</li>
+<li>Partner Logos</li>
+</ol>
+</div>
+<div class="cta">
+<h2>Get this deliverable — and 149 more.</h2>
+<p>This file is included in every Strategy Pack and Foundation build, generated from your specific business description.</p>
+<div class="cta-row">
+<a href="/app?plan=free&source=item_frontend_about-page" class="btn" style="border:1px solid var(--bdr);color:var(--sub)">Score free</a>
+<a href="/app?plan=strategy_pack&source=item_frontend_about-page" class="btn" style="background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);color:var(--gold)">Strategy Pack &mdash; $697</a>
+<a href="/app?plan=foundation&source=item_frontend_about-page" class="btn" style="background:var(--gold);color:#09090B">Foundation &mdash; $1,997</a>
+</div>
+<p style="font-size:11px;color:var(--dim);margin-top:8px">$697 credited toward Foundation if you upgrade within 30 days.</p>
+</div>
+<div style="display:flex;justify-content:space-between;gap:16px;margin:32px 0 0;flex-wrap:wrap"><a href="/deliverables/frontend/pricing-page" style="font-size:13px;color:var(--sub);text-decoration:none;transition:color .2s">&larr; Pricing Page</a><a href="/deliverables/frontend/not-found" style="font-size:13px;color:var(--sub);text-decoration:none;transition:color .2s">Custom 404 Page &rarr;</a></div>
+</div>
+</main>
+<footer>
+<p>&copy; 2026 PA Registered Office Services, LLC &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a> &middot; <a href="/">Home</a></p>
+<p style="margin-top:4px">All documents are AI-generated starting points. Legal, financial, and tax documents require qualified professional review.</p>
+</footer>
+</body>
+</html>
