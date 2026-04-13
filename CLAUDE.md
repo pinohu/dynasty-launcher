@@ -1,7 +1,7 @@
 # CLAUDE.md — Your Deputy V3
 
 ## What This Is
-Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is a business provisioning engine. A user describes a business idea in one prompt, and the system generates documents, code, and deployment; **Foundation** does **not** auto-provision integration modules on the server (`TIER_MODULES.foundation: []`). **Professional** ($4,997) runs 11 live integration modules; **Enterprise** ($9,997) runs up to 13 modules; **custom_volume** unlocks all 19 `mod_*` functions. All `mod_*` functions are implemented; some vendor API keys are still empty — see "Keys still needed" below.
+Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is a business provisioning engine. A user describes a business idea in one prompt, and the system generates documents, code, and deployment; **Foundation** does **not** auto-provision integration modules on the server (`TIER_MODULES.foundation: []`). **Professional** ($4,997) runs 11 live integration modules; **Enterprise** ($9,997) runs up to 17 modules; **custom_volume** unlocks all 19 `mod_*` functions. All `mod_*` functions are implemented; some vendor API keys are still empty — see "Keys still needed" below.
 
 ## Repo Structure
 ```
