@@ -1743,7 +1743,41 @@ function generateCredentialsMd(project, moduleResults) {
     lines.push(`## CRM (SuiteDash)\n- Portal: ${moduleResults.crm.details.portal_url}\n- Company ID: ${moduleResults.crm.details.company_id}\n`);
   }
   if (moduleResults.chatbot?.ok) {
-    lines.push(`## Chatbot (Chatbase)\n- Bot ID: ${moduleResults.chatbot.details.chatbot_id}\n`);
+    const cb = moduleResults.chatbot.details;
+    lines.push(`## Chatbot\n- FAQ Items: ${cb.faq_count || 'N/A'}\n- Embed Snippet: See dynasty-snippets.ts\n`);
+  }
+  if (moduleResults.seo?.ok) {
+    const s = moduleResults.seo.details;
+    lines.push(`## SEO\n- Keywords: ${(s.keywords || []).slice(0, 5).join(', ')}\n- Blog Posts: ${s.blog_posts_count || 'N/A'}\n- Sitemap: ${s.sitemap ? 'Generated' : 'N/A'}\n`);
+  }
+  if (moduleResults.sms?.ok) {
+    lines.push(`## SMS\n- Provider: SMS-iT\n- Templates: ${moduleResults.sms.details.templates_created || 'N/A'}\n`);
+  }
+  if (moduleResults.video?.ok) {
+    const v = moduleResults.video.details;
+    lines.push(`## Video\n- Explainer: ${v.vadoo_video_id || v.fliki_project_id || 'N/A'}\n`);
+  }
+  if (moduleResults.design?.ok) {
+    lines.push(`## Design\n- Brand Guide: See docs/BRAND-GUIDE.md in repo\n- Assets: ${moduleResults.design.details.assets_generated || 'See repo'}\n`);
+  }
+  if (moduleResults.leads?.ok) {
+    lines.push(`## Leads\n- Tracking: See docs/LEADS-SETUP.md in repo\n`);
+  }
+  if (moduleResults.docs?.ok) {
+    lines.push(`## Legal Docs\n- Files: ${(moduleResults.docs.details.files_pushed || []).join(', ') || 'See repo docs/'}\n`);
+  }
+  if (moduleResults.social?.ok) {
+    lines.push(`## Social\n- Provider: Vista Social\n- Calendar: ${moduleResults.social.details.posts_imported || 'See guide'}\n`);
+  }
+  if (moduleResults.directory?.ok) {
+    lines.push(`## Directory\n- Provider: Brilliant Directories\n- Site ID: ${moduleResults.directory.details.site_id || 'N/A'}\n`);
+  }
+  if (moduleResults.wordpress?.ok) {
+    const wp = moduleResults.wordpress.details;
+    lines.push(`## WordPress\n- Package: ${wp.package_id || 'N/A'}\n- Domain: ${wp.domain || 'N/A'}\n- Control Panel: ${wp.control_panel || 'N/A'}\n`);
+  }
+  if (moduleResults.verify?.ok) {
+    lines.push(`## Verification\n- Status: ${moduleResults.verify.details.pass_count || 0} checks passed\n`);
   }
 
   lines.push(`\n---\n*Keep this document secure. Do not commit to public repositories.*`);

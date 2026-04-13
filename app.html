@@ -3636,7 +3636,7 @@ function renderScorecard(sc) {
     ${Object.entries(s).map(([k, v]) => `
       <div class="sc-row">
         <span class="sc-label">${escapeHtml(k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))}</span>
-        <span class="sc-score ${cls(v.score)}">${v.score.toFixed(1)} / 10</span>
+        <span class="sc-score ${cls(v.score)}">${(typeof v.score === 'number' ? v.score : 0).toFixed(1)} / 10</span>
       </div>`).join('')}
     <div class="sc-composite">
       <span class="sc-label">Composite Score</span>
@@ -12688,7 +12688,7 @@ services:
     build: ./backend
     ports: ["8000:8000"]
     environment:
-      DATABASE_URL: postgresql://dynasty:dynasty_pass@db:5432/${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
+      DATABASE_URL: postgresql://dynasty:\$\{POSTGRES_PASSWORD:-changeme_before_deploy\}@db:5432/${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${'$'}{SECRET_KEY:-changeme}
       STRIPE_SECRET_KEY: ${'$'}{STRIPE_SECRET_KEY}
@@ -12702,7 +12702,7 @@ services:
     environment:
       POSTGRES_DB: ${inf.repo?.replace(/-/g,'_')||'dynasty_db'}
       POSTGRES_USER: dynasty
-      POSTGRES_PASSWORD: dynasty_pass
+      POSTGRES_PASSWORD: ${'$'}{POSTGRES_PASSWORD:-changeme_before_deploy}
     volumes: [postgres_data:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dynasty"]
@@ -14150,7 +14150,7 @@ table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
     <div class="verdict ${sc.composite >= 8 ? 'strong' : sc.composite >= 6 ? 'viable' : 'weak'}">
       ${sc.verdict} — Composite Score: <strong>${sc.composite.toFixed(1)}/10</strong>
     </div>
-    ${Object.entries(sc.scores).map(([k, v]) => `<div class="score-row"><span class="name">${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span><span class="num ${v.score >= 8 ? 'high' : v.score >= 6 ? 'mid' : 'low'}">${v.score.toFixed(1)}/10</span></div>`).join('')}
+    ${Object.entries(sc.scores).map(([k, v]) => `<div class="score-row"><span class="name">${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span><span class="num ${(v.score||0) >= 8 ? 'high' : (v.score||0) >= 6 ? 'mid' : 'low'}">${(typeof v.score === 'number' ? v.score : 0).toFixed(1)}/10</span></div>`).join('')}
     <div class="grid" style="margin-top:1rem">
       <div class="card"><div class="label">Risk</div><div class="value" style="font-size:12px;font-weight:400;color:#E5534B">${sc.risk_summary}</div></div>
       <div class="card"><div class="label">Opportunity</div><div class="value" style="font-size:12px;font-weight:400;color:#3ECF8E">${sc.opportunity_summary}</div></div>
