@@ -183,6 +183,7 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
   <a href="/app?plan=free">Score Free</a>
   <a href="/app?plan=foundation">Foundation — $1,997</a>
   <a href="/app?plan=professional" class="primary">Professional — $4,997</a>
+  <a href="/app?plan=enterprise">Enterprise — $9,997</a>
 </div>
 <div class="btns" style="margin-top:8px">
   <a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>
