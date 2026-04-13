@@ -9210,6 +9210,12 @@ await Promise.allSettled([
       if (isNextJs && files['postcss.config.js']?.includes('tailwindcss')) {
         delete files['postcss.config.js'];
       }
+      // Also remove tailwind.config.ts / .js — Tailwind v4 configures via CSS @theme
+      if (isNextJs) {
+        for (const tcf of ['tailwind.config.ts', 'tailwind.config.js', 'tailwind.config.mjs']) {
+          if (files[tcf]) delete files[tcf];
+        }
+      }
 
       // ── 3c. next.config.js: ensure it's not just a comment placeholder ──
       if (isNextJs) {
@@ -9569,7 +9575,7 @@ export default function NotFound() {
           { key: 'services', title: 'Services', subtitle: 'Niche-specific deliverables', body: `Service delivery includes audience-fit messaging, conversion architecture, implementation scaffolds, and go-live verification for ${_safeType}.` },
           { key: 'contact', title: 'Contact', subtitle: 'Direct operator support', body: `Get implementation guidance for your selected scope, timeline, and verification requirements.` }
         ];
-        const _alwaysRequired = new Set(['docs', 'pricing']);
+        const _alwaysRequired = new Set(['docs', 'pricing', 'about']);
         const _archetypeRequiresFive = ['starter_5p', 'growth', 'authority_site', 'enterprise_full'].includes(_bpLocal?.archetype || '');
         for (const _r of _routeDefs) {
           if (!_alwaysRequired.has(_r.key) && !_archetypeRequiresFive) continue;
@@ -9589,6 +9595,17 @@ export default function NotFound() {
         const _nf = _mkNotFoundPage();
         files['src/app/not-found.tsx'] = _nf;
         files['src/app/[locale]/not-found.tsx'] = _nf;
+
+        // ── 8b. Strip AI prompt placeholders from backend/main.py ──
+        if (files['backend/main.py']) {
+          files['backend/main.py'] = files['backend/main.py']
+            .replace(/\[Define \d+-\d+ more[^\]]*\]/g, '')
+            .replace(/\[Implement \d+ core[^\]]*\]/g, '')
+            .replace(/\[Add \d+-\d+[^\]]*\]/g, '')
+            .replace(/\[TODO[^\]]*\]/gi, '')
+            .replace(/# ?\[.*?\]/g, '')
+            .replace(/\n{3,}/g, '\n\n');
+        }
 
         // ── 9. Authority conversion quality gate (iterative; never blocks ship) ──
         if (!(_res && _resumeFlags.gateCompleted)) {
@@ -10605,7 +10622,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
           const routeFailures = [];
           if (strictOk) {
             const bpNow = getBuildProfile();
-            const expectedRoutePaths = ['/docs', '/pricing'];
+            const expectedRoutePaths = ['/docs', '/pricing', '/about'];
             if (['starter_5p', 'growth', 'authority_site', 'enterprise_full'].includes(bpNow?.archetype || '')) {
               expectedRoutePaths.push('/about', '/services', '/contact');
             }
@@ -12504,12 +12521,6 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-  nginx:
-    image: nginx:alpine
-    ports: ["80:80", "443:443"]
-    volumes: ["./nginx.conf:/etc/nginx/conf.d/default.conf"]
-    depends_on: [app]
-    restart: unless-stopped
 volumes:
   postgres_data:
   redis_data:
@@ -12804,8 +12815,14 @@ Generate using ---BEGIN:key--- / ---END:key--- delimiters:
         // Translation override
         if (tmplOverride.en_json) {
           feFiles['src/locales/en.json'] = tmplOverride.en_json;
-          // Also generate fr.json as a copy (better than leaving boilerplate French)
-          feFiles['src/locales/fr.json'] = tmplOverride.en_json;
+          try {
+            const frResp = await callAI(`Translate this JSON i18n file from English to French. Return ONLY valid JSON, no markdown fences. Keep all keys identical, translate only the string values:\n${tmplOverride.en_json}`, { max_tokens: 4000 });
+            const frText = frResp.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim();
+            JSON.parse(frText);
+            feFiles['src/locales/fr.json'] = frText;
+          } catch (_) {
+            feFiles['src/locales/fr.json'] = tmplOverride.en_json;
+          }
         }
         setP('g7b', 'ok', `${Object.keys(tmplOverride).filter(k => tmplOverride[k]).length + 4} template components customized`);
       } catch (e) { setP('g7b', 'sk', e.message); }

@@ -115,7 +115,7 @@ else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{doc
   if (plan === 'custom_volume') {
     return Response.redirect(new URL('/#pricing', request.url), 307);
   }
-  if (plan && ['blueprint', 'scoring_pro', 'foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(plan)) {
+  if (plan && ['blueprint', 'scoring_pro', 'strategy_pack', 'foundation', 'starter', 'professional', 'enterprise', 'managed'].includes(plan)) {
     // Redirect to checkout API which creates Stripe session and redirects to Stripe
     const checkoutUrl = new URL('/api/checkout', request.url);
     checkoutUrl.searchParams.set('action', 'create_session');
@@ -178,12 +178,11 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
 <body>
 <div style="font-size:2.5rem">⚡</div>
 <h2>Your Deputy</h2>
-<p>Judgment on whether the business holds up, implementation you can ship, and accountable scope — not a menu of AI tasks. Score free, blueprint $297, or scoring from $19/mo.</p>
+<p>Judgment on whether the business holds up, implementation you can ship, and accountable scope — not a menu of AI tasks. Score free, strategy documents $697, or full build from $1,997.</p>
 <div class="btns">
   <a href="/app?plan=free">Score Free</a>
-  <a href="/app?plan=blueprint">Blueprint — $297</a>
-  <a href="/app?plan=scoring_pro">Scoring Pro — $19/mo</a>
-  <a href="/app?plan=professional" class="primary">Build — $4,997</a>
+  <a href="/app?plan=strategy_pack">Strategy Pack — $697</a>
+  <a href="/app?plan=foundation" class="primary">Foundation — $1,997</a>
 </div>
 <div class="btns" style="margin-top:8px">
   <a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>
