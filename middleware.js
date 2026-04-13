@@ -21,9 +21,10 @@ export default function middleware(request) {
   }
 
   const params = url.searchParams;
+  const lowPath = url.pathname.toLowerCase();
 
   // Only gate the builder and admin routes; everything else passes through to static files.
-  if (!url.pathname.startsWith('/admin') && !lowPath.startsWith('/app')) {
+  if (!lowPath.startsWith('/admin') && !lowPath.startsWith('/app')) {
     return;
   }
 
@@ -152,7 +153,7 @@ fetch('/api/checkout?action=create_session', {
 
   // /app — always serve app.html; edge cannot read localStorage (admin token, paid session).
   // Client-side gate in app.html enforces access; without this, /app reload after ?k=… shows the edge gate.
-  if (url.pathname === '/app' || url.pathname.startsWith('/app/')) {
+  if (lowPath === '/app' || lowPath.startsWith('/app/')) {
     return;
   }
 
