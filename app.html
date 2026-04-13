@@ -2240,7 +2240,7 @@ function showPreflightModal(report) {
         </div>
       </div>`;
     document.body.appendChild(modal);
-    window._pfResolve = resolve;
+    modal.querySelector('.pf-btn-launch')?.focus();
   });
 }
 
@@ -14996,7 +14996,7 @@ function showPreflightModal(report) {
         </div>
       </div>`;
     document.body.appendChild(modal);
-    window._pfResolve = resolve;
+    modal.querySelector('.pf-btn-launch')?.focus();
   });
 }
 

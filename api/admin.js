@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  if (!verifyAdmin(req)) return res.status(401).json({ error: 'Unauthorized — valid admin token required' });
+  if (!verifyAdmin(req)) return res.status(401).json({ ok: false, error: 'Unauthorized — valid admin token required' });
 
   const action = req.query?.action || req.body?.action;
   let config = {};
@@ -327,5 +327,5 @@ export default async function handler(req, res) {
     } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
-  return res.status(400).json({ error: `Unknown admin action: ${action}` });
+  return res.status(400).json({ ok: false, error: `Unknown admin action: ${action}` });
 }

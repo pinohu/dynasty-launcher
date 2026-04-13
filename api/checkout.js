@@ -79,7 +79,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+  if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
 
   const { action } = req.query;
 
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
       enterprise: { amount: 999700, name: 'Your Deputy — Enterprise', desc: 'Broadest integration attempts: up to 17 module types when your site package does not skip them — subject to API success, keys, and implementation status. Plus creative, SEO, social calendar, and directory/WP paths per spec. See BUILD-MANIFEST.json for your build. $71K–$194K equivalent value.' }
     };
     const tierDef = tiers[normalizedPlan];
-    if (!tierDef) return res.status(400).json({ error: `Unknown plan: ${normalizedPlan}. Valid plans: ${Object.keys(tiers).join(', ')}` });
+    if (!tierDef) return res.status(400).json({ ok: false, error: `Unknown plan: ${normalizedPlan}. Valid plans: ${Object.keys(tiers).join(', ')}` });
     const isBlueprintCreditablePlan = !['blueprint', 'managed', 'scoring_pro', 'strategy_pack'].includes(normalizedPlan);
     const wantsBlueprintCredit = !!apply_blueprint_credit && isBlueprintCreditablePlan;
     const blueprintCreditCents = wantsBlueprintCredit ? Math.min(29700, Math.max(0, tierDef.amount - 5000)) : 0;

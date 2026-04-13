@@ -78,12 +78,12 @@ export default async function handler(req, res) {
           source: safeSource,
           signup_date: new Date().toISOString().split('T')[0]
         });
-        await fetch('https://acumbamail.com/api/1/addSubscriber/', {
+        const addResp = await fetch('https://acumbamail.com/api/1/addSubscriber/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: `auth_token=${acumbaKey}&list_id=${listId}&merge_fields=${encodeURIComponent(mergeData)}`
         });
-        results.email_added = true;
+        if (addResp.ok) results.email_added = true;
       }
     } catch (e) {
       results.acumba_note = 'Email list service temporarily unavailable';

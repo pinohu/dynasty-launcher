@@ -1,5 +1,5 @@
 export const maxDuration = 15;
-const _se = (m) => typeof m === 'string' ? m.replace(/sk_live_\w+/g,'sk_live_***').replace(/ghp_\w+/g,'ghp_***').slice(0,200) : 'Error';
+const _se = (m) => typeof m === 'string' ? m.replace(/sk_live_\w+/g,'sk_live_***').replace(/ghp_\w+/g,'ghp_***').replace(/postgres(ql)?:\/\/[^\s]+/g,'postgres://***').slice(0,200) : 'Error';
 
 export default async function handler(req, res) {
   const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (!ADMIN || adminKey !== ADMIN) {
     return res.json({ ok: true, status: 'operational', timestamp: new Date().toISOString() });
   }
-  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
+  if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'GET only' });
 
   const checks = {};
   let config = {}; try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch {}
