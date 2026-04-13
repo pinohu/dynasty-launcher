@@ -60,6 +60,9 @@
     },
     "api/waitlist.js": {
       "maxDuration": 15
+    },
+    "api/telemetry.js": {
+      "maxDuration": 15
     }
   },
   "headers": [
