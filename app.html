@@ -10520,7 +10520,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
           setP('deploy','warn',dd.error||'Deploy triggered — check hosting dashboard');
         }
       }catch(e){
-        setP('deploy','warn','Deploy queued — check https://vercel.com/polycarpohu-gmailcoms-projects');
+        setP('deploy','warn','Deploy queued — check https://vercel.com/~/projects');
       }
     }
 
@@ -10960,7 +10960,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     if (doneCount < doneTotal) {
       const nextSteps = [];
       if (!doneChecks.github) nextSteps.push('Missing critical files in GitHub repo — inspect Vercel build logs or re-run the build.');
-      if (!doneChecks.vercel) nextSteps.push(`Vercel deployment did not reach READY. Check https://vercel.com/polycarpohu-gmails-projects/${inf.repo}/deployments for the build error.`);
+      if (!doneChecks.vercel) nextSteps.push(`Vercel deployment did not reach READY. Check https://vercel.com/~/projects/${inf.repo}/deployments for the build error.`);
       if (!doneChecks.live) nextSteps.push(`Live URL ${vercelUrl || ''} did not return project-specific content. Common causes: build error, template branding leak, or DNS still propagating.`);
       if (!doneChecks.routes) nextSteps.push('Required routes failed content checks (e.g., /docs or /pricing or package routes).');
       if (!doneChecks.quality) nextSteps.push('Quality gate flagged placeholders or invalid patterns in critical docs/code — expand the Quality step in the build log, fix in-repo, then redeploy if needed.');

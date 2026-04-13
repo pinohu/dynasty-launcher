@@ -490,7 +490,7 @@ async function mod_billing(config, project, liveUrl) {
     delete results.details._webhook_secret;
 
     results.details.note = 'Stripe Connected Account created. Client completes onboarding at the provided URL. Products, prices, and webhooks are on their connected account — add STRIPE_* and webhook secret to Vercel from .env.example (not auto-injected).';
-    results.ok = true;
+    results.ok = !!(results.details.connected_account_id || results.details.product_id);
     results.cost_usd = 0;
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create Stripe account at dashboard.stripe.com — see docs/STRIPE-SETUP.md'; }
   return results;
@@ -872,6 +872,7 @@ async function mod_seo(config, project, liveUrl) {
   const nwKey = config.content?.neuronwriter;
   const aiKey = process.env.ANTHROPIC_API_KEY;
   const GH_TOKEN = process.env.GITHUB_TOKEN;
+  if (!aiKey && !wzKey && !nwKey) { results.error = 'No SEO keys configured'; results.fallback = 'Add ANTHROPIC_API_KEY, writerzen, or neuronwriter to config'; return results; }
 
   // AI content generation helper
   async function aiGenSeo(prompt, maxTokens = 4000) {
@@ -1318,7 +1319,7 @@ Return in this exact format:
 async function mod_automation(config, project, liveUrl) {
   const results = { ok: false, service: 'automation', details: {} };
   const n8nKey = process.env.N8N_API_KEY || config.automation?.n8n_api;
-  const n8nUrl = config.automation?.n8n_url || process.env.N8N_URL || 'https://pinohu.app.n8n.cloud';
+  const n8nUrl = config.automation?.n8n_url || process.env.N8N_URL || '';
   if (!n8nKey) { results.error = 'No n8n API key'; results.fallback = 'Add N8N_API_KEY env var or n8n_api to DYNASTY_TOOL_CONFIG.automation'; return results; }
   const nh = { 'X-N8N-API-KEY': n8nKey, 'Content-Type': 'application/json' };
   const webhookBase = liveUrl || `https://${project.slug}.vercel.app`;
@@ -3136,7 +3137,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           },
           settings: { executionOrder: 'v1' },
         };
-        const n8nBaseUrl = config.automation?.n8n_url || process.env.N8N_URL || 'https://pinohu.app.n8n.cloud';
+        const n8nBaseUrl = config.automation?.n8n_url || process.env.N8N_URL || '';
         const wr = await fetch(`${n8nBaseUrl}/api/v1/workflows`, {
           method: 'POST',
           headers: { 'X-N8N-API-KEY': N8N_KEY, 'Content-Type': 'application/json' },
