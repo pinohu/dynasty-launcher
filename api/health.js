@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
 
   const checks = {};
-  const config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}');
+  let config = {}; try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch {}
 
   // GitHub token
   try {

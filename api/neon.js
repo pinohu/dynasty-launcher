@@ -38,7 +38,9 @@ export default async function handler(req, res) {
   }
 
   // ── CHECK / TEST KEY ─────────────────────────────────────────────────────
+  // check is admin-gated to prevent credential oracle
   if (action === 'check') {
+    if (!ADMIN_SECRET || reqToken !== ADMIN_SECRET) return res.status(401).json({ ok: false, error: 'Admin auth required for check' });
     const keyMissing = !NEON_API_KEY || NEON_API_KEY.startsWith('REPLACE');
     if (keyMissing) return res.json({ ok: false, has_key: false,
       error: 'NEON_API_KEY not set. Get from console.neon.tech → Account Settings → API Keys',

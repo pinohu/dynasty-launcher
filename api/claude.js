@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // ── Security: require paid session or admin token ──────────────────
+  // ── Security: require paid session or admin token (HMAC-verified) ──
   const _adminTok = (req.headers['x-dynasty-admin-token'] || '').toString();
   const _paidTok = (req.body?.access_token || req.headers['x-dynasty-access-token'] || '').toString();
   let _authed = false;
@@ -20,9 +20,9 @@ export default async function handler(req, res) {
         const [prefix, expiry, hash] = parts;
         const secret = prefix === 'admin' ? (process.env.ADMIN_KEY || '') : (prefix === 'admin_test' ? (process.env.TEST_ADMIN_KEY || '') : '');
         if (secret && parseInt(expiry) > Date.now()) {
-          const { createHmac } = await import('crypto');
+          const { createHmac, timingSafeEqual } = await import('crypto');
           const expected = createHmac('sha256', secret).update(prefix + ':' + expiry).digest('hex');
-          if (hash === expected) _authed = true;
+          if (expected.length === hash.length && timingSafeEqual(Buffer.from(expected), Buffer.from(hash))) _authed = true;
         }
       }
     } catch {}
@@ -30,9 +30,18 @@ export default async function handler(req, res) {
   if (!_authed && _paidTok) {
     try {
       const parts = _paidTok.split(':');
-      if (parts.length >= 6 && parts[0] === 'pay') {
-        const exp = parseInt(parts[4]);
-        if (exp > Date.now()) _authed = true;
+      if (parts.length === 6 && parts[0] === 'pay') {
+        const [prefix, tokSession, tokUser, tokTier, exp, sig] = parts;
+        const expNum = parseInt(exp, 10);
+        if (Number.isFinite(expNum) && Date.now() <= expNum) {
+          const secret = process.env.PAYMENT_ACCESS_SECRET || process.env.STRIPE_SECRET_KEY || '';
+          if (secret) {
+            const { createHmac, timingSafeEqual } = await import('crypto');
+            const payload = prefix + ':' + tokSession + ':' + tokUser + ':' + tokTier + ':' + exp;
+            const expected = createHmac('sha256', secret).update(payload).digest('hex');
+            if (expected.length === sig.length && timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) _authed = true;
+          }
+        }
       }
     } catch {}
   }
