@@ -490,7 +490,7 @@ async function mod_billing(config, project, liveUrl) {
     delete results.details._webhook_secret;
 
     results.details.note = 'Stripe Connected Account created. Client completes onboarding at the provided URL. Products, prices, and webhooks are on their connected account — add STRIPE_* and webhook secret to Vercel from .env.example (not auto-injected).';
-    results.ok = !!(results.details.connected_account_id || results.details.product_id);
+    results.ok = !!(results.details.stripe_account_id || results.details.product_id);
     results.cost_usd = 0;
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create Stripe account at dashboard.stripe.com — see docs/STRIPE-SETUP.md'; }
   return results;
@@ -1320,6 +1320,7 @@ async function mod_automation(config, project, liveUrl) {
   const results = { ok: false, service: 'automation', details: {} };
   const n8nKey = process.env.N8N_API_KEY || config.automation?.n8n_api;
   const n8nUrl = config.automation?.n8n_url || process.env.N8N_URL || '';
+  if (!n8nUrl) { results.fallback = 'Configure n8n URL in DYNASTY_TOOL_CONFIG or N8N_URL env var.'; return results; }
   if (!n8nKey) { results.error = 'No n8n API key'; results.fallback = 'Add N8N_API_KEY env var or n8n_api to DYNASTY_TOOL_CONFIG.automation'; return results; }
   const nh = { 'X-N8N-API-KEY': n8nKey, 'Content-Type': 'application/json' };
   const webhookBase = liveUrl || `https://${project.slug}.vercel.app`;
