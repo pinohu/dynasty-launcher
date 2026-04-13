@@ -1,6 +1,6 @@
 // Your Deputy — Admin API
 // All actions require valid admin token (HMAC-signed, checked server-side)
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 export const maxDuration = 60;
 
@@ -19,7 +19,7 @@ function verifyAdmin(req) {
     if (!tokenSecret) return false;
     const payload = `${prefix}:${expiry}`;
     const expected = createHmac('sha256', tokenSecret).update(payload).digest('hex');
-    const { timingSafeEqual: _tse } = await import("crypto"); if (expected.length !== hash.length || !_tse(Buffer.from(expected), Buffer.from(hash))) return false;
+    if (expected.length !== hash.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(hash))) return false;
     if (Date.now() > parseInt(expiry)) return false;
     return true;
   } catch { return false; }
@@ -315,8 +315,9 @@ export default async function handler(req, res) {
     // Dry-run a single module with test project
     const testProject = { name: 'Admin Test', slug: 'test-admin', description: 'Admin module test', type: 'saas', domain: 'test.vercel.app', accent: '#C9A84C' };
     try {
-      const r = await fetch(`${req.headers.origin || 'https://yourdeputy.com'}/api/provision?action=provision_modules`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+      const selfOrigin = (() => { const o = req.headers.origin || ''; const allowed = process.env.CORS_ORIGIN || 'https://yourdeputy.com'; return o.startsWith(allowed) ? o : allowed; })();
+      const r = await fetch(`${selfOrigin}/api/provision?action=provision_modules`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': req.headers.authorization || '' },
         body: JSON.stringify({ project: testProject, liveUrl: 'https://test.vercel.app', modules_enabled: { [module_name]: true }, tier: 'enterprise', dry_run: true })
       });
       const d = await r.json();
