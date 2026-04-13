@@ -6202,7 +6202,7 @@ const EDU_CONTENT = {
     phase: '⬡ Product Docs',
     title: 'Writing your product specification',
     body: 'SPEC.md captures intended features, stories, and acceptance criteria; ROADMAP.md and README.md depth depend on archetype. The first codegen pass may not implement every SPEC line — check BUILD-MANIFEST for deferrals and gaps.',
-    tip: '💡 OPERATIONS.md + BUILD-MANIFEST.json show what shipped vs manual follow-up (auth, webhooks, Search Console, etc.).',
+    tip: '💡 MANUAL-ACTIONS.md + BUILD-MANIFEST.json show what shipped vs manual follow-up (auth, webhooks, Search Console, etc.).',
     facts: ['Prioritizing MVP vs later phases...','Drafting roadmap horizons (not fixed-date promises)...','Generating .env.example and setup notes...','Listing integration handoffs by tier...'],
     preview: ['# SPEC.md','## P0 — MVP Features','- User authentication','- Dashboard with KPIs','- Subscription billing','- Admin panel']
   },
@@ -6226,7 +6226,7 @@ const EDU_CONTENT = {
     phase: '⬡ Agent System',
     title: 'Designing your AI workforce',
     body: 'AGENT-SYSTEM.md specifies your automation workforce — from lead intake to deal structuring. Each agent has defined triggers, inputs, outputs, and fallback procedures. Seven workflow patterns map to n8n when your tier allows integration provisioning. FAILURE-MODES.md anticipates failure scenarios with recovery playbooks.',
-    tip: '💡 On paid tiers, the orchestrator attempts automation workflows where APIs succeed; Foundation receives the architecture in-repo and manual steps in OPERATIONS.md. An AI consultancy charges $5,000–12,000 for comparable architecture.',
+    tip: '💡 On paid tiers, the orchestrator attempts automation workflows where APIs succeed; Foundation receives the architecture in-repo and manual steps in MANUAL-ACTIONS.md. An AI consultancy charges $5,000–12,000 for comparable architecture.',
     facts: ['Configuring intake → evaluation → decision pipeline...','Setting up circuit breakers for each failure mode...','Defining agent triggers, inputs, and outputs...','Mapping workflow patterns to services when tier permits...'],
     preview: ['## Agent: Lead Intake','Trigger: New form submission','Tool: tier-dependent (e.g. voice at Enterprise)','Output: Qualified lead object','Fallback: Manual review queue']
   },
@@ -6234,7 +6234,7 @@ const EDU_CONTENT = {
     phase: '⬡ Backend Code',
     title: 'Generating production-ready code',
     body: 'Most fullstack builds center on Next.js App Router plus API routes (Route Handlers) and the template data layer — not a required FastAPI service. If the fork is Python-first, you get that stack instead. SPEC.md and the repo are the source of truth; Foundation may ship stubs without live processor linkage.',
-    tip: '💡 Webhooks and billing routes appear when the tier and module run; otherwise OPERATIONS.md lists manual activation.',
+    tip: '💡 Webhooks and billing routes appear when the tier and module run; otherwise MANUAL-ACTIONS.md lists manual activation.',
     facts: ['Scaffolding API surface per template (Next.js or forked backend)...','Wiring auth/session patterns when in scope...','Adding health or readiness routes where applicable...','Implementing or stubbing webhooks when billing is tier-gated...','Docker/compose only if this template includes them...'],
     preview: ['// e.g. app/api/health/route.ts','export async function GET() {','  return Response.json({ ok: true })','}','// Exact paths: see SPEC.md + repo']
   },
@@ -6257,7 +6257,7 @@ const EDU_CONTENT = {
   prov: {
     phase: '⬡ Infrastructure',
     title: 'Provisioning your tech stack',
-    body: 'When your paid tier allows it, we attempt live hooks — payments, hosting linkage, database, email lists, and related modules. Foundation focuses on deploy + docs; vendor integrations follow OPERATIONS.md or an upgrade.',
+    body: 'When your paid tier allows it, we attempt live hooks — payments, hosting linkage, database, email lists, and related modules. Foundation focuses on deploy + docs; vendor integrations follow MANUAL-ACTIONS.md or an upgrade.',
     tip: '💡 Stripe products and webhooks appear when billing provisioning succeeds and your tier permits. BUILD-MANIFEST.json records what ran vs deferred.',
     facts: ['Attempting payment product linkage (tier permitting)...','Setting up cloud project with auto-deploy...','Provisioning database when in scope...','Email/marketing lists when tier + keys allow...','Configuring monitoring when enabled...'],
     preview: ['Payments: try / skip (tier + keys)...','Hosting: link or pending...','Database: if in scope...','Email/SMS: if module on...','Monitoring: optional...']
@@ -9826,7 +9826,45 @@ Return these files only using delimiters:
 
       // ── Generate .env.example ──
       if (isNextJs) {
-        files['.env.example'] = `# ${inf.name||'App'} — Environment Variables\n\n# Clerk Authentication (https://dashboard.clerk.com)\nNEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...\nCLERK_SECRET_KEY=sk_test_...\nNEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in\nNEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up\n\n# Stripe (https://dashboard.stripe.com/apikeys)\nNEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...\nSTRIPE_SECRET_KEY=sk_test_...\nSTRIPE_WEBHOOK_SECRET=whsec_...\n\n# Database (auto-configured by Vercel Neon integration)\nDATABASE_URL=postgresql://...\n\n# Sentry (optional)\nSENTRY_DSN=https://...@sentry.io/...\n`;
+        const sn = (inf.name||'App').replace(/'/g, '');
+        files['.env.example'] = `# ${sn} — Environment Variables
+# Copy this file: cp .env.example .env.local
+# Then fill in each value from the service dashboards listed below.
+# NEVER commit .env.local to git.
+
+# ─── Authentication (Clerk) ─────────────────────────────────────────────
+# Dashboard: https://dashboard.clerk.com → Create application → API Keys
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_REPLACE_ME
+CLERK_SECRET_KEY=sk_test_REPLACE_ME
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/en/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/en/dashboard
+
+# ─── Payments (Stripe) ──────────────────────────────────────────────────
+# Dashboard: https://dashboard.stripe.com/apikeys
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_REPLACE_ME
+STRIPE_SECRET_KEY=sk_test_REPLACE_ME
+# Webhook: https://dashboard.stripe.com/webhooks → Add endpoint → your-domain/api/webhooks/stripe
+STRIPE_WEBHOOK_SECRET=whsec_REPLACE_ME
+BILLING_PLAN_ENV=test
+
+# ─── Database (Neon Postgres) ───────────────────────────────────────────
+# Dashboard: https://console.neon.tech → Project → Connection Details
+# Use the pooled connection string (ending in -pooler.neon.tech)
+DATABASE_URL=postgresql://user:pass@host-pooler.neon.tech/dbname?sslmode=require
+
+# ─── App Configuration ──────────────────────────────────────────────────
+NEXT_PUBLIC_APP_URL=https://${inf.repo||'your-app'}.vercel.app
+NODE_ENV=production
+
+# ─── Monitoring (Optional) ──────────────────────────────────────────────
+# Sentry: https://sentry.io → Create Project → Client Keys
+# SENTRY_DSN=https://...@sentry.io/...
+# PostHog: https://app.posthog.com → Project Settings → Project API Key
+# NEXT_PUBLIC_POSTHOG_KEY=phc_...
+# NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+`;
       }
 
       // Global find-and-replace across ALL files — catch anything the above missed
@@ -10303,7 +10341,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
           }
           return html;
         })();
-        const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>${reportTitle} — Build Report</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0A0A0A;color:#EEEDE8;padding:2rem;max-width:700px;margin:0 auto;line-height:1.6}h1{font-size:1.8rem;margin-bottom:.5rem}h2{color:#C9A84C;font-size:1rem;margin:1.5rem 0 .5rem;border-bottom:1px solid #222;padding-bottom:4px}.meta{color:#666;font-size:13px}.card{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:1rem;margin:8px 0}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}ul{padding-left:1.2rem;font-size:13px;color:#888}li{margin:3px 0}.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}</style></head><body><h1>${reportTitle}</h1><p class="meta">${inf.type_label} · ${inf.revenue_model} · ${inf.price} · ${reportDate}</p>${scoreHtml}${moduleReport}<h2>Generated Files (${Object.keys(window._buildFiles||{}).length})</h2><ul>${filesTable}</ul><h2>Quick Start</h2><pre style="background:#111;padding:12px;border-radius:6px;font-size:12px;color:#C9A84C">gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</pre><h2>Documentation</h2><div class="g"><div class="card"><a href="OPERATIONS.md" style="color:#C9A84C;text-decoration:none">OPERATIONS.md</a><div style="font-size:12px;color:#888">Owner's manual</div></div><div class="card"><a href="CREDENTIALS.md" style="color:#C9A84C;text-decoration:none">CREDENTIALS.md</a><div style="font-size:12px;color:#888">Service credentials</div></div></div><p style="margin-top:2rem;text-align:center;color:#333;font-size:11px">${isWhiteLabel() ? '' : 'Built with Your Deputy V3 · '}${reportDate}</p></body></html>`;
+        const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>${reportTitle} — Build Report</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0A0A0A;color:#EEEDE8;padding:2rem;max-width:700px;margin:0 auto;line-height:1.6}h1{font-size:1.8rem;margin-bottom:.5rem}h2{color:#C9A84C;font-size:1rem;margin:1.5rem 0 .5rem;border-bottom:1px solid #222;padding-bottom:4px}.meta{color:#666;font-size:13px}.card{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:1rem;margin:8px 0}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}ul{padding-left:1.2rem;font-size:13px;color:#888}li{margin:3px 0}.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}</style></head><body><h1>${reportTitle}</h1><p class="meta">${inf.type_label} · ${inf.revenue_model} · ${inf.price} · ${reportDate}</p>${scoreHtml}${moduleReport}<h2>Generated Files (${Object.keys(window._buildFiles||{}).length})</h2><ul>${filesTable}</ul><h2>Quick Start</h2><pre style="background:#111;padding:12px;border-radius:6px;font-size:12px;color:#C9A84C">gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</pre><h2>Documentation</h2><div class="g"><div class="card"><a href="MANUAL-ACTIONS.md" style="color:#C9A84C;text-decoration:none">MANUAL-ACTIONS.md</a><div style="font-size:12px;color:#888">Setup &amp; configuration guide</div></div><div class="card"><a href=".env.example" style="color:#C9A84C;text-decoration:none">.env.example</a><div style="font-size:12px;color:#888">Environment variables template</div></div></div><p style="margin-top:2rem;text-align:center;color:#333;font-size:11px">${isWhiteLabel() ? '' : 'Built with Your Deputy V3 · '}${reportDate}</p></body></html>`;
         await pushF(`${ORG}/${inf.repo}`, 'REPORT.html', reportHtml, 'docs: shareable build report');
       } catch {}
     }
@@ -10942,8 +10980,8 @@ Every interactive component must implement: default / hover / focus / active / d
 
 ## Git Rules
 Always run before committing:
-git config user.email "polycarpohu@gmail.com"
-git config user.name "pinohu"
+git config user.email "you@example.com"
+git config user.name "your-username"
 
 ## Do Not
 [14 specific prohibitions — include colors from other Dynasty products, and any anti-patterns specific to this stack]
@@ -11138,6 +11176,8 @@ ${cx(desc,inf)}
 
 > [One compelling line — benefit-driven, specific]
 
+**👉 New here? Start with [START-HERE.md](./START-HERE.md) for setup instructions.**
+
 [![Deploy](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)](https://${inf.repo}.vercel.app)
 [![Built with Dynasty](https://img.shields.io/badge/Built%20with-Dynasty%20Launcher-C9A84C)](https://yourdeputy.com)
 
@@ -11195,7 +11235,23 @@ gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && pi      # Pi Agent
 [Concise list: Framework, Auth, Database, Payments, Hosting, UI Library, Monitoring]
 
 ## Deployment
-[Production deployment steps — Vercel CLI or git push]
+
+### Vercel (Recommended)
+\`\`\`bash
+npx vercel --prod
+\`\`\`
+Or connect this GitHub repo in the [Vercel Dashboard](https://vercel.com/new) for automatic deploys on every push.
+
+### Environment Variables
+Add all variables from \`.env.example\` to your Vercel project:
+**Vercel Dashboard → Settings → Environment Variables**
+
+### Post-Deploy Checklist
+1. Set env vars in Vercel (see \`.env.example\`)
+2. Configure Clerk auth (see [MANUAL-ACTIONS.md](./MANUAL-ACTIONS.md))
+3. Set up Stripe webhooks pointing to \`your-domain/api/webhooks/stripe\`
+4. Run database migrations: \`npx prisma db push\` (if using Prisma)
+5. Verify: visit your domain and test sign-up flow
 
 ## Contributing
 See [AGENTS.md](./AGENTS.md) for coding conventions and [CLAUDE.md](./CLAUDE.md) for AI agent instructions.
@@ -11208,7 +11264,32 @@ See [AGENTS.md](./AGENTS.md) for coding conventions and [CLAUDE.md](./CLAUDE.md)
 ---BEGIN:manual_md---
 # Manual Configuration Guide — ${inf.name}
 
-> Complete these steps after deployment to activate all services.
+> This guide covers everything you need to go from repository to production.
+
+---
+
+## 0. Deploy to Production
+
+\`\`\`bash
+# Clone your repo
+gh repo clone ${ORG}/${inf.repo}
+cd ${inf.repo}
+
+# Set up environment
+cp .env.example .env.local
+# Fill in values from the service dashboards below
+
+# Install and test locally
+npm install
+npm run dev
+# Visit http://localhost:3000 to verify
+
+# Deploy to Vercel
+npx vercel --prod
+# Or connect this repo at https://vercel.com/new for auto-deploy
+\`\`\`
+
+**After deploying:** Add all .env.local variables to Vercel Dashboard → Settings → Environment Variables.
 
 ---
 
@@ -13220,7 +13301,7 @@ export const nicheConfig = {
       ...(isAuthority&&nc?.niche_config?{'src/config/niche.config.ts':nc.niche_config}:{}),
       'AGENTS.md':`# AGENTS.md — ${inf.name}
 ## Quick Start
-Read files in this order: DYNASTY-DESIGN.md → DESIGN.md → CLAUDE.md → SPEC.md → AGENT-SYSTEM.md
+Read START-HERE.md first, then: DESIGN.md → CLAUDE.md → SPEC.md → AGENT-SYSTEM.md
 
 ## Compatible Agents
 - **Claude Code**: \`gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude\`
@@ -13229,15 +13310,29 @@ Read files in this order: DYNASTY-DESIGN.md → DESIGN.md → CLAUDE.md → SPEC
 
 ## Git Config
 \`\`\`
-git config user.email "polycarpohu@gmail.com"
-git config user.name "pinohu"
+git config user.email "you@example.com"
+git config user.name "your-username"
 \`\`\`
-
-## Dynasty Bridge
-Inbox: POST https://claude-inbox.audreysplace.place/message | Auth: Bearer ${FT}
 
 ## Backend
 \`docker-compose up -d\`
+
+## Deployment
+\`\`\`bash
+# 1. Copy environment template and fill in your keys
+cp .env.example .env.local
+
+# 2. Install dependencies
+npm install
+
+# 3. Run locally
+npm run dev
+
+# 4. Deploy to Vercel
+npx vercel --prod
+\`\`\`
+
+See MANUAL-ACTIONS.md for service-specific setup (auth, payments, database).
 
 ## Safety
 - Feature branches only
@@ -13285,6 +13380,94 @@ Then read DESIGN.md for visual design rules.
       'SPEC.md':dc.spec_md,'ROADMAP.md':dc.roadmap_md,'README.md':dc.readme_md,
       'MANUAL-ACTIONS.md':dc.manual_md,'.env.example':dc.env_ex,
       '.gitignore':'node_modules/\n.next/\nout/\ndist/\nbuild/\n.vercel/\n.env\n.env.local\n.env.*.local\n.DS_Store\n*.log\ncoverage/\n__pycache__/\n*.py[cod]\n.venv/\nvenv/\n*.tsbuildinfo\nnext-env.d.ts\n',
+      'START-HERE.md':`# 🚀 Start Here — ${inf.name}
+
+> **Read this first.** Everything you need to go from this repo to a live production application.
+
+---
+
+## Step 1: Clone & Install
+
+\`\`\`bash
+gh repo clone ${ORG}/${inf.repo}
+cd ${inf.repo}
+npm install
+\`\`\`
+
+## Step 2: Set Up Environment Variables
+
+\`\`\`bash
+cp .env.example .env.local
+\`\`\`
+
+Open \`.env.example\` — each variable has a comment explaining where to get it:
+
+| Service | Dashboard | What to copy |
+|---------|-----------|-------------|
+| **Clerk** (auth) | [dashboard.clerk.com](https://dashboard.clerk.com) | Publishable key + Secret key |
+| **Stripe** (payments) | [dashboard.stripe.com/apikeys](https://dashboard.stripe.com/apikeys) | Publishable key + Secret key |
+| **Neon** (database) | [console.neon.tech](https://console.neon.tech) | Pooled connection string |
+
+## Step 3: Run Locally
+
+\`\`\`bash
+npm run dev
+\`\`\`
+
+Visit [http://localhost:3000](http://localhost:3000) — you should see your landing page.
+
+## Step 4: Deploy to Production
+
+**Option A: Vercel CLI**
+\`\`\`bash
+npx vercel --prod
+\`\`\`
+
+**Option B: Git-connected (recommended)**
+1. Go to [vercel.com/new](https://vercel.com/new)
+2. Import this GitHub repo
+3. Add your environment variables from \`.env.local\`
+4. Deploy — every future \`git push\` auto-deploys
+
+## Step 5: Post-Deploy Configuration
+
+See **[MANUAL-ACTIONS.md](./MANUAL-ACTIONS.md)** for service-specific setup:
+- Stripe webhook endpoint → \`your-domain/api/webhooks/stripe\`
+- Clerk redirect URLs → your production domain
+- Database migrations (if applicable)
+
+---
+
+## Your Repository Map
+
+| File | What it does |
+|------|-------------|
+| **START-HERE.md** | You are here — setup guide |
+| **[.env.example](./.env.example)** | Every environment variable you need, with dashboard URLs |
+| **[MANUAL-ACTIONS.md](./MANUAL-ACTIONS.md)** | Service-by-service configuration steps |
+| **[SPEC.md](./SPEC.md)** | Full product specification |
+| **[DESIGN.md](./DESIGN.md)** | Visual design system |
+| **[CLAUDE.md](./CLAUDE.md)** | AI agent project instructions |
+| **[AGENTS.md](./AGENTS.md)** | Quick start for AI coding agents |
+| **[ROADMAP.md](./ROADMAP.md)** | Development phases and priorities |
+| **[BUSINESS-SYSTEM.md](./BUSINESS-SYSTEM.md)** | Strategic business architecture |
+| **[REVENUE-MODEL.md](./REVENUE-MODEL.md)** | Revenue projections and unit economics |
+| **[GTM-PLAYBOOK.md](./GTM-PLAYBOOK.md)** | Go-to-market strategy |
+| **[FAILURE-MODES.md](./FAILURE-MODES.md)** | Risk analysis and recovery plans |
+| **[docs/API-CONTRACTS.md](./docs/API-CONTRACTS.md)** | API endpoint specifications |
+| **[docs/DATA-MODEL.md](./docs/DATA-MODEL.md)** | Database schema documentation |
+| **[LAUNCH-PLAYBOOK.md](./LAUNCH-PLAYBOOK.md)** | 90-day launch plan |
+
+## Need Help?
+
+- **Technical issues**: Open a GitHub Issue on this repo
+- **AI agent help**: Run \`claude\` in the repo root — it reads CLAUDE.md automatically
+- **Upgrade your build**: Visit [yourdeputy.com](https://yourdeputy.com) to add integrations
+
+---
+
+*Built by [Your Deputy](https://yourdeputy.com) · ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}*
+`,
       'docs/DATA-MODEL.md':ds.data_model,'docs/API-CONTRACTS.md':ds.api_contracts,
       'docs/KB-OUTLINES.md':ds.kb_outlines,
       'docs/DESIGN-DECISIONS.md':`# Design Decisions — ${inf.name}\n## ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})} — Project initialized\nType: ${inf.type_label} · Accent: ${inf.accent} · Model: ${inf.revenue_model} at ${inf.price}\n---\n`,
