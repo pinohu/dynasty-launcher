@@ -93,7 +93,7 @@ export default async function handler(req, res) {
 
   // ── CREATE PACKAGE (WordPress or Static) ────────────────────────────────
   if (action === 'create_package') {
-    const { site_name, domain, type, stack_user } = req.body;
+    const { site_name, domain, type, stack_user } = req.body || {};
     if (!site_name || !domain) return res.status(400).json({ ok: false, error: 'site_name and domain required' });
 
     // Determine bundle — WordPress vs Static HTML

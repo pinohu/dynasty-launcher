@@ -1,7 +1,7 @@
 // Your Deputy — Service Worker
 // Network-first for HTML navigations (homepage must update after deploy).
 // Cache-first for other same-origin GETs. Network-first for /api, /app, /admin.
-const CACHE_NAME = 'deputy-v4';
+const CACHE_NAME = 'deputy-v5';
 // Do not precache '/' — it caused stale homepages until users cleared site data.
 const STATIC_ASSETS = ['/privacy', '/terms', '/quiz'];
 
@@ -25,7 +25,11 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname.startsWith('/api/') || url.pathname === '/app' || url.pathname === '/admin') {
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  if (url.pathname === '/app' || url.pathname === '/admin') {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );

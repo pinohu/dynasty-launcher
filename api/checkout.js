@@ -218,7 +218,7 @@ export default async function handler(req, res) {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
     if (isRecoverRateLimited(req)) { res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' }); }
     const { email } = req.body || {};
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ ok: false, error: 'Valid email required' });
     }
     try {
@@ -252,7 +252,7 @@ export default async function handler(req, res) {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
     if (isRecoverRateLimited(req)) { res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' }); }
     const { email, code } = req.body || {};
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Valid email required' });
+    if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Valid email required' });
     if (!code) return res.status(400).json({ ok: false, error: 'Verification code required' });
     try {
       const { createHmac } = await import('crypto');
