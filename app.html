@@ -2606,7 +2606,7 @@ function trackEvent(eventName, properties) {
 }
 
 function tierRank(t) {
-  const r = { free: 0, foundation: 1, starter: 1, professional: 2, enterprise: 3, managed: 3 };
+  const r = { free: 0, blueprint: 0, scoring_pro: 0, strategy_pack: 0, foundation: 1, starter: 1, professional: 2, enterprise: 3, managed: 3 };
   return r[t] ?? 0;
 }
 function archetypeMinTierRank(arch) {
@@ -2627,6 +2627,9 @@ function refreshTierAccessNotice() {
   } else if (tier === 'blueprint') {
     html = `<strong>Blueprint access:</strong> diagnostics and planning are enabled. Full generation + deployment requires Foundation or higher.
       <div style="margin-top:6px"><button onclick="startCheckout('foundation')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer">Upgrade to Foundation</button></div>`;
+  } else if (tier === 'strategy_pack') {
+    html = `<strong>Strategy Pack access:</strong> all 90+ strategy, legal, financial, marketing, and operations documents are enabled. Code generation + deployment requires Foundation.
+      <div style="margin-top:6px"><button onclick="startCheckout('foundation')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer">Upgrade to Foundation — $697 credited</button></div>`;
   } else if (tier === 'scoring_pro') {
     html = `<strong>Scoring Pro access:</strong> recurring scoring is enabled. Full generation + deployment requires Foundation or higher.
       <div style="margin-top:6px"><button onclick="startCheckout('foundation')" style="font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer">Upgrade to Foundation</button></div>`;
@@ -2751,6 +2754,7 @@ const V3_TIERS = {
   free: { price: 0, label: 'Free Scoring', modules: [] },
   blueprint: { price: 297, label: 'Diagnostic + Execution Blueprint ($297)', modules: [] },
   scoring_pro: { price: 19, label: 'Scoring Pro ($19/mo)', modules: [] },
+  strategy_pack: { price: 697, label: 'Strategy Pack ($697)', modules: [] },
   /* Foundation: must match api/provision.js TIER_MODULES.foundation — docs + deploy, no mod_* auto-provision */
   foundation: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
   starter: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
@@ -12189,6 +12193,31 @@ Scenarios to cover: JWT/Auth failure, Database connection loss, Stripe webhook f
     const bz={...bz1,...bz2};
     // Merge bz1 + bz2 into bz
    
+    // ── Strategy Pack gate: documents generated, skip code + deploy ──
+    if (getUserTier() === 'strategy_pack' && !localStorage.getItem('dynasty_admin_token')) {
+      updateGlobalProgress(12, 12, 'Strategy Pack complete');
+      const docCount = Object.keys(window._buildFiles || {}).length;
+      const d = document.getElementById('dynasty-results');
+      const fileList = Object.keys(window._buildFiles || {}).sort().map(f => `<div class="lr"><span class="lb lb-biz">Doc</span>${escapeHtml(f)}</div>`).join('');
+      d.innerHTML = `
+        <div class="done-head"><h2>Strategy Pack — ${docCount} documents generated</h2>
+        <p style="color:var(--sec);font-size:13px;line-height:1.6">Your strategy, legal, financial, marketing, and operations documents are ready. Download below or upgrade to Foundation to generate production code and deploy to your domain.</p></div>
+        ${V2_SCORECARD ? '<div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--rl);padding:1rem;margin-bottom:1rem"><strong>Viability:</strong> ' + V2_SCORECARD.verdict + ' — ' + V2_SCORECARD.composite.toFixed(1) + '/10</div>' : ''}
+        <div style="background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.02));border:1px solid rgba(201,168,76,.22);border-radius:12px;padding:20px 24px;margin-bottom:1.5rem;text-align:center">
+          <p style="font-size:14px;color:var(--gold);font-weight:600;margin-bottom:8px">Ready for the full build?</p>
+          <p style="font-size:12px;color:var(--sub);margin-bottom:12px">Upgrade to Foundation ($1,997) and your $697 Strategy Pack fee is credited. Get production code, deployment, and the Day-1 Success Kit.</p>
+          <button onclick="startCheckout('foundation')" style="padding:12px 28px;font-size:14px;font-weight:600;border-radius:8px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer">Upgrade to Foundation — pay only $1,300 more</button>
+        </div>
+        <div class="rc"><h3>Your Documents (${docCount})</h3>${fileList}</div>
+        <div style="text-align:center;margin-top:1rem"><button onclick="downloadStrategyPack()" style="padding:10px 24px;font-size:13px;border-radius:8px;border:1px solid var(--bdr);background:var(--card);color:var(--tx);cursor:pointer">Download all documents as .zip</button></div>
+      `;
+      d.style.display = 'block';
+      document.getElementById('dynasty-results').scrollIntoView({ behavior: 'smooth' });
+      window._buildInProgress = false;
+      window.onbeforeunload = null;
+      if (window._buildTimerInterval) { clearInterval(window._buildTimerInterval); window._buildTimerInterval = null; }
+      return;
+    }
 
     updateEduCard('g5');
     addP('g5','Generating FastAPI backend + Dockerfile + docker-compose','','⬡ Backend Code');setP('g5','run');
@@ -13893,6 +13922,30 @@ table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
   const win = window.open('', '_blank');
   win.document.write(reportHtml);
   win.document.close();
+}
+
+async function downloadStrategyPack() {
+  if (typeof JSZip === 'undefined') {
+    alert('JSZip not loaded. Please try again.');
+    return;
+  }
+  const zip = new JSZip();
+  const inf = INFERRED;
+  const files = window._buildFiles || {};
+  let count = 0;
+  for (const [path, content] of Object.entries(files)) {
+    if (content && typeof content === 'string' && content.length > 0) {
+      zip.file(path, content);
+      count++;
+    }
+  }
+  if (count === 0) { alert('No files to download.'); return; }
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${inf.repo || 'strategy-pack'}-documents.zip`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 async function downloadAllFiles() {
