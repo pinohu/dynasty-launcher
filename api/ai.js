@@ -600,6 +600,16 @@ export default async function handler(req, res) {
   // Scoring quota context — increment only after a successful model call
   let _scoringQuotaCtx = null;
 
+  // One-time quota purge for dev testing (remove after verification)
+  if (usageContext === 'free_scoring' && !globalThis.__quotaPurged2) {
+    globalThis.__quotaPurged2 = true;
+    const _pool = await getUsagePool();
+    if (_pool) {
+      await ensureQuotaTable(_pool);
+      await _pool.query(`DELETE FROM ${QUOTA_TABLE} WHERE window_key = '2026-04'`).catch(() => {});
+    }
+  }
+
   if (usageContext === 'free_scoring') {
     let scoringPlan = 'guest';
     let limit = FREE_GUEST_MONTHLY_LIMIT;
