@@ -1,23 +1,35 @@
 # CLAUDE.md — Your Deputy V3
 
 ## What This Is
-Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is a business provisioning engine. A user describes a business idea in one prompt, and the system generates documents, code, and deployment; **Foundation** does **not** auto-provision integration modules on the server (`TIER_MODULES.foundation: []`). **Professional** ($4,997) runs 11 live integration modules; **Enterprise** ($9,997) runs up to 17 modules. All `mod_*` functions are implemented and API keys are configured.
+Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is a business provisioning engine. A user describes a business idea in one prompt, and the system generates documents, code, and deployment; **Foundation** does **not** auto-provision integration modules on the server (`TIER_MODULES.foundation: []`). **Professional** ($4,997) runs 11 live integration modules; **Enterprise** ($9,997) runs up to 13 modules; **custom_volume** unlocks all 19 `mod_*` functions. All `mod_*` functions are implemented; some vendor API keys are still empty — see "Keys still needed" below.
 
 ## Repo Structure
 ```
 dynasty-launcher/
 ├── index.html              # Landing page (standalone, ~360 lines)
-├── app.html                # Builder app (monolith, ~12600 lines)
+├── app.html                # Builder app (monolith, ~12700 lines)
 ├── maturity.html           # "What ships today" truth deck (~130 lines)
 ├── deliverables.html       # Deliverables hub page
 ├── deliverables/           # Category + individual deliverable pages (160 files)
 ├── api/
-│   ├── provision.js        # Backend orchestrator (~3200 lines, 19 mod_* functions)
-│   ├── checkout.js         # Stripe checkout + session recovery (~240 lines)
+│   ├── provision.js        # Backend orchestrator (~3500 lines, 19 mod_* functions)
+│   ├── checkout.js         # Stripe checkout + session recovery (~290 lines)
 │   ├── auth.js             # Clerk auth + admin key verification (~130 lines)
 │   ├── waitlist.js         # Waitlist capture (Acumbamail + Telegram + Neon)
-│   ├── ai.js               # AI router (multi-provider)
-│   └── neon.js             # Neon DB provisioner (~130 lines)
+│   ├── ai.js               # AI router (multi-provider, quota, rate limiting)
+│   ├── neon.js             # Neon DB provisioner (~130 lines)
+│   ├── admin.js            # Admin dashboard backend
+│   ├── claude.js           # Anthropic Claude API proxy (auth-gated)
+│   ├── docgen.js           # Document generation helper
+│   ├── flags.js            # Feature flags
+│   ├── github.js           # GitHub API proxy (auth-gated, path-restricted)
+│   ├── health.js           # Health check endpoint (admin-gated detail)
+│   ├── memory.js           # Project memory storage (auth-gated)
+│   ├── orchestrate.js      # Build orchestration helper (auth-gated)
+│   ├── research.js         # Research API proxy (auth-gated)
+│   ├── telemetry.js        # Telemetry / analytics events
+│   ├── twentyi.js          # 20i hosting API proxy (auth-gated)
+│   └── validate.js         # Build validation (payload-limited)
 ├── for/                    # Persona-specific funnel pages (8 pages)
 ├── DYNASTY_LAUNCHER_V3_FINAL.md  # Complete build specification
 ├── CLAUDE.md               # This file
@@ -156,14 +168,14 @@ After any change:
 On **Windows PowerShell**, `curl` is an alias for `Invoke-WebRequest` — use **`curl.exe`** with the same flags, or `Invoke-WebRequest` equivalents.
 
 ## Key Files to Edit
-- **app.html lines ~5900-6060**: Frontend generation (phases g7, g7b, g7c)
-- **app.html lines ~6700-7000**: Build validation gate (8 checks)
-- **app.html lines ~7100-7250**: Provisioning trigger (calls provision.js)
-- **app.html lines ~9770-10169**: Day-1 Success Kit (g8_onboard, g8_tests, g8_seed, g8_api, g8_playbook)
-- **api/provision.js lines 40-65**: DYNASTY_TOOL_CONFIG parsing + inventory
-- **api/provision.js lines 288-1300**: 17 mod_* integration modules
-- **api/provision.js lines ~2200-2400**: Fullstack deploy (project creation, env vars, deployment)
-- **api/provision.js lines ~2800-2900**: Retry deploy logic
+- **app.html lines ~12700-12900**: Frontend generation (phases g7, g7b, g7c)
+- **app.html lines ~9200-9500**: Build validation gate (8 checks)
+- **app.html lines ~4900-5100**: Provisioning trigger (proceedToBuild, calls provision.js)
+- **app.html lines ~10000-10350**: Day-1 Success Kit (g8_onboard, g8_tests, g8_seed, g8_api, g8_playbook)
+- **api/provision.js lines ~2135-2245**: DYNASTY_TOOL_CONFIG parsing + inventory
+- **api/provision.js lines 288-1834**: 19 mod_* integration modules
+- **api/provision.js lines ~2880-3200**: Fullstack deploy (project creation, env vars, deployment)
+- **api/provision.js lines ~3416-3500**: Verify + retry deploy logic
 
 ## V3 Specification
 See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:

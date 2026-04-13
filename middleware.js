@@ -69,7 +69,7 @@ button:hover{opacity:.92}.row{display:flex;gap:10px;align-items:center}.hint{fon
   }
 
   // ── /admin route — require admin key in URL or let page handle token check ──
-  if (url.pathname === '/admin') {
+  if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) {
     const adminKey = process.env.ADMIN_KEY || '';
     const testAdminKey = process.env.TEST_ADMIN_KEY || '';
     // Allow with key in URL

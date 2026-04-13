@@ -2136,17 +2136,6 @@ async function compactPhase(phaseId, output) {
     if (d.compacted) BUILD_COMPACTIONS.push(d.compacted);
   } catch {}
 }
-async function getCompactContext() {
-  if (!BUILD_COMPACTIONS.length) return '';
-  try {
-    const r = await fetch('/api/orchestrate', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'build_context', compactions: BUILD_COMPACTIONS }),
-    });
-    const d = await r.json();
-    return d.context || '';
-  } catch { return ''; }
-}
 
 // ── Smart Model Routing ──────────────────────────────────────────────────────
 async function routeModel(phaseId) {
@@ -2248,30 +2237,6 @@ function showPreflightModal(report) {
   });
 }
 
-// ── Parallel Execution Engine ────────────────────────────────────────────────
-// Runs independent phases concurrently (Claude Code's Fork pattern)
-async function runParallel(tasks) {
-  if (!flagEnabled('parallel_generation') || tasks.length <= 1) {
-    // Sequential fallback
-    const results = {};
-    for (const task of tasks) {
-      results[task.id] = await task.fn();
-    }
-    return results;
-  }
-  // Run all tasks concurrently
-  const settled = await Promise.allSettled(tasks.map(t => t.fn()));
-  const results = {};
-  tasks.forEach((task, i) => {
-    if (settled[i].status === 'fulfilled') {
-      results[task.id] = settled[i].value;
-    } else {
-      results[task.id] = { error: settled[i].reason?.message || 'Failed' };
-      console.error(`Phase ${task.id} failed:`, settled[i].reason);
-    }
-  });
-  return results;
-}
 
 // Load flags on page load
 loadFlags().then(() => {
