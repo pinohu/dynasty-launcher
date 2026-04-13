@@ -1524,7 +1524,7 @@ function updateAuthUI() {
     const name = CLERK_USER.firstName || CLERK_USER.emailAddresses?.[0]?.emailAddress?.split('@')[0] || 'User';
     const avatar = CLERK_USER.imageUrl;
     authBtn.innerHTML = avatar 
-      ? `<img src="${escapeHtml(avatar)}" loading="lazy" width="28" height="28" style="width:24px;height:24px;border-radius:50%;vertical-align:middle" /> ${name}`
+      ? `<img src="${escapeHtml(avatar)}" loading="lazy" width="28" height="28" alt="" style="width:24px;height:24px;border-radius:50%;vertical-align:middle" /> ${escapeHtml(name)}`
       : name;
     authBtn.onclick = () => CLERK_INSTANCE?.openUserProfile();
   } else {

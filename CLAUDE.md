@@ -6,8 +6,8 @@ Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is 
 ## Repo Structure
 ```
 dynasty-launcher/
-├── index.html              # Landing page (standalone, ~360 lines)
-├── app.html                # Builder app (monolith, ~12700 lines)
+├── index.html              # Landing page (standalone, ~370 lines)
+├── app.html                # Builder app (monolith, ~27000 lines)
 ├── maturity.html           # "What ships today" truth deck (~130 lines)
 ├── deliverables.html       # Deliverables hub page
 ├── deliverables/           # Category + individual deliverable pages (160 files)
@@ -20,7 +20,7 @@ dynasty-launcher/
 │   ├── neon.js             # Neon DB provisioner (~130 lines)
 │   ├── admin.js            # Admin dashboard backend
 │   ├── claude.js           # Anthropic Claude API proxy (auth-gated)
-│   ├── docgen.js           # Document generation helper
+│   ├── docgen.js           # Document generation helper (library, not an HTTP endpoint)
 │   ├── flags.js            # Feature flags
 │   ├── github.js           # GitHub API proxy (auth-gated, path-restricted)
 │   ├── health.js           # Health check endpoint (admin-gated detail)
@@ -30,7 +30,16 @@ dynasty-launcher/
 │   ├── telemetry.js        # Telemetry / analytics events
 │   ├── twentyi.js          # 20i hosting API proxy (auth-gated)
 │   └── validate.js         # Build validation (payload-limited)
-├── for/                    # Persona-specific funnel pages (8 pages)
+├── for/                    # Persona-specific funnel pages (10 pages)
+├── middleware.js           # Vercel Edge Middleware (~210 lines)
+├── admin.html              # Admin dashboard UI (~440 lines)
+├── quiz.html               # Diagnostic quiz (~310 lines)
+├── privacy.html            # Privacy policy
+├── terms.html              # Terms of service
+├── sw.js                   # Service worker
+├── sitemap.xml             # Sitemap (177 URLs)
+├── robots.txt              # Robots config
+├── manifest.json           # PWA manifest
 ├── DYNASTY_LAUNCHER_V3_FINAL.md  # Complete build specification
 ├── CLAUDE.md               # This file
 ├── vercel.json             # Deployment config (cleanUrls: true)
