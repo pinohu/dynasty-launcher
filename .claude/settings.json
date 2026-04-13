@@ -3,13 +3,20 @@
     "superpowers@superpowers-marketplace": true,
     "elements-of-style@superpowers-marketplace": true,
     "superpowers-developing-for-claude-code@superpowers-marketplace": true,
-    "private-journal-mcp@superpowers-marketplace": true
+    "private-journal-mcp@superpowers-marketplace": true,
+    "ecc@ecc": true
   },
   "extraKnownMarketplaces": {
     "superpowers-marketplace": {
       "source": {
         "source": "github",
         "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "ecc": {
+      "source": {
+        "source": "github",
+        "repo": "affaan-m/everything-claude-code"
       }
     }
   }
