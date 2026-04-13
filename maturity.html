@@ -40,7 +40,7 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 <p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/deliverables">Full deliverables inventory</a> · <a href="/#pricing">Pricing</a></p>
 <h1>What’s included today</h1>
 <p class="lead">This page exists for one reason: <strong>accountability before purchase</strong>. It shows what is live now, what is wired server-side when keys allow, and what stays in your repo only — so you are not sold a vague “AI did it” story.</p>
-<p class="note"><strong>Last reviewed:</strong> 2026-04-12. Five tiers are available today:<br>
+<p class="note"><strong>Last reviewed:</strong> 2026-04-13. Seven tiers are available today:<br>
 <strong>Free Scoring</strong> ($0) — viability scorecard only.<br>
 <strong>Scoring Pro</strong> ($19/mo) — unlimited scoring with priority models.<br>
 <strong>Blueprint</strong> ($297) — deep diagnostic + execution plan.<br>
@@ -56,10 +56,10 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 </ul>
 
 <div class="sum">
-<span><strong style="color:var(--live)">Live:</strong> 12</span>
+<span><strong style="color:var(--live)">Live:</strong> 22</span>
 <span><strong style="color:var(--partial)">Partial:</strong> 6</span>
 <span><strong style="color:var(--sub)">Codegen:</strong> 4</span>
-<span><strong style="color:var(--ready)">Planned:</strong> 15</span>
+<span><strong style="color:var(--ready)">Planned:</strong> 5</span>
 </div>
 
 <details class="matrix">
@@ -88,27 +88,40 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 <tr><td>Seed data and demo content</td><td><span class="tag live">Live</span></td><td><code>src/data/seed/</code>, <code>src/scripts/seed.ts</code></td><td>Fictional users, content, transactions matching business type. Executable seeder script (npm run db:seed).</td></tr>
 <tr><td>API collection (OpenAPI + Postman)</td><td><span class="tag live">Live</span></td><td><code>docs/openapi.json</code>, <code>docs/postman-collection.json</code></td><td>OpenAPI 3.0 spec + Postman v2.1 collection derived from generated API routes.</td></tr>
 <tr><td>90-day launch playbook</td><td><span class="tag live">Live</span></td><td><code>LAUNCH-PLAYBOOK.md</code></td><td>Tier-aware week-by-week action plan referencing specific repo deliverables. Suggested playbook, not professional advice.</td></tr>
-<tr><td>Hosting, domain, and inbox setup</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will auto-run with valid infrastructure credentials; daily volume caps apply by tier.</td></tr>
-<tr><td>Payments and webhook flow</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Tier + package depth still control run/defer behavior.</td></tr>
-<tr><td>Email campaigns and onboarding sequence</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run with configured messaging credentials.</td></tr>
-<tr><td>Voice intake and booking automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
-<tr><td>Text-message campaign automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
-<tr><td>Website assistant experience</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run when assistant generation keys are available.</td></tr>
-<tr><td>SEO content bundle</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run when content credentials allow; you own editorial judgment before publish.</td></tr>
-<tr><td>Video and visual creative outputs</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Video path reserved for custom volume onboarding; design outputs remain available in standard tiers.</td></tr>
-<tr><td>Behavior and funnel analytics</td><td><span class="tag partial">Partial</span></td><td>Not yet available</td><td>Core analytics planned today; deeper behavior tooling may require extra credentials.</td></tr>
-<tr><td>Lead intelligence and enrichment</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
-<tr><td>Legal and policy document drafts</td><td><span class="tag partial">Partial</span></td><td>Partial via codegen</td><td>Core drafting is active via codegen; attorney review required; expense tooling remains credential-gated.</td></tr>
-<tr><td>Workflow orchestration pack</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run with workflow engine credentials.</td></tr>
-<tr><td>Social publishing calendar automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run with social publishing credentials.</td></tr>
-<tr><td>Client workspace and pipeline automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
-<tr><td>Directory business model automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
-<tr><td>Managed CMS site path</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run with managed CMS credentials; daily volume caps apply by tier.</td></tr>
-<tr><td>Post-deploy quality verification (orchestrator / modules)</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Distinct from client multi-pass GitHub/Vercel/live verification above; both may apply in a full session.</td></tr>
+<tr><td>Hosting, domain, and inbox setup</td><td><span class="tag live">Live</span></td><td>20i: domain, email, SPF/DKIM/DMARC, SSL</td><td>Professional+ tiers. Auto-provisions via 20i API when infrastructure credentials are configured.</td></tr>
+<tr><td>Payments and webhook flow</td><td><span class="tag live">Live</span></td><td>Stripe Connect: products, prices, webhooks, dunning</td><td>Professional+ tiers. Creates connected Stripe account, products, prices, and webhook endpoints.</td></tr>
+<tr><td>Email campaigns and onboarding sequence</td><td><span class="tag live">Live</span></td><td>Acumbamail: list, 5-email welcome, automation + Emailit transactional</td><td>Professional+ tiers. Creates subscriber list, welcome sequence, and transactional email via Emailit.</td></tr>
+<tr><td>Voice intake and booking automation</td><td><span class="tag ready">Planned</span></td><td>Enterprise+ when configured</td><td>Enterprise tier. CallScaler + Insighto + Trafft. Reserved for builds with voice/booking needs.</td></tr>
+<tr><td>Text-message campaign automation</td><td><span class="tag ready">Planned</span></td><td>Enterprise+ when configured</td><td>Enterprise tier. SMS-iT campaigns and templates. Reserved for builds with SMS needs.</td></tr>
+<tr><td>Website assistant experience</td><td><span class="tag live">Live</span></td><td>AI chatbot: FAQ-trained, embeddable widget</td><td>Professional+ tiers. Generates FAQ-trained chatbot widget using Anthropic API. Static widget, no runtime key needed on client site.</td></tr>
+<tr><td>SEO content bundle</td><td><span class="tag live">Live</span></td><td>5 blog posts, keyword research, meta tags</td><td>Professional+ tiers. AI-generated blog posts with keyword targeting. You own editorial judgment before publish.</td></tr>
+<tr><td>Video and visual creative outputs</td><td><span class="tag partial">Partial</span></td><td>Design asset kit (hero, OG, social) via SUPERMACHINE/Pixelied</td><td>Professional+ tiers. Design assets live; video generation (Vadoo/Fliki) available when keys configured.</td></tr>
+<tr><td>Behavior and funnel analytics</td><td><span class="tag live">Live</span></td><td>PostHog: events, funnels + Plerdy: heatmaps</td><td>Professional+ tiers. PostHog project + snippet injection + Plerdy heatmap wiring.</td></tr>
+<tr><td>Lead intelligence and enrichment</td><td><span class="tag ready">Planned</span></td><td>Enterprise+ when configured</td><td>Custom volume tier. Happierleads + Salespanel visitor ID and lead scoring.</td></tr>
+<tr><td>Legal and policy document drafts</td><td><span class="tag live">Live</span></td><td>Documentero: formatted legal PDFs + codegen drafts</td><td>Professional+ tiers add Documentero PDF generation. Codegen drafts available in all build tiers. Attorney review required.</td></tr>
+<tr><td>Workflow orchestration pack</td><td><span class="tag live">Live</span></td><td>n8n: 7 automation workflows</td><td>Professional+ tiers. Creates n8n workflows for onboarding, billing, notifications, lead routing, content, reporting, and health checks.</td></tr>
+<tr><td>Social publishing calendar automation</td><td><span class="tag live">Live</span></td><td>Vista Social: 260-post calendar import</td><td>Professional+ tiers. Imports generated social media calendar into Vista Social.</td></tr>
+<tr><td>Client workspace and pipeline automation</td><td><span class="tag ready">Planned</span></td><td>Enterprise+ when configured</td><td>Custom volume tier. SuiteDash workspace, pipeline, portal, invoicing.</td></tr>
+<tr><td>Directory business model automation</td><td><span class="tag ready">Planned</span></td><td>Enterprise+ when configured</td><td>Custom volume tier. Brilliant Directories provisioning.</td></tr>
+<tr><td>Managed CMS site path</td><td><span class="tag live">Live</span></td><td>20i WordPress + Dynasty Developer theme</td><td>Enterprise tier. WordPress provisioning via 20i with Dynasty Developer theme.</td></tr>
+<tr><td>Post-deploy quality verification (orchestrator / modules)</td><td><span class="tag live">Live</span></td><td>Automated smoke tests on live URL</td><td>Enterprise tier. HTTP checks, content verification, and SSL validation on deployed site.</td></tr>
 <tr><td>Community (Heartbeat)</td><td><span class="tag partial">Partial</span></td><td>UI toggle in V3 wireframe</td><td>Spec only; no server-side module yet. Optional and key-gated.</td></tr>
 </tbody>
 </table>
 </details>
+
+<div style="margin:32px 0;background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(201,168,76,0.01));border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:28px;text-align:center">
+<h2 style="font-size:18px;color:var(--gold);margin:0 0 6px">Get notified when Managed Runtime launches</h2>
+<p style="font-size:13px;color:var(--dim);margin-bottom:14px">Managed Automation Runtime ($497/mo) — ongoing monitoring, retry queues, and optimization. Join the waitlist.</p>
+<form id="mat-waitlist" onsubmit="return matWaitlist(event)" style="display:flex;gap:8px;max-width:420px;margin:0 auto">
+<input id="mat-wl-email" type="email" placeholder="you@example.com" required style="flex:1;padding:10px 14px;border:1px solid var(--bdr);border-radius:8px;background:var(--card);color:var(--tx);font-size:14px;font-family:inherit;outline:none">
+<button type="submit" style="padding:10px 20px;background:var(--gold);color:var(--ink);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap">Join waitlist</button>
+</form>
+<div id="mat-wl-msg" style="font-size:12px;margin-top:8px;min-height:18px"></div>
+</div>
+<script>
+function matWaitlist(e){e.preventDefault();var em=document.getElementById('mat-wl-email').value.trim();var msg=document.getElementById('mat-wl-msg');if(!em){msg.style.color='#EF4444';msg.textContent='Enter your email';return false}msg.style.color='var(--dim)';msg.textContent='Joining...';fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,tier_interest:'managed',source:'maturity'})}).then(function(r){return r.json()}).then(function(d){if(d.ok){msg.style.color='#22C55E';msg.textContent='You\'re on the list!';document.getElementById('mat-wl-email').value=''}else{msg.style.color='#EF4444';msg.textContent=d.error||'Error'}}).catch(function(){msg.style.color='#EF4444';msg.textContent='Network error'});return false}
+</script>
 
 <h2>Why this page matters</h2>
 <p class="lead" style="margin-bottom:16px">Most platforms oversell vague capability. <strong>This page exists so you know exactly what you’re buying.</strong> Foundation delivers everything marked Live, Codegen, or Partial. Items marked Planned are in development and will be available in future tiers — we won’t sell them until they’re ready.</p>

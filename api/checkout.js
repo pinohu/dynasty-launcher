@@ -64,13 +64,14 @@ export default async function handler(req, res) {
     const tiers = {
       blueprint: { amount: 29700, name: 'Your Deputy — Diagnostic + Execution Blueprint', desc: 'Conversion-grade execution blueprint: risk map, priority sequence, execution path, and persona-matched package recommendation. 100% creditable toward a paid build started within 14 days.' },
       scoring_pro: { amount: 1900, name: 'Your Deputy — Scoring Pro', desc: 'Monthly scoring access with higher monthly limits, account-level history, and fair-use safeguards.' },
+      strategy_pack: { amount: 69700, name: 'Your Deputy — Strategy Pack', desc: 'All 90+ consulting-grade documents — strategy, legal, financial, marketing, operations — as a downloadable .zip. No code generation or deployment. $697 credited toward Foundation within 30 days.' },
       foundation: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations; typically tens of thousands of words, varies by session). SBA business plan, investor readiness, cap table themes, tax strategy. Production app + repo deploy. No automatic server-side integration module provisioning on Foundation — use OPERATIONS.md or upgrade to Professional+. $71K–$131K equivalent value.' },
       starter: { amount: 199700, name: 'Your Deputy — Foundation', desc: '90+ consulting-grade documents (strategy, financial, legal, hiring, operations; typically tens of thousands of words, varies by session). SBA business plan, investor readiness, cap table themes, tax strategy. Production app + repo deploy. No automatic server-side integration module provisioning on Foundation — use OPERATIONS.md or upgrade to Professional+. $71K–$131K equivalent value.' },
       professional: { amount: 499700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus attempts at core live stack where APIs succeed: domain/email patterns, connected payments, CRM, marketing sequences, chatbot, analytics, automation (subject to keys and archetype deferrals). $100K–$170K equivalent value.' },
       enterprise: { amount: 999700, name: 'Your Deputy — Enterprise', desc: 'Broadest integration attempts: up to 17 module types when your site package does not skip them — subject to API success, keys, and implementation status. Plus creative, SEO, social calendar, and directory/WP paths per spec. See BUILD-MANIFEST.json for your build. $71K–$194K equivalent value.' }
     };
     const tierDef = tiers[normalizedPlan] || tiers.foundation;
-    const isBlueprintCreditablePlan = !['blueprint', 'managed', 'scoring_pro'].includes(normalizedPlan);
+    const isBlueprintCreditablePlan = !['blueprint', 'managed', 'scoring_pro', 'strategy_pack'].includes(normalizedPlan);
     const wantsBlueprintCredit = !!apply_blueprint_credit && isBlueprintCreditablePlan;
     const blueprintCreditCents = wantsBlueprintCredit ? Math.min(29700, Math.max(0, tierDef.amount - 5000)) : 0;
     const finalAmount = Math.max(5000, tierDef.amount - blueprintCreditCents);
@@ -177,5 +178,74 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(400).json({ error: 'Unknown action. Use: create_session, verify' });
+  // ── Session Recovery — send a code to email ─────────────────────
+  if (action === 'recover_start') {
+    if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
+    const { email } = req.body || {};
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ ok: false, error: 'Valid email required' });
+    }
+    try {
+      const { createHmac } = await import('crypto');
+      const window5m = Math.floor(Date.now() / 300000);
+      const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET;
+      const code = createHmac('sha256', secret).update(`recover:${email.toLowerCase()}:${window5m}`).digest('hex').slice(-6).toUpperCase();
+
+      const emailitKey = process.env.EMAILIT_API_KEY;
+      if (emailitKey) {
+        await fetch('https://api.emailit.com/v2/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${emailitKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'Your Deputy <hello@yourdeputy.com>',
+            to: email,
+            subject: 'Your Deputy — Sign-in code',
+            text: `Your sign-in code is: ${code}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\nhttps://yourdeputy.com`
+          })
+        });
+      }
+      return res.json({ ok: true, sent: true });
+    } catch (e) {
+      return res.json({ ok: false, error: 'Could not send code. Try again.' });
+    }
+  }
+
+  // ── Session Recovery — verify code and return session ──────────
+  if (action === 'recover_verify') {
+    if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
+    const { email, code } = req.body || {};
+    if (!email || !code) return res.status(400).json({ ok: false, error: 'email and code required' });
+    try {
+      const { createHmac } = await import('crypto');
+      const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET;
+      const now5m = Math.floor(Date.now() / 300000);
+      let valid = false;
+      for (let w = now5m; w >= now5m - 1; w--) {
+        const expected = createHmac('sha256', secret).update(`recover:${email.toLowerCase()}:${w}`).digest('hex').slice(-6).toUpperCase();
+        if (code.toUpperCase() === expected) { valid = true; break; }
+      }
+      if (!valid) return res.json({ ok: false, error: 'Invalid or expired code' });
+
+      const enc = (s) => encodeURIComponent(s);
+      const sessions = await stripeGet(`checkout/sessions?limit=10&customer_details%5Bemail%5D=${enc(email.toLowerCase())}`);
+      const paid = (sessions.data || []).find(s => s.payment_status === 'paid' || (s.mode === 'subscription' && s.status === 'complete'));
+      if (!paid) return res.json({ ok: false, error: 'No paid session found for this email' });
+
+      const accessToken = await signPaidAccessToken({
+        sessionId: paid.id, userId: '', plan: paid.metadata?.plan || 'foundation'
+      });
+      return res.json({
+        ok: true,
+        paid: true,
+        session_id: paid.id,
+        plan: paid.metadata?.plan || 'foundation',
+        access_token: accessToken,
+        customer_email: paid.customer_email || paid.customer_details?.email,
+      });
+    } catch (e) {
+      return res.json({ ok: false, error: e.message });
+    }
+  }
+
+  return res.status(400).json({ error: 'Unknown action. Use: create_session, verify, recover_start, recover_verify' });
 }

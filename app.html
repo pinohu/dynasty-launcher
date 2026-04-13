@@ -1264,7 +1264,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
 
   // 3. Plan purchase URLs redirect to Stripe checkout (user doesn't stay on /app)
   var plan = params.get('plan');
-  if (plan && ['free','blueprint','scoring_pro','foundation','starter','professional','enterprise','managed'].includes(plan)) {
+  if (plan && ['free','blueprint','scoring_pro','strategy_pack','foundation','starter','professional','enterprise','managed'].includes(plan)) {
     return; // Let checkPlanPurchase() handle (free → enter builder, paid → redirect to Stripe)
   }
 
@@ -1276,7 +1276,95 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     try {
       window.history.replaceState({}, '', window.location.pathname + window.location.hash);
     } catch (e) {}
-    if (!(paidSession && paidAt)) return;
+    if (paidSession && paidAt) return;
+    // Show session recovery UI — works with or without Clerk
+    document.documentElement.innerHTML = [
+      '<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
+      '<title>Sign In — Your Deputy</title>',
+      '<style>*{margin:0;padding:0;box-sizing:border-box}',
+      'body{background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;',
+      'font-family:system-ui,-apple-system,sans-serif;flex-direction:column;gap:20px;text-align:center;padding:24px}',
+      'h2{font-size:1.6rem;font-weight:600}p{color:rgba(255,255,255,0.5);font-size:1rem;max-width:440px;line-height:1.6}',
+      '.card{background:#16161B;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:32px;max-width:400px;width:100%;text-align:left}',
+      'label{font-size:13px;color:rgba(255,255,255,.5);display:block;margin-bottom:6px;font-weight:500}',
+      'input{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,.15);border-radius:10px;background:#0C0C14;color:#fff;font-size:15px;font-family:inherit;outline:none;transition:border .2s}',
+      'input:focus{border-color:#C9A84C}',
+      '.btn{width:100%;padding:12px;background:#C9A84C;color:#000;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:12px;transition:opacity .2s}',
+      '.btn:hover{opacity:.9}.btn:disabled{opacity:.4;cursor:not-allowed}',
+      '.msg{font-size:13px;margin-top:10px;min-height:20px}',
+      '.msg.err{color:#EF4444}.msg.ok{color:#22C55E}',
+      '.step2{display:none}',
+      '</style></head><body>',
+      '<div style="font-size:2.5rem">⚡</div><h2>Welcome back</h2>',
+      '<p>Recover your build session using the email you purchased with.</p>',
+      '<div class="card" id="recover-card">',
+      '<div id="step1">',
+      '<label for="recover-email">Purchase email</label>',
+      '<input id="recover-email" type="email" placeholder="you@example.com" autocomplete="email">',
+      '<button class="btn" id="send-code-btn" onclick="sendRecoverCode()">Send sign-in code</button>',
+      '<div class="msg" id="step1-msg"></div>',
+      '</div>',
+      '<div id="step2" class="step2">',
+      '<label for="recover-code">Enter the 6-character code sent to your email</label>',
+      '<input id="recover-code" type="text" placeholder="ABC123" maxlength="6" autocomplete="one-time-code" style="text-align:center;letter-spacing:4px;font-size:20px;font-weight:700">',
+      '<button class="btn" id="verify-code-btn" onclick="verifyRecoverCode()">Verify &amp; sign in</button>',
+      '<div class="msg" id="step2-msg"></div>',
+      '<p style="font-size:12px;color:rgba(255,255,255,.3);margin-top:12px;cursor:pointer" onclick="document.getElementById(\'step1\').style.display=\'block\';document.getElementById(\'step2\').style.display=\'none\'">← Use a different email</p>',
+      '</div></div>',
+      '<p style="font-size:13px;color:rgba(255,255,255,.25);margin-top:8px">New here? <a href="/" style="color:#C9A84C;text-decoration:none">Start free →</a></p>',
+      '</body></html>'
+    ].join('');
+    // Recovery logic
+    var _recoverEmail = '';
+    window.sendRecoverCode = async function() {
+      var email = document.getElementById('recover-email').value.trim();
+      var msg = document.getElementById('step1-msg');
+      var btn = document.getElementById('send-code-btn');
+      if (!email || !email.includes('@')) { msg.className='msg err'; msg.textContent='Enter a valid email'; return; }
+      btn.disabled = true; btn.textContent = 'Sending...';
+      try {
+        var r = await fetch('/api/checkout?action=recover_start', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ email: email })
+        });
+        var d = await r.json();
+        if (d.ok) {
+          _recoverEmail = email;
+          document.getElementById('step1').style.display = 'none';
+          document.getElementById('step2').style.display = 'block';
+          document.getElementById('step2').classList.remove('step2');
+        } else {
+          msg.className='msg err'; msg.textContent=d.error||'Failed to send code';
+        }
+      } catch(e) { msg.className='msg err'; msg.textContent='Network error — try again'; }
+      btn.disabled = false; btn.textContent = 'Send sign-in code';
+    };
+    window.verifyRecoverCode = async function() {
+      var code = document.getElementById('recover-code').value.trim();
+      var msg = document.getElementById('step2-msg');
+      var btn = document.getElementById('verify-code-btn');
+      if (!code || code.length < 6) { msg.className='msg err'; msg.textContent='Enter the 6-character code'; return; }
+      btn.disabled = true; btn.textContent = 'Verifying...';
+      try {
+        var r = await fetch('/api/checkout?action=recover_verify', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ email: _recoverEmail, code: code })
+        });
+        var d = await r.json();
+        if (d.ok && d.paid) {
+          localStorage.setItem('dynasty_paid_session', d.session_id);
+          if (d.access_token) localStorage.setItem('dynasty_paid_token', d.access_token);
+          localStorage.setItem('dynasty_paid_at', new Date().toISOString());
+          localStorage.setItem('dynasty_tier', d.plan || 'foundation');
+          msg.className='msg ok'; msg.textContent='Session restored! Redirecting...';
+          setTimeout(function(){ window.location.href = '/app'; }, 800);
+        } else {
+          msg.className='msg err'; msg.textContent=d.error||'Invalid code or no purchase found';
+        }
+      } catch(e) { msg.className='msg err'; msg.textContent='Network error — try again'; }
+      btn.disabled = false; btn.textContent = 'Verify & sign in';
+    };
+    return;
   }
 
   // 4. Verified paid user (has a confirmed Stripe session)
@@ -1312,12 +1400,12 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     'a{color:#C9A84C;text-decoration:none;font-weight:600;padding:12px 28px;border:1px solid #C9A84C;border-radius:10px;transition:all .2s;font-size:15px}',
     'a:hover{background:#C9A84C;color:#000}a.primary{background:#C9A84C;color:#000}</style></head><body>',
     '<div style="font-size:2.5rem">⚡</div><h2>Your Deputy</h2>',
-    '<p>Defensible judgment on your plan, shipped implementation, and accountable scope — not a checklist of AI tasks. Score free, start with a $297 blueprint, or unlock ongoing scoring for $19/mo.</p>',
+    '<p>Defensible judgment on your plan, shipped implementation, and accountable scope — not a checklist of AI tasks. Score free, start with a $297 blueprint, or build from $1,997 to $9,997.</p>',
     '<div class="btns">',
     '<a href="/app?plan=free">Score Free</a>',
     '<a href="/app?plan=blueprint">Blueprint — $297</a>',
-    '<a href="/app?plan=scoring_pro">Scoring Pro — $19/mo</a>',
-    '<a href="/app?plan=foundation" class="primary">Build — $1,997</a>',
+    '<a href="/app?plan=foundation">Foundation — $1,997</a>',
+    '<a href="/app?plan=professional" class="primary">Professional — $4,997</a>',
     '</div><div class="btns" style="margin-top:8px">',
     '<a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>',
     '</div>',

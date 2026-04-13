@@ -1,16 +1,22 @@
 # CLAUDE.md — Your Deputy V3
 
 ## What This Is
-Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is a business provisioning engine. A user describes a business idea in one prompt, and the system generates documents, code, and deployment; **Foundation** does **not** auto-provision integration modules on the server (`TIER_MODULES.foundation: []`). **Professional+** attempts live integrations (CRM, billing, comms, automation, etc.) where APIs and keys allow. It currently outputs ~65% of what a real business needs end-to-end. V3 targets 95%+ by completing the `mod_*` suite and phases 9–20.
+Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is a business provisioning engine. A user describes a business idea in one prompt, and the system generates documents, code, and deployment; **Foundation** does **not** auto-provision integration modules on the server (`TIER_MODULES.foundation: []`). **Professional** ($4,997) runs 11 live integration modules; **Enterprise** ($9,997) runs up to 17 modules. All `mod_*` functions are implemented and API keys are configured.
 
 ## Repo Structure
 ```
 dynasty-launcher/
-├── index.html              # Landing page (standalone, ~280 lines)
-├── app.html                # Builder app (monolith, ~12500 lines)
-├── maturity.html           # "What ships today" truth deck (~100 lines)
+├── index.html              # Landing page (standalone, ~360 lines)
+├── app.html                # Builder app (monolith, ~12600 lines)
+├── maturity.html           # "What ships today" truth deck (~130 lines)
+├── deliverables.html       # Deliverables hub page
+├── deliverables/           # Category + individual deliverable pages (160 files)
 ├── api/
-│   ├── provision.js        # Backend orchestrator (~3200 lines, 17 mod_* functions)
+│   ├── provision.js        # Backend orchestrator (~3200 lines, 19 mod_* functions)
+│   ├── checkout.js         # Stripe checkout + session recovery (~240 lines)
+│   ├── auth.js             # Clerk auth + admin key verification (~130 lines)
+│   ├── waitlist.js         # Waitlist capture (Acumbamail + Telegram + Neon)
+│   ├── ai.js               # AI router (multi-provider)
 │   └── neon.js             # Neon DB provisioner (~130 lines)
 ├── for/                    # Persona-specific funnel pages (8 pages)
 ├── DYNASTY_LAUNCHER_V3_FINAL.md  # Complete build specification

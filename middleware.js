@@ -178,11 +178,11 @@ a.primary:hover{box-shadow:0 0 20px rgba(201,168,76,0.3)}
 <body>
 <div style="font-size:2.5rem">⚡</div>
 <h2>Your Deputy</h2>
-<p>Judgment on whether the business holds up, implementation you can ship, and accountable scope — not a menu of AI tasks. Score free, strategy documents $697, or full build from $1,997.</p>
+<p>Judgment on whether the business holds up, implementation you can ship, and accountable scope — not a menu of AI tasks. Score free, strategy documents $697, full build from $1,997, or live integrations from $4,997.</p>
 <div class="btns">
   <a href="/app?plan=free">Score Free</a>
-  <a href="/app?plan=strategy_pack">Strategy Pack — $697</a>
-  <a href="/app?plan=foundation" class="primary">Foundation — $1,997</a>
+  <a href="/app?plan=foundation">Foundation — $1,997</a>
+  <a href="/app?plan=professional" class="primary">Professional — $4,997</a>
 </div>
 <div class="btns" style="margin-top:8px">
   <a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>

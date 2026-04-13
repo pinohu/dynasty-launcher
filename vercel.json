@@ -57,6 +57,9 @@
     },
     "api/checkout.js": {
       "maxDuration": 30
+    },
+    "api/waitlist.js": {
+      "maxDuration": 15
     }
   },
   "headers": [

@@ -162,7 +162,7 @@ function sanitizeError(msg) {
     .slice(0, 200);
 }
 
-const PROVISION_TIER_VALID = ['free', 'blueprint', 'scoring_pro', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'];
+const PROVISION_TIER_VALID = ['free', 'blueprint', 'scoring_pro', 'strategy_pack', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'];
 const AUTOMATION_ONLY_MODE = (process.env.AUTOMATION_ONLY_MODE || 'true') !== 'false';
 const CONTACT_ONLY_MODULES = new Set(['phone', 'sms', 'video', 'leads', 'crm', 'directory']);
 const TIER_MODULE_DAILY_LIMITS = {
@@ -3215,6 +3215,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       free: [], // Viability scoring only — no build, no modules
       blueprint: [], // Paid diagnostic and execution map only — no generation/provision modules
       scoring_pro: [], // Scoring subscription only — no generation/provision modules
+      strategy_pack: [], // Documents only, no code/deploy/modules
       foundation: [], // Strategy docs + deployment only, no integration modules
       starter: [], // Legacy alias for foundation
       professional: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'social', 'vertical_tool'],
