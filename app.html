@@ -9372,7 +9372,36 @@ await Promise.allSettled([
         TodoForm: { title_label: 'Title', title_description: 'Enter a title.', message_title: 'Description', message_description: 'Enter a description.', submit_button: 'Submit' },
       };
       files['src/locales/en.json'] = JSON.stringify(fullTranslation, null, 2);
-      files['src/locales/fr.json'] = JSON.stringify(fullTranslation, null, 2);
+      const frTranslation = {
+        Index: { meta_title: fullTranslation.Index.meta_title, meta_description: fullTranslation.Index.meta_description },
+        Navbar: { sign_in: 'Connexion', sign_up: 'Commencer', product: 'Produit', docs: 'Documentation', blog: 'Blog', community: 'Support', company: '\u00C0 propos' },
+        Hero: { follow_twitter: fullTranslation.Hero.follow_twitter, title: fullTranslation.Hero.title, description: fullTranslation.Hero.description, primary_button: 'Commencer', secondary_button: 'En savoir plus' },
+        Sponsors: { title: 'Propuls\u00E9 par' },
+        Features: { ...fullTranslation.Features, section_subtitle: 'Fonctionnalit\u00E9s', section_title: `Pourquoi choisir ${inf.name}`, feature1_title: 'Rapide et fiable', feature2_title: 'S\u00E9curis\u00E9', feature3_title: '\u00C9volutif', feature4_title: 'TypeScript', feature5_title: 'Tableau de bord', feature6_title: 'Acc\u00E8s API' },
+        Pricing: { section_subtitle: 'Tarifs', section_title: 'Tarification simple et transparente', section_description: 'Commencez gratuitement, \u00E9voluez selon vos besoins.', button_text: 'Commencer' },
+        PricingPlan: { free_plan_name: 'Gratuit', premium_plan_name: 'Pro', enterprise_plan_name: 'Entreprise', free_plan_description: 'Pour les particuliers', premium_plan_description: 'Pour les \u00E9quipes en croissance', enterprise_plan_description: 'Pour les grandes organisations', feature_team_member: '{number} membres', feature_website: '{number} projets', feature_storage: '{number} Go de stockage', feature_transfer: '{number} To de transfert', feature_email_support: 'Support par e-mail', plan_interval_month: 'mois', plan_interval_year: 'an', next_renew_date: 'Votre abonnement se renouvelle le {date}' },
+        FAQ: { question: `Que fait ${inf.name}\u00A0?`, answer: fullTranslation.FAQ.answer },
+        CTA: { title: 'Pr\u00EAt \u00E0 commencer\u00A0?', description: `Commencez \u00E0 utiliser ${inf.name} aujourd\u2019hui. Aucune carte de cr\u00E9dit requise.`, button_text: 'Essai gratuit' },
+        Footer: { product: 'Produit', docs: 'Documentation', blog: 'Blog', community: 'Support', company: '\u00C0 propos', terms_of_service: 'Conditions d\u2019utilisation', privacy_policy: 'Politique de confidentialit\u00E9', footer_text: '\u00A9 {year} {name}. Tous droits r\u00E9serv\u00E9s.' },
+        ProtectFallback: { not_enough_permission: 'Vous n\u2019avez pas la permission d\u2019effectuer cette action' },
+        SignIn: { meta_title: 'Connexion', meta_description: `Connectez-vous \u00E0 votre compte ${inf.name}.` },
+        SignUp: { meta_title: 'Inscription', meta_description: `Cr\u00E9ez votre compte ${inf.name}.` },
+        DashboardLayout: { home: 'Accueil', todos: 'T\u00E2ches', members: 'Membres', billing: 'Facturation', settings: 'Param\u00E8tres' },
+        Dashboard: { meta_title: `Tableau de bord ${inf.name}`, meta_description: `G\u00E9rez votre compte ${inf.name}.` },
+        DashboardIndex: { title_bar: 'Tableau de bord', title_bar_description: `Bienvenue sur ${inf.name}`, message_state_title: 'Premiers pas', message_state_description: `Configurez votre compte ${inf.name} pour commencer.`, message_state_button: 'Voir la documentation', message_state_alternative: '', max_message: '' },
+        UserProfile: { title_bar: 'Profil utilisateur', title_bar_description: 'G\u00E9rez votre profil' },
+        OrganizationProfile: { title_bar: 'Organisation', title_bar_description: 'G\u00E9rez votre organisation' },
+        Billing: { title_bar: 'Facturation', title_bar_description: 'G\u00E9rez la facturation et l\u2019abonnement', current_section_title: 'Forfait actuel', current_section_description: 'Ajustez votre forfait', manage_subscription_button: 'G\u00E9rer l\u2019abonnement' },
+        BillingOptions: { current_plan: 'Forfait actuel', upgrade_plan: 'Commencer' },
+        CheckoutConfirmation: { title_bar: 'Confirmation de paiement', message_state_title: 'Paiement r\u00E9ussi', message_state_description: 'Votre paiement a \u00E9t\u00E9 trait\u00E9. Merci\u00A0!', message_state_button: 'Aller \u00E0 la facturation' },
+        DataTable: { no_results: 'Aucun r\u00E9sultat.' },
+        Todos: { title_bar: 'T\u00E2ches', title_bar_description: 'G\u00E9rez vos t\u00E2ches', add_todo_button: 'Nouvelle t\u00E2che' },
+        TodoTableColumns: { open_menu: 'Ouvrir le menu', edit: 'Modifier', delete: 'Supprimer', title_header: 'Titre', message_header: 'Description', created_at_header: 'Cr\u00E9\u00E9 le' },
+        AddTodo: { title_bar: 'Ajouter une t\u00E2che', add_todo_section_title: 'Cr\u00E9er une nouvelle t\u00E2che', add_todo_section_description: 'Remplissez les d\u00E9tails ci-dessous' },
+        EditTodo: { title_bar: 'Modifier la t\u00E2che', edit_todo_section_title: 'Modifier la t\u00E2che', edit_todo_section_description: 'Mettez \u00E0 jour les d\u00E9tails ci-dessous' },
+        TodoForm: { title_label: 'Titre', title_description: 'Saisissez un titre.', message_title: 'Description', message_description: 'Saisissez une description.', submit_button: 'Envoyer' },
+      };
+      files['src/locales/fr.json'] = JSON.stringify(frTranslation, null, 2);
 
       // ── 8. Deterministic route hardening (prevents vanilla/404 deployments) ──
       const _safeName = String(inf.name || 'Your Business').replace(/`/g, '\\`').replace(/'/g, "\\'");

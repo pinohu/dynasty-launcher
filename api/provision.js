@@ -1712,7 +1712,7 @@ function generateOperationsMd(project, moduleResults) {
 function generateCredentialsMd(project, moduleResults) {
   const mask = (s) => { if (!s || typeof s !== 'string') return ''; if (s.length <= 8) return '****'; return s.slice(0, 6) + '...' + '****'; };
   const lines = [`# ${project.name} — Service Credentials\n`, `> Generated ${new Date().toISOString().split('T')[0]} | KEEP THIS DOCUMENT SECURE\n`];
-  lines.push(`## Website\n- URL: https://${project.domain || project.slug + '.vercel.app'}\n- GitHub: https://github.com/pinohu/${project.slug}\n- Vercel: https://vercel.com/polycarpohu-gmailcoms-projects/${project.slug}\n`);
+  lines.push(`## Website\n- URL: https://${project.domain || project.slug + '.vercel.app'}\n- GitHub: https://github.com/pinohu/${project.slug}\n- Vercel: https://vercel.com/~/projects/${project.slug}\n`);
 
   if (moduleResults.hosting?.ok) {
     const h = moduleResults.hosting.details;
@@ -3042,7 +3042,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         if(lr.ok||lr.status===201||ld?.error?.code==='store_project_connection_not_unique'){
           results.neon={ok:true, store:'neon-chestnut-field',
             note:'DATABASE_URL + POSTGRES_URL auto-set on Vercel project',
-            dashboard:`https://vercel.com/polycarpohu-gmailcoms-projects/stores/${NEON_STORE}`};
+            dashboard:`https://vercel.com/~/stores/${NEON_STORE}`};
         }else{
           results.neon={manual:true, error:ld?.error?.message||JSON.stringify(ld).slice(0,80),
             action:'Vercel dashboard → Storage → neon-chestnut-field → Connect Project'};
