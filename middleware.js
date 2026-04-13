@@ -23,7 +23,7 @@ export default function middleware(request) {
   const params = url.searchParams;
 
   // Only gate the builder and admin routes; everything else passes through to static files.
-  if (url.pathname !== '/admin' && !url.pathname.startsWith('/app')) {
+  if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/app')) {
     return;
   }
 
