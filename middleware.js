@@ -23,14 +23,14 @@ export default function middleware(request) {
   const params = url.searchParams;
 
   // Only gate the builder and admin routes; everything else passes through to static files.
-  if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/app')) {
+  if (!url.pathname.startsWith('/admin') && !lowPath.startsWith('/app')) {
     return;
   }
 
   // ── /app/test-login helper — accepts raw key, encodes, redirects to /app ──
-  if (url.pathname === '/app/test-login') {
+  if (lowPath === '/app/test-login') {
     const keyFromQuery = params.get('k') || '';
-    const safeQueryKey = keyFromQuery.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const safeQueryKey = keyFromQuery.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     return new Response(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Builder Test Login — Your Deputy</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;padding:20px}
 .card{width:min(520px,100%);background:#141414;border:1px solid #222;border-radius:12px;padding:22px}
@@ -69,7 +69,7 @@ button:hover{opacity:.92}.row{display:flex;gap:10px;align-items:center}.hint{fon
   }
 
   // ── /admin route — require admin key in URL or let page handle token check ──
-  if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) {
+  if (lowPath === '/admin' || lowPath.startsWith('/admin/')) {
     const adminKey = process.env.ADMIN_KEY || '';
     const testAdminKey = process.env.TEST_ADMIN_KEY || '';
     // Allow with key in URL
