@@ -136,6 +136,8 @@ section{max-width:1080px;margin:0 auto;padding:56px 24px}
 .stp h3{font-size:16px;font-weight:600;margin:24px 0 8px}
 .stp p{font-size:14px;color:var(--sub);line-height:1.6;font-weight:300}
 .pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;max-width:1240px;margin:0 auto}
+.pricing-row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+.pricing-row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px;margin:0 auto}
 .pl{background:#1E1E2A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:36px 28px;position:relative;box-shadow:0 4px 24px rgba(0,0,0,.4)}
 .pl.pop{border-color:var(--gold);background:linear-gradient(180deg,rgba(201,168,76,.06),#1E1E2A 40%);box-shadow:0 4px 32px rgba(201,168,76,.12)}
 .pl .bdg{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:4px 16px;background:var(--gold);color:var(--ink);border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
@@ -190,7 +192,7 @@ nav{height:56px;padding:0 16px}
 .cc{padding:20px}
 .features{grid-template-columns:1fr}.ft.w{grid-column:span 1}.ft{padding:20px 18px}
 .steps{grid-template-columns:1fr}.stp{padding:20px 16px}
-.pricing{grid-template-columns:1fr}.pl{padding:24px 20px}.pl .pr{font-size:32px}
+.pricing{grid-template-columns:1fr}.pricing-row-3{grid-template-columns:1fr}.pricing-row-2{grid-template-columns:1fr;max-width:100%}.pl{padding:24px 20px}.pl .pr{font-size:32px}
 .fg{grid-template-columns:1fr;gap:28px;text-align:center}
 .fb+p{max-width:none;margin:0 auto}
 .fc{text-align:center}
@@ -308,7 +310,8 @@ section{padding:32px 16px}
 <section id="entry-offer"><h3 class="sl">Start with low risk</h3><h2 class="st">Diagnostic + execution blueprint: $297</h2><div class="ss">If you're unsure, start with a paid decision layer first. You get a concrete execution sequence, risk map, and persona-matched package recommendation. If you start a paid build within 14 days, this fee is credited at checkout.</div><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="app?plan=blueprint" class="btn-g" style="font-size:14px;padding:12px 24px">Blueprint — $297</a><a href="app?plan=strategy_pack" class="btn-g" style="font-size:14px;padding:12px 24px">Strategy Pack — $697</a><a href="/quiz" class="btn-p" style="font-size:14px;padding:12px 24px">Find my best path</a><a href="app?plan=scoring_pro" class="btn-p" style="font-size:14px;padding:12px 24px">Unlimited scoring — $19/mo</a></div><p style="font-size:12px;color:var(--dim);text-align:center;margin-top:10px">Scoring runs locally on your device using WebGPU — unlimited and private. No server calls, no quota limits. Cloud fallback available if your browser lacks WebGPU support.</p></section>
 <div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
 <section id="pricing"><h3 class="sl">Pricing</h3><h2 class="st">Start free. Step up when you're ready.</h2><div class="ss">Every step delivers real value. No commitment until you're confident.</div>
-<div class="pricing" role="list" aria-label="Pricing tiers" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:1000px;margin:0 auto">
+<div role="list" aria-label="Pricing tiers" style="max-width:1080px;margin:0 auto">
+<div class="pricing-row-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px">
 
 <div class="pl" role="listitem"><h3>Free Scoring</h3><div class="pr">$0</div><div class="ds">Know before you invest</div><ul><li>Multi-lens viability scorecard</li><li>Independent stress test</li><li>Composite score with confidence</li><li>Framework-by-framework breakdown</li><li>Risk summary + key assumptions</li><li>Runs locally via WebGPU &#8212; unlimited</li><li>No credit card required</li></ul><a href="app?plan=free" class="btn-g" style="width:100%;text-align:center;padding:12px">Score Your Idea Free</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">~2 minutes &#183; Zero risk</div></div>
 
@@ -316,10 +319,14 @@ section{padding:32px 16px}
 
 <div class="pl" role="listitem"><h3>Blueprint</h3><div class="pr">$297<span>/one-time</span></div><div class="ds">Deep diagnostic + execution plan</div><ul><li>Everything in Scoring Pro, plus:</li><li>Execution blueprint document</li><li>Competitive landscape analysis</li><li>Revenue model + unit economics</li><li>Go-to-market strategy draft</li><li>Architecture recommendation</li><li>Risk assessment + mitigation plan</li><li>Investor-ready summary narrative</li></ul><a href="app?plan=blueprint" class="btn-p" style="width:100%;text-align:center;padding:12px;background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.4)">Get Your Blueprint &#8212; $297</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">The plan before the build</div></div>
 
+</div>
+<div class="pricing-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px;margin:0 auto">
+
 <div class="pl" role="listitem"><h3>Strategy Pack</h3><div class="pr">$697<span>/one-time</span></div><div class="ds">All 90+ documents &#183; No code or deployment</div><ul><li>Everything in Blueprint, plus:</li><li>90+ consulting-grade documents</li><li>SBA business plan + investor readiness</li><li>Legal templates (OA, IP, NDA, GDPR)</li><li>Financial models + valuation framework</li><li>Marketing strategy + social calendar</li><li>Operations playbook + hiring plan</li><li>Downloadable .zip &#8212; yours to keep</li><li>$697 credited if you upgrade to Foundation</li></ul><a href="app?plan=strategy_pack" class="btn-p" style="width:100%;text-align:center;padding:12px;background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.4)">Get Strategy Pack &#8212; $697</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">Documents only &#8212; upgrade anytime</div></div>
 
 <div class="pl pop" role="listitem"><div class="bdg">The Full Build</div><h3>Foundation</h3><div class="pr">$1,997<span>/build</span></div><div class="ds">120+ files &#183; Deployed product &#183; You own everything</div><ul><li>Everything in Strategy Pack, plus:</li><li>Production Next.js app on your domain</li><li>Backend API + database schema</li><li>Design system wired to your brand</li><li>Private GitHub repo &#8212; yours to extend</li><li><strong>Day-1 Kit:</strong> onboarding dashboard, tests, seed data, API collection, 90-day playbook</li></ul><a href="app?plan=foundation" class="btn-p" style="width:100%;text-align:center;padding:12px">Start Foundation &#8212; $1,997</a><div style="font-size:11px;color:var(--gold);text-align:center;margin-top:8px">Replaces $71K+ of specialist work</div></div>
 
+</div>
 </div>
 <div style="max-width:720px;margin:32px auto 0;background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(201,168,76,0.01));border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:28px 36px;text-align:center"><h3 style="font-size:16px;font-weight:600;color:var(--sub);margin-bottom:4px">Operational connections &amp; managed runtime</h3><p style="font-size:13px;color:var(--dim);margin-bottom:8px">Live payment processing, CRM, email automations, analytics, and ongoing managed monitoring are in active development. Foundation gives you the full strategy + product bundle now; operational add-ons arrive in future tiers.</p><p style="font-size:12px;color:var(--gold)">Want early access? <a href="mailto:ikeohu@dynastyempire.com?subject=Early%20Access%20Interest" style="color:var(--gold)">Contact us</a></p></div></section>
 <div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
