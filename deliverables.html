@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>What's in your build — Your Deputy</title>
+<meta name="description" content="The full inventory: 120+ deliverables across strategy, legal, code, finance, marketing, operations, technical docs, testing, and launch resources. See every file before you buy.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://yourdeputy.com/deliverables">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--ink:#09090B;--panel:#16161B;--card:#1E1E2A;--bdr:rgba(255,255,255,.12);--tx:#FAFAF9;--sub:#A1A1AA;--dim:#71717A;--grn:#22C55E}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0C0C14;color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+
+.topnav{padding:20px 24px;max-width:1100px;margin:0 auto;font-size:14px;color:var(--dim)}
+.topnav a{margin-right:12px}
+
+.hero-d{text-align:center;padding:60px 24px 40px;max-width:800px;margin:0 auto}
+.hero-d h1{font-family:'Playfair Display',serif;font-size:clamp(30px,5vw,48px);font-weight:400;letter-spacing:-.02em;margin-bottom:12px}
+.hero-d h1 em{font-style:normal;color:var(--gold)}
+.hero-d p{color:var(--sub);font-size:16px;max-width:620px;margin:0 auto 24px;line-height:1.65}
+.hero-d .counts{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:16px}
+.hero-d .ct{text-align:center}
+.hero-d .ct .n{font-family:'Playfair Display',serif;font-size:36px;color:var(--gold)}
+.hero-d .ct .l{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.hero-d .note{font-size:12px;color:var(--dim);max-width:540px;margin:0 auto}
+
+.cats{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:900px;margin:0 auto 48px;padding:0 24px}
+.cats a{font-size:12px;padding:7px 14px;border:1px solid var(--bdr);border-radius:999px;color:var(--sub);transition:all .2s;white-space:nowrap}
+.cats a:hover,.cats a:focus{color:var(--gold);border-color:rgba(201,168,76,.3);text-decoration:none;background:rgba(201,168,76,.05)}
+
+.section{padding:32px 0 48px;border-top:1px solid rgba(255,255,255,.06)}
+.section:first-of-type{border-top:none}
+.section-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.section-icon{font-size:28px;line-height:1}
+.section-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,28px);font-weight:400}
+.section-count{font-size:12px;color:var(--dim);border:1px solid var(--bdr);border-radius:999px;padding:3px 10px}
+.section-desc{color:var(--sub);font-size:14px;margin-bottom:24px;max-width:700px;line-height:1.6}
+
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.item{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;transition:all .2s}
+.item:hover{border-color:rgba(201,168,76,.25);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.item .file{font-size:11px;font-family:'SF Mono','Fira Code',monospace,system-ui;color:var(--gold);margin-bottom:4px;word-break:break-all}
+.item .desc{font-size:12.5px;color:var(--sub);line-height:1.45}
+
+@media(max-width:768px){
+  .grid{grid-template-columns:1fr}
+  .hero-d{padding:40px 16px 28px}
+  .hero-d .counts{gap:16px}
+  .hero-d .ct .n{font-size:28px}
+  .section{padding:24px 0 36px}
+  .wrap{padding:0 16px}
+  .cats{gap:6px}.cats a{font-size:11px;padding:6px 10px}
+}
+@media(min-width:769px) and (max-width:1024px){
+  .grid{grid-template-columns:1fr 1fr}
+}
+
+.cta-bottom{text-align:center;padding:48px 24px;border-top:1px solid rgba(255,255,255,.06)}
+.cta-bottom h2{font-family:'Playfair Display',serif;font-size:clamp(24px,3.5vw,36px);font-weight:400;margin-bottom:10px}
+.cta-bottom p{color:var(--sub);font-size:15px;margin-bottom:24px;max-width:520px;margin-left:auto;margin-right:auto}
+.btn-p{padding:12px 28px;background:var(--gold);color:var(--ink);border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s;font-family:inherit;text-decoration:none;display:inline-block}
+.btn-p:hover{box-shadow:0 8px 32px rgba(201,168,76,.25);transform:translateY(-2px);text-decoration:none}
+.btn-g{padding:12px 28px;background:transparent;color:var(--sub);border:1px solid var(--bdr);border-radius:10px;font-size:15px;font-weight:500;text-decoration:none;display:inline-block;transition:all .2s}
+.btn-g:hover{color:var(--tx);border-color:rgba(255,255,255,.2);text-decoration:none}
+
+footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center;font-size:12px;color:var(--dim);max-width:1100px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<div class="topnav"><a href="/">← Home</a> <a href="/#pricing">Pricing</a> <a href="/maturity">What ships</a> <a href="/for/">Guides</a></div>
+
+<div class="hero-d">
+<h1>Everything in <em>your build</em></h1>
+<p>Not a vague promise. This is the actual file-by-file inventory across 10 categories that you walk away with — in your repo, on your domain, under your control.</p>
+<div class="counts">
+<div class="ct"><div class="n">120+</div><div class="l">Total files</div></div>
+<div class="ct"><div class="n">10</div><div class="l">Categories</div></div>
+<div class="ct"><div class="n">50K+</div><div class="l">Words of strategy</div></div>
+<div class="ct"><div class="n">$71K+</div><div class="l">Equivalent value</div></div>
+</div>
+<p class="note">Exact count varies by tier and build archetype. Foundation delivers 90+ docs + deployed product. Professional and Enterprise add operational connections. Every file listed below is real — generated from your specific business description.</p>
+</div>
+
+<div class="cats">
+<a href="#strategy">Strategy &amp; Planning</a>
+<a href="#legal">Legal &amp; Compliance</a>
+<a href="#frontend">Frontend Code</a>
+<a href="#backend">Backend &amp; Config</a>
+<a href="#financial">Financial Models</a>
+<a href="#marketing">Marketing &amp; Growth</a>
+<a href="#operations">Operations &amp; Team</a>
+<a href="#techdocs">Technical Docs</a>
+<a href="#testing">Testing &amp; QA</a>
+<a href="#launch">Day-1 Launch Kit</a>
+</div>
+
+<div class="wrap">
+
+<!-- 1. Strategy -->
+<div class="section" id="strategy">
+<div class="section-head"><span class="section-icon">📊</span><span class="section-title">Strategy &amp; Business Planning</span><span class="section-count">15 documents</span></div>
+<p class="section-desc">High-level documents that define what the business is, how it operates, and where it's going. Built to survive a lender meeting, investor diligence, or internal planning session.</p>
+<div class="grid">
+<div class="item"><div class="file">SPEC.md</div><div class="desc">Full product specification — features, user stories, acceptance criteria, tech stack decisions</div></div>
+<div class="item"><div class="file">BUSINESS-SYSTEM.md</div><div class="desc">Board-style operating system — org structure, decision framework, KPIs, OKRs</div></div>
+<div class="item"><div class="file">REVENUE-MODEL.md</div><div class="desc">Pricing tiers, revenue streams, unit economics, LTV/CAC, payback period</div></div>
+<div class="item"><div class="file">GTM-PLAYBOOK.md</div><div class="desc">Go-to-market strategy — channels, messaging, launch timeline, distribution</div></div>
+<div class="item"><div class="file">ROADMAP.md</div><div class="desc">Phased product roadmap with milestones, dependencies, and success criteria</div></div>
+<div class="item"><div class="file">ENTITY-SELECTION.md</div><div class="desc">LLC vs S-Corp vs C-Corp analysis with ROBS/401k nuances for your business</div></div>
+<div class="item"><div class="file">PIVOT-FRAMEWORK.md</div><div class="desc">Decision trees and trigger criteria for when and how to pivot the model</div></div>
+<div class="item"><div class="file">SCENARIO-PLANNING.md</div><div class="desc">Best/base/worst case scenarios with financial projections and response plans</div></div>
+<div class="item"><div class="file">PRODUCT-STRATEGY.md</div><div class="desc">Product vision, competitive positioning, feature prioritization framework</div></div>
+<div class="item"><div class="file">ZERO-TO-ONE-ASSESSMENT.md</div><div class="desc">Peter Thiel-style assessment — contrarian truth, monopoly path, secret</div></div>
+<div class="item"><div class="file">PITCH-DECK.md</div><div class="desc">10-section investor pitch summary — problem, solution, market, traction, ask</div></div>
+<div class="item"><div class="file">INVESTOR-READINESS.md</div><div class="desc">Due diligence prep — financial projections, team, IP, metrics dashboard</div></div>
+<div class="item"><div class="file">SBA-BUSINESS-PLAN.md</div><div class="desc">Traditional SBA-format business plan for bank and loan applications</div></div>
+<div class="item"><div class="file">PMF-MEASUREMENT.md</div><div class="desc">Product-market fit metrics — Sean Ellis test, cohort curves, NPS framework</div></div>
+<div class="item"><div class="file">BANK-FUNDING-PLAYBOOK.md</div><div class="desc">SBA loan types, bank lending requirements, application checklist, pitch structure</div></div>
+</div>
+</div>
+
+<!-- 2. Legal -->
+<div class="section" id="legal">
+<div class="section-head"><span class="section-icon">⚖️</span><span class="section-title">Legal &amp; Compliance Templates</span><span class="section-count">15 documents</span></div>
+<p class="section-desc">Ready-to-customize legal documents generated for your specific business type. Not a substitute for an attorney — but a strong starting draft that saves thousands in billable hours.</p>
+<div class="grid">
+<div class="item"><div class="file">docs/LEGAL-TEMPLATES.md</div><div class="desc">Terms of Service + Privacy Policy tailored to your business type</div></div>
+<div class="item"><div class="file">docs/OPERATING-AGREEMENT-TEMPLATE.md</div><div class="desc">LLC operating agreement — member roles, profit distribution, exit clauses</div></div>
+<div class="item"><div class="file">docs/IP-ASSIGNMENT.md</div><div class="desc">Intellectual property assignment template for founders and contractors</div></div>
+<div class="item"><div class="file">docs/NDA-TEMPLATE.md</div><div class="desc">Non-disclosure agreement for partners, employees, and contractors</div></div>
+<div class="item"><div class="file">docs/CONTRACTOR-AGREEMENT.md</div><div class="desc">Independent contractor agreement with scope, payment, IP ownership</div></div>
+<div class="item"><div class="file">docs/OFFER-LETTER-TEMPLATE.md</div><div class="desc">Employment offer letter with compensation, equity, benefits structure</div></div>
+<div class="item"><div class="file">docs/GDPR-IMPLEMENTATION.md</div><div class="desc">GDPR compliance plan — data mapping, consent flows, DSAR procedures</div></div>
+<div class="item"><div class="file">docs/DPA-TEMPLATE.md</div><div class="desc">Data Processing Agreement for vendor and processor relationships</div></div>
+<div class="item"><div class="file">docs/BOARD-RESOLUTIONS.md</div><div class="desc">Board resolution templates for common corporate actions</div></div>
+<div class="item"><div class="file">FOUNDER-AGREEMENT.md</div><div class="desc">Co-founder operating agreement — equity split, vesting, roles, departure</div></div>
+<div class="item"><div class="file">docs/CAPABILITIES-STATEMENT.template.md</div><div class="desc">Government contracting capability statement template</div></div>
+<div class="item"><div class="file">docs/RFP-RESPONSE-OUTLINE.md</div><div class="desc">RFP response framework for government and enterprise bids</div></div>
+<div class="item"><div class="file">docs/NAICS-CANDIDATES.md</div><div class="desc">NAICS code analysis for government contracting eligibility</div></div>
+<div class="item"><div class="file">docs/GOV-READINESS.md</div><div class="desc">Government contracting readiness checklist (SAM, DUNS, certifications)</div></div>
+<div class="item"><div class="file">REMOTE-WORK-POLICY.md</div><div class="desc">Remote work policies — equipment, availability, security, compliance</div></div>
+</div>
+</div>
+
+<!-- 3. Frontend -->
+<div class="section" id="frontend">
+<div class="section-head"><span class="section-icon">🖥️</span><span class="section-title">Frontend — Production Next.js Application</span><span class="section-count">15 files</span></div>
+<p class="section-desc">A real, deployable Next.js application with your design system, your content, and your branding — not a generic template with placeholder text.</p>
+<div class="grid">
+<div class="item"><div class="file">src/app/layout.tsx</div><div class="desc">Root layout with metadata, fonts, providers, global CSS import</div></div>
+<div class="item"><div class="file">src/app/page.tsx</div><div class="desc">Homepage with hero, features, social proof, and CTA sections</div></div>
+<div class="item"><div class="file">src/app/dashboard/page.tsx</div><div class="desc">Authenticated dashboard with data tables, charts, and actions</div></div>
+<div class="item"><div class="file">src/templates/Hero.tsx</div><div class="desc">Hero section component with headline, subhead, CTA, and image</div></div>
+<div class="item"><div class="file">src/templates/Features.tsx</div><div class="desc">Feature grid component with icons, descriptions, responsive layout</div></div>
+<div class="item"><div class="file">src/templates/Pricing.tsx</div><div class="desc">Pricing table with tiers, monthly/annual toggle, feature comparison</div></div>
+<div class="item"><div class="file">src/templates/FAQ.tsx</div><div class="desc">Accordion FAQ component with structured data for SEO</div></div>
+<div class="item"><div class="file">src/templates/Navbar.tsx</div><div class="desc">Navigation bar with mobile hamburger, auth state, CTA button</div></div>
+<div class="item"><div class="file">src/templates/Footer.tsx</div><div class="desc">Footer with sitemap, social icons, legal links, newsletter signup</div></div>
+<div class="item"><div class="file">src/templates/CTA.tsx</div><div class="desc">Call-to-action section with urgency copy and conversion button</div></div>
+<div class="item"><div class="file">src/app/docs/page.tsx</div><div class="desc">Documentation and knowledge-base page</div></div>
+<div class="item"><div class="file">src/app/pricing/page.tsx</div><div class="desc">Dedicated pricing page with extended feature comparison</div></div>
+<div class="item"><div class="file">src/app/about/page.tsx</div><div class="desc">About page with company story, team, and values</div></div>
+<div class="item"><div class="file">src/app/not-found.tsx</div><div class="desc">Custom 404 page with navigation back to home</div></div>
+<div class="item"><div class="file">src/locales/en.json + fr.json</div><div class="desc">Internationalized content files for multi-language support</div></div>
+</div>
+</div>
+
+<!-- 4. Backend -->
+<div class="section" id="backend">
+<div class="section-head"><span class="section-icon">⚙️</span><span class="section-title">Backend, Infrastructure &amp; Configuration</span><span class="section-count">15 files</span></div>
+<p class="section-desc">Backend logic, database schemas, API routes, and infrastructure config — everything a developer needs to extend the product after handoff.</p>
+<div class="grid">
+<div class="item"><div class="file">backend/main.py</div><div class="desc">FastAPI application with CRUD endpoints, auth middleware, error handling</div></div>
+<div class="item"><div class="file">src/models/Schema.ts</div><div class="desc">Database schema with models, relations, indexes, and constraints</div></div>
+<div class="item"><div class="file">src/app/api/v1/route.ts</div><div class="desc">REST API v1 routes — CRUD operations, validation, auth checks</div></div>
+<div class="item"><div class="file">src/app/api/data/route.ts</div><div class="desc">Data API routes for dashboard fetches and mutations</div></div>
+<div class="item"><div class="file">backend/requirements.txt</div><div class="desc">Python dependencies with pinned versions</div></div>
+<div class="item"><div class="file">backend/Dockerfile</div><div class="desc">Multi-stage Docker build for the backend service</div></div>
+<div class="item"><div class="file">docker-compose.yml</div><div class="desc">Full-stack dev environment — app, database, redis, worker</div></div>
+<div class="item"><div class="file">package.json</div><div class="desc">Node dependencies, scripts (dev, build, test, seed, lint)</div></div>
+<div class="item"><div class="file">next.config.js</div><div class="desc">Next.js config — images, redirects, headers, i18n settings</div></div>
+<div class="item"><div class="file">tailwind.config.ts</div><div class="desc">Tailwind CSS config with custom theme tokens from your design system</div></div>
+<div class="item"><div class="file">tsconfig.json</div><div class="desc">TypeScript strict mode config with path aliases</div></div>
+<div class="item"><div class="file">vercel.json</div><div class="desc">Vercel deployment config — routes, headers, function settings</div></div>
+<div class="item"><div class="file">.env.example</div><div class="desc">Environment variable template with every required key documented</div></div>
+<div class="item"><div class="file">src/utils/AppConfig.ts</div><div class="desc">Application constants — site name, URL, description, locale</div></div>
+<div class="item"><div class="file">src/libs/Env.ts</div><div class="desc">Zod-validated environment variable schema with runtime checks</div></div>
+</div>
+</div>
+
+<!-- 5. Financial -->
+<div class="section" id="financial">
+<div class="section-head"><span class="section-icon">💰</span><span class="section-title">Financial Planning &amp; Modeling</span><span class="section-count">15 documents</span></div>
+<p class="section-desc">Quantitative financial frameworks tailored to your business — the numbers lenders ask for and investors expect to see.</p>
+<div class="grid">
+<div class="item"><div class="file">RUNWAY-CALCULATOR.md</div><div class="desc">Monthly burn rate, runway projection, cash flow templates</div></div>
+<div class="item"><div class="file">CAP-TABLE-MODEL.md</div><div class="desc">Cap table with founder splits, option pool, dilution scenarios</div></div>
+<div class="item"><div class="file">VALUATION-MODEL.md</div><div class="desc">Pre/post-money calculations, comparable analysis, DCF framework</div></div>
+<div class="item"><div class="file">DILUTION-MODEL.md</div><div class="desc">Multi-round dilution waterfall showing founder % through Series C</div></div>
+<div class="item"><div class="file">THREE-STATEMENT-MODEL.md</div><div class="desc">Income statement + balance sheet + cash flow linked model</div></div>
+<div class="item"><div class="file">TERM-SHEET-TEMPLATES.md</div><div class="desc">Seed/Series A term sheet annotated with founder-friendly guidance</div></div>
+<div class="item"><div class="file">FINANCIAL-CONTROLS.md</div><div class="desc">Internal controls — approval workflows, expense policies, audit prep</div></div>
+<div class="item"><div class="file">REVENUE-RECOGNITION.md</div><div class="desc">ASC 606 compliance — recognition timing, deferred revenue, reporting</div></div>
+<div class="item"><div class="file">TAX-STRATEGY.md</div><div class="desc">Tax optimization — entity structure, R&amp;D credits, state nexus, QSBS</div></div>
+<div class="item"><div class="file">PRICING-STRATEGY.md</div><div class="desc">Value-based pricing framework, willingness-to-pay, experimentation</div></div>
+<div class="item"><div class="file">docs/ROBS-CHECKLIST.md</div><div class="desc">Rollover for Business Startups (401k) compliance checklist</div></div>
+<div class="item"><div class="file">COMPENSATION-BENCHMARKS.md</div><div class="desc">Salary bands, equity ranges, benefits benchmarks by role and stage</div></div>
+<div class="item"><div class="file">INVESTOR-UPDATE-TEMPLATE.md</div><div class="desc">Monthly investor update template — metrics, wins, asks, runway</div></div>
+<div class="item"><div class="file">BOARD-DECK-TEMPLATE.md</div><div class="desc">Quarterly board deck template — financials, product, pipeline</div></div>
+<div class="item"><div class="file">WEEKLY-METRICS.md</div><div class="desc">Weekly metrics dashboard — north star, leading indicators, health</div></div>
+</div>
+</div>
+
+<!-- 6. Marketing -->
+<div class="section" id="marketing">
+<div class="section-head"><span class="section-icon">📣</span><span class="section-title">Marketing &amp; Growth</span><span class="section-count">15 documents</span></div>
+<p class="section-desc">Everything needed to acquire, convert, and retain customers — from social calendars to competitor analysis to referral programs.</p>
+<div class="grid">
+<div class="item"><div class="file">social-media/SOCIAL-MEDIA-CALENDAR.md</div><div class="desc">260-post content calendar across platforms with copy, hashtags, timing</div></div>
+<div class="item"><div class="file">social-media/calendar.csv</div><div class="desc">CSV import for Vista Social, Buffer, or Hootsuite</div></div>
+<div class="item"><div class="file">social-media/calendar.json</div><div class="desc">JSON format for programmatic social scheduling</div></div>
+<div class="item"><div class="file">VIDEO-SCRIPT.md</div><div class="desc">5-minute explainer video script with scene directions and B-roll notes</div></div>
+<div class="item"><div class="file">AB-MESSAGING.md</div><div class="desc">Two complete GTM messaging variants for A/B testing</div></div>
+<div class="item"><div class="file">docs/EMAIL-SEQUENCES.md</div><div class="desc">5-email welcome/onboarding drip sequence with subject lines and timing</div></div>
+<div class="item"><div class="file">docs/COMPETITIVE-ANALYSIS.md</div><div class="desc">2×2 competitive matrix, feature comparison, positioning gaps</div></div>
+<div class="item"><div class="file">PITCH-SCRIPT.md</div><div class="desc">60-second and 3-minute verbal pitch scripts with objection handling</div></div>
+<div class="item"><div class="file">CONTENT-MARKETING-PLAN.md</div><div class="desc">Editorial calendar, SEO keyword strategy, content pillars</div></div>
+<div class="item"><div class="file">CHANNEL-PLAYBOOKS.md</div><div class="desc">Channel-by-channel acquisition playbooks (paid, organic, partnerships)</div></div>
+<div class="item"><div class="file">REFERRAL-PROGRAM.md</div><div class="desc">Referral program design — incentive structure, viral loops, tracking</div></div>
+<div class="item"><div class="file">LAUNCH-CHECKLIST.md</div><div class="desc">Pre-launch, launch day, and post-launch checklist with owners</div></div>
+<div class="item"><div class="file">NETWORK-EFFECTS.md</div><div class="desc">Network effects analysis — type, defensibility, critical mass strategies</div></div>
+<div class="item"><div class="file">MARKETPLACE-STRATEGY.md</div><div class="desc">Supply/demand balancing, chicken-and-egg solutions, take rate model</div></div>
+<div class="item"><div class="file">CUSTOMER-JOURNEY-MAP.md</div><div class="desc">End-to-end journey with touchpoints, emotions, and friction points</div></div>
+</div>
+</div>
+
+<!-- 7. Operations -->
+<div class="section" id="operations">
+<div class="section-head"><span class="section-icon">🏢</span><span class="section-title">Operations &amp; Team Building</span><span class="section-count">15 documents</span></div>
+<p class="section-desc">Internal ops, culture, hiring, and team management — the playbooks that keep a business running after launch day.</p>
+<div class="grid">
+<div class="item"><div class="file">OPERATIONS-PLAYBOOK.md</div><div class="desc">SOPs for daily, weekly, and monthly operations — workflows, escalations</div></div>
+<div class="item"><div class="file">HIRING-PLAN.md</div><div class="desc">First 10 hires — roles, comp ranges, scorecards, interview guides</div></div>
+<div class="item"><div class="file">CULTURE.md</div><div class="desc">Values, norms, rituals, decision-making principles for the team</div></div>
+<div class="item"><div class="file">EQUITY-GUIDE.md</div><div class="desc">Equity compensation guide — vesting schedules, cliff, exercise windows</div></div>
+<div class="item"><div class="file">PERFORMANCE-FRAMEWORK.md</div><div class="desc">Performance review system — OKRs, feedback cadence, growth paths</div></div>
+<div class="item"><div class="file">ORG-DESIGN.md</div><div class="desc">Organizational structure — reporting lines, team topology, RACI</div></div>
+<div class="item"><div class="file">ONBOARDING-CHECKLIST.md</div><div class="desc">New employee onboarding — week 1–4 plan, tools, access, mentorship</div></div>
+<div class="item"><div class="file">CUSTOMER-SUCCESS.md</div><div class="desc">CS playbooks — health scoring, QBR templates, expansion triggers</div></div>
+<div class="item"><div class="file">CRISIS-PLAYBOOK.md</div><div class="desc">Incident response — severity levels, war room process, communications</div></div>
+<div class="item"><div class="file">AGENT-SYSTEM.md</div><div class="desc">AI/automation architecture — agent roles, tool access, handoff rules</div></div>
+<div class="item"><div class="file">FAILURE-MODES.md</div><div class="desc">Pre-mortem analysis — failure scenarios, detection, mitigation runbooks</div></div>
+<div class="item"><div class="file">UNSCALABLE-PLAYBOOK.md</div><div class="desc">"Do things that don't scale" tactical checklist for early growth</div></div>
+<div class="item"><div class="file">CHURN-REDUCTION.md</div><div class="desc">Churn analysis — leading indicators, save plays, win-back sequences</div></div>
+<div class="item"><div class="file">RETENTION-PLAYBOOK.md</div><div class="desc">Retention strategies — engagement loops, activation milestones</div></div>
+<div class="item"><div class="file">SUPPLY-CHAIN.md</div><div class="desc">Supply chain management — vendor selection, logistics, contingency</div></div>
+</div>
+</div>
+
+<!-- 8. Tech Docs -->
+<div class="section" id="techdocs">
+<div class="section-head"><span class="section-icon">📖</span><span class="section-title">Technical Documentation</span><span class="section-count">15 documents</span></div>
+<p class="section-desc">Developer-facing docs, API specs, and architecture references — everything a new developer or technical advisor needs to understand the system.</p>
+<div class="grid">
+<div class="item"><div class="file">DESIGN.md</div><div class="desc">Design system — colors, typography, spacing, component tokens</div></div>
+<div class="item"><div class="file">CLAUDE.md</div><div class="desc">Agent-facing project rules — repo structure, conventions, testing</div></div>
+<div class="item"><div class="file">docs/DATA-MODEL.md</div><div class="desc">Database schema docs — entities, relations, indexes, migrations</div></div>
+<div class="item"><div class="file">docs/API-CONTRACTS.md</div><div class="desc">API reference — endpoints, request/response schemas, auth flows</div></div>
+<div class="item"><div class="file">docs/KB-OUTLINES.md</div><div class="desc">25 knowledge-base article outlines for the customer help center</div></div>
+<div class="item"><div class="file">docs/openapi.json</div><div class="desc">OpenAPI 3.0 specification — machine-readable, Swagger-compatible</div></div>
+<div class="item"><div class="file">docs/postman-collection.json</div><div class="desc">Postman v2.1 collection with pre-configured API requests</div></div>
+<div class="item"><div class="file">MANUAL-ACTIONS.md</div><div class="desc">Manual setup steps that couldn't be automated (DNS, keys, etc.)</div></div>
+<div class="item"><div class="file">docs/DESIGN-DECISIONS.md</div><div class="desc">Architecture decision records — rationale for key technical choices</div></div>
+<div class="item"><div class="file">AGENTS.md</div><div class="desc">Multi-agent orchestration config — roles, tools, boundaries</div></div>
+<div class="item"><div class="file">ANALYTICS-INSTRUMENTATION.md</div><div class="desc">Event taxonomy, tracking plan, dashboard specs for analytics tools</div></div>
+<div class="item"><div class="file">ACCESSIBILITY-PLAN.md</div><div class="desc">WCAG 2.2 AA compliance plan — audit checklist, remediation priorities</div></div>
+<div class="item"><div class="file">I18N-STRATEGY.md</div><div class="desc">Internationalization plan — locale detection, translation workflow, RTL</div></div>
+<div class="item"><div class="file">TECH-DEBT-FRAMEWORK.md</div><div class="desc">Technical debt classification, prioritization matrix, paydown cadence</div></div>
+<div class="item"><div class="file">docs/V4-ARCHETYPE-FILE-COUNTS.md</div><div class="desc">Build archetype transparency — what was generated vs expected</div></div>
+</div>
+</div>
+
+<!-- 9. Testing -->
+<div class="section" id="testing">
+<div class="section-head"><span class="section-icon">🧪</span><span class="section-title">Testing &amp; Quality Assurance</span><span class="section-count">15 artifacts</span></div>
+<p class="section-desc">Automated tests, research frameworks, and quality playbooks — so the product works on day one and the business learns from real users.</p>
+<div class="grid">
+<div class="item"><div class="file">src/__tests__/api.test.ts</div><div class="desc">API route unit tests with mocked DB, auth, and error cases</div></div>
+<div class="item"><div class="file">src/__tests__/pages.test.tsx</div><div class="desc">React Testing Library component tests for all page routes</div></div>
+<div class="item"><div class="file">src/__tests__/schema.test.ts</div><div class="desc">Database schema validation — required fields, constraints, relations</div></div>
+<div class="item"><div class="file">e2e/smoke.spec.ts</div><div class="desc">Playwright end-to-end smoke tests — navigation, forms, auth flow</div></div>
+<div class="item"><div class="file">vitest.config.ts</div><div class="desc">Vitest config — coverage thresholds, environment, setup files</div></div>
+<div class="item"><div class="file">playwright.config.ts</div><div class="desc">Playwright config — browsers, base URL, screenshot settings</div></div>
+<div class="item"><div class="file">EXPERIMENT-FRAMEWORK.md</div><div class="desc">A/B test framework — hypothesis, metrics, sample size, duration</div></div>
+<div class="item"><div class="file">AB-TESTING-FRAMEWORK.md</div><div class="desc">Technical A/B implementation — feature flags, statistical rigor</div></div>
+<div class="item"><div class="file">COHORT-ANALYSIS.md</div><div class="desc">Cohort analysis templates — retention curves, revenue by cohort</div></div>
+<div class="item"><div class="file">GROWTH-EXPERIMENTS.md</div><div class="desc">Growth experiment backlog — ICE scored, templates, learnings tracker</div></div>
+<div class="item"><div class="file">docs/CUSTOMER-DISCOVERY.md</div><div class="desc">Customer discovery interview script — questions, recording, synthesis</div></div>
+<div class="item"><div class="file">USER-RESEARCH-PLAN.md</div><div class="desc">User research plan — personas, methods, recruitment, synthesis</div></div>
+<div class="item"><div class="file">JTBD-INTERVIEW-GUIDE.md</div><div class="desc">Jobs-to-be-Done interview guide — timeline, forces, switch triggers</div></div>
+<div class="item"><div class="file">COMMUNITY-STRATEGY.md</div><div class="desc">Community building plan — platform, activation, moderation, growth</div></div>
+<div class="item"><div class="file">docs/plain/QA-NOTES.md</div><div class="desc">Plain-language QA heuristic notes from automated content scan</div></div>
+</div>
+</div>
+
+<!-- 10. Launch Kit -->
+<div class="section" id="launch">
+<div class="section-head"><span class="section-icon">🚀</span><span class="section-title">Day-1 Launch Kit &amp; Onboarding</span><span class="section-count">15 artifacts</span></div>
+<p class="section-desc">Resources designed to get you productive from day one — not "read this later" documentation, but tools you use immediately.</p>
+<div class="grid">
+<div class="item"><div class="file">public/onboard.html</div><div class="desc">Interactive HTML onboarding dashboard with checklist and progress tracking</div></div>
+<div class="item"><div class="file">LAUNCH-PLAYBOOK.md</div><div class="desc">Tier-aware 90-day launch playbook — week-by-week action items</div></div>
+<div class="item"><div class="file">src/data/seed/users.json</div><div class="desc">Realistic fake user data for development and demos</div></div>
+<div class="item"><div class="file">src/data/seed/content.json</div><div class="desc">Sample content entries matching your business type</div></div>
+<div class="item"><div class="file">src/data/seed/transactions.json</div><div class="desc">Fictional transaction data for testing billing and revenue views</div></div>
+<div class="item"><div class="file">src/scripts/seed.ts</div><div class="desc">Executable TypeScript seeder script (npm run db:seed)</div></div>
+<div class="item"><div class="file">README.md</div><div class="desc">Developer onboarding — setup instructions, architecture overview</div></div>
+<div class="item"><div class="file">.github/workflows/ci.yml</div><div class="desc">GitHub Actions CI — lint, type-check, test, build on every PR</div></div>
+<div class="item"><div class="file">.gitignore</div><div class="desc">Comprehensive gitignore for Next.js + Python + IDE files</div></div>
+<div class="item"><div class="file">docs/plain/START-HERE.md</div><div class="desc">Non-technical "start here" guide written in plain language</div></div>
+<div class="item"><div class="file">docs/plain/BUSINESS-SYSTEM.md</div><div class="desc">Plain-language version of the operating system document</div></div>
+<div class="item"><div class="file">docs/plain/REVENUE-MODEL.md</div><div class="desc">Plain-language version of the revenue model</div></div>
+<div class="item"><div class="file">docs/plain/GTM-PLAYBOOK.md</div><div class="desc">Plain-language version of the go-to-market playbook</div></div>
+<div class="item"><div class="file">docs/plain/SPEC.md</div><div class="desc">Plain-language version of the product specification</div></div>
+<div class="item"><div class="file">GOVERNANCE.md</div><div class="desc">Governance framework — decision rights, board structure, compliance</div></div>
+</div>
+</div>
+
+</div>
+
+<div class="cta-bottom">
+<h2>That's what <em style="font-style:normal;color:var(--gold)">$1,997</em> buys.</h2>
+<p>Not "access to a tool." Not "credits." A complete business-in-a-box built from your specific idea, deployed on your domain, in your repo, under your control. Forever.</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<a href="/app?plan=free" class="btn-g">Score free first</a>
+<a href="/app?plan=foundation" class="btn-p">Start Foundation — $1,997</a>
+</div>
+<p style="font-size:12px;color:var(--dim);margin-top:14px">Higher tiers add live operational connections (payments, CRM, automations). <a href="/#pricing">Compare tiers</a> · <a href="/maturity">See what ships today</a></p>
+</div>
+
+<footer>
+<p>© 2026 PA Registered Office Services, LLC · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/">Home</a></p>
+<p style="margin-top:8px;font-size:11px;color:#444">All documents are AI-generated starting points. Legal, financial, and tax documents require qualified professional review. Generated code is production-ready scaffolding — extend and audit before relying on it in production.</p>
+</footer>
+
+</body>
+</html>
