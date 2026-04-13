@@ -114,7 +114,7 @@ export default async function handler(req, res) {
       const payload = `${prefix}:${expiry}`;
       const crypto = await import('crypto');
       const expected = crypto.createHmac('sha256', tokenSecret).update(payload).digest('hex');
-      if (hash !== expected) return res.json({ ok: false, valid: false });
+      if (expected.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(hash))) return res.json({ ok: false, valid: false });
       if (Date.now() > parseInt(expiry)) return res.json({ ok: false, valid: false, expired: true });
       return res.json({ ok: true, valid: true, tier: 'enterprise' });
     } catch {

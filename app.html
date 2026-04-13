@@ -1369,16 +1369,29 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
 
   // 4. Verified paid user (has a confirmed Stripe session)
   if (paidSession && paidAt) {
-    if (!localStorage.getItem('dynasty_paid_token')) {
-      fetch('/api/checkout?action=verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: paidSession, user_id: CLERK_USER?.id || '' })
-      }).then(r => r.json()).then(v => {
-        if (v.ok && v.paid && v.access_token) localStorage.setItem('dynasty_paid_token', v.access_token)
-      }).catch(() => {});
+    var existingToken = localStorage.getItem('dynasty_paid_token');
+    if (existingToken) {
+      return;
     }
-    // Payment exists — allow access (server-side tier gating handles module limits)
+    // Must verify with server before granting access
+    var _accessGate = document.getElementById('access-gate');
+    if (_accessGate) { _accessGate.innerHTML = '<p style="color:var(--dim);text-align:center;margin-top:40vh">Verifying session…</p>'; _accessGate.style.display = 'flex'; }
+    fetch('/api/checkout?action=verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: paidSession, user_id: CLERK_USER?.id || '' })
+    }).then(function(r) { return r.json() }).then(function(v) {
+      if (v.ok && v.paid && v.access_token) {
+        localStorage.setItem('dynasty_paid_token', v.access_token);
+        if (_accessGate) _accessGate.style.display = 'none';
+      } else {
+        localStorage.removeItem('dynasty_paid_session');
+        localStorage.removeItem('dynasty_paid_at');
+        window.location.reload();
+      }
+    }).catch(function() {
+      if (_accessGate) _accessGate.style.display = 'none';
+    });
     return;
   }
 
@@ -1568,7 +1581,8 @@ updateHistoryButtonVisibility();
 loadBuildHistory();
 // ── Security: HTML Escaping ───────────────────────────────────────────────────
 function escapeHtml(str) {
-  if (!str || typeof str !== 'string') return str || '';
+  if (str == null) return '';
+  if (typeof str !== 'string') return String(str);
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
@@ -3079,7 +3093,7 @@ async function startCheckout(plan) {
     enterBuilder();
     return;
   }
-  if (plan && ['blueprint', 'scoring_pro', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'].includes(plan) && !params.get('payment')) {
+  if (plan && ['blueprint', 'scoring_pro', 'strategy_pack', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'].includes(plan) && !params.get('payment')) {
     // Don't store tier yet — wait for payment confirmation in checkPaymentReturn
     startCheckout(plan === 'starter' ? 'foundation' : plan);
   }
@@ -3825,7 +3839,7 @@ async function populateModels() {
     .sort((a, b) => a[1].free === b[1].free ? 0 : a[1].free ? -1 : 1)
     .map(([id, m]) => `
       <div class="model-chip ${m.free ? 'free' : ''} ${id === V2_MODEL ? 'selected' : ''}"
-           onclick="selectModel('${id}', this)" data-model="${id}" data-cost="${m.estimatedBuildCost}">
+           onclick="selectModel('${escapeHtml(id)}', this)" data-model="${escapeHtml(id)}" data-cost="${m.estimatedBuildCost}">
         <div class="mc-name">${m.label}</div>
         <div class="mc-provider">${m.provider}</div>
         <div class="mc-cost">${m.free ? 'FREE' : m.estimatedBuildCost}</div>
@@ -4687,7 +4701,7 @@ Return ONLY valid JSON:
       document.getElementById(`refine-status-${round}`).textContent = 'Attacking refined idea...';
       document.getElementById(`refine-status-${round}`).style.color = 'var(--red)';
     } catch (e) {
-      document.getElementById(`refine-content-${round}`).innerHTML = `<div style="color:var(--red);font-size:11px">Refinement failed: ${e.message}</div>`;
+      document.getElementById(`refine-content-${round}`).innerHTML = `<div style="color:var(--red);font-size:11px">Refinement failed: ${escapeHtml(e.message)}</div>`;
       document.getElementById(`refine-status-${round}`).textContent = 'Failed';
       break;
     }
@@ -6871,7 +6885,7 @@ Image Prompt column: Describe a specific image that could be generated with AI (
         titleHtml: 'Social calendar — error',
         body: 'Generation did not complete. Check the progress list; you can still continue the build.',
         tip: EDU_CONTENT.social.tip,
-        factHtml: '<div class="edu-fact">' + String(e.message || 'Error').slice(0, 120) + '</div>',
+        factHtml: '<div class="edu-fact">' + escapeHtml(String(e.message || 'Error').slice(0, 120)) + '</div>',
         fillWidth: '100%',
         fillOpacity: 0.45,
       });

@@ -87,7 +87,8 @@ export default async function handler(req, res) {
       professional: { amount: 499700, name: 'Your Deputy — Professional', desc: 'Everything in Foundation plus attempts at core live stack where APIs succeed: domain/email patterns, connected payments, CRM, marketing sequences, chatbot, analytics, automation (subject to keys and archetype deferrals). $100K–$170K equivalent value.' },
       enterprise: { amount: 999700, name: 'Your Deputy — Enterprise', desc: 'Broadest integration attempts: up to 17 module types when your site package does not skip them — subject to API success, keys, and implementation status. Plus creative, SEO, social calendar, and directory/WP paths per spec. See BUILD-MANIFEST.json for your build. $71K–$194K equivalent value.' }
     };
-    const tierDef = tiers[normalizedPlan] || tiers.foundation;
+    const tierDef = tiers[normalizedPlan];
+    if (!tierDef) return res.status(400).json({ error: `Unknown plan: ${normalizedPlan}. Valid plans: ${Object.keys(tiers).join(', ')}` });
     const isBlueprintCreditablePlan = !['blueprint', 'managed', 'scoring_pro', 'strategy_pack'].includes(normalizedPlan);
     const wantsBlueprintCredit = !!apply_blueprint_credit && isBlueprintCreditablePlan;
     const blueprintCreditCents = wantsBlueprintCredit ? Math.min(29700, Math.max(0, tierDef.amount - 5000)) : 0;
