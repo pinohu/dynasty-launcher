@@ -43,7 +43,9 @@ async function stripePost(endpoint, params) {
     headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params
   });
-  return resp.json();
+  const data = await resp.json();
+  if (!resp.ok) data._http_error = resp.status;
+  return data;
 }
 
 async function stripeGet(endpoint) {
@@ -51,7 +53,9 @@ async function stripeGet(endpoint) {
   const resp = await fetch(`https://api.stripe.com/v1/${endpoint}`, {
     headers: { 'Authorization': `Basic ${auth}` }
   });
-  return resp.json();
+  const data = await resp.json();
+  if (!resp.ok) data._http_error = resp.status;
+  return data;
 }
 
 
@@ -255,13 +259,14 @@ export default async function handler(req, res) {
     if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Valid email required' });
     if (!code) return res.status(400).json({ ok: false, error: 'Verification code required' });
     try {
-      const { createHmac } = await import('crypto');
+      const { createHmac, timingSafeEqual } = await import('crypto');
       const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET;
       const now5m = Math.floor(Date.now() / 300000);
       let valid = false;
       for (let w = now5m; w >= now5m - 1; w--) {
         const expected = createHmac('sha256', secret).update(`recover:${email.toLowerCase()}:${w}`).digest('hex').slice(-6).toUpperCase();
-        if (code.toUpperCase() === expected) { valid = true; break; }
+        const userCode = code.toUpperCase().padEnd(expected.length).slice(0, expected.length);
+        if (expected.length === userCode.length && timingSafeEqual(Buffer.from(expected), Buffer.from(userCode))) { valid = true; break; }
       }
       if (!valid) return res.json({ ok: false, error: 'Invalid or expired code' });
 
@@ -286,5 +291,5 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(400).json({ error: 'Unknown action. Use: create_session, verify, recover_start, recover_verify' });
+  return res.status(400).json({ ok: false, error: 'Unknown action. Use: create_session, verify, recover_start, recover_verify' });
 }

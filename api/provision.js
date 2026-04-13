@@ -2908,7 +2908,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
             body:`product=${prod.id}&currency=usd&unit_amount=${cents}&recurring[interval]=month&nickname=${encodeURIComponent(name)}`}).then(r=>r.json());
           results.stripe={product_id:prod.id, price_id:price.id, amount:`$${(cents/100).toFixed(0)}/mo`};
         }
-      }catch(e){results.stripe={error:e.message};}
+      }catch(e){results.stripe={error:sanitizeError(e.message)};}
     }
 
     // ── VERCEL PROJECT (SaaS/directory/compliance — not WordPress/static) ─────
@@ -3045,7 +3045,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           results.vercel={ok:true, project_id:vercelProjectId, url:`https://${slug}.vercel.app`,
             existing:!pj.id};
         }
-      }catch(e){results.vercel={error:e.message};}
+      }catch(e){results.vercel={error:sanitizeError(e.message)};}
     }
 
     // ── CUSTOM DOMAIN (if configured in settings) ──
@@ -3080,10 +3080,10 @@ Return ONLY a valid JSON array (no markdown, no backticks):
             note:'DATABASE_URL + POSTGRES_URL auto-set on Vercel project',
             dashboard:`https://vercel.com/~/stores/${NEON_STORE}`};
         }else{
-          results.neon={manual:true, error:ld?.error?.message||JSON.stringify(ld).slice(0,80),
+          results.neon={manual:true, error:sanitizeError(ld?.error?.message||JSON.stringify(ld).slice(0,80)),
             action:'Vercel dashboard → Storage → neon-chestnut-field → Connect Project'};
         }
-      }catch(e){results.neon={manual:true, error:e.message};}
+      }catch(e){results.neon={manual:true, error:sanitizeError(e.message)};}
     }else if(needsNeon){
       results.neon={manual:true, action:'Re-run provision — Vercel project required first'};
     }
@@ -3109,9 +3109,9 @@ Return ONLY a valid JSON array (no markdown, no backticks):
             results.twentyi={manual:true, keys_expired:true,
               action:'20i Reseller Panel → API Settings → Generate New Keys → update DYNASTY_TOOL_CONFIG.infrastructure.twentyi_general'};
           }else{
-            results.twentyi={error:JSON.stringify(pd).slice(0,120)};
+            results.twentyi={error:sanitizeError(JSON.stringify(pd).slice(0,120))};
           }
-        }catch(e){results.twentyi={manual:true, error:e.message};}
+        }catch(e){results.twentyi={manual:true, error:sanitizeError(e.message)};}
       }
     }
 
@@ -3124,7 +3124,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
             name:`${name} - Dynasty`,from_email:'hello@dynastyempire.com',from_name:'Dynasty Empire',country:'US'})
         }).then(r=>r.json());
         results.acumbamail={ok:true, list_id:r.id||r.list_id||r.result, raw:r};
-      }catch(e){results.acumbamail={error:e.message};}
+      }catch(e){results.acumbamail={error:sanitizeError(e.message)};}
     }
 
     // ── PULSETIC MONITOR (auto-create via API) ──────────────────────────────

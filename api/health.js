@@ -1,4 +1,5 @@
 export const maxDuration = 15;
+const _se = (m) => typeof m === 'string' ? m.replace(/sk_live_\w+/g,'sk_live_***').replace(/ghp_\w+/g,'ghp_***').slice(0,200) : 'Error';
 
 export default async function handler(req, res) {
   const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
     });
     const d = await r.json();
     checks.github = r.ok ? { ok: true, user: d.login } : { ok: false, error: d.message };
-  } catch(e) { checks.github = { ok: false, error: e.message }; }
+  } catch(e) { checks.github = { ok: false, error: _se(e.message) }; }
 
   // Anthropic API
   try {
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5, messages: [{ role: 'user', content: 'ping' }] })
     });
     checks.anthropic = r.ok ? { ok: true } : { ok: false, status: r.status };
-  } catch(e) { checks.anthropic = { ok: false, error: e.message }; }
+  } catch(e) { checks.anthropic = { ok: false, error: _se(e.message) }; }
 
   // Stripe
   try {
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
     } else {
       checks.stripe = { ok: false, error: 'Key expired — refresh at dashboard.stripe.com' };
     }
-  } catch(e) { checks.stripe = { ok: false, error: e.message }; }
+  } catch(e) { checks.stripe = { ok: false, error: _se(e.message) }; }
 
   // Pulsetic (correct auth format)
   try {
@@ -66,7 +67,7 @@ export default async function handler(req, res) {
     } else {
       checks.pulsetic = { ok: false, error: 'No key in config' };
     }
-  } catch(e) { checks.pulsetic = { ok: false, error: e.message }; }
+  } catch(e) { checks.pulsetic = { ok: false, error: _se(e.message) }; }
 
   const allOk = Object.values(checks).every(c => c.ok);
   const failing = Object.entries(checks).filter(([,v]) => !v.ok).map(([k]) => k);

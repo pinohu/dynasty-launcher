@@ -2,6 +2,8 @@
 // All actions require valid admin token (HMAC-signed, checked server-side)
 import { createHmac, timingSafeEqual } from 'crypto';
 
+function safeErr(msg) { return typeof msg === 'string' ? msg.replace(/sk_live_\w+/g, 'sk_live_***').replace(/ghp_\w+/g, 'ghp_***').replace(/postgres(ql)?:\/\/[^\s]+/g, 'postgres://***').slice(0, 300) : 'Unknown error'; }
+
 export const maxDuration = 60;
 
 function verifyAdmin(req) {
@@ -76,7 +78,7 @@ export default async function handler(req, res) {
 
     async function check(name, fn) {
       try { checks[name] = await Promise.race([fn(), timeout(8000)]); }
-      catch (e) { checks[name] = { ok: false, error: e.message }; }
+      catch (e) { checks[name] = { ok: false, error: safeErr(e.message) }; }
     }
 
     await Promise.all([
@@ -145,7 +147,7 @@ export default async function handler(req, res) {
       await pool.end();
       return res.json({ ok: true, builds: result.rows, total: result.rowCount });
     } catch (e) {
-      return res.json({ ok: true, builds: [], error: e.message, note: 'Neon DB may not be configured or table may not exist' });
+      return res.json({ ok: true, builds: [], error: safeErr(e.message), note: 'Neon DB may not be configured or table may not exist' });
     }
   }
 
@@ -181,7 +183,7 @@ export default async function handler(req, res) {
         state: p.latestDeployments?.[0]?.readyState,
       }));
       return res.json({ ok: true, projects, total: projects.length });
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
   // ── STRIPE CUSTOMERS ────────────────────────────────────────────────
@@ -198,7 +200,7 @@ export default async function handler(req, res) {
         created: new Date(s.created * 1000).toISOString(),
       }));
       return res.json({ ok: true, sessions, total: sessions.length });
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
   // ── CLERK USERS ─────────────────────────────────────────────────────
@@ -212,7 +214,7 @@ export default async function handler(req, res) {
         id: u.id, email: u.email_addresses?.[0]?.email_address, name: `${u.first_name || ''} ${u.last_name || ''}`.trim(),
         plan: u.public_metadata?.plan, builds: u.public_metadata?.builds_used, created: u.created_at,
       }))});
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
   // ── CREATE USER ──────────────────────────────────────────────────────
@@ -241,7 +243,7 @@ export default async function handler(req, res) {
       const u = await r.json();
       if (u.errors) return res.json({ ok: false, error: u.errors.map(e => e.long_message || e.message).join(', ') });
       return res.json({ ok: true, user_id: u.id, email: u.email_addresses?.[0]?.email_address, tier: tier || 'free' });
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
   // ── DELETE USER ─────────────────────────────────────────────────────
@@ -255,7 +257,7 @@ export default async function handler(req, res) {
         method: 'DELETE', headers: { 'Authorization': `Bearer ${sk}` },
       });
       return res.json({ ok: r.ok || r.status === 200, deleted: user_id });
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
   // ── UPDATE USER TIER ────────────────────────────────────────────────
@@ -274,7 +276,7 @@ export default async function handler(req, res) {
       });
       const u = await r.json();
       return res.json({ ok: true, user_id, updated: u.public_metadata });
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
   // ── RETRY DEPLOY ────────────────────────────────────────────────────
@@ -291,7 +293,7 @@ export default async function handler(req, res) {
       });
       const d = await r.json();
       return res.json({ ok: true, deployment_id: d.id, url: d.url, state: d.readyState });
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
   // ── DELETE VERCEL PROJECT ───────────────────────────────────────────
@@ -305,7 +307,7 @@ export default async function handler(req, res) {
         method: 'DELETE', headers: { 'Authorization': `Bearer ${vt}` }
       });
       return res.json({ ok: r.ok || r.status === 204, deleted: project_id });
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
   // ── MODULE TEST ─────────────────────────────────────────────────────
@@ -322,7 +324,7 @@ export default async function handler(req, res) {
       });
       const d = await r.json();
       return res.json({ ok: true, module: module_name, result: d });
-    } catch (e) { return res.json({ ok: false, error: e.message }); }
+    } catch (e) { return res.json({ ok: false, error: safeErr(e.message) }); }
   }
 
   return res.status(400).json({ error: `Unknown admin action: ${action}` });

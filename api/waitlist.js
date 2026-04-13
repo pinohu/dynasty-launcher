@@ -46,6 +46,7 @@ export default async function handler(req, res) {
     try {
       const listName = 'Deputy Waitlist';
       const listsResp = await fetch(`https://acumbamail.com/api/1/getLists/?auth_token=${acumbaKey}&response_type=json`);
+      if (!listsResp.ok) throw new Error('Acumbamail getLists failed');
       const lists = await listsResp.json();
       let listId = null;
 
@@ -64,6 +65,7 @@ export default async function handler(req, res) {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: `auth_token=${acumbaKey}&name=${encodeURIComponent(listName)}&sender_email=${encodeURIComponent('hello@yourdeputy.com')}&company=${encodeURIComponent('Your Deputy')}`
         });
+        if (!createResp.ok) throw new Error('Acumbamail createList failed');
         const created = await createResp.json();
         listId = created.id || created.subscriber_list_id;
       }
@@ -111,7 +113,7 @@ export default async function handler(req, res) {
       await fetch(`https://api.telegram.org/bot${telegramBot}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: telegramChat, text: msg, parse_mode: 'HTML' })
+        body: JSON.stringify({ chat_id: telegramChat, text: msg })
       });
       results.telegram_sent = true;
     } catch {}

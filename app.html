@@ -611,7 +611,7 @@ html,body{overflow-x:hidden}
 .lp-hero,.lp-section,.lp-cta-banner,.lp-footer{overflow-x:hidden}
 </style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5.125.7/dist/clerk.browser.js" crossorigin="anonymous"></script>
 <script type="module" id="webllm-loader">
 import { CreateMLCEngine, prebuiltAppConfig } from 'https://esm.run/@mlc-ai/web-llm';
 window.__webllm = { CreateMLCEngine, prebuiltAppConfig, engine: null, ready: false, loading: false, error: null, supported: false };
@@ -2183,7 +2183,6 @@ async function runPreflight(inf, svcs) {
 
 function showPreflightModal(report) {
   return new Promise((resolve) => {
-    // Remove any existing modal
     document.getElementById('preflight-modal')?.remove();
 
     const infraItems = Object.entries(report.infrastructure || {})
@@ -2197,8 +2196,14 @@ function showPreflightModal(report) {
 
     const modal = document.createElement('div');
     modal.id = 'preflight-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Preflight review');
+    const closeModal = (val) => { document.getElementById('preflight-modal')?.remove(); resolve(val); };
+    window._pfResolve = closeModal;
+    document.addEventListener('keydown', function _pfEsc(e) { if (e.key === 'Escape') { document.removeEventListener('keydown', _pfEsc); closeModal(false); } });
     modal.innerHTML = `
-      <div class="pf-overlay" onclick="document.getElementById('preflight-modal').remove()">
+      <div class="pf-overlay" onclick="window._pfResolve && window._pfResolve(false)">
         <div class="pf-card" onclick="event.stopPropagation()">
           <div class="pf-header">
             <span class="pf-icon">🛫</span>
@@ -2229,8 +2234,8 @@ function showPreflightModal(report) {
             <div class="pf-flags">${flagsList || '<span class="pf-muted">defaults</span>'}</div>
           </div>
           <div class="pf-actions">
-            <button class="pf-btn pf-btn-cancel" onclick="document.getElementById('preflight-modal').remove(); window._pfResolve && window._pfResolve(false)">Cancel</button>
-            <button class="pf-btn pf-btn-launch" onclick="document.getElementById('preflight-modal').remove(); window._pfResolve && window._pfResolve(true)">🚀 Launch Build</button>
+            <button class="pf-btn pf-btn-cancel" onclick="window._pfResolve && window._pfResolve(false)">Cancel</button>
+            <button class="pf-btn pf-btn-launch" onclick="window._pfResolve && window._pfResolve(true)">🚀 Launch Build</button>
           </div>
         </div>
       </div>`;
@@ -2396,7 +2401,12 @@ document.getElementById('settings-btn').onclick=()=>{
 
   const modal = document.createElement('div');
   modal.id = 'settings-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-label', 'Settings');
   modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto';
+  modal.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.remove(); });
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
   modal.innerHTML = `
     <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;max-width:560px;width:90%;max-height:90vh;overflow-y:auto;margin:20px 0">
       <h3 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:1rem">⚙ Settings & Build Configuration</h3>
@@ -5630,7 +5640,7 @@ async function checkHealth(){
     if(HEALTH_STATUS.expired_or_failing?.length){
       const warn=document.createElement('div');
       warn.style.cssText='background:#1a0808;border:1px solid rgba(229,83,75,0.3);border-radius:8px;padding:8px 12px;margin-bottom:1rem;font-size:11px;color:#F07070';
-      warn.innerHTML='⚠ Credential check: <strong>'+HEALTH_STATUS.expired_or_failing.join(', ')+'</strong> need refreshing — some provisioning steps will skip. <a href="/api/health" target="_blank" style="color:#F07070;margin-left:6px">Details ↗</a>';
+      warn.innerHTML='⚠ Credential check: <strong>'+HEALTH_STATUS.expired_or_failing.join(', ')+'</strong> need refreshing — some provisioning steps will skip. <a href="/api/health" target="_blank" rel="noopener noreferrer" style="color:#F07070;margin-left:6px">Details ↗</a>';
       document.querySelector('.page').insertBefore(warn,document.querySelector('.tbanner')||document.querySelector('.hero'));
     }
   }catch{}
@@ -13700,16 +13710,16 @@ ${window._buildFiles?.['BUSINESS-SYSTEM.md'] ? `<div style="background:var(--car
   <div class="bb-item"><div class="bb-l">Frameworks</div><div class="bb-v" style="color:var(--tx)">${V2_FRAMEWORKS?.length||1}</div></div>
   <div class="bb-item"><div class="bb-l">Words Generated</div><div class="bb-v" style="color:var(--tx)">${window._buildFiles?Math.round(Object.values(window._buildFiles).join('').length/5).toLocaleString():'—'}</div></div>
 </div>
-<div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank">${repoLabel||repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div><div class="cmd" style="margin-top:4px;opacity:0.6;font-size:11px">or: gh repo clone ${repo} && cd ${inf.repo} && pi</div></div>
-<div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
-<div class="rc"><h3>Backend + Docker (${beFiles.length})</h3>${beFiles.map(f=>`<div class="lr"><span class="lb lb-be">Code</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}<div style="font-size:11px;color:var(--dim);margin-top:5px">FastAPI + PostgreSQL + Redis · <code style="font-family:monospace">docker-compose up -d</code></div></div>
-<div class="rc"><h3>Design System + Docs (${designFiles.length+docFiles.length})</h3>${[...designFiles,...docFiles].map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
-${bonusFiles.length?`<div class="rc"><h3>💎 Bonus Deliverables (${bonusFiles.length})</h3>${bonusFiles.map(f=>`<div class="lr"><span class="lb" style="background:rgba(201,168,76,0.15);color:#C9A84C">New</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>`:''}
+<div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank" rel="noopener noreferrer">${repoLabel||repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div><div class="cmd" style="margin-top:4px;opacity:0.6;font-size:11px">or: gh repo clone ${repo} && cd ${inf.repo} && pi</div></div>
+<div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repoUrl}/blob/main/${f}" target="_blank" rel="noopener noreferrer">${f}</a></div>`).join('')}</div>
+<div class="rc"><h3>Backend + Docker (${beFiles.length})</h3>${beFiles.map(f=>`<div class="lr"><span class="lb lb-be">Code</span><a href="${repoUrl}/blob/main/${f}" target="_blank" rel="noopener noreferrer">${f}</a></div>`).join('')}<div style="font-size:11px;color:var(--dim);margin-top:5px">FastAPI + PostgreSQL + Redis · <code style="font-family:monospace">docker-compose up -d</code></div></div>
+<div class="rc"><h3>Design System + Docs (${designFiles.length+docFiles.length})</h3>${[...designFiles,...docFiles].map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repoUrl}/blob/main/${f}" target="_blank" rel="noopener noreferrer">${f}</a></div>`).join('')}</div>
+${bonusFiles.length?`<div class="rc"><h3>💎 Bonus Deliverables (${bonusFiles.length})</h3>${bonusFiles.map(f=>`<div class="lr"><span class="lb" style="background:rgba(201,168,76,0.15);color:#C9A84C">New</span><a href="${repoUrl}/blob/main/${f}" target="_blank" rel="noopener noreferrer">${f}</a></div>`).join('')}</div>`:''}
 ${provRes&&provRes.results?`<div class="rc"><h3>Infrastructure Provisioned</h3><div class="rl">
       ${provRes.results.stripe?`<div class="lr"><span class="lb lb-g">Payments</span><span>Product + price tiers created</span></div>`:''}
-      ${provRes.results.vercel?`<div class="lr"><span class="lb lb-g">Hosting</span><a href="${provRes.results.vercel.url||'#'}" target="_blank">${provRes.results.vercel.url||'project created'}</a></div>`:''}
+      ${provRes.results.vercel?`<div class="lr"><span class="lb lb-g">Hosting</span><a href="${provRes.results.vercel.url||'#'}" target="_blank" rel="noopener noreferrer">${provRes.results.vercel.url||'project created'}</a></div>`:''}
       ${provRes.results.neon?`<div class="lr"><span class="lb lb-g">Database</span><span>${provRes.results.neon.note||provRes.results.neon.action||'linked'}</span></div>`:''}
-      ${provRes.results.twentyi?`<div class="lr"><span class="lb lb-g">Domain</span><a href="${provRes.results.twentyi.control_panel||'#'}" target="_blank">${provRes.results.twentyi.type||'Package'} #${provRes.results.twentyi.package_id||''}</a></div>`:''}
+      ${provRes.results.twentyi?`<div class="lr"><span class="lb lb-g">Domain</span><a href="${provRes.results.twentyi.control_panel||'#'}" target="_blank" rel="noopener noreferrer">${provRes.results.twentyi.type||'Package'} #${provRes.results.twentyi.package_id||''}</a></div>`:''}
       ${provRes.results.acumbamail?`<div class="lr"><span class="lb lb-g">Email</span><span>Marketing list created</span></div>`:''}
       ${provRes.results.pulsetic?`<div class="lr"><span class="lb lb-g">Monitor</span><span>${provRes.results.pulsetic.note||'Queued'}</span></div>`:''}
       ${provRes.manual_steps&&provRes.manual_steps.length?`<div class="lr"><span class="lb" style="background:#f59e0b;color:#000">Manual</span><span style="color:#f59e0b;font-size:12px">${provRes.manual_steps[0]}</span></div>`:''}
@@ -13727,7 +13737,7 @@ ${provRes&&provRes.modules?`<div class="rc"><h3>V3 Modules Provisioned (${Object
         }
       }).join('')}
     </div></div>`:''}
-${window._socialCalendarMd?`<div class="rc"><h3>📱 Social Media Calendar</h3><div style="font-size:11px;color:var(--sec);margin-bottom:8px">1-year content calendar across 5 platforms — ready to schedule. Includes AI image prompts and optimal posting times.</div><div class="lr"><span class="lb lb-f">CSV</span><a href="${repoUrl}/blob/main/social-media/calendar.csv" target="_blank">calendar.csv — Import to Buffer, Hootsuite, Later</a></div><div class="lr"><span class="lb lb-f">JSON</span><a href="${repoUrl}/blob/main/social-media/calendar.json" target="_blank">calendar.json — API-ready format</a></div><div class="lr"><span class="lb lb-f">MD</span><a href="${repoUrl}/blob/main/social-media/SOCIAL-MEDIA-CALENDAR.md" target="_blank">SOCIAL-MEDIA-CALENDAR.md — Full calendar</a></div><div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"><div style="font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Sample Posts</div>${(()=>{try{const rows=(window._socialCalendarMd||'').split('\\n').filter(l=>l.startsWith('|')&&!l.includes('---')&&!l.includes('Week')).slice(0,3);return rows.map(r=>{const c=r.split('|').map(x=>x.trim()).filter(Boolean);return c.length>=4?'<div style="font-size:11px;color:var(--sec);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span style="color:var(--gold);font-weight:600;font-size:10px">'+c[1]+'</span> · '+(c[3]||'').slice(0,120)+'…</div>':'';}).join('');}catch{return'';}})()}</div></div>`:''}
+${window._socialCalendarMd?`<div class="rc"><h3>📱 Social Media Calendar</h3><div style="font-size:11px;color:var(--sec);margin-bottom:8px">1-year content calendar across 5 platforms — ready to schedule. Includes AI image prompts and optimal posting times.</div><div class="lr"><span class="lb lb-f">CSV</span><a href="${repoUrl}/blob/main/social-media/calendar.csv" target="_blank" rel="noopener noreferrer">calendar.csv — Import to Buffer, Hootsuite, Later</a></div><div class="lr"><span class="lb lb-f">JSON</span><a href="${repoUrl}/blob/main/social-media/calendar.json" target="_blank" rel="noopener noreferrer">calendar.json — API-ready format</a></div><div class="lr"><span class="lb lb-f">MD</span><a href="${repoUrl}/blob/main/social-media/SOCIAL-MEDIA-CALENDAR.md" target="_blank" rel="noopener noreferrer">SOCIAL-MEDIA-CALENDAR.md — Full calendar</a></div><div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"><div style="font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Sample Posts</div>${(()=>{try{const rows=(window._socialCalendarMd||'').split('\\n').filter(l=>l.startsWith('|')&&!l.includes('---')&&!l.includes('Week')).slice(0,3);return rows.map(r=>{const c=r.split('|').map(x=>x.trim()).filter(Boolean);return c.length>=4?'<div style="font-size:11px;color:var(--sec);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span style="color:var(--gold);font-weight:600;font-size:10px">'+c[1]+'</span> · '+(c[3]||'').slice(0,120)+'…</div>':'';}).join('');}catch{return'';}})()}</div></div>`:''}
 ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see MANUAL-ACTIONS.md</h3><div class="ml">${mtasks.map(t=>`<div class="mi">${t}</div>`).join('')}</div></div>`:''}
 
 <div style="background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(201,168,76,0.01));border:1px solid rgba(201,168,76,0.12);border-radius:var(--rl);padding:1rem 1.25rem;margin-top:1rem">
@@ -13759,10 +13769,10 @@ ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see M
 <div style="display:flex;gap:8px;margin-top:1.25rem;flex-wrap:wrap">
   <button class="launch" style="flex:1;min-width:140px" onclick="generateBuildReport()">📄 Report <span style="font-size:10px;opacity:.6">(PDF)</span></button>
   <button class="launch" style="flex:1;min-width:140px;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="downloadAllFiles()">📦 All Files</button>
-  <a href="${repoUrl}/blob/main/REPORT.html" target="_blank" class="launch" style="flex:1;min-width:140px;background:transparent;border:1px solid var(--gb);color:var(--gold);text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">🔗 Share Report</a>
+  <a href="${repoUrl}/blob/main/REPORT.html" target="_blank" rel="noopener noreferrer" class="launch" style="flex:1;min-width:140px;background:transparent;border:1px solid var(--gb);color:var(--gold);text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">🔗 Share Report</a>
 </div>
-${window._buildFiles?.['VIDEO-SCRIPT.md'] ? '<div style="margin-top:8px;font-size:11px;color:var(--dim)">📹 <a href="' + repoUrl + '/blob/main/VIDEO-SCRIPT.md" target="_blank" style="color:var(--sec)">VIDEO-SCRIPT.md</a> · 5-min Loom walkthrough script</div>' : ''}
-${window._buildFiles?.['AB-MESSAGING.md'] ? '<div style="font-size:11px;color:var(--dim)">🎯 <a href="' + repoUrl + '/blob/main/AB-MESSAGING.md" target="_blank" style="color:var(--sec)">AB-MESSAGING.md</a> · 2 headline/CTA variants to test</div>' : ''}
+${window._buildFiles?.['VIDEO-SCRIPT.md'] ? '<div style="margin-top:8px;font-size:11px;color:var(--dim)">📹 <a href="' + repoUrl + '/blob/main/VIDEO-SCRIPT.md" target="_blank" rel="noopener noreferrer" style="color:var(--sec)">VIDEO-SCRIPT.md</a> · 5-min Loom walkthrough script</div>' : ''}
+${window._buildFiles?.['AB-MESSAGING.md'] ? '<div style="font-size:11px;color:var(--dim)">🎯 <a href="' + repoUrl + '/blob/main/AB-MESSAGING.md" target="_blank" rel="noopener noreferrer" style="color:var(--sec)">AB-MESSAGING.md</a> · 2 headline/CTA variants to test</div>' : ''}
 <span class="again" onclick="reset()">Build another →</span>
 ${window._buildHistory?.length > 1 ? '<span class="again" onclick="showBuildComparison()" style="margin-left:12px">Compare builds →</span>' : ''}`;
 
@@ -13810,7 +13820,7 @@ function showBuildHistory() {
       <td style="padding:6px;font-size:11px;color:var(--dim)">${b.files_count} files</td>
       <td style="padding:6px;font-size:11px;color:var(--dim)">${b.words?.toLocaleString()||'—'} words</td>
       ${canSeeInternalCost ? `<td style="padding:6px;font-size:11px;color:var(--dim)">$${(b.cost||0).toFixed(4)}</td>` : ''}
-      <td style="padding:6px;font-size:11px">${b.live_url?'<a href="'+b.live_url+'" target="_blank" style="color:var(--gold)">Live</a>':'—'}</td>
+      <td style="padding:6px;font-size:11px">${b.live_url?'<a href="'+b.live_url+'" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">Live</a>':'—'}</td>
     </tr>`).join('');
   
   const modal = document.createElement('div');
@@ -13948,7 +13958,7 @@ function showBuildComparison() {
         ${row('Words', a.words?.toLocaleString() || '—', b.words?.toLocaleString() || '—')}
         ${canSeeInternalCost ? row('Cost', '$' + (a.cost || 0).toFixed(4), '$' + (b.cost || 0).toFixed(4)) : ''}
         ${row('Duration', a.duration + 's', b.duration + 's')}
-        ${row('URL', a.live_url ? '<a href="' + a.live_url + '" target="_blank" style="color:var(--gold)">' + a.live_url.replace('https://','') + '</a>' : '—', b.live_url ? '<a href="' + b.live_url + '" target="_blank" style="color:var(--gold)">' + b.live_url.replace('https://','') + '</a>' : '—')}
+        ${row('URL', a.live_url ? '<a href="' + a.live_url + '" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">' + a.live_url.replace('https://','') + '</a>' : '—', b.live_url ? '<a href="' + b.live_url + '" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">' + b.live_url.replace('https://','') + '</a>' : '—')}
         ${row('Infra', (a.infrastructure||[]).join(', ')||'—', (b.infrastructure||[]).join(', ')||'—')}
         ${row('V3 Modules', (a.v3_modules_ok||[]).length ? '<span style="color:var(--grn)">' + (a.v3_modules_ok||[]).length + ' ok</span>' + ((a.v3_modules_failed||[]).length ? ' · <span style="color:var(--red)">' + (a.v3_modules_failed||[]).length + ' failed</span>' : '') : '—', (b.v3_modules_ok||[]).length ? '<span style="color:var(--grn)">' + (b.v3_modules_ok||[]).length + ' ok</span>' + ((b.v3_modules_failed||[]).length ? ' · <span style="color:var(--red)">' + (b.v3_modules_failed||[]).length + ' failed</span>' : '') : '—')}
         ${row('Tier', a.tier||'—', b.tier||'—')}
@@ -14929,7 +14939,6 @@ async function runPreflight(inf, svcs) {
 
 function showPreflightModal(report) {
   return new Promise((resolve) => {
-    // Remove any existing modal
     document.getElementById('preflight-modal')?.remove();
 
     const infraItems = Object.entries(report.infrastructure || {})
@@ -14943,8 +14952,14 @@ function showPreflightModal(report) {
 
     const modal = document.createElement('div');
     modal.id = 'preflight-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Preflight review');
+    const closeModal = (val) => { document.getElementById('preflight-modal')?.remove(); resolve(val); };
+    window._pfResolve = closeModal;
+    document.addEventListener('keydown', function _pfEsc(e) { if (e.key === 'Escape') { document.removeEventListener('keydown', _pfEsc); closeModal(false); } });
     modal.innerHTML = `
-      <div class="pf-overlay" onclick="document.getElementById('preflight-modal').remove()">
+      <div class="pf-overlay" onclick="window._pfResolve && window._pfResolve(false)">
         <div class="pf-card" onclick="event.stopPropagation()">
           <div class="pf-header">
             <span class="pf-icon">🛫</span>
@@ -14975,8 +14990,8 @@ function showPreflightModal(report) {
             <div class="pf-flags">${flagsList || '<span class="pf-muted">defaults</span>'}</div>
           </div>
           <div class="pf-actions">
-            <button class="pf-btn pf-btn-cancel" onclick="document.getElementById('preflight-modal').remove(); window._pfResolve && window._pfResolve(false)">Cancel</button>
-            <button class="pf-btn pf-btn-launch" onclick="document.getElementById('preflight-modal').remove(); window._pfResolve && window._pfResolve(true)">🚀 Launch Build</button>
+            <button class="pf-btn pf-btn-cancel" onclick="window._pfResolve && window._pfResolve(false)">Cancel</button>
+            <button class="pf-btn pf-btn-launch" onclick="window._pfResolve && window._pfResolve(true)">🚀 Launch Build</button>
           </div>
         </div>
       </div>`;
@@ -15142,7 +15157,12 @@ document.getElementById('settings-btn').onclick=()=>{
 
   const modal = document.createElement('div');
   modal.id = 'settings-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-label', 'Settings');
   modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;overflow-y:auto';
+  modal.addEventListener('keydown', (e) => { if (e.key === 'Escape') modal.remove(); });
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
   modal.innerHTML = `
     <div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;max-width:560px;width:90%;max-height:90vh;overflow-y:auto;margin:20px 0">
       <h3 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:1rem">⚙ Settings & Build Configuration</h3>
@@ -18376,7 +18396,7 @@ async function checkHealth(){
     if(HEALTH_STATUS.expired_or_failing?.length){
       const warn=document.createElement('div');
       warn.style.cssText='background:#1a0808;border:1px solid rgba(229,83,75,0.3);border-radius:8px;padding:8px 12px;margin-bottom:1rem;font-size:11px;color:#F07070';
-      warn.innerHTML='⚠ Credential check: <strong>'+HEALTH_STATUS.expired_or_failing.join(', ')+'</strong> need refreshing — some provisioning steps will skip. <a href="/api/health" target="_blank" style="color:#F07070;margin-left:6px">Details ↗</a>';
+      warn.innerHTML='⚠ Credential check: <strong>'+HEALTH_STATUS.expired_or_failing.join(', ')+'</strong> need refreshing — some provisioning steps will skip. <a href="/api/health" target="_blank" rel="noopener noreferrer" style="color:#F07070;margin-left:6px">Details ↗</a>';
       document.querySelector('.page').insertBefore(warn,document.querySelector('.tbanner')||document.querySelector('.hero'));
     }
   }catch{}
@@ -26446,16 +26466,16 @@ ${window._buildFiles?.['BUSINESS-SYSTEM.md'] ? `<div style="background:var(--car
   <div class="bb-item"><div class="bb-l">Frameworks</div><div class="bb-v" style="color:var(--tx)">${V2_FRAMEWORKS?.length||1}</div></div>
   <div class="bb-item"><div class="bb-l">Words Generated</div><div class="bb-v" style="color:var(--tx)">${window._buildFiles?Math.round(Object.values(window._buildFiles).join('').length/5).toLocaleString():'—'}</div></div>
 </div>
-<div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank">${repoLabel||repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div><div class="cmd" style="margin-top:4px;opacity:0.6;font-size:11px">or: gh repo clone ${repo} && cd ${inf.repo} && pi</div></div>
-<div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
-<div class="rc"><h3>Backend + Docker (${beFiles.length})</h3>${beFiles.map(f=>`<div class="lr"><span class="lb lb-be">Code</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}<div style="font-size:11px;color:var(--dim);margin-top:5px">FastAPI + PostgreSQL + Redis · <code style="font-family:monospace">docker-compose up -d</code></div></div>
-<div class="rc"><h3>Design System + Docs (${designFiles.length+docFiles.length})</h3>${[...designFiles,...docFiles].map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>
-${bonusFiles.length?`<div class="rc"><h3>💎 Bonus Deliverables (${bonusFiles.length})</h3>${bonusFiles.map(f=>`<div class="lr"><span class="lb" style="background:rgba(201,168,76,0.15);color:#C9A84C">New</span><a href="${repoUrl}/blob/main/${f}" target="_blank">${f}</a></div>`).join('')}</div>`:''}
+<div class="rc"><h3>Repository</h3><div class="lr"><span class="lb lb-r">Repo</span><a href="${repoUrl}" target="_blank" rel="noopener noreferrer">${repoLabel||repoUrl}</a></div><div class="cmd">gh repo clone ${repo} && cd ${inf.repo} && claude</div><div class="cmd" style="margin-top:4px;opacity:0.6;font-size:11px">or: gh repo clone ${repo} && cd ${inf.repo} && pi</div></div>
+<div class="rc"><h3>Business System (${bizFiles.length})</h3>${bizFiles.map(f=>`<div class="lr"><span class="lb lb-biz">Biz</span><a href="${repoUrl}/blob/main/${f}" target="_blank" rel="noopener noreferrer">${f}</a></div>`).join('')}</div>
+<div class="rc"><h3>Backend + Docker (${beFiles.length})</h3>${beFiles.map(f=>`<div class="lr"><span class="lb lb-be">Code</span><a href="${repoUrl}/blob/main/${f}" target="_blank" rel="noopener noreferrer">${f}</a></div>`).join('')}<div style="font-size:11px;color:var(--dim);margin-top:5px">FastAPI + PostgreSQL + Redis · <code style="font-family:monospace">docker-compose up -d</code></div></div>
+<div class="rc"><h3>Design System + Docs (${designFiles.length+docFiles.length})</h3>${[...designFiles,...docFiles].map(f=>`<div class="lr"><span class="lb lb-f">File</span><a href="${repoUrl}/blob/main/${f}" target="_blank" rel="noopener noreferrer">${f}</a></div>`).join('')}</div>
+${bonusFiles.length?`<div class="rc"><h3>💎 Bonus Deliverables (${bonusFiles.length})</h3>${bonusFiles.map(f=>`<div class="lr"><span class="lb" style="background:rgba(201,168,76,0.15);color:#C9A84C">New</span><a href="${repoUrl}/blob/main/${f}" target="_blank" rel="noopener noreferrer">${f}</a></div>`).join('')}</div>`:''}
 ${provRes&&provRes.results?`<div class="rc"><h3>Infrastructure Provisioned</h3><div class="rl">
       ${provRes.results.stripe?`<div class="lr"><span class="lb lb-g">Payments</span><span>Product + price tiers created</span></div>`:''}
-      ${provRes.results.vercel?`<div class="lr"><span class="lb lb-g">Hosting</span><a href="${provRes.results.vercel.url||'#'}" target="_blank">${provRes.results.vercel.url||'project created'}</a></div>`:''}
+      ${provRes.results.vercel?`<div class="lr"><span class="lb lb-g">Hosting</span><a href="${provRes.results.vercel.url||'#'}" target="_blank" rel="noopener noreferrer">${provRes.results.vercel.url||'project created'}</a></div>`:''}
       ${provRes.results.neon?`<div class="lr"><span class="lb lb-g">Database</span><span>${provRes.results.neon.note||provRes.results.neon.action||'linked'}</span></div>`:''}
-      ${provRes.results.twentyi?`<div class="lr"><span class="lb lb-g">Domain</span><a href="${provRes.results.twentyi.control_panel||'#'}" target="_blank">${provRes.results.twentyi.type||'Package'} #${provRes.results.twentyi.package_id||''}</a></div>`:''}
+      ${provRes.results.twentyi?`<div class="lr"><span class="lb lb-g">Domain</span><a href="${provRes.results.twentyi.control_panel||'#'}" target="_blank" rel="noopener noreferrer">${provRes.results.twentyi.type||'Package'} #${provRes.results.twentyi.package_id||''}</a></div>`:''}
       ${provRes.results.acumbamail?`<div class="lr"><span class="lb lb-g">Email</span><span>Marketing list created</span></div>`:''}
       ${provRes.results.pulsetic?`<div class="lr"><span class="lb lb-g">Monitor</span><span>${provRes.results.pulsetic.note||'Queued'}</span></div>`:''}
       ${provRes.manual_steps&&provRes.manual_steps.length?`<div class="lr"><span class="lb" style="background:#f59e0b;color:#000">Manual</span><span style="color:#f59e0b;font-size:12px">${provRes.manual_steps[0]}</span></div>`:''}
@@ -26473,7 +26493,7 @@ ${provRes&&provRes.modules?`<div class="rc"><h3>V3 Modules Provisioned (${Object
         }
       }).join('')}
     </div></div>`:''}
-${window._socialCalendarMd?`<div class="rc"><h3>📱 Social Media Calendar</h3><div style="font-size:11px;color:var(--sec);margin-bottom:8px">1-year content calendar across 5 platforms — ready to schedule. Includes AI image prompts and optimal posting times.</div><div class="lr"><span class="lb lb-f">CSV</span><a href="${repoUrl}/blob/main/social-media/calendar.csv" target="_blank">calendar.csv — Import to Buffer, Hootsuite, Later</a></div><div class="lr"><span class="lb lb-f">JSON</span><a href="${repoUrl}/blob/main/social-media/calendar.json" target="_blank">calendar.json — API-ready format</a></div><div class="lr"><span class="lb lb-f">MD</span><a href="${repoUrl}/blob/main/social-media/SOCIAL-MEDIA-CALENDAR.md" target="_blank">SOCIAL-MEDIA-CALENDAR.md — Full calendar</a></div><div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"><div style="font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Sample Posts</div>${(()=>{try{const rows=(window._socialCalendarMd||'').split('\\n').filter(l=>l.startsWith('|')&&!l.includes('---')&&!l.includes('Week')).slice(0,3);return rows.map(r=>{const c=r.split('|').map(x=>x.trim()).filter(Boolean);return c.length>=4?'<div style="font-size:11px;color:var(--sec);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span style="color:var(--gold);font-weight:600;font-size:10px">'+c[1]+'</span> · '+(c[3]||'').slice(0,120)+'…</div>':'';}).join('');}catch{return'';}})()}</div></div>`:''}
+${window._socialCalendarMd?`<div class="rc"><h3>📱 Social Media Calendar</h3><div style="font-size:11px;color:var(--sec);margin-bottom:8px">1-year content calendar across 5 platforms — ready to schedule. Includes AI image prompts and optimal posting times.</div><div class="lr"><span class="lb lb-f">CSV</span><a href="${repoUrl}/blob/main/social-media/calendar.csv" target="_blank" rel="noopener noreferrer">calendar.csv — Import to Buffer, Hootsuite, Later</a></div><div class="lr"><span class="lb lb-f">JSON</span><a href="${repoUrl}/blob/main/social-media/calendar.json" target="_blank" rel="noopener noreferrer">calendar.json — API-ready format</a></div><div class="lr"><span class="lb lb-f">MD</span><a href="${repoUrl}/blob/main/social-media/SOCIAL-MEDIA-CALENDAR.md" target="_blank" rel="noopener noreferrer">SOCIAL-MEDIA-CALENDAR.md — Full calendar</a></div><div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"><div style="font-size:10px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Sample Posts</div>${(()=>{try{const rows=(window._socialCalendarMd||'').split('\\n').filter(l=>l.startsWith('|')&&!l.includes('---')&&!l.includes('Week')).slice(0,3);return rows.map(r=>{const c=r.split('|').map(x=>x.trim()).filter(Boolean);return c.length>=4?'<div style="font-size:11px;color:var(--sec);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span style="color:var(--gold);font-weight:600;font-size:10px">'+c[1]+'</span> · '+(c[3]||'').slice(0,120)+'…</div>':'';}).join('');}catch{return'';}})()}</div></div>`:''}
 ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see MANUAL-ACTIONS.md</h3><div class="ml">${mtasks.map(t=>`<div class="mi">${t}</div>`).join('')}</div></div>`:''}
 
 <div style="background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(201,168,76,0.01));border:1px solid rgba(201,168,76,0.12);border-radius:var(--rl);padding:1rem 1.25rem;margin-top:1rem">
@@ -26505,10 +26525,10 @@ ${mtasks.length?`<div class="rc"><h3>Manual Actions (${mtasks.length}) — see M
 <div style="display:flex;gap:8px;margin-top:1.25rem;flex-wrap:wrap">
   <button class="launch" style="flex:1;min-width:140px" onclick="generateBuildReport()">📄 Report <span style="font-size:10px;opacity:.6">(PDF)</span></button>
   <button class="launch" style="flex:1;min-width:140px;background:transparent;border:1px solid var(--bdr);color:var(--sec)" onclick="downloadAllFiles()">📦 All Files</button>
-  <a href="${repoUrl}/blob/main/REPORT.html" target="_blank" class="launch" style="flex:1;min-width:140px;background:transparent;border:1px solid var(--gb);color:var(--gold);text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">🔗 Share Report</a>
+  <a href="${repoUrl}/blob/main/REPORT.html" target="_blank" rel="noopener noreferrer" class="launch" style="flex:1;min-width:140px;background:transparent;border:1px solid var(--gb);color:var(--gold);text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">🔗 Share Report</a>
 </div>
-${window._buildFiles?.['VIDEO-SCRIPT.md'] ? '<div style="margin-top:8px;font-size:11px;color:var(--dim)">📹 <a href="' + repoUrl + '/blob/main/VIDEO-SCRIPT.md" target="_blank" style="color:var(--sec)">VIDEO-SCRIPT.md</a> · 5-min Loom walkthrough script</div>' : ''}
-${window._buildFiles?.['AB-MESSAGING.md'] ? '<div style="font-size:11px;color:var(--dim)">🎯 <a href="' + repoUrl + '/blob/main/AB-MESSAGING.md" target="_blank" style="color:var(--sec)">AB-MESSAGING.md</a> · 2 headline/CTA variants to test</div>' : ''}
+${window._buildFiles?.['VIDEO-SCRIPT.md'] ? '<div style="margin-top:8px;font-size:11px;color:var(--dim)">📹 <a href="' + repoUrl + '/blob/main/VIDEO-SCRIPT.md" target="_blank" rel="noopener noreferrer" style="color:var(--sec)">VIDEO-SCRIPT.md</a> · 5-min Loom walkthrough script</div>' : ''}
+${window._buildFiles?.['AB-MESSAGING.md'] ? '<div style="font-size:11px;color:var(--dim)">🎯 <a href="' + repoUrl + '/blob/main/AB-MESSAGING.md" target="_blank" rel="noopener noreferrer" style="color:var(--sec)">AB-MESSAGING.md</a> · 2 headline/CTA variants to test</div>' : ''}
 <span class="again" onclick="reset()">Build another →</span>
 ${window._buildHistory?.length > 1 ? '<span class="again" onclick="showBuildComparison()" style="margin-left:12px">Compare builds →</span>' : ''}`;
 
@@ -26556,7 +26576,7 @@ function showBuildHistory() {
       <td style="padding:6px;font-size:11px;color:var(--dim)">${b.files_count} files</td>
       <td style="padding:6px;font-size:11px;color:var(--dim)">${b.words?.toLocaleString()||'—'} words</td>
       ${canSeeInternalCost ? `<td style="padding:6px;font-size:11px;color:var(--dim)">$${(b.cost||0).toFixed(4)}</td>` : ''}
-      <td style="padding:6px;font-size:11px">${b.live_url?'<a href="'+b.live_url+'" target="_blank" style="color:var(--gold)">Live</a>':'—'}</td>
+      <td style="padding:6px;font-size:11px">${b.live_url?'<a href="'+b.live_url+'" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">Live</a>':'—'}</td>
     </tr>`).join('');
   
   const modal = document.createElement('div');
@@ -26694,7 +26714,7 @@ function showBuildComparison() {
         ${row('Words', a.words?.toLocaleString() || '—', b.words?.toLocaleString() || '—')}
         ${canSeeInternalCost ? row('Cost', '$' + (a.cost || 0).toFixed(4), '$' + (b.cost || 0).toFixed(4)) : ''}
         ${row('Duration', a.duration + 's', b.duration + 's')}
-        ${row('URL', a.live_url ? '<a href="' + a.live_url + '" target="_blank" style="color:var(--gold)">' + a.live_url.replace('https://','') + '</a>' : '—', b.live_url ? '<a href="' + b.live_url + '" target="_blank" style="color:var(--gold)">' + b.live_url.replace('https://','') + '</a>' : '—')}
+        ${row('URL', a.live_url ? '<a href="' + a.live_url + '" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">' + a.live_url.replace('https://','') + '</a>' : '—', b.live_url ? '<a href="' + b.live_url + '" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">' + b.live_url.replace('https://','') + '</a>' : '—')}
         ${row('Infra', (a.infrastructure||[]).join(', ')||'—', (b.infrastructure||[]).join(', ')||'—')}
         ${row('V3 Modules', (a.v3_modules_ok||[]).length ? '<span style="color:var(--grn)">' + (a.v3_modules_ok||[]).length + ' ok</span>' + ((a.v3_modules_failed||[]).length ? ' · <span style="color:var(--red)">' + (a.v3_modules_failed||[]).length + ' failed</span>' : '') : '—', (b.v3_modules_ok||[]).length ? '<span style="color:var(--grn)">' + (b.v3_modules_ok||[]).length + ' ok</span>' + ((b.v3_modules_failed||[]).length ? ' · <span style="color:var(--red)">' + (b.v3_modules_failed||[]).length + ' failed</span>' : '') : '—')}
         ${row('Tier', a.tier||'—', b.tier||'—')}

@@ -7,12 +7,12 @@ Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is 
 ```
 dynasty-launcher/
 ├── index.html              # Landing page (standalone, ~370 lines)
-├── app.html                # Builder app (monolith, ~27000 lines)
-├── maturity.html           # "What ships today" truth deck (~130 lines)
+├── app.html                # Builder app (monolith, ~27100 lines)
+├── maturity.html           # "What ships today" truth deck (~140 lines)
 ├── deliverables.html       # Deliverables hub page
 ├── deliverables/           # Category + individual deliverable pages (160 files)
 ├── api/
-│   ├── provision.js        # Backend orchestrator (~3500 lines, 19 mod_* functions)
+│   ├── provision.js        # Backend orchestrator (~3570 lines, 19 mod_* functions)
 │   ├── checkout.js         # Stripe checkout + session recovery (~290 lines)
 │   ├── auth.js             # Clerk auth + admin key verification (~130 lines)
 │   ├── waitlist.js         # Waitlist capture (Acumbamail + Telegram + Neon)
