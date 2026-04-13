@@ -589,20 +589,6 @@ export default async function handler(req, res) {
   // Scoring quota context — increment only after a successful model call
   let _scoringQuotaCtx = null;
 
-  // One-time purge: clear stale quota from failed Gemma 4 calls (remove after May 2026)
-  if (usageContext === 'free_scoring' && !globalThis.__quotaPurged_apr26) {
-    globalThis.__quotaPurged_apr26 = true;
-    const _pool = await getUsagePool();
-    if (_pool) {
-      await ensureQuotaTable(_pool);
-      await _pool.query(`DELETE FROM ${QUOTA_TABLE} WHERE window_key = '2026-04'`).catch(() => {});
-    } else if (globalThis.__dynastyAiQuotaMem) {
-      for (const k of [...globalThis.__dynastyAiQuotaMem.keys()]) {
-        if (k.startsWith('2026-04:')) globalThis.__dynastyAiQuotaMem.delete(k);
-      }
-    }
-  }
-
   if (usageContext === 'free_scoring') {
     let scoringPlan = 'guest';
     let limit = FREE_GUEST_MONTHLY_LIMIT;
