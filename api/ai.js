@@ -188,7 +188,7 @@ async function incrementUsage(actorKey) {
 }
 
 function resolveFreeModel(config) {
-  const preferred = ['gemma-4-27b-it', 'gemma-4-e4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'gemma-4-e2b-it', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
+  const preferred = ['gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
   for (const model of preferred) {
     const info = PROVIDERS[model];
     if (!info || !info.free) continue;

@@ -3999,8 +3999,8 @@ async function initReviewModels() {
 async function aiRawWithModel(prompt, modelId, max = 4000) {
   const freeTier = isFreeTier();
   const fallbackModels = freeTier
-    ? [modelId, 'gemma-4-27b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant']
-    : [modelId, 'gemma-4-27b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'claude-haiku-4-5-20251001'];
+    ? [modelId, 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant']
+    : [modelId, 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'claude-haiku-4-5-20251001'];
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
     try {
@@ -6057,12 +6057,12 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
   // Cost-optimized model selection
   // 100x Cost Mode: FREE → FREE → cheap fallback
   const COST_MODELS = {
-    premium: 'gemma-4-27b-it',                       // FREE (Google AI Studio) — best free model for analysis
-    standard: 'gemma-4-27b-it',                      // FREE (Google AI Studio) — high quality
-    budget: 'gemini-2.0-flash',                      // FREE (Google) — fast for boilerplate
+    premium: 'gemini-2.0-flash',                      // FREE (Google) — proven reliable
+    standard: 'gemini-2.0-flash',                     // FREE (Google) — fast and capable
+    budget: 'gemini-2.0-flash',                       // FREE (Google) — fast for boilerplate
   };
   const model = COST_MODELS[costTier] || COST_MODELS.standard;
-  const fallbackModels = [model, 'gemma-4-27b-it', 'gemma-4-e4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'claude-haiku-4-5-20251001'];
+  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'claude-haiku-4-5-20251001'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
