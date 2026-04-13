@@ -353,17 +353,29 @@ async function callGoogle(apiKey, body) {
   const model = body.model;
   const prompt = body.messages.map(m => m.content).join('\n\n');
   const systemInstruction = body.system || '';
+  const isGemma4Thinking = model.startsWith('gemma-4-') && !model.includes('a4b');
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       ...(systemInstruction ? { systemInstruction: { parts: [{ text: systemInstruction }] } } : {}),
-      generationConfig: { maxOutputTokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 },
+      generationConfig: {
+        maxOutputTokens: body.max_tokens || 4096,
+        temperature: body.temperature || 0.7,
+        ...(isGemma4Thinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+      },
     }),
   });
   const d = await r.json();
-  const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (!r.ok) {
+    const errMsg = d?.error?.message || `Google API error (${r.status})`;
+    return { error: errMsg, content: null };
+  }
+  const parts = d.candidates?.[0]?.content?.parts || [];
+  // Gemma 4 returns thinking tokens in parts with `thought: true` — extract only final answer parts
+  const answerParts = parts.filter(p => !p.thought && p.text);
+  const text = answerParts.length > 0 ? answerParts.map(p => p.text).join('') : (parts.map(p => p.text || '').join(''));
   return { content: [{ type: 'text', text }], model, usage: d.usageMetadata };
 }
 
