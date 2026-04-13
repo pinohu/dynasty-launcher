@@ -30,9 +30,13 @@ small{display:block;margin-top:16px;font-size:12px;color:var(--sub)}
 .fq p{font-size:12px;color:var(--sub);margin:6px 0 2px;line-height:1.55}
 .promise{font-size:12px;color:var(--dim);border-top:1px solid var(--bdr);margin-top:18px;padding-top:12px;line-height:1.55}
 .promise a{font-weight:500}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+.skip:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important}
 </style>
 </head>
 <body>
+<a href="#content" class="skip" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999;font-size:14px;padding:8px 16px;background:var(--gold);color:#09090B;border-radius:8px;font-weight:600">Skip to content</a>
+<main id="content" role="main">
 <a class="back" href="/for/">← All situations</a>
 <h1>Get a clear go/no-go answer first</h1>
 <p class="lead">This path gives you a free, structured viability score before you commit budget to build, launch, or integrations. Scoring runs locally on your device — unlimited, private, and instant.</p>
@@ -40,7 +44,8 @@ small{display:block;margin-top:16px;font-size:12px;color:var(--sub)}
 <small style="margin-top:0">This path is designed to reduce regret: you only pay after clarity.</small>
 <div class="cta">
 <a class="btn btn-p" href="/app?plan=free&archetype=demo_express&segment=viability&source=spoke">Score free — $0</a>
-<a class="btn btn-g" href="/app?plan=foundation&archetype=landing_1p&segment=viability_buy&source=spoke">Move to Foundation — $1,997</a>
+<a class="btn btn-g" href="/app?plan=strategy_pack&archetype=landing_1p&segment=viability_buy&source=spoke">Strategy Pack — $697</a>
+<a class="btn btn-g" href="/app?plan=foundation&archetype=landing_1p&segment=viability_buy&source=spoke">Foundation — $1,997</a>
 </div>
 <div class="faq">
 <h2>Common questions</h2>
@@ -50,5 +55,6 @@ small{display:block;margin-top:16px;font-size:12px;color:var(--sub)}
 </div>
 <p class="promise">Every path runs through the same product: judgment on the plan, implementation you own, and accountable scope. <a href="/deliverables">See every file you get</a> · <a href="/maturity">See what ships today</a>.</p>
 <small><a href="/">Home</a> · <a href="/deliverables">Deliverables</a> · <a href="/maturity">What ships</a> · <a href="/#pricing">Pricing</a> · <a href="/quiz">Diagnostic</a></small>
+</main>
 </body>
 </html>

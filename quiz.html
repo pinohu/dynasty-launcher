@@ -32,11 +32,14 @@ input[type="radio"],input[type="checkbox"]{accent-color:var(--gold);margin-top:2
 .list{margin:0 0 0 18px;color:var(--sub);font-size:14px}
 .list li{margin:4px 0}
 small{display:block;margin-top:12px;color:var(--dim);font-size:12px}
-@media(min-width:820px){.grid{grid-template-columns:1fr 1fr}}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+.skip:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important}
 </style>
 </head>
 <body>
-<a class="back" href="/">← Back home</a>
+<a href="#quiz-form" class="skip" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999;font-size:14px;padding:8px 16px;background:var(--gold);color:#09090B;border-radius:8px;font-weight:600">Skip to quiz</a>
+<main role="main">
+<a class="back" href="/">&#8592; Back home</a>
 <h1>Match your bottleneck to the right build path</h1>
 <p class="lead">Four questions route you to path, tier, and site shape — not a generic “AI build.” Open the app prefilled when you are ready.</p>
 
@@ -106,6 +109,7 @@ small{display:block;margin-top:12px;color:var(--dim);font-size:12px}
   </div>
   <small>Recommendation is a starting point, not legal/financial advice. You can adjust before committing.</small>
 </section>
+</main>
 
 <script>
 const DIAGNOSTIC_SESSION_ID = (() => {
@@ -251,7 +255,13 @@ document.getElementById('run-quiz').addEventListener('click', () => {
   const { key, rec, reasons } = pickRecommendation()
   const res = document.getElementById('result')
   const planLabels = { foundation: 'Foundation ($1,997)', strategy_pack: 'Strategy Pack ($697)', blueprint: 'Blueprint ($297)', scoring_pro: 'Scoring Pro ($19/mo)', free: 'Free scoring ($0)' }
-  const planLabel = planLabels[rec.plan] || 'Free scoring ($0)'
+  // Override plan based on budget selection
+  let finalPlan = rec.plan;
+  if (budget === 'strategy_pack') finalPlan = 'strategy_pack';
+  else if (budget === 'blueprint') finalPlan = 'blueprint';
+  else if (budget === 'scoring_pro') finalPlan = 'scoring_pro';
+  else if (budget === 'free') finalPlan = 'free';
+  const planLabel = planLabels[finalPlan] || 'Free scoring ($0)'
 
   document.getElementById('res-title').textContent = `Recommended: ${rec.label}`
   document.getElementById('res-path').textContent = `Path: ${key.replace('_', ' ')}`
@@ -260,7 +270,7 @@ document.getElementById('run-quiz').addEventListener('click', () => {
   const why = document.getElementById('res-why')
   why.innerHTML = reasons.map(r => `<li>${r}</li>`).join('')
 
-  const build = `/app?plan=${encodeURIComponent(rec.plan)}&archetype=${encodeURIComponent(rec.archetype)}&segment=${encodeURIComponent(key)}&source=quiz&diag_id=${encodeURIComponent(DIAGNOSTIC_SESSION_ID)}`
+  const build = `/app?plan=${encodeURIComponent(finalPlan)}&archetype=${encodeURIComponent(rec.archetype)}&segment=${encodeURIComponent(key)}&source=quiz&diag_id=${encodeURIComponent(DIAGNOSTIC_SESSION_ID)}`
   document.getElementById('res-build').href = build
   document.getElementById('res-build').textContent = rec.cta
   document.getElementById('res-guide').href = rec.guide
@@ -270,7 +280,7 @@ document.getElementById('run-quiz').addEventListener('click', () => {
       session_id: DIAGNOSTIC_SESSION_ID,
       ts: new Date().toISOString(),
       recommended_segment: key,
-      recommended_plan: rec.plan,
+      recommended_plan: finalPlan,
       recommended_archetype: rec.archetype,
       answers: { stage, budget, delivery, pains }
     }))
@@ -283,7 +293,7 @@ document.getElementById('run-quiz').addEventListener('click', () => {
     delivery,
     pains,
     recommended_segment: key,
-    recommended_plan: rec.plan,
+    recommended_plan: finalPlan,
     recommended_archetype: rec.archetype
   })
 

@@ -70,11 +70,12 @@ a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
 .btn-g:hover{color:var(--tx);border-color:rgba(255,255,255,.2);text-decoration:none}
 
 footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center;font-size:12px;color:var(--dim);max-width:1100px;margin:0 auto}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+.skip-link:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important}
 </style>
-</head>
-<body>
-
-<div class="topnav"><a href="/">← Home</a> <a href="/#pricing">Pricing</a> <a href="/maturity">What ships</a> <a href="/for/">Guides</a></div>
+<a href="#strategy" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999;font-size:14px;padding:8px 16px;background:var(--gold);color:var(--ink);border-radius:8px;font-weight:600">Skip to content</a>
+<div class="topnav"><a href="/">&#8592; Home</a> <a href="/#pricing">Pricing</a> <a href="/maturity">What ships</a> <a href="/for/">Guides</a></div>
+<main id="main" role="main">
 
 <div class="hero-d">
 <h1>Everything in <em>your build</em></h1>
@@ -85,7 +86,7 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 <div class="ct"><div class="n">50K+</div><div class="l">Words of strategy</div></div>
 <div class="ct"><div class="n">$71K+</div><div class="l">Equivalent value</div></div>
 </div>
-<p class="note">Exact count varies by build archetype. Foundation delivers 90+ docs + deployed product + Day-1 Success Kit. Every file listed below is real — generated from your specific business description, not a generic template.</p>
+<p class="note">Exact count varies by build archetype and tier. <strong>Strategy Pack</strong> ($697) delivers all 90+ documents as a downloadable .zip — no code or deployment. <strong>Foundation</strong> ($1,997) delivers everything: documents + deployed product + Day-1 Success Kit. Every file listed below is real — generated from your specific business description, not a generic template.</p>
 </div>
 
 <div class="cats">
@@ -336,15 +337,17 @@ footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center
 </div>
 
 <div class="cta-bottom">
-<h2>That's what <em style="font-style:normal;color:var(--gold)">$1,997</em> buys.</h2>
-<p>Not "access to a tool." Not "credits." A complete business-in-a-box built from your specific idea, deployed on your domain, in your repo, under your control. Forever.</p>
+<h2>Pick how deep you go.</h2>
+<p>Strategy Pack ($697) gives you every document listed above — downloaded and yours to keep. Foundation ($1,997) adds production code, deployment, and a Day-1 Success Kit on top.</p>
 <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
 <a href="/app?plan=free" class="btn-g">Score free first</a>
-<a href="/app?plan=foundation" class="btn-p">Start Foundation — $1,997</a>
+<a href="/app?plan=strategy_pack" class="btn-g">Strategy Pack — $697</a>
+<a href="/app?plan=foundation" class="btn-p">Foundation — $1,997</a>
 </div>
-<p style="font-size:12px;color:var(--dim);margin-top:14px">Operational connection tiers (payments, CRM, automations) coming soon. <a href="/maturity">See what ships today</a></p>
+<p style="font-size:12px;color:var(--dim);margin-top:14px">$697 credited toward Foundation if you upgrade within 30 days. Operational connection tiers (payments, CRM, automations) coming soon. <a href="/maturity">See what ships today</a></p>
 </div>
 
+</main>
 <footer>
 <p>© 2026 PA Registered Office Services, LLC · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/">Home</a></p>
 <p style="margin-top:8px;font-size:11px;color:#444">All documents are AI-generated starting points. Legal, financial, and tax documents require qualified professional review. Generated code is production-ready scaffolding — extend and audit before relying on it in production.</p>
