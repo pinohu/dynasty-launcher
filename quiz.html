@@ -79,8 +79,6 @@ small{display:block;margin-top:12px;color:var(--dim);font-size:12px}
       <div class="opts">
         <label class="opt"><input type="radio" name="budget" value="free" checked><span>Start at $0 and decide after evidence</span></label>
         <label class="opt"><input type="radio" name="budget" value="foundation"><span>Comfortable at Foundation ($1,997)</span></label>
-        <label class="opt"><input type="radio" name="budget" value="professional"><span>Comfortable at Professional ($4,997)</span></label>
-        <label class="opt"><input type="radio" name="budget" value="enterprise"><span>Comfortable at Enterprise ($9,997)</span></label>
       </div>
     </section>
   </div>
@@ -140,12 +138,12 @@ const SEGMENTS = {
   viability: { label: 'Proof before spend', guide: '/for/viability', plan: 'free', archetype: 'demo_express', cta: 'Start with free scoring' },
   capital: { label: 'Funding readiness', guide: '/for/capital', plan: 'foundation', archetype: 'starter_5p', cta: 'Start Foundation path' },
   foundation_diy: { label: 'Plans + product first', guide: '/for/foundation-diy', plan: 'foundation', archetype: 'landing_1p', cta: 'Start Foundation DIY path' },
-  revenue_ops: { label: 'Revenue operations', guide: '/for/revenue-ops', plan: 'professional', archetype: 'growth', cta: 'Start Professional path' },
-  full_launch: { label: 'Full launch (widest scope)', guide: '/for/full-launch', plan: 'enterprise', archetype: 'enterprise_full', cta: 'Start Enterprise path' },
-  authority_seo: { label: 'Authority / SEO growth', guide: '/for/authority-seo', plan: 'enterprise', archetype: 'authority_site', cta: 'Start authority path' },
-  trades_vertical: { label: 'Vertical workflow assist', guide: '/for/trades-vertical', plan: 'professional', archetype: 'growth', cta: 'Start vertical assist path' },
-  directory: { label: 'Directory/community model', guide: '/for/directory', plan: 'enterprise', archetype: 'enterprise_full', cta: 'Start directory path' },
-  managed_ops: { label: 'Post-launch runtime stability', guide: '/for/managed', plan: 'managed', archetype: 'growth', cta: 'Add managed runtime mode' }
+  revenue_ops: { label: 'Revenue operations', guide: '/for/revenue-ops', plan: 'foundation', archetype: 'growth', cta: 'Start Foundation path' },
+  full_launch: { label: 'Full launch (widest scope)', guide: '/for/full-launch', plan: 'foundation', archetype: 'enterprise_full', cta: 'Start Foundation path' },
+  authority_seo: { label: 'Authority / SEO growth', guide: '/for/authority-seo', plan: 'foundation', archetype: 'authority_site', cta: 'Start Foundation authority path' },
+  trades_vertical: { label: 'Vertical workflow assist', guide: '/for/trades-vertical', plan: 'foundation', archetype: 'growth', cta: 'Start Foundation + assist' },
+  directory: { label: 'Directory/community model', guide: '/for/directory', plan: 'foundation', archetype: 'enterprise_full', cta: 'Start Foundation directory path' },
+  managed_ops: { label: 'Post-launch runtime stability', guide: '/for/managed', plan: 'foundation', archetype: 'growth', cta: 'Start Foundation (managed coming soon)' }
 }
 
 const PAIN_LABELS = {
@@ -215,8 +213,8 @@ function pickRecommendation() {
 
   if (budget === 'free') score.viability += 2
   if (budget === 'foundation') { score.capital += 1; score.foundation_diy += 2 }
-  if (budget === 'professional') { score.revenue_ops += 2; score.trades_vertical += 1 }
-  if (budget === 'enterprise') { score.full_launch += 2; score.authority_seo += 1; score.directory += 1 }
+  
+  
 
   const top = Object.entries(score).sort((a, b) => b[1] - a[1])[0][0]
   const map = {
@@ -246,10 +244,7 @@ document.getElementById('run-quiz').addEventListener('click', () => {
   const pains = getCheckedValues('pain').slice(0, 2)
   const { key, rec, reasons } = pickRecommendation()
   const res = document.getElementById('result')
-  const planLabel = rec.plan === 'managed' ? 'Managed ($497/mo)' :
-    rec.plan === 'enterprise' ? 'Enterprise ($9,997)' :
-    rec.plan === 'professional' ? 'Professional ($4,997)' :
-    rec.plan === 'foundation' ? 'Foundation ($1,997)' : 'Free scoring ($0)'
+  const planLabel = rec.plan === 'foundation' ? 'Foundation ($1,997)' : 'Free scoring ($0)'
 
   document.getElementById('res-title').textContent = `Recommended: ${rec.label}`
   document.getElementById('res-path').textContent = `Path: ${key.replace('_', ' ')}`

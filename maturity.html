@@ -33,24 +33,24 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 </style>
 </head>
 <body>
-<p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/deliverables">Full deliverables inventory</a> · <a href="/#outcome-packages">Outcome packages</a></p>
+<p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/deliverables">Full deliverables inventory</a> · <a href="/#pricing">Pricing</a></p>
 <h1>What’s included today</h1>
 <p class="lead">This page exists for one reason: <strong>accountability before purchase</strong>. It shows what is live now, what is wired server-side when keys allow, and what stays in your repo only — so you are not sold a vague “AI did it” story.</p>
-<p class="note"><strong>Last reviewed:</strong> 2026-04-12. Foundation centers judgment + core implementation (strategy, product, deployment). Higher tiers widen operating scope where credentials and providers cooperate. <strong>Credential boundary:</strong> launcher-held keys (e.g. <code>DYNASTY_TOOL_CONFIG</code>) are for generating deliverables and orchestrating setup; <strong>sustained operation</strong> of deployed apps is intended to use <strong>customer-owned</strong> vendor credentials in the shipped project (<code>.env.example</code>, MANUAL-ACTIONS, their Vercel env) — not an ongoing dependency on the launcher’s shared API pool. Customer Vercel projects are not auto-filled with real Clerk/Stripe/DB secrets from the launcher (placeholders + dashboard handoff). Modules are implemented in the orchestrator and execute as software workflows; success still depends on your approvals, API health, and tier limits. The builder runs <strong>multi-pass post-deploy checks</strong> (repo paths, Vercel READY, strict live URL + routes) and an <strong>artifact quality gate</strong> on key docs (placeholders, template-leak patterns, niche grounding) before calling a deploy “ready.” The <strong>U.S. government contracting planning pack</strong> is <strong>opt-in</strong> in the builder and is informational only (verify on SAM, USASpending, SBA, Census NAICS).<br><br>Technical verification endpoint: <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
+<p class="note"><strong>Last reviewed:</strong> 2026-04-12. Foundation is the only tier currently available. It delivers judgment + core implementation (strategy, product, deployment, Day-1 Kit). Items marked “Planned” are in active development for future operational tiers. <strong>Credential boundary:</strong> launcher-held keys (e.g. <code>DYNASTY_TOOL_CONFIG</code>) are for generating deliverables and orchestrating setup; <strong>sustained operation</strong> of deployed apps is intended to use <strong>customer-owned</strong> vendor credentials in the shipped project (<code>.env.example</code>, MANUAL-ACTIONS, their Vercel env) — not an ongoing dependency on the launcher’s shared API pool. Customer Vercel projects are not auto-filled with real Clerk/Stripe/DB secrets from the launcher (placeholders + dashboard handoff). Modules are implemented in the orchestrator and execute as software workflows; success still depends on your approvals, API health, and tier limits. The builder runs <strong>multi-pass post-deploy checks</strong> (repo paths, Vercel READY, strict live URL + routes) and an <strong>artifact quality gate</strong> on key docs (placeholders, template-leak patterns, niche grounding) before calling a deploy “ready.” The <strong>U.S. government contracting planning pack</strong> is <strong>opt-in</strong> in the builder and is informational only (verify on SAM, USASpending, SBA, Census NAICS).<br><br>Technical verification endpoint: <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
 
 <h2>Status legend</h2>
 <ul>
 <li><span class="tag live">Live</span> — In active use for paying builds, subject to tier, keys, and API health.</li>
 <li><span class="tag partial">Partial</span> — Works in many cases but has known provider/key dependencies or reduced fallback behavior.</li>
 <li><span class="tag gen">Codegen</span> — Client-side generation + repo files; no external API required.</li>
-<li><span class="tag ready">Automation-ready</span> — Implemented server-side; runs when credentials and provider APIs allow, with skips logged when they do not.</li>
+<li><span class="tag ready">Planned</span> — Designed and specified; not yet available to customers. Will activate in future tiers when implementation is complete.</li>
 </ul>
 
 <div class="sum">
 <span><strong style="color:var(--live)">Live:</strong> 12</span>
 <span><strong style="color:var(--partial)">Partial:</strong> 6</span>
 <span><strong style="color:var(--sub)">Codegen:</strong> 4</span>
-<span><strong style="color:var(--ready)">Automation-ready:</strong> 15</span>
+<span><strong style="color:var(--ready)">Planned:</strong> 15</span>
 </div>
 
 <details class="matrix">
@@ -79,30 +79,30 @@ details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bo
 <tr><td>Seed data and demo content</td><td><span class="tag live">Live</span></td><td><code>src/data/seed/</code>, <code>src/scripts/seed.ts</code></td><td>Fictional users, content, transactions matching business type. Executable seeder script (npm run db:seed).</td></tr>
 <tr><td>API collection (OpenAPI + Postman)</td><td><span class="tag live">Live</span></td><td><code>docs/openapi.json</code>, <code>docs/postman-collection.json</code></td><td>OpenAPI 3.0 spec + Postman v2.1 collection derived from generated API routes.</td></tr>
 <tr><td>90-day launch playbook</td><td><span class="tag live">Live</span></td><td><code>LAUNCH-PLAYBOOK.md</code></td><td>Tier-aware week-by-week action plan referencing specific repo deliverables. Suggested playbook, not professional advice.</td></tr>
-<tr><td>Hosting, domain, and inbox setup</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Auto-runs with valid infrastructure credentials; daily volume caps apply by tier.</td></tr>
-<tr><td>Payments and webhook flow</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Tier + package depth still control run/defer behavior.</td></tr>
-<tr><td>Email campaigns and onboarding sequence</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Runs with configured messaging credentials.</td></tr>
-<tr><td>Voice intake and booking automation</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Reserved for custom volume onboarding.</td></tr>
-<tr><td>Text-message campaign automation</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Reserved for custom volume onboarding.</td></tr>
-<tr><td>Website assistant experience</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Runs when assistant generation keys are available.</td></tr>
-<tr><td>SEO content bundle</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Runs when content credentials allow; you own editorial judgment before publish.</td></tr>
-<tr><td>Video and visual creative outputs</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Video path reserved for custom volume onboarding; design outputs remain available in standard tiers.</td></tr>
-<tr><td>Behavior and funnel analytics</td><td><span class="tag partial">Partial</span></td><td>Server runtime connector</td><td>Core analytics run today; deeper behavior tooling may require extra credentials.</td></tr>
-<tr><td>Lead intelligence and enrichment</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Reserved for custom volume onboarding.</td></tr>
-<tr><td>Legal and policy document drafts</td><td><span class="tag partial">Partial</span></td><td>Server runtime connector</td><td>Core drafting is active; attorney review required; expense tooling remains credential-gated.</td></tr>
-<tr><td>Workflow orchestration pack</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Runs with workflow engine credentials.</td></tr>
-<tr><td>Social publishing calendar automation</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Runs with social publishing credentials.</td></tr>
-<tr><td>Client workspace and pipeline automation</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Reserved for custom volume onboarding.</td></tr>
-<tr><td>Directory business model automation</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Reserved for custom volume onboarding.</td></tr>
-<tr><td>Managed CMS site path</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector</td><td>Runs with managed CMS credentials; daily volume caps apply by tier.</td></tr>
-<tr><td>Post-deploy quality verification (orchestrator / modules)</td><td><span class="tag ready">Automation-ready</span></td><td>Server runtime connector + build report</td><td>Distinct from client multi-pass GitHub/Vercel/live verification above; both may apply in a full session.</td></tr>
+<tr><td>Hosting, domain, and inbox setup</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will auto-run with valid infrastructure credentials; daily volume caps apply by tier.</td></tr>
+<tr><td>Payments and webhook flow</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Tier + package depth still control run/defer behavior.</td></tr>
+<tr><td>Email campaigns and onboarding sequence</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run with configured messaging credentials.</td></tr>
+<tr><td>Voice intake and booking automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
+<tr><td>Text-message campaign automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
+<tr><td>Website assistant experience</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run when assistant generation keys are available.</td></tr>
+<tr><td>SEO content bundle</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run when content credentials allow; you own editorial judgment before publish.</td></tr>
+<tr><td>Video and visual creative outputs</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Video path reserved for custom volume onboarding; design outputs remain available in standard tiers.</td></tr>
+<tr><td>Behavior and funnel analytics</td><td><span class="tag partial">Partial</span></td><td>Not yet available</td><td>Core analytics planned today; deeper behavior tooling may require extra credentials.</td></tr>
+<tr><td>Lead intelligence and enrichment</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
+<tr><td>Legal and policy document drafts</td><td><span class="tag partial">Partial</span></td><td>Partial via codegen</td><td>Core drafting is active via codegen; attorney review required; expense tooling remains credential-gated.</td></tr>
+<tr><td>Workflow orchestration pack</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run with workflow engine credentials.</td></tr>
+<tr><td>Social publishing calendar automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run with social publishing credentials.</td></tr>
+<tr><td>Client workspace and pipeline automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
+<tr><td>Directory business model automation</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Reserved for custom volume onboarding.</td></tr>
+<tr><td>Managed CMS site path</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Will run with managed CMS credentials; daily volume caps apply by tier.</td></tr>
+<tr><td>Post-deploy quality verification (orchestrator / modules)</td><td><span class="tag ready">Planned</span></td><td>Not yet available</td><td>Planned. Distinct from client multi-pass GitHub/Vercel/live verification above; both may apply in a full session.</td></tr>
 <tr><td>Community (Heartbeat)</td><td><span class="tag partial">Partial</span></td><td>UI toggle in V3 wireframe</td><td>Spec only; no server-side module yet. Optional and key-gated.</td></tr>
 </tbody>
 </table>
 </details>
 
 <h2>Why this page matters</h2>
-<p class="lead" style="margin-bottom:16px">Most platforms oversell vague capability. <strong>Transparent scope here</strong> builds trust — so you match tier to the judgment, implementation, and results you actually need.</p>
+<p class="lead" style="margin-bottom:16px">Most platforms oversell vague capability. <strong>This page exists so you know exactly what you’re buying.</strong> Foundation delivers everything marked Live, Codegen, or Partial. Items marked Planned are in development and will be available in future tiers — we won’t sell them until they’re ready.</p>
 
 <p class="nav"><a href="/for/">Guide pages</a> · <a href="/deliverables">Full deliverables inventory</a> · <a href="mailto:ikeohu@dynastyempire.com">Contact</a></p>
 </body>

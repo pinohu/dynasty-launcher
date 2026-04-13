@@ -1050,7 +1050,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
       <h3 class="cfg-label">Build package</h3>
       <p class="cfg-desc">Pick how large your first release should be, plus optional add-ons. Lean packages prioritize speed; larger packages prioritize breadth.</p>
       <select id="dynasty-archetype" class="ti" style="width:100%;max-width:420px;padding:10px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--bdr);color:var(--tx);font-size:13px;margin-bottom:8px" onchange="saveBuildProfileToStorage()">
-        <option value="enterprise_full">Enterprise full — broadest launch depth (default)</option>
+        <option value="enterprise_full">Full launch — broadest depth (default)</option>
         <option value="authority_site">Authority / SEO-heavy site</option>
         <option value="growth">Growth — app + core operations stack</option>
         <option value="starter_5p">Starter — 5-page marketing site depth</option>
@@ -1317,7 +1317,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     '<a href="/app?plan=free">Score Free</a>',
     '<a href="/app?plan=blueprint">Blueprint — $297</a>',
     '<a href="/app?plan=scoring_pro">Scoring Pro — $19/mo</a>',
-    '<a href="/app?plan=professional" class="primary">Build — $4,997</a>',
+    '<a href="/app?plan=foundation" class="primary">Build — $1,997</a>',
     '</div><div class="btns" style="margin-top:8px">',
     '<a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>',
     '</div>',
@@ -2952,7 +2952,7 @@ async function startCheckout(plan) {
   }
 }
 
-// Check for plan purchase redirect from homepage (e.g. ?plan=professional)
+// Check for plan purchase redirect from homepage (e.g. ?plan=foundation)
 (function checkPlanPurchase() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('source') === 'quiz') {
