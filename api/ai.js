@@ -384,6 +384,7 @@ async function callGroq(apiKey, body) {
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
   });
+  if (!r.ok) { const errBody = await r.text().catch(() => ""); throw new Error(`Groq API error ${r.status}: ${errBody.slice(0, 200)}`); }
   const d = await r.json();
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
@@ -396,6 +397,7 @@ async function callDeepSeek(apiKey, body) {
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
   });
+  if (!r.ok) { const errBody = await r.text().catch(() => ""); throw new Error(`DeepSeek API error ${r.status}: ${errBody.slice(0, 200)}`); }
   const d = await r.json();
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
@@ -408,6 +410,7 @@ async function callMistral(apiKey, body) {
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
   });
+  if (!r.ok) { const errBody = await r.text().catch(() => ""); throw new Error(`Mistral API error ${r.status}: ${errBody.slice(0, 200)}`); }
   const d = await r.json();
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
@@ -423,6 +426,7 @@ async function callOllama(apiKey, body) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: ollamaModel, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7, stream: false }),
   });
+  if (!r.ok) { const errBody = await r.text().catch(() => ""); throw new Error(`Ollama API error ${r.status}: ${errBody.slice(0, 200)}`); }
   const d = await r.json();
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
@@ -435,6 +439,7 @@ async function callOpenRouter(apiKey, body) {
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': 'https://yourdeputy.com', 'X-Title': 'Your Deputy' },
     body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
   });
+  if (!r.ok) { const errBody = await r.text().catch(() => ""); throw new Error(`OpenRouter API error ${r.status}: ${errBody.slice(0, 200)}`); }
   const d = await r.json();
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }

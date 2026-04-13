@@ -216,7 +216,7 @@ export default async function handler(req, res) {
   // ── Session Recovery — send a code to email ─────────────────────
   if (action === 'recover_start') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
-    if (isRecoverRateLimited(req)) res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
+    if (isRecoverRateLimited(req)) { res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' }); }
     const { email } = req.body || {};
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ ok: false, error: 'Valid email required' });
@@ -250,7 +250,7 @@ export default async function handler(req, res) {
   // ── Session Recovery — verify code and return session ──────────
   if (action === 'recover_verify') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
-    if (isRecoverRateLimited(req)) res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' });
+    if (isRecoverRateLimited(req)) { res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' }); }
     const { email, code } = req.body || {};
     if (!email || !code) return res.status(400).json({ ok: false, error: 'email and code required' });
     try {

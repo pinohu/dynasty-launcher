@@ -19,7 +19,7 @@ function verifyAdmin(req) {
     if (!tokenSecret) return false;
     const payload = `${prefix}:${expiry}`;
     const expected = createHmac('sha256', tokenSecret).update(payload).digest('hex');
-    if (hash !== expected) return false;
+    const { timingSafeEqual: _tse } = await import("crypto"); if (expected.length !== hash.length || !_tse(Buffer.from(expected), Buffer.from(hash))) return false;
     if (Date.now() > parseInt(expiry)) return false;
     return true;
   } catch { return false; }
