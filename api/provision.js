@@ -1316,7 +1316,7 @@ Return in this exact format:
 }
 
 // ── mod_automation: 353-Workflow Catalog Engine ─────────────────────────────
-const automationCatalog = require('./automation-catalog.js');
+const automationCatalog = require(require('path').join(__dirname, 'automation-catalog.js'));
 
 async function mod_automation(config, project, liveUrl) {
   const results = { ok: false, service: 'automation', details: {} };
