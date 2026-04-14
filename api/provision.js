@@ -1318,14 +1318,17 @@ Return in this exact format:
 // ── mod_automation: 353-Workflow Catalog Engine ─────────────────────────────
 let automationCatalog;
 try {
-  automationCatalog = require(require('path').join(__dirname, 'automation-catalog.js'));
-  if (!automationCatalog.ALL_AUTOMATIONS) throw new Error('Empty catalog');
+  const { readFileSync } = await import('fs');
+  const { join, dirname } = await import('path');
+  const { fileURLToPath } = await import('url');
+  const __catalogDir = dirname(fileURLToPath(import.meta.url));
+  const catalogCode = readFileSync(join(__catalogDir, 'automation-catalog.js'), 'utf8');
+  const m = {}; const mod = { exports: m };
+  (new Function('module', 'exports', catalogCode))(mod, m);
+  automationCatalog = mod.exports;
+  if (!automationCatalog?.ALL_AUTOMATIONS?.length) automationCatalog = null;
 } catch {
-  try {
-    automationCatalog = require('./automation-catalog');
-  } catch {
-    automationCatalog = null;
-  }
+  automationCatalog = null;
 }
 
 async function mod_automation(config, project, liveUrl) {
