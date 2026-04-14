@@ -1316,7 +1316,17 @@ Return in this exact format:
 }
 
 // ── mod_automation: 353-Workflow Catalog Engine ─────────────────────────────
-const automationCatalog = require(require('path').join(__dirname, 'automation-catalog.js'));
+let automationCatalog;
+try {
+  automationCatalog = require(require('path').join(__dirname, 'automation-catalog.js'));
+  if (!automationCatalog.ALL_AUTOMATIONS) throw new Error('Empty catalog');
+} catch {
+  try {
+    automationCatalog = require('./automation-catalog');
+  } catch {
+    automationCatalog = null;
+  }
+}
 
 async function mod_automation(config, project, liveUrl) {
   const results = { ok: false, service: 'automation', details: {} };
@@ -1326,6 +1336,12 @@ async function mod_automation(config, project, liveUrl) {
   if (!n8nKey) { results.error = 'No n8n API key'; results.fallback = 'Add N8N_API_KEY env var or n8n_api to DYNASTY_TOOL_CONFIG.automation'; return results; }
   const nh = { 'X-N8N-API-KEY': n8nKey, 'Content-Type': 'application/json' };
   const webhookBase = liveUrl || `https://${project.slug}.vercel.app`;
+
+  if (!automationCatalog || !automationCatalog.ALL_AUTOMATIONS) {
+    results.error = 'Automation catalog not loaded';
+    results.fallback = 'The 353-automation catalog module could not be loaded. Deploy n8n workflows manually.';
+    return results;
+  }
 
   const archetype = project.archetype || project.type || 'default';
   const selectedAutomations = automationCatalog.getAutomationsForProject(archetype);
@@ -2217,12 +2233,12 @@ export default async function handler(req, res) {
         verify: true
       },
       modules_enabled: config.modules_enabled || {},
-      automation_catalog: {
+      automation_catalog: automationCatalog ? {
         total_automations: automationCatalog.ALL_AUTOMATIONS.length,
         categories: Object.keys(automationCatalog.CATEGORIES).length,
         packages: Object.keys(automationCatalog.PACKAGES),
         archetypes: Object.keys(automationCatalog.ARCHETYPE_PACKAGES),
-      },
+      } : { error: 'Catalog module not loaded' },
     });
   }
 
