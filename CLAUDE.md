@@ -13,6 +13,7 @@ dynasty-launcher/
 ├── deliverables/           # Category + individual deliverable pages (160 files)
 ├── api/
 │   ├── provision.js        # Backend orchestrator (~3570 lines, 19 mod_* functions)
+│   ├── automation-catalog.js # 353-automation n8n workflow catalog + generator (45 categories)
 │   ├── checkout.js         # Stripe checkout + session recovery (~290 lines)
 │   ├── auth.js             # Clerk auth + admin key verification (~130 lines)
 │   ├── waitlist.js         # Waitlist capture (Acumbamail + Telegram + Neon)
@@ -50,7 +51,7 @@ dynasty-launcher/
 
 ## Architecture
 - **app.html**: Single-file frontend. Contains the entire builder UI + AI generation pipeline + build validation gate. All phases run client-side calling the Anthropic API and GitHub API directly. **Viability scoring uses WebLLM (client-side WebGPU inference) as the primary path** — a Gemma 2 2B or Qwen2.5-3B model runs directly in the browser for zero-cost, unlimited, private scoring. Falls back to server-side `/api/ai` when WebGPU is unavailable.
-- **api/provision.js**: Vercel serverless function. Handles deployment: creates GitHub repos (via template fork), creates Vercel projects, sets env vars, triggers deployments. Also runs 17 `mod_*` integration modules (hosting, billing, email, phone, SMS, chatbot, SEO, video, design, analytics, leads, docs, automation, social, CRM, directory, WordPress) for Professional+ tiers. Handles authority site deploys and retry logic.
+- **api/provision.js**: Vercel serverless function. Handles deployment: creates GitHub repos (via template fork), creates Vercel projects, sets env vars, triggers deployments. Also runs 17 `mod_*` integration modules (hosting, billing, email, phone, SMS, chatbot, SEO, video, design, analytics, leads, docs, automation, social, CRM, directory, WordPress) for Professional+ tiers. The `mod_automation` function uses `automation-catalog.js` to deploy up to 50 n8n workflows via API and pushes the full 353-automation catalog as importable JSON to customer repos. Handles authority site deploys and retry logic.
 - **api/ai.js**: AI router. Multi-provider (Anthropic, OpenAI, Google/Gemma 4, Groq, DeepSeek, Mistral, OpenRouter, Ollama, Cerebras, SambaNova). Rate limiting + quota system. **Gemma 4 27B (via Google AI Studio, free tier) is the preferred free model** for server-side scoring and generation. Cloud fallback for browsers without WebGPU.
 - **DYNASTY_TOOL_CONFIG**: Encrypted Vercel env var containing 50+ API keys organized by category (ai, payments, infrastructure, comms, content, crm_pm, automation, data_research, directories, suitedash, community, modules_enabled).
 

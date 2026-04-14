@@ -1315,7 +1315,9 @@ Return in this exact format:
   return results;
 }
 
-// ── mod_automation: n8n 7 Workflows ─────────────────────────────────────────
+// ── mod_automation: 353-Workflow Catalog Engine ─────────────────────────────
+const automationCatalog = require('./automation-catalog.js');
+
 async function mod_automation(config, project, liveUrl) {
   const results = { ok: false, service: 'automation', details: {} };
   const n8nKey = process.env.N8N_API_KEY || config.automation?.n8n_api;
@@ -1325,90 +1327,64 @@ async function mod_automation(config, project, liveUrl) {
   const nh = { 'X-N8N-API-KEY': n8nKey, 'Content-Type': 'application/json' };
   const webhookBase = liveUrl || `https://${project.slug}.vercel.app`;
 
-  // Helper to build a multi-step n8n workflow with real action nodes
-  function wfNodes(path, steps) {
-    const nodes = [
-      { parameters: { httpMethod: 'POST', path, responseMode: 'responseNode' }, name: 'Webhook', type: 'n8n-nodes-base.webhook', position: [250, 300], typeVersion: 2 }
-    ];
-    steps.forEach((s, i) => nodes.push({ ...s, position: [450 + i * 200, 300] }));
-    nodes.push({ parameters: { respondWith: 'json', responseBody: '={{ JSON.stringify($json) }}' }, name: 'Respond', type: 'n8n-nodes-base.respondToWebhook', position: [650 + steps.length * 200, 300], typeVersion: 1.1 });
-    return nodes;
-  }
-  const workflows = [
-    { name: `${project.name} — New Signup → CRM → Email → SMS`, nodes: wfNodes(`${project.slug}-signup`, [
-      { name: 'Extract Data', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'email', value: '={{ $json.email }}', type: 'string' }, { name: 'name', value: '={{ $json.name }}', type: 'string' }, { name: 'project', value: project.name, type: 'string' }] } } },
-      { name: 'Add to CRM', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/contacts`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'email', value: '={{ $json.email }}' }, { name: 'name', value: '={{ $json.name }}' }, { name: 'source', value: 'signup' }] } } },
-      { name: 'Send Welcome Email', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.email }}' }, { name: 'template', value: 'welcome' }] } } },
-      { name: 'Send Welcome SMS', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/sms/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.phone }}' }, { name: 'message', value: `Welcome to ${project.name}! We're glad to have you.` }] } } },
-      { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'signup_processed', type: 'string' }, { name: 'crm', value: 'contact_created', type: 'string' }, { name: 'email', value: 'welcome_sent', type: 'string' }] } } }
-    ])},
-    { name: `${project.name} — New Booking → Confirm → Remind`, nodes: wfNodes(`${project.slug}-booking`, [
-      { name: 'Extract Booking', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'client_email', value: '={{ $json.email }}', type: 'string' }, { name: 'service', value: '={{ $json.service }}', type: 'string' }, { name: 'date', value: '={{ $json.date }}', type: 'string' }] } } },
-      { name: 'Create CRM Task', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/tasks`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'title', value: '={{ "Booking: " + $json.service }}' }, { name: 'due_date', value: '={{ $json.date }}' }] } } },
-      { name: 'Send Confirmation', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.client_email }}' }, { name: 'template', value: 'booking_confirmed' }] } } },
-      { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'booking_confirmed', type: 'string' }] } } }
-    ])},
-    { name: `${project.name} — New Payment → Invoice → Receipt`, nodes: wfNodes(`${project.slug}-payment`, [
-      { name: 'Extract Payment', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'customer_email', value: '={{ $json.customer_email || $json.data?.object?.customer_email }}', type: 'string' }, { name: 'amount', value: '={{ $json.amount || $json.data?.object?.amount_total }}', type: 'string' }] } } },
-      { name: 'Create Invoice Record', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/invoices`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'email', value: '={{ $json.customer_email }}' }, { name: 'amount', value: '={{ $json.amount }}' }] } } },
-      { name: 'Send Receipt Email', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.customer_email }}' }, { name: 'template', value: 'payment_receipt' }] } } },
-      { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'payment_processed', type: 'string' }] } } }
-    ])},
-    { name: `${project.name} — Hot Lead → CRM Deal → Email → Alert`, nodes: wfNodes(`${project.slug}-hotlead`, [
-      { name: 'Extract Lead', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'lead_email', value: '={{ $json.email }}', type: 'string' }, { name: 'lead_score', value: '={{ $json.score || 80 }}', type: 'number' }, { name: 'company', value: '={{ $json.company || "Unknown" }}', type: 'string' }] } } },
-      { name: 'Create CRM Deal', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/deals`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'email', value: '={{ $json.lead_email }}' }, { name: 'score', value: '={{ $json.lead_score }}' }, { name: 'stage', value: 'Qualified' }] } } },
-      { name: 'Send Personalized Email', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.lead_email }}' }, { name: 'template', value: 'hot_lead_outreach' }] } } },
-      { name: 'Alert Owner', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/notifications/owner`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'type', value: 'hot_lead' }, { name: 'message', value: '={{ "Hot lead: " + $json.lead_email + " (score: " + $json.lead_score + ")" }}' }] } } },
-      { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'hot_lead_processed', type: 'string' }] } } }
-    ])},
-    { name: `${project.name} — Missed Call → SMS → CRM → Email`, nodes: wfNodes(`${project.slug}-missed`, [
-      { name: 'Extract Caller', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'caller_phone', value: '={{ $json.from || $json.caller }}', type: 'string' }, { name: 'called_at', value: '={{ $json.timestamp || new Date().toISOString() }}', type: 'string' }] } } },
-      { name: 'Send Apology SMS', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/sms/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.caller_phone }}' }, { name: 'message', value: `Sorry we missed your call! Book online: ${webhookBase}/booking` }] } } },
-      { name: 'Create CRM Lead', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/leads`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'phone', value: '={{ $json.caller_phone }}' }, { name: 'source', value: 'missed_call' }] } } },
-      { name: 'Email Owner', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/notifications/owner`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'type', value: 'missed_call' }, { name: 'message', value: '={{ "Missed call from " + $json.caller_phone }}' }] } } },
-      { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'missed_call_handled', type: 'string' }] } } }
-    ])},
-    { name: `${project.name} — Failed Payment → Dunning → SMS → Escalate`, nodes: wfNodes(`${project.slug}-dunning`, [
-      { name: 'Extract Failure', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'customer_email', value: '={{ $json.data?.object?.customer_email || $json.email }}', type: 'string' }, { name: 'amount', value: '={{ $json.data?.object?.amount_due || $json.amount }}', type: 'string' }, { name: 'attempt', value: '={{ $json.data?.object?.attempt_count || 1 }}', type: 'number' }] } } },
-      { name: 'Send Dunning Email', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.customer_email }}' }, { name: 'template', value: 'payment_failed' }, { name: 'amount', value: '={{ $json.amount }}' }] } } },
-      { name: 'Send SMS Reminder', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/sms/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.customer_phone }}' }, { name: 'message', value: `Your payment to ${project.name} needs attention. Update your card at ${webhookBase}/billing` }] } } },
-      { name: 'Alert Owner if Escalation', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/notifications/owner`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'type', value: 'failed_payment' }, { name: 'message', value: '={{ "Failed payment: " + $json.customer_email + " ($" + $json.amount/100 + ") attempt #" + $json.attempt }}' }] } } },
-      { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'dunning_initiated', type: 'string' }] } } }
-    ])},
-    { name: `${project.name} — Post-Service → Review → Collect → Update`, nodes: wfNodes(`${project.slug}-review`, [
-      { name: 'Extract Client', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'client_email', value: '={{ $json.email }}', type: 'string' }, { name: 'service_name', value: '={{ $json.service || "service" }}', type: 'string' }] } } },
-      { name: 'Send Review Request', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/email/send`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'to', value: '={{ $json.client_email }}' }, { name: 'template', value: 'review_request' }, { name: 'review_link', value: `${webhookBase}/review` }] } } },
-      { name: 'Log Review Request', type: 'n8n-nodes-base.httpRequest', typeVersion: 4.2, parameters: { method: 'POST', url: `${webhookBase}/api/crm/activities`, options: {}, sendBody: true, bodyParameters: { parameters: [{ name: 'type', value: 'review_requested' }, { name: 'email', value: '={{ $json.client_email }}' }] } } },
-      { name: 'Set Result', type: 'n8n-nodes-base.set', typeVersion: 3.4, parameters: { assignments: { assignments: [{ name: 'status', value: 'review_requested', type: 'string' }] } } }
-    ])}
-  ];
+  const archetype = project.archetype || project.type || 'default';
+  const selectedAutomations = automationCatalog.getAutomationsForProject(archetype);
+  const MAX_LIVE_DEPLOY = 50; // Deploy top N workflows via API; push full catalog as importable JSON
+  const toDeploy = selectedAutomations.slice(0, MAX_LIVE_DEPLOY);
 
   results.details.workflows = [];
+  results.details.catalog_total = automationCatalog.ALL_AUTOMATIONS.length;
+  results.details.selected_for_archetype = selectedAutomations.length;
+  results.details.live_deployed = 0;
+
   try {
-    for (const wf of workflows) {
+    for (const auto of toDeploy) {
       try {
-        const connections = {};
-        for (let i = 0; i < wf.nodes.length - 1; i++) {
-          connections[wf.nodes[i].name] = { main: [[{ node: wf.nodes[i + 1].name, type: 'main', index: 0 }]] };
-        }
+        const wf = automationCatalog.buildN8nWorkflow(auto, project, webhookBase);
         const resp = await fetch(`${n8nUrl}/api/v1/workflows`, {
           method: 'POST', headers: nh,
-          body: JSON.stringify({ name: wf.name, nodes: wf.nodes, connections, settings: { executionOrder: 'v1' } })
+          body: JSON.stringify(wf)
         });
         const data = await resp.json();
         if (data.id) {
-          // Activate the workflow
           let activated = false;
           try { const ar = await fetch(`${n8nUrl}/api/v1/workflows/${data.id}/activate`, { method: 'POST', headers: nh }); activated = ar.ok; } catch {}
-          results.details.workflows.push({ name: wf.name, id: data.id, active: activated });
+          results.details.workflows.push({ id: data.id, automation_id: auto.id, name: auto.name, category: automationCatalog.CATEGORIES[auto.cat], active: activated });
+          results.details.live_deployed++;
         }
       } catch {}
     }
-    results.ok = results.details.workflows.length > 0;
+
+    // Push the FULL catalog as importable n8n JSON to the customer's GitHub repo
+    if (process.env.GITHUB_TOKEN && project.slug) {
+      try {
+        const fullCatalogWorkflows = selectedAutomations.map(a => automationCatalog.buildN8nWorkflow(a, project, webhookBase));
+        const exportJson = JSON.stringify({ workflows: fullCatalogWorkflows, meta: { archetype, total: fullCatalogWorkflows.length, generated: new Date().toISOString() } });
+        const ghHeaders = { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' };
+        const org = process.env.GITHUB_ORG || 'dynasty-apps';
+        await fetch(`https://api.github.com/repos/${org}/${project.slug}/contents/n8n-automation-catalog.json`, {
+          method: 'PUT', headers: ghHeaders,
+          body: JSON.stringify({ message: 'feat: add 353-workflow automation catalog for n8n import', content: Buffer.from(exportJson).toString('base64') })
+        });
+        results.details.catalog_pushed = true;
+
+        // Also push a MANUAL_IMPORT.md with instructions
+        const catList = Object.entries(automationCatalog.CATEGORIES).map(function([k, v]) { return '- **Cat ' + k + ':** ' + v; }).join('\n');
+        const wfList = results.details.workflows.map(function(w) { return '- ' + w.automation_id + ': ' + w.name; }).join('\n');
+        const importGuide = '# n8n Automation Import Guide\n\nThis project includes **' + fullCatalogWorkflows.length + ' pre-built automations** across ' + Object.keys(automationCatalog.CATEGORIES).length + ' categories.\n\n## Quick Import\n1. Open your n8n instance\n2. Go to **Workflows > Import from File**\n3. Upload `n8n-automation-catalog.json`\n4. Each workflow will be imported with its webhook/cron triggers pre-configured\n\n## Categories Included\n' + catList + '\n\n## Live-Deployed Workflows\nThe following ' + results.details.live_deployed + ' workflows were auto-deployed and activated:\n' + wfList + '\n\n## Webhook Base URL\nAll webhook workflows use: `' + webhookBase + '`\n';
+        await fetch(`https://api.github.com/repos/${org}/${project.slug}/contents/AUTOMATION_IMPORT.md`, {
+          method: 'PUT', headers: ghHeaders,
+          body: JSON.stringify({ message: 'docs: add automation import guide', content: Buffer.from(importGuide).toString('base64') })
+        });
+      } catch {}
+    }
+
+    results.ok = results.details.live_deployed > 0 || results.details.catalog_pushed;
     results.details.workflow_ids = results.details.workflows.map(w => w.id);
-    if (!results.ok) { results.error = 'No workflows created'; results.fallback = 'Create n8n workflows manually'; }
+    results.details.categories_covered = [...new Set(results.details.workflows.map(w => w.category))];
+    if (!results.ok) { results.error = 'No workflows created'; results.fallback = 'Import n8n-automation-catalog.json manually from the repo'; }
     results.cost_usd = 0;
-  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Set up n8n workflows manually'; }
+  } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Import n8n-automation-catalog.json manually from the repo'; }
   return results;
 }
 
@@ -2241,6 +2217,12 @@ export default async function handler(req, res) {
         verify: true
       },
       modules_enabled: config.modules_enabled || {},
+      automation_catalog: {
+        total_automations: automationCatalog.ALL_AUTOMATIONS.length,
+        categories: Object.keys(automationCatalog.CATEGORIES).length,
+        packages: Object.keys(automationCatalog.PACKAGES),
+        archetypes: Object.keys(automationCatalog.ARCHETYPE_PACKAGES),
+      },
     });
   }
 
