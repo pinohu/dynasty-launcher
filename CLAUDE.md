@@ -7,7 +7,7 @@ Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is 
 ```
 dynasty-launcher/
 ├── index.html              # Landing page (standalone, ~370 lines)
-├── app.html                # Builder app (monolith, ~27100 lines)
+├── app.html                # Builder app (monolith, ~14340 lines)
 ├── maturity.html           # "What ships today" truth deck (~140 lines)
 ├── deliverables.html       # Deliverables hub page
 ├── deliverables/           # Category + individual deliverable pages (160 files)
