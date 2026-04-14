@@ -58,8 +58,8 @@ const PROVIDERS = {
 };
 
 const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_DAILY_LIMIT || '30', 10));
-const FREE_GUEST_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_GUEST_SCORING_LIMIT || '3', 10));
-const FREE_REGISTERED_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_REGISTERED_SCORING_LIMIT || '6', 10));
+const FREE_GUEST_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_GUEST_SCORING_LIMIT || '15', 10));
+const FREE_REGISTERED_MONTHLY_LIMIT = Math.max(1, parseInt(process.env.FREE_REGISTERED_SCORING_LIMIT || '30', 10));
 const SCORING_PRO_MONTHLY_LIMIT = Math.max(50, parseInt(process.env.SCORING_PRO_MONTHLY_LIMIT || '200', 10));
 const USAGE_TABLE = 'dynasty_ai_usage_daily';
 const QUOTA_TABLE = 'dynasty_ai_quota_usage';
@@ -656,14 +656,14 @@ export default async function handler(req, res) {
     if (requestsInPeriod >= limit) {
       if (scoringPlan === 'guest') {
         res.setHeader('Retry-After', '60'); return res.status(429).json({
-          error: 'You\u2019ve used your 3 guest scores this month. Sign in with email to unlock 6 scores per month.',
+          error: 'You\u2019ve used your free guest scores this month. Sign in with email to unlock more scores per month.',
           code: 'scoring_guest_limit_reached',
           limit,
         });
       }
       if (scoringPlan === 'registered') {
         res.setHeader('Retry-After', '60'); return res.status(429).json({
-          error: 'You\u2019ve used your 6 registered free scores this month. Upgrade to Scoring Pro for ongoing access.',
+          error: 'You\u2019ve used your registered free scores this month. Upgrade to Scoring Pro for ongoing access.',
           code: 'scoring_registered_limit_reached',
           limit,
         });
