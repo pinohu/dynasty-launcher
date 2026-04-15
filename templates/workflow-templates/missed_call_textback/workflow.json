@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "missed_call_textback",
+  "name": "Missed Call Text-Back Workflow",
+  "description": "On call.missed, text the caller back after the configured delay, create a lead, and notify the owner.",
+  "trigger": {
+    "event": "call.missed",
+    "conditions": { "caller_is_new_or_unknown": true }
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "wait",
+      "params": { "seconds_from": "settings.reply_delay_seconds" }
+    },
+    {
+      "step": 2,
+      "action": "check_quiet_hours",
+      "params": { "quiet_hours_from": "settings.quiet_hours", "only_business_hours_from": "settings.only_business_hours" },
+      "on_skip": "abort"
+    },
+    {
+      "step": 3,
+      "action": "send_sms",
+      "params": {
+        "template_ref": "settings.template_id",
+        "to": "payload.caller_phone"
+      }
+    },
+    {
+      "step": 4,
+      "action": "create_lead",
+      "params": {
+        "source_from": "call.missed",
+        "contact_from": "payload.caller_phone"
+      }
+    },
+    {
+      "step": 5,
+      "action": "tag_contact",
+      "params": { "tags": ["missed-call"] }
+    },
+    {
+      "step": 6,
+      "action": "notify_owner",
+      "params": { "assignee_from": "settings.assigned_owner" }
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

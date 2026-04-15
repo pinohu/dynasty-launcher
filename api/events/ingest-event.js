@@ -1,12 +1,12 @@
 // api/events/ingest-event.js — POST /api/events/ingest-event
 // -----------------------------------------------------------------------------
-// Records a tenant activity event onto the bus. Called by:
+// Records a tenant activity event onto the bus and dispatches it to every
+// active module whose trigger matches.
+//
+// Called by:
 //   - webhook handlers (call missed, invoice overdue, job completed, etc.)
 //   - the launcher's own modules when they take actions
 //   - customer SDKs / webhooks
-//
-// This is the single entry point for external events. All recommendation
-// metrics derive from what flows through here.
 //
 // Body:
 //   {
@@ -14,13 +14,17 @@
 //     event_type: string, (required; recommended prefix: "tenant.")
 //     payload?: object
 //   }
+//
+// Response:
+//   { event, dispatch: { dispatched: N, results: [...] } }
 // -----------------------------------------------------------------------------
 
 import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
 import { emit } from './_bus.mjs';
+import { dispatchEvent } from './_dispatcher.mjs';
 import { getTenant } from '../tenants/_store.mjs';
 
-export const maxDuration = 15;
+export const maxDuration = 30;
 
 export default async function handler(req, res) {
   if (corsPreflight(req, res)) return;
@@ -37,5 +41,14 @@ export default async function handler(req, res) {
   if (!getTenant(tenant_id)) return res.status(404).json({ error: 'tenant_not_found' });
 
   const event = emit(event_type, { tenant_id, ...(payload || {}) });
-  return res.status(201).json({ event });
+
+  // Dispatch to matching active modules
+  let dispatch = { dispatched: 0, results: [] };
+  try {
+    dispatch = await dispatchEvent(event);
+  } catch (e) {
+    console.error('[ingest-event] dispatch threw:', e);
+  }
+
+  return res.status(201).json({ event, dispatch });
 }

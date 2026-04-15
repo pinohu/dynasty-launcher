@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "webform_autoreply",
+  "name": "Web Form Auto-Reply Workflow",
+  "description": "On form.submitted, acknowledge the lead across the configured channels and create a CRM lead record.",
+  "trigger": {
+    "event": "form.submitted",
+    "conditions": {}
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "create_lead",
+      "params": {
+        "source_from": "payload.source",
+        "name_from": "payload.name",
+        "contact_from": "payload.contact"
+      }
+    },
+    {
+      "step": 2,
+      "action": "tag_contact",
+      "params": { "tags": ["form-submission"] }
+    },
+    {
+      "step": 3,
+      "action": "send_email",
+      "if": "settings.ack_channel in ['email', 'both']",
+      "params": {
+        "template_ref": "settings.email_template_id",
+        "to": "payload.email"
+      }
+    },
+    {
+      "step": 4,
+      "action": "send_sms",
+      "if": "settings.ack_channel in ['sms', 'both'] and payload.phone",
+      "params": {
+        "template_ref": "settings.sms_template_id",
+        "to": "payload.phone"
+      }
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

@@ -68,10 +68,15 @@
       "includeFiles": "product/**/*.json"
     },
     "api/events/ingest-event.js": {
-      "maxDuration": 15
+      "maxDuration": 30,
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json}"
     },
     "api/events/opportunity-cards.js": {
       "maxDuration": 15,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/tenants/install-blueprint.js": {
+      "maxDuration": 30,
       "includeFiles": "product/**/*.json"
     },
     "api/health.js": {

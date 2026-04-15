@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "post_job_review_request",
+  "name": "Post-Job Review Request Workflow",
+  "description": "On job.completed, wait the configured delay, then ask the customer for a review on the chosen platform.",
+  "trigger": { "event": "job.completed" },
+  "actions": [
+    {
+      "step": 1,
+      "action": "wait",
+      "params": { "hours_from": "settings.delay_hours" }
+    },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "if": "settings.channel in ['sms', 'both']",
+      "params": {
+        "template_ref": "tmpl_review_request_sms",
+        "to": "payload.contact_phone",
+        "review_link_from": "settings.primary_platform"
+      }
+    },
+    {
+      "step": 3,
+      "action": "send_email",
+      "if": "settings.channel in ['email', 'both']",
+      "params": {
+        "template_ref": "tmpl_review_request_email",
+        "to": "payload.contact_email"
+      }
+    },
+    {
+      "step": 4,
+      "action": "log_outcome",
+      "params": { "job_id_from": "payload.job_id", "module_code": "post_job_review_request" }
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}
