@@ -23,10 +23,17 @@ machine-readable product model in `product/` and the execution logic in `api/`.
 
 ## Operational audit
 
+- **[docs/operations/README.md](../operations/README.md)** — the operations
+  folder index. Start there for execution concerns.
+- **[docs/operations/PRODUCTION_PROGRAM_BOARD.md](../operations/PRODUCTION_PROGRAM_BOARD.md)**
+  — 12 tracks, dependencies, exit criteria. The top-level production map.
+- **[docs/operations/ACTIVATION_FLOW_SPEC.md](../operations/ACTIVATION_FLOW_SPEC.md)**
+  — the literal 14-step activation contract every module must honor.
 - **[docs/operations/MODULE_RELEASE_SCOREBOARD.md](../operations/MODULE_RELEASE_SCOREBOARD.md)**
-  — Running status of every module, bundle, suite, and edition against the
-  deployability standard. This is the single source of truth for "what can we
-  sell today?"
+  — running status of every module, bundle, suite, and edition. Single
+  source of truth for "what can we sell today?"
+- **[docs/operations/AGENT_WORK_ALLOCATION.md](../operations/AGENT_WORK_ALLOCATION.md)**
+  — 8 teams, ownership, non-overlap, handoff, definition-of-done, escalation.
 
 ## Source documents this builds on
 
