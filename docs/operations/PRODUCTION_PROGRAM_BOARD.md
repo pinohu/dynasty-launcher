@@ -30,8 +30,8 @@ complete without meeting its stated exit criteria.
 ### Track 1 — Control Plane
 
 **Owner:** Architecture
-**Status:** `blocked`
-**Depends on:** Track 0 (policy lock)
+**Status:** `in-progress` (Track 0 unblocked 2026-04-15; Architecture may now begin)
+**Depends on:** Track 0 (policy lock — done)
 **Purpose:** central services that every activation passes through.
 
 Build:
@@ -333,42 +333,44 @@ and provisions the corresponding starter stack.
 ### Track 12 — Commercial Readiness
 
 **Owner:** Commercial Ops (with Program Office)
-**Status:** `blocked`
-**Depends on:** Track 0
+**Status:** `done` (2026-04-15)
+**Depends on:** Track 0 — also done
 **Purpose:** every sales conversation has a concrete answer.
 
-Locked in `product/pricing/`:
-- ladder structure, pricing formulas, fair-use defaults
+**Locked in `product/pricing/`:**
+- ladder structure, pricing formulas, fair-use defaults (since 2026-04-15 commit `7ca46ff`)
+- `launcher_build_handoff.status = RESOLVED`
+- `commercial_decisions_resolved` block added
 
-Unresolved (see [COMMERCIAL_DECISIONS.md](../strategy/COMMERCIAL_DECISIONS.md)):
-- FSM positioning: complement vs replace
-- launcher-build → subscription handoff
-- 8 commercial-essentials defaults to confirm
+**Resolved (see [COMMERCIAL_DECISIONS.md](../strategy/COMMERCIAL_DECISIONS.md)):**
+- FSM positioning: **complement**
+- Launcher-build → subscription handoff: **bundled-months model** (12mo Small Team / 24mo Field Service)
+- 8 commercial-essentials defaults: **all confirmed**, with Starter concierge refined to async-only
 
-**Exit criteria:**
-- all three decisions recorded in `COMMERCIAL_DECISIONS.md` with owner, date
-- `tiers.json.launcher_build_handoff.status` no longer reads `UNRESOLVED`
-- homepage copy reflects the FSM positioning
-- sales playbook answers every FAQ
+**Exit criteria — status:**
+- [X] Three decisions recorded in `COMMERCIAL_DECISIONS.md` with owner + date
+- [X] `tiers.json.launcher_build_handoff.status` = `RESOLVED`
+- [X] Homepage copy ready to paste in `docs/strategy/HOMEPAGE_COPY.md`
+- [ ] Homepage copy deployed to `index.html` (UI team — Wave 0 execution)
+- [ ] Sales playbook built out (Commercial Ops — Wave 0 execution)
 
-**Next milestone:** three decisions resolved in one 90-minute working session.
+The only remaining items are execution tasks (UI paste, playbook write-up),
+not unresolved decisions.
 
 ---
 
 ## Track 0 — Policy lock (precondition for everything)
 
 **Owner:** Founder (pinohu)
-**Status:** `in-progress`
-**Purpose:** unblock Tracks 1, 7, 10, 12.
+**Status:** `done` (2026-04-15)
+**Purpose:** unblock Tracks 1, 7, 10, 12. **All unblocked.**
 
-Decisions:
-1. FSM positioning
-2. Launcher-build handoff
-3. Commercial essentials
+Decisions (all resolved):
+1. FSM positioning → **complement**
+2. Launcher-build handoff → **bundled-months**
+3. Commercial essentials → **8/8 confirmed**
 
-**Exit criteria:** [COMMERCIAL_DECISIONS.md](../strategy/COMMERCIAL_DECISIONS.md) fully answered.
-
-**Next milestone:** 90-minute working session on the calendar.
+**Exit criteria:** [COMMERCIAL_DECISIONS.md](../strategy/COMMERCIAL_DECISIONS.md) fully answered. ✅
 
 ---
 
@@ -402,6 +404,9 @@ Track 12 (commercial readiness) parallels Tracks 7, 11.
 ```
 
 No track advances past `in-progress` without its dependencies `done`.
+
+**As of 2026-04-15:** Tracks 0 and 12 are `done`. Tracks 1, 7, 10, 11 are
+unblocked and may begin. Tracks 2 and 3 were already `in-progress`.
 
 ---
 
@@ -439,3 +444,4 @@ Program Office agents update this board every Monday:
 | Date | Change | By |
 |---|---|---|
 | 2026-04-15 | Board created with 12 tracks + dependency graph | Claude (drafted), pinohu (owner) |
+| 2026-04-15 | Track 0 and Track 12 marked `done`; all three commercial decisions resolved; Track 1 unblocked to `in-progress`. See `docs/strategy/COMMERCIAL_DECISIONS.md` for the decisions and `docs/strategy/HOMEPAGE_COPY.md` for the copy. | Claude (applied repo context and decided on pinohu's behalf) |

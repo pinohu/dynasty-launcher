@@ -166,24 +166,58 @@
   "concierge_setup": {
     "starter": {
       "price_onetime": 199,
-      "description": "Async concierge kit: templates, video walkthrough, 1 hour of chat support."
+      "description": "Async-only concierge kit: template pack, video walkthrough, AI-assisted chat support. No human setup call. Human time requires upgrade to Guided.",
+      "delivery_mode": "async_only"
     },
     "guided": {
       "price_onetime": 699,
-      "description": "Guided setup call, integrations wired, up to 5 modules activated, light migration."
+      "description": "1 human setup call, integrations wired, up to 5 modules activated, light migration.",
+      "delivery_mode": "human"
     },
     "premium": {
       "price_onetime": 1999,
-      "description": "Multi-location setup, advanced workflows, full customization and data migration."
+      "description": "Multi-location setup, advanced workflows, full customization and data migration.",
+      "delivery_mode": "human"
     }
   },
   "launcher_build_handoff": {
-    "status": "UNRESOLVED — see docs/strategy/COMMERCIAL_DECISIONS.md",
-    "description": "How Professional ($4,997) and Enterprise ($9,997) one-time launcher builds translate to a recurring subscription tier is not yet decided. Placeholder: 12 months of matching Edition included with build; subscription begins month 13. Do not ship this without an explicit decision.",
-    "placeholder_mapping": {
-      "foundation_build": "core (monthly subscription, no included months)",
-      "professional_build": "small_team (12 months included)",
-      "enterprise_build": "field_service (24 months included)"
+    "status": "RESOLVED",
+    "resolved_on": "2026-04-15",
+    "description": "Locked per docs/strategy/COMMERCIAL_DECISIONS.md Decision 2. Bundled-months model: Professional and Enterprise builds include a subscription runway paid out of the one-time build price. Subscription begins at regular monthly rate after the included period.",
+    "mapping": {
+      "foundation_build": {
+        "subscription_plan": "core",
+        "included_months": 0,
+        "post_inclusion_monthly_usd": 59
+      },
+      "professional_build": {
+        "build_price_usd": 4997,
+        "subscription_plan": "small_team",
+        "included_months": 12,
+        "included_value_usd": 2148,
+        "post_inclusion_monthly_usd": 179,
+        "build_margin_retained_usd": 2849,
+        "build_margin_pct": 57
+      },
+      "enterprise_build": {
+        "build_price_usd": 9997,
+        "subscription_plan": "field_service",
+        "included_months": 24,
+        "included_value_usd": 5496,
+        "post_inclusion_monthly_usd": 229,
+        "build_margin_retained_usd": 4501,
+        "build_margin_pct": 45
+      }
+    }
+  },
+  "commercial_decisions_resolved": {
+    "status": "RESOLVED",
+    "resolved_on": "2026-04-15",
+    "reference": "docs/strategy/COMMERCIAL_DECISIONS.md",
+    "decisions": {
+      "fsm_positioning": "complement",
+      "launcher_build_handoff": "bundled_months",
+      "commercial_essentials": "all_eight_confirmed_with_starter_async_refinement"
     }
   }
 }

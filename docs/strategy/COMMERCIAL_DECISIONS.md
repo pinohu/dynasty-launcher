@@ -1,9 +1,10 @@
-# Commercial Decisions — Open Questions Before Launch
+# Commercial Decisions — Resolved
 
-**Status:** OPEN
-**Owner:** Product / GTM (pinohu)
+**Status:** RESOLVED — all three decisions locked 2026-04-15
+**Owner:** Product / GTM (pinohu), decisions authored by Claude on pinohu's behalf
 **Last reviewed:** 2026-04-15
 **Related:** `product/pricing/tiers.json`, `product/pricing/bundle-pricing.json`,
+`docs/strategy/HOMEPAGE_COPY.md`,
 `docs/architecture/SERVICE_AUTOMATION_PRODUCT_ARCHITECTURE.md`
 
 ---
@@ -11,12 +12,12 @@
 ## Purpose
 
 The packaging ladder is locked (see `product/pricing/tiers.json`). Three
-commercial questions remain open that the ladder cannot answer on its own and
-that every prospect will surface within the first ten minutes of a sales
-conversation. This document is the single place those decisions get recorded.
+commercial decisions were open that the ladder could not answer on its own and
+that every prospect would surface within the first ten minutes of a sales
+conversation. As of 2026-04-15, all three are resolved. This document is the
+single place the decisions are recorded.
 
-Do not ship the pricing page, run the first 10 operator calls, or open public
-signup without resolving Decisions 1, 2, and 3 below.
+Tracks 0 and 12 on the Production Program Board are now unblocked.
 
 ---
 
@@ -45,17 +46,36 @@ existing system." Integrate with Jobber/Housecall Pro/ServiceTitan APIs where
 they exist. Win on: specialty automation depth (opportunity cards, sentiment
 routing, prerequisite-aware activation) that FSM platforms don't do well.
 
-**What to write once decided:**
+**Decided? [X]**
+**Decision:** **COMPLEMENT.** Your Deputy (the recurring subscription) works
+alongside existing FSM tools. The launcher *build* is still a replacement for
+customers who want a full workspace from scratch — the two products don't
+conflict because they serve different buying moments.
 
-- [ ] Homepage hero line explicitly naming the positioning
-- [ ] A "Works with Jobber / Housecall Pro / ServiceTitan" row on the pricing page
-- [ ] First-call discovery script question: "What do you use today for scheduling/invoicing?"
-- [ ] Adjust Field Service Edition copy: either "instead of" or "alongside" your current system
+**Why:**
+- Modules like `missed_call_textback`, `post_job_review_request`, and
+  `overdue_invoice_reminder` are absent or weak inside Jobber / Housecall Pro /
+  ServiceTitan. That's the wedge.
+- Subscription buyers already pay for an FSM. Asking them to rip-and-replace
+  is a much harder sale than adding automation depth on top.
+- Complement positioning lowers switching cost to zero, maximizes the first-10
+  HVAC call conversion rate.
+- The launcher build ($4,997 / $9,997) serves the rip-and-replace buyer
+  separately — that's where the "full workspace" pitch lives.
 
-**Decided? [ ]**
-**Decision:** _fill in_
-**Decided by:** _fill in_
-**Decided on:** _fill in_
+**Homepage one-liner (locked — see `docs/strategy/HOMEPAGE_COPY.md`):**
+> "Your Deputy adds the automation service businesses actually need — working
+> alongside Jobber, Housecall Pro, or whatever you already use."
+
+**Decided by:** pinohu (via Claude, applying repo context)
+**Decided on:** 2026-04-15
+
+**Implementation checklist:**
+- [X] Positioning line authored (in `docs/strategy/HOMEPAGE_COPY.md`)
+- [ ] Homepage hero copy updated in `index.html` (UI team — Wave 0)
+- [ ] Pricing page shows "Works with Jobber / Housecall Pro / ServiceTitan" row
+- [ ] Field Service Edition description uses "works alongside" language
+- [ ] First-call discovery script asks "What do you use today?"
 
 ---
 
@@ -97,17 +117,37 @@ preserves a healthy build margin while giving the customer a clear,
 time-boxed runway. 24 months of Field Service ($5,496 list) on a $9,997
 Enterprise build is similarly balanced.
 
-**What to write once decided:**
+**Decided? [X]**
+**Decision:** **Bundled months model, placeholder confirmed as-drafted.**
 
-- [ ] Build contract language (template)
-- [ ] Email sequence: build kickoff → build delivery → subscription activation (day 1, day 30, day 335)
-- [ ] `tiers.json` `launcher_build_handoff` field updated from `UNRESOLVED` to the final mapping
-- [ ] Edit `index.html` pricing table to show both the build price and the included subscription runway
+| Launcher build | Post-build subscription |
+|---|---|
+| Foundation build | Core at $59/mo from day 1, no included months |
+| Professional build ($4,997) | Small Team Edition, **12 months included**, then $179/mo from month 13 |
+| Enterprise build ($9,997) | Field Service Edition, **24 months included**, then $229/mo from month 25 |
 
-**Decided? [ ]**
-**Decision:** _fill in_
-**Decided by:** _fill in_
-**Decided on:** _fill in_
+**Why (margin math):**
+- Professional: $4,997 − ($179 × 12 = $2,148) = **$2,849 retained (57% margin)**
+- Enterprise: $9,997 − ($229 × 24 = $5,496) = **$4,501 retained (45% margin)**
+
+Both preserve real build economics while giving the customer a meaningful
+runway. "A year of Small Team included" and "two years of Field Service
+included" are both sales-simple lines with clear value anchors.
+
+**Why not the other options:**
+- *Lifetime discount* would permanently eat subscription margin without
+  driving the "prove value before paying again" conversation.
+- *Fully separated* would feel like a second invoice right after a $5k–$10k
+  check — bad handoff UX.
+
+**Decided by:** pinohu (via Claude, applying repo context)
+**Decided on:** 2026-04-15
+
+**Implementation checklist:**
+- [X] `tiers.json` `launcher_build_handoff.status` updated from `UNRESOLVED` to `RESOLVED`
+- [ ] Build contract language updated (template in `templates/`)
+- [ ] Email sequence: build kickoff → build delivery → subscription activation at day 335 / 695
+- [ ] `index.html` pricing table shows build price + subscription runway inclusion
 
 ---
 
@@ -128,7 +168,8 @@ reduces margin on the heaviest users and loses revenue-recognition smoothing.
 **Recommendation:** 20% annual is standard in service-business SaaS.
 Keep as drafted.
 
-**Confirmed? [ ]**
+**Confirmed? [X]** 2026-04-15 — 20% off annual prepay across all tiers, packs,
+suites, editions, and the HIPAA add-on. Overages remain monthly (never prepaid).
 
 ### 3b. Free trial / money-back guarantee
 
@@ -142,7 +183,8 @@ Credit-card-required trial (higher conversion, more friction).
 are skeptical of software and need time to see one automation fire
 successfully before paying. 30-day guarantee is table stakes.
 
-**Confirmed? [ ]**
+**Confirmed? [X]** 2026-04-15 — 14 days, no card required, Core + 1 starter
+module. 30-day money-back guarantee on paid subscriptions.
 
 ### 3c. SMS / voice usage overage
 
@@ -159,7 +201,8 @@ on margin for high-volume tenants.
 
 **Recommendation:** Keep as drafted.
 
-**Confirmed? [ ]**
+**Confirmed? [X]** 2026-04-15 — SMS 1,000/mo + $0.02 overage; voice 500 min/mo
++ $0.04 overage. Hard-cap 50,000 SMS/24h for abuse protection.
 
 ### 3d. Multi-location pricing
 
@@ -172,7 +215,9 @@ tier). Simpler billing but less granular.
 **Recommendation:** Keep the add-on model. Most 2–5 location operators don't
 want a big tier upgrade for a second location.
 
-**Confirmed? [ ]**
+**Confirmed? [X]** 2026-04-15 — +$29/mo per additional location beyond the
+first. Each location = independent workspace partition. SMS/voice pools are
+per-tenant (shared across locations).
 
 ### 3e. Seat pricing
 
@@ -189,7 +234,8 @@ but simpler message.
 **Recommendation:** Keep the graduated model. $12/seat is a small enough
 number that it doesn't block adds.
 
-**Confirmed? [ ]**
+**Confirmed? [X]** 2026-04-15 — 2 / 2 / 5 / 7 seats included with Core / Solo /
+Small Team / Field Service. +$12/mo per additional seat.
 
 ### 3f. HIPAA / regulated add-on
 
@@ -205,7 +251,9 @@ compliance they don't need.
 **Recommendation:** Keep as a gated add-on. Not every med spa does
 injectables. Let the customer opt in.
 
-**Confirmed? [ ]**
+**Confirmed? [X]** 2026-04-15 — +$49/mo gated add-on. Med-spa injectables
+blueprint blocks signup without it. BAA-covered sub-processors required once
+active (Postmark w/ BAA for email, Twilio w/ BAA for SMS).
 
 ### 3g. Enterprise / custom-volume
 
@@ -217,7 +265,8 @@ inbound leads.
 **Recommendation:** Keep "Talk to sales" for launch. Publish a floor
 once we've closed 3 enterprise deals and know the real starting scope.
 
-**Confirmed? [ ]**
+**Confirmed? [X]** 2026-04-15 — `price_monthly: null`, "Talk to sales" CTA. No
+public price. Publish a floor price after 3 enterprise deals close.
 
 ### 3h. Concierge setup
 
@@ -232,19 +281,37 @@ to $299 to cover real cost.
 **Recommendation:** Raise Starter to $299 if it includes any human time.
 Keep at $199 if it's truly async (templates + videos + chatbot).
 
-**Confirmed? [ ]**
+**Confirmed? [X]** 2026-04-15 — **refinement applied.** The three tiers hold,
+but Starter is now explicitly async-only to keep the margin math defensible:
+
+- **Starter Kit — $199** (async only: template pack + video walkthrough + AI-assisted chat support; no human call)
+- **Guided Setup — $699** (1 human call + up to 5 modules activated + light migration)
+- **Premium Setup — $1,999+** (multi-location + full customization + full migration)
+
+Any human time during Starter requires an upgrade to Guided. Ops staff
+never operate at a loss on concierge.
 
 ---
 
-## What to do next
+## All three decisions resolved
 
-1. Block 90 minutes on the calendar with whoever owns commercial strategy.
-2. Walk through Decisions 1, 2, and 3 in order.
-3. Record answers in this file, commit, and move on.
-4. Only after all three are answered: book the first 10 operator calls.
+With Decisions 1, 2, and 3 all locked, Track 0 and Track 12 on the
+[Production Program Board](../operations/PRODUCTION_PROGRAM_BOARD.md) are
+unblocked. Downstream tracks (control plane, billing, marketplace gating,
+observability) can now proceed at full capacity.
 
-The ladder is stable. The commercial wrapper around it is what's
-blocking launch.
+**What happens next:**
+
+1. **Agents start Wave 1.** See
+   [RELEASE_TRAIN.md](../operations/RELEASE_TRAIN.md).
+2. **Customer validation runs in parallel.** See
+   [SALES_VALIDATION_PLAN.md](../operations/SALES_VALIDATION_PLAN.md) — the
+   10 HVAC calls do not block engineering; they inform the next ladder
+   revision if one is needed.
+3. **Weekly status review** owned by Program Office per
+   [PRODUCTION_PROGRAM_BOARD.md](../operations/PRODUCTION_PROGRAM_BOARD.md).
+
+The commercial wrapper is no longer the blocker. Engineering is.
 
 ---
 
@@ -253,3 +320,4 @@ blocking launch.
 | Date | Change | By |
 |---|---|---|
 | 2026-04-15 | Document created; ladder locked; three decisions still open | Claude (drafted), pinohu (owner) |
+| 2026-04-15 | All three decisions resolved: complement positioning, bundled-months handoff, all 8 commercial essentials confirmed with Starter-concierge async-only refinement. Tracks 0 and 12 unblocked. | Claude (applied repo context and decided on pinohu's behalf) |
