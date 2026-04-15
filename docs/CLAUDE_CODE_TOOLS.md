@@ -81,8 +81,8 @@ The five next-moves from the workspace-surface-audit are all executed:
 | 1. Enable ECC hook tier | done | `~/.claude/settings.json` + `.claude/settings.json` (project) both set `ECC_HOOK_TIER=standard`; project also sets `ECC_GOVERNANCE_CAPTURE=1` |
 | 2. Agent-sort for this repo | done | `.claude/DAILY.md` (curated shortlist) + `.claude/skills/skill-library/SKILL.md` (keyword router for off-stack skills) |
 | 3. `dynasty-provision-ops` skill | done | `.claude/skills/dynasty-provision-ops/SKILL.md` — operator workflow for the 19 `mod_*` modules |
-| 4. Register superpowers | **manual** | Run `/plugin marketplace add obra/superpowers-marketplace` + `/plugin install superpowers@superpowers-marketplace` in an interactive Claude Code session (slash commands can't be invoked programmatically) |
-| 5. Hermes dynasty watcher | scaffolded | `scripts/hermes-dynasty-watcher.sh` — run after `hermes setup` to install 3 cron jobs (health ping 15m, inventory drift 1h, daily summary 09:00 UTC) |
+| 4. Register superpowers | ✅ installed | `claude plugin install superpowers@superpowers-marketplace` registered it under user scope. `claude plugin list` confirms version 5.0.7 enabled. |
+| 5. Hermes dynasty watcher | scaffolded (keys needed) | `scripts/hermes-dynasty-watcher.sh` + `scripts/hermes-bootstrap.sh`. One-command finish: `ANTHROPIC_API_KEY=sk-ant-xxx HERMES_DELIVER=telegram:<chat-id> bash scripts/hermes-bootstrap.sh` |
 
 ### What's now DAILY for this repo
 
@@ -93,14 +93,23 @@ See `.claude/DAILY.md` for the full curated list. Summary:
 - ~20 slash commands
 - 13 ECC hooks (fact-forcing gate, design-quality-check, governance-capture, batch format+typecheck at session-end, console.log guards)
 
-### MCP key wiring (not automated — needs your secrets)
+### MCP key wiring (one-command, needs your keys)
 
-`~/.claude/mcp-configs/mcp-servers.json` has 24 server templates with `YOUR_*_HERE` placeholders. For this repo, the highest-leverage ones to populate are:
-- `github` — already active in this session
-- `vercel` — deploys + project config
-- `context7` — live docs lookup
-- `exa-web-search` — research-ops backing
-- `playwright` — alternative to gstack `/browse`
-- `omega-memory` — persistent cross-session memory
+`~/.claude/mcp-configs/mcp-servers.json` has 24 server templates with `YOUR_*_HERE` placeholders. Run `scripts/wire-mcp-keys.sh` with any subset of env vars — only the ones you supply get wired, rest stay as templates. Safe to re-run.
 
-The other 18 (Supabase, Clickhouse, Firecrawl, Browserbase, fal-ai, Jira, Confluence, etc.) can be filled on demand.
+```bash
+EXA_API_KEY=xxx \
+GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxx \
+FIRECRAWL_API_KEY=fc-xxx \
+bash scripts/wire-mcp-keys.sh
+```
+
+Priority 4 for this repo:
+- **vercel** — keyless (HTTP MCP with browser auth, no env var needed)
+- **context7** — keyless (free, no signup)
+- **exa-web-search** — needs `EXA_API_KEY` (exa.ai)
+- **omega-memory** — keyless (runs via uvx locally)
+
+Nice-to-haves with keys: `github`, `firecrawl`, `fal-ai`, `browserbase`, `playwright` (keyless), `jira`, `confluence`.
+
+**Note:** after wiring, you still need to copy the MCP entries you want into `~/.claude.json` under `mcpServers` — the `mcp-configs` file is a template, not the live config. Keep under 10 enabled to preserve context.
