@@ -41,10 +41,10 @@ export default async function handler(req, res) {
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
   if (!module_code) return res.status(400).json({ error: 'module_code required' });
 
-  if (!getTenant(tenant_id)) return res.status(404).json({ error: 'tenant_not_found' });
+  if (!await getTenant(tenant_id)) return res.status(404).json({ error: 'tenant_not_found' });
   const knownModule = getCatalog().modules.find((m) => m.module_code === module_code);
   if (!knownModule) return res.status(404).json({ error: 'module_not_found' });
 
-  const entitlement = grantEntitlement({ tenant_id, module_code, billing_source });
+  const entitlement = await grantEntitlement({ tenant_id, module_code, billing_source });
   return res.status(200).json({ entitlement });
 }

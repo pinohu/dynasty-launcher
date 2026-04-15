@@ -45,12 +45,12 @@ function interpolate(template, values) {
   });
 }
 
-function moduleInactive(tenant_id, module_code) {
-  const ent = getEntitlement(tenant_id, module_code);
+async function moduleInactive(tenant_id, module_code) {
+  const ent = await getEntitlement(tenant_id, module_code);
   return !ent || ent.state !== 'active';
 }
 
-function evaluateRule(rule, tenant) {
+async function evaluateRule(rule, tenant) {
   const sig = rule.signal || {};
   const value = computeMetric(tenant.tenant_id, sig.metric, sig.window_days);
   if (value === null) {
@@ -65,7 +65,7 @@ function evaluateRule(rule, tenant) {
 
   // Every named module_inactive must actually be inactive
   for (const code of (cond.module_inactive || [])) {
-    if (!moduleInactive(tenant.tenant_id, code)) {
+    if (!(await moduleInactive(tenant.tenant_id, code))) {
       return { matches: false, reason: 'module_already_active', module: code };
     }
   }
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
   const tenant_id = req.query?.tenant_id || req.query?.id;
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
-  const tenant = getTenant(tenant_id);
+  const tenant = await getTenant(tenant_id);
   if (!tenant) return res.status(404).json({ error: 'tenant_not_found' });
 
   const { recommendations } = getCatalog();
@@ -123,7 +123,7 @@ export default async function handler(req, res) {
   const matches = [];
   const misses = [];
   for (const rule of recommendations) {
-    const r = evaluateRule(rule, tenant);
+    const r = await evaluateRule(rule, tenant);
     if (r.matches) {
       matches.push(buildCard(rule, r.value));
     } else {

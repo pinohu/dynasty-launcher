@@ -29,12 +29,12 @@ export default async function handler(req, res) {
   if (!capability_code) return res.status(400).json({ error: 'capability_code required' });
   if (typeof enabled !== 'boolean') return res.status(400).json({ error: 'enabled (boolean) required' });
 
-  if (!getTenant(tenant_id)) return res.status(404).json({ error: `tenant '${tenant_id}' not found` });
+  if (!await getTenant(tenant_id)) return res.status(404).json({ error: `tenant '${tenant_id}' not found` });
 
   // Validate the capability_code actually exists
   const known = getCatalog().capabilities.find((c) => c.capability_code === capability_code);
   if (!known) return res.status(400).json({ error: `unknown capability '${capability_code}'` });
 
-  const tenant = setTenantCapability(tenant_id, capability_code, enabled);
+  const tenant = await setTenantCapability(tenant_id, capability_code, enabled);
   return res.json({ tenant });
 }

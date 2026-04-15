@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
   if (!blueprint_code) return res.status(400).json({ error: 'blueprint_code required' });
 
-  const tenant = getTenant(tenant_id);
+  const tenant = await getTenant(tenant_id);
   if (!tenant) return res.status(404).json({ error: 'tenant_not_found' });
 
   const blueprint = getCatalog().blueprints.find((b) => b.blueprint_code === blueprint_code);
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
       skipped.push({ module_code, reason: 'unknown_module' });
       continue;
     }
-    const ent = grantEntitlement({
+    const ent = await grantEntitlement({
       tenant_id,
       module_code,
       billing_source: { source_type: 'plan_included', source_code: `blueprint:${blueprint_code}` },
@@ -59,10 +59,10 @@ export default async function handler(req, res) {
 
   // Record blueprint on tenant (create-tenant already sets this; this is a
   // safety-net if install-blueprint is called on an existing tenant).
-  updateTenant(tenant_id, { blueprint_installed: blueprint_code, business_type: blueprint_code });
+  await updateTenant(tenant_id, { blueprint_installed: blueprint_code, business_type: blueprint_code });
 
   return res.status(200).json({
-    tenant: getTenant(tenant_id),
+    tenant: await getTenant(tenant_id),
     blueprint: {
       code: blueprint_code,
       name: blueprint.name,

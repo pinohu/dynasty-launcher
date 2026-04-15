@@ -79,6 +79,14 @@
       "maxDuration": 30,
       "includeFiles": "product/**/*.json"
     },
+    "api/billing/create-checkout-session.js": {
+      "maxDuration": 30,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/billing/webhook.js": {
+      "maxDuration": 30,
+      "includeFiles": "product/**/*.json"
+    },
     "api/health.js": {
       "maxDuration": 15
     },

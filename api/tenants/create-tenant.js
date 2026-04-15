@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     capabilities_enabled: [],
   };
 
-  const tenant = createTenant(input);
+  const tenant = await createTenant(input);
 
   return res.status(201).json({
     tenant,

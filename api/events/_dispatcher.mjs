@@ -153,13 +153,13 @@ export async function dispatchEvent(event) {
     return { dispatched: 0, results: [] };
   }
 
-  const tenant = getTenant(tenant_id);
+  const tenant = await getTenant(tenant_id);
   if (!tenant) return { dispatched: 0, results: [] };
 
   const { modules } = getCatalog();
   const byCode = indexModules(modules);
 
-  const entitlements = listTenantEntitlements(tenant_id);
+  const entitlements = await listTenantEntitlements(tenant_id);
   const active = entitlements.filter((e) => e.state === 'active');
 
   const results = [];

@@ -39,7 +39,7 @@ function log(ok, name, detail = '') {
 }
 
 async function main() {
-  _reset();
+  await _reset();
   const h = await loadHandlers();
   let fails = 0;
 

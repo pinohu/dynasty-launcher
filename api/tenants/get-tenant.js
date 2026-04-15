@@ -15,11 +15,11 @@ export default async function handler(req, res) {
   const tenant_id = req.query?.tenant_id || req.query?.id;
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
-  const tenant = getTenant(tenant_id);
+  const tenant = await getTenant(tenant_id);
   if (!tenant) return res.status(404).json({ error: `tenant '${tenant_id}' not found` });
 
   return res.json({
     tenant,
-    entitlements: listTenantEntitlements(tenant_id),
+    entitlements: await listTenantEntitlements(tenant_id),
   });
 }

@@ -53,7 +53,7 @@ function log(ok, name, detail = '') {
 const ADMIN = { 'x-admin-key': 'test-admin-key' };
 
 async function main() {
-  resetStore();
+  await resetStore();
   resetBus();
   const h = await loadHandlers();
   let fails = 0;

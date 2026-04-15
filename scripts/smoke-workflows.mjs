@@ -79,7 +79,7 @@ async function entitleAndActivate(h, tenant, module_code, user_input) {
 }
 
 async function main() {
-  resetStore();
+  await resetStore();
   resetBus();
   _resetWorkflowCache();
 
@@ -117,7 +117,7 @@ async function main() {
       `dispatched=${dispatched} status=${result?.status} events=${runEvents.length}`);
   }
 
-  resetStore(); resetBus();
+  await resetStore(); resetBus();
 
   // ============================================================
   // webform_autoreply: channel=email only skips sms step via guard
@@ -141,7 +141,7 @@ async function main() {
       `emails=${emails} smses=${smses}`);
   }
 
-  resetStore(); resetBus();
+  await resetStore(); resetBus();
 
   // ============================================================
   // missed_call_textback: trigger condition enforcement
@@ -177,7 +177,7 @@ async function main() {
     fails += log(r2.body.dispatch.dispatched === 0, 'call.missed with known caller does NOT dispatch (trigger condition gate)');
   }
 
-  resetStore(); resetBus();
+  await resetStore(); resetBus();
 
   // ============================================================
   // post_job_review_request: runs on job.completed
@@ -201,7 +201,7 @@ async function main() {
       `logged=${!!logOutcome} job_id=${logOutcome?.payload.job_id}`);
   }
 
-  resetStore(); resetBus();
+  await resetStore(); resetBus();
 
   // ============================================================
   // Inactive module does NOT dispatch
@@ -220,7 +220,7 @@ async function main() {
     fails += log(r.body.dispatch.dispatched === 0, 'entitled-but-not-active module does NOT dispatch');
   }
 
-  resetStore(); resetBus();
+  await resetStore(); resetBus();
 
   // ============================================================
   // Unknown event type: zero dispatch
@@ -235,7 +235,7 @@ async function main() {
     fails += log(r.body.dispatch.dispatched === 0, 'unrelated event type dispatches zero workflows');
   }
 
-  resetStore(); resetBus();
+  await resetStore(); resetBus();
 
   // ============================================================
   // Active module without workflow template: skipped_no_workflow

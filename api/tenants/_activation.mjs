@@ -139,14 +139,14 @@ export async function activateModule({ tenant_id, module_code, user_input = {} }
   for (const c of capabilities) capsByCode[c.capability_code] = c;
 
   // Step 1: verify_entitlement
-  const ent = getEntitlement(tenant_id, module_code);
+  const ent = await getEntitlement(tenant_id, module_code);
   if (!ent) return failure(tenant_id, module_code, 'no_entitlement');
   if (ent.state === 'revoked') return failure(tenant_id, module_code, 'revoked');
   if (ent.state === 'active') {
     return { status: 'idempotent_ok', entitlement: ent };
   }
 
-  const tenant = getTenant(tenant_id);
+  const tenant = await getTenant(tenant_id);
   if (!tenant) return failure(tenant_id, module_code, 'tenant_not_found');
 
   // Step 2: verify_tier_gate
@@ -185,7 +185,7 @@ export async function activateModule({ tenant_id, module_code, user_input = {} }
       missing_capabilities: missing,
       checked_at: new Date().toISOString(),
     };
-    upsertEntitlement(tenant_id, module_code, { state: 'entitled', prereq_check: checked });
+    await upsertEntitlement(tenant_id, module_code, { state: 'entitled', prereq_check: checked });
     emit('module.activation_deferred', {
       tenant_id,
       module_code,
@@ -197,7 +197,7 @@ export async function activateModule({ tenant_id, module_code, user_input = {} }
 
   // Step 4: verify_prerequisite_modules
   for (const prereq of (module.prerequisite_modules || [])) {
-    const pe = getEntitlement(tenant_id, prereq);
+    const pe = await getEntitlement(tenant_id, prereq);
     if (!pe || pe.state !== 'active') {
       return failure(tenant_id, module_code, 'prereq_not_active', { prereq });
     }
@@ -230,7 +230,7 @@ export async function activateModule({ tenant_id, module_code, user_input = {} }
     if (!p12.passed) { await rollback(tenant_id, module_code); return failure(tenant_id, module_code, 'postflight_failed', { details: p12.details || null }); }
 
     // Step 13: mark_module_active
-    const activated = upsertEntitlement(tenant_id, module_code, {
+    const activated = await upsertEntitlement(tenant_id, module_code, {
       state: 'active',
       activated_at: new Date().toISOString(),
       config_state: p9.settings,
@@ -255,7 +255,7 @@ export async function deactivateModule({ tenant_id, module_code }) {
   const module = modules.find((m) => m.module_code === module_code);
   if (!module) return { status: 'error', reason: 'module_not_found' };
 
-  const ent = getEntitlement(tenant_id, module_code);
+  const ent = await getEntitlement(tenant_id, module_code);
   if (!ent) return { status: 'idempotent_ok' };
   if (ent.state === 'deactivated' || ent.state === 'revoked') {
     return { status: 'idempotent_ok', entitlement: ent };
@@ -264,7 +264,7 @@ export async function deactivateModule({ tenant_id, module_code }) {
   // Apply downgrade_behavior (stub: just record it)
   const onCancel = module.downgrade_behavior?.on_cancel || 'disable_new_runs_keep_data';
 
-  const updated = upsertEntitlement(tenant_id, module_code, {
+  const updated = await upsertEntitlement(tenant_id, module_code, {
     state: 'deactivated',
     deactivated_at: new Date().toISOString(),
   });
@@ -277,21 +277,21 @@ export async function deactivateModule({ tenant_id, module_code }) {
 // -----------------------------------------------------------------------------
 
 export async function pauseModule({ tenant_id, module_code, reason = 'customer_requested' }) {
-  const ent = getEntitlement(tenant_id, module_code);
+  const ent = await getEntitlement(tenant_id, module_code);
   if (!ent) return { status: 'error', reason: 'no_entitlement' };
   if (ent.state !== 'active') return { status: 'idempotent_ok', entitlement: ent };
 
-  const paused = upsertEntitlement(tenant_id, module_code, { state: 'paused' });
+  const paused = await upsertEntitlement(tenant_id, module_code, { state: 'paused' });
   emit('module.paused', { tenant_id, module_code, reason });
   return { status: 'ok', entitlement: paused };
 }
 
 export async function resumeModule({ tenant_id, module_code }) {
-  const ent = getEntitlement(tenant_id, module_code);
+  const ent = await getEntitlement(tenant_id, module_code);
   if (!ent) return { status: 'error', reason: 'no_entitlement' };
   if (ent.state !== 'paused') return { status: 'idempotent_ok', entitlement: ent };
 
-  const resumed = upsertEntitlement(tenant_id, module_code, {
+  const resumed = await upsertEntitlement(tenant_id, module_code, {
     state: 'active',
     // config_state preserved; activated_at intentionally not bumped (resume != reactivate)
   });
@@ -303,8 +303,8 @@ export async function resumeModule({ tenant_id, module_code }) {
 // Entitlement grant (for Stripe webhook or admin)
 // -----------------------------------------------------------------------------
 
-export function grantEntitlement({ tenant_id, module_code, billing_source }) {
-  const ent = upsertEntitlement(tenant_id, module_code, {
+export async function grantEntitlement({ tenant_id, module_code, billing_source }) {
+  const ent = await upsertEntitlement(tenant_id, module_code, {
     state: 'entitled',
     billing_source: billing_source || { source_type: 'module' },
   });

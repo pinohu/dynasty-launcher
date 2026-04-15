@@ -1,0 +1,236 @@
+// api/tenants/_store_postgres.mjs — Postgres adapter (Track 4)
+// -----------------------------------------------------------------------------
+// Drop-in replacement for _store_memory.mjs backed by Postgres via `pg`.
+// Activated when DATABASE_URL is set.
+//
+// Schema is defined in scripts/migrations/001_initial.sql. Run with:
+//   psql $DATABASE_URL < scripts/migrations/001_initial.sql
+//
+// The memory adapter remains the default for local dev and tests; this file
+// is loaded by _store.mjs when DATABASE_URL is present.
+// -----------------------------------------------------------------------------
+
+import pg from 'pg';
+
+const { Pool } = pg;
+
+let _pool = null;
+
+function pool() {
+  if (_pool) return _pool;
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL not set; Postgres adapter requires it');
+  _pool = new Pool({
+    connectionString: url,
+    ssl: url.includes('sslmode=require') ? { rejectUnauthorized: false } : undefined,
+    max: 10,
+  });
+  return _pool;
+}
+
+const now = () => new Date().toISOString();
+function newId(prefix) {
+  return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export const backend = 'postgres';
+
+// -----------------------------------------------------------------------------
+// Tenants
+// -----------------------------------------------------------------------------
+
+export async function createTenant(input = {}) {
+  const tenant_id = input.tenant_id || newId('tnt');
+  const row = {
+    tenant_id,
+    business_name: input.business_name || 'Untitled Business',
+    business_type: input.business_type || input.blueprint_code || 'general',
+    plan: input.plan || 'core',
+    subscription_status: input.subscription_status || 'active',
+    onboarding_status: input.onboarding_status || 'in_progress',
+    timezone: input.timezone || 'America/New_York',
+    locale: input.locale || 'en-US',
+    profile: input.profile || {},
+    capabilities_enabled: Array.isArray(input.capabilities_enabled) ? input.capabilities_enabled : [],
+    modules_active: [],
+    blueprint_installed: input.blueprint_code || null,
+    compliance_mode: input.compliance_mode || null,
+    created_at: now(),
+    updated_at: now(),
+  };
+  await pool().query(
+    `insert into tenants
+      (tenant_id, business_name, business_type, plan, subscription_status,
+       onboarding_status, timezone, locale, profile, capabilities_enabled,
+       modules_active, blueprint_installed, compliance_mode, created_at, updated_at)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11::jsonb,$12,$13,$14,$15)`,
+    [
+      row.tenant_id, row.business_name, row.business_type, row.plan, row.subscription_status,
+      row.onboarding_status, row.timezone, row.locale, JSON.stringify(row.profile),
+      JSON.stringify(row.capabilities_enabled), JSON.stringify(row.modules_active),
+      row.blueprint_installed, row.compliance_mode, row.created_at, row.updated_at,
+    ],
+  );
+  return { schema_version: '1.0.0', ...row };
+}
+
+function rowToTenant(r) {
+  if (!r) return null;
+  return {
+    schema_version: '1.0.0',
+    tenant_id: r.tenant_id,
+    business_name: r.business_name,
+    business_type: r.business_type,
+    plan: r.plan,
+    subscription_status: r.subscription_status,
+    onboarding_status: r.onboarding_status,
+    timezone: r.timezone,
+    locale: r.locale,
+    profile: r.profile || {},
+    capabilities_enabled: r.capabilities_enabled || [],
+    modules_active: r.modules_active || [],
+    blueprint_installed: r.blueprint_installed,
+    compliance_mode: r.compliance_mode,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+  };
+}
+
+export async function getTenant(tenant_id) {
+  const { rows } = await pool().query(`select * from tenants where tenant_id = $1`, [tenant_id]);
+  return rowToTenant(rows[0]);
+}
+
+export async function updateTenant(tenant_id, patch) {
+  const t = await getTenant(tenant_id);
+  if (!t) return null;
+  const u = { ...t, ...patch, updated_at: now() };
+  await pool().query(
+    `update tenants set
+       business_name = $2, business_type = $3, plan = $4, subscription_status = $5,
+       onboarding_status = $6, timezone = $7, locale = $8, profile = $9::jsonb,
+       capabilities_enabled = $10::jsonb, modules_active = $11::jsonb,
+       blueprint_installed = $12, compliance_mode = $13, updated_at = $14
+     where tenant_id = $1`,
+    [
+      tenant_id, u.business_name, u.business_type, u.plan, u.subscription_status,
+      u.onboarding_status, u.timezone, u.locale, JSON.stringify(u.profile || {}),
+      JSON.stringify(u.capabilities_enabled || []), JSON.stringify(u.modules_active || []),
+      u.blueprint_installed, u.compliance_mode, u.updated_at,
+    ],
+  );
+  return u;
+}
+
+export async function listTenants() {
+  const { rows } = await pool().query(`select * from tenants order by created_at desc`);
+  return rows.map(rowToTenant);
+}
+
+export async function setTenantCapability(tenant_id, cap, enabled) {
+  const t = await getTenant(tenant_id);
+  if (!t) return null;
+  const s = new Set(t.capabilities_enabled || []);
+  if (enabled) s.add(cap); else s.delete(cap);
+  return updateTenant(tenant_id, { capabilities_enabled: [...s] });
+}
+
+// -----------------------------------------------------------------------------
+// Entitlements
+// -----------------------------------------------------------------------------
+
+function rowToEntitlement(r) {
+  if (!r) return null;
+  return {
+    schema_version: '1.0.0',
+    entitlement_id: r.entitlement_id,
+    tenant_id: r.tenant_id,
+    module_code: r.module_code,
+    state: r.state,
+    billing_source: r.billing_source || { source_type: 'module' },
+    activated_at: r.activated_at,
+    deactivated_at: r.deactivated_at,
+    config_state: r.config_state,
+    prereq_check: r.prereq_check,
+  };
+}
+
+export async function getEntitlement(tenant_id, module_code) {
+  const { rows } = await pool().query(
+    `select * from entitlements where tenant_id = $1 and module_code = $2`,
+    [tenant_id, module_code],
+  );
+  return rowToEntitlement(rows[0]);
+}
+
+export async function upsertEntitlement(tenant_id, module_code, patch) {
+  const existing = await getEntitlement(tenant_id, module_code);
+  const merged = {
+    schema_version: '1.0.0',
+    entitlement_id: existing?.entitlement_id || newId('ent'),
+    tenant_id,
+    module_code,
+    state: 'entitled',
+    billing_source: { source_type: 'module' },
+    ...existing,
+    ...patch,
+  };
+  await pool().query(
+    `insert into entitlements
+       (entitlement_id, tenant_id, module_code, state, billing_source,
+        activated_at, deactivated_at, config_state, prereq_check)
+     values ($1,$2,$3,$4,$5::jsonb,$6,$7,$8::jsonb,$9::jsonb)
+     on conflict (tenant_id, module_code) do update set
+       state = excluded.state,
+       billing_source = excluded.billing_source,
+       activated_at = excluded.activated_at,
+       deactivated_at = excluded.deactivated_at,
+       config_state = excluded.config_state,
+       prereq_check = excluded.prereq_check`,
+    [
+      merged.entitlement_id, merged.tenant_id, merged.module_code, merged.state,
+      JSON.stringify(merged.billing_source || {}), merged.activated_at || null,
+      merged.deactivated_at || null, JSON.stringify(merged.config_state || null),
+      JSON.stringify(merged.prereq_check || null),
+    ],
+  );
+
+  // Sync modules_active
+  const t = await getTenant(tenant_id);
+  if (t) {
+    const active = new Set(t.modules_active || []);
+    if (merged.state === 'active') active.add(module_code);
+    else active.delete(module_code);
+    await updateTenant(tenant_id, { modules_active: [...active] });
+  }
+
+  return merged;
+}
+
+export async function listTenantEntitlements(tenant_id) {
+  const { rows } = await pool().query(
+    `select * from entitlements where tenant_id = $1`,
+    [tenant_id],
+  );
+  return rows.map(rowToEntitlement);
+}
+
+export async function _reset() {
+  await pool().query('truncate table entitlements');
+  await pool().query('truncate table tenants cascade');
+}
+
+export async function _stats() {
+  const a = await pool().query(`select count(*)::int as n from tenants`);
+  const b = await pool().query(`select count(*)::int as n from entitlements`);
+  return { tenants: a.rows[0].n, entitlements: b.rows[0].n };
+}
+
+export async function healthcheck() {
+  try {
+    await pool().query('select 1');
+    return { ok: true, backend: 'postgres' };
+  } catch (e) {
+    return { ok: false, backend: 'postgres', error: e.message };
+  }
+}
