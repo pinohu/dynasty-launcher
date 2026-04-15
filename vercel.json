@@ -20,6 +20,26 @@
       "maxDuration": 300,
       "includeFiles": "api/automation-catalog.js"
     },
+    "api/catalog/modules.js": {
+      "maxDuration": 10,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/catalog/bundles.js": {
+      "maxDuration": 10,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/catalog/blueprints.js": {
+      "maxDuration": 10,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/catalog/personas.js": {
+      "maxDuration": 10,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/catalog/tiers.js": {
+      "maxDuration": 10,
+      "includeFiles": "product/**/*.json"
+    },
     "api/health.js": {
       "maxDuration": 15
     },

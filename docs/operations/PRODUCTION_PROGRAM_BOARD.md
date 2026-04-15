@@ -60,7 +60,7 @@ responses. No runtime behavior yet — just the interface contract.
 ### Track 2 — Product Registry
 
 **Owner:** Architecture
-**Status:** `in-progress` (schemas and 20 modules exist; consumers don't yet read them)
+**Status:** `in-progress` (catalog endpoints live; UI consumer remaining)
 **Depends on:** none
 **Purpose:** machine-readable source of truth for commerce.
 
@@ -72,14 +72,19 @@ Already on the branch:
 - `product/personas/` (6 personas)
 - `product/recommendations/` (10 rules)
 - `product/pricing/tiers.json` + `bundle-pricing.json`
+- **✅ `api/catalog/` — 5 read-only endpoints (modules, bundles, blueprints,
+  personas, tiers) with marketplace gating, filtering, cross-ref decoration,
+  and 18/18 passing smoke tests (run `npm run test:catalog`).**
 
 **Exit criteria:**
-- `api/catalog/modules.js`, `bundles.js`, `blueprints.js` read from these files
-- `app.html` marketplace surface reads from the same endpoints
-- pricing, entitlements, eligibility all come from the same source
+- [X] `api/catalog/modules.js`, `bundles.js`, `blueprints.js`, `personas.js`, `tiers.js` read from `product/`
+- [X] Marketplace gating per `AUTOMATION_DEPLOYABILITY_STANDARD.md` — `?marketplace=true` filters to `deployable`/`live` only
+- [X] Bundles decorated with `effective_status` (strictest-member rule)
+- [X] Smoke test suite covers every endpoint + cross-refs
+- [ ] `app.html` marketplace surface reads from the endpoints (UI team — next)
 
-**Next milestone:** implement read-only `api/catalog/*` handlers that serve
-the JSON over HTTP. No writes. No business logic.
+**Next milestone:** UI team replaces hard-coded marketplace arrays in
+`app.html` with `fetch('/api/catalog/...')` calls.
 
 ---
 
@@ -445,3 +450,4 @@ Program Office agents update this board every Monday:
 |---|---|---|
 | 2026-04-15 | Board created with 12 tracks + dependency graph | Claude (drafted), pinohu (owner) |
 | 2026-04-15 | Track 0 and Track 12 marked `done`; all three commercial decisions resolved; Track 1 unblocked to `in-progress`. See `docs/strategy/COMMERCIAL_DECISIONS.md` for the decisions and `docs/strategy/HOMEPAGE_COPY.md` for the copy. | Claude (applied repo context and decided on pinohu's behalf) |
+| 2026-04-15 | Track 2 first milestone hit: `api/catalog/*` endpoints built and smoke-tested. 5 endpoints (modules/bundles/blueprints/personas/tiers), marketplace gating, cross-ref decoration, 18/18 passing smoke tests. UI team can now wire `app.html` to the catalog. | Claude (first build session) |

@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Business provisioning engine — one prompt deploys a complete operating company",
   "scripts": {
-    "test:validate": "node scripts/validate-smoke.mjs"
+    "test:validate": "node scripts/validate-smoke.mjs",
+    "test:catalog": "node scripts/smoke-catalog.mjs",
+    "test": "npm run test:validate && npm run test:catalog"
   },
   "engines": {
     "node": "20.x"
