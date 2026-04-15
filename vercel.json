@@ -40,6 +40,21 @@
       "maxDuration": 10,
       "includeFiles": "product/**/*.json"
     },
+    "api/tenants/create-tenant.js": {
+      "maxDuration": 15,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/tenants/get-tenant.js": {
+      "maxDuration": 10
+    },
+    "api/tenants/get-tenant-capabilities.js": {
+      "maxDuration": 10,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/tenants/set-tenant-capability.js": {
+      "maxDuration": 10,
+      "includeFiles": "product/**/*.json"
+    },
     "api/health.js": {
       "maxDuration": 15
     },
