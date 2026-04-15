@@ -2,28 +2,92 @@
   "schema_version": "1.0.0",
   "module_code": "unhappy_customer_interception",
   "name": "Unhappy Customer Interception",
-  "short_description": "If the review-request response is low-rating, route the customer to a private feedback form and alert the owner — before they leave a public review.",
+  "description_short": "If the review-request response is low-rating, route the customer to a private feedback form and alert the owner \u2014 before they leave a public review.",
   "outcome": "Catch detractors privately, fix the problem, and protect the public rating.",
   "category": "reviews",
   "price_monthly": 19,
-  "capabilities_required": ["crm", "reviews", "email"],
+  "tier_availability": [
+    "professional",
+    "enterprise"
+  ],
+  "capabilities_required": [
+    "crm",
+    "reviews",
+    "email"
+  ],
+  "prerequisite_modules": [
+    "post_job_review_request"
+  ],
+  "compliance_flags": [
+    "review_solicitation_policy",
+    "pii_minimization"
+  ],
   "activation_type": "instant",
   "trigger": {
     "event": "review_request.reply",
-    "conditions": { "sentiment": "negative_or_neutral" }
+    "conditions": {
+      "sentiment": "negative_or_neutral"
+    }
   },
-  "inputs": ["review_request_event", "contact_record"],
-  "actions": ["send_private_feedback_form", "notify_owner", "create_task", "pause_public_ask"],
-  "configurable_settings": [
-    { "key": "negative_threshold", "label": "Route to private form if rating <=", "type": "int", "default": 3 },
-    { "key": "owner_alert_channel", "label": "Alert owner via", "type": "enum", "options": ["sms", "email", "slack"], "default": "sms" }
+  "inputs": [
+    "review_request_event",
+    "contact_record"
   ],
-  "templates_used": ["tmpl_private_feedback_form", "tmpl_owner_negative_alert"],
-  "recommended_for_personas": ["owner-operator"],
-  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "cleaning", "pest-control", "med-spa"],
-  "upsell_from": ["post_job_review_request"],
+  "actions": [
+    "send_private_feedback_form",
+    "notify_owner",
+    "create_task",
+    "pause_public_ask"
+  ],
+  "configurable_settings": [
+    {
+      "key": "negative_threshold",
+      "label": "Route to private form if rating <=",
+      "type": "int",
+      "default": 3
+    },
+    {
+      "key": "owner_alert_channel",
+      "label": "Alert owner via",
+      "type": "enum",
+      "options": [
+        "sms",
+        "email",
+        "slack"
+      ],
+      "default": "sms"
+    }
+  ],
+  "templates_used": [
+    "tmpl_private_feedback_form",
+    "tmpl_owner_negative_alert"
+  ],
+  "recommended_for_personas": [
+    "owner-operator"
+  ],
+  "recommended_for_blueprints": [
+    "plumbing",
+    "hvac",
+    "electrical",
+    "cleaning",
+    "pest-control",
+    "med-spa"
+  ],
+  "upsell_from": [
+    "post_job_review_request"
+  ],
   "upsell_to": [],
-  "kpis": ["negative_interceptions", "avg_public_rating_delta", "resolution_rate"],
-  "source_refs": ["21.XX"],
+  "kpis": [
+    "negative_interceptions",
+    "avg_public_rating_delta",
+    "resolution_rate"
+  ],
+  "downgrade_behavior": {
+    "on_cancel": "manual_review",
+    "data_retention_days": 365
+  },
+  "source_refs": [
+    "21.XX"
+  ],
   "status": "spec"
 }

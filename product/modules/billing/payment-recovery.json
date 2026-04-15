@@ -2,26 +2,88 @@
   "schema_version": "1.0.0",
   "module_code": "payment_recovery",
   "name": "Failed Payment Recovery",
-  "short_description": "Automatically retry failed card charges, notify the customer, and capture updated payment methods.",
+  "description_short": "Automatically retry failed card charges, notify the customer, and capture updated payment methods.",
   "outcome": "Recover involuntary churn from expired or declined cards.",
   "category": "billing",
   "price_monthly": 19,
-  "capabilities_required": ["payments", "invoicing", "crm", "email"],
-  "activation_type": "guided",
-  "trigger": { "event": "payment.failed" },
-  "inputs": ["payment_attempt", "invoice_record", "contact_record"],
-  "actions": ["retry_schedule", "send_update_card_link", "notify_owner", "pause_service_if_applicable"],
-  "configurable_settings": [
-    { "key": "retry_schedule_days", "label": "Retry schedule (days)", "type": "string", "default": "1,3,5,7" },
-    { "key": "pause_service_after_days", "label": "Pause service after N days", "type": "int", "default": 14 },
-    { "key": "grace_amount", "label": "Grace amount (USD)", "type": "float", "default": 5 }
+  "tier_availability": [
+    "professional",
+    "enterprise"
   ],
-  "templates_used": ["tmpl_card_failed", "tmpl_update_card_reminder"],
-  "recommended_for_personas": ["office-manager", "owner-operator"],
-  "recommended_for_blueprints": ["med-spa", "cleaning", "pest-control"],
-  "upsell_from": ["overdue_invoice_reminder"],
+  "capabilities_required": [
+    "payments",
+    "invoicing",
+    "crm",
+    "email"
+  ],
+  "prerequisite_modules": [],
+  "compliance_flags": [
+    "email_footer",
+    "pci_hand_off",
+    "fdcpa_b2b_tone_guard"
+  ],
+  "activation_type": "guided",
+  "trigger": {
+    "event": "payment.failed"
+  },
+  "inputs": [
+    "payment_attempt",
+    "invoice_record",
+    "contact_record"
+  ],
+  "actions": [
+    "retry_schedule",
+    "send_update_card_link",
+    "notify_owner",
+    "pause_service_if_applicable"
+  ],
+  "configurable_settings": [
+    {
+      "key": "retry_schedule_days",
+      "label": "Retry schedule (days)",
+      "type": "string",
+      "default": "1,3,5,7"
+    },
+    {
+      "key": "pause_service_after_days",
+      "label": "Pause service after N days",
+      "type": "int",
+      "default": 14
+    },
+    {
+      "key": "grace_amount",
+      "label": "Grace amount (USD)",
+      "type": "float",
+      "default": 5
+    }
+  ],
+  "templates_used": [
+    "tmpl_card_failed",
+    "tmpl_update_card_reminder"
+  ],
+  "recommended_for_personas": [
+    "office-manager",
+    "owner-operator"
+  ],
+  "recommended_for_blueprints": [
+    "med-spa",
+    "cleaning",
+    "pest-control"
+  ],
+  "upsell_from": [
+    "overdue_invoice_reminder"
+  ],
   "upsell_to": [],
-  "kpis": ["failed_payment_recovery_rate", "involuntary_churn_rate"],
-  "source_refs": ["16.XX"],
+  "kpis": [
+    "failed_payment_recovery_rate",
+    "involuntary_churn_rate"
+  ],
+  "downgrade_behavior": {
+    "on_cancel": "manual_review",
+    "data_retention_days": 730
+  },
+  "source_refs": [
+    "16.XX"
+  ],
   "status": "spec"
 }

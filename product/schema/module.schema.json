@@ -19,7 +19,8 @@
     "schema_version": { "type": "string", "default": "1.0.0" },
     "module_code": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
     "name": { "type": "string" },
-    "short_description": { "type": "string" },
+    "description_short": { "type": "string" },
+    "description_long": { "type": "string" },
     "outcome": { "type": "string", "description": "The business result in one sentence." },
     "category": {
       "type": "string",
@@ -39,9 +40,31 @@
       ]
     },
     "price_monthly": { "type": "number", "minimum": 0 },
+    "tier_availability": {
+      "type": "array",
+      "description": "Which launcher build tiers can subscribe to this module. Aligns with TIER_MODULES in api/provision.js. Omit or empty = available to all tiers.",
+      "items": { "type": "string", "enum": ["foundation", "professional", "enterprise"] },
+      "uniqueItems": true
+    },
     "capabilities_required": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "capabilities_optional": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "prerequisite_modules": {
+      "type": "array",
+      "description": "Other modules whose events this module depends on. Enforced at activation time.",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "compliance_flags": {
+      "type": "array",
+      "description": "Policy gates the activation UI and runtime must respect (e.g. sms_opt_out, quiet_hours, email_footer, can_spam, pci_hand_off, review_solicitation_policy, pii_minimization, fdcpa_b2b_tone_guard, a2p_registered, call_recording_consent).",
+      "items": { "type": "string" },
+      "uniqueItems": true
     },
     "activation_type": {
       "type": "string",
@@ -77,6 +100,22 @@
     "upsell_from": { "type": "array", "items": { "type": "string" } },
     "upsell_to": { "type": "array", "items": { "type": "string" } },
     "kpis": { "type": "array", "items": { "type": "string" } },
+    "downgrade_behavior": {
+      "type": "object",
+      "description": "What happens when the customer cancels or downgrades off this module. Preserves data unless explicitly archived.",
+      "additionalProperties": false,
+      "properties": {
+        "on_cancel": {
+          "type": "string",
+          "enum": ["disable_new_runs_keep_data", "disable_and_archive", "manual_review"]
+        },
+        "data_retention_days": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "owner_notes": {
+      "type": "string",
+      "description": "Internal notes for the catalog team. Not shown to customers."
+    },
     "source_refs": {
       "type": "array",
       "description": "Back-references to rows in SERVICE_BUSINESS_AUTOMATION_CATALOG.md (e.g. '2.15').",

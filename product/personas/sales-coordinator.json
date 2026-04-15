@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "persona_code": "sales-coordinator",
+  "name": "Sales Coordinator",
+  "role": "Mid-size service business role: owns estimate-to-close process, pipeline hygiene, and rep productivity",
+  "persona_group_ref": "group-1:sales-coordinator",
+  "pains": [
+    "estimates going cold without follow-up",
+    "no visibility into which proposals are alive",
+    "pipeline stage hygiene depends on rep discipline",
+    "lost-deal reactivation is nobody's job",
+    "reporting to the owner eats hours per week"
+  ],
+  "goals": [
+    "close more estimates",
+    "spend time on alive deals, not dead ones",
+    "measurable rep and team performance",
+    "automated pipeline hygiene"
+  ],
+  "preferred_channels": ["email", "slack", "crm"],
+  "messaging_tone": "data-informed, action-oriented",
+  "default_module_recommendations": [
+    "estimate_followup",
+    "proposal_view_tracker",
+    "lost_deal_reactivation",
+    "speed_to_lead_response"
+  ],
+  "default_bundle_recommendations": ["lead_conversion_pack"],
+  "typical_business_size": "10–50 staff, $2M–$15M revenue",
+  "success_signals": [
+    "estimate_close_rate",
+    "time_to_decision",
+    "pipeline_velocity",
+    "stalled_deal_intervention_rate"
+  ]
+}

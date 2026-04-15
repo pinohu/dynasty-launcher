@@ -2,29 +2,96 @@
   "schema_version": "1.0.0",
   "module_code": "reschedule_workflow",
   "name": "Self-Serve Reschedule Workflow",
-  "short_description": "Let customers reschedule with one tap, without involving staff.",
-  "outcome": "Keep appointments on the calendar — just moved, not lost.",
+  "description_short": "Let customers reschedule with one tap, without involving staff.",
+  "outcome": "Keep appointments on the calendar \u2014 just moved, not lost.",
   "category": "scheduling",
   "price_monthly": 19,
-  "capabilities_required": ["calendar", "crm", "sms", "email"],
+  "tier_availability": [
+    "professional",
+    "enterprise"
+  ],
+  "capabilities_required": [
+    "calendar",
+    "crm",
+    "sms",
+    "email"
+  ],
+  "prerequisite_modules": [],
+  "compliance_flags": [
+    "sms_opt_out"
+  ],
   "activation_type": "instant",
   "trigger": {
     "event": "reschedule.requested",
-    "conditions": { "source": ["link_click", "sms_reply", "customer_portal"] }
+    "conditions": {
+      "source": [
+        "link_click",
+        "sms_reply",
+        "customer_portal"
+      ]
+    }
   },
-  "inputs": ["appointment_record", "availability"],
-  "actions": ["present_slots", "update_calendar", "send_confirmation", "notify_staff"],
-  "configurable_settings": [
-    { "key": "lead_time_hours", "label": "Minimum lead time (hours)", "type": "int", "default": 4 },
-    { "key": "max_reschedules", "label": "Max self-serve reschedules", "type": "int", "default": 2 },
-    { "key": "require_reason", "label": "Ask for reschedule reason", "type": "bool", "default": false }
+  "inputs": [
+    "appointment_record",
+    "availability"
   ],
-  "templates_used": ["tmpl_reschedule_link", "tmpl_reschedule_confirm"],
-  "recommended_for_personas": ["scheduler", "office-manager"],
-  "recommended_for_blueprints": ["med-spa", "hvac", "plumbing", "cleaning"],
-  "upsell_from": ["appointment_reminder"],
-  "upsell_to": ["no_show_recovery"],
-  "kpis": ["self_serve_reschedule_rate", "staff_minutes_saved", "cancel_to_reschedule_ratio"],
-  "source_refs": ["9.XX"],
+  "actions": [
+    "present_slots",
+    "update_calendar",
+    "send_confirmation",
+    "notify_staff"
+  ],
+  "configurable_settings": [
+    {
+      "key": "lead_time_hours",
+      "label": "Minimum lead time (hours)",
+      "type": "int",
+      "default": 4
+    },
+    {
+      "key": "max_reschedules",
+      "label": "Max self-serve reschedules",
+      "type": "int",
+      "default": 2
+    },
+    {
+      "key": "require_reason",
+      "label": "Ask for reschedule reason",
+      "type": "bool",
+      "default": false
+    }
+  ],
+  "templates_used": [
+    "tmpl_reschedule_link",
+    "tmpl_reschedule_confirm"
+  ],
+  "recommended_for_personas": [
+    "scheduler",
+    "office-manager"
+  ],
+  "recommended_for_blueprints": [
+    "med-spa",
+    "hvac",
+    "plumbing",
+    "cleaning"
+  ],
+  "upsell_from": [
+    "appointment_reminder"
+  ],
+  "upsell_to": [
+    "no_show_recovery"
+  ],
+  "kpis": [
+    "self_serve_reschedule_rate",
+    "staff_minutes_saved",
+    "cancel_to_reschedule_ratio"
+  ],
+  "downgrade_behavior": {
+    "on_cancel": "disable_new_runs_keep_data",
+    "data_retention_days": 365
+  },
+  "source_refs": [
+    "9.XX"
+  ],
   "status": "spec"
 }

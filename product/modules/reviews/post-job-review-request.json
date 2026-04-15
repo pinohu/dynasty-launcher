@@ -2,27 +2,110 @@
   "schema_version": "1.0.0",
   "module_code": "post_job_review_request",
   "name": "Post-Job Review Request",
-  "short_description": "After a job is marked complete, automatically ask the customer for a review on the right platform.",
+  "description_short": "After a job is marked complete, automatically ask the customer for a review on the right platform.",
   "outcome": "Generate a steady flow of 5-star public reviews without staff remembering to ask.",
   "category": "reviews",
   "price_monthly": 19,
-  "capabilities_required": ["crm", "reviews", "sms"],
-  "activation_type": "guided",
-  "trigger": { "event": "job.completed" },
-  "inputs": ["job_record", "contact_record", "review_links"],
-  "actions": ["send_sms", "send_email", "route_by_sentiment", "log_outcome"],
-  "configurable_settings": [
-    { "key": "delay_hours", "label": "Delay after completion (hours)", "type": "int", "default": 3 },
-    { "key": "primary_platform", "label": "Primary review platform", "type": "enum", "options": ["google", "facebook", "yelp", "industry_directory"], "default": "google" },
-    { "key": "channel", "label": "Channel", "type": "enum", "options": ["sms", "email", "both"], "default": "sms" },
-    { "key": "rotate_platforms", "label": "Rotate across platforms", "type": "bool", "default": false }
+  "tier_availability": [
+    "professional",
+    "enterprise"
   ],
-  "templates_used": ["tmpl_review_request_sms", "tmpl_review_request_email"],
-  "recommended_for_personas": ["owner-operator", "office-manager"],
-  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "cleaning", "pest-control", "med-spa", "auto-detail"],
-  "upsell_from": ["appointment_reminder"],
-  "upsell_to": ["unhappy_customer_interception"],
-  "kpis": ["reviews_requested", "reviews_received", "avg_rating"],
-  "source_refs": ["21.XX"],
+  "capabilities_required": [
+    "crm",
+    "reviews",
+    "sms"
+  ],
+  "prerequisite_modules": [],
+  "compliance_flags": [
+    "sms_opt_out",
+    "review_solicitation_policy"
+  ],
+  "activation_type": "guided",
+  "trigger": {
+    "event": "job.completed"
+  },
+  "inputs": [
+    "job_record",
+    "contact_record",
+    "review_links"
+  ],
+  "actions": [
+    "send_sms",
+    "send_email",
+    "route_by_sentiment",
+    "log_outcome"
+  ],
+  "configurable_settings": [
+    {
+      "key": "delay_hours",
+      "label": "Delay after completion (hours)",
+      "type": "int",
+      "default": 3
+    },
+    {
+      "key": "primary_platform",
+      "label": "Primary review platform",
+      "type": "enum",
+      "options": [
+        "google",
+        "facebook",
+        "yelp",
+        "industry_directory"
+      ],
+      "default": "google"
+    },
+    {
+      "key": "channel",
+      "label": "Channel",
+      "type": "enum",
+      "options": [
+        "sms",
+        "email",
+        "both"
+      ],
+      "default": "sms"
+    },
+    {
+      "key": "rotate_platforms",
+      "label": "Rotate across platforms",
+      "type": "bool",
+      "default": false
+    }
+  ],
+  "templates_used": [
+    "tmpl_review_request_sms",
+    "tmpl_review_request_email"
+  ],
+  "recommended_for_personas": [
+    "owner-operator",
+    "office-manager"
+  ],
+  "recommended_for_blueprints": [
+    "plumbing",
+    "hvac",
+    "electrical",
+    "cleaning",
+    "pest-control",
+    "med-spa",
+    "auto-detail"
+  ],
+  "upsell_from": [
+    "appointment_reminder"
+  ],
+  "upsell_to": [
+    "unhappy_customer_interception"
+  ],
+  "kpis": [
+    "reviews_requested",
+    "reviews_received",
+    "avg_rating"
+  ],
+  "downgrade_behavior": {
+    "on_cancel": "disable_new_runs_keep_data",
+    "data_retention_days": 365
+  },
+  "source_refs": [
+    "21.XX"
+  ],
   "status": "spec"
 }

@@ -73,10 +73,10 @@ contains enough structured objects to drive onboarding, activation, and upsells
 end-to-end:
 
 - 10 capabilities
-- ~20 modules across 7 categories
+- 20 modules across 7 categories (lead-capture, lead-response, sales, scheduling, reviews, billing, retention)
 - 5 outcome bundles
 - 5 vertical blueprints
-- 5 personas
+- 6 personas (owner-operator, office-manager, scheduler, field-team-lead, regulated-operator, sales-coordinator)
 - 10 recommendation rules
 - 4 journeys
 - 3 pricing files

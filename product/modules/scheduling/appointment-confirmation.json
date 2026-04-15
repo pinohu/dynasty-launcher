@@ -2,26 +2,97 @@
   "schema_version": "1.0.0",
   "module_code": "appointment_confirmation",
   "name": "Appointment Confirmation",
-  "short_description": "Immediately after a booking, send a confirmation with the time, address, prep instructions, and reschedule link.",
+  "description_short": "Immediately after a booking, send a confirmation with the time, address, prep instructions, and reschedule link.",
   "outcome": "Cut no-shows and inbound confirmation calls.",
   "category": "scheduling",
   "price_monthly": 19,
-  "capabilities_required": ["calendar", "crm", "email", "sms"],
-  "activation_type": "instant",
-  "trigger": { "event": "appointment.created" },
-  "inputs": ["appointment_record", "contact_record", "business_profile"],
-  "actions": ["send_email", "send_sms", "attach_ics"],
-  "configurable_settings": [
-    { "key": "channel", "label": "Confirmation channel", "type": "enum", "options": ["email", "sms", "both"], "default": "both" },
-    { "key": "include_prep_instructions", "label": "Include prep instructions", "type": "bool", "default": true },
-    { "key": "reschedule_link_ttl_hours", "label": "Reschedule link TTL (hours)", "type": "int", "default": 48 }
+  "tier_availability": [
+    "foundation",
+    "professional",
+    "enterprise"
   ],
-  "templates_used": ["tmpl_appt_confirm_sms", "tmpl_appt_confirm_email"],
-  "recommended_for_personas": ["scheduler", "office-manager"],
-  "recommended_for_blueprints": ["hvac", "plumbing", "cleaning", "med-spa", "pest-control"],
-  "upsell_from": ["webform_autoreply"],
-  "upsell_to": ["appointment_reminder", "no_show_recovery"],
-  "kpis": ["confirmation_delivery_rate", "reschedules_from_confirmation", "no_show_rate_delta"],
-  "source_refs": ["9.XX"],
+  "capabilities_required": [
+    "calendar",
+    "crm",
+    "email",
+    "sms"
+  ],
+  "prerequisite_modules": [],
+  "compliance_flags": [
+    "sms_opt_out"
+  ],
+  "activation_type": "instant",
+  "trigger": {
+    "event": "appointment.created"
+  },
+  "inputs": [
+    "appointment_record",
+    "contact_record",
+    "business_profile"
+  ],
+  "actions": [
+    "send_email",
+    "send_sms",
+    "attach_ics"
+  ],
+  "configurable_settings": [
+    {
+      "key": "channel",
+      "label": "Confirmation channel",
+      "type": "enum",
+      "options": [
+        "email",
+        "sms",
+        "both"
+      ],
+      "default": "both"
+    },
+    {
+      "key": "include_prep_instructions",
+      "label": "Include prep instructions",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "key": "reschedule_link_ttl_hours",
+      "label": "Reschedule link TTL (hours)",
+      "type": "int",
+      "default": 48
+    }
+  ],
+  "templates_used": [
+    "tmpl_appt_confirm_sms",
+    "tmpl_appt_confirm_email"
+  ],
+  "recommended_for_personas": [
+    "scheduler",
+    "office-manager"
+  ],
+  "recommended_for_blueprints": [
+    "hvac",
+    "plumbing",
+    "cleaning",
+    "med-spa",
+    "pest-control"
+  ],
+  "upsell_from": [
+    "webform_autoreply"
+  ],
+  "upsell_to": [
+    "appointment_reminder",
+    "no_show_recovery"
+  ],
+  "kpis": [
+    "confirmation_delivery_rate",
+    "reschedules_from_confirmation",
+    "no_show_rate_delta"
+  ],
+  "downgrade_behavior": {
+    "on_cancel": "disable_new_runs_keep_data",
+    "data_retention_days": 365
+  },
+  "source_refs": [
+    "9.XX"
+  ],
   "status": "spec"
 }

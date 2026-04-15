@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "blueprint_code": "home-remodeling",
+  "name": "Home Remodeling / Design-Build",
+  "vertical": "home-services",
+  "description": "Kitchen, bath, and whole-home remodelers; long sales cycles, high-ticket estimates, proposal engagement is the critical signal.",
+  "common_services": ["kitchen_remodel", "bath_remodel", "addition", "basement_finish", "whole_home", "design_consultation"],
+  "typical_job_types": ["consultation", "design_phase", "build_phase", "change_order", "punch_list"],
+  "seasonal_patterns": ["january_planning_surge", "spring_build_start", "summer_outdoor_project_push", "q4_permit_rush"],
+  "default_messaging_tone": "considered, design-sensitive, trust-forward",
+  "default_hours": {
+    "mon_fri": "08:00-18:00",
+    "sat": "09:00-13:00",
+    "sun": "closed"
+  },
+  "recommended_modules": [
+    "webform_autoreply",
+    "instant_lead_ack",
+    "speed_to_lead_response",
+    "appointment_confirmation",
+    "estimate_followup",
+    "proposal_view_tracker",
+    "lost_deal_reactivation",
+    "post_job_review_request",
+    "overdue_invoice_reminder"
+  ],
+  "recommended_bundles": ["lead_conversion_pack", "reviews_reputation_pack", "billing_collections_pack"],
+  "suggested_bundle_order": ["lead_conversion_pack", "billing_collections_pack", "reviews_reputation_pack", "scheduling_pack", "reactivation_pack"],
+  "dashboard_kpis": ["estimate_close_rate", "time_to_decision", "proposal_view_to_close_rate", "days_sales_outstanding"],
+  "template_overrides": {},
+  "status": "spec"
+}

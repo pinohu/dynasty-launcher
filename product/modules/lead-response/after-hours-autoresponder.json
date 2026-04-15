@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "after_hours_autoresponder",
+  "name": "After-Hours Auto-Responder",
+  "description_short": "When leads come in outside business hours, send a response that sets expectations and offers self-booking.",
+  "outcome": "Capture after-hours demand instead of losing it to the next search result.",
+  "category": "lead-response",
+  "price_monthly": 19,
+  "tier_availability": [
+    "foundation",
+    "professional",
+    "enterprise"
+  ],
+  "capabilities_required": [
+    "crm",
+    "sms",
+    "email"
+  ],
+  "prerequisite_modules": [],
+  "compliance_flags": [
+    "email_footer",
+    "sms_opt_out",
+    "quiet_hours"
+  ],
+  "activation_type": "instant",
+  "trigger": {
+    "event": "lead.created",
+    "conditions": {
+      "outside_business_hours": true
+    }
+  },
+  "inputs": [
+    "lead_record",
+    "business_hours",
+    "after_hours_templates"
+  ],
+  "actions": [
+    "send_sms",
+    "send_email",
+    "offer_booking_link",
+    "tag_contact"
+  ],
+  "configurable_settings": [
+    {
+      "key": "tone",
+      "label": "Tone",
+      "type": "enum",
+      "options": [
+        "friendly",
+        "professional",
+        "urgent"
+      ],
+      "default": "friendly"
+    },
+    {
+      "key": "promise_response_by",
+      "label": "Promise response by (time next business day)",
+      "type": "string",
+      "default": "9:00am"
+    },
+    {
+      "key": "include_emergency_path",
+      "label": "Show emergency path",
+      "type": "bool",
+      "default": false
+    }
+  ],
+  "templates_used": [
+    "tmpl_after_hours_sms",
+    "tmpl_after_hours_email"
+  ],
+  "recommended_for_personas": [
+    "owner-operator",
+    "scheduler"
+  ],
+  "recommended_for_blueprints": [
+    "plumbing",
+    "hvac",
+    "electrical",
+    "pest-control"
+  ],
+  "upsell_from": [
+    "missed_call_textback"
+  ],
+  "upsell_to": [
+    "instant_lead_ack"
+  ],
+  "kpis": [
+    "after_hours_ack_rate",
+    "after_hours_next_day_booking_rate"
+  ],
+  "downgrade_behavior": {
+    "on_cancel": "disable_new_runs_keep_data",
+    "data_retention_days": 365
+  },
+  "source_refs": [
+    "2.15"
+  ],
+  "status": "spec"
+}

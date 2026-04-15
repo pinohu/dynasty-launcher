@@ -14,7 +14,7 @@
   ],
   "price_monthly": 79,
   "implied_savings_monthly": 16,
-  "recommended_for_personas": ["owner-operator", "office-manager"],
+  "recommended_for_personas": ["owner-operator", "office-manager", "sales-coordinator"],
   "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "pest-control", "cleaning"],
   "hero_kpi": "First response time p95",
   "status": "spec"

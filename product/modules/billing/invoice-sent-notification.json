@@ -2,25 +2,88 @@
   "schema_version": "1.0.0",
   "module_code": "invoice_sent_notification",
   "name": "Invoice Sent Notification",
-  "short_description": "When an invoice is sent, confirm delivery to the customer and log the send event.",
+  "description_short": "When an invoice is sent, confirm delivery to the customer and log the send event.",
   "outcome": "Fewer 'I never got the invoice' disputes.",
   "category": "billing",
   "price_monthly": 19,
-  "capabilities_required": ["invoicing", "crm", "email", "sms"],
-  "activation_type": "instant",
-  "trigger": { "event": "invoice.sent" },
-  "inputs": ["invoice_record", "contact_record"],
-  "actions": ["send_email", "send_sms", "log_delivery"],
-  "configurable_settings": [
-    { "key": "channel", "label": "Notify via", "type": "enum", "options": ["email", "sms", "both"], "default": "both" },
-    { "key": "include_payment_link", "label": "Include pay-now link", "type": "bool", "default": true }
+  "tier_availability": [
+    "foundation",
+    "professional",
+    "enterprise"
   ],
-  "templates_used": ["tmpl_invoice_sent_email", "tmpl_invoice_sent_sms"],
-  "recommended_for_personas": ["office-manager", "owner-operator"],
-  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "cleaning", "pest-control"],
+  "capabilities_required": [
+    "invoicing",
+    "crm",
+    "email",
+    "sms"
+  ],
+  "prerequisite_modules": [],
+  "compliance_flags": [
+    "email_footer"
+  ],
+  "activation_type": "instant",
+  "trigger": {
+    "event": "invoice.sent"
+  },
+  "inputs": [
+    "invoice_record",
+    "contact_record"
+  ],
+  "actions": [
+    "send_email",
+    "send_sms",
+    "log_delivery"
+  ],
+  "configurable_settings": [
+    {
+      "key": "channel",
+      "label": "Notify via",
+      "type": "enum",
+      "options": [
+        "email",
+        "sms",
+        "both"
+      ],
+      "default": "both"
+    },
+    {
+      "key": "include_payment_link",
+      "label": "Include pay-now link",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "templates_used": [
+    "tmpl_invoice_sent_email",
+    "tmpl_invoice_sent_sms"
+  ],
+  "recommended_for_personas": [
+    "office-manager",
+    "owner-operator"
+  ],
+  "recommended_for_blueprints": [
+    "plumbing",
+    "hvac",
+    "electrical",
+    "cleaning",
+    "pest-control"
+  ],
   "upsell_from": [],
-  "upsell_to": ["overdue_invoice_reminder", "payment_recovery"],
-  "kpis": ["invoice_open_rate", "pay_link_ctr"],
-  "source_refs": ["15.XX", "16.XX"],
+  "upsell_to": [
+    "overdue_invoice_reminder",
+    "payment_recovery"
+  ],
+  "kpis": [
+    "invoice_open_rate",
+    "pay_link_ctr"
+  ],
+  "downgrade_behavior": {
+    "on_cancel": "disable_new_runs_keep_data",
+    "data_retention_days": 365
+  },
+  "source_refs": [
+    "15.XX",
+    "16.XX"
+  ],
   "status": "spec"
 }

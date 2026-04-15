@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "blueprint_code": "auto-detail",
+  "name": "Auto Detailing & Mobile Detail",
+  "vertical": "personal-care",
+  "description": "Fixed-location and mobile detailers with appointment-dense days and frequent rebooking opportunity.",
+  "common_services": ["exterior_detail", "interior_detail", "full_detail", "ceramic_coating", "paint_correction", "headlight_restore"],
+  "typical_job_types": ["one_time_detail", "recurring_maintenance", "ceramic_package", "fleet_contract"],
+  "seasonal_patterns": ["spring_salt_removal", "summer_convertible_prep", "pre_holiday_gifting"],
+  "default_messaging_tone": "enthusiastic, car-enthusiast-aware, appointment-first",
+  "default_hours": {
+    "mon_sat": "08:00-18:00",
+    "sun": "closed"
+  },
+  "recommended_modules": [
+    "webform_autoreply",
+    "instant_lead_ack",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "reschedule_workflow",
+    "no_show_recovery",
+    "post_job_review_request",
+    "dormant_customer_reactivation"
+  ],
+  "recommended_bundles": ["scheduling_pack", "reviews_reputation_pack", "reactivation_pack"],
+  "suggested_bundle_order": ["scheduling_pack", "reviews_reputation_pack", "reactivation_pack", "lead_conversion_pack", "billing_collections_pack"],
+  "dashboard_kpis": ["no_show_rate", "rebook_rate", "avg_review_rating", "ceramic_attach_rate"],
+  "template_overrides": {},
+  "status": "spec"
+}

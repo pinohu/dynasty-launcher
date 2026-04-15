@@ -2,29 +2,110 @@
   "schema_version": "1.0.0",
   "module_code": "appointment_reminder",
   "name": "Appointment Reminder Sequence",
-  "short_description": "Remind customers 24h and 1h before appointments, with a confirm/reschedule action.",
+  "description_short": "Remind customers 24h and 1h before appointments, with a confirm/reschedule action.",
   "outcome": "Reduce no-shows and last-minute cancellations.",
   "category": "scheduling",
   "price_monthly": 19,
-  "capabilities_required": ["calendar", "crm", "sms"],
+  "tier_availability": [
+    "professional",
+    "enterprise"
+  ],
+  "capabilities_required": [
+    "calendar",
+    "crm",
+    "sms"
+  ],
+  "prerequisite_modules": [],
+  "compliance_flags": [
+    "sms_opt_out",
+    "quiet_hours"
+  ],
   "activation_type": "instant",
   "trigger": {
     "event": "appointment.upcoming",
-    "conditions": { "offset_windows": ["24h", "1h"] }
+    "conditions": {
+      "offset_windows": [
+        "24h",
+        "1h"
+      ]
+    }
   },
-  "inputs": ["appointment_record", "contact_record"],
-  "actions": ["send_sms", "send_email", "mark_confirmed", "move_to_reschedule_flow"],
-  "configurable_settings": [
-    { "key": "reminder_offsets", "label": "Reminder offsets", "type": "enum", "options": ["24h", "4h", "1h", "24h+1h", "24h+4h+1h"], "default": "24h+1h" },
-    { "key": "channel", "label": "Channel", "type": "enum", "options": ["sms", "email", "both"], "default": "sms" },
-    { "key": "enable_confirm_link", "label": "Include one-tap confirm", "type": "bool", "default": true }
+  "inputs": [
+    "appointment_record",
+    "contact_record"
   ],
-  "templates_used": ["tmpl_appt_reminder_24h", "tmpl_appt_reminder_1h"],
-  "recommended_for_personas": ["scheduler", "office-manager"],
-  "recommended_for_blueprints": ["hvac", "plumbing", "cleaning", "med-spa", "pest-control", "auto-detail"],
-  "upsell_from": ["appointment_confirmation"],
-  "upsell_to": ["no_show_recovery", "post_job_review_request"],
-  "kpis": ["reminder_open_rate", "confirm_rate", "no_show_rate"],
-  "source_refs": ["9.XX"],
+  "actions": [
+    "send_sms",
+    "send_email",
+    "mark_confirmed",
+    "move_to_reschedule_flow"
+  ],
+  "configurable_settings": [
+    {
+      "key": "reminder_offsets",
+      "label": "Reminder offsets",
+      "type": "enum",
+      "options": [
+        "24h",
+        "4h",
+        "1h",
+        "24h+1h",
+        "24h+4h+1h"
+      ],
+      "default": "24h+1h"
+    },
+    {
+      "key": "channel",
+      "label": "Channel",
+      "type": "enum",
+      "options": [
+        "sms",
+        "email",
+        "both"
+      ],
+      "default": "sms"
+    },
+    {
+      "key": "enable_confirm_link",
+      "label": "Include one-tap confirm",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "templates_used": [
+    "tmpl_appt_reminder_24h",
+    "tmpl_appt_reminder_1h"
+  ],
+  "recommended_for_personas": [
+    "scheduler",
+    "office-manager"
+  ],
+  "recommended_for_blueprints": [
+    "hvac",
+    "plumbing",
+    "cleaning",
+    "med-spa",
+    "pest-control",
+    "auto-detail"
+  ],
+  "upsell_from": [
+    "appointment_confirmation"
+  ],
+  "upsell_to": [
+    "no_show_recovery",
+    "post_job_review_request"
+  ],
+  "kpis": [
+    "reminder_open_rate",
+    "confirm_rate",
+    "no_show_rate"
+  ],
+  "downgrade_behavior": {
+    "on_cancel": "disable_new_runs_keep_data",
+    "data_retention_days": 365
+  },
+  "source_refs": [
+    "9.XX"
+  ],
   "status": "spec"
 }
