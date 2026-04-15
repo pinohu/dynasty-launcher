@@ -56,6 +56,8 @@ Because the official install path is the interactive `/plugin install superpower
 /plugin install superpowers@superpowers-marketplace
 ```
 
+**This is the only manual step required after running `scripts/setup-claude-tools.sh`.** Everything else (ECC, gstack, hermes) is already wired. Do it once per new machine.
+
 **Update:** `cd ~/.claude/plugins/superpowers && git pull`. **Uninstall:** `rm -rf ~/.claude/plugins/superpowers` (and `/plugin uninstall superpowers` if registered via slash command).
 
 ### hermes-agent
@@ -67,5 +69,38 @@ Installed with `--skip-setup` so the interactive wizard (model provider selectio
 ## Caveats
 
 - ECC and gstack both ship a `/review` skill (and other common names like `/plan`, `/qa`). Both live on disk; Claude Code's skill resolver decides which fires at runtime based on description match. If you prefer one over the other for a given name, invoke it explicitly by its fully-qualified path or disable the other.
-- `~/.claude/settings.json`, `~/.claude/stop-hook-git-check.sh`, and `~/.claude/skills/session-start-hook/` are untouched by this setup.
+- `~/.claude/settings.json` now sets `env.ECC_HOOK_TIER=standard` (was not set before). `stop-hook-git-check.sh` and `skills/session-start-hook/` are untouched.
 - These tools are for the **developer environment only** and have no runtime impact on the dynasty-launcher Vercel deployment or its `api/provision.js` module stack.
+
+## Activation status on this account
+
+The five next-moves from the workspace-surface-audit are all executed:
+
+| Move | Status | Artifact |
+|---|---|---|
+| 1. Enable ECC hook tier | done | `~/.claude/settings.json` + `.claude/settings.json` (project) both set `ECC_HOOK_TIER=standard`; project also sets `ECC_GOVERNANCE_CAPTURE=1` |
+| 2. Agent-sort for this repo | done | `.claude/DAILY.md` (curated shortlist) + `.claude/skills/skill-library/SKILL.md` (keyword router for off-stack skills) |
+| 3. `dynasty-provision-ops` skill | done | `.claude/skills/dynasty-provision-ops/SKILL.md` — operator workflow for the 19 `mod_*` modules |
+| 4. Register superpowers | **manual** | Run `/plugin marketplace add obra/superpowers-marketplace` + `/plugin install superpowers@superpowers-marketplace` in an interactive Claude Code session (slash commands can't be invoked programmatically) |
+| 5. Hermes dynasty watcher | scaffolded | `scripts/hermes-dynasty-watcher.sh` — run after `hermes setup` to install 3 cron jobs (health ping 15m, inventory drift 1h, daily summary 09:00 UTC) |
+
+### What's now DAILY for this repo
+
+See `.claude/DAILY.md` for the full curated list. Summary:
+- 11 agents (`typescript-reviewer`, `security-reviewer`, `architect`, etc.)
+- ~55 skills (runtime + testing + security + AI + provisioning + GTM + multi-agent)
+- 3 rule sets (common, web, typescript)
+- ~20 slash commands
+- 13 ECC hooks (fact-forcing gate, design-quality-check, governance-capture, batch format+typecheck at session-end, console.log guards)
+
+### MCP key wiring (not automated — needs your secrets)
+
+`~/.claude/mcp-configs/mcp-servers.json` has 24 server templates with `YOUR_*_HERE` placeholders. For this repo, the highest-leverage ones to populate are:
+- `github` — already active in this session
+- `vercel` — deploys + project config
+- `context7` — live docs lookup
+- `exa-web-search` — research-ops backing
+- `playwright` — alternative to gstack `/browse`
+- `omega-memory` — persistent cross-session memory
+
+The other 18 (Supabase, Clickhouse, Firecrawl, Browserbase, fal-ai, Jira, Confluence, etc.) can be filled on demand.
