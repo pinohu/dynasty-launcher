@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "blueprint_code": "hvac",
+  "name": "HVAC Service Business",
+  "vertical": "home-services",
+  "description": "Heating, cooling, and ventilation contractors with strong recurring maintenance opportunity.",
+  "common_services": ["ac_tuneup", "furnace_tuneup", "install", "repair", "duct_cleaning", "indoor_air_quality"],
+  "typical_job_types": ["emergency", "scheduled_repair", "install_bid", "maintenance_visit"],
+  "seasonal_patterns": ["spring_ac_prep", "fall_furnace_prep", "heat_wave_spike", "cold_snap_spike"],
+  "default_messaging_tone": "professional, reassuring, comfort-focused",
+  "default_hours": {
+    "mon_fri": "07:00-19:00",
+    "sat": "08:00-16:00",
+    "sun": "emergency_only"
+  },
+  "recommended_modules": [
+    "missed_call_textback",
+    "webform_autoreply",
+    "speed_to_lead_response",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "estimate_followup",
+    "proposal_view_tracker",
+    "post_job_review_request",
+    "service_due_reminder",
+    "dormant_customer_reactivation",
+    "overdue_invoice_reminder"
+  ],
+  "recommended_bundles": ["lead_conversion_pack", "scheduling_pack", "reactivation_pack"],
+  "suggested_bundle_order": ["lead_conversion_pack", "scheduling_pack", "reviews_reputation_pack", "reactivation_pack", "billing_collections_pack"],
+  "dashboard_kpis": ["first_response_time_p95", "maintenance_plan_attach_rate", "seasonal_conversion_rate", "avg_review_rating"],
+  "template_overrides": {
+    "tmpl_service_due_30": "hvac_tuneup_due_30",
+    "tmpl_service_due_14": "hvac_tuneup_due_14",
+    "tmpl_service_due_7": "hvac_tuneup_due_7"
+  },
+  "status": "spec"
+}

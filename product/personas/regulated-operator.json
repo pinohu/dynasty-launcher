@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "persona_code": "regulated-operator",
+  "name": "Regulated Service Operator",
+  "role": "Owner or compliance lead in a licensed/regulated service (med spa, home health, legal-adjacent, childcare, HVAC with refrigerant work)",
+  "persona_group_ref": "group-1:regulated-operator",
+  "pains": [
+    "consent, HIPAA, or license-dependent data handling",
+    "auditable communication logs",
+    "tightly scoped marketing claims",
+    "licensing renewals and lapses",
+    "staff credentialing drift"
+  ],
+  "goals": [
+    "automation that respects compliance boundaries",
+    "audit-ready logs",
+    "guardrails against out-of-scope messaging",
+    "pre-built templates vetted for the category"
+  ],
+  "preferred_channels": ["email", "secure_portal"],
+  "messaging_tone": "measured, precise, claim-disciplined",
+  "default_module_recommendations": [
+    "appointment_confirmation",
+    "appointment_reminder",
+    "post_job_review_request",
+    "unhappy_customer_interception"
+  ],
+  "default_bundle_recommendations": ["scheduling_pack", "reviews_reputation_pack"],
+  "typical_business_size": "varies; compliance posture is the distinguishing trait",
+  "success_signals": ["audit_log_completeness", "consent_capture_rate", "claim_policy_violations"]
+}

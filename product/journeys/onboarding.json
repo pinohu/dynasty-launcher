@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0.0",
+  "journey_code": "onboarding",
+  "description": "The first-time setup flow. Collects data broad enough to power many future modules, not just the first one purchased. Mirrors the 'onboarding (broader than first purchase)' section in docs/architecture/SERVICE_AUTOMATION_PRODUCT_ARCHITECTURE.md.",
+  "steps": [
+    {
+      "step_code": "pick_blueprint",
+      "title": "Pick your business type",
+      "inputs": ["vertical", "subcategory"],
+      "outputs": ["blueprint_installed"]
+    },
+    {
+      "step_code": "business_basics",
+      "title": "Business basics",
+      "inputs": ["business_name", "phone", "email", "address", "service_areas", "hours", "emergency_hours"]
+    },
+    {
+      "step_code": "communication_channels",
+      "title": "How you talk to customers",
+      "inputs": ["email_provider", "sms_number", "calendar_provider", "preferred_channels"],
+      "outputs": ["capabilities_enabled:+email", "capabilities_enabled:+sms", "capabilities_enabled:+calendar"]
+    },
+    {
+      "step_code": "services_and_operations",
+      "title": "Services and operations",
+      "inputs": ["services_offered", "common_job_types", "estimate_process", "booking_rules", "staff_roster"]
+    },
+    {
+      "step_code": "brand_and_messaging",
+      "title": "Brand and messaging",
+      "inputs": ["tone", "review_links", "common_faqs", "base_templates"],
+      "outputs": ["capabilities_enabled:+reviews"]
+    },
+    {
+      "step_code": "commerce_and_billing",
+      "title": "Commerce and billing",
+      "inputs": ["invoicing_provider", "payment_provider", "default_terms"],
+      "outputs": ["capabilities_enabled:+invoicing", "capabilities_enabled:+payments"]
+    },
+    {
+      "step_code": "goals",
+      "title": "What you want to fix first",
+      "inputs": ["primary_goals"],
+      "outputs": ["starter_stack_recommendation"]
+    },
+    {
+      "step_code": "recommended_starter_stack",
+      "title": "Your recommended starter stack",
+      "outputs": ["modules_to_activate", "bundles_to_activate"]
+    }
+  ]
+}

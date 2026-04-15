@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdeputy.com/product/schema/blueprint.schema.json",
+  "title": "Blueprint",
+  "description": "A vertical starter stack. Preselects modules, templates, and defaults for a specific service-business niche.",
+  "type": "object",
+  "required": ["blueprint_code", "name", "recommended_modules"],
+  "properties": {
+    "schema_version": { "type": "string", "default": "1.0.0" },
+    "blueprint_code": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+    "name": { "type": "string" },
+    "vertical": { "type": "string" },
+    "description": { "type": "string" },
+    "common_services": { "type": "array", "items": { "type": "string" } },
+    "typical_job_types": { "type": "array", "items": { "type": "string" } },
+    "seasonal_patterns": { "type": "array", "items": { "type": "string" } },
+    "default_messaging_tone": { "type": "string" },
+    "default_hours": { "type": "object" },
+    "recommended_modules": { "type": "array", "items": { "type": "string" } },
+    "recommended_bundles": { "type": "array", "items": { "type": "string" } },
+    "suggested_bundle_order": {
+      "type": "array",
+      "description": "Recommended order in which the operator should activate bundles as they grow.",
+      "items": { "type": "string" }
+    },
+    "dashboard_kpis": { "type": "array", "items": { "type": "string" } },
+    "template_overrides": { "type": "object" },
+    "status": { "type": "string", "enum": ["live", "beta", "spec"], "default": "spec" }
+  },
+  "additionalProperties": false
+}

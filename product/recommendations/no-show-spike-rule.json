@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "rule_code": "no-show-spike-rule",
+  "description": "No-show rate has spiked and no no-show recovery module is on.",
+  "signal": {
+    "metric": "no_show_rate",
+    "operator": ">=",
+    "threshold": 0.08,
+    "window_days": 30
+  },
+  "conditions": {
+    "module_inactive": ["no_show_recovery"],
+    "capability_present": ["calendar", "sms"]
+  },
+  "module_recommended": "no_show_recovery",
+  "bundle_recommended": "scheduling_pack",
+  "headline": "No-show rate is at {{signal.value_pct}}%.",
+  "body": "Turn on No-Show Recovery. The first outreach within 30 minutes rebooks a meaningful share — especially in med spa, cleaning, and auto-detail.",
+  "cta_label": "Reclaim the calendar",
+  "priority": 78,
+  "cooldown_days": 14
+}

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdeputy.com/product/schema/module.schema.json",
+  "title": "Module",
+  "description": "A sellable micro-SaaS unit. One module = one outcome a customer can activate.",
+  "type": "object",
+  "required": [
+    "module_code",
+    "name",
+    "category",
+    "outcome",
+    "price_monthly",
+    "capabilities_required",
+    "activation_type",
+    "trigger",
+    "actions"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "default": "1.0.0" },
+    "module_code": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "name": { "type": "string" },
+    "short_description": { "type": "string" },
+    "outcome": { "type": "string", "description": "The business result in one sentence." },
+    "category": {
+      "type": "string",
+      "enum": [
+        "lead-capture",
+        "lead-response",
+        "sales",
+        "scheduling",
+        "communication",
+        "reviews",
+        "billing",
+        "retention",
+        "reporting",
+        "team",
+        "intake",
+        "estimates"
+      ]
+    },
+    "price_monthly": { "type": "number", "minimum": 0 },
+    "capabilities_required": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "activation_type": {
+      "type": "string",
+      "enum": ["instant", "guided", "assisted"]
+    },
+    "trigger": {
+      "type": "object",
+      "required": ["event"],
+      "properties": {
+        "event": { "type": "string" },
+        "conditions": { "type": "object" }
+      }
+    },
+    "inputs": { "type": "array", "items": { "type": "string" } },
+    "actions": { "type": "array", "items": { "type": "string" } },
+    "configurable_settings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "label", "type"],
+        "properties": {
+          "key": { "type": "string" },
+          "label": { "type": "string" },
+          "type": { "type": "string", "enum": ["string", "int", "float", "bool", "enum", "duration", "template_ref", "user_ref", "schedule"] },
+          "default": {},
+          "options": { "type": "array" }
+        }
+      }
+    },
+    "templates_used": { "type": "array", "items": { "type": "string" } },
+    "recommended_for_personas": { "type": "array", "items": { "type": "string" } },
+    "recommended_for_blueprints": { "type": "array", "items": { "type": "string" } },
+    "upsell_from": { "type": "array", "items": { "type": "string" } },
+    "upsell_to": { "type": "array", "items": { "type": "string" } },
+    "kpis": { "type": "array", "items": { "type": "string" } },
+    "source_refs": {
+      "type": "array",
+      "description": "Back-references to rows in SERVICE_BUSINESS_AUTOMATION_CATALOG.md (e.g. '2.15').",
+      "items": { "type": "string" }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["live", "beta", "spec", "deprecated"],
+      "default": "spec"
+    }
+  },
+  "additionalProperties": false
+}

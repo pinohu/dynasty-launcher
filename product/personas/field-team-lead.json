@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "persona_code": "field-team-lead",
+  "name": "Field Team Lead",
+  "role": "Senior technician who runs a crew and coordinates with dispatch and the office",
+  "persona_group_ref": "group-1:field-team-lead",
+  "pains": [
+    "getting incomplete job info from the office",
+    "reaching customers who 'didn't know' about the appointment",
+    "no visibility into invoice/pay status after the job",
+    "having to repeat updates to dispatch by phone"
+  ],
+  "goals": [
+    "arrive prepared",
+    "finish jobs faster",
+    "hand off completed jobs without extra admin"
+  ],
+  "preferred_channels": ["sms", "mobile_app"],
+  "messaging_tone": "direct, job-focused",
+  "default_module_recommendations": [
+    "appointment_confirmation",
+    "appointment_reminder",
+    "post_job_review_request",
+    "voicemail_transcription"
+  ],
+  "default_bundle_recommendations": ["scheduling_pack", "reviews_reputation_pack"],
+  "typical_business_size": "crew of 2–6 within a larger business",
+  "success_signals": ["on_time_arrival_rate", "first_time_fix_rate", "reviews_per_tech"]
+}

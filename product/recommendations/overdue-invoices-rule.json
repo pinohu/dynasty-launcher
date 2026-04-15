@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "rule_code": "overdue-invoices-rule",
+  "description": "Tenants with overdue invoices and no reminder automation are leaving cash on the table.",
+  "signal": {
+    "metric": "overdue_invoices",
+    "operator": ">=",
+    "threshold": 5,
+    "window_days": 30
+  },
+  "conditions": {
+    "module_inactive": ["overdue_invoice_reminder"],
+    "capability_present": ["invoicing", "email"]
+  },
+  "module_recommended": "overdue_invoice_reminder",
+  "headline": "{{signal.value}} invoices are past due.",
+  "body": "Activate Overdue Invoice Reminder to send a friendly-to-firm nudge cadence automatically until they're paid.",
+  "cta_label": "Start collecting",
+  "priority": 85,
+  "cooldown_days": 14
+}

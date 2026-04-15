@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "journey_code": "retention",
+  "description": "How the product keeps customers seeing value over time and reduces churn risk.",
+  "signals_monitored": [
+    "modules_activated_last_30d",
+    "opportunity_cards_acted_on",
+    "kpi_trend_direction",
+    "support_tickets_opened",
+    "failed_payments"
+  ],
+  "interventions": [
+    {
+      "trigger": "no_activation_in_45_days",
+      "action": "send 'unused capacity' review email summarizing opportunities"
+    },
+    {
+      "trigger": "kpi_regression",
+      "action": "surface dashboard insight with root-cause candidate modules"
+    },
+    {
+      "trigger": "payment_failure",
+      "action": "activate payment_recovery playbook; preserve module state as 'paused'"
+    },
+    {
+      "trigger": "cancellation_requested",
+      "action": "offer pause, downgrade, or concierge intervention before full cancel"
+    }
+  ]
+}

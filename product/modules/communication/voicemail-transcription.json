@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "voicemail_transcription",
+  "name": "Voicemail Transcription to CRM",
+  "short_description": "Every voicemail is transcribed, saved on the contact record, and surfaced to the right staffer.",
+  "outcome": "Nothing said on voicemail gets lost or re-listened to by three different people.",
+  "category": "communication",
+  "price_monthly": 19,
+  "capabilities_required": ["phone", "crm"],
+  "activation_type": "instant",
+  "trigger": { "event": "voicemail.received" },
+  "inputs": ["voicemail_audio", "contact_record"],
+  "actions": ["transcribe", "attach_to_contact", "notify_owner", "auto_tag_intent"],
+  "configurable_settings": [
+    { "key": "notify_channel", "label": "Notify via", "type": "enum", "options": ["sms", "email", "slack"], "default": "sms" },
+    { "key": "intent_tags", "label": "Auto-tag intents", "type": "bool", "default": true }
+  ],
+  "templates_used": ["tmpl_voicemail_alert"],
+  "recommended_for_personas": ["office-manager", "owner-operator"],
+  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "pest-control"],
+  "upsell_from": ["missed_call_textback"],
+  "upsell_to": ["speed_to_lead_response"],
+  "kpis": ["voicemail_response_time", "voicemails_to_bookings"],
+  "source_refs": ["2.09"],
+  "status": "spec"
+}

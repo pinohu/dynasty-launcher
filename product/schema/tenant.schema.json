@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdeputy.com/product/schema/tenant.schema.json",
+  "title": "Tenant",
+  "description": "A customer workspace. Shared business objects referenced by every module.",
+  "type": "object",
+  "required": ["tenant_id", "business_name", "business_type", "plan", "subscription_status"],
+  "properties": {
+    "schema_version": { "type": "string", "default": "1.0.0" },
+    "tenant_id": { "type": "string", "pattern": "^tnt_[a-z0-9]{8,}$" },
+    "business_name": { "type": "string" },
+    "business_type": { "type": "string", "description": "Vertical/blueprint code (e.g. 'plumbing', 'hvac')." },
+    "plan": { "type": "string", "enum": ["foundation", "professional", "enterprise", "custom_volume"] },
+    "subscription_status": { "type": "string", "enum": ["active", "past_due", "paused", "canceled"] },
+    "onboarding_status": { "type": "string", "enum": ["not_started", "in_progress", "completed"] },
+    "timezone": { "type": "string" },
+    "locale": { "type": "string" },
+    "profile": {
+      "type": "object",
+      "properties": {
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "service_areas": { "type": "array", "items": { "type": "string" } },
+        "hours": { "type": "object" },
+        "emergency_hours": { "type": "object" },
+        "website": { "type": "string" },
+        "review_links": { "type": "object" },
+        "social_links": { "type": "object" }
+      }
+    },
+    "capabilities_enabled": {
+      "type": "array",
+      "description": "Capability codes currently satisfied for this tenant.",
+      "items": { "type": "string" }
+    },
+    "modules_active": {
+      "type": "array",
+      "description": "Module codes currently entitled and activated.",
+      "items": { "type": "string" }
+    },
+    "blueprint_installed": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": true
+}

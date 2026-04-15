@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "persona_code": "owner-operator",
+  "name": "Owner-Operator",
+  "role": "Owner doing both revenue-generating work and back-office work",
+  "persona_group_ref": "group-1:owner-operator",
+  "pains": [
+    "missing calls while on jobs",
+    "forgetting to follow up on estimates",
+    "inconsistent review volume",
+    "staff turnover breaking processes",
+    "doing admin work at night"
+  ],
+  "goals": [
+    "stop missing revenue while in the field",
+    "sound like a bigger company",
+    "make the business run without me",
+    "have a predictable pipeline"
+  ],
+  "preferred_channels": ["sms", "email"],
+  "messaging_tone": "plainspoken, outcome-focused, time-respecting",
+  "default_module_recommendations": [
+    "missed_call_textback",
+    "webform_autoreply",
+    "estimate_followup",
+    "post_job_review_request"
+  ],
+  "default_bundle_recommendations": ["lead_conversion_pack", "reviews_reputation_pack"],
+  "typical_business_size": "1–5 staff, <$1M revenue",
+  "success_signals": ["first_response_time_p95", "reviews_per_month", "estimate_close_rate"]
+}

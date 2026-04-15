@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "proposal_view_tracker",
+  "name": "Proposal View Tracker",
+  "short_description": "Get notified when a proposal is viewed, for how long, and by whom — with a nudge if it's stalling.",
+  "outcome": "Know which deals are alive so the owner spends time on the right follow-ups.",
+  "category": "sales",
+  "price_monthly": 19,
+  "capabilities_required": ["estimates", "crm"],
+  "activation_type": "instant",
+  "trigger": {
+    "event": "estimate.viewed"
+  },
+  "inputs": ["estimate_record", "view_event"],
+  "actions": ["notify_owner", "log_engagement_score", "trigger_nudge_if_idle"],
+  "configurable_settings": [
+    { "key": "nudge_after_views", "label": "Nudge owner after N views without reply", "type": "int", "default": 3 },
+    { "key": "notify_channel", "label": "Notify owner via", "type": "enum", "options": ["email", "sms", "slack", "all"], "default": "sms" }
+  ],
+  "templates_used": ["tmpl_proposal_viewed_alert"],
+  "recommended_for_personas": ["owner-operator"],
+  "recommended_for_blueprints": ["home-remodeling", "hvac", "plumbing"],
+  "upsell_from": ["estimate_followup"],
+  "upsell_to": ["lost_deal_reactivation"],
+  "kpis": ["view_to_close_rate", "stalled_deal_intervention_rate"],
+  "source_refs": ["6.04"],
+  "status": "spec"
+}

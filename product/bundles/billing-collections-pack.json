@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "bundle_code": "billing_collections_pack",
+  "name": "Billing & Collections Pack",
+  "tagline": "Get paid faster. Chase less.",
+  "description": "Invoice confirmation, overdue reminder ladder, and failed-payment recovery — the full 'money in the door' lifecycle.",
+  "outcome": "Lower days-sales-outstanding and recover involuntary churn.",
+  "modules": [
+    "invoice_sent_notification",
+    "overdue_invoice_reminder",
+    "payment_recovery"
+  ],
+  "price_monthly": 45,
+  "implied_savings_monthly": 12,
+  "recommended_for_personas": ["office-manager", "owner-operator"],
+  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "home-remodeling", "med-spa"],
+  "hero_kpi": "Days sales outstanding",
+  "status": "spec"
+}

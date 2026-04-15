@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdeputy.com/product/schema/bundle.schema.json",
+  "title": "Bundle",
+  "description": "An outcome-based pack of modules sold at a discount to their sum.",
+  "type": "object",
+  "required": ["bundle_code", "name", "modules", "price_monthly"],
+  "properties": {
+    "schema_version": { "type": "string", "default": "1.0.0" },
+    "bundle_code": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "name": { "type": "string" },
+    "tagline": { "type": "string" },
+    "description": { "type": "string" },
+    "outcome": { "type": "string" },
+    "modules": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string" }
+    },
+    "price_monthly": { "type": "number", "minimum": 0 },
+    "implied_savings_monthly": { "type": "number" },
+    "recommended_for_personas": { "type": "array", "items": { "type": "string" } },
+    "recommended_for_blueprints": { "type": "array", "items": { "type": "string" } },
+    "hero_kpi": { "type": "string" },
+    "status": { "type": "string", "enum": ["live", "beta", "spec"], "default": "spec" }
+  },
+  "additionalProperties": false
+}

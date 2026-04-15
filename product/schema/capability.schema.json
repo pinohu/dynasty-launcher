@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdeputy.com/product/schema/capability.schema.json",
+  "title": "Capability",
+  "description": "A platform capability that modules can require. Capabilities are satisfied by tenant configuration (e.g. SMS connected, calendar connected).",
+  "type": "object",
+  "required": ["capability_code", "name", "category", "requires_integration"],
+  "properties": {
+    "schema_version": { "type": "string", "default": "1.0.0" },
+    "capability_code": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "name": { "type": "string" },
+    "category": {
+      "type": "string",
+      "enum": ["communication", "data", "commerce", "scheduling", "content", "identity", "infrastructure"]
+    },
+    "description": { "type": "string" },
+    "requires_integration": { "type": "boolean" },
+    "supported_providers": {
+      "type": "array",
+      "description": "Provider codes that can satisfy this capability.",
+      "items": { "type": "string" }
+    },
+    "setup_wizard_id": {
+      "type": "string",
+      "description": "Reference to the setup wizard used when a module needs this capability and it is missing."
+    },
+    "verification_checks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Runtime checks to confirm the capability is live (e.g. test send, webhook echo)."
+    },
+    "docs_url": { "type": "string" }
+  },
+  "additionalProperties": false
+}

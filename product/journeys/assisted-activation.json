@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "journey_code": "assisted_activation",
+  "description": "The exception path for modules that cannot be activated purely self-serve. Used only for modules marked activation_type='assisted'.",
+  "triggers": [
+    "complex_integration_missing",
+    "licensing_or_compliance_step_required",
+    "customer_explicitly_requested_help"
+  ],
+  "flow": [
+    {
+      "step": "offer_concierge",
+      "description": "Present a clear price and scope for guided setup. Default price from pricing/tiers.json.concierge_setup."
+    },
+    {
+      "step": "schedule_kickoff",
+      "description": "Book a kickoff session on the internal team calendar."
+    },
+    {
+      "step": "execute_setup",
+      "description": "Internal team completes the missing integration or policy step."
+    },
+    {
+      "step": "transition_to_self_serve",
+      "description": "Once set up, module flips to 'instant' on future reactivation. Assisted mode is a one-time cost, not a dependency."
+    }
+  ],
+  "anti_patterns": [
+    "Do not let assisted-only modules become the majority of the catalog.",
+    "If >20% of the catalog is assisted-only, the shared schema or capability model is too thin — fix the platform, not the module."
+  ]
+}

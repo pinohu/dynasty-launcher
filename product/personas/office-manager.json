@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "persona_code": "office-manager",
+  "name": "Office Manager",
+  "role": "Runs the back office: intake, scheduling, invoicing, payroll, and customer service",
+  "persona_group_ref": "group-1:office-manager",
+  "pains": [
+    "juggling too many inboxes and tools",
+    "rebooking no-shows manually",
+    "chasing unpaid invoices",
+    "manual data re-entry across systems",
+    "handling irate customers alone"
+  ],
+  "goals": [
+    "fewer tools and more automation",
+    "a clear daily workflow",
+    "faster invoice collection",
+    "protect the owner's time"
+  ],
+  "preferred_channels": ["email", "sms", "slack"],
+  "messaging_tone": "organized, pragmatic, process-respecting",
+  "default_module_recommendations": [
+    "instant_lead_ack",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "overdue_invoice_reminder",
+    "no_show_recovery"
+  ],
+  "default_bundle_recommendations": ["scheduling_pack", "billing_collections_pack"],
+  "typical_business_size": "5–20 staff, $1M–$5M revenue",
+  "success_signals": ["days_sales_outstanding", "no_show_rate", "ack_coverage_rate"]
+}

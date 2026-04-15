@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "rule_code": "missed-calls-rule",
+  "description": "Tenants with a high rate of missed calls and no missed-call recovery active are leaking phone revenue.",
+  "signal": {
+    "metric": "missed_calls",
+    "operator": ">=",
+    "threshold": 10,
+    "window_days": 30
+  },
+  "conditions": {
+    "module_inactive": ["missed_call_textback"],
+    "capability_present": ["phone", "sms"]
+  },
+  "module_recommended": "missed_call_textback",
+  "headline": "You missed {{signal.value}} calls in the last 30 days.",
+  "body": "Turn on Missed Call Text-Back. Every unanswered caller gets an automatic text inviting them to book — in under a minute.",
+  "cta_label": "Activate Missed Call Text-Back",
+  "priority": 90,
+  "cooldown_days": 14
+}

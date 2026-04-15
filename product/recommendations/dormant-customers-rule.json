@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "rule_code": "dormant-customers-rule",
+  "description": "A meaningful share of customers are dormant and no reactivation automation is running.",
+  "signal": {
+    "metric": "dormant_customers_over_6mo",
+    "operator": ">=",
+    "threshold": 50
+  },
+  "conditions": {
+    "module_inactive": ["dormant_customer_reactivation"],
+    "capability_present": ["crm", "email"]
+  },
+  "module_recommended": "dormant_customer_reactivation",
+  "bundle_recommended": "reactivation_pack",
+  "headline": "{{signal.value}} customers haven't booked in 6+ months.",
+  "body": "Launch Dormant Customer Reactivation. Most service businesses recover 5–15% of dormant accounts with one well-timed reminder.",
+  "cta_label": "Recover revenue",
+  "priority": 75,
+  "cooldown_days": 21
+}

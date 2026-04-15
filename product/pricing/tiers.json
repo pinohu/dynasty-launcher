@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Base platform tiers. Customers always subscribe to a core tier, then add modules or bundles on top. Aligns with TIER_MODULES in api/provision.js and V3_TIERS in app.html.",
+  "tiers": [
+    {
+      "tier_code": "core_starter",
+      "name": "Starter OS",
+      "price_monthly": 49,
+      "description": "Shared workspace, CRM, templates, automation marketplace access, and two included starter modules.",
+      "included_modules": [
+        "webform_autoreply",
+        "appointment_confirmation"
+      ],
+      "module_discount_pct": 0,
+      "max_users": 3,
+      "max_contacts": 2500
+    },
+    {
+      "tier_code": "core_growth",
+      "name": "Growth OS",
+      "price_monthly": 149,
+      "description": "Starter plus outcome dashboards, recommendation engine, and five included modules.",
+      "included_modules": [
+        "webform_autoreply",
+        "appointment_confirmation",
+        "appointment_reminder",
+        "post_job_review_request",
+        "instant_lead_ack"
+      ],
+      "module_discount_pct": 10,
+      "max_users": 10,
+      "max_contacts": 25000
+    },
+    {
+      "tier_code": "core_scale",
+      "name": "Scale OS",
+      "price_monthly": 349,
+      "description": "Growth plus advanced routing, multi-location support, premium support, and up to 12 included modules.",
+      "included_modules": [
+        "webform_autoreply",
+        "appointment_confirmation",
+        "appointment_reminder",
+        "post_job_review_request",
+        "instant_lead_ack",
+        "missed_call_textback",
+        "speed_to_lead_response",
+        "estimate_followup",
+        "overdue_invoice_reminder",
+        "no_show_recovery",
+        "service_due_reminder",
+        "dormant_customer_reactivation"
+      ],
+      "module_discount_pct": 20,
+      "max_users": 50,
+      "max_contacts": 250000
+    }
+  ],
+  "concierge_setup": {
+    "price_onetime": 1997,
+    "description": "Optional guided setup: imports, templates, staff training, and first-month activation review."
+  }
+}

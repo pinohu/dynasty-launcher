@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "webform_autoreply",
+  "name": "Web Form Auto-Reply",
+  "short_description": "When a lead submits a web form, acknowledge instantly over email and/or SMS.",
+  "outcome": "Prove the business is paying attention in the first 60 seconds — the biggest predictor of close rate.",
+  "category": "lead-capture",
+  "price_monthly": 19,
+  "capabilities_required": ["forms", "crm", "email"],
+  "activation_type": "instant",
+  "trigger": {
+    "event": "form.submitted"
+  },
+  "inputs": ["form_submission", "business_profile", "acknowledgment_template"],
+  "actions": ["send_email", "send_sms", "create_lead", "tag_contact"],
+  "configurable_settings": [
+    { "key": "ack_channel", "label": "Acknowledge via", "type": "enum", "options": ["email", "sms", "both"], "default": "both" },
+    { "key": "email_template_id", "label": "Email template", "type": "template_ref", "default": "tmpl_webform_ack_email" },
+    { "key": "sms_template_id", "label": "SMS template", "type": "template_ref", "default": "tmpl_webform_ack_sms" },
+    { "key": "include_booking_link", "label": "Include self-booking link", "type": "bool", "default": true }
+  ],
+  "templates_used": ["tmpl_webform_ack_email", "tmpl_webform_ack_sms"],
+  "recommended_for_personas": ["owner-operator", "office-manager", "scheduler"],
+  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "cleaning", "med-spa", "pest-control"],
+  "upsell_from": [],
+  "upsell_to": ["instant_lead_ack", "estimate_followup", "speed_to_lead_response"],
+  "kpis": ["ack_send_time_p95", "reply_rate", "forms_to_booking_rate"],
+  "source_refs": ["2.01", "2.15", "5.01"],
+  "status": "spec"
+}

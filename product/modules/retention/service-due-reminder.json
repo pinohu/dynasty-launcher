@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "service_due_reminder",
+  "name": "Service-Due Reminder",
+  "short_description": "For recurring services (HVAC tune-up, pest treatment, cleaning), remind customers when they're due.",
+  "outcome": "Lock in recurring revenue that used to depend on customer memory.",
+  "category": "retention",
+  "price_monthly": 19,
+  "capabilities_required": ["crm", "email", "sms"],
+  "activation_type": "guided",
+  "trigger": {
+    "event": "service.due",
+    "conditions": { "lead_time_days_in": [30, 14, 7] }
+  },
+  "inputs": ["contact_record", "last_service_record", "service_cadence"],
+  "actions": ["send_email", "send_sms", "offer_booking_link"],
+  "configurable_settings": [
+    { "key": "default_cadence_months", "label": "Default service cadence (months)", "type": "int", "default": 6 },
+    { "key": "lead_time_days", "label": "Lead time (days)", "type": "string", "default": "30,14,7" },
+    { "key": "allow_customer_override", "label": "Allow customer to set cadence", "type": "bool", "default": true }
+  ],
+  "templates_used": ["tmpl_service_due_30", "tmpl_service_due_14", "tmpl_service_due_7"],
+  "recommended_for_personas": ["owner-operator", "office-manager"],
+  "recommended_for_blueprints": ["hvac", "pest-control", "cleaning"],
+  "upsell_from": [],
+  "upsell_to": ["dormant_customer_reactivation"],
+  "kpis": ["due_to_booking_rate", "recurring_revenue_share"],
+  "source_refs": ["31.XX"],
+  "status": "spec"
+}

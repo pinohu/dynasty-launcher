@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "rule_code": "stalled-pipeline-rule",
+  "description": "Deals are stalling in the pipeline with no reactivation motion.",
+  "signal": {
+    "metric": "cold_deals_over_30d",
+    "operator": ">=",
+    "threshold": 10
+  },
+  "conditions": {
+    "module_inactive": ["lost_deal_reactivation"],
+    "capability_present": ["crm", "email"]
+  },
+  "module_recommended": "lost_deal_reactivation",
+  "bundle_recommended": "reactivation_pack",
+  "headline": "{{signal.value}} deals have gone quiet for 30+ days.",
+  "body": "Lost Deal Reactivation re-engages cold deals on a proven 30/60/90-day cadence. Most operators recover 5–15% of them.",
+  "cta_label": "Wake them up",
+  "priority": 72,
+  "cooldown_days": 21
+}

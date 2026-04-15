@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "lost_deal_reactivation",
+  "name": "Lost Deal Reactivation",
+  "short_description": "Re-engage estimates that went cold 30, 60, or 90 days ago with a fresh, light-touch offer.",
+  "outcome": "Recover 5–15% of 'lost' deals at near-zero cost.",
+  "category": "sales",
+  "price_monthly": 19,
+  "capabilities_required": ["estimates", "crm", "email"],
+  "activation_type": "guided",
+  "trigger": {
+    "event": "pipeline.deal_cold",
+    "conditions": { "days_since_last_activity_in": [30, 60, 90] }
+  },
+  "inputs": ["deal_record", "contact_record", "reactivation_offer"],
+  "actions": ["send_email", "send_sms", "create_task", "tag_contact"],
+  "configurable_settings": [
+    { "key": "cohorts", "label": "Days-since-cold cohorts", "type": "string", "default": "30,60,90" },
+    { "key": "offer_type", "label": "Offer type", "type": "enum", "options": ["none", "timed_discount", "scope_refresh", "priority_scheduling"], "default": "scope_refresh" },
+    { "key": "exclude_tags", "label": "Exclude contacts tagged", "type": "string", "default": "do-not-contact" }
+  ],
+  "templates_used": ["tmpl_cold_deal_30", "tmpl_cold_deal_60", "tmpl_cold_deal_90"],
+  "recommended_for_personas": ["owner-operator"],
+  "recommended_for_blueprints": ["home-remodeling", "hvac", "plumbing", "med-spa"],
+  "upsell_from": ["estimate_followup"],
+  "upsell_to": ["dormant_customer_reactivation"],
+  "kpis": ["cold_deal_recovery_rate", "revenue_recovered_per_cohort"],
+  "source_refs": ["5.09"],
+  "status": "spec"
+}

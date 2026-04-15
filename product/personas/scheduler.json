@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "persona_code": "scheduler",
+  "name": "Scheduler / Dispatcher",
+  "role": "Owns the calendar: booking, confirming, reminding, rerouting",
+  "persona_group_ref": "group-1:scheduler",
+  "pains": [
+    "last-minute cancellations",
+    "no-show days",
+    "double-bookings across staff",
+    "customers not responding to confirmations",
+    "manual reschedules eating half the day"
+  ],
+  "goals": [
+    "a calendar that confirms itself",
+    "fewer inbound 'what time was my appointment' calls",
+    "predictable crew utilization"
+  ],
+  "preferred_channels": ["sms", "email"],
+  "messaging_tone": "crisp, polite, schedule-first",
+  "default_module_recommendations": [
+    "appointment_confirmation",
+    "appointment_reminder",
+    "reschedule_workflow",
+    "no_show_recovery"
+  ],
+  "default_bundle_recommendations": ["scheduling_pack"],
+  "typical_business_size": "5–30 staff, $1M–$10M revenue",
+  "success_signals": ["no_show_rate", "self_serve_reschedule_rate", "crew_utilization"]
+}

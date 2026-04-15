@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "payments",
+  "name": "Payment Processing",
+  "category": "commerce",
+  "description": "Card/ACH payment processing for the tenant's customers, including checkout links and webhook events. Uses the customer's own merchant account (Stripe Connect or equivalent), not Dynasty's.",
+  "requires_integration": true,
+  "supported_providers": ["stripe_connect", "square", "authorize_net"],
+  "setup_wizard_id": "wiz_payments_connect",
+  "verification_checks": [
+    "merchant_account_connected",
+    "test_charge_successful",
+    "webhook_signed_and_live",
+    "payout_schedule_confirmed"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#payments"
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "sms",
+  "name": "SMS / Text Messaging",
+  "category": "communication",
+  "description": "Ability to send and receive SMS on a tenant-owned number, including opt-in/opt-out handling and A2P registration.",
+  "requires_integration": true,
+  "supported_providers": ["smsit", "twilio", "telnyx", "messagebird"],
+  "setup_wizard_id": "wiz_sms_connect",
+  "verification_checks": [
+    "number_purchased_or_ported",
+    "a2p_brand_registered",
+    "a2p_campaign_approved",
+    "send_test_sms",
+    "inbound_webhook_live"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#sms"
+}

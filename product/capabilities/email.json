@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "email",
+  "name": "Transactional & Marketing Email",
+  "category": "communication",
+  "description": "Ability to send outbound email on behalf of the tenant, with templates, deliverability controls, and unsubscribe handling.",
+  "requires_integration": true,
+  "supported_providers": ["acumbamail", "resend", "postmark", "ses", "sendgrid"],
+  "setup_wizard_id": "wiz_email_connect",
+  "verification_checks": [
+    "send_test_email",
+    "check_spf",
+    "check_dkim",
+    "check_dmarc",
+    "check_from_domain_verified"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#email"
+}

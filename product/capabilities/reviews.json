@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "reviews",
+  "name": "Review Links & Reputation",
+  "category": "content",
+  "description": "Configured review destinations (Google, Facebook, industry directories) and links used by review-request flows.",
+  "requires_integration": false,
+  "supported_providers": ["google_business_profile", "facebook_reviews", "yelp", "bbb", "directory_sites"],
+  "setup_wizard_id": "wiz_reviews_setup",
+  "verification_checks": [
+    "google_review_link_present",
+    "at_least_one_alternate_link_present",
+    "happy_path_route_defined",
+    "unhappy_path_route_defined"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#reviews"
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "forms",
+  "name": "Web Forms & Lead Capture",
+  "category": "data",
+  "description": "Hosted or embedded web forms that create lead records, with UTM capture, spam protection, and source attribution.",
+  "requires_integration": false,
+  "supported_providers": ["native_forms", "typeform", "jotform", "gravity_forms"],
+  "setup_wizard_id": "wiz_forms_setup",
+  "verification_checks": [
+    "at_least_one_form_published",
+    "submission_routed_to_crm",
+    "utm_capture_live"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#forms"
+}

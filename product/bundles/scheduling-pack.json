@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "bundle_code": "scheduling_pack",
+  "name": "Scheduling Pack",
+  "tagline": "Full calendars. Fewer no-shows.",
+  "description": "Confirmations, reminder cadences, self-serve reschedules, and no-show recovery — a complete scheduling lifecycle.",
+  "outcome": "Keep the calendar full and reduce no-shows by 30–60%.",
+  "modules": [
+    "appointment_confirmation",
+    "appointment_reminder",
+    "reschedule_workflow",
+    "no_show_recovery"
+  ],
+  "price_monthly": 59,
+  "implied_savings_monthly": 17,
+  "recommended_for_personas": ["scheduler", "office-manager"],
+  "recommended_for_blueprints": ["med-spa", "cleaning", "hvac", "plumbing", "auto-detail"],
+  "hero_kpi": "No-show rate",
+  "status": "spec"
+}

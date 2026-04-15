@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "blueprint_code": "cleaning",
+  "name": "Residential/Commercial Cleaning",
+  "vertical": "home-services",
+  "description": "Recurring cleaning operators, move-in/out specialists, and small commercial janitorial companies.",
+  "common_services": ["recurring_residential", "deep_clean", "move_in_out", "commercial_nightly", "post_construction"],
+  "typical_job_types": ["recurring", "one_time", "move_in_out", "commercial_contract"],
+  "seasonal_patterns": ["spring_cleaning", "holiday_prep", "move_season_summer"],
+  "default_messaging_tone": "warm, respectful, detail-oriented",
+  "default_hours": {
+    "mon_fri": "07:00-18:00",
+    "sat": "08:00-14:00",
+    "sun": "closed"
+  },
+  "recommended_modules": [
+    "webform_autoreply",
+    "instant_lead_ack",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "reschedule_workflow",
+    "no_show_recovery",
+    "post_job_review_request",
+    "dormant_customer_reactivation",
+    "service_due_reminder",
+    "payment_recovery"
+  ],
+  "recommended_bundles": ["scheduling_pack", "reviews_reputation_pack", "reactivation_pack"],
+  "suggested_bundle_order": ["scheduling_pack", "lead_conversion_pack", "reviews_reputation_pack", "reactivation_pack", "billing_collections_pack"],
+  "dashboard_kpis": ["recurring_retention_rate", "no_show_rate", "review_capture_rate", "payment_failure_recovery"],
+  "template_overrides": {
+    "tmpl_appt_reminder_24h": "cleaning_reminder_24h",
+    "tmpl_dormant_6": "cleaning_dormant_6mo"
+  },
+  "status": "spec"
+}

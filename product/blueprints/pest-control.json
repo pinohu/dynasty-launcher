@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "blueprint_code": "pest-control",
+  "name": "Pest Control",
+  "vertical": "home-services",
+  "description": "Residential and commercial pest operators with quarterly/monthly service contracts.",
+  "common_services": ["quarterly_general_pest", "mosquito", "termite_inspection", "rodent", "wdi_wdo_letters", "commercial_contract"],
+  "typical_job_types": ["recurring_service", "one_time_treatment", "inspection", "emergency_infestation"],
+  "seasonal_patterns": ["spring_mosquito_push", "fall_rodent_push", "termite_swarm_season"],
+  "default_messaging_tone": "reassuring, science-lite, family-safe",
+  "default_hours": {
+    "mon_fri": "07:00-18:00",
+    "sat": "08:00-14:00",
+    "sun": "closed"
+  },
+  "recommended_modules": [
+    "missed_call_textback",
+    "webform_autoreply",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "post_job_review_request",
+    "service_due_reminder",
+    "dormant_customer_reactivation",
+    "overdue_invoice_reminder"
+  ],
+  "recommended_bundles": ["scheduling_pack", "reactivation_pack", "reviews_reputation_pack"],
+  "suggested_bundle_order": ["scheduling_pack", "reactivation_pack", "reviews_reputation_pack", "lead_conversion_pack", "billing_collections_pack"],
+  "dashboard_kpis": ["recurring_plan_attach_rate", "service_due_conversion", "avg_review_rating"],
+  "template_overrides": {
+    "tmpl_service_due_30": "pest_quarterly_due_30",
+    "tmpl_service_due_14": "pest_quarterly_due_14"
+  },
+  "status": "spec"
+}

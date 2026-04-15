@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "phone",
+  "name": "Voice & Missed-Call Tracking",
+  "category": "communication",
+  "description": "Inbound call routing, recording, missed-call webhooks, voicemail transcription, and AI voice hand-offs.",
+  "requires_integration": true,
+  "supported_providers": ["callscaler", "insighto", "twilio_voice"],
+  "setup_wizard_id": "wiz_phone_connect",
+  "verification_checks": [
+    "tracking_number_live",
+    "forwarding_configured",
+    "missed_call_webhook_live",
+    "voicemail_transcription_live"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#phone"
+}

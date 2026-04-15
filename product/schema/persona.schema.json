@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdeputy.com/product/schema/persona.schema.json",
+  "title": "Persona",
+  "description": "A normalized persona record used for onboarding, messaging, and recommendation logic. The full narrative persona definitions live in docs/strategy/PERSONA_GROUPS_MASTER.md.",
+  "type": "object",
+  "required": ["persona_code", "name", "role", "pains", "goals"],
+  "properties": {
+    "schema_version": { "type": "string", "default": "1.0.0" },
+    "persona_code": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+    "name": { "type": "string" },
+    "role": { "type": "string" },
+    "persona_group_ref": {
+      "type": "string",
+      "description": "Pointer into PERSONA_GROUPS_MASTER.md (e.g. 'group-1:owner-operator')."
+    },
+    "pains": { "type": "array", "items": { "type": "string" } },
+    "goals": { "type": "array", "items": { "type": "string" } },
+    "preferred_channels": { "type": "array", "items": { "type": "string" } },
+    "messaging_tone": { "type": "string" },
+    "default_module_recommendations": { "type": "array", "items": { "type": "string" } },
+    "default_bundle_recommendations": { "type": "array", "items": { "type": "string" } },
+    "typical_business_size": { "type": "string" },
+    "success_signals": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

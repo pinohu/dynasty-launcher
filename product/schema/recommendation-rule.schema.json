@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdeputy.com/product/schema/recommendation-rule.schema.json",
+  "title": "RecommendationRule",
+  "description": "A rule that surfaces a next-best module to a tenant based on observed signal + entitlement state. Evaluated by api/events/opportunity-cards.js.",
+  "type": "object",
+  "required": ["rule_code", "signal", "module_recommended", "headline"],
+  "properties": {
+    "schema_version": { "type": "string", "default": "1.0.0" },
+    "rule_code": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+    "description": { "type": "string" },
+    "signal": {
+      "type": "object",
+      "required": ["metric", "operator", "threshold"],
+      "properties": {
+        "metric": {
+          "type": "string",
+          "description": "Event-level metric (e.g. 'missed_calls_30d', 'overdue_invoices', 'completed_jobs_without_review')."
+        },
+        "operator": { "type": "string", "enum": [">", ">=", "<", "<=", "==", "!="] },
+        "threshold": { "type": ["number", "string", "boolean"] },
+        "window_days": { "type": "number" }
+      }
+    },
+    "conditions": {
+      "type": "object",
+      "description": "Additional conditions like 'module X inactive' or 'blueprint is HVAC'.",
+      "properties": {
+        "module_inactive": { "type": "array", "items": { "type": "string" } },
+        "capability_present": { "type": "array", "items": { "type": "string" } },
+        "capability_absent": { "type": "array", "items": { "type": "string" } },
+        "blueprint_in": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "module_recommended": { "type": "string" },
+    "bundle_recommended": { "type": "string" },
+    "headline": { "type": "string" },
+    "body": { "type": "string" },
+    "cta_label": { "type": "string", "default": "Activate" },
+    "priority": { "type": "number", "default": 100 },
+    "cooldown_days": { "type": "number", "default": 14 }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "rule_code": "no-estimate-followup-rule",
+  "description": "Estimates are going out but nothing is chasing them.",
+  "signal": {
+    "metric": "estimates_sent_without_followup",
+    "operator": ">=",
+    "threshold": 5,
+    "window_days": 30
+  },
+  "conditions": {
+    "module_inactive": ["estimate_followup"],
+    "capability_present": ["estimates", "email"]
+  },
+  "module_recommended": "estimate_followup",
+  "headline": "{{signal.value}} estimates sent with no follow-up.",
+  "body": "Activate Estimate Follow-Up. Industry data shows 50–80% of close-rate lift comes from the second and third touch — not the estimate itself.",
+  "cta_label": "Chase estimates for me",
+  "priority": 85,
+  "cooldown_days": 14
+}

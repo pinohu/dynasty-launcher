@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Default module price is $19/month. Override here if a specific module carries a different price.",
+  "default_price_monthly": 19,
+  "overrides": {
+  }
+}

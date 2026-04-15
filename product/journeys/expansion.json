@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0.0",
+  "journey_code": "expansion",
+  "description": "How active customers discover and activate additional modules or bundles from inside the product. Self-serve by default.",
+  "surfaces": [
+    {
+      "surface_code": "dashboard_opportunity_cards",
+      "description": "Cards on the main dashboard surfacing recommendation rule matches.",
+      "source": "product/recommendations/*"
+    },
+    {
+      "surface_code": "marketplace_browse",
+      "description": "Marketplace view filterable by outcome, persona, blueprint, and price.",
+      "source": "product/modules/*, product/bundles/*"
+    },
+    {
+      "surface_code": "contextual_prompts",
+      "description": "In-app prompts triggered by specific events (e.g. a missed call lands while module is inactive).",
+      "source": "product/recommendations/*"
+    },
+    {
+      "surface_code": "blueprint_suggested_next",
+      "description": "Next recommended bundle per vertical blueprint's suggested_bundle_order.",
+      "source": "product/blueprints/*"
+    }
+  ],
+  "activation_paths": {
+    "instant": "Entitlement created, capabilities present, module goes live immediately.",
+    "guided": "Entitlement created, 1–3 prerequisites missing — short wizard completes setup.",
+    "assisted": "Complex dependency triggers a concierge offer; optional paid setup."
+  },
+  "billing_flow": [
+    "customer selects module or bundle",
+    "Stripe subscription item is added",
+    "entitlement row is created",
+    "prereq check runs",
+    "activation path is chosen",
+    "module state transitions to active"
+  ]
+}

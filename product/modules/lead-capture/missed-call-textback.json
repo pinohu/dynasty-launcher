@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "missed_call_textback",
+  "name": "Missed Call Text-Back",
+  "short_description": "When a call is missed, automatically text the caller back within seconds.",
+  "outcome": "Recover revenue from missed phone leads without adding staff.",
+  "category": "lead-capture",
+  "price_monthly": 19,
+  "capabilities_required": ["phone", "sms", "crm"],
+  "activation_type": "guided",
+  "trigger": {
+    "event": "call.missed",
+    "conditions": { "caller_is_new_or_unknown": true }
+  },
+  "inputs": ["call_event", "business_profile", "default_reply_template"],
+  "actions": ["send_sms", "create_lead", "tag_contact", "notify_owner"],
+  "configurable_settings": [
+    { "key": "reply_delay_seconds", "label": "Reply delay (seconds)", "type": "int", "default": 30 },
+    { "key": "quiet_hours", "label": "Quiet hours", "type": "schedule" },
+    { "key": "template_id", "label": "SMS template", "type": "template_ref", "default": "tmpl_missed_call_default" },
+    { "key": "assigned_owner", "label": "Route lead to", "type": "user_ref" },
+    { "key": "only_business_hours", "label": "Only send during business hours", "type": "bool", "default": false }
+  ],
+  "templates_used": ["tmpl_missed_call_default", "tmpl_after_hours_callback"],
+  "recommended_for_personas": ["owner-operator", "office-manager"],
+  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "pest-control", "cleaning"],
+  "upsell_from": [],
+  "upsell_to": ["instant_lead_ack", "voicemail_transcription", "after_hours_autoresponder"],
+  "kpis": ["missed_calls_recovered", "responses_sent", "bookings_from_recovery"],
+  "source_refs": ["2.02", "2.15", "14.XX"],
+  "status": "spec"
+}

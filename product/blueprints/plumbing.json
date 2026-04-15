@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0.0",
+  "blueprint_code": "plumbing",
+  "name": "Plumbing Service Business",
+  "vertical": "home-services",
+  "description": "Residential and light-commercial plumbers with a mix of urgent and scheduled work.",
+  "common_services": ["leak-repair", "water-heater", "drain-cleaning", "fixture-install", "repipe", "sewer-line"],
+  "typical_job_types": ["emergency", "scheduled_repair", "estimate_install", "maintenance_check"],
+  "seasonal_patterns": ["winter_freeze_spike", "spring_sewer_backups", "summer_hose-bib_repairs"],
+  "default_messaging_tone": "friendly, direct, trust-forward",
+  "default_hours": {
+    "mon_fri": "07:00-18:00",
+    "sat": "08:00-14:00",
+    "sun": "emergency_only"
+  },
+  "recommended_modules": [
+    "missed_call_textback",
+    "after_hours_autoresponder",
+    "webform_autoreply",
+    "speed_to_lead_response",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "estimate_followup",
+    "post_job_review_request",
+    "overdue_invoice_reminder"
+  ],
+  "recommended_bundles": ["lead_conversion_pack", "reviews_reputation_pack"],
+  "suggested_bundle_order": ["lead_conversion_pack", "scheduling_pack", "reviews_reputation_pack", "billing_collections_pack", "reactivation_pack"],
+  "dashboard_kpis": ["first_response_time_p95", "emergency_response_rate", "avg_review_rating", "days_sales_outstanding"],
+  "template_overrides": {
+    "tmpl_missed_call_default": "plumbing_missed_call_v1",
+    "tmpl_after_hours_sms": "plumbing_after_hours_v1"
+  },
+  "status": "spec"
+}

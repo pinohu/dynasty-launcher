@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Bundle prices derived for easy marketplace rendering. Authoritative price lives on each bundle JSON.",
+  "bundles": [
+    { "bundle_code": "lead_conversion_pack", "price_monthly": 79 },
+    { "bundle_code": "scheduling_pack", "price_monthly": 59 },
+    { "bundle_code": "reviews_reputation_pack", "price_monthly": 29 },
+    { "bundle_code": "billing_collections_pack", "price_monthly": 45 },
+    { "bundle_code": "reactivation_pack", "price_monthly": 45 }
+  ],
+  "stacked_discounts": [
+    { "bundles_count": 2, "discount_pct": 5 },
+    { "bundles_count": 3, "discount_pct": 10 },
+    { "bundles_count": 4, "discount_pct": 15 }
+  ]
+}

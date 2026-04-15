@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "calendar",
+  "name": "Calendar & Booking",
+  "category": "scheduling",
+  "description": "Two-way calendar sync, booking pages, availability windows, and appointment lifecycle events.",
+  "requires_integration": true,
+  "supported_providers": ["trafft", "google_calendar", "microsoft_365", "calendly"],
+  "setup_wizard_id": "wiz_calendar_connect",
+  "verification_checks": [
+    "oauth_connected",
+    "two_way_sync_live",
+    "availability_rules_defined",
+    "booking_page_published"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#calendar"
+}

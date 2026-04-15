@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "overdue_invoice_reminder",
+  "name": "Overdue Invoice Reminder",
+  "short_description": "Nudge customers on day 3, 7, 14, and 21 past due with a friendly-to-firm tone ladder.",
+  "outcome": "Cut days-sales-outstanding (DSO) without awkward phone calls.",
+  "category": "billing",
+  "price_monthly": 19,
+  "capabilities_required": ["invoicing", "crm", "email"],
+  "activation_type": "guided",
+  "trigger": {
+    "event": "invoice.overdue",
+    "conditions": { "days_overdue_in": [3, 7, 14, 21] }
+  },
+  "inputs": ["invoice_record", "contact_record"],
+  "actions": ["send_email", "send_sms", "create_task", "escalate_to_owner"],
+  "configurable_settings": [
+    { "key": "cadence_days", "label": "Reminder days", "type": "string", "default": "3,7,14,21" },
+    { "key": "tone_ladder", "label": "Tone escalates over time", "type": "bool", "default": true },
+    { "key": "owner_escalation_day", "label": "Escalate to owner at day", "type": "int", "default": 21 },
+    { "key": "stop_on_payment", "label": "Stop when paid", "type": "bool", "default": true }
+  ],
+  "templates_used": ["tmpl_overdue_3", "tmpl_overdue_7", "tmpl_overdue_14", "tmpl_overdue_21"],
+  "recommended_for_personas": ["office-manager", "owner-operator"],
+  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "home-remodeling"],
+  "upsell_from": ["invoice_sent_notification"],
+  "upsell_to": ["payment_recovery"],
+  "kpis": ["days_sales_outstanding", "overdue_recovery_rate"],
+  "source_refs": ["16.XX"],
+  "status": "spec"
+}

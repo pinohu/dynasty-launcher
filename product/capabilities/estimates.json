@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "estimates",
+  "name": "Estimates & Proposals",
+  "category": "commerce",
+  "description": "The ability to create, send, and track estimates / proposals, including view events and signature state.",
+  "requires_integration": false,
+  "supported_providers": ["native_estimates", "documentero", "pandadoc", "jobber"],
+  "setup_wizard_id": "wiz_estimates_setup",
+  "verification_checks": [
+    "estimate_template_exists",
+    "send_webhook_live",
+    "view_tracking_live",
+    "signature_flow_live"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#estimates"
+}

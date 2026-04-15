@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "estimate_followup",
+  "name": "Estimate Follow-Up Sequence",
+  "short_description": "After an estimate is sent, follow up on a 24h / 72h / 7d cadence until it's signed, declined, or expires.",
+  "outcome": "Convert more estimates into booked jobs without the owner chasing them.",
+  "category": "sales",
+  "price_monthly": 19,
+  "capabilities_required": ["estimates", "crm", "email"],
+  "activation_type": "guided",
+  "trigger": {
+    "event": "estimate.sent"
+  },
+  "inputs": ["estimate_record", "contact_record"],
+  "actions": ["send_email", "send_sms", "create_task", "move_pipeline_stage"],
+  "configurable_settings": [
+    { "key": "cadence", "label": "Follow-up cadence", "type": "enum", "options": ["24h/72h/7d", "48h/5d/10d", "custom"], "default": "24h/72h/7d" },
+    { "key": "custom_cadence_hours", "label": "Custom cadence (comma-separated hours)", "type": "string" },
+    { "key": "stop_on_view", "label": "Stop sending after estimate is viewed", "type": "bool", "default": false },
+    { "key": "include_sms", "label": "Also send SMS follow-ups", "type": "bool", "default": true }
+  ],
+  "templates_used": ["tmpl_estimate_fu_1", "tmpl_estimate_fu_2", "tmpl_estimate_fu_3"],
+  "recommended_for_personas": ["owner-operator", "office-manager"],
+  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "home-remodeling", "pest-control"],
+  "upsell_from": ["webform_autoreply"],
+  "upsell_to": ["proposal_view_tracker", "lost_deal_reactivation"],
+  "kpis": ["estimate_close_rate", "time_to_decision", "follow_up_reply_rate"],
+  "source_refs": ["5.08", "6.06"],
+  "status": "spec"
+}

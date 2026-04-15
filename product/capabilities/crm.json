@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "crm",
+  "name": "CRM & Contact Records",
+  "category": "data",
+  "description": "The shared contact/lead/customer data model. Required by almost every module.",
+  "requires_integration": false,
+  "supported_providers": ["native_crm", "suitedash", "hubspot", "pipedrive"],
+  "setup_wizard_id": "wiz_crm_init",
+  "verification_checks": [
+    "contact_object_initialized",
+    "lead_object_initialized",
+    "pipeline_defined",
+    "tag_taxonomy_seeded"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#crm"
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "rule_code": "low-response-time-rule",
+  "description": "First-response time on new leads is slow — a top predictor of lost deals.",
+  "signal": {
+    "metric": "first_response_time_minutes_p95",
+    "operator": ">=",
+    "threshold": 30,
+    "window_days": 14
+  },
+  "conditions": {
+    "module_inactive": ["instant_lead_ack", "speed_to_lead_response"],
+    "capability_present": ["crm", "sms"]
+  },
+  "module_recommended": "instant_lead_ack",
+  "bundle_recommended": "lead_conversion_pack",
+  "headline": "New leads are waiting {{signal.value}}+ minutes for a first touch.",
+  "body": "Instant Lead Acknowledgment gets an ack out in under 60 seconds across every source. Close rate correlates directly.",
+  "cta_label": "Respond faster",
+  "priority": 88,
+  "cooldown_days": 10
+}

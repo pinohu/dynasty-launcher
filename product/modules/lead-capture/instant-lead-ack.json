@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "instant_lead_ack",
+  "name": "Instant Lead Acknowledgment (multi-source)",
+  "short_description": "Any inbound lead (form, call, chat, paid ad, referral) gets a unified instant acknowledgment.",
+  "outcome": "One consistent first touch across every channel, so no source leaks leads.",
+  "category": "lead-capture",
+  "price_monthly": 19,
+  "capabilities_required": ["crm", "email", "sms"],
+  "activation_type": "guided",
+  "trigger": {
+    "event": "lead.created",
+    "conditions": { "lead.first_touch_ack_sent": false }
+  },
+  "inputs": ["lead_record", "source_channel", "acknowledgment_templates"],
+  "actions": ["send_email", "send_sms", "tag_contact", "start_followup_clock"],
+  "configurable_settings": [
+    { "key": "primary_channel", "label": "Primary channel", "type": "enum", "options": ["sms", "email"], "default": "sms" },
+    { "key": "fallback_channel", "label": "Fallback if primary unavailable", "type": "enum", "options": ["sms", "email", "none"], "default": "email" },
+    { "key": "per_source_templates", "label": "Use different template per source", "type": "bool", "default": true }
+  ],
+  "templates_used": ["tmpl_instant_ack_sms", "tmpl_instant_ack_email", "tmpl_instant_ack_paid"],
+  "recommended_for_personas": ["owner-operator", "office-manager"],
+  "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "cleaning", "pest-control"],
+  "upsell_from": ["missed_call_textback", "webform_autoreply"],
+  "upsell_to": ["estimate_followup", "speed_to_lead_response"],
+  "kpis": ["first_response_time_p95", "ack_coverage_rate", "source_mix_health"],
+  "source_refs": ["5.01", "2.15"],
+  "status": "spec"
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yourdeputy.com/product/schema/entitlement.schema.json",
+  "title": "Entitlement",
+  "description": "A record of what a tenant is allowed to activate. One entitlement per tenant per module, created when the customer subscribes to a module or bundle.",
+  "type": "object",
+  "required": ["entitlement_id", "tenant_id", "module_code", "state", "billing_source"],
+  "properties": {
+    "schema_version": { "type": "string", "default": "1.0.0" },
+    "entitlement_id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "module_code": { "type": "string" },
+    "state": {
+      "type": "string",
+      "enum": ["entitled", "active", "paused", "deactivated", "revoked"],
+      "description": "entitled = paid but not activated; active = running; paused = temporarily off; deactivated = turned off by user; revoked = billing lost"
+    },
+    "billing_source": {
+      "type": "object",
+      "required": ["source_type"],
+      "properties": {
+        "source_type": { "type": "string", "enum": ["module", "bundle", "plan_included", "trial", "comp"] },
+        "source_code": { "type": "string" },
+        "stripe_subscription_id": { "type": "string" },
+        "stripe_subscription_item_id": { "type": "string" }
+      }
+    },
+    "activated_at": { "type": "string", "format": "date-time" },
+    "deactivated_at": { "type": "string", "format": "date-time" },
+    "config_state": {
+      "type": "object",
+      "description": "Snapshot of the configurable_settings values for this activation."
+    },
+    "prereq_check": {
+      "type": "object",
+      "properties": {
+        "passed": { "type": "boolean" },
+        "missing_capabilities": { "type": "array", "items": { "type": "string" } },
+        "checked_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "additionalProperties": false
+}

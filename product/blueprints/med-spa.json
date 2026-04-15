@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0.0",
+  "blueprint_code": "med-spa",
+  "name": "Med Spa / Aesthetics",
+  "vertical": "personal-care",
+  "description": "Appointment-dense, consent-heavy aesthetics businesses (injectables, skincare, laser, body contouring).",
+  "common_services": ["injectables", "laser", "facials", "body_contouring", "membership_programs"],
+  "typical_job_types": ["consultation", "treatment_appointment", "package_treatment", "membership_visit"],
+  "seasonal_patterns": ["pre_wedding_season", "pre_holiday_glow", "summer_hair_removal"],
+  "default_messaging_tone": "aspirational, discreet, knowledgeable",
+  "default_hours": {
+    "mon_sat": "10:00-19:00",
+    "sun": "closed"
+  },
+  "recommended_modules": [
+    "webform_autoreply",
+    "instant_lead_ack",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "reschedule_workflow",
+    "no_show_recovery",
+    "post_job_review_request",
+    "unhappy_customer_interception",
+    "dormant_customer_reactivation",
+    "service_due_reminder",
+    "payment_recovery"
+  ],
+  "recommended_bundles": ["scheduling_pack", "reviews_reputation_pack", "reactivation_pack", "billing_collections_pack"],
+  "suggested_bundle_order": ["scheduling_pack", "reviews_reputation_pack", "reactivation_pack", "billing_collections_pack", "lead_conversion_pack"],
+  "dashboard_kpis": ["no_show_rate", "membership_retention_rate", "avg_public_rating", "failed_payment_recovery_rate"],
+  "template_overrides": {
+    "tmpl_appt_reminder_24h": "medspa_reminder_24h",
+    "tmpl_review_request_sms": "medspa_review_sms",
+    "tmpl_dormant_6": "medspa_dormant_6mo"
+  },
+  "status": "spec"
+}

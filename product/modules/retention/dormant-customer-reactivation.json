@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "dormant_customer_reactivation",
+  "name": "Dormant Customer Reactivation",
+  "short_description": "If a customer hasn't booked in 6/9/12 months, send a personalized win-back with a reason to come back.",
+  "outcome": "Turn 'past customers' back into 'repeat revenue.'",
+  "category": "retention",
+  "price_monthly": 19,
+  "capabilities_required": ["crm", "email", "sms"],
+  "activation_type": "guided",
+  "trigger": {
+    "event": "customer.dormant",
+    "conditions": { "months_since_last_job_in": [6, 9, 12] }
+  },
+  "inputs": ["contact_record", "last_job_record", "reactivation_offer"],
+  "actions": ["send_email", "send_sms", "offer_booking_link", "tag_contact"],
+  "configurable_settings": [
+    { "key": "cohorts_months", "label": "Dormant cohorts (months)", "type": "string", "default": "6,9,12" },
+    { "key": "offer_type", "label": "Offer", "type": "enum", "options": ["none", "percent_off", "free_addon", "priority_slot"], "default": "free_addon" },
+    { "key": "exclude_do_not_contact", "label": "Exclude 'do not contact' tagged", "type": "bool", "default": true }
+  ],
+  "templates_used": ["tmpl_dormant_6", "tmpl_dormant_9", "tmpl_dormant_12"],
+  "recommended_for_personas": ["owner-operator"],
+  "recommended_for_blueprints": ["med-spa", "cleaning", "hvac", "pest-control", "auto-detail"],
+  "upsell_from": ["post_job_review_request"],
+  "upsell_to": ["service_due_reminder"],
+  "kpis": ["reactivation_rate", "revenue_per_reactivation"],
+  "source_refs": ["31.XX", "32.XX"],
+  "status": "spec"
+}

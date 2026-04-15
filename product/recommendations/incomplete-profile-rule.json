@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "rule_code": "incomplete-profile-rule",
+  "description": "Business profile is missing fields that multiple modules depend on.",
+  "signal": {
+    "metric": "profile_completeness_pct",
+    "operator": "<",
+    "threshold": 0.8
+  },
+  "conditions": {
+    "capability_absent": ["reviews"]
+  },
+  "module_recommended": "post_job_review_request",
+  "headline": "Your review destinations aren't configured yet.",
+  "body": "Add your Google and Facebook review links so every module that asks for reviews knows where to send them.",
+  "cta_label": "Finish profile setup",
+  "priority": 95,
+  "cooldown_days": 7
+}

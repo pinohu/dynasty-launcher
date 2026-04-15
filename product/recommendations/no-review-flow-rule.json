@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "rule_code": "no-review-flow-rule",
+  "description": "Jobs are being completed but no review request is being sent.",
+  "signal": {
+    "metric": "completed_jobs_without_review_request",
+    "operator": ">=",
+    "threshold": 10,
+    "window_days": 30
+  },
+  "conditions": {
+    "module_inactive": ["post_job_review_request"],
+    "capability_present": ["crm", "sms"]
+  },
+  "module_recommended": "post_job_review_request",
+  "bundle_recommended": "reviews_reputation_pack",
+  "headline": "{{signal.value}} completed jobs with no review ask.",
+  "body": "Turn on Post-Job Review Request so every happy customer gets asked — on the platform that matters most to your business.",
+  "cta_label": "Turn on reviews",
+  "priority": 80,
+  "cooldown_days": 14
+}

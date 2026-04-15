@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "capability_code": "invoicing",
+  "name": "Invoicing",
+  "category": "commerce",
+  "description": "Create, send, and track invoices with due dates, late-payment state, and receipt confirmations.",
+  "requires_integration": true,
+  "supported_providers": ["stripe_invoices", "suitedash_invoices", "quickbooks", "xero"],
+  "setup_wizard_id": "wiz_invoicing_setup",
+  "verification_checks": [
+    "provider_connected",
+    "test_invoice_sent",
+    "due_date_tracking_live",
+    "paid_webhook_live"
+  ],
+  "docs_url": "/docs/architecture/TENANT_CAPABILITY_MODEL.md#invoicing"
+}
