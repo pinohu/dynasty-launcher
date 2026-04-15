@@ -24,8 +24,8 @@
     "post_job_review_request",
     "overdue_invoice_reminder"
   ],
-  "recommended_bundles": ["lead_conversion_pack", "reviews_reputation_pack", "billing_collections_pack"],
-  "suggested_bundle_order": ["lead_conversion_pack", "billing_collections_pack", "reviews_reputation_pack", "scheduling_pack", "reactivation_pack"],
+  "recommended_bundles": ["lead_capture_pack", "reviews_pack", "billing_pack"],
+  "suggested_bundle_order": ["lead_capture_pack", "billing_pack", "reviews_pack", "scheduling_pack", "retention_pack"],
   "dashboard_kpis": ["estimate_close_rate", "time_to_decision", "proposal_view_to_close_rate", "days_sales_outstanding"],
   "template_overrides": {},
   "status": "spec"

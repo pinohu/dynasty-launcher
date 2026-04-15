@@ -74,12 +74,16 @@ end-to-end:
 
 - 10 capabilities
 - 20 modules across 7 categories (lead-capture, lead-response, sales, scheduling, reviews, billing, retention)
-- 5 outcome bundles
-- 5 vertical blueprints
+- 5 locked launch packs (lead-capture, scheduling, reviews, billing, retention) — see `product/pricing/bundle-pricing.json` for the mechanical pricing formula
+- 3 suites + 4 editions defined in `product/pricing/tiers.json`
+- 8 vertical blueprints
 - 6 personas (owner-operator, office-manager, scheduler, field-team-lead, regulated-operator, sales-coordinator)
 - 10 recommendation rules
 - 4 journeys
-- 3 pricing files
+- 3 pricing files (tiers, modules, bundles)
+
+**Open commercial decisions** before launch are tracked in
+`docs/strategy/COMMERCIAL_DECISIONS.md`.
 
 Additional modules should be added incrementally as they prove out in market,
 always driven back to the raw inventory in

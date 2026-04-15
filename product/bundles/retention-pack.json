@@ -1,17 +1,16 @@
 {
   "schema_version": "1.0.0",
-  "bundle_code": "reactivation_pack",
-  "name": "Reactivation Pack",
+  "bundle_code": "retention_pack",
+  "name": "Retention Pack",
   "tagline": "Turn past customers into repeat revenue.",
-  "description": "Win back dormant customers, surface service-due reminders, and rescue cold deals.",
+  "description": "Win back dormant customers and surface service-due reminders before the window closes.",
   "outcome": "Unlock recurring revenue hiding in the CRM.",
   "modules": [
     "dormant_customer_reactivation",
-    "service_due_reminder",
-    "lost_deal_reactivation"
+    "service_due_reminder"
   ],
-  "price_monthly": 45,
-  "implied_savings_monthly": 12,
+  "price_monthly": 35,
+  "implied_savings_monthly": 3,
   "recommended_for_personas": ["owner-operator"],
   "recommended_for_blueprints": ["hvac", "pest-control", "cleaning", "med-spa", "auto-detail"],
   "hero_kpi": "Revenue from reactivation",

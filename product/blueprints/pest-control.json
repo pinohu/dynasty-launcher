@@ -23,8 +23,8 @@
     "dormant_customer_reactivation",
     "overdue_invoice_reminder"
   ],
-  "recommended_bundles": ["scheduling_pack", "reactivation_pack", "reviews_reputation_pack"],
-  "suggested_bundle_order": ["scheduling_pack", "reactivation_pack", "reviews_reputation_pack", "lead_conversion_pack", "billing_collections_pack"],
+  "recommended_bundles": ["scheduling_pack", "retention_pack", "reviews_pack"],
+  "suggested_bundle_order": ["scheduling_pack", "retention_pack", "reviews_pack", "lead_capture_pack", "billing_pack"],
   "dashboard_kpis": ["recurring_plan_attach_rate", "service_due_conversion", "avg_review_rating"],
   "template_overrides": {
     "tmpl_service_due_30": "pest_quarterly_due_30",

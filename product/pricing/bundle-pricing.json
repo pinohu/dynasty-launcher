@@ -1,16 +1,70 @@
 {
   "schema_version": "1.0.0",
-  "description": "Bundle prices derived for easy marketplace rendering. Authoritative price lives on each bundle JSON.",
-  "bundles": [
-    { "bundle_code": "lead_conversion_pack", "price_monthly": 79 },
-    { "bundle_code": "scheduling_pack", "price_monthly": 59 },
-    { "bundle_code": "reviews_reputation_pack", "price_monthly": 29 },
-    { "bundle_code": "billing_collections_pack", "price_monthly": 45 },
-    { "bundle_code": "reactivation_pack", "price_monthly": 45 }
+  "description": "Locked launch packs. 5 packs only — all contents map to live or near-live modules in product/modules/. Any pack added in the future must pass the promotion rule documented in docs/architecture/SERVICE_AUTOMATION_PRODUCT_ARCHITECTURE.md (>=3 live modules, clear buyer job, instant/guided activation, real usage).",
+  "last_reconciled": "2026-04-15",
+  "packs": [
+    {
+      "bundle_code": "lead_capture_pack",
+      "price_monthly": 49,
+      "module_count": 3,
+      "module_sum": 57,
+      "effective_discount_pct": 14,
+      "note": "At $49 this is a $8 savings vs. buying modules individually. Formula row for 3 modules."
+    },
+    {
+      "bundle_code": "scheduling_pack",
+      "price_monthly": 49,
+      "module_count": 3,
+      "module_sum": 57,
+      "effective_discount_pct": 14
+    },
+    {
+      "bundle_code": "reviews_pack",
+      "price_monthly": 35,
+      "module_count": 2,
+      "module_sum": 38,
+      "effective_discount_pct": 8,
+      "note": "Smallest pack. Kept as a standalone SKU because reviews is a clear standalone buyer job."
+    },
+    {
+      "bundle_code": "billing_pack",
+      "price_monthly": 49,
+      "module_count": 3,
+      "module_sum": 57,
+      "effective_discount_pct": 14
+    },
+    {
+      "bundle_code": "retention_pack",
+      "price_monthly": 35,
+      "module_count": 2,
+      "module_sum": 38,
+      "effective_discount_pct": 8,
+      "note": "Expands to 3 modules ($49) when lost_deal_reactivation graduates from sales into the retention pack, or when a seasonal-reminder module is built."
+    }
   ],
-  "stacked_discounts": [
-    { "bundles_count": 2, "discount_pct": 5 },
-    { "bundles_count": 3, "discount_pct": 10 },
-    { "bundles_count": 4, "discount_pct": 15 }
-  ]
+  "not_launching_yet": [
+    {
+      "bundle_code": "sales_followup_pack",
+      "reason": "Only 1 live module (estimate_followup). proposal_view_tracker and lost_deal_reactivation exist but need a 3rd module (lead_assignment) before this earns pack status.",
+      "target_launch": "when a 3rd sales module exists"
+    },
+    {
+      "bundle_code": "communication_pack",
+      "reason": "No dedicated modules yet. Speed-to-lead, voicemail, and after-hours autoresponder live in lead-response, not a standalone communication concept.",
+      "target_launch": "when 3+ communication-specific modules exist"
+    },
+    {
+      "bundle_code": "operations_pack",
+      "reason": "No live modules (task alerts, job-status triggers, handoff alerts not yet built).",
+      "target_launch": "when 3+ ops modules exist"
+    }
+  ],
+  "stacked_discounts": [],
+  "pack_pricing_formula": {
+    "2_modules": 35,
+    "3_modules": 49,
+    "4_modules": 65,
+    "5_modules": 79,
+    "rule": "Pack price must always be less than sum of constituent module prices ($19 each). See product/pricing/tiers.json pricing_rules."
+  }
 }

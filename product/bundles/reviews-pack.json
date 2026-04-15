@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
-  "bundle_code": "reviews_reputation_pack",
-  "name": "Reviews & Reputation Pack",
+  "bundle_code": "reviews_pack",
+  "name": "Reviews Pack",
   "tagline": "More 5-stars. Fewer 1-stars.",
   "description": "Ask every happy customer for a public review and intercept unhappy ones privately — before they post.",
   "outcome": "Sustainably grow public rating while protecting it from the occasional bad day.",
@@ -9,8 +9,8 @@
     "post_job_review_request",
     "unhappy_customer_interception"
   ],
-  "price_monthly": 29,
-  "implied_savings_monthly": 9,
+  "price_monthly": 35,
+  "implied_savings_monthly": 3,
   "recommended_for_personas": ["owner-operator"],
   "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "cleaning", "pest-control", "med-spa", "auto-detail"],
   "hero_kpi": "Average public rating",

@@ -25,7 +25,7 @@
     "post_job_review_request",
     "unhappy_customer_interception"
   ],
-  "default_bundle_recommendations": ["scheduling_pack", "reviews_reputation_pack"],
+  "default_bundle_recommendations": ["scheduling_pack", "reviews_pack"],
   "typical_business_size": "varies; compliance posture is the distinguishing trait",
   "success_signals": ["audit_log_completeness", "consent_capture_rate", "claim_policy_violations"]
 }

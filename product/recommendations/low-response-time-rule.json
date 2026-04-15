@@ -13,7 +13,7 @@
     "capability_present": ["crm", "sms"]
   },
   "module_recommended": "instant_lead_ack",
-  "bundle_recommended": "lead_conversion_pack",
+  "bundle_recommended": "lead_capture_pack",
   "headline": "New leads are waiting {{signal.value}}+ minutes for a first touch.",
   "body": "Instant Lead Acknowledgment gets an ack out in under 60 seconds across every source. Close rate correlates directly.",
   "cta_label": "Respond faster",

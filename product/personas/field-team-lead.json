@@ -23,7 +23,7 @@
     "post_job_review_request",
     "voicemail_transcription"
   ],
-  "default_bundle_recommendations": ["scheduling_pack", "reviews_reputation_pack"],
+  "default_bundle_recommendations": ["scheduling_pack", "reviews_pack"],
   "typical_business_size": "crew of 2–6 within a larger business",
   "success_signals": ["on_time_arrival_rate", "first_time_fix_rate", "reviews_per_tech"]
 }

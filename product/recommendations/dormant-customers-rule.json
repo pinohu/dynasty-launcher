@@ -12,7 +12,7 @@
     "capability_present": ["crm", "email"]
   },
   "module_recommended": "dormant_customer_reactivation",
-  "bundle_recommended": "reactivation_pack",
+  "bundle_recommended": "retention_pack",
   "headline": "{{signal.value}} customers haven't booked in 6+ months.",
   "body": "Launch Dormant Customer Reactivation. Most service businesses recover 5–15% of dormant accounts with one well-timed reminder.",
   "cta_label": "Recover revenue",

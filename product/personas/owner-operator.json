@@ -25,7 +25,7 @@
     "estimate_followup",
     "post_job_review_request"
   ],
-  "default_bundle_recommendations": ["lead_conversion_pack", "reviews_reputation_pack"],
+  "default_bundle_recommendations": ["lead_capture_pack", "reviews_pack"],
   "typical_business_size": "1–5 staff, <$1M revenue",
   "success_signals": ["first_response_time_p95", "reviews_per_month", "estimate_close_rate"]
 }

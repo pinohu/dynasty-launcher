@@ -22,8 +22,8 @@
     "post_job_review_request",
     "dormant_customer_reactivation"
   ],
-  "recommended_bundles": ["scheduling_pack", "reviews_reputation_pack", "reactivation_pack"],
-  "suggested_bundle_order": ["scheduling_pack", "reviews_reputation_pack", "reactivation_pack", "lead_conversion_pack", "billing_collections_pack"],
+  "recommended_bundles": ["scheduling_pack", "reviews_pack", "retention_pack"],
+  "suggested_bundle_order": ["scheduling_pack", "reviews_pack", "retention_pack", "lead_capture_pack", "billing_pack"],
   "dashboard_kpis": ["no_show_rate", "rebook_rate", "avg_review_rating", "ceramic_attach_rate"],
   "template_overrides": {},
   "status": "spec"

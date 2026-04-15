@@ -26,8 +26,8 @@
     "dormant_customer_reactivation",
     "overdue_invoice_reminder"
   ],
-  "recommended_bundles": ["lead_conversion_pack", "scheduling_pack", "reactivation_pack"],
-  "suggested_bundle_order": ["lead_conversion_pack", "scheduling_pack", "reviews_reputation_pack", "reactivation_pack", "billing_collections_pack"],
+  "recommended_bundles": ["lead_capture_pack", "scheduling_pack", "retention_pack"],
+  "suggested_bundle_order": ["lead_capture_pack", "scheduling_pack", "reviews_pack", "retention_pack", "billing_pack"],
   "dashboard_kpis": ["first_response_time_p95", "maintenance_plan_attach_rate", "seasonal_conversion_rate", "avg_review_rating"],
   "template_overrides": {
     "tmpl_service_due_30": "hvac_tuneup_due_30",

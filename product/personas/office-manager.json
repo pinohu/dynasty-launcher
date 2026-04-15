@@ -26,7 +26,7 @@
     "overdue_invoice_reminder",
     "no_show_recovery"
   ],
-  "default_bundle_recommendations": ["scheduling_pack", "billing_collections_pack"],
+  "default_bundle_recommendations": ["scheduling_pack", "billing_pack"],
   "typical_business_size": "5–20 staff, $1M–$5M revenue",
   "success_signals": ["days_sales_outstanding", "no_show_rate", "ack_coverage_rate"]
 }

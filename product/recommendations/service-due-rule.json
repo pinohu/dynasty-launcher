@@ -13,7 +13,7 @@
     "capability_present": ["crm", "sms"]
   },
   "module_recommended": "service_due_reminder",
-  "bundle_recommended": "reactivation_pack",
+  "bundle_recommended": "retention_pack",
   "headline": "{{signal.value}} customers are due for recurring service soon.",
   "body": "Turn on Service-Due Reminder so every customer gets a 30/14/7-day nudge to rebook before the window closes.",
   "cta_label": "Lock in the rebooks",

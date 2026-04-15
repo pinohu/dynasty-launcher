@@ -13,7 +13,7 @@
     "capability_present": ["crm", "sms"]
   },
   "module_recommended": "post_job_review_request",
-  "bundle_recommended": "reviews_reputation_pack",
+  "bundle_recommended": "reviews_pack",
   "headline": "{{signal.value}} completed jobs with no review ask.",
   "body": "Turn on Post-Job Review Request so every happy customer gets asked — on the platform that matters most to your business.",
   "cta_label": "Turn on reviews",

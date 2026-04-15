@@ -25,7 +25,7 @@
     "lost_deal_reactivation",
     "speed_to_lead_response"
   ],
-  "default_bundle_recommendations": ["lead_conversion_pack"],
+  "default_bundle_recommendations": ["lead_capture_pack"],
   "typical_business_size": "10–50 staff, $2M–$15M revenue",
   "success_signals": [
     "estimate_close_rate",

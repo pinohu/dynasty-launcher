@@ -1,19 +1,17 @@
 {
   "schema_version": "1.0.0",
-  "bundle_code": "lead_conversion_pack",
-  "name": "Lead Conversion Pack",
+  "bundle_code": "lead_capture_pack",
+  "name": "Lead Capture Pack",
   "tagline": "Stop leaking leads.",
-  "description": "Instant acknowledgment, missed-call recovery, speed-to-lead dispatch, and estimate follow-up — the four automations that most service businesses lose revenue without.",
+  "description": "Every inbound lead — missed call, web form, or cross-source — gets an instant acknowledgment so intent stays hot.",
   "outcome": "Respond faster and convert more of the leads you already have.",
   "modules": [
     "missed_call_textback",
     "webform_autoreply",
-    "instant_lead_ack",
-    "speed_to_lead_response",
-    "estimate_followup"
+    "instant_lead_ack"
   ],
-  "price_monthly": 79,
-  "implied_savings_monthly": 16,
+  "price_monthly": 49,
+  "implied_savings_monthly": 8,
   "recommended_for_personas": ["owner-operator", "office-manager", "sales-coordinator"],
   "recommended_for_blueprints": ["plumbing", "hvac", "electrical", "pest-control", "cleaning"],
   "hero_kpi": "First response time p95",

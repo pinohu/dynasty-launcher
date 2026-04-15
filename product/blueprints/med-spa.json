@@ -25,8 +25,8 @@
     "service_due_reminder",
     "payment_recovery"
   ],
-  "recommended_bundles": ["scheduling_pack", "reviews_reputation_pack", "reactivation_pack", "billing_collections_pack"],
-  "suggested_bundle_order": ["scheduling_pack", "reviews_reputation_pack", "reactivation_pack", "billing_collections_pack", "lead_conversion_pack"],
+  "recommended_bundles": ["scheduling_pack", "reviews_pack", "retention_pack", "billing_pack"],
+  "suggested_bundle_order": ["scheduling_pack", "reviews_pack", "retention_pack", "billing_pack", "lead_capture_pack"],
   "dashboard_kpis": ["no_show_rate", "membership_retention_rate", "avg_public_rating", "failed_payment_recovery_rate"],
   "template_overrides": {
     "tmpl_appt_reminder_24h": "medspa_reminder_24h",

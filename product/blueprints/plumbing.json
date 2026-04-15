@@ -24,8 +24,8 @@
     "post_job_review_request",
     "overdue_invoice_reminder"
   ],
-  "recommended_bundles": ["lead_conversion_pack", "reviews_reputation_pack"],
-  "suggested_bundle_order": ["lead_conversion_pack", "scheduling_pack", "reviews_reputation_pack", "billing_collections_pack", "reactivation_pack"],
+  "recommended_bundles": ["lead_capture_pack", "reviews_pack"],
+  "suggested_bundle_order": ["lead_capture_pack", "scheduling_pack", "reviews_pack", "billing_pack", "retention_pack"],
   "dashboard_kpis": ["first_response_time_p95", "emergency_response_rate", "avg_review_rating", "days_sales_outstanding"],
   "template_overrides": {
     "tmpl_missed_call_default": "plumbing_missed_call_v1",

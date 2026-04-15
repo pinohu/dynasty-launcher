@@ -1,62 +1,189 @@
 {
   "schema_version": "1.0.0",
-  "description": "Base platform tiers. Customers always subscribe to a core tier, then add modules or bundles on top. Aligns with TIER_MODULES in api/provision.js and V3_TIERS in app.html.",
+  "description": "Locked launch ladder. One base platform subscription (Your Deputy Core), atomic modules, outcome packs (bundle-pricing.json), 3 suites, 4 editions, plus commercial essentials. Use the pricing formulas below when adding any new pack, suite, or edition.",
+  "last_reconciled": "2026-04-15",
   "tiers": [
     {
-      "tier_code": "core_starter",
-      "name": "Starter OS",
-      "price_monthly": 49,
-      "description": "Shared workspace, CRM, templates, automation marketplace access, and two included starter modules.",
-      "included_modules": [
-        "webform_autoreply",
-        "appointment_confirmation"
-      ],
+      "tier_code": "core",
+      "name": "Your Deputy Core",
+      "price_monthly": 59,
+      "description": "The business workspace. CRM, contact records, templates, dashboard, automation marketplace access. No modules included — customers activate what they need à la carte or via packs/suites/editions.",
+      "included_modules": [],
       "module_discount_pct": 0,
-      "max_users": 3,
-      "max_contacts": 2500
-    },
-    {
-      "tier_code": "core_growth",
-      "name": "Growth OS",
-      "price_monthly": 149,
-      "description": "Starter plus outcome dashboards, recommendation engine, and five included modules.",
-      "included_modules": [
-        "webform_autoreply",
-        "appointment_confirmation",
-        "appointment_reminder",
-        "post_job_review_request",
-        "instant_lead_ack"
-      ],
-      "module_discount_pct": 10,
-      "max_users": 10,
-      "max_contacts": 25000
-    },
-    {
-      "tier_code": "core_scale",
-      "name": "Scale OS",
-      "price_monthly": 349,
-      "description": "Growth plus advanced routing, multi-location support, premium support, and up to 12 included modules.",
-      "included_modules": [
-        "webform_autoreply",
-        "appointment_confirmation",
-        "appointment_reminder",
-        "post_job_review_request",
-        "instant_lead_ack",
-        "missed_call_textback",
-        "speed_to_lead_response",
-        "estimate_followup",
-        "overdue_invoice_reminder",
-        "no_show_recovery",
-        "service_due_reminder",
-        "dormant_customer_reactivation"
-      ],
-      "module_discount_pct": 20,
-      "max_users": 50,
-      "max_contacts": 250000
+      "max_users": 2,
+      "max_contacts": 5000,
+      "positioning": "Start once. Expand anytime."
     }
   ],
+  "editions": [
+    {
+      "edition_code": "solo",
+      "name": "Solo Service Edition",
+      "price_monthly": 129,
+      "for": "Owner-operators and solo service providers",
+      "includes": {
+        "tier": "core",
+        "suites": ["growth_suite"],
+        "packs": [],
+        "extra_seats": 0
+      },
+      "standalone_sum": 143,
+      "effective_discount_pct": 10,
+      "positioning": "Everything a one-person shop needs to catch more leads and grow reviews."
+    },
+    {
+      "edition_code": "small_team",
+      "name": "Small Team Edition",
+      "price_monthly": 179,
+      "for": "Office-managed small service businesses (3–10 staff)",
+      "includes": {
+        "tier": "core",
+        "suites": ["growth_suite", "service_operations_suite"],
+        "packs": [],
+        "extra_seats": 3
+      },
+      "standalone_sum": 225,
+      "effective_discount_pct": 20,
+      "positioning": "Lead response + scheduling + retention for teams with a real front office."
+    },
+    {
+      "edition_code": "field_service",
+      "name": "Field Service Edition",
+      "price_monthly": 229,
+      "for": "HVAC, plumbing, electrical, pest control, cleaning, landscaping",
+      "includes": {
+        "tier": "core",
+        "suites": ["growth_suite", "service_operations_suite"],
+        "packs": ["billing_pack"],
+        "extra_seats": 5
+      },
+      "standalone_sum": 274,
+      "effective_discount_pct": 16,
+      "positioning": "The vertical stack — built for field-service operators with recurring maintenance."
+    },
+    {
+      "edition_code": "enterprise",
+      "name": "Enterprise / Multi-Location",
+      "price_monthly": null,
+      "price_label": "Talk to sales",
+      "for": "Multi-location operators, franchises, and >$10M service businesses",
+      "includes": {
+        "tier": "core",
+        "suites": "all",
+        "packs": "all",
+        "extra_seats": "unlimited"
+      },
+      "positioning": "Custom scope. Volume pricing. Dedicated onboarding."
+    }
+  ],
+  "suites": [
+    {
+      "suite_code": "growth_suite",
+      "name": "Growth Suite",
+      "price_monthly": 65,
+      "packs": ["lead_capture_pack", "reviews_pack"],
+      "extras": ["advanced_reporting"],
+      "pack_sum": 84,
+      "effective_discount_pct": 23,
+      "positioning": "Catch more leads and turn happy customers into public reviews."
+    },
+    {
+      "suite_code": "service_operations_suite",
+      "name": "Service Operations Suite",
+      "price_monthly": 65,
+      "packs": ["scheduling_pack", "retention_pack"],
+      "extras": ["advanced_reporting"],
+      "pack_sum": 84,
+      "effective_discount_pct": 23,
+      "positioning": "Keep the calendar full. Win back customers before they drift."
+    },
+    {
+      "suite_code": "revenue_suite",
+      "name": "Revenue Suite",
+      "price_monthly": 49,
+      "packs": ["billing_pack"],
+      "extras": ["advanced_reporting"],
+      "pack_sum": 49,
+      "effective_discount_pct": 0,
+      "status": "launch_partial",
+      "notes": "Currently includes Billing Pack only. Expands with a Sales Pack once estimate/proposal modules are live beyond estimate_followup. Priced at pack-parity for now; raises when second pack lands.",
+      "positioning": "Get paid faster. Cut DSO without awkward phone calls."
+    }
+  ],
+  "pricing_rules": {
+    "module_price_monthly": 19,
+    "pack_formula": {
+      "description": "Mechanical pack pricing. Always cheaper than buying constituent modules individually.",
+      "2_modules": 35,
+      "3_modules": 49,
+      "4_modules": 65,
+      "5_modules": 79
+    },
+    "discount_bands": {
+      "pack_vs_module_sum_pct": [25, 35],
+      "suite_vs_pack_sum_pct": [20, 30],
+      "edition_vs_suite_sum_pct": [10, 40]
+    }
+  },
+  "commercial_essentials": {
+    "annual_discount_pct": 20,
+    "annual_discount_description": "Two months free on annual prepay across all tiers, packs, suites, and editions.",
+    "free_trial": {
+      "days": 14,
+      "applies_to": ["core", "any_one_module"],
+      "no_credit_card_required": true
+    },
+    "money_back_guarantee_days": 30,
+    "sms_fair_use": {
+      "monthly_included_outbound": 1000,
+      "overage_per_message_usd": 0.02,
+      "applies_to_modules": ["missed_call_textback", "appointment_reminder", "post_job_review_request", "overdue_invoice_reminder", "dormant_customer_reactivation", "instant_lead_ack", "after_hours_autoresponder", "webform_autoreply", "no_show_recovery", "reschedule_workflow", "service_due_reminder", "invoice_sent_notification", "speed_to_lead_response"]
+    },
+    "voice_fair_use": {
+      "monthly_included_inbound_minutes": 500,
+      "overage_per_minute_usd": 0.04,
+      "applies_to_modules": ["missed_call_textback", "voicemail_transcription"]
+    },
+    "multi_location": {
+      "addon_per_location_monthly": 29,
+      "first_location_included": true,
+      "description": "Each additional location adds a workspace partition with its own business hours, staff, and automations."
+    },
+    "seats": {
+      "addon_per_seat_monthly": 12,
+      "included_with_core": 2,
+      "included_with_solo": 2,
+      "included_with_small_team": 5,
+      "included_with_field_service": 7
+    },
+    "hipaa_addon": {
+      "monthly_usd": 49,
+      "description": "BAA-covered processing, audit-log retention, consent capture, claim-policy guardrails. Required for med spa (injectables), home health, and any tenant with PHI.",
+      "gates_persona": "regulated-operator",
+      "gates_blueprints": ["med-spa"]
+    }
+  },
   "concierge_setup": {
-    "price_onetime": 1997,
-    "description": "Optional guided setup: imports, templates, staff training, and first-month activation review."
+    "starter": {
+      "price_onetime": 199,
+      "description": "Async concierge kit: templates, video walkthrough, 1 hour of chat support."
+    },
+    "guided": {
+      "price_onetime": 699,
+      "description": "Guided setup call, integrations wired, up to 5 modules activated, light migration."
+    },
+    "premium": {
+      "price_onetime": 1999,
+      "description": "Multi-location setup, advanced workflows, full customization and data migration."
+    }
+  },
+  "launcher_build_handoff": {
+    "status": "UNRESOLVED — see docs/strategy/COMMERCIAL_DECISIONS.md",
+    "description": "How Professional ($4,997) and Enterprise ($9,997) one-time launcher builds translate to a recurring subscription tier is not yet decided. Placeholder: 12 months of matching Edition included with build; subscription begins month 13. Do not ship this without an explicit decision.",
+    "placeholder_mapping": {
+      "foundation_build": "core (monthly subscription, no included months)",
+      "professional_build": "small_team (12 months included)",
+      "enterprise_build": "field_service (24 months included)"
+    }
   }
 }
