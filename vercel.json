@@ -55,6 +55,18 @@
       "maxDuration": 10,
       "includeFiles": "product/**/*.json"
     },
+    "api/tenants/activate-module.js": {
+      "maxDuration": 30,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/tenants/deactivate-module.js": {
+      "maxDuration": 15,
+      "includeFiles": "product/**/*.json"
+    },
+    "api/tenants/grant-entitlement.js": {
+      "maxDuration": 15,
+      "includeFiles": "product/**/*.json"
+    },
     "api/health.js": {
       "maxDuration": 15
     },

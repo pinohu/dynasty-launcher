@@ -8,7 +8,8 @@
     "test:validate": "node scripts/validate-smoke.mjs",
     "test:catalog": "node scripts/smoke-catalog.mjs",
     "test:tenants": "node scripts/smoke-tenants.mjs",
-    "test": "npm run test:validate && npm run test:catalog && npm run test:tenants"
+    "test:activation": "node scripts/smoke-activation.mjs",
+    "test": "npm run test:validate && npm run test:catalog && npm run test:tenants && npm run test:activation"
   },
   "engines": {
     "node": "20.x"
