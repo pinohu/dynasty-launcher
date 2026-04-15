@@ -3,5 +3,18 @@
   "env": {
     "ECC_HOOK_TIER": "standard",
     "ECC_GOVERNANCE_CAPTURE": "1"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf 'dynasty-launcher auto-routing active. Consult CLAUDE.md \"Auto-routing\" section before replying: match user intent to a skill/agent/command and fire it automatically without asking. Key pairings: mod_*/keys/tier questions -> dynasty-provision-ops | browser QA -> gstack /browse + /qa | security audit -> security-reviewer + security-review | ship/deploy -> gstack /ship + /canary | plan review -> /autoplan | off-stack language/domain -> skill-library router. Do not announce skill invocations; just do the work.\\n'"
+          }
+        ]
+      }
+    ]
   }
 }

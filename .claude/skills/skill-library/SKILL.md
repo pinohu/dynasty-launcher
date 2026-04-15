@@ -1,6 +1,6 @@
 ---
 name: skill-library
-description: Keyword router for dynasty-launcher's LIBRARY skill set — off-stack skills kept searchable without auto-loading. Invoke when asked about a language/framework/domain not active in this repo (Rust, Go, Kotlin, Flutter, Laravel, crypto, logistics, video, etc.).
+description: Keyword router for dynasty-launcher's LIBRARY (off-stack) skill set. Auto-invoke when the user asks about a language, framework, or domain that is NOT active in this repo — Rust, Go, Python/Django, Java/Spring, Kotlin/Android, Swift/iOS, C++, C#/.NET, PHP/Laravel, Dart/Flutter, Perl, NestJS, PyTorch, Clickhouse, crypto/Solidity/EVM, DeFi, AMM, logistics/freight/customs/supply chain, manufacturing/quality/procurement, video generation/Remotion/Manim, document OCR, Jira/Confluence/Google Workspace — and returns the right skill name to pull in on demand instead of auto-loading. Also use when the user says "I need a skill for X" or "which skill handles Y".
 ---
 
 # Library Router — dynasty-launcher

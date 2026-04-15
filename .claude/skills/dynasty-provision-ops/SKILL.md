@@ -1,6 +1,6 @@
 ---
 name: dynasty-provision-ops
-description: Operator workflow for dynasty-launcher's 19 mod_* provisioning modules in api/provision.js. Use when the user wants to inventory which vendor keys are present, dry-run a tier (foundation/professional/enterprise/custom_volume), retry failed modules, audit archetype gating, or plan which of the 15 currently-empty vendor keys to unblock next. Reuses the api-connector-builder skill's template when adding a new mod_*.
+description: Dynasty Launcher provisioning operator — auto-invoke for any prompt about vendor keys, module status, tier gating, Foundation/Professional/Enterprise readiness, dry-runs, retries, or mod_* work on api/provision.js. Trigger phrases include "check modules", "which keys do I need", "what's missing", "dry-run a build", "why did X skip", "inventory", "provisioning status", "mod_hosting", "mod_billing", "mod_email", "mod_seo", "mod_chatbot", "mod_design", "mod_analytics", "mod_automation", "20i", "Stripe module", "Acumbamail", "Chatbase", "WriterZen", "NeuronWriter", "Vadoo", "Fliki", "Vista Social", "Plerdy", "Happierleads", "SuiteDash", "Brilliant Directories", "tier readiness", "archetype gating", "foundation empty", "revenue gating", "key inventory", "retry failed build", "retry modules", "add a new mod_", "onboard vendor". Use when the user asks about the health, readiness, or expansion of the 19-function provisioning fleet.
 ---
 
 # dynasty-provision-ops

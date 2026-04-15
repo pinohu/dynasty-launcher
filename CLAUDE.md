@@ -203,3 +203,47 @@ See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:
 - **`PAIN_POINT_MASTER_MAP.md`** + **`PAIN_POINT_MASTER_MAP.csv`** — exhaustive pain taxonomy + traceability matrix for sales/RevOps.
 - **Builder:** `app.html` includes **Expected scope (honest preview)** under build package (V4 R/D/S matrix + tier caveat).
 - **Tier truth:** **`index.html`** states that **Foundation** does **not** auto-provision integration modules, matching **`api/provision.js`** `TIER_MODULES.foundation: []` and **`app.html`** `V3_TIERS.foundation.modules: []`.
+
+## Auto-routing (read this every session)
+
+The user should NOT have to invoke slash commands or skill names. When a prompt matches any intent below, **fire the listed skill/agent/command immediately without asking**. When multiple intents match, chain them in the order given.
+
+| If the prompt sounds like… | Fire this | Because |
+|---|---|---|
+| "check modules", "what keys do I need", "tier readiness", anything about mod_* | **dynasty-provision-ops** skill | Operator playbook for the 19 mod_* fleet |
+| "add a new integration for vendor X" | **dynasty-provision-ops** → **api-connector-builder** | Template-match against existing mod_* pattern |
+| "test it in the browser", "load the app", "QA the site", "click through X" | gstack **/browse** (then **/qa** if bugs found) | Playwright Chromium already built |
+| "audit security", "check for vulnerabilities", "leaked secrets" | **security-reviewer** agent + **security-review** skill + **security-scan** | OWASP + repo-specific secret scan |
+| "review my code", "look at my changes" | **code-reviewer** agent + **typescript-reviewer** agent (runs on .js too) | Parallel review |
+| "plan this feature", "think through X first" | **planner** agent → **prp-prd** → **prp-plan** | PRD then impl plan |
+| "get a CEO's perspective on this plan", "product critique" | gstack **/office-hours** then **/plan-ceo-review** | YC-style interrogation |
+| "run all the plan reviews", "parallel review" | gstack **/autoplan** | Runs CEO + design + eng + devex in parallel |
+| "design this page", "improve the visual hierarchy" | **frontend-design** skill + gstack **/design-consultation** | Anti-template policy active |
+| "is the UI template-looking?", "design QA" | gstack **/design-review** | Designer's-eye QA |
+| "generate design variants" | gstack **/design-shotgun** | N variants, comparison board |
+| "write a blog post", "draft social", "crosspost" | **content-engine** + **brand-voice** + **crosspost** | Platform-native content, your voice |
+| "pitch deck", "investor memo", "one-pager" | **investor-materials** + **investor-outreach** | V4_INVESTOR_FEEDBACK-aware |
+| "ship it", "deploy", "release" | gstack **/ship** (chains merge → test → deploy → tag → canary) | Full release flow |
+| "after deploy check if it works" | gstack **/canary** | Live console-error + perf monitoring |
+| "freeze edits to this dir", "scope lock" | gstack **/freeze** (or **/guard** for full safety mode) | Directory-scoped edits |
+| "parallelize this across N agents", "spin up a team" | **claude-devfleet** + **dmux-workflows** + **team-builder** | Worktree-isolated parallel agents |
+| "force two reviewers to agree before shipping" | **santa-loop** | Adversarial dual-review |
+| "debate this tradeoff", "which approach should we pick" | **council** skill | 4-voice council |
+| "debug this, find the root cause" | gstack **/investigate** + **build-error-resolver** agent | 4-phase investigate→analyze→hypothesize→implement |
+| "why is this slow", "optimize performance" | **performance-optimizer** agent + **benchmark** (gstack) | Profiling + Core Web Vitals |
+| "clean up dead code", "find unused imports" | **refactor-cleaner** agent | Dead-code sweep |
+| "research X, find examples, cite sources" | **deep-research** + **exa-search** | Firecrawl + Exa MCPs |
+| "look up the Anthropic/Stripe/Clerk/Vercel SDK docs" | **documentation-lookup** via Context7 MCP | Live docs, not stale training data |
+| "save where we are", "come back to this tomorrow" | **/save-session** or **/checkpoint** | Explicit state capture |
+| "pick up where we left off" | **/resume-session** | Loads latest saved state |
+| "quick side question, don't lose context" | **/aside** | Scoped detour |
+| anything about Rust/Go/Python/Kotlin/Swift/PHP/Java/C++/C#/Flutter/crypto/logistics/video/OCR | **skill-library** skill (router returns the right LIBRARY skill without loading it all) | Off-stack — keyword routed |
+| "audit what this harness can do", "what plugins should I add" | **workspace-surface-audit** | This is the audit that produced this routing table |
+| "sort which skills are daily vs library" | **agent-sort** | Re-run after stack changes |
+| "find a skill for X" | **skill-library** | Keyword router |
+
+**Rule of thumb:** if the intent fires any row above, invoke automatically. Only ask the user when there's genuine ambiguity between two rows.
+
+**Silence is success:** don't announce "I'm invoking skill X" — just do the work. The user will see the result.
+
+**Hand-off chains are fine:** e.g., a prompt like "plan a new mod_stripe_connect module then start building" should fire `planner` → `dynasty-provision-ops` → `api-connector-builder` in sequence without asking.
