@@ -1,0 +1,65 @@
+id: "1.03"
+slug: new-filing-alert
+version: 1
+title: New Business Filing Alert (T5 worker)
+description: |
+  Monitors a state Secretary of State's business-filings feed for new
+  registrations matching the tenant's target niche/area. Example
+  implementation uses PA DOS; add adapters under adapters/jurisdictions/ for
+  other states.
+
+category_id: 1
+topology: T5
+drivers:
+  - worker
+  - webhook-router
+
+artifacts:
+  worker: workers/1.03-new-filing-alert.worker.mjs
+
+credentials_required: []
+shared_runtime: true
+
+env_schema:
+  JURISDICTION:
+    required: true
+    prompt: "State code, e.g. PA"
+  TARGET_NICHE_KEYWORDS:
+    required: false
+    description: "Comma-separated keywords to filter filings, e.g. 'LLC,notary,plumbing'"
+  TARGET_ENDPOINT_URL:
+    required: true
+    prompt: "Your Vercel endpoint to receive filtered filings (POST)"
+  TARGET_ENDPOINT_HMAC:
+    required: true
+    prompt: "HMAC secret shared with your endpoint"
+
+triggers:
+  - type: cron
+    expression: "0 6 * * *"
+
+depends_on: []
+
+data_sensitivity: public
+
+health_check:
+  type: http_ping
+  url: "{{TARGET_ENDPOINT_URL}}"
+  expect_within: 25h
+
+rollback:
+  - deregister_worker
+
+estimated_deploy_seconds: 30
+
+jurisdictions: [PA]
+
+persona_fit:
+  marketing_mike: 0.8
+  owner_omar: 0.85
+  startup_sam: 0.85
+  compliance_carol: 0.6
+
+pricing:
+  service_fee_monthly_usd: 19
+  expected_tool_cost_usd: 5

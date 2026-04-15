@@ -1,0 +1,59 @@
+{
+  "name": "auto-{{tenant_slug}}-15.01-invoice",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "15.01-invoice" },
+      "id": "inbound",
+      "name": "Invoice Inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.documentero.com/v1/generate",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "template_id", "value": "={{$json.template_id}}" },
+            { "name": "variables", "value": "={{{\"amount\": $json.amount_cents/100, \"currency\": $json.currency, \"pi\": $json.payment_intent_id, \"business\": $json.business}}}" }
+          ]
+        }
+      },
+      "id": "gen_pdf",
+      "name": "Generate PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.emailit.com/v1/send",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "to", "value": "={{$json.customer_email}}" },
+            { "name": "subject", "value": "=Invoice for {{$json.description}}" },
+            { "name": "html", "value": "=Thank you! Your invoice is attached." },
+            { "name": "attachments", "value": "=[{\"url\":\"{{$json.pdf_url}}\",\"name\":\"invoice.pdf\"}]" }
+          ]
+        }
+      },
+      "id": "send_email",
+      "name": "Email invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Invoice Inbound": { "main": [[{ "node": "Generate PDF", "type": "main", "index": 0 }]] },
+    "Generate PDF": { "main": [[{ "node": "Email invoice", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false
+}

@@ -1,0 +1,72 @@
+{
+  "name": "auto-{{tenant_slug}}-20.01-deadlines",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "cronExpression", "expression": "0 8 * * *" }] } },
+      "id": "daily",
+      "name": "Daily 8am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Load entities from CRM (stubbed). Real impl: fetch /contacts filtered by tag.\nreturn { json: { entities: $getWorkflowStaticData('global').entities || [] } };"
+      },
+      "id": "load_entities",
+      "name": "Load entities",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const today = new Date();\nconst thresholds = [30, 14, 7, 3, 1];\nconst due = [];\nfor (const e of $input.item.json.entities || []) {\n  const deadline = new Date(e.next_deadline);\n  const daysLeft = Math.ceil((deadline - today) / 86400000);\n  for (const t of thresholds) {\n    if (daysLeft === t) due.push({ entity: e.name, daysLeft, deadline: e.next_deadline, jurisdiction: e.jurisdiction });\n  }\n}\nreturn { json: { due } };"
+      },
+      "id": "compute_due",
+      "name": "Compute due",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": { "number": [{ "value1": "={{$json.due.length}}", "operation": "largerEqual", "value2": 1 }] }
+      },
+      "id": "if_due",
+      "name": "If any due",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [920, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.emailit.com/v1/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "to", "value": "={{$env.ALERT_EMAIL}}" },
+            { "name": "subject", "value": "=Compliance deadlines due: {{$json.due.length}}" },
+            { "name": "html", "value": "={{$json.due.map(d => `<p><strong>${d.entity}</strong> (${d.jurisdiction}): ${d.daysLeft} day(s) — ${d.deadline}</p>`).join('')}}" }
+          ]
+        }
+      },
+      "id": "alert_email",
+      "name": "Send email alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1160, 260]
+    }
+  ],
+  "connections": {
+    "Daily 8am": { "main": [[{ "node": "Load entities", "type": "main", "index": 0 }]] },
+    "Load entities": { "main": [[{ "node": "Compute due", "type": "main", "index": 0 }]] },
+    "Compute due": { "main": [[{ "node": "If any due", "type": "main", "index": 0 }]] },
+    "If any due": { "main": [[{ "node": "Send email alert", "type": "main", "index": 0 }], []] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false
+}

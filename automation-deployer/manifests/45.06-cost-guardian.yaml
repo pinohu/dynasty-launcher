@@ -1,0 +1,61 @@
+id: "45.06"
+slug: cost-guardian
+version: 1
+title: Cost Guardian (LLM / SMS / email budget enforcer)
+description: |
+  Meta-automation that monitors tenant spend across LLM, SMS, email, and
+  orchestrated automation runs. Alerts at 50% / 75% / 90% of monthly budget.
+  Hard-throttles offending automations at 100%.
+
+category_id: 45
+topology: T1
+drivers:
+  - n8n
+
+artifacts:
+  n8n_workflow: workflows/45.06-cost-guardian.json
+
+credentials_required:
+  - key: OPENAI_API_KEY
+    source: tenant
+    description: "For token-usage queries (alt: any LLM provider)"
+  - key: EMAILIT_API_KEY
+    source: tenant
+  - key: N8N_JWT
+    source: tenant
+    description: "To deactivate offending workflows"
+
+env_schema:
+  MONTHLY_BUDGET_USD:
+    required: true
+    prompt: "Total automation budget ceiling per month"
+  ALERT_EMAIL:
+    required: true
+  HARD_KILL_AT_PERCENT:
+    required: false
+    default: 100
+
+triggers:
+  - type: cron
+    expression: "0 * * * *"
+
+depends_on: []
+
+data_sensitivity: internal
+
+health_check:
+  type: n8n_execution
+  expect_within: 75m
+
+rollback:
+  - deactivate_workflow
+  - delete_workflow
+
+estimated_deploy_seconds: 40
+
+persona_fit:
+  startup_sam: 0.9
+  owner_omar: 0.85
+
+pricing:
+  service_fee_monthly_usd: 0

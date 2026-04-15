@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dynasty-launcher/schemas/tenant.schema.json",
+  "title": "Tenant Configuration",
+  "type": "object",
+  "required": ["slug", "business_name", "infra"],
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "business_name": { "type": "string" },
+    "industry": { "type": "string" },
+    "vertical": { "type": "string" },
+    "size": {
+      "type": "string",
+      "enum": ["solo", "small_team", "growth", "franchise", "agency"]
+    },
+    "revenue_band": {
+      "type": "string",
+      "enum": ["under_100k", "100k-500k", "500k-2m", "2m-10m", "10m-50m", "over_50m"]
+    },
+    "primary_persona": { "type": "string" },
+    "secondary_personas": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "goals": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "pains": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "budget_ceiling_usd_per_month": { "type": "number", "minimum": 0 },
+    "target_jurisdictions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "infra": {
+      "type": "object",
+      "required": ["github"],
+      "properties": {
+        "github": {
+          "type": "object",
+          "required": ["owner"],
+          "properties": {
+            "owner": { "type": "string" },
+            "default_repo": { "type": "string" },
+            "default_branch": { "type": "string", "default": "main" }
+          }
+        },
+        "vercel": {
+          "type": "object",
+          "properties": {
+            "team_id": { "type": "string" },
+            "project_id_pattern": { "type": "string" }
+          }
+        },
+        "n8n": {
+          "type": "object",
+          "properties": {
+            "base_url": { "type": "string", "format": "uri" },
+            "auth_ref": { "type": "string" }
+          }
+        },
+        "domain": { "type": "string" },
+        "crm_vendor": {
+          "type": "string",
+          "enum": ["suitedash", "hubspot", "servicetitan", "housecallpro", "jobber", "none"]
+        },
+        "payment_vendor": {
+          "type": "string",
+          "enum": ["stripe", "square", "paypal", "none"]
+        },
+        "email_vendor": {
+          "type": "string",
+          "enum": ["emailit", "postmark", "sendgrid", "mailgun", "none"]
+        },
+        "sms_vendor": {
+          "type": "string",
+          "enum": ["smsit", "twilio", "plivo", "none"]
+        },
+        "voice_vendor": {
+          "type": "string",
+          "enum": ["callscaler", "thoughtly", "insighto", "twilio_voice", "none"]
+        },
+        "llm_vendors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["openai", "anthropic", "groq", "cerebras", "google_ai", "ollama"]
+          }
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "jurisdiction": { "type": "string" },
+              "entity_id": { "type": "string" }
+            }
+          }
+        },
+        "license_types": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "selected_automations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^\\d{1,2}\\.\\d{2}$" },
+          "version": { "type": "integer", "default": 1 },
+          "rationale": { "type": "string" },
+          "config_overrides": { "type": "object" }
+        }
+      }
+    },
+    "engagement_tier": {
+      "type": "string",
+      "enum": ["self-serve", "managed-provision", "managed-operation", "white-glove"]
+    },
+    "max_parallel_deploys": {
+      "type": "integer",
+      "default": 4,
+      "minimum": 1,
+      "maximum": 16
+    }
+  }
+}

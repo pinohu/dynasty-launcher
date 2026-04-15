@@ -1,0 +1,79 @@
+# Example tenant — a fictional plumbing business.
+# Illustrates how a Field Service Fred / Manager Maria hybrid fills out their config.
+
+slug: example-acme-plumbing
+business_name: "Acme Plumbing LLC"
+industry: field_service
+vertical: plumbing
+
+size: small_team
+revenue_band: 500k-2m
+
+primary_persona: field_service_fred
+secondary_personas:
+  - manager_maria
+
+goals:
+  - real_time_tech_visibility
+  - standardize_team_processes
+
+pains:
+  - techs_miss_payment
+  - leads_slip
+  - team_forgets_steps
+
+budget_ceiling_usd_per_month: 400
+
+target_jurisdictions:
+  - PA
+
+infra:
+  github:
+    owner: example-acme-plumbing
+    default_repo: acme-automations
+    default_branch: main
+  vercel:
+    team_id: team_example_acme
+    project_id_pattern: "acme-{automation_slug}"
+  n8n:
+    base_url: "https://n8n.acmeplumbing.example"
+    auth_ref: N8N_JWT
+  domain: acmeplumbing.example
+  crm_vendor: housecallpro
+  payment_vendor: stripe
+  email_vendor: emailit
+  sms_vendor: smsit
+  voice_vendor: callscaler
+  llm_vendors:
+    - groq
+
+compliance:
+  entities: []
+  license_types: []
+
+engagement_tier: managed-provision
+max_parallel_deploys: 4
+
+# selected_automations is filled in by `interview`. Below shows a plausible
+# output for this tenant — use the CLI to reproduce.
+selected_automations:
+  - id: "2.01"
+    rationale: "Lead Capture & Intake — strong persona fit (0.90), stack-ready"
+  - id: "3.01"
+    rationale: "Lead Qualification & Scoring — addresses declared pain (leads_slip)"
+  - id: "8.01"
+    rationale: "Client Onboarding — strong persona fit, addresses team_forgets_steps"
+  - id: "9.01"
+    rationale: "Scheduling & Appointments — strong persona fit (field_service_fred)"
+  - id: "9.03"
+    rationale: "Scheduling reminders — depends on 9.01"
+  - id: "14.01"
+    rationale: "Voice & Phone — call tracking for CallScaler"
+  - id: "15.01"
+    rationale: "Invoicing — foundation for money cluster"
+  - id: "21.01"
+    rationale: "Reputation & Review Management — post-service asks"
+  - id: "38.01"
+    rationale: "Field Service & Dispatch — hard rule include for field_service_fred"
+  - id: "38.03"
+    rationale: "ETA updates — chains with 38.01"

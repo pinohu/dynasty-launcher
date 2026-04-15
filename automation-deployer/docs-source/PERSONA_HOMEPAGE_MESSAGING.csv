@@ -1,0 +1,23 @@
+persona_key,messaging_element,messaging_principle,pain_ids,entry_path_or_surface
+P-FOUNDER,title_h1,"Outcome: judgment + implementation + accountability; live trajectory","B1,B7,S2",index.html default
+P-FOUNDER,meta_description,"Free score to decision-grade plans to shipped product; optional revenue stack","B1,B11,G1,S3",index.html head
+P-FOUNDER,hero_ribbon,"Concrete artifacts + clear tier boundary","S2,S3,Z0",index.html outcome-ribbon
+P-FOUNDER,cta_primary,"Start free score / enter builder","A6,B1",index.html nav-cta
+P-FOUNDER,cta_secondary,"What ships today","S2,S4",maturity.html link
+P-FOUNDER,trust_chips,"Inventory; honest scope; you own repo","G2,S4,Z0",index.html hero-assurance
+P-AGENCY,title_h1,"Implementation you hand off; client keys on their Vercel","G2,P2,J22",for/foundation-diy.html or A/B hero
+P-AGENCY,subhead,"Placeholders + MANUAL-ACTIONS + .env.example as truth","P2,F4,S3",same
+P-AGENCY,cta_secondary,"Credential boundary + Foundation truth","Z0,S2",maturity + CLAUDE pointer
+P-AGENCY,entry_path,"DIY connect tools","F4,G2",/for/foundation-diy
+P-PROCURE,title_h1,"Defensible artifacts for approval; reproducible strategy","B5,J22,C8",custom enterprise landing optional
+P-PROCURE,subhead,"Generated vs live-provisioned; module inventory","S3,S4,Z0",maturity
+P-PROCURE,cta_primary,"Maturity + inventory JSON; no prod secrets auto-injected","J15,P2,S4",/api/provision?action=inventory
+P-PROCURE,entry_path,"Full launch scope expectations","J22",/for/full-launch
+P-OPERATOR,title_h1,"Runbooks over hype; keys and ownership explicit","R3,J21,P2",/for/managed
+P-OPERATOR,subhead,"Post-deploy dashboards; not launcher-hosted secrets","H2,T1,P2",managed page
+P-OPERATOR,cta_primary,"MANUAL-ACTIONS and .env.example","T1,T3",repo + for/managed
+P-CAPITAL,entry_path,"Lender/investor-ready","C,B,R2",/for/capital
+P-TRADE,entry_path,"Assistive workflow + guardrails","Q,R1",/for/trades-vertical
+P-AUTHORITY,entry_path,"SEO/content depth","M,R1",/for/authority-seo
+P-MANAGED,entry_path,"Stale automations / cadence","T,M2",/for/managed
+P-REVENUE-OPS,entry_path,"Leads payments follow-up","H,I,K,O",/for/revenue-ops

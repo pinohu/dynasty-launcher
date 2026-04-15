@@ -1,0 +1,69 @@
+{
+  "persona_category_weight": 0.5,
+  "pain_match_weight": 0.3,
+  "stack_compat_weight": 0.2,
+  "minimum_stack_compat": 0.5,
+  "hard_rules": [
+    {
+      "if": { "persona": "field_service_fred" },
+      "then": { "include_categories": [9, 11, 14, 38] }
+    },
+    {
+      "if": { "persona": "compliance_carol" },
+      "then": { "include_categories": [20, 35, 43] }
+    },
+    {
+      "if": { "persona": "bookkeeper_beth" },
+      "then": { "include_categories": [15, 16, 17] }
+    },
+    {
+      "if": { "persona": "marketing_mike" },
+      "then": { "include_categories": [24, 26, 28] }
+    },
+    {
+      "if": { "persona": "agency_alex" },
+      "then": { "include_categories": [6, 7, 8, 10, 39] }
+    },
+    {
+      "if": { "size": "solo" },
+      "then": { "max_automations": 5 }
+    },
+    {
+      "if": { "size": "franchise" },
+      "then": { "prefer_categories": [18, 22, 37, 38, 41, 45] }
+    }
+  ],
+  "pain_to_category": {
+    "leads_slip": [1, 2, 3, 31],
+    "invoices_late": [15, 16],
+    "no_time_to_market": [24, 26, 28],
+    "team_forgets_steps": [8, 10, 11, 36, 37],
+    "inconsistent_onboarding": [8, 36],
+    "reports_manual": [23],
+    "flat_margins": [30, 31],
+    "black_box_pipeline": [5, 23],
+    "per_location_variance": [11, 23, 37, 41],
+    "apples_to_oranges_reports": [23, 45],
+    "brand_inconsistency": [21, 24, 25],
+    "too_many_tools": [45],
+    "spreadsheet_errors": [20, 23, 35],
+    "audit_scrambles": [20, 35, 37],
+    "paper_notes_lost": [11, 38],
+    "techs_miss_payment": [16, 38],
+    "driving_time": [38],
+    "scope_creep": [6, 10],
+    "manual_onboarding": [8],
+    "manual_entry": [4, 17],
+    "content_bottleneck": [24, 25, 28],
+    "no_roi_visibility": [23, 27],
+    "slow_creative_turnaround": [24, 25]
+  },
+  "budget_to_depth": {
+    "0-50": "solo-3",
+    "50-150": "books-5",
+    "150-400": "growth-10",
+    "400-800": "agency-20",
+    "800-2000": "ops-40",
+    "2000+": "franchise"
+  }
+}

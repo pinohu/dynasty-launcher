@@ -1,0 +1,49 @@
+# Tenant configuration template.
+# Copy this folder to tenants/<your-slug>/ and edit the values.
+# Conforms to schemas/tenant.schema.json.
+
+slug: <slug>                         # filled in by `automation-deployer init`
+business_name: ""                     # REQUIRED
+industry: ""                          # free-form, e.g. "field_service", "legal", "coaching"
+vertical: ""                          # narrower, e.g. "plumbing", "immigration-law"
+
+size: small_team                      # solo | small_team | growth | franchise | agency
+revenue_band: 500k-2m                 # under_100k | 100k-500k | 500k-2m | 2m-10m | 10m-50m | over_50m
+
+primary_persona: manager_maria        # see registry/personas.json for keys
+secondary_personas: []
+
+goals: []                             # e.g. ["never_miss_lead", "standardize_team_processes"]
+pains: []                             # e.g. ["leads_slip", "team_forgets_steps"]
+budget_ceiling_usd_per_month: 500
+
+target_jurisdictions: []              # e.g. ["PA", "NJ"] for compliance automations
+
+infra:
+  github:
+    owner: ""                         # REQUIRED — the tenant's GitHub org/user
+    default_repo: ""                  # e.g. "acme-automations"
+    default_branch: main
+  vercel:
+    team_id: ""                       # tenant's Vercel team
+    project_id_pattern: "{slug}-{automation_slug}"
+  n8n:
+    base_url: ""                      # https://n8n.<tenant>.com — tenant-owned
+    auth_ref: N8N_JWT                 # references .secrets/env.local key
+  domain: ""                          # tenant's primary domain
+  crm_vendor: suitedash                # suitedash | hubspot | servicetitan | housecallpro | jobber | none
+  payment_vendor: stripe               # stripe | square | paypal | none
+  email_vendor: emailit                # emailit | postmark | sendgrid | mailgun | none
+  sms_vendor: smsit                    # smsit | twilio | plivo | none
+  voice_vendor: callscaler             # callscaler | thoughtly | insighto | twilio_voice | none
+  llm_vendors:                         # pick 1+
+    - groq
+
+compliance:
+  entities: []                         # [{ name, jurisdiction, entity_id }]
+  license_types: []
+
+engagement_tier: managed-provision    # self-serve | managed-provision | managed-operation | white-glove
+max_parallel_deploys: 4
+
+selected_automations: []               # Filled by `automation-deployer interview`

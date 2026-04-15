@@ -1,0 +1,86 @@
+{
+  "name": "auto-{{tenant_slug}}-8.01-welcome",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "8.01-welcome",
+        "authentication": "headerAuth"
+      },
+      "id": "inbound",
+      "name": "Welcome Inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.emailit.com/v1/send",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "to", "value": "={{$json.email}}" },
+            { "name": "template", "value": "={{$json.template_slug}}" },
+            { "name": "variables", "value": "={{{\"name\": $json.name, \"portal_url\": $json.portal_url}}}" }
+          ]
+        }
+      },
+      "id": "send_email",
+      "name": "Send welcome email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [440, 260]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.sms-it.com/v1/send",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "to", "value": "={{$json.phone}}" },
+            { "name": "body", "value": "=Welcome! Your portal is at {{$json.portal_url}}" }
+          ]
+        }
+      },
+      "id": "send_sms",
+      "name": "Send welcome SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [440, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://app.suitedash.com/secure-api/contacts/tags",
+        "authentication": "headerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "email", "value": "={{$json.email}}" },
+            { "name": "tags", "value": "=onboarded,tier:{{$json.tier}}" }
+          ]
+        }
+      },
+      "id": "tag_suitedash",
+      "name": "Tag in SuiteDash",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 320]
+    }
+  ],
+  "connections": {
+    "Welcome Inbound": {
+      "main": [[
+        { "node": "Send welcome email", "type": "main", "index": 0 },
+        { "node": "Send welcome SMS", "type": "main", "index": 0 }
+      ]]
+    },
+    "Send welcome email": { "main": [[{ "node": "Tag in SuiteDash", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false
+}

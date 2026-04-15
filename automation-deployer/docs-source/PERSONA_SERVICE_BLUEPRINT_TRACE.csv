@@ -1,0 +1,10 @@
+sb_code,persona_codes,pain_cluster_letters,key_pain_ids,system_outputs,messaging_surface
+SB00,"P-FOUNDER;P-AGENCY;P-PROCURE;P-OPERATOR","S,B,Z0","S2,S3,S4,B1,Z0","honest tier+module truth;inventory API","index.html;maturity.html;for/index.html"
+SB01,"P-FOUNDER;P-AGENCY;P-PROCURE","B,S,J22","B1,S2,J22","Stripe tier verify;auth to builder","hero CTAs;checkout copy"
+SB02,"P-FOUNDER;P-AGENCY;P-PROCURE;P-OPERATOR","A,F,J22,P","A1,A7,F4,P2,J22","intake;R/D/S scope;vendor-key callout","app.html Expected scope"
+SB03,"P-FOUNDER;P-AGENCY;P-PROCURE","B,R","B1-B8,B14,R4","multi-model review;scorecard","builder strategy UI"
+SB04,"P-FOUNDER;P-AGENCY;P-PROCURE;P-CAPITAL","F,C,D,E,M,R,W,Q","F1-F9,C1-C8,D,E,M,R,W,Q","doc+code phases;gov/trade optional packs","builder phase list"
+SB05,"P-FOUNDER;P-AGENCY;P-PROCURE","F,G","F9,G8","eight-check validation gate","app.html build gate"
+SB06,"P-FOUNDER;P-AGENCY;P-PROCURE;P-OPERATOR","G,H,P,J22","G1-G7,P2,H1","provision or export;placeholder Vercel env","provision results;CLAUDE policy"
+SB07,"P-FOUNDER;P-AGENCY","H,I,J,K,L,M,N,O,U","H1,I1,J1,K1,L1,M1,N1,O1","mod_* per tier+archetype","module status in UI"
+SB08,"P-OPERATOR;P-AGENCY","P,T,J21,R","P2,T1,R3,J21","MANUAL-ACTIONS;.env.example;ops boundary","post-build docs;for/managed"

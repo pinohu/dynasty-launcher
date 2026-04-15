@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dynasty-launcher/schemas/deployment-plan.schema.json",
+  "title": "Deployment Plan",
+  "type": "object",
+  "required": ["plan_id", "tenant_slug", "created_at", "waves", "total_automations"],
+  "properties": {
+    "plan_id": { "type": "string" },
+    "tenant_slug": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "mode": {
+      "type": "string",
+      "enum": ["deploy", "upgrade", "uninstall", "rollback", "dry-run"],
+      "default": "deploy"
+    },
+    "total_automations": { "type": "integer" },
+    "waves": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["wave_index", "automations"],
+        "properties": {
+          "wave_index": { "type": "integer", "minimum": 0 },
+          "automations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "manifest_ref", "status", "drivers"],
+              "properties": {
+                "id": { "type": "string" },
+                "manifest_ref": { "type": "string" },
+                "status": {
+                  "type": "string",
+                  "enum": ["pending", "ready", "blocked", "skipped"]
+                },
+                "drivers": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "blocked_reason": { "type": "string" },
+                "missing_credentials": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "estimated_cost_monthly_usd": { "type": "number" },
+                "estimated_deploy_seconds": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "credential_gap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "source": { "type": "string" },
+          "required_by": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "estimated_cost_total_monthly_usd": { "type": "number" },
+    "summary": { "type": "string" }
+  }
+}

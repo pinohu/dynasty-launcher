@@ -1,0 +1,79 @@
+id: "1.01"
+slug: gbp-monitor
+version: 1
+title: Google Business Profile Monitor
+description: |
+  Daily cron job that checks the tenant's Google Business Profile for new reviews,
+  Q&A activity, and rank shifts. Sends a digest alert to the tenant's primary
+  email (or Slack if configured).
+
+category_id: 1
+topology: T1
+drivers:
+  - n8n
+
+artifacts:
+  n8n_workflow: workflows/1.01-gbp-monitor.json
+
+credentials_required:
+  - key: GOOGLE_BUSINESS_API_KEY
+    source: tenant
+    scope: google_business.readonly
+    description: "Google Business Profile API key with read scope"
+  - key: EMAILIT_API_KEY
+    source: tenant
+    scope: send
+    description: "Emailit transactional sender key"
+
+env_schema:
+  GBP_LOCATION_ID:
+    required: true
+    prompt: "Your Google Business Profile location ID"
+    description: "Find this in your GBP dashboard URL"
+  ALERT_EMAIL:
+    required: true
+    prompt: "Email to receive daily digest"
+  ALERT_THRESHOLD:
+    required: false
+    default: new_review
+    enum: [new_review, rating_drop, qa_new, ranking_change, any]
+
+webhooks:
+  inbound: []
+  outbound:
+    - name: alert_channel
+      default: "{{tenant.comms.primary_email}}"
+
+triggers:
+  - type: cron
+    expression: "0 7 * * *"
+    timezone: America/New_York
+
+depends_on: []
+conflicts_with: []
+replaces: []
+
+data_sensitivity: public
+estimated_monthly_tokens: 0
+
+health_check:
+  type: n8n_execution
+  expect_within: 25h
+
+rollback:
+  - deactivate_workflow
+  - delete_workflow
+
+estimated_deploy_seconds: 35
+
+persona_fit:
+  solo_steve: 0.7
+  manager_maria: 0.8
+  agency_alex: 0.9
+  marketing_mike: 0.95
+  owner_omar: 0.5
+
+pricing:
+  service_fee_monthly_usd: 9
+  one_time_setup_usd: 0
+  expected_tool_cost_usd: 0

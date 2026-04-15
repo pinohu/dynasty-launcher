@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - 'automation-deployer/**'
+  pull_request:
+    paths:
+      - 'automation-deployer/**'
+
+defaults:
+  run:
+    working-directory: automation-deployer
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci || npm install
+      - name: Parse catalog (ensure registry matches source)
+        run: |
+          node scripts/parse-catalog.mjs
+          git diff --exit-code registry/automations.json registry/categories.json || \
+            (echo 'registry/automations.json is stale — re-run parse-catalog and commit' && exit 1)
+      - name: Validate registry + manifests
+        run: node deployer/cli.mjs validate
+      - name: Tests
+        run: npm test

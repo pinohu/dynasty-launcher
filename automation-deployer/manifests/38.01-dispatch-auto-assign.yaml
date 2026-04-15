@@ -1,0 +1,72 @@
+id: "38.01"
+slug: dispatch-auto-assign
+version: 1
+title: Dispatch Auto-Assign (field service)
+description: |
+  When a new job is created in ServiceTitan / Housecall Pro / Jobber / SuiteDash
+  field module, assigns the best-fit technician based on availability,
+  proximity (GPS), and skill tags. Sends an SMS + app notification to the tech
+  and an ETA text to the customer.
+
+category_id: 38
+topology: T3
+drivers:
+  - github
+  - vercel
+  - n8n
+
+artifacts:
+  code: workflows/38.01-dispatch-auto-assign.code.js
+  n8n_workflow: workflows/38.01-dispatch-auto-assign.n8n.json
+
+credentials_required:
+  - key: CRM_VENDOR
+    source: customer-input
+  - key: SMSIT_API_KEY
+    source: tenant
+  - key: SERVICETITAN_CLIENT_ID
+    source: tenant
+    description: "Only if vendor_variant.crm == servicetitan"
+
+env_schema:
+  MAX_DISTANCE_KM:
+    required: false
+    default: 40
+  SKILL_MATCH_REQUIRED:
+    required: false
+    default: true
+
+triggers:
+  - type: webhook
+    event: job.created
+  - type: crm_event
+    event: job.created
+
+depends_on: []
+
+data_sensitivity: customer_pii
+
+vendor_variant:
+  crm: [servicetitan, housecallpro, jobber, suitedash]
+
+health_check:
+  type: synthetic_payload
+  expect_within: 2m
+
+rollback:
+  - remove_code
+  - unset_env
+  - deactivate_workflow
+  - delete_workflow
+
+estimated_deploy_seconds: 90
+
+persona_fit:
+  field_service_fred: 0.98
+  manager_maria: 0.7
+  owner_omar: 0.7
+  franchise_fran: 0.85
+
+pricing:
+  service_fee_monthly_usd: 29
+  one_time_setup_usd: 99

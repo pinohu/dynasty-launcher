@@ -1,0 +1,286 @@
+{
+  "n8n": {
+    "name": "n8n",
+    "role": "workflow-engine",
+    "cost_tier": "free_or_20_plus",
+    "oss": true,
+    "api_version": "v1",
+    "auth": "jwt",
+    "docs": "https://docs.n8n.io/api/"
+  },
+  "vercel": {
+    "name": "Vercel",
+    "role": "serverless-hosting",
+    "cost_tier": "free_or_20_plus",
+    "oss": false,
+    "api_version": "v13",
+    "auth": "bearer",
+    "docs": "https://vercel.com/docs/rest-api"
+  },
+  "github": {
+    "name": "GitHub",
+    "role": "code-vcs",
+    "cost_tier": "free",
+    "oss": false,
+    "api_version": "2022-11-28",
+    "auth": "pat_or_app",
+    "docs": "https://docs.github.com/rest"
+  },
+  "neon": {
+    "name": "Neon",
+    "role": "postgres",
+    "cost_tier": "free_or_19_plus",
+    "oss": true,
+    "api_version": "v2",
+    "auth": "bearer"
+  },
+  "suitedash": {
+    "name": "SuiteDash",
+    "role": "crm-portal",
+    "cost_tier": "19_99",
+    "vendor_variant_group": "crm",
+    "oss": false
+  },
+  "hubspot": {
+    "name": "HubSpot",
+    "role": "crm",
+    "cost_tier": "free_or_paid",
+    "vendor_variant_group": "crm",
+    "oss": false
+  },
+  "servicetitan": {
+    "name": "ServiceTitan",
+    "role": "field-service-crm",
+    "cost_tier": "200_plus",
+    "vendor_variant_group": "crm",
+    "oss": false
+  },
+  "brilliant_directories": {
+    "name": "Brilliant Directories",
+    "role": "directory",
+    "cost_tier": "75_plus",
+    "oss": false
+  },
+  "emailit": {
+    "name": "Emailit",
+    "role": "transactional-email",
+    "cost_tier": "10_plus",
+    "vendor_variant_group": "tx_email"
+  },
+  "postmark": {
+    "name": "Postmark",
+    "role": "transactional-email",
+    "cost_tier": "10_plus",
+    "vendor_variant_group": "tx_email"
+  },
+  "acumbamail": {
+    "name": "Acumbamail",
+    "role": "marketing-email",
+    "cost_tier": "15_plus",
+    "vendor_variant_group": "marketing_email"
+  },
+  "smsit": {
+    "name": "SMS-iT",
+    "role": "sms",
+    "cost_tier": "29_plus",
+    "vendor_variant_group": "sms"
+  },
+  "twilio": {
+    "name": "Twilio",
+    "role": "sms-voice",
+    "cost_tier": "pay_per_use",
+    "vendor_variant_group": "sms"
+  },
+  "callscaler": {
+    "name": "CallScaler",
+    "role": "call-tracking",
+    "cost_tier": "49_plus"
+  },
+  "insighto": {
+    "name": "Insighto",
+    "role": "voice-ai",
+    "cost_tier": "29_plus",
+    "vendor_variant_group": "voice_ai"
+  },
+  "thoughtly": {
+    "name": "Thoughtly",
+    "role": "voice-ai",
+    "cost_tier": "99_plus",
+    "vendor_variant_group": "voice_ai"
+  },
+  "chatbase": {
+    "name": "Chatbase",
+    "role": "website-chat",
+    "cost_tier": "19_plus"
+  },
+  "stripe": {
+    "name": "Stripe",
+    "role": "payments",
+    "cost_tier": "percent",
+    "vendor_variant_group": "payments"
+  },
+  "documentero": {
+    "name": "Documentero",
+    "role": "pdf-generation",
+    "cost_tier": "15_plus"
+  },
+  "sparkreceipt": {
+    "name": "SparkReceipt",
+    "role": "expense-ocr",
+    "cost_tier": "9_plus"
+  },
+  "quickbooks": {
+    "name": "QuickBooks Online",
+    "role": "accounting",
+    "cost_tier": "30_plus",
+    "vendor_variant_group": "accounting"
+  },
+  "xero": {
+    "name": "Xero",
+    "role": "accounting",
+    "cost_tier": "15_plus",
+    "vendor_variant_group": "accounting"
+  },
+  "writerzen": {
+    "name": "WriterZen",
+    "role": "seo-research",
+    "cost_tier": "39_plus"
+  },
+  "neuronwriter": {
+    "name": "NeuronWriter",
+    "role": "seo-writing",
+    "cost_tier": "19_plus"
+  },
+  "vadoo": {
+    "name": "Vadoo AI",
+    "role": "video-gen",
+    "cost_tier": "29_plus",
+    "vendor_variant_group": "video_ai"
+  },
+  "fliki": {
+    "name": "Fliki",
+    "role": "video-gen",
+    "cost_tier": "28_plus",
+    "vendor_variant_group": "video_ai"
+  },
+  "vista_social": {
+    "name": "Vista Social",
+    "role": "social-scheduling",
+    "cost_tier": "39_plus"
+  },
+  "plerdy": {
+    "name": "Plerdy",
+    "role": "analytics-heatmap",
+    "cost_tier": "23_plus"
+  },
+  "posthog": {
+    "name": "PostHog",
+    "role": "product-analytics",
+    "cost_tier": "free_or_450"
+  },
+  "happierleads": {
+    "name": "Happierleads",
+    "role": "visitor-id"
+  },
+  "salespanel": {
+    "name": "Salespanel",
+    "role": "lead-scoring"
+  },
+  "trafft": {
+    "name": "Trafft",
+    "role": "booking",
+    "cost_tier": "free_or_paid"
+  },
+  "lob": {
+    "name": "Lob",
+    "role": "direct-mail",
+    "cost_tier": "pay_per_piece"
+  },
+  "openai": {
+    "name": "OpenAI",
+    "role": "llm",
+    "cost_tier": "pay_per_token",
+    "vendor_variant_group": "llm"
+  },
+  "anthropic": {
+    "name": "Anthropic",
+    "role": "llm",
+    "cost_tier": "pay_per_token",
+    "vendor_variant_group": "llm"
+  },
+  "groq": {
+    "name": "Groq",
+    "role": "llm",
+    "cost_tier": "free_or_paid",
+    "vendor_variant_group": "llm"
+  },
+  "google_ai": {
+    "name": "Google AI Studio",
+    "role": "llm",
+    "cost_tier": "free_tier",
+    "vendor_variant_group": "llm"
+  },
+  "hunter": {
+    "name": "Hunter.io",
+    "role": "email-finder",
+    "cost_tier": "49_plus"
+  },
+  "snov": {
+    "name": "Snov.io",
+    "role": "email-finder",
+    "cost_tier": "39_plus"
+  },
+  "apollo": {
+    "name": "Apollo.io",
+    "role": "email-finder",
+    "cost_tier": "49_plus"
+  },
+  "builtwith": {
+    "name": "BuiltWith",
+    "role": "tech-detector",
+    "cost_tier": "295_plus"
+  },
+  "outscraper": {
+    "name": "Outscraper",
+    "role": "maps-scraper",
+    "cost_tier": "39_plus"
+  },
+  "serpapi": {
+    "name": "SerpAPI",
+    "role": "search-scraper",
+    "cost_tier": "50_plus"
+  },
+  "pacer": {
+    "name": "PACER",
+    "role": "court-records",
+    "cost_tier": "pay_per_query",
+    "jurisdictions": ["US"]
+  },
+  "pa_dos": {
+    "name": "PA Department of State",
+    "role": "business-registry",
+    "cost_tier": "free",
+    "jurisdictions": ["PA"]
+  },
+  "google_api": {
+    "name": "Google APIs",
+    "role": "google-workspace"
+  },
+  "scraper": {
+    "name": "Generic scraper",
+    "role": "web-scraper",
+    "notes": "Manifests that use this stack must declare a specific source URL and respect source TOS."
+  },
+  "slack": {
+    "name": "Slack",
+    "role": "team-chat"
+  },
+  "telegram": {
+    "name": "Telegram",
+    "role": "messaging"
+  },
+  "postcardmania": {
+    "name": "PostcardMania",
+    "role": "direct-mail"
+  }
+}

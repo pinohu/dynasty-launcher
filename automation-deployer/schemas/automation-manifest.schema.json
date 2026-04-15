@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dynasty-launcher/schemas/automation-manifest.schema.json",
+  "title": "Automation Manifest",
+  "description": "Declarative deployment contract for a single automation.",
+  "type": "object",
+  "required": ["id", "slug", "version", "title", "category_id", "topology", "artifacts", "credentials_required", "triggers", "data_sensitivity", "rollback"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^\\d{1,2}\\.\\d{2}$",
+      "description": "Catalog ID, e.g. 1.01, 20.03"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "category_id": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 45
+    },
+    "topology": {
+      "type": "string",
+      "enum": ["T1", "T2", "T3", "T4", "T5"]
+    },
+    "drivers": {
+      "type": "array",
+      "description": "Ordered list of drivers to invoke during provision.",
+      "items": {
+        "type": "string",
+        "enum": ["n8n", "vercel", "github", "stripe", "clerk", "dns", "webhook-router", "worker", "vendor-native", "manual"]
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "n8n_workflow": {
+          "type": ["string", "null"],
+          "description": "Relative path to the n8n workflow JSON"
+        },
+        "code": {
+          "type": ["string", "null"],
+          "description": "Relative path to a Vercel serverless function module"
+        },
+        "vendor_config": {
+          "type": ["string", "null"],
+          "description": "Relative path to a vendor-native configuration JSON"
+        },
+        "worker": {
+          "type": ["string", "null"],
+          "description": "Relative path to a T5 worker module"
+        }
+      },
+      "additionalProperties": false
+    },
+    "credentials_required": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "source"],
+        "properties": {
+          "key": { "type": "string" },
+          "source": {
+            "type": "string",
+            "enum": ["tenant", "customer-input", "deployer"]
+          },
+          "scope": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "shared_runtime": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this automation relies on deployer-held credentials at runtime. Requires explicit operator ack."
+    },
+    "env_schema": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "required": { "type": "boolean", "default": false },
+          "default": {},
+          "prompt": { "type": "string" },
+          "enum": { "type": "array" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "webhooks": {
+      "type": "object",
+      "properties": {
+        "inbound": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "path"],
+            "properties": {
+              "name": { "type": "string" },
+              "path": { "type": "string" },
+              "method": { "type": "string", "default": "POST" },
+              "signing": {
+                "type": "string",
+                "enum": ["none", "hmac-sha256", "stripe", "custom"]
+              }
+            }
+          }
+        },
+        "outbound": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "default": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["cron", "webhook", "api", "ui", "crm_event", "email_received", "form_submit", "manual"]
+          },
+          "expression": { "type": "string" },
+          "event": { "type": "string" },
+          "timezone": { "type": "string", "default": "UTC" }
+        }
+      }
+    },
+    "depends_on": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^\\d{1,2}\\.\\d{2}$" }
+    },
+    "conflicts_with": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^\\d{1,2}\\.\\d{2}$" }
+    },
+    "replaces": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^\\d{1,2}\\.\\d{2}$" }
+    },
+    "data_sensitivity": {
+      "type": "string",
+      "enum": ["public", "internal", "customer_pii", "financial", "regulated"]
+    },
+    "estimated_monthly_tokens": {
+      "type": "integer",
+      "description": "Expected LLM tokens per month for cost planning. 0 if no LLM."
+    },
+    "health_check": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["n8n_execution", "http_ping", "synthetic_payload", "vendor_resource", "none"]
+        },
+        "expect_within": { "type": "string", "description": "e.g. '25h', '10m'" },
+        "url": { "type": "string" },
+        "synthetic_payload": {}
+      }
+    },
+    "rollback": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "deactivate_workflow",
+          "delete_workflow",
+          "remove_code",
+          "unset_env",
+          "redeploy",
+          "delete_vendor_resource",
+          "deregister_worker",
+          "revoke_webhook"
+        ]
+      }
+    },
+    "estimated_deploy_seconds": { "type": "integer", "minimum": 1 },
+    "jurisdictions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ISO state / country codes where this automation is applicable"
+    },
+    "vendor_variant": {
+      "type": "object",
+      "description": "Map of vendor alternatives for this automation, e.g. { crm: ['suitedash', 'hubspot'] }"
+    },
+    "persona_fit": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "pricing": {
+      "type": "object",
+      "properties": {
+        "service_fee_monthly_usd": { "type": "number" },
+        "one_time_setup_usd": { "type": "number" },
+        "expected_tool_cost_usd": { "type": "number" }
+      }
+    }
+  }
+}

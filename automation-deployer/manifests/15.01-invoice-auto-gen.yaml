@@ -1,0 +1,75 @@
+id: "15.01"
+slug: invoice-auto-gen
+version: 1
+title: Invoice auto-generation on Stripe payment
+description: |
+  Listens to Stripe `payment_intent.succeeded` events, generates a branded PDF
+  invoice via Documentero, emails it to the customer, and records the invoice
+  in the tenant's accounting system.
+
+category_id: 15
+topology: T3
+drivers:
+  - github
+  - vercel
+  - n8n
+
+artifacts:
+  code: workflows/15.01-invoice-auto-gen.code.js
+  n8n_workflow: workflows/15.01-invoice-auto-gen.n8n.json
+
+credentials_required:
+  - key: STRIPE_WEBHOOK_SECRET
+    source: tenant
+  - key: DOCUMENTERO_API_KEY
+    source: tenant
+  - key: EMAILIT_API_KEY
+    source: tenant
+  - key: N8N_INBOUND_HMAC
+    source: tenant
+
+env_schema:
+  INVOICE_TEMPLATE_ID:
+    required: true
+    prompt: "Documentero template ID for invoices"
+  BUSINESS_LEGAL_NAME:
+    required: true
+  BUSINESS_TAX_ID:
+    required: false
+
+webhooks:
+  inbound:
+    - name: stripe
+      path: /stripe
+      signing: stripe
+
+triggers:
+  - type: webhook
+    event: stripe.payment_intent.succeeded
+
+depends_on: []
+data_sensitivity: financial
+
+health_check:
+  type: synthetic_payload
+  expect_within: 2m
+
+rollback:
+  - remove_code
+  - unset_env
+  - deactivate_workflow
+  - delete_workflow
+
+estimated_deploy_seconds: 120
+
+persona_fit:
+  solo_steve: 0.95
+  bookkeeper_beth: 0.95
+  manager_maria: 0.9
+  owner_omar: 0.9
+  agency_alex: 0.9
+
+pricing:
+  service_fee_monthly_usd: 12
+  one_time_setup_usd: 49
+  expected_tool_cost_usd: 15

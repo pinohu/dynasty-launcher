@@ -1,0 +1,83 @@
+{
+  "name": "auto-{{tenant_slug}}-1.01-gbp-monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 7 * * *" }
+          ]
+        }
+      },
+      "id": "trigger",
+      "name": "Daily 7am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://mybusinessbusinessinformation.googleapis.com/v1/locations/{{$env.GBP_LOCATION_ID}}/reviews",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi"
+      },
+      "id": "fetch_reviews",
+      "name": "Fetch GBP Reviews",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Diff against last run's review IDs (stored in n8n static data)\nconst staticData = $getWorkflowStaticData('global');\nconst known = new Set(staticData.knownReviewIds || []);\nconst fresh = $input.item.json.reviews.filter(r => !known.has(r.reviewId));\nstaticData.knownReviewIds = $input.item.json.reviews.map(r => r.reviewId);\nreturn { json: { newReviews: fresh, count: fresh.length } };"
+      },
+      "id": "diff",
+      "name": "Diff vs last run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [{ "value1": "={{$json.count}}", "operation": "largerEqual", "value2": 1 }]
+        }
+      },
+      "id": "if_any",
+      "name": "If any new",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.emailit.com/v1/send",
+        "authentication": "headerAuth",
+        "headerParameters": { "parameters": [{ "name": "Authorization", "value": "Bearer {{$env.EMAILIT_API_KEY}}" }] },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "to", "value": "={{$env.ALERT_EMAIL}}" },
+            { "name": "subject", "value": "=GBP digest: {{$json.count}} new reviews" },
+            { "name": "html", "value": "={{$json.newReviews.map(r => `<p><strong>${r.starRating}</strong> — ${r.comment}</p>`).join('')}}" }
+          ]
+        }
+      },
+      "id": "send_alert",
+      "name": "Send digest email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1200, 240]
+    }
+  ],
+  "connections": {
+    "Daily 7am": { "main": [[{ "node": "Fetch GBP Reviews", "type": "main", "index": 0 }]] },
+    "Fetch GBP Reviews": { "main": [[{ "node": "Diff vs last run", "type": "main", "index": 0 }]] },
+    "Diff vs last run": { "main": [[{ "node": "If any new", "type": "main", "index": 0 }]] },
+    "If any new": { "main": [[{ "node": "Send digest email", "type": "main", "index": 0 }], []] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false
+}

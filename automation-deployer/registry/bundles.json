@@ -1,0 +1,66 @@
+[
+  {
+    "key": "solo-3",
+    "name": "Solo Starter (3)",
+    "target_personas": ["solo_steve", "startup_sam"],
+    "automation_ids": ["2.01", "9.01", "15.01"],
+    "price_usd_month": 49,
+    "summary": "Capture leads, book appointments, invoice on first payment."
+  },
+  {
+    "key": "books-5",
+    "name": "Bookkeeper Focus (5)",
+    "target_personas": ["bookkeeper_beth"],
+    "automation_ids": ["15.01", "16.01", "16.04", "17.01", "23.01"],
+    "price_usd_month": 99,
+    "summary": "Invoice, process payments, handle dunning, sync accounting, produce weekly report."
+  },
+  {
+    "key": "field-10",
+    "name": "Field Service Growth (10)",
+    "target_personas": ["field_service_fred"],
+    "automation_ids": ["2.01", "8.01", "9.01", "9.03", "11.04", "14.01", "14.05", "21.01", "38.01", "38.03"],
+    "price_usd_month": 399,
+    "summary": "End-to-end field service: intake, onboarding, scheduling, dispatch, ETA updates, reviews."
+  },
+  {
+    "key": "care-10",
+    "name": "Compliance Care (10)",
+    "target_personas": ["compliance_carol"],
+    "automation_ids": ["20.01", "20.02", "20.03", "20.05", "20.06", "20.07", "35.01", "37.01", "41.01", "43.01"],
+    "price_usd_month": 499,
+    "summary": "Never miss a deadline. Audit-ready at all times."
+  },
+  {
+    "key": "agency-20",
+    "name": "Agency Complete (20)",
+    "target_personas": ["agency_alex"],
+    "automation_ids": [
+      "2.01", "3.01", "4.01", "5.01", "6.01", "7.01", "8.01", "8.02", "10.01", "11.01",
+      "15.01", "22.01", "23.01", "24.01", "29.01", "30.01", "31.01", "32.01", "39.01", "45.01"
+    ],
+    "price_usd_month": 799,
+    "summary": "Productize agency delivery: capture → propose → onboard → deliver → retain → refer."
+  },
+  {
+    "key": "ops-40",
+    "name": "Full-Stack Ops (40)",
+    "target_personas": ["owner_omar", "manager_maria"],
+    "automation_ids": [
+      "1.01", "1.13", "2.01", "3.01", "4.01", "4.02", "5.01", "5.04", "6.01", "7.01",
+      "8.01", "8.02", "9.01", "9.03", "10.01", "11.01", "12.01", "13.01", "14.01", "15.01",
+      "16.01", "16.04", "17.01", "21.01", "22.01", "23.01", "24.01", "28.01", "29.01", "30.01",
+      "31.01", "31.03", "32.01", "37.01", "39.01", "41.01", "42.01", "45.01", "45.06", "45.07"
+    ],
+    "price_usd_month": 1499,
+    "summary": "Complete operational stack spanning every phase of the customer lifecycle."
+  },
+  {
+    "key": "builder-lifetime",
+    "name": "Builder Lifetime (templates)",
+    "target_personas": ["startup_sam"],
+    "automation_ids": ["2.01", "9.01", "15.01", "22.04", "45.01", "45.06"],
+    "price_usd_one_time": 299,
+    "summary": "Templates only. Self-serve deploy. No managed service."
+  }
+]

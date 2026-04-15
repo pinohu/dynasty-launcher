@@ -1,0 +1,73 @@
+id: "3.01"
+slug: lead-scorer
+version: 1
+title: Lead Scoring (multi-signal)
+description: |
+  Scores inbound leads on a 0-100 scale using configurable signals (UTM source,
+  completed forms, company data from enrichment, time of submission). Writes
+  the score back to the CRM as a custom field and fires a "hot lead" webhook
+  if the score crosses a threshold.
+
+category_id: 3
+topology: T2
+drivers:
+  - github
+  - vercel
+
+artifacts:
+  code: workflows/3.01-lead-scorer.code.js
+
+credentials_required:
+  - key: SUITEDASH_API_KEY
+    source: tenant
+
+env_schema:
+  HOT_THRESHOLD:
+    required: false
+    default: 70
+  HOT_WEBHOOK_URL:
+    required: false
+    prompt: "Where to POST when a lead crosses HOT_THRESHOLD"
+
+webhooks:
+  inbound:
+    - name: score
+      path: /score
+      method: POST
+      signing: hmac-sha256
+  outbound:
+    - name: hot_lead_webhook
+
+triggers:
+  - type: webhook
+
+depends_on:
+  - "2.01"
+
+data_sensitivity: customer_pii
+estimated_monthly_tokens: 0
+
+health_check:
+  type: synthetic_payload
+  expect_within: 2m
+  synthetic_payload:
+    lead: { email: "hot@smoke.local", utm_source: "linkedin", form_completed: true, entity_type: "llc" }
+
+rollback:
+  - remove_code
+  - unset_env
+  - redeploy
+
+estimated_deploy_seconds: 45
+
+persona_fit:
+  solo_steve: 0.6
+  manager_maria: 0.9
+  owner_omar: 0.9
+  agency_alex: 0.8
+  startup_sam: 0.9
+
+pricing:
+  service_fee_monthly_usd: 9
+  one_time_setup_usd: 0
+  expected_tool_cost_usd: 0

@@ -1,0 +1,72 @@
+id: "20.01"
+slug: regulatory-deadline-monitor
+version: 1
+title: Regulatory Deadline Monitor
+description: |
+  Tracks every compliance deadline across a tenant's entities and licenses.
+  Fires T-30, T-14, T-7, T-3, T-1 notifications. PA DOS is the reference
+  jurisdiction; add adapters under deployer/lib/adapters/jurisdictions/ to
+  scale to other states.
+
+category_id: 20
+topology: T1
+drivers:
+  - n8n
+
+artifacts:
+  n8n_workflow: workflows/20.01-deadline-monitor.json
+
+credentials_required:
+  - key: EMAILIT_API_KEY
+    source: tenant
+  - key: SMSIT_API_KEY
+    source: tenant
+    description: "For T-7 and below escalation"
+
+env_schema:
+  JURISDICTIONS:
+    required: true
+    prompt: "Comma-separated list, e.g. PA,NJ"
+  ESCALATION_CHANNELS:
+    required: false
+    default: "email,sms"
+  ACKNOWLEDGE_URL_BASE:
+    required: true
+    prompt: "URL where click-through acknowledgements land (e.g. https://portal.acme.com/ack)"
+
+webhooks:
+  inbound: []
+  outbound:
+    - name: ack_callback
+
+triggers:
+  - type: cron
+    expression: "0 8 * * *"
+    timezone: America/New_York
+
+depends_on: []
+
+data_sensitivity: regulated
+estimated_monthly_tokens: 0
+
+health_check:
+  type: n8n_execution
+  expect_within: 25h
+
+rollback:
+  - deactivate_workflow
+  - delete_workflow
+
+estimated_deploy_seconds: 60
+
+jurisdictions: [PA]
+
+persona_fit:
+  compliance_carol: 0.98
+  owner_omar: 0.6
+  franchise_fran: 0.5
+  bookkeeper_beth: 0.7
+
+pricing:
+  service_fee_monthly_usd: 29
+  one_time_setup_usd: 99

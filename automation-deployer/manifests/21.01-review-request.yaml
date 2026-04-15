@@ -1,0 +1,62 @@
+id: "21.01"
+slug: review-request
+version: 1
+title: Post-service review request
+description: |
+  Fires after service completion (tracked via CRM tag or SuiteDash event).
+  Sends a branded SMS + email 48 hours after job close with a direct link to
+  Google/Yelp/vendor review page. Escalates to a second ask at day 7.
+
+category_id: 21
+topology: T1
+drivers:
+  - n8n
+
+artifacts:
+  n8n_workflow: workflows/21.01-review-request.json
+
+credentials_required:
+  - key: EMAILIT_API_KEY
+    source: tenant
+  - key: SMSIT_API_KEY
+    source: tenant
+  - key: SUITEDASH_API_KEY
+    source: tenant
+
+env_schema:
+  REVIEW_URL_GOOGLE:
+    required: true
+  REVIEW_URL_YELP:
+    required: false
+  SECOND_ASK_DAYS:
+    required: false
+    default: 7
+
+triggers:
+  - type: crm_event
+    event: service.completed
+
+depends_on:
+  - "8.02"
+
+data_sensitivity: internal
+
+health_check:
+  type: n8n_execution
+  expect_within: 72h
+
+rollback:
+  - deactivate_workflow
+  - delete_workflow
+
+estimated_deploy_seconds: 45
+
+persona_fit:
+  solo_steve: 0.9
+  owner_omar: 0.8
+  marketing_mike: 0.9
+  field_service_fred: 0.85
+  agency_alex: 0.75
+
+pricing:
+  service_fee_monthly_usd: 9

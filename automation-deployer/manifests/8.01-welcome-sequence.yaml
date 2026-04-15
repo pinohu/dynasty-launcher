@@ -1,0 +1,85 @@
+id: "8.01"
+slug: welcome-sequence
+version: 1
+title: Welcome Sequence on New Client
+description: |
+  When a Stripe payment or CRM "client-activated" tag is observed, dispatch a
+  tier-aware welcome email + SMS sequence, create a portal access code, and
+  schedule a kickoff in the tenant's booking tool.
+
+category_id: 8
+topology: T3
+drivers:
+  - github
+  - vercel
+  - n8n
+
+artifacts:
+  code: workflows/8.01-welcome-sequence.code.js
+  n8n_workflow: workflows/8.01-welcome-sequence.n8n.json
+
+credentials_required:
+  - key: STRIPE_WEBHOOK_SECRET
+    source: tenant
+    scope: webhook_verify
+  - key: EMAILIT_API_KEY
+    source: tenant
+  - key: SMSIT_API_KEY
+    source: tenant
+  - key: SUITEDASH_API_KEY
+    source: tenant
+  - key: N8N_INBOUND_HMAC
+    source: tenant
+
+env_schema:
+  TIER_MAPPING:
+    required: true
+    prompt: "JSON: {\"starter\": \"welcome-starter\", \"pro\": \"welcome-pro\"}"
+  PORTAL_URL:
+    required: true
+    prompt: "Portal URL (e.g. https://portal.acme.com)"
+
+webhooks:
+  inbound:
+    - name: stripe
+      path: /stripe
+      method: POST
+      signing: stripe
+  outbound:
+    - name: n8n_welcome
+      description: "Invokes n8n welcome workflow with signed HMAC"
+
+triggers:
+  - type: webhook
+    event: stripe.checkout.session.completed
+  - type: crm_event
+    event: client.activated
+
+depends_on:
+  - "2.01"
+  - "15.01"
+
+data_sensitivity: customer_pii
+
+health_check:
+  type: synthetic_payload
+  expect_within: 2m
+
+rollback:
+  - remove_code
+  - unset_env
+  - deactivate_workflow
+  - delete_workflow
+
+estimated_deploy_seconds: 90
+
+persona_fit:
+  solo_steve: 0.85
+  manager_maria: 0.95
+  owner_omar: 0.9
+  agency_alex: 0.95
+  field_service_fred: 0.8
+
+pricing:
+  service_fee_monthly_usd: 12
+  one_time_setup_usd: 49

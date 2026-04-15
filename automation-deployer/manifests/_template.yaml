@@ -1,0 +1,69 @@
+# Manifest template. Copy to manifests/<id>-<slug>.yaml and fill in.
+# Conforms to schemas/automation-manifest.schema.json.
+
+id: "X.XX"                           # Catalog ID
+slug: your-slug                      # Lowercase, hyphen-separated
+version: 1
+title: "Automation title"
+description: |
+  One-paragraph description. What it does, why it's useful, who it serves.
+category_id: 0                       # 1-45
+topology: T1                         # T1 | T2 | T3 | T4 | T5
+drivers:                             # Ordered list of drivers to run
+  - n8n
+
+artifacts:
+  n8n_workflow: workflows/X.XX-your-slug.json    # Relative to repo root
+  code: null                                      # Or api/auto-X.XX-your-slug.js
+  vendor_config: null
+  worker: null
+
+credentials_required:
+  - key: EXAMPLE_API_KEY
+    source: tenant                   # tenant | customer-input | deployer
+    scope: read
+    description: "Vendor API key for X"
+
+env_schema:
+  EXAMPLE_CONFIG:
+    required: true
+    prompt: "Customer-specific config value"
+    description: "..."
+
+webhooks:
+  inbound: []
+  outbound: []
+
+triggers:
+  - type: cron
+    expression: "0 7 * * *"
+    timezone: UTC
+
+depends_on: []                       # [X.XX, Y.YY]
+conflicts_with: []
+replaces: []
+
+data_sensitivity: internal           # public | internal | customer_pii | financial | regulated
+estimated_monthly_tokens: 0
+
+health_check:
+  type: n8n_execution                # n8n_execution | http_ping | synthetic_payload | vendor_resource | none
+  expect_within: 25h
+
+rollback:
+  - deactivate_workflow
+  - delete_workflow
+
+estimated_deploy_seconds: 30
+jurisdictions: []
+
+# Optional extras
+vendor_variant: {}
+persona_fit: {}
+pricing:
+  service_fee_monthly_usd: 9
+  one_time_setup_usd: 0
+  expected_tool_cost_usd: 0
+
+# For `manual` driver only:
+manual_steps: []
