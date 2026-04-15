@@ -67,6 +67,13 @@
       "maxDuration": 15,
       "includeFiles": "product/**/*.json"
     },
+    "api/events/ingest-event.js": {
+      "maxDuration": 15
+    },
+    "api/events/opportunity-cards.js": {
+      "maxDuration": 15,
+      "includeFiles": "product/**/*.json"
+    },
     "api/health.js": {
       "maxDuration": 15
     },
