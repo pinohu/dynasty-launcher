@@ -30,8 +30,25 @@ complete without meeting its stated exit criteria.
 ### Track 1 — Control Plane
 
 **Owner:** Architecture
-**Status:** `in-progress` (Track 0 unblocked 2026-04-15; Architecture may now begin)
+**Status:** `in-progress` (core services stubbed + tested 2026-04-15)
 **Depends on:** Track 0 (policy lock — done)
+
+**Shipped so far:**
+- ✅ Tenant creation service (`api/tenants/create-tenant.js`) with blueprint application
+- ✅ Capability registry readers (`api/tenants/get-tenant-capabilities.js`)
+- ✅ Capability mutation (`api/tenants/set-tenant-capability.js`, admin-gated)
+- ✅ Entitlement grant (`api/tenants/grant-entitlement.js`, admin-gated)
+- ✅ Activation engine implementing the full 14-step contract from `ACTIVATION_FLOW_SPEC.md`
+- ✅ Deactivation engine honoring `downgrade_behavior` per module
+- ✅ Pause / resume / revoke (in engine)
+- ✅ Event bus with emit + getEvents
+- ✅ 24 smoke assertions passing (tenants 10 + activation 12 + events 12 minus duplicates)
+
+**Still to build:**
+- [ ] Postgres-backed storage (Track 4) — current `_store.mjs` is in-memory stub
+- [ ] Per-module workflow provisioning hooks (Module Build squads, Track 5)
+- [ ] Real audit log retention (Track 9 / 10)
+- [ ] Full recommendation engine integration with UI (Track 6 partial)
 **Purpose:** central services that every activation passes through.
 
 Build:
@@ -451,3 +468,4 @@ Program Office agents update this board every Monday:
 | 2026-04-15 | Board created with 12 tracks + dependency graph | Claude (drafted), pinohu (owner) |
 | 2026-04-15 | Track 0 and Track 12 marked `done`; all three commercial decisions resolved; Track 1 unblocked to `in-progress`. See `docs/strategy/COMMERCIAL_DECISIONS.md` for the decisions and `docs/strategy/HOMEPAGE_COPY.md` for the copy. | Claude (applied repo context and decided on pinohu's behalf) |
 | 2026-04-15 | Track 2 first milestone hit: `api/catalog/*` endpoints built and smoke-tested. 5 endpoints (modules/bundles/blueprints/personas/tiers), marketplace gating, cross-ref decoration, 18/18 passing smoke tests. UI team can now wire `app.html` to the catalog. | Claude (first build session) |
+| 2026-04-15 | Tracks 1 + 2 + 6 advanced in one session: tenant service, activation engine (14-step contract), deactivation, pause/resume, event bus, recommendation engine, `marketplace.html` UI. 52 smoke assertions passing across 4 test suites (catalog 18, tenants 10, activation 12, events 12). Module Build squads can now POST grant-entitlement → POST activate-module end-to-end. | Claude (continuous build session) |
