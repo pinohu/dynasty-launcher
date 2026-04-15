@@ -108,14 +108,21 @@ A module qualifies for `live` only when every item below is true and recorded.
 
 ### 8. Activation path
 
-- [ ] `activation_type` is `instant`, `guided`, or `assisted`
+- [ ] `activation_type` is `instant` or `guided`
 - [ ] `instant` modules: every required capability can be auto-verified at checkout time
 - [ ] `guided` modules: the wizard exists and completes in ≤10 minutes of customer time
-- [ ] `assisted` modules: only permitted if the module would otherwise be impossible
-  self-serve; treated as exception, not pattern
 
-**Target mix:** ≥80% `instant` or `guided` across the shipped catalog. If
-`assisted` count exceeds 20%, the platform is under-invested, not the module.
+**`assisted` is not production-self-serve and may not be marketed as
+self-serve.** If a module requires staff intervention, it is not deployable
+under this standard. The `assisted` value remains in the schema only so legacy
+data can round-trip; no new module may ship with that activation type, and no
+`assisted` module may appear in the marketplace, in a pack, in a suite, or
+in an edition.
+
+If the platform discovers that a module labeled `instant` or `guided` actually
+requires staff to complete activation, the module is immediately demoted below
+`deployable` and removed from the marketplace until the gap is closed on the
+platform side — not by adding human steps.
 
 ### 9. Preflight checks
 
@@ -214,6 +221,58 @@ the platform **must** execute this sequence with zero human steps:
 
 Any step that cannot complete automatically is a deployability defect. File
 an issue and demote the module until fixed.
+
+---
+
+## Allowed customer input
+
+Customer input is allowed **only** through self-serve UI fields surfaced by the
+module's `configurable_settings`. The supported shapes include:
+
+- business hours
+- assignee (user reference)
+- message tone
+- template choice
+- reminder timing
+- review link preference
+- quiet hours
+- channel choice (email / SMS / both)
+- cadence selection from a fixed list
+
+Customers must **never** be required to:
+
+- file a support ticket to complete activation
+- wait for staff setup to finish
+- request engineering help
+- depend on manual credential stitching by staff
+- receive a shared credential from the launcher
+- copy-paste configuration from a document or email thread
+
+If the only path to a working module runs through any of the above, the module
+is not deployable and does not ship.
+
+---
+
+## Prohibited patterns
+
+The following patterns **automatically disqualify** a module from `deployable`
+status. If any of these is true for a module, demote it immediately.
+
+- Hidden manual setup
+- Undocumented prerequisites
+- Custom one-off tenant logic
+- Environment-specific hacks
+- Spreadsheet-driven activation
+- Support-ticket-only provisioning
+- Activation that depends on developer intervention
+- Templates created manually after purchase
+- Manual database edits to complete activation
+- Shared launcher credentials routed to the tenant's live traffic
+- "Just this once" exceptions that accrete into a process
+
+The list is not exhaustive. Any pattern that breaks the core commitment —
+*no manual intervention by staff* — disqualifies the module regardless of
+whether it appears above.
 
 ---
 
