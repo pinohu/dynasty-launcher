@@ -87,6 +87,10 @@
       "maxDuration": 30,
       "includeFiles": "product/**/*.json"
     },
+    "api/admin/test-fire-event.js": {
+      "maxDuration": 30,
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json}"
+    },
     "api/health.js": {
       "maxDuration": 15
     },

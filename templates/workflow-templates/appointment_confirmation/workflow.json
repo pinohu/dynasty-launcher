@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "appointment_confirmation",
+  "name": "Appointment Confirmation Workflow",
+  "description": "On appointment.created, send a confirmation (email/sms/both) with optional ICS + reschedule link.",
+  "trigger": { "event": "appointment.created" },
+  "actions": [
+    { "step": 1, "action": "attach_ics", "params": {} },
+    {
+      "step": 2,
+      "action": "send_email",
+      "if": "settings.channel in ['email', 'both']",
+      "params": { "template_ref": "tmpl_appt_confirm_email", "to": "payload.contact_email" }
+    },
+    {
+      "step": 3,
+      "action": "send_sms",
+      "if": "settings.channel in ['sms', 'both']",
+      "params": { "template_ref": "tmpl_appt_confirm_sms", "to": "payload.contact_phone" }
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

@@ -229,6 +229,26 @@ async function main() {
     );
   }
 
+  // ============================================================
+  // HIPAA gate: med-spa tenant activating a PHI-touching module without
+  // the HIPAA add-on → hipaa_addon_required
+  // ============================================================
+  {
+    const { body: { tenant: medSpa } } = await invoke(h.createTenant, {
+      body: { blueprint_code: 'med-spa', plan: 'professional' },
+    });
+    for (const cap of ['crm', 'reviews', 'email', 'sms']) {
+      await invoke(h.setCap, { headers: ADMIN, body: { tenant_id: medSpa.tenant_id, capability_code: cap, enabled: true } });
+    }
+    await invoke(h.grant, { headers: ADMIN, body: { tenant_id: medSpa.tenant_id, module_code: 'post_job_review_request' } });
+    const r = await invoke(h.activate, { body: { tenant_id: medSpa.tenant_id, module_code: 'post_job_review_request' } });
+    fails += log(
+      r.status === 400 && r.body.reason === 'hipaa_addon_required',
+      'med-spa tenant without HIPAA add-on cannot activate PHI-touching module',
+      `reason=${r.body.reason}`,
+    );
+  }
+
   console.log('-'.repeat(60));
   if (fails === 0) {
     console.log('OK — all activation smoke checks passed.');

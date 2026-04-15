@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Deputy — Dashboard</title>
+<style>
+  :root {
+    --bg: #0b0d10; --card: #13171c; --card-hover: #1a1f26;
+    --border: #242a31; --fg: #e8eaed; --muted: #9aa3ad;
+    --accent: #4da3ff; --success: #3ecf8e; --warn: #f0b429; --danger: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.5; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .container { max-width: 1240px; margin: 0 auto; padding: 28px 24px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 18px; margin: 0; }
+  header .tenant-picker { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+  input, select, button {
+    background: var(--card); color: var(--fg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 10px; font-size: 13px; font-family: inherit;
+  }
+  button { cursor: pointer; }
+  button:hover { background: var(--card-hover); border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+
+  .row { display: grid; gap: 20px; margin-top: 24px; }
+  .row-2 { grid-template-columns: 1fr 1fr; }
+  .row-3 { grid-template-columns: 2fr 1fr; }
+  @media (max-width: 900px) { .row-2, .row-3 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .card h2 { font-size: 14px; margin: 0 0 10px; letter-spacing: 0.02em; color: var(--muted); text-transform: uppercase; font-weight: 600; }
+  .card h3 { margin: 0; font-size: 15px; }
+
+  .kpi { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .kpi .label { color: var(--muted); font-size: 12px; }
+  .kpi .value { font-size: 20px; font-weight: 600; }
+
+  .module-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .module-row:last-child { border-bottom: none; }
+  .module-row .name { font-size: 14px; }
+  .module-row .status {
+    font-size: 10px; padding: 2px 8px; border-radius: 10px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600;
+  }
+  .status-active { background: #143322; color: var(--success); }
+  .status-entitled { background: #2a2216; color: var(--warn); }
+  .status-paused { background: #2a1616; color: var(--danger); }
+  .status-deactivated { background: #1a1a1a; color: var(--muted); }
+
+  .opp-card { background: #0f1620; border: 1px solid #253545; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .opp-card .headline { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .opp-card .body { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  .opp-card .cta { display: inline-block; font-size: 12px; padding: 5px 10px; border-radius: 5px; background: var(--accent); color: #000; font-weight: 600; }
+
+  .event-row { display: grid; grid-template-columns: 120px 240px 1fr; gap: 10px; padding: 6px 0; font-size: 12px; color: var(--muted); border-bottom: 1px dashed var(--border); }
+  .event-row:last-child { border-bottom: none; }
+  .event-row .type { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--fg); }
+  .event-row .time { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .event-row.t-mod_started .type { color: var(--warn); }
+  .event-row.t-mod_completed .type { color: var(--success); }
+  .event-row.t-mod_failed .type { color: var(--danger); }
+
+  .empty { color: var(--muted); font-size: 13px; font-style: italic; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+  .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Your Deputy — Tenant Dashboard</h1>
+  <div class="tenant-picker">
+    <span id="tenant-label">No tenant</span>
+    <input id="tenant-input" placeholder="tnt_..." style="width: 200px;">
+    <button onclick="loadTenant()">Load</button>
+    <button onclick="createTestTenant()" title="Creates an HVAC test tenant via /api/tenants/create-tenant">New HVAC test tenant</button>
+  </div>
+</header>
+
+<div id="no-tenant" class="card" style="margin-top: 30px;">
+  <h2>No tenant selected</h2>
+  <p class="empty">Paste a tenant_id above and click Load, or click "New HVAC test tenant" to create one. The dashboard reads live from <code>/api/tenants/*</code> and <code>/api/events/*</code>.</p>
+</div>
+
+<div id="dashboard" style="display: none;">
+  <div class="row row-3">
+    <section class="card">
+      <h2>Opportunity Cards</h2>
+      <div id="opp-cards"></div>
+    </section>
+    <section class="card">
+      <h2>KPIs</h2>
+      <div id="kpis" class="stat-grid"></div>
+    </section>
+  </div>
+
+  <div class="row row-2">
+    <section class="card">
+      <h2>Modules</h2>
+      <div id="modules"></div>
+    </section>
+    <section class="card">
+      <h2>Capabilities</h2>
+      <div id="caps"></div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top: 20px;">
+    <h2>Recent Events</h2>
+    <div id="events"></div>
+  </section>
+</div>
+
+<div class="footer">
+  Platform: <code id="platform-status">—</code> ·
+  <a href="/marketplace">Marketplace</a> ·
+  <a href="/maturity">What ships today</a>
+</div>
+
+</div>
+
+<script>
+(function() {
+  const $ = (s) => document.querySelector(s);
+  let currentTenant = null;
+
+  window.loadTenant = async function() {
+    const id = $('#tenant-input').value.trim();
+    if (!id) return;
+    await refresh(id);
+  };
+
+  window.createTestTenant = async function() {
+    try {
+      const r = await fetch('/api/tenants/create-tenant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blueprint_code: 'hvac', plan: 'professional' }),
+      });
+      const data = await r.json();
+      if (!r.ok) return alert('Failed: ' + (data.error || r.status));
+      $('#tenant-input').value = data.tenant.tenant_id;
+      await refresh(data.tenant.tenant_id);
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  };
+
+  async function refresh(tenant_id) {
+    currentTenant = tenant_id;
+    $('#tenant-label').textContent = tenant_id;
+    try {
+      const [tenant, caps, cards] = await Promise.all([
+        fetch('/api/tenants/get-tenant?tenant_id=' + tenant_id).then((r) => r.json()),
+        fetch('/api/tenants/get-tenant-capabilities?tenant_id=' + tenant_id).then((r) => r.json()),
+        fetch('/api/events/opportunity-cards?tenant_id=' + tenant_id + '&all=true').then((r) => r.json()),
+      ]);
+      if (tenant.error) {
+        alert('Tenant not found');
+        return;
+      }
+      $('#no-tenant').style.display = 'none';
+      $('#dashboard').style.display = '';
+      renderOppCards(cards);
+      renderModules(tenant);
+      renderCaps(caps);
+      renderKpis(tenant);
+      // events don't have a dedicated tenant endpoint yet; skip for MVP
+      $('#events').innerHTML = '<p class="empty">Events list endpoint is WIP — see telemetry for now.</p>';
+    } catch (e) {
+      alert('Load error: ' + e.message);
+    }
+  }
+
+  function renderOppCards(data) {
+    const el = $('#opp-cards');
+    const cards = data.cards || [];
+    if (cards.length === 0) {
+      el.innerHTML = '<p class="empty">No opportunities right now. Ingest some tenant events via <code>/api/events/ingest-event</code> to see rules fire.</p>';
+      return;
+    }
+    el.innerHTML = cards.map((c) => `
+      <div class="opp-card">
+        <div class="headline">${c.headline}</div>
+        <p class="body">${c.body || ''}</p>
+        <a href="#" class="cta" onclick="event.preventDefault(); activate('${c.module_recommended}')">${c.cta_label}</a>
+      </div>
+    `).join('');
+  }
+
+  window.activate = async function(module_code) {
+    if (!currentTenant || !module_code) return;
+    alert(`Activating ${module_code}. (Requires entitlement + capabilities; will return deferred if prereqs missing.)`);
+    try {
+      const r = await fetch('/api/tenants/activate-module', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenant_id: currentTenant, module_code }),
+      });
+      const data = await r.json();
+      alert('Result: ' + JSON.stringify(data, null, 2).slice(0, 400));
+      await refresh(currentTenant);
+    } catch (e) {
+      alert('Activate error: ' + e.message);
+    }
+  };
+
+  function renderModules(data) {
+    const el = $('#modules');
+    const ents = data.entitlements || [];
+    if (ents.length === 0) {
+      el.innerHTML = '<p class="empty">No entitlements yet. Install a blueprint or grant one with <code>/api/tenants/install-blueprint</code>.</p>';
+      return;
+    }
+    el.innerHTML = ents.map((e) => `
+      <div class="module-row">
+        <div class="name">${e.module_code}</div>
+        <span class="status status-${e.state}">${e.state}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderCaps(data) {
+    const el = $('#caps');
+    const caps = data.all_capabilities || [];
+    el.innerHTML = caps.map((c) => `
+      <div class="module-row">
+        <div class="name">${c.capability_code}</div>
+        <span class="status status-${c.enabled ? 'active' : 'deactivated'}">${c.enabled ? 'enabled' : 'off'}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderKpis(data) {
+    const t = data.tenant || {};
+    const counts = {
+      'Plan': t.plan,
+      'Blueprint': t.blueprint_installed || '—',
+      'Active Modules': (t.modules_active || []).length,
+      'Capabilities': (t.capabilities_enabled || []).length,
+      'Subscription': t.subscription_status,
+      'Compliance': t.compliance_mode || 'standard',
+    };
+    $('#kpis').innerHTML = Object.entries(counts).map(([label, value]) =>
+      `<div><div class="kpi"><div class="label">${label}</div></div><div class="value">${value}</div></div>`
+    ).join('');
+  }
+
+  // Health probe
+  fetch('/api/health').then((r) => r.json()).then((d) => {
+    $('#platform-status').textContent = d.status || 'operational';
+  }).catch(() => {});
+
+  // Autoload from URL
+  const id = new URLSearchParams(location.search).get('tenant_id');
+  if (id) {
+    $('#tenant-input').value = id;
+    refresh(id);
+  }
+})();
+</script>
+
+</body>
+</html>

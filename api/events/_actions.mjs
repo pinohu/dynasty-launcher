@@ -26,6 +26,7 @@
 // -----------------------------------------------------------------------------
 
 import { emit } from './_bus.mjs';
+import { sendEmail, sendSms } from './_providers.mjs';
 
 // -----------------------------------------------------------------------------
 // Handler signature: async (ctx) => { ok: boolean, ...details }
@@ -188,25 +189,59 @@ const HANDLERS = {
   // ---------- External (stubs; emit only) ----------
 
   send_email: async (ctx) => {
-    // Stub: actually sending requires email capability wiring.
-    // Always emits so metrics + recommendations keep working.
+    // Uses the configured email provider (Acumbamail → Resend → stub).
+    // Falls back to stub when no keys present, so dev + tests work without
+    // external vendor access. Every attempt emits module.email_sent so
+    // metrics + recommendations populate regardless.
+    const to = resolveFrom(ctx.step.params || {}, 'to', ctx)
+      || ctx.trigger_event?.payload?.email
+      || ctx.trigger_event?.payload?.contact_email
+      || ctx.trigger_event?.payload?.customer_email
+      || null;
+    const template_ref = ctx.step.params?.template_ref || null;
+    const result = await sendEmail({
+      to: to || 'unknown@example.com',
+      subject: `Your Deputy: ${ctx.module.name || ctx.module.module_code}`,
+      body: null, // provider renders template_ref
+      template_ref,
+      tenant_id: ctx.tenant.tenant_id,
+      module_code: ctx.module.module_code,
+    });
     emit('module.email_sent', {
       tenant_id: ctx.tenant.tenant_id,
       module_code: ctx.module.module_code,
-      template_ref: ctx.step.params?.template_ref || null,
-      provider: 'stub',
+      template_ref,
+      to,
+      provider: result.provider || 'stub',
+      ok: result.ok,
     });
-    return { ok: true, provider: 'stub' };
+    return result;
   },
 
   send_sms: async (ctx) => {
+    const to = resolveFrom(ctx.step.params || {}, 'to', ctx)
+      || ctx.trigger_event?.payload?.phone
+      || ctx.trigger_event?.payload?.caller_phone
+      || ctx.trigger_event?.payload?.contact_phone
+      || ctx.trigger_event?.payload?.customer_phone
+      || null;
+    const template_ref = ctx.step.params?.template_ref || null;
+    const result = await sendSms({
+      to: to || '+15550000000',
+      body: null,
+      template_ref,
+      tenant_id: ctx.tenant.tenant_id,
+      module_code: ctx.module.module_code,
+    });
     emit('module.sms_sent', {
       tenant_id: ctx.tenant.tenant_id,
       module_code: ctx.module.module_code,
-      template_ref: ctx.step.params?.template_ref || null,
-      provider: 'stub',
+      template_ref,
+      to,
+      provider: result.provider || 'stub',
+      ok: result.ok,
     });
-    return { ok: true, provider: 'stub' };
+    return result;
   },
 };
 

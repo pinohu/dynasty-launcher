@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "no_show_recovery",
+  "name": "No-Show Recovery Workflow",
+  "description": "On appointment.no_show, wait initial_delay_minutes then text + email with rebook link.",
+  "trigger": { "event": "appointment.no_show" },
+  "actions": [
+    { "step": 1, "action": "wait", "params": { "minutes_from": "settings.initial_delay_minutes" } },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "params": { "template_ref": "tmpl_no_show_first", "to": "payload.contact_phone" }
+    },
+    {
+      "step": 3,
+      "action": "send_email",
+      "params": { "template_ref": "tmpl_no_show_first", "to": "payload.contact_email" }
+    },
+    { "step": 4, "action": "offer_rebook_link", "params": {} },
+    { "step": 5, "action": "create_task", "params": { "reason": "no_show_followup" } }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

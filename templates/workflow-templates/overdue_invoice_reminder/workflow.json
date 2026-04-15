@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "overdue_invoice_reminder",
+  "name": "Overdue Invoice Reminder Workflow",
+  "description": "On invoice.overdue (days 3/7/14/21), send escalating tone-ladder reminder. Escalate to owner at configured day.",
+  "trigger": {
+    "event": "invoice.overdue",
+    "conditions": {}
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "send_email",
+      "params": { "template_ref": "tmpl_overdue_email", "to": "payload.customer_email", "days_overdue_from": "payload.days_overdue" }
+    },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "if": "payload.customer_phone",
+      "params": { "template_ref": "tmpl_overdue_sms", "to": "payload.customer_phone" }
+    },
+    { "step": 3, "action": "create_task", "params": { "reason": "overdue_invoice" } },
+    {
+      "step": 4,
+      "action": "escalate_to_owner",
+      "if": "payload.days_overdue",
+      "params": { "threshold_from": "settings.owner_escalation_day" }
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

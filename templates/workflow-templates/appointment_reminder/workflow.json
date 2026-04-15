@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "appointment_reminder",
+  "name": "Appointment Reminder Workflow",
+  "description": "On appointment.upcoming (24h/1h offsets), send reminder SMS/email with confirm link.",
+  "trigger": {
+    "event": "appointment.upcoming",
+    "conditions": {}
+  },
+  "actions": [
+    { "step": 1, "action": "check_quiet_hours", "params": {}, "on_skip": "abort" },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "if": "settings.channel in ['sms', 'both']",
+      "params": { "template_ref": "tmpl_appt_reminder", "to": "payload.contact_phone" }
+    },
+    {
+      "step": 3,
+      "action": "send_email",
+      "if": "settings.channel in ['email', 'both']",
+      "params": { "template_ref": "tmpl_appt_reminder", "to": "payload.contact_email" }
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

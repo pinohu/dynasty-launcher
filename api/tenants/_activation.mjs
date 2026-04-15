@@ -50,7 +50,24 @@ const VALID_REASONS = new Set([
   'module_not_found',
   'revoked',
   'assisted_disallowed',
+  'hipaa_addon_required',
 ]);
+
+// Modules that touch PHI and therefore require the HIPAA add-on when the
+// tenant's blueprint is HIPAA-adjacent. The list is conservative; expand
+// as new PHI-touching modules land.
+// Source: docs/operations/PRICING_BILLING_IMPLEMENTATION_SPEC.md §3f HIPAA.
+const HIPAA_ADJACENT_BLUEPRINTS = new Set(['med-spa']);
+function requiresHipaaAddon(module, tenant) {
+  if (!tenant) return false;
+  const flags = new Set(module.compliance_flags || []);
+  const phiAdjacent = flags.has('pii_minimization') || flags.has('review_solicitation_policy');
+  // A tenant using a HIPAA-adjacent blueprint with a PHI-touching module
+  // must opt into the HIPAA add-on (via compliance_mode = 'hipaa').
+  return phiAdjacent
+    && HIPAA_ADJACENT_BLUEPRINTS.has(tenant.blueprint_installed)
+    && tenant.compliance_mode !== 'hipaa';
+}
 
 function failure(tenant_id, module_code, reason, details = {}) {
   if (!VALID_REASONS.has(reason)) {
@@ -163,6 +180,13 @@ export async function activateModule({ tenant_id, module_code, user_input = {} }
       && tenant.plan !== 'enterprise') {
     return failure(tenant_id, module_code, 'tier_mismatch',
       { plan: tenant.plan, required: module.tier_availability });
+  }
+
+  // HIPAA gate: block PHI-touching modules on HIPAA-adjacent blueprints unless
+  // the tenant has the HIPAA add-on (compliance_mode='hipaa').
+  if (requiresHipaaAddon(module, tenant)) {
+    return failure(tenant_id, module_code, 'hipaa_addon_required',
+      { blueprint: tenant.blueprint_installed, monthly_usd: 49 });
   }
 
   // Step 3: verify_capabilities

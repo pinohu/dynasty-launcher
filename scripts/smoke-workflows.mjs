@@ -239,19 +239,19 @@ async function main() {
 
   // ============================================================
   // Active module without workflow template: skipped_no_workflow
+  // (reschedule_workflow has no workflow.json yet — Wave 3 module)
   // ============================================================
   {
     const tenant = await setupHvacTenant(h, ['calendar', 'crm', 'email', 'sms']);
-    // appointment_confirmation has no workflow template file
-    await entitleAndActivate(h, tenant, 'appointment_confirmation', { channel: 'email' });
+    await entitleAndActivate(h, tenant, 'reschedule_workflow', {});
     const r = await invoke(h.ingest, {
       method: 'POST',
-      body: { tenant_id: tenant.tenant_id, event_type: 'appointment.created', payload: {} },
+      body: { tenant_id: tenant.tenant_id, event_type: 'reschedule.requested', payload: { source: 'link_click' } },
     });
     const evts = getEvents({ tenant_id: tenant.tenant_id });
     const skip = evts.find((e) => e.event_type === 'module.run.skipped_no_workflow');
     fails += log(
-      r.body.dispatch.dispatched === 1 && skip && skip.payload.module_code === 'appointment_confirmation',
+      r.body.dispatch.dispatched === 1 && skip && skip.payload.module_code === 'reschedule_workflow',
       'module without workflow template emits module.run.skipped_no_workflow (honest)',
       `skipped=${!!skip}`,
     );

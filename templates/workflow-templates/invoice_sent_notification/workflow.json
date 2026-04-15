@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "invoice_sent_notification",
+  "name": "Invoice Sent Notification Workflow",
+  "description": "On invoice.sent, confirm delivery to the customer with optional pay-link.",
+  "trigger": { "event": "invoice.sent" },
+  "actions": [
+    {
+      "step": 1,
+      "action": "send_email",
+      "if": "settings.channel in ['email', 'both']",
+      "params": { "template_ref": "tmpl_invoice_sent_email", "to": "payload.customer_email", "pay_link_from": "payload.pay_link" }
+    },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "if": "settings.channel in ['sms', 'both']",
+      "params": { "template_ref": "tmpl_invoice_sent_sms", "to": "payload.customer_phone" }
+    },
+    { "step": 3, "action": "log_delivery", "params": { "invoice_id_from": "payload.invoice_id" } }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}
