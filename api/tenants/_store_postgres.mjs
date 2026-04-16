@@ -82,6 +82,26 @@ async function ensureSchema() {
     `;
   }
   await pool().query(sql);
+
+  // Run additional migrations if present (002, 003, etc.)
+  const migrationDir = candidates[0] ? join(candidates[0], '..') : join(process.cwd(), 'scripts', 'migrations');
+  const extraMigrations = ['002_automation_tables.sql'];
+  for (const file of extraMigrations) {
+    const fileCandidates = [
+      join(process.cwd(), 'scripts', 'migrations', file),
+      join(selfDir, '..', '..', 'scripts', 'migrations', file),
+      join(selfDir, 'scripts', 'migrations', file),
+    ];
+    for (const c of fileCandidates) {
+      if (existsSync(c)) {
+        try { await pool().query(readFileSync(c, 'utf-8')); } catch (e) {
+          console.error(`[store_postgres] migration ${file} error (non-fatal):`, e.message);
+        }
+        break;
+      }
+    }
+  }
+
   _migrated = true;
 }
 
