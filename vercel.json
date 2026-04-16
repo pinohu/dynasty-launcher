@@ -50,7 +50,7 @@
       "includeFiles": "product/**/*.json"
     },
     "api/tenants/create-tenant.js": {
-      "maxDuration": 15,
+      "maxDuration": 60,
       "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/tenants/get-tenant.js": {
@@ -166,6 +166,18 @@
     "api/automations/webhook.js": {
       "maxDuration": 30,
       "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql,automations/**/*.json}"
+    },
+    "api/tenants/provision-automations.js": {
+      "maxDuration": 60,
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+    },
+    "api/tenants/upgrade-module.js": {
+      "maxDuration": 45,
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+    },
+    "api/storefront/catalog.js": {
+      "maxDuration": 30,
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     }
   },
   "headers": [
