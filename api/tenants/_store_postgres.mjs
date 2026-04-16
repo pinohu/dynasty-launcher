@@ -11,10 +11,14 @@
 // -----------------------------------------------------------------------------
 
 import pg from 'pg';
+import { readFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const { Pool } = pg;
 
 let _pool = null;
+let _migrated = false;
 
 function pool() {
   if (_pool) return _pool;
@@ -26,6 +30,59 @@ function pool() {
     max: 10,
   });
   return _pool;
+}
+
+// Auto-migrate on first use. Safe on every cold start because the migration
+// uses `CREATE TABLE IF NOT EXISTS` throughout. Idempotent by design.
+async function ensureSchema() {
+  if (_migrated) return;
+  const selfDir = dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    join(process.cwd(), 'scripts', 'migrations', '001_initial.sql'),
+    join(selfDir, '..', '..', 'scripts', 'migrations', '001_initial.sql'),
+    join(selfDir, 'scripts', 'migrations', '001_initial.sql'),
+  ];
+  let sql = null;
+  for (const c of candidates) {
+    if (existsSync(c)) { sql = readFileSync(c, 'utf-8'); break; }
+  }
+  if (!sql) {
+    // Inline fallback so the lambda works even if the migration file wasn't bundled.
+    sql = `
+      create table if not exists tenants (
+        tenant_id text primary key,
+        business_name text not null,
+        business_type text not null default 'general',
+        plan text not null default 'core',
+        subscription_status text not null default 'active',
+        onboarding_status text not null default 'in_progress',
+        timezone text not null default 'America/New_York',
+        locale text not null default 'en-US',
+        profile jsonb not null default '{}'::jsonb,
+        capabilities_enabled jsonb not null default '[]'::jsonb,
+        modules_active jsonb not null default '[]'::jsonb,
+        blueprint_installed text,
+        compliance_mode text,
+        created_at timestamptz not null default now(),
+        updated_at timestamptz not null default now()
+      );
+      create table if not exists entitlements (
+        entitlement_id text primary key,
+        tenant_id text not null references tenants(tenant_id) on delete cascade,
+        module_code text not null,
+        state text not null default 'entitled',
+        billing_source jsonb not null default '{"source_type":"module"}'::jsonb,
+        activated_at timestamptz,
+        deactivated_at timestamptz,
+        config_state jsonb,
+        prereq_check jsonb,
+        unique (tenant_id, module_code)
+      );
+      create index if not exists entitlements_tenant_idx on entitlements (tenant_id);
+    `;
+  }
+  await pool().query(sql);
+  _migrated = true;
 }
 
 const now = () => new Date().toISOString();
@@ -40,6 +97,7 @@ export const backend = 'postgres';
 // -----------------------------------------------------------------------------
 
 export async function createTenant(input = {}) {
+  await ensureSchema();
   const tenant_id = input.tenant_id || newId('tnt');
   const row = {
     tenant_id,
@@ -97,11 +155,13 @@ function rowToTenant(r) {
 }
 
 export async function getTenant(tenant_id) {
+  await ensureSchema();
   const { rows } = await pool().query(`select * from tenants where tenant_id = $1`, [tenant_id]);
   return rowToTenant(rows[0]);
 }
 
 export async function updateTenant(tenant_id, patch) {
+  await ensureSchema();
   const t = await getTenant(tenant_id);
   if (!t) return null;
   const u = { ...t, ...patch, updated_at: now() };
@@ -123,11 +183,13 @@ export async function updateTenant(tenant_id, patch) {
 }
 
 export async function listTenants() {
+  await ensureSchema();
   const { rows } = await pool().query(`select * from tenants order by created_at desc`);
   return rows.map(rowToTenant);
 }
 
 export async function setTenantCapability(tenant_id, cap, enabled) {
+  await ensureSchema();
   const t = await getTenant(tenant_id);
   if (!t) return null;
   const s = new Set(t.capabilities_enabled || []);
@@ -156,6 +218,7 @@ function rowToEntitlement(r) {
 }
 
 export async function getEntitlement(tenant_id, module_code) {
+  await ensureSchema();
   const { rows } = await pool().query(
     `select * from entitlements where tenant_id = $1 and module_code = $2`,
     [tenant_id, module_code],
@@ -164,6 +227,7 @@ export async function getEntitlement(tenant_id, module_code) {
 }
 
 export async function upsertEntitlement(tenant_id, module_code, patch) {
+  await ensureSchema();
   const existing = await getEntitlement(tenant_id, module_code);
   const merged = {
     schema_version: '1.0.0',
@@ -208,6 +272,7 @@ export async function upsertEntitlement(tenant_id, module_code, patch) {
 }
 
 export async function listTenantEntitlements(tenant_id) {
+  await ensureSchema();
   const { rows } = await pool().query(
     `select * from entitlements where tenant_id = $1`,
     [tenant_id],
@@ -216,17 +281,20 @@ export async function listTenantEntitlements(tenant_id) {
 }
 
 export async function _reset() {
+  await ensureSchema();
   await pool().query('truncate table entitlements');
   await pool().query('truncate table tenants cascade');
 }
 
 export async function _stats() {
+  await ensureSchema();
   const a = await pool().query(`select count(*)::int as n from tenants`);
   const b = await pool().query(`select count(*)::int as n from entitlements`);
   return { tenants: a.rows[0].n, entitlements: b.rows[0].n };
 }
 
 export async function healthcheck() {
+  await ensureSchema();
   try {
     await pool().query('select 1');
     return { ok: true, backend: 'postgres' };

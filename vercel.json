@@ -4,7 +4,12 @@
   "redirects": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "yourdeputy.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "yourdeputy.com"
+        }
+      ],
       "destination": "https://www.yourdeputy.com/:path*",
       "permanent": true
     }
@@ -42,54 +47,55 @@
     },
     "api/tenants/create-tenant.js": {
       "maxDuration": 15,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/tenants/get-tenant.js": {
-      "maxDuration": 10
+      "maxDuration": 10,
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/tenants/get-tenant-capabilities.js": {
       "maxDuration": 10,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/tenants/set-tenant-capability.js": {
       "maxDuration": 10,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/tenants/activate-module.js": {
       "maxDuration": 30,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/tenants/deactivate-module.js": {
       "maxDuration": 15,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/tenants/grant-entitlement.js": {
       "maxDuration": 15,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/events/ingest-event.js": {
       "maxDuration": 30,
-      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json}"
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/events/opportunity-cards.js": {
       "maxDuration": 15,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/tenants/install-blueprint.js": {
       "maxDuration": 30,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/billing/create-checkout-session.js": {
       "maxDuration": 30,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/billing/webhook.js": {
       "maxDuration": 30,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/admin/test-fire-event.js": {
       "maxDuration": 30,
-      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json}"
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/health.js": {
       "maxDuration": 15
@@ -132,6 +138,10 @@
     },
     "api/telemetry.js": {
       "maxDuration": 15
+    },
+    "api/health/backend.js": {
+      "maxDuration": 15,
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     }
   },
   "headers": [
@@ -159,19 +169,43 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(self), microphone=(self), geolocation=()" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.anthropic.com https://api.groq.com https://openrouter.ai https://api.stripe.com https://api.deepseek.com https://generativelanguage.googleapis.com https://api.mistral.ai; img-src 'self' data: blob: https://riku-assets.com; frame-src https://js.stripe.com https://accounts.google.com; media-src blob:" }
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains; preload"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(self), microphone=(self), geolocation=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.anthropic.com https://api.groq.com https://openrouter.ai https://api.stripe.com https://api.deepseek.com https://generativelanguage.googleapis.com https://api.mistral.ai; img-src 'self' data: blob: https://riku-assets.com; frame-src https://js.stripe.com https://accounts.google.com; media-src blob:"
+        }
       ]
     },
     {
       "source": "/sw.js",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
-        { "key": "Service-Worker-Allowed", "value": "/" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
       ]
     }
   ]
