@@ -41,27 +41,46 @@ function extractSkuCodes(event) {
   return codeList.map((code, i) => ({ sku_code: code, sku_type: typeList[i] || 'module' }));
 }
 
+// Expand pack/bundle SKUs into their constituent module codes
+function expandPackToModules(sku_code) {
+  try {
+    const catalog = getCatalog();
+    const bundle = (catalog.bundles || []).find(
+      (b) => b.bundle_code === sku_code || b.bundle_code === sku_code.replace(/-/g, '_'),
+    );
+    return bundle ? bundle.modules : [];
+  } catch { return []; }
+}
+
 async function grantForItems({ tenant_id, skus, subscription_id }) {
   const results = [];
   for (const { sku_type, sku_code } of skus) {
     if (sku_type === 'concierge') continue; // concierge is one-time, no entitlement
 
-    // For module SKUs, grant directly. For pack/suite/edition, Track 7 v2 will
-    // expand into their constituent modules. MVP: only module-level grants.
-    if (sku_type !== 'module') {
-      results.push({ sku_code, status: 'skipped_non_module' });
+    // Expand packs/bundles into their constituent modules
+    const moduleCodes = sku_type === 'module'
+      ? [sku_code]
+      : sku_type === 'pack' || sku_type === 'bundle'
+        ? expandPackToModules(sku_code)
+        : [];
+
+    if (moduleCodes.length === 0 && sku_type !== 'module') {
+      results.push({ sku_code, sku_type, status: 'skipped_unknown_type' });
       continue;
     }
-    const ent = await grantEntitlement({
-      tenant_id,
-      module_code: sku_code,
-      billing_source: {
-        source_type: 'module',
-        source_code: sku_code,
-        stripe_subscription_id: subscription_id || null,
-      },
-    });
-    results.push({ sku_code, status: 'granted', entitlement_id: ent.entitlement_id });
+
+    for (const module_code of moduleCodes) {
+      const ent = await grantEntitlement({
+        tenant_id,
+        module_code,
+        billing_source: {
+          source_type: sku_type,
+          source_code: sku_code,
+          stripe_subscription_id: subscription_id || null,
+        },
+      });
+      results.push({ sku_code: module_code, via_pack: sku_type !== 'module' ? sku_code : null, status: 'granted', entitlement_id: ent.entitlement_id });
+    }
   }
   return results;
 }

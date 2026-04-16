@@ -19,8 +19,9 @@
 import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
 import { createTenant } from './_store.mjs';
 import { getCatalog } from '../catalog/_lib.mjs';
+import { provisionAllAutomations } from './_provision.mjs';
 
-export const maxDuration = 15;
+export const maxDuration = 30;
 
 export default async function handler(req, res) {
   if (corsPreflight(req, res)) return;
@@ -58,6 +59,21 @@ export default async function handler(req, res) {
 
   const tenant = await createTenant(input);
 
+  // Zero-touch: pre-load ALL automations as dormant so they're ready to activate
+  // on button-click. This is fire-and-forget — tenant creation succeeds even if
+  // provisioning hits an edge case. The provision endpoint is idempotent and can
+  // be re-called later.
+  let provisioning = null;
+  try {
+    provisioning = await provisionAllAutomations({
+      tenant_id: tenant.tenant_id,
+      blueprint_code: blueprint_code || null,
+    });
+  } catch (e) {
+    console.error('[create-tenant] automation provisioning failed (non-fatal):', e.message);
+    provisioning = { ok: false, error: e.message };
+  }
+
   return res.status(201).json({
     tenant,
     blueprint_applied: blueprint
@@ -68,5 +84,6 @@ export default async function handler(req, res) {
           dashboard_kpis: blueprint.dashboard_kpis || [],
         }
       : null,
+    automations_provisioned: provisioning,
   });
 }
