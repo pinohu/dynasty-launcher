@@ -49,6 +49,7 @@ async function loadHandlers() {
     checkout: await import('../api/billing/create-checkout-session.js'),
     webhook: await import('../api/billing/webhook.js'),
     getTenant: await import('../api/tenants/get-tenant.js'),
+    catalogSync: await import('../api/billing/catalog-sync.js'),
   };
 }
 
@@ -85,9 +86,28 @@ async function main() {
       r.status === 200
         && r.body.session
         && r.body.session.stub === true
-        && r.body.line_items[0].price === 'price_module_webform_autoreply_annual',
-      'checkout returns stub session with expected price id',
-      `price=${r.body.line_items?.[0]?.price} stub=${r.body.session?.stub}`,
+        && r.body.lookup_keys?.[0] === 'module_webform_autoreply_annual'
+        && r.body.line_items[0].price === 'price_stub_module_webform_autoreply_annual',
+      'checkout returns stub session with resolved lookup_key',
+      `lookup_key=${r.body.lookup_keys?.[0]} price=${r.body.line_items?.[0]?.price}`,
+    );
+  }
+
+  // ============================================================
+  // create-checkout-session concierge (one-time)
+  // ============================================================
+  {
+    const r = await invoke(h.checkout, {
+      body: {
+        tenant_id: tenant.tenant_id,
+        items: [{ sku_type: 'concierge', sku_code: 'guided' }],
+      },
+    });
+    fails += log(
+      r.status === 200
+        && r.body.lookup_keys?.[0] === 'concierge_guided_onetime',
+      'concierge checkout uses onetime lookup_key',
+      `lookup_key=${r.body.lookup_keys?.[0]}`,
     );
   }
 
@@ -193,6 +213,84 @@ async function main() {
     fails += log(
       r.status === 200 && r.body.actions?.[0]?.type === 'ignored',
       'webhook returns 200 + ignored for unhandled event types',
+    );
+  }
+
+  // ============================================================
+  // catalog-sync: requires admin key
+  // ============================================================
+  {
+    const r = await invoke(h.catalogSync, { body: {} });
+    fails += log(
+      r.status === 401 && r.body.error === 'admin_key_required',
+      'catalog-sync rejects request without admin key',
+      `status=${r.status}`,
+    );
+  }
+
+  // ============================================================
+  // catalog-sync: dry-run returns expected SKU coverage
+  // ============================================================
+  {
+    const r = await invoke(h.catalogSync, {
+      headers: { 'x-admin-key': 'test-admin-key' },
+      body: { dry_run: true },
+    });
+    const ops = r.body?.operations || [];
+    const byType = ops.reduce((acc, o) => {
+      acc[o.sku_type] = (acc[o.sku_type] || 0) + 1; return acc;
+    }, {});
+    const expectModules = byType.module >= 15;      // 20 live modules in catalog
+    const expectPacks = byType.pack === 5;
+    const expectSuites = byType.suite === 3;
+    const expectEditions = byType.edition === 3;    // enterprise skipped (null price)
+    const expectConcierge = byType.concierge === 3; // starter/guided/premium
+    const expectTier = byType.tier === 1;
+    fails += log(
+      r.status === 200 && r.body.dry_run === true
+        && expectModules && expectPacks && expectSuites && expectEditions
+        && expectConcierge && expectTier,
+      'catalog-sync dry_run enumerates all SKU families',
+      `modules=${byType.module} packs=${byType.pack} suites=${byType.suite} editions=${byType.edition} concierge=${byType.concierge} tier=${byType.tier}`,
+    );
+  }
+
+  // ============================================================
+  // catalog-sync: skipped enterprise edition recorded
+  // ============================================================
+  {
+    const r = await invoke(h.catalogSync, {
+      headers: { 'x-admin-key': 'test-admin-key' },
+      body: { dry_run: true, scope: 'editions' },
+    });
+    const skipped = r.body?.summary?.skipped || [];
+    const enterpriseSkipped = skipped.some(
+      (s) => s.sku_type === 'edition' && s.sku_code === 'enterprise' && s.reason === 'no_price',
+    );
+    fails += log(enterpriseSkipped, 'catalog-sync skips enterprise edition (Talk to sales)');
+  }
+
+  // ============================================================
+  // catalog-sync: module prices include monthly + annual with correct math
+  // ============================================================
+  {
+    const r = await invoke(h.catalogSync, {
+      headers: { 'x-admin-key': 'test-admin-key' },
+      body: { dry_run: true, scope: 'modules' },
+    });
+    const webform = (r.body.operations || []).find(
+      (o) => o.sku_code === 'webform_autoreply',
+    );
+    const keys = (webform?.prices || []).map((p) => p.lookup_key);
+    const hasMonthly = keys.includes('module_webform_autoreply_monthly');
+    const hasAnnual = keys.includes('module_webform_autoreply_annual');
+    const annual = (webform?.prices || []).find((p) => p.lookup_key?.endsWith('_annual'));
+    // $19/mo × 12 × 0.8 = $182.40 → rounded $182 → 18200 cents
+    const annualCentsOk = annual?.unit_amount === 18200;
+    fails += log(
+      hasMonthly && hasAnnual && annualCentsOk,
+      'catalog-sync generates module monthly + annual (20% off) prices',
+      `annual_cents=${annual?.unit_amount}`,
     );
   }
 

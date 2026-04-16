@@ -7,38 +7,56 @@
 //   {
 //     tenant_id: string,           (required)
 //     items: [                     (required, non-empty)
-//       { sku_type: "module" | "pack" | "suite" | "edition" | "concierge",
+//       { sku_type: "module" | "pack" | "suite" | "edition" | "tier" | "concierge",
 //         sku_code: string,
 //         quantity?: number }
 //     ],
-//     billing_cycle?: "monthly" | "annual"  (default monthly),
+//     billing_cycle?: "monthly" | "annual"  (default monthly; concierge is always onetime),
 //     success_url?: string,
 //     cancel_url?: string
 //   }
 //
 // Response:
-//   { session: { id, url, stub? }, line_items }
+//   { session: { id, url, stub? }, line_items, lookup_keys }
 //
-// Stripe product/price IDs are not yet provisioned; this endpoint therefore
-// runs in STUB mode and returns a fake session URL when stripe_live is
-// unconfigured. Wire Stripe by:
-//   1. set STRIPE_SECRET_KEY (or DYNASTY_TOOL_CONFIG.payments.stripe_live)
-//   2. run /api/billing/catalog-sync (not yet built) to create Products+Prices
-//   3. this endpoint auto-flips to live mode
+// Stripe lifecycle:
+//   - In stub mode (no STRIPE_SECRET_KEY / DYNASTY_TOOL_CONFIG.payments.stripe_live)
+//     the endpoint returns a fake session URL; the stub Stripe wrapper echoes
+//     back synthetic price IDs built from the lookup_keys.
+//   - In live mode:
+//       1. We compute the lookup_key for each line (e.g. "module_webform_autoreply_monthly")
+//       2. Call Stripe /prices?lookup_keys[]=... to resolve → real price ID
+//       3. Pass those real IDs into Checkout
+//     Lookup keys are created by /api/billing/catalog-sync. If a key doesn't
+//     resolve, we return 409 with a pointer to run the sync.
 // -----------------------------------------------------------------------------
 
 import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
-import { createCheckoutSession, isConfigured } from './_stripe.mjs';
+import { createCheckoutSession, isConfigured, listPrices } from './_stripe.mjs';
 import { getTenant } from '../tenants/_store.mjs';
 import { getCatalog } from '../catalog/_lib.mjs';
 
 export const maxDuration = 30;
 
-function resolvePrice(sku_type, sku_code, billing_cycle) {
-  // In stub mode we return synthetic price IDs. Once catalog-sync runs, the
-  // Stripe price IDs will live in product/pricing/ or a mapping file.
-  const suffix = billing_cycle === 'annual' ? '_annual' : '_monthly';
-  return `price_${sku_type}_${sku_code}${suffix}`;
+function buildLookupKey(sku_type, sku_code, billing_cycle) {
+  if (sku_type === 'concierge') return `concierge_${sku_code}_onetime`;
+  const cycle = billing_cycle === 'annual' ? 'annual' : 'monthly';
+  return `${sku_type}_${sku_code}_${cycle}`;
+}
+
+async function resolvePriceId(lookup_key) {
+  // In stub mode _stripe.mjs returns { stub: true, data: [] }; we map to a
+  // synthetic ID to keep smoke tests working.
+  if (!isConfigured()) return `price_stub_${lookup_key}`;
+  const result = await listPrices({ lookup_keys: [lookup_key] });
+  const hit = (result?.data || [])[0];
+  if (!hit) {
+    const err = new Error(`price not found for lookup_key '${lookup_key}' — run /api/billing/catalog-sync`);
+    err.code = 'lookup_key_not_found';
+    err.lookup_key = lookup_key;
+    throw err;
+  }
+  return hit.id;
 }
 
 export default async function handler(req, res) {
@@ -66,6 +84,7 @@ export default async function handler(req, res) {
   const tierCodes = new Set((tiers.tiers || []).map((t) => t.tier_code));
 
   const line_items = [];
+  const lookup_keys = [];
   for (const item of items) {
     const { sku_type, sku_code } = item;
     let ok = false;
@@ -80,10 +99,21 @@ export default async function handler(req, res) {
     }
     if (!ok) return res.status(400).json({ error: `unknown ${sku_type} '${sku_code}'` });
 
-    line_items.push({
-      price: resolvePrice(sku_type, sku_code, billing_cycle),
-      quantity: item.quantity || 1,
-    });
+    const lookup_key = buildLookupKey(sku_type, sku_code, billing_cycle);
+    try {
+      const price_id = await resolvePriceId(lookup_key);
+      line_items.push({ price: price_id, quantity: item.quantity || 1 });
+      lookup_keys.push(lookup_key);
+    } catch (e) {
+      if (e.code === 'lookup_key_not_found') {
+        return res.status(409).json({
+          error: 'price_not_synced',
+          lookup_key: e.lookup_key,
+          hint: 'POST /api/billing/catalog-sync (admin) to create Stripe products + prices',
+        });
+      }
+      return res.status(500).json({ error: 'stripe_lookup_failed', message: e.message });
+    }
   }
 
   const mode = items.every((i) => i.sku_type === 'concierge') ? 'payment' : 'subscription';
@@ -105,6 +135,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       session: { id: session.id, url: session.url, stub: session.stub || false },
       line_items,
+      lookup_keys,
       stripe_configured: isConfigured(),
     });
   } catch (e) {

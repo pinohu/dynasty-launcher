@@ -113,6 +113,15 @@ export async function listProducts({ limit = 100 } = {}) {
   return stripeCall(`/products?limit=${limit}`);
 }
 
+export async function retrieveProduct(id) {
+  if (!stripEnabled()) {
+    const err = new Error('not_found');
+    err.status = 404;
+    throw err;
+  }
+  return stripeCall(`/products/${encodeURIComponent(id)}`);
+}
+
 export async function createProduct({ id, name, description, metadata = {} }) {
   if (!stripEnabled()) return { stub: true, id: id || `prod_stub_${name}`, name };
   return stripeCall('/products', {
@@ -121,11 +130,33 @@ export async function createProduct({ id, name, description, metadata = {} }) {
   });
 }
 
-export async function createPrice({ product, unit_amount, currency = 'usd', recurring, metadata = {}, nickname = null }) {
-  if (!stripEnabled()) return { stub: true, id: `price_stub_${product}_${unit_amount}`, unit_amount, product };
+export async function listPrices({ lookup_keys = [], product = null, limit = 100 } = {}) {
+  if (!stripEnabled()) return { stub: true, data: [] };
+  const params = [`limit=${limit}`];
+  if (product) params.push(`product=${encodeURIComponent(product)}`);
+  for (const lk of lookup_keys) {
+    params.push(`lookup_keys[]=${encodeURIComponent(lk)}`);
+  }
+  return stripeCall(`/prices?${params.join('&')}`);
+}
+
+export async function createPrice({ product, unit_amount, currency = 'usd', recurring, metadata = {}, nickname = null, lookup_key = null, transfer_lookup_key = true }) {
+  if (!stripEnabled()) {
+    return {
+      stub: true,
+      id: `price_stub_${product}_${unit_amount}`,
+      unit_amount, product, lookup_key,
+    };
+  }
+  const body = { product, unit_amount, currency, metadata, nickname };
+  if (recurring) body.recurring = recurring;
+  if (lookup_key) {
+    body.lookup_key = lookup_key;
+    body.transfer_lookup_key = transfer_lookup_key;
+  }
   return stripeCall('/prices', {
     method: 'POST',
-    body: { product, unit_amount, currency, recurring, metadata, nickname },
+    body,
   });
 }
 
