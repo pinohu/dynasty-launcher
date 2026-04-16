@@ -98,7 +98,7 @@ async function provisionAutomations(tenant_id, blueprint_code) {
     const { module_code } = module;
     if (!module_code) continue;
 
-    const config_state = recommendedModules.has(module_code) ? 'recommended' : null;
+    const config_state = recommendedModules.has(module_code) ? { recommended: true, blueprint: blueprint_code } : null;
 
     const ent_id = newId('ent');
     const config_id = newId('cfg');
@@ -144,7 +144,7 @@ async function provisionAutomations(tenant_id, blueprint_code) {
       billing_source, config_state, prereq_check, activated_at, deactivated_at
     )
     VALUES
-    ${entitlementRows.map((_, i) => `($${i * 9 + 1}, $${i * 9 + 2}, $${i * 9 + 3}, $${i * 9 + 4}, $${i * 9 + 5}, $${i * 9 + 6}, $${i * 9 + 7}, $${i * 9 + 8}, $${i * 9 + 9})`).join(',')}
+    ${entitlementRows.map((_, i) => `($${i * 9 + 1}, $${i * 9 + 2}, $${i * 9 + 3}, $${i * 9 + 4}, $${i * 9 + 5}::jsonb, $${i * 9 + 6}::jsonb, $${i * 9 + 7}::jsonb, $${i * 9 + 8}, $${i * 9 + 9})`).join(',')}
     ON CONFLICT (tenant_id, module_code) DO NOTHING
   `;
 
@@ -154,8 +154,8 @@ async function provisionAutomations(tenant_id, blueprint_code) {
     r.module_code,
     r.state,
     JSON.stringify(r.billing_source),
-    r.config_state,
-    r.prereq_check,
+    r.config_state ? JSON.stringify(r.config_state) : null,
+    r.prereq_check ? JSON.stringify(r.prereq_check) : null,
     r.activated_at,
     r.deactivated_at,
   ]);
@@ -167,7 +167,7 @@ async function provisionAutomations(tenant_id, blueprint_code) {
       created_at, updated_at
     )
     VALUES
-    ${automationsRows.map((_, i) => `($${i * 12 + 1}, $${i * 12 + 2}, $${i * 12 + 3}, $${i * 12 + 4}, $${i * 12 + 5}, $${i * 12 + 6}, $${i * 12 + 7}, $${i * 12 + 8}, $${i * 12 + 9}, $${i * 12 + 10}, $${i * 12 + 11}, $${i * 12 + 12})`).join(',')}
+    ${automationsRows.map((_, i) => `($${i * 12 + 1}, $${i * 12 + 2}, $${i * 12 + 3}, $${i * 12 + 4}, $${i * 12 + 5}::jsonb, $${i * 12 + 6}::time, $${i * 12 + 7}::time, $${i * 12 + 8}, $${i * 12 + 9}, $${i * 12 + 10}, $${i * 12 + 11}, $${i * 12 + 12})`).join(',')}
     ON CONFLICT (tenant_id, module_code) DO NOTHING
   `;
 
