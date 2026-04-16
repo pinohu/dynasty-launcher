@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Your Deputy — Platform Observability</title>
+<style>
+:root{--bg:#0b0d10;--card:#13171c;--card-hover:#1a1f26;--border:#242a31;--fg:#e8eaed;--muted:#9aa3ad;--accent:#4da3ff;--success:#3ecf8e;--warn:#f0b429;--danger:#ff6b6b}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;background:var(--bg);color:var(--fg);line-height:1.5;font-size:14px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.container{max-width:1280px;margin:0 auto;padding:32px 24px}
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border);padding:16px 24px;position:sticky;top:0;background:var(--bg);z-index:50}
+header h1{margin:0;font-size:18px;letter-spacing:-.01em}
+header .meta{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--muted)}
+header .dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0}
+header .dot.off{background:var(--danger)}
+.btn{padding:7px 14px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--fg);font-size:12px;cursor:pointer}
+.btn:hover{border-color:var(--accent);background:var(--card-hover)}
+section{margin-bottom:40px}
+section h2{font-size:16px;margin:0 0 14px;border-bottom:1px solid var(--border);padding-bottom:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+.st{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px}
+.st .l{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:2px}
+.st .v{font-size:22px;font-weight:700}
+.st .s{font-size:11px;color:var(--muted);margin-top:2px}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase}
+.pill-ok{background:rgba(62,207,142,.12);color:var(--success)}
+.pill-warn{background:rgba(240,180,41,.12);color:var(--warn)}
+.pill-err{background:rgba(255,107,107,.12);color:var(--danger)}
+.pill-info{background:rgba(77,163,255,.12);color:var(--accent)}
+.bars{margin-bottom:14px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:12px}
+.bar-row .lbl{min-width:130px;color:var(--muted);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .track{flex:1;height:18px;background:var(--bg);border-radius:4px;overflow:hidden}
+.bar-row .fill{height:100%;border-radius:4px;min-width:2px;transition:width .3s}
+.bar-row .cnt{min-width:36px;text-align:right;font-weight:600;font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.03)}
+tr:hover{background:rgba(255,255,255,.02)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;overflow-x:auto}
+.card h3{font-size:13px;margin:0 0 10px;color:var(--accent);font-weight:600}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end}
+.filters label{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.filters input,.filters select{padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:5px;color:var(--fg);font-size:12px}
+.filters input:focus{outline:none;border-color:var(--accent)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:100}
+.overlay .box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px;width:340px;text-align:center}
+.overlay .box h2{margin:0 0 16px;font-size:18px}
+.overlay .box input{width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--fg);font-size:14px;margin-bottom:12px;text-align:center}
+.overlay .box input:focus{outline:none;border-color:var(--accent)}
+.overlay .box .err{color:var(--danger);font-size:12px;min-height:18px;margin-bottom:8px}
+.pager{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:12px;color:var(--muted)}
+.none{color:var(--muted);font-size:12px;padding:16px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="auth">
+  <div class="box">
+    <h2>Admin Access</h2>
+    <input type="password" id="key-input" placeholder="Enter admin key" autocomplete="off">
+    <div class="err" id="auth-err"></div>
+    <button class="btn" style="width:100%;padding:10px;font-size:14px" onclick="tryAuth()">Authenticate</button>
+  </div>
+</div>
+
+<header>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:20px">&#9978;</span>
+    <h1>Platform Observability</h1>
+    <span class="pill pill-info">ADMIN</span>
+  </div>
+  <div class="meta">
+    <span class="dot" id="h-dot"></span>
+    <span id="h-backend">--</span>
+    <span id="h-ts">--</span>
+    <span id="h-cd">30s</span>
+    <button class="btn" onclick="refresh()">Refresh</button>
+    <button class="btn" onclick="location.href='/admin'">Admin</button>
+    <button class="btn" onclick="location.href='/'">Site</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <section id="s-system"><h2>System</h2><div class="stats" id="r-system"></div></section>
+
+  <section id="s-catalog"><h2>Catalog</h2><div class="stats" id="r-cat-stats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><h3>Modules by Status</h3><div id="r-cat-status"></div></div>
+      <div class="card"><h3>Modules by Category</h3><div id="r-cat-cat"></div></div>
+    </div>
+  </section>
+
+  <section id="s-tenants"><h2>Tenants</h2><div class="stats" id="r-ten-stats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><h3>By Plan</h3><div id="r-ten-plan"></div></div>
+      <div class="card"><h3>By Onboarding Status</h3><div id="r-ten-onb"></div></div>
+      <div class="card"><h3>By Subscription</h3><div id="r-ten-sub"></div></div>
+      <div class="card"><h3>By Blueprint</h3><div id="r-ten-bp"></div></div>
+    </div>
+  </section>
+
+  <section id="s-ent"><h2>Entitlements</h2><div class="stats" id="r-ent-stats"></div>
+    <div class="card"><h3>By Module (drill-down)</h3><div id="r-ent-mod" style="overflow-x:auto"></div></div>
+    <div class="card"><h3>Recent Entitlements</h3><div id="r-ent-recent"></div></div>
+  </section>
+
+  <section id="s-events"><h2>Events</h2><div class="stats" id="r-ev-stats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><h3>Top Event Types</h3><div id="r-ev-type"></div></div>
+      <div class="card"><h3>Recent Failures</h3><div id="r-ev-fail"></div></div>
+    </div>
+  </section>
+
+  <section id="s-act"><h2>Activations</h2><div class="stats" id="r-act-stats"></div>
+    <div class="card"><h3>Failures by Reason</h3><div id="r-act-reason"></div></div>
+  </section>
+
+  <section id="s-billing"><h2>Billing</h2><div class="stats" id="r-bill-stats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><h3>Webhook Events</h3><div id="r-bill-wh"></div></div>
+      <div class="card"><h3>Recent Checkouts</h3><div id="r-bill-chk"></div></div>
+    </div>
+  </section>
+
+  <section id="s-wf"><h2>Workflows</h2><div class="stats" id="r-wf-stats"></div>
+    <div class="card"><h3>Templates</h3><div id="r-wf-list"></div></div>
+  </section>
+
+  <section id="s-log"><h2>Event Log Viewer</h2>
+    <div class="filters">
+      <label>Tenant ID<input id="f-tenant" placeholder="ten_..."></label>
+      <label>Event Type<input id="f-type" placeholder="module.activated"></label>
+      <label>Module<input id="f-mod" placeholder="mod_seo"></label>
+      <label>Since<input id="f-since" type="date"></label>
+      <label>Until<input id="f-until" type="date"></label>
+      <label>&nbsp;<button class="btn" onclick="loadLog(0)">Fetch</button></label>
+    </div>
+    <div class="card"><div id="r-log"></div>
+      <div class="pager"><button class="btn" id="log-prev" onclick="logPage(-1)" disabled>Prev</button><span id="log-info">--</span><button class="btn" id="log-next" onclick="logPage(1)" disabled>Next</button></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+const KEY_NAME='yd_admin_key';
+let adminKey=localStorage.getItem(KEY_NAME)||'';
+let data=null, countdown=30, timer=null, logState={offset:0,limit:50,total:0};
+
+/* ── helpers ─────────────────────────────────── */
+const $=s=>document.getElementById(s);
+const fmt=n=>n==null?'--':Number(n).toLocaleString();
+const pct=(n,max)=>max?Math.round(n/max*100):0;
+const trunc=(s,n)=>s&&s.length>n?s.slice(0,n)+'...':s||'--';
+const ts=iso=>iso?new Date(iso).toLocaleString():'-';
+const pill=(t,c)=>`<span class="pill pill-${c}">${t}</span>`;
+const boolPill=v=>v?pill('yes','ok'):pill('no','err');
+
+function bars(obj,color){
+  if(!obj||!Object.keys(obj).length) return '<div class="none">No data</div>';
+  const max=Math.max(...Object.values(obj),1);
+  return '<div class="bars">'+Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>
+    `<div class="bar-row"><span class="lbl" title="${k}">${k}</span><div class="track"><div class="fill" style="width:${pct(v,max)}%;background:${color||'var(--accent)'}"></div></div><span class="cnt">${fmt(v)}</span></div>`
+  ).join('')+'</div>';
+}
+
+function stCard(label,value,sub,cls){
+  return `<div class="st${cls?' '+cls:''}"><div class="l">${label}</div><div class="v">${value}</div>${sub?'<div class="s">'+sub+'</div>':''}</div>`;
+}
+
+/* ── auth ─────────────────────────────────────── */
+function showAuth(){$('auth').style.display='flex'}
+function hideAuth(){$('auth').style.display='none'}
+
+window.tryAuth=function(){
+  const k=$('key-input').value.trim();
+  if(!k){$('auth-err').textContent='Key required';return}
+  adminKey=k;localStorage.setItem(KEY_NAME,k);
+  $('auth-err').textContent='';
+  init();
+};
+$('key-input').addEventListener('keydown',e=>{if(e.key==='Enter')tryAuth()});
+
+/* ── fetch ────────────────────────────────────── */
+function hdrs(){return{'x-admin-key':adminKey}}
+
+async function fetchMetrics(){
+  const r=await fetch('/api/admin/metrics',{headers:hdrs()});
+  if(r.status===401){showAuth();return null}
+  return r.json();
+}
+
+async function fetchEvents(p){
+  const q=new URLSearchParams();
+  if(p.tenant_id)q.set('tenant_id',p.tenant_id);
+  if(p.event_type)q.set('event_type',p.event_type);
+  if(p.module_code)q.set('module_code',p.module_code);
+  if(p.since)q.set('since',p.since);
+  if(p.until)q.set('until',p.until);
+  q.set('limit',p.limit||50);
+  q.set('offset',p.offset||0);
+  const r=await fetch('/api/admin/events?'+q,{headers:hdrs()});
+  if(r.status===401){showAuth();return null}
+  return r.json();
+}
+
+/* ── render: system ───────────────────────────── */
+function rSystem(d){
+  if(!d){$('r-system').innerHTML='<div class="none">Loading failed</div>';return}
+  const h=d.health||{};
+  $('h-dot').className='dot'+(h.ok?'':' off');
+  $('h-backend').textContent=d.backend||'unknown';
+  let html=stCard('Backend',d.backend||'--');
+  html+=stCard('Database',d.database_url_set?'Connected':'Not set','',d.database_url_set?'':'');
+  html+=stCard('Stripe',d.stripe_configured?'Configured':'Not set');
+  html+=stCard('Admin Key',d.admin_key_set?'Set':'Missing');
+  if(h.ok!==undefined) html+=stCard('Health',h.ok?'OK':'Degraded','',h.ok?'':'');
+  const ss=d.store_stats;
+  if(ss&&!ss.error){
+    html+=stCard('Tenants (store)',fmt(ss.tenants));
+    html+=stCard('Entitlements (store)',fmt(ss.entitlements));
+  }
+  $('r-system').innerHTML=html;
+}
+
+/* ── render: catalog ──────────────────────────── */
+function rCatalog(d){
+  if(!d||d.error){$('r-cat-stats').innerHTML='<div class="none">'+((d&&d.error)||'No data')+'</div>';return}
+  let html=stCard('Modules',fmt(d.modules?.total));
+  html+=stCard('Bundles',fmt(d.bundles?.total));
+  html+=stCard('Suites',fmt(d.suites));
+  html+=stCard('Editions',fmt(d.editions));
+  html+=stCard('Personas',fmt(d.personas));
+  html+=stCard('Blueprints',fmt(d.blueprints));
+  html+=stCard('Capabilities',fmt(d.capabilities));
+  $('r-cat-stats').innerHTML=html;
+  $('r-cat-status').innerHTML=bars(d.modules?.by_status,'var(--accent)');
+  $('r-cat-cat').innerHTML=bars(d.modules?.by_category,'var(--warn)');
+}
+
+/* ── render: tenants ──────────────────────────── */
+function rTenants(d){
+  const el=$('r-ten-stats');
+  if(!d){el.innerHTML='<div class="none">No database connected</div>';return}
+  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  el.innerHTML=stCard('Total',fmt(d.total))+stCard('Last 7d',fmt(d.created_last_7d),'new tenants')+stCard('Last 30d',fmt(d.created_last_30d),'new tenants');
+  $('r-ten-plan').innerHTML=bars(d.by_plan,'var(--accent)');
+  $('r-ten-onb').innerHTML=bars(d.by_onboarding_status,'var(--warn)');
+  $('r-ten-sub').innerHTML=bars(d.by_subscription_status,'var(--success)');
+  $('r-ten-bp').innerHTML=bars(d.by_blueprint,'var(--muted)');
+}
+
+/* ── render: entitlements ─────────────────────── */
+function rEntitlements(d){
+  const el=$('r-ent-stats');
+  if(!d){el.innerHTML='<div class="none">No database connected</div>';return}
+  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  let html=stCard('Total',fmt(d.total));
+  if(d.by_state) Object.entries(d.by_state).forEach(([k,v])=>{html+=stCard(k,fmt(v))});
+  html+=stCard('Activated 7d',fmt(d.activated_last_7d));
+  html+=stCard('Deactivated 7d',fmt(d.deactivated_last_7d));
+  el.innerHTML=html;
+
+  // drill-down table by module
+  const bm=d.by_module;
+  if(bm&&Object.keys(bm).length){
+    const states=new Set();
+    Object.values(bm).forEach(o=>Object.keys(o).forEach(s=>states.add(s)));
+    const sts=[...states].sort();
+    let t='<table><tr><th>Module</th>'+sts.map(s=>'<th>'+s+'</th>').join('')+'</tr>';
+    Object.entries(bm).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mod,obj])=>{
+      t+='<tr><td><strong>'+mod+'</strong></td>'+sts.map(s=>'<td>'+(obj[s]||'-')+'</td>').join('')+'</tr>';
+    });
+    $('r-ent-mod').innerHTML=t+'</table>';
+  } else $('r-ent-mod').innerHTML='<div class="none">No module data</div>';
+
+  // recent
+  if(d.recent&&d.recent.length){
+    let t='<table><tr><th>Tenant</th><th>Module</th><th>State</th><th>Activated</th><th>Deactivated</th></tr>';
+    d.recent.forEach(r=>{t+='<tr><td>'+trunc(r.tenant_id,16)+'</td><td>'+r.module_code+'</td><td>'+pill(r.state,r.state==='active'?'ok':r.state==='suspended'?'err':'warn')+'</td><td>'+ts(r.activated_at)+'</td><td>'+ts(r.deactivated_at)+'</td></tr>'});
+    $('r-ent-recent').innerHTML=t+'</table>';
+  } else $('r-ent-recent').innerHTML='<div class="none">No recent entitlements</div>';
+}
+
+/* ── render: events ───────────────────────────── */
+function rEvents(d){
+  const el=$('r-ev-stats');
+  if(!d){el.innerHTML='<div class="none">No database connected</div>';return}
+  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  el.innerHTML=stCard('Total',fmt(d.total))+stCard('Last 1h',fmt(d.last_1h))+stCard('Last 24h',fmt(d.last_24h))+stCard('Last 7d',fmt(d.last_7d));
+  $('r-ev-type').innerHTML=bars(d.by_type,'var(--accent)');
+  if(d.recent_failures&&d.recent_failures.length){
+    let t='<table><tr><th>Type</th><th>Tenant</th><th>Module</th><th>Time</th></tr>';
+    d.recent_failures.forEach(r=>{t+='<tr><td>'+pill(r.event_type,'err')+'</td><td>'+trunc(r.tenant_id,16)+'</td><td>'+(r.module_code||'-')+'</td><td>'+ts(r.emitted_at)+'</td></tr>'});
+    $('r-ev-fail').innerHTML=t+'</table>';
+  } else $('r-ev-fail').innerHTML='<div class="none">No recent failures</div>';
+}
+
+/* ── render: activations ──────────────────────── */
+function rActivations(d){
+  const el=$('r-act-stats');
+  if(!d){el.innerHTML='<div class="none">No database connected</div>';return}
+  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  el.innerHTML=stCard('Activated',fmt(d.activated),'','')
+    +stCard('Failed',fmt(d.failed),'',d.failed>0?'':'')
+    +stCard('Deferred',fmt(d.deferred));
+  $('r-act-reason').innerHTML=bars(d.failed_by_reason,'var(--danger)');
+}
+
+/* ── render: billing ──────────────────────────── */
+function rBilling(d){
+  const el=$('r-bill-stats');
+  if(!d){el.innerHTML='<div class="none">No billing data</div>';return}
+  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  el.innerHTML=stCard('Stripe',d.stripe_configured?'Configured':'Not set');
+  $('r-bill-wh').innerHTML=bars(d.webhook_event_counts,'var(--accent)');
+  if(d.recent_checkouts&&d.recent_checkouts.length){
+    let t='<table><tr><th>Tenant</th><th>Time</th><th>Payload</th></tr>';
+    d.recent_checkouts.forEach(r=>{t+='<tr><td>'+trunc(r.tenant_id,16)+'</td><td>'+ts(r.emitted_at)+'</td><td><code>'+trunc(JSON.stringify(r.payload),60)+'</code></td></tr>'});
+    $('r-bill-chk').innerHTML=t+'</table>';
+  } else $('r-bill-chk').innerHTML='<div class="none">No recent checkouts</div>';
+}
+
+/* ── render: workflows ────────────────────────── */
+function rWorkflows(d){
+  const el=$('r-wf-stats');
+  if(!d){el.innerHTML='<div class="none">No workflow data</div>';return}
+  el.innerHTML=stCard('Templates Found',d.templates_root_found?'Yes':'No')+stCard('Total',fmt(d.total));
+  if(d.templates&&d.templates.length){
+    $('r-wf-list').innerHTML=d.templates.map(t=>pill(t,'info')).join(' ');
+  } else $('r-wf-list').innerHTML='<div class="none">No templates</div>';
+}
+
+/* ── render all ───────────────────────────────── */
+function renderAll(d){
+  if(!d)return;
+  $('h-ts').textContent='Updated '+new Date(d.timestamp).toLocaleTimeString();
+  try{rSystem(d.system)}catch(e){console.error('system',e)}
+  try{rCatalog(d.catalog)}catch(e){console.error('catalog',e)}
+  try{rTenants(d.tenants)}catch(e){console.error('tenants',e)}
+  try{rEntitlements(d.entitlements)}catch(e){console.error('entitlements',e)}
+  try{rEvents(d.events)}catch(e){console.error('events',e)}
+  try{rActivations(d.activations)}catch(e){console.error('activations',e)}
+  try{rBilling(d.billing)}catch(e){console.error('billing',e)}
+  try{rWorkflows(d.workflows)}catch(e){console.error('workflows',e)}
+}
+
+/* ── event log viewer ─────────────────────────── */
+window.loadLog=async function(offset){
+  logState.offset=offset||0;
+  const d=await fetchEvents({
+    tenant_id:$('f-tenant').value.trim(),
+    event_type:$('f-type').value.trim(),
+    module_code:$('f-mod').value.trim(),
+    since:$('f-since').value||null,
+    until:$('f-until').value||null,
+    limit:logState.limit,
+    offset:logState.offset
+  });
+  if(!d)return;
+  logState.total=d.total;
+  if(d.events&&d.events.length){
+    let t='<table><tr><th>Event ID</th><th>Type</th><th>Tenant</th><th>Module</th><th>Time</th><th>Payload</th></tr>';
+    d.events.forEach(r=>{t+='<tr><td style="font-family:monospace;font-size:10px">'+trunc(r.event_id,12)+'</td><td>'+r.event_type+'</td><td>'+trunc(r.tenant_id,16)+'</td><td>'+(r.module_code||'-')+'</td><td>'+ts(r.emitted_at)+'</td><td><code style="font-size:10px">'+trunc(JSON.stringify(r.payload),50)+'</code></td></tr>'});
+    $('r-log').innerHTML=t+'</table>';
+  } else $('r-log').innerHTML='<div class="none">No events found</div>';
+  const start=logState.offset+1,end=Math.min(logState.offset+logState.limit,logState.total);
+  $('log-info').textContent=logState.total?start+'-'+end+' of '+logState.total:'0 events';
+  $('log-prev').disabled=logState.offset===0;
+  $('log-next').disabled=!d.has_more;
+};
+window.logPage=function(dir){loadLog(Math.max(0,logState.offset+dir*logState.limit))};
+
+/* ── refresh + countdown ──────────────────────── */
+window.refresh=async function(){
+  countdown=30;
+  try{data=await fetchMetrics();renderAll(data)}catch(e){console.error('refresh',e)}
+};
+
+function tick(){
+  countdown--;
+  $('h-cd').textContent=countdown+'s';
+  if(countdown<=0)refresh();
+}
+
+/* ── init ─────────────────────────────────────── */
+async function init(){
+  hideAuth();
+  await refresh();
+  loadLog(0);
+  if(timer)clearInterval(timer);
+  timer=setInterval(tick,1000);
+}
+
+if(adminKey)init();else showAuth();
+})();
+</script>
+</body>
+</html>

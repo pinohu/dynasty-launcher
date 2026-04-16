@@ -97,6 +97,14 @@
       "maxDuration": 60,
       "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
+    "api/admin/metrics.js": {
+      "maxDuration": 30,
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
+    },
+    "api/admin/events.js": {
+      "maxDuration": 15,
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+    },
     "api/admin/test-fire-event.js": {
       "maxDuration": 30,
       "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
