@@ -221,6 +221,23 @@
   <div id="modules-grid" class="grid"></div>
 </section>
 
+<section id="automations-section">
+  <h2>Atomic automations <span id="auto-count" style="font-size:13px;color:var(--muted);font-weight:400"></span></h2>
+  <p class="section-lede">Every automation that ships with the platform. Filter by category, package, archetype, or search by name.</p>
+  <div class="controls" id="auto-controls" style="margin-bottom:16px">
+    <label for="auto-cat">Category:</label>
+    <select id="auto-cat"><option value="">All (45 categories)</option></select>
+    <label for="auto-pkg">Package:</label>
+    <select id="auto-pkg"><option value="">All packages</option></select>
+    <label for="auto-arch">Archetype:</label>
+    <select id="auto-arch"><option value="">All archetypes</option></select>
+    <label for="auto-trigger">Trigger:</label>
+    <select id="auto-trigger"><option value="">All</option><option value="webhook">Webhook</option><option value="cron">Scheduled</option></select>
+    <input type="text" id="auto-q" placeholder="Search automations..." style="min-width:180px">
+  </div>
+  <div id="automations-grid" class="grid"></div>
+</section>
+
 <section id="concierge-section">
   <h2>Concierge setup</h2>
   <p class="section-lede">One-time setup help. Skip the onboarding self-serve if you want a human to wire everything up for you.</p>
@@ -460,9 +477,126 @@
     updateUrl();
   });
 
+  // ── Automations section ────────────────────────────────────────
+  let autoData = null;
+  let autoFiltered = [];
+
+  async function loadAutomations() {
+    autoData = await fetchJSON('/api/catalog/automations');
+    // Populate filter dropdowns once
+    const catSel = $('#auto-cat');
+    if (catSel.options.length <= 1 && autoData.categories) {
+      Object.entries(autoData.categories).sort((a, b) => +a[0] - +b[0]).forEach(([num, name]) => {
+        const opt = document.createElement('option');
+        opt.value = num;
+        opt.textContent = `${num}. ${name}`;
+        catSel.appendChild(opt);
+      });
+    }
+    const pkgSel = $('#auto-pkg');
+    if (pkgSel.options.length <= 1 && autoData.packages) {
+      autoData.packages.forEach((p) => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p.replace(/_/g, ' ');
+        pkgSel.appendChild(opt);
+      });
+    }
+    const archSel = $('#auto-arch');
+    if (archSel.options.length <= 1 && autoData.archetypes) {
+      autoData.archetypes.forEach((a) => {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a.replace(/_/g, ' ');
+        archSel.appendChild(opt);
+      });
+    }
+    renderAutomations();
+  }
+
+  function renderAutomations() {
+    if (!autoData) return;
+    let items = autoData.automations || [];
+
+    const catV = $('#auto-cat').value;
+    const pkgV = $('#auto-pkg').value;
+    const archV = $('#auto-arch').value;
+    const trigV = $('#auto-trigger').value;
+    const qV = ($('#auto-q').value || '').toLowerCase();
+
+    if (catV) items = items.filter((a) => String(a.cat) === catV);
+    if (pkgV) items = items.filter((a) => (a.packages || []).includes(pkgV));
+    if (trigV) items = items.filter((a) => a.trigger === trigV);
+    if (qV) items = items.filter((a) => a.name.toLowerCase().includes(qV));
+
+    // Archetype filter: need to re-fetch or local-filter using package membership
+    if (archV) {
+      // Fetch the archetype's packages client-side — we have the data
+      items = items.filter((a) => a.packages && a.packages.length > 0);
+    }
+
+    autoFiltered = items;
+    $('#auto-count').textContent = `(${items.length} of ${autoData.total})`;
+
+    if (items.length === 0) {
+      $('#automations-grid').innerHTML = `<div class="card"><p>No automations match your filters. Try broadening your search.</p></div>`;
+      return;
+    }
+
+    // Group by category for readability
+    const byCategory = {};
+    items.forEach((a) => {
+      const cat = a.category_name || `Category ${a.cat}`;
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(a);
+    });
+
+    let html = '';
+    Object.entries(byCategory).sort((a, b) => a[0].localeCompare(b[0])).forEach(([catName, autos]) => {
+      html += `<div style="grid-column:1/-1;margin-top:12px;margin-bottom:4px;font-size:13px;color:var(--accent);font-weight:600;">${catName} (${autos.length})</div>`;
+      autos.forEach((a) => {
+        const trigLabel = a.trigger === 'cron' ? 'Scheduled' : 'Webhook';
+        const cronLabel = a.cron ? ` · <span style="font-family:monospace;font-size:10px">${a.cron}</span>` : '';
+        html += `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+              <h3 style="font-size:13px">${a.name}</h3>
+              <span style="font-size:10px;color:var(--muted);white-space:nowrap">${a.id}</span>
+            </div>
+            <div class="meta">
+              <span>${trigLabel}${cronLabel}</span>
+              <span>${a.step_count} steps</span>
+              ${a.packages.map((p) => `<span>${p}</span>`).join('')}
+            </div>
+          </div>`;
+      });
+    });
+    $('#automations-grid').innerHTML = html;
+  }
+
+  // Wire up automation filters
+  ['auto-cat', 'auto-pkg', 'auto-arch', 'auto-trigger'].forEach((id) => {
+    $('#' + id).addEventListener('change', () => {
+      // If archetype changes, we re-fetch server-side for accurate filtering
+      if (id === 'auto-arch' && $('#auto-arch').value) {
+        fetchJSON('/api/catalog/automations?archetype=' + encodeURIComponent($('#auto-arch').value))
+          .then((d) => { autoData = d; renderAutomations(); });
+      } else if (id === 'auto-arch' && !$('#auto-arch').value) {
+        fetchJSON('/api/catalog/automations').then((d) => { autoData = d; renderAutomations(); });
+      } else {
+        renderAutomations();
+      }
+    });
+  });
+  let _autoDebounce = null;
+  $('#auto-q').addEventListener('input', () => {
+    clearTimeout(_autoDebounce);
+    _autoDebounce = setTimeout(renderAutomations, 200);
+  });
+
   (async () => {
     try {
-      await loadAll();
+      await Promise.all([loadAll(), loadAutomations()]);
       render();
     } catch (e) {
       document.querySelector('.container').insertAdjacentHTML('afterbegin',

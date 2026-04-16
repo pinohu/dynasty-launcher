@@ -41,6 +41,10 @@
       "maxDuration": 10,
       "includeFiles": "product/**/*.json"
     },
+    "api/catalog/automations.js": {
+      "maxDuration": 10,
+      "includeFiles": "{product/**/*.json,api/automation-catalog.js}"
+    },
     "api/catalog/tiers.js": {
       "maxDuration": 10,
       "includeFiles": "product/**/*.json"
