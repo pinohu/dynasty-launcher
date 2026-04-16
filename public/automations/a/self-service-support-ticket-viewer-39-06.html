@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-Service Support Ticket Viewer — Your Deputy</title>
+<meta name="description" content="Self-Service Support Ticket Viewer — webhook-triggered automation with 2 steps for client portal &amp; self-service. Part of Your Deputy's service business automation platform.">
+<link rel="canonical" href="https://www.yourdeputy.com/automations/a/self-service-support-ticket-viewer-39-06">
+<meta property="og:type" content="product">
+<meta property="og:title" content="Self-Service Support Ticket Viewer — Your Deputy">
+<meta property="og:description" content="Self-Service Support Ticket Viewer — webhook-triggered automation with 2 steps for client portal &amp; self-service. Part of Your Deputy's service business automation platform.">
+<meta property="og:url" content="https://www.yourdeputy.com/automations/a/self-service-support-ticket-viewer-39-06">
+<meta property="og:site_name" content="Your Deputy">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Self-Service Support Ticket Viewer — Your Deputy">
+<meta name="twitter:description" content="Self-Service Support Ticket Viewer — webhook-triggered automation with 2 steps for client portal &amp; self-service. Part of Your Deputy's service business automation platform.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Self-Service Support Ticket Viewer","description":"Self-Service Support Ticket Viewer — webhook-triggered automation with 2 steps for client portal & self-service. Part of Your Deputy's service business automation platform.","brand":{"@type":"Brand","name":"Your Deputy"},"url":"https://www.yourdeputy.com/automations/a/self-service-support-ticket-viewer-39-06"}</script>
+<style>
+:root {
+  --bg: #0b0d10; --card: #13171c; --card-hover: #1a1f26;
+  --border: #242a31; --fg: #e8eaed; --muted: #9aa3ad;
+  --accent: #4da3ff; --success: #3ecf8e; --warn: #f0b429;
+  --danger: #ff6b6b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; line-height: 1.6; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+.breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+.breadcrumb a { color: var(--muted); }
+.breadcrumb a:hover { color: var(--accent); }
+.hero-section {
+  border: 1px solid var(--border); border-radius: 12px; padding: 36px;
+  background: linear-gradient(180deg, #121621 0%, #0b0d10 100%);
+  margin-bottom: 36px;
+}
+.hero-section h1 { font-size: 28px; letter-spacing: -0.02em; margin-bottom: 8px; }
+.hero-section .tagline { color: var(--muted); font-size: 16px; max-width: 640px; margin-bottom: 16px; }
+.hero-section .price-tag { font-size: 22px; font-weight: 700; color: var(--success); margin-bottom: 12px; }
+.hero-section .price-tag span { font-size: 14px; font-weight: 400; color: var(--muted); }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pill { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px; font-size: 12px; color: var(--muted); }
+.pill-accent { border-color: var(--accent); color: var(--accent); }
+.pill-success { border-color: var(--success); color: var(--success); }
+.section { margin-bottom: 36px; }
+.section h2 { font-size: 18px; margin-bottom: 14px; letter-spacing: -0.01em; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.section p, .section li { color: var(--muted); font-size: 14px; }
+.section ul { padding-left: 20px; }
+.section li { margin-bottom: 6px; }
+.card-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.card-sm {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px; transition: border-color 0.15s;
+}
+.card-sm:hover { border-color: var(--accent); }
+.card-sm h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.card-sm p { font-size: 12px; color: var(--muted); }
+.card-sm .meta { font-size: 11px; color: var(--muted); margin-top: 8px; }
+.cta-bar {
+  margin-top: 40px; padding: 24px; border-radius: 10px;
+  background: linear-gradient(135deg, #162238 0%, #0f1922 100%);
+  border: 1px solid var(--accent);
+  text-align: center;
+}
+.cta-bar h3 { font-size: 18px; margin-bottom: 8px; }
+.cta-bar p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+.btn {
+  display: inline-block; padding: 12px 28px; border-radius: 8px;
+  background: var(--accent); color: #fff; font-weight: 600; font-size: 14px;
+  text-decoration: none; transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.85; text-decoration: none; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 640px) {
+  .wrap { padding: 24px 16px; }
+  .hero-section { padding: 24px; }
+  .hero-section h1 { font-size: 22px; }
+  .two-col { grid-template-columns: 1fr; }
+}
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { text-align: left; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+th { color: var(--fg); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+td { color: var(--muted); }
+.steps-list { counter-reset: step; list-style: none; padding: 0; }
+.steps-list li { counter-increment: step; padding: 10px 0 10px 40px; position: relative; border-left: 2px solid var(--border); margin-left: 12px; }
+.steps-list li::before {
+  content: counter(step); position: absolute; left: -14px; top: 8px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--card); border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--accent);
+}
+.steps-list li:last-child { border-left-color: transparent; }
+footer { border-top: 1px solid var(--border); margin-top: 60px; padding: 24px 0; color: var(--muted); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="breadcrumb"><a href="/marketplace">Marketplace</a> › <a href="/automations/categories/client-portal-self-service">Client Portal &amp; Self-Service</a> › <span>Self-Service Support Ticket Viewer</span></nav>
+
+<div class="hero-section">
+  <div class="pills" style="margin-bottom:12px">
+    <span class="pill pill-accent">Client Portal &amp; Self-Service</span>
+    <span class="pill">webhook-triggered</span>
+    
+    <span class="pill pill-success">field_service package</span>
+    <span class="pill">2 steps</span>
+  </div>
+  <h1>Self-Service Support Ticket Viewer</h1>
+  <p class="tagline">Automation 39.06 — a webhook-triggered workflow with 2 steps for client portal &amp; self-service.</p>
+</div>
+
+<div class="section">
+  <h2>Workflow Steps</h2>
+  <ol class="steps-list"><li><strong>Extract Data</strong></li>
+<li><strong>API Call</strong> — Get Tickets</li></ol>
+</div>
+
+<div class="two-col">
+  <div class="section">
+    <h2>Trigger</h2>
+    <p><strong>Type:</strong> webhook</p>
+    <p>Fires on incoming webhook event</p>
+  </div>
+  <div class="section">
+    <h2>Included In</h2>
+    <p><span class="pill pill-success" style="margin-right:6px">field_service</span></p>
+  </div>
+</div>
+
+<div class="section">
+  <h2>More in Client Portal &amp; Self-Service</h2>
+  <div class="card-grid"><a href="/automations/a/portal-account-provisioner-39-01" class="card-sm">
+      <h3>Portal Account Provisioner</h3>
+      <p>3 steps · webhook-triggered</p>
+    </a>
+<a href="/automations/a/portal-sso-setup-39-02" class="card-sm">
+      <h3>Portal SSO Setup</h3>
+      <p>3 steps · webhook-triggered</p>
+    </a>
+<a href="/automations/a/self-service-document-upload-39-03" class="card-sm">
+      <h3>Self-Service Document Upload</h3>
+      <p>3 steps · webhook-triggered</p>
+    </a>
+<a href="/automations/a/self-service-invoice-viewer-39-04" class="card-sm">
+      <h3>Self-Service Invoice Viewer</h3>
+      <p>2 steps · webhook-triggered</p>
+    </a>
+<a href="/automations/a/self-service-appointment-booker-39-05" class="card-sm">
+      <h3>Self-Service Appointment Booker</h3>
+      <p>3 steps · webhook-triggered</p>
+    </a>
+<a href="/automations/a/portal-usage-analytics-39-07" class="card-sm">
+      <h3>Portal Usage Analytics</h3>
+      <p>2 steps · cron-triggered</p>
+    </a></div>
+</div>
+
+<div class="cta-bar">
+  <h3>Activate this automation</h3>
+  <p>Part of the Your Deputy platform for service businesses. One click to turn on.</p>
+  <a href="/dashboard" class="btn">Get Started</a>
+</div>
+<footer>© 2026 Dynasty Empire LLC · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/marketplace">Back to Marketplace</a></footer>
+</div>
+</body>
+</html>
