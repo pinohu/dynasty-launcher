@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build path diagnostic — Your Deputy</title>
+<meta name="description" content="Four questions → a recommended path, tier, and build shape — judgment-first routing into a prefilled builder session.">
+<link rel="canonical" href="https://yourdeputy.com/quiz">
+<meta property="og:title" content="Business Diagnostic — Your Deputy">
+<meta property="og:description" content="Four questions to a recommended path, tier, and build shape for your business.">
+<meta property="og:url" content="https://yourdeputy.com/quiz">
+<style>
+:root{--gold:#C9A84C;--tx:#FAFAF9;--sub:#A1A1AA;--dim:#8A8A8A;--bg:#0C0C14;--card:#1E1E2A;--bdr:rgba(255,255,255,.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.55;padding:30px 18px 44px;max-width:860px;margin:0 auto}
+a{color:var(--gold)}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.18;margin:10px 0 8px}
+p.lead{color:var(--sub);max-width:720px;margin-bottom:18px}
+.back{font-size:14px;color:var(--sub);text-decoration:none}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:16px 16px 14px}
+.card h2{font-size:16px;margin-bottom:10px}
+.hint{font-size:12px;color:var(--dim);margin-bottom:10px}
+.opts{display:grid;grid-template-columns:1fr;gap:8px}
+label.opt{display:flex;align-items:flex-start;gap:9px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);padding:9px 10px;border-radius:10px;cursor:pointer}
+label.opt span{font-size:14px;color:var(--sub)}
+input[type="radio"],input[type="checkbox"]{accent-color:var(--gold);margin-top:2px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btn{display:inline-block;text-decoration:none;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;border:1px solid var(--bdr);color:var(--sub);background:transparent}
+.btn-p{background:var(--gold);color:#09090B;border-color:var(--gold)}
+.result{display:none;margin-top:18px;background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.02));border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:16px}
+.result h3{font-size:18px;margin-bottom:8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
+.chip{font-size:11px;padding:5px 8px;border-radius:999px;background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.25)}
+.list{margin:0 0 0 18px;color:var(--sub);font-size:14px}
+.list li{margin:4px 0}
+small{display:block;margin-top:12px;color:var(--dim);font-size:12px}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+.skip:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important}
+</style>
+</head>
+<body>
+<a href="#quiz-form" class="skip" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999;font-size:14px;padding:8px 16px;background:var(--gold);color:#09090B;border-radius:8px;font-weight:600">Skip to quiz</a>
+<main role="main">
+<a class="back" href="/">&#8592; Back home</a>
+<h1>Match your bottleneck to the right build path</h1>
+<p class="lead">Four questions route you to path, tier, and site shape — not a generic “AI build.” Open the app prefilled when you are ready.</p>
+
+<form id="quiz-form">
+  <div class="grid">
+    <section class="card">
+      <h2>1) Where are you right now?</h2>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="stage" value="idea" checked><span>Idea stage: deciding whether this is worth building</span></label>
+        <label class="opt"><input type="radio" name="stage" value="raising"><span>Validating and preparing for lender/investor conversations</span></label>
+        <label class="opt"><input type="radio" name="stage" value="launching"><span>Ready to launch and need execution across ops and growth</span></label>
+        <label class="opt"><input type="radio" name="stage" value="live"><span>Already live and need consistency, fixes, and optimization</span></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2) What hurts most right now?</h2>
+      <div class="hint">Pick up to 2.</div>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="pain" value="viability"><span>I need proof before spending more money</span></label>
+        <label class="opt"><input type="checkbox" name="pain" value="capital"><span>I need a funding-ready narrative and numbers</span></label>
+        <label class="opt"><input type="checkbox" name="pain" value="ops"><span>Leads, payments, and follow-ups are disorganized</span></label>
+        <label class="opt"><input type="checkbox" name="pain" value="authority"><span>I need authority/SEO to compound lead flow</span></label>
+        <label class="opt"><input type="checkbox" name="pain" value="vertical"><span>I need trade/vertical workflow assistance</span></label>
+        <label class="opt"><input type="checkbox" name="pain" value="directory"><span>My business model is directory/community-led</span></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3) Delivery preference</h2>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="delivery" value="diy" checked><span>I can activate some tools myself if I have clear docs</span></label>
+        <label class="opt"><input type="radio" name="delivery" value="assisted"><span>I want core ops connected for me where possible</span></label>
+        <label class="opt"><input type="radio" name="delivery" value="full"><span>I want the widest implementation scope now</span></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4) Budget comfort (now)</h2>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="budget" value="free" checked><span>Start at $0 and decide after evidence</span></label>
+        <label class="opt"><input type="radio" name="budget" value="scoring_pro"><span>$19/mo for ongoing scoring access</span></label>
+        <label class="opt"><input type="radio" name="budget" value="blueprint"><span>$297 for a deep diagnostic + execution plan</span></label>
+        <label class="opt"><input type="radio" name="budget" value="strategy_pack"><span>$697 for all 90+ documents (no code/deploy)</span></label>
+        <label class="opt"><input type="radio" name="budget" value="foundation"><span>$1,997 for the full build + deployment</span></label>
+      </div>
+    </section>
+  </div>
+
+  <div class="bar">
+    <button class="btn btn-p" type="button" id="run-quiz">Get my recommendation</button>
+    <a class="btn" href="/for/">Browse all paths instead</a>
+  </div>
+</form>
+
+<section id="result" class="result" aria-live="polite">
+  <h3 id="res-title"></h3>
+  <div class="chips">
+    <span id="res-path" class="chip"></span>
+    <span id="res-tier" class="chip"></span>
+    <span id="res-shape" class="chip"></span>
+  </div>
+  <ul id="res-why" class="list"></ul>
+  <div class="bar">
+    <a id="res-build" class="btn btn-p" href="/app" role="button">Open prefilled build</a>
+    <a id="res-guide" class="btn" href="/for" role="button">Read matching guide</a>
+  </div>
+  <small>Recommendation is a starting point, not legal/financial advice. You can adjust before committing.</small>
+</section>
+</main>
+
+<script>
+const DIAGNOSTIC_SESSION_ID = (() => {
+  try {
+    const k = 'dynasty_diag_session_id'
+    const existing = localStorage.getItem(k)
+    if (existing) return existing
+    const created = `diag_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+    localStorage.setItem(k, created)
+    return created
+  } catch {
+    return `diag_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+  }
+})()
+
+function sendTelemetry(eventName, properties) {
+  fetch('/api/telemetry', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event: eventName,
+      distinct_id: DIAGNOSTIC_SESSION_ID,
+      properties: {
+        source: 'quiz',
+        path: '/quiz',
+        ...properties
+      }
+    })
+  }).catch(() => {})
+}
+
+const SEGMENTS = {
+  viability: { label: 'Proof before spend', guide: '/for/viability', plan: 'free', archetype: 'demo_express', cta: 'Start with free scoring' },
+  capital: { label: 'Funding readiness', guide: '/for/capital', plan: 'foundation', archetype: 'starter_5p', cta: 'Start Foundation path' },
+  foundation_diy: { label: 'Plans + product first', guide: '/for/foundation-diy', plan: 'foundation', archetype: 'landing_1p', cta: 'Start Foundation DIY path' },
+  revenue_ops: { label: 'Revenue operations', guide: '/for/revenue-ops', plan: 'foundation', archetype: 'growth', cta: 'Start Foundation path' },
+  full_launch: { label: 'Full launch (widest scope)', guide: '/for/full-launch', plan: 'foundation', archetype: 'enterprise_full', cta: 'Start Foundation path' },
+  authority_seo: { label: 'Authority / SEO growth', guide: '/for/authority-seo', plan: 'foundation', archetype: 'authority_site', cta: 'Start Foundation authority path' },
+  trades_vertical: { label: 'Vertical workflow assist', guide: '/for/trades-vertical', plan: 'foundation', archetype: 'growth', cta: 'Start Foundation + assist' },
+  directory: { label: 'Directory/community model', guide: '/for/directory', plan: 'foundation', archetype: 'enterprise_full', cta: 'Start Foundation directory path' },
+  managed_ops: { label: 'Post-launch runtime stability', guide: '/for/managed', plan: 'foundation', archetype: 'growth', cta: 'Start Foundation (managed available now in Professional and Enterprise tiers)' }
+}
+
+const PAIN_LABELS = {
+  viability: 'Proof before spending',
+  capital: 'Funding-ready materials',
+  ops: 'Revenue operations',
+  authority: 'Authority and SEO growth',
+  vertical: 'Vertical workflow assist',
+  directory: 'Directory/community model'
+}
+
+const ARCHETYPE_LABELS = {
+  demo_express: 'Fast proof',
+  landing_1p: 'Lean launch',
+  starter_5p: '5-page launch',
+  growth: 'Growth stack',
+  authority_site: 'Authority SEO',
+  enterprise_full: 'Full launch'
+}
+
+sendTelemetry('diagnostic_viewed', { version: 1 })
+
+function getFormValue(name) {
+  const item = document.querySelector(`input[name="${name}"]:checked`)
+  return item ? item.value : ''
+}
+
+function getCheckedValues(name) {
+  return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(n => n.value)
+}
+
+function pickRecommendation() {
+  const stage = getFormValue('stage')
+  const budget = getFormValue('budget')
+  const delivery = getFormValue('delivery')
+  const pains = getCheckedValues('pain').slice(0, 2)
+
+  const score = {
+    viability: 0,
+    capital: 0,
+    foundation_diy: 0,
+    revenue_ops: 0,
+    full_launch: 0,
+    authority_seo: 0,
+    trades_vertical: 0,
+    directory: 0,
+    managed_ops: 0
+  }
+
+  if (stage === 'idea') score.viability += 4
+  if (stage === 'raising') score.capital += 4
+  if (stage === 'launching') { score.full_launch += 3; score.revenue_ops += 2 }
+  if (stage === 'live') score.managed_ops += 5
+
+  for (const pain of pains) {
+    if (pain === 'viability') score.viability += 4
+    if (pain === 'capital') score.capital += 4
+    if (pain === 'ops') score.revenue_ops += 4
+    if (pain === 'authority') score.authority_seo += 4
+    if (pain === 'vertical') score.trades_vertical += 4
+    if (pain === 'directory') score.directory += 4
+  }
+
+  if (delivery === 'diy') score.foundation_diy += 3
+  if (delivery === 'assisted') score.revenue_ops += 2
+  if (delivery === 'full') score.full_launch += 3
+
+  if (budget === 'free') score.viability += 2
+  if (budget === 'scoring_pro') { score.viability += 2 }
+  if (budget === 'blueprint') { score.capital += 2; score.viability += 1 }
+  if (budget === 'strategy_pack') { score.capital += 2; score.foundation_diy += 1 }
+  if (budget === 'foundation') { score.capital += 1; score.foundation_diy += 2 }
+  
+  
+
+  const top = Object.entries(score).sort((a, b) => b[1] - a[1])[0][0]
+  const map = {
+    viability: 'viability',
+    capital: 'capital',
+    foundation_diy: 'foundation_diy',
+    revenue_ops: 'revenue_ops',
+    full_launch: 'full_launch',
+    authority_seo: 'authority_seo',
+    trades_vertical: 'trades_vertical',
+    directory: 'directory',
+    managed_ops: 'managed_ops'
+  }
+  const key = map[top] || 'viability'
+  const rec = SEGMENTS[key]
+
+  const reasons = []
+  if (pains.length) reasons.push(`Primary blocker selected: ${pains.map(p => PAIN_LABELS[p] || p).join(' + ')}`)
+  reasons.push(`Stage: ${stage}; delivery: ${delivery}; budget: ${budget}`)
+  return { key, rec, reasons }
+}
+
+document.getElementById('run-quiz').addEventListener('click', () => {
+  const stage = getFormValue('stage')
+  const budget = getFormValue('budget')
+  const delivery = getFormValue('delivery')
+  const pains = getCheckedValues('pain').slice(0, 2)
+  const { key, rec, reasons } = pickRecommendation()
+  const res = document.getElementById('result')
+  const planLabels = { foundation: 'Foundation ($1,997)', strategy_pack: 'Strategy Pack ($697)', blueprint: 'Blueprint ($297)', scoring_pro: 'Scoring Pro ($19/mo)', free: 'Free scoring ($0)' }
+  // Override plan based on budget selection
+  let finalPlan = rec.plan;
+  if (budget === 'strategy_pack') finalPlan = 'strategy_pack';
+  else if (budget === 'blueprint') finalPlan = 'blueprint';
+  else if (budget === 'scoring_pro') finalPlan = 'scoring_pro';
+  else if (budget === 'free') finalPlan = 'free';
+  const planLabel = planLabels[finalPlan] || 'Free scoring ($0)'
+
+  document.getElementById('res-title').textContent = `Recommended: ${rec.label}`
+  document.getElementById('res-path').textContent = `Path: ${key.replace('_', ' ')}`
+  document.getElementById('res-tier').textContent = `Tier: ${planLabel}`
+  document.getElementById('res-shape').textContent = `Site shape: ${ARCHETYPE_LABELS[rec.archetype] || rec.archetype}`
+  const why = document.getElementById('res-why')
+  why.innerHTML = reasons.map(r => `<li>${r}</li>`).join('')
+
+  const build = `/app?plan=${encodeURIComponent(finalPlan)}&archetype=${encodeURIComponent(rec.archetype)}&segment=${encodeURIComponent(key)}&source=quiz&diag_id=${encodeURIComponent(DIAGNOSTIC_SESSION_ID)}`
+  document.getElementById('res-build').href = build
+  document.getElementById('res-build').textContent = rec.cta
+  document.getElementById('res-guide').href = rec.guide
+
+  try {
+    localStorage.setItem('dynasty_diagnostic_recommendation', JSON.stringify({
+      session_id: DIAGNOSTIC_SESSION_ID,
+      ts: new Date().toISOString(),
+      recommended_segment: key,
+      recommended_plan: finalPlan,
+      recommended_archetype: rec.archetype,
+      answers: { stage, budget, delivery, pains }
+    }))
+  } catch {}
+
+  sendTelemetry('diagnostic_completed', {
+    version: 1,
+    stage,
+    budget,
+    delivery,
+    pains,
+    recommended_segment: key,
+    recommended_plan: finalPlan,
+    recommended_archetype: rec.archetype
+  })
+
+  res.style.display = 'block'
+  res.scrollIntoView({ behavior: 'smooth', block: 'start' })
+})
+</script>
+</body>
+</html>
