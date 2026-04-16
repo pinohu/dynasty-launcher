@@ -1,0 +1,272 @@
+{
+  "name": "Category 15: Invoicing & Billing",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [50, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "path": "invoicing",
+        "responseMode": "responseNode",
+        "auth": "headerAuth"
+      },
+      "name": "Billing Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ $json }}"
+      },
+      "name": "Billing Router",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "auto_invoice",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Auto Invoice Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/auto-generate",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {jobId: $json.jobId} }}"
+      },
+      "name": "Generate Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "recurring_billing",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Recurring Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/recurring",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {customerId: $json.customerId, amount: $json.amount, frequency: $json.frequency} }}"
+      },
+      "name": "Setup Recurring Billing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "time_calculation",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Time Calc Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/time-calculation",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {jobId: $json.jobId, hours: $json.hours, rate: $json.rate} }}"
+      },
+      "name": "Calculate Time-Based",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "expense_tracking",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Expense Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/expense-tracking",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {jobId: $json.jobId, expenses: $json.expenses} }}"
+      },
+      "name": "Track Expenses",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/payment-reminders",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {invoiceId: $json.invoiceId, clientId: $json.clientId} }}"
+      },
+      "name": "Send Payment Reminders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/late-fees",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {invoiceId: $json.invoiceId} }}"
+      },
+      "name": "Apply Late Fees",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/tax-calculation",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {invoiceId: $json.invoiceId, amount: $json.amount, jurisdiction: $json.jurisdiction} }}"
+      },
+      "name": "Calculate Tax",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/pdf-generator",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {invoiceId: $json.invoiceId} }}"
+      },
+      "name": "Generate PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/payment-receipt",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {paymentId: $json.paymentId} }}"
+      },
+      "name": "Send Receipt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1200, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/invoicing/revenue-recognition",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {invoiceId: $json.invoiceId, amount: $json.amount} }}"
+      },
+      "name": "Log Revenue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1200, 150]
+    },
+    {
+      "parameters": {
+        "respondWith": "allData"
+      },
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1400, 50]
+    }
+  ],
+  "connections": {
+    "Start": {"main": [{"node": "Billing Webhook", "branch": 0}]},
+    "Billing Webhook": {"main": [{"node": "Billing Router", "branch": 0}]},
+    "Billing Router": {"main": [{"node": "Auto Invoice Switch", "branch": 0}]},
+    "Auto Invoice Switch": {
+      "main": [
+        [{"node": "Generate Invoice", "branch": 0}],
+        [{"node": "Recurring Switch", "branch": 0}]
+      ]
+    },
+    "Recurring Switch": {
+      "main": [
+        [{"node": "Setup Recurring Billing", "branch": 0}],
+        [{"node": "Time Calc Switch", "branch": 0}]
+      ]
+    },
+    "Time Calc Switch": {
+      "main": [
+        [{"node": "Calculate Time-Based", "branch": 0}],
+        [{"node": "Expense Switch", "branch": 0}]
+      ]
+    },
+    "Expense Switch": {
+      "main": [
+        [{"node": "Track Expenses", "branch": 0}],
+        [{"node": "Send Payment Reminders", "branch": 0}]
+      ]
+    },
+    "Send Payment Reminders": {"main": [{"node": "Apply Late Fees", "branch": 0}]},
+    "Apply Late Fees": {"main": [{"node": "Calculate Tax", "branch": 0}]},
+    "Calculate Tax": {"main": [{"node": "Generate PDF", "branch": 0}]},
+    "Generate PDF": {"main": [{"node": "Send Receipt", "branch": 0}]},
+    "Send Receipt": {"main": [{"node": "Log Revenue", "branch": 0}]},
+    "Log Revenue": {"main": [{"node": "Response", "branch": 0}]},
+    "Generate Invoice": {"main": [{"node": "Send Payment Reminders", "branch": 0}]},
+    "Setup Recurring Billing": {"main": [{"node": "Send Payment Reminders", "branch": 0}]},
+    "Calculate Time-Based": {"main": [{"node": "Send Payment Reminders", "branch": 0}]},
+    "Track Expenses": {"main": [{"node": "Send Payment Reminders", "branch": 0}]}
+  }
+}

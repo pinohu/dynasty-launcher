@@ -1,0 +1,388 @@
+{
+  "name": "Category 7: Contracts & Agreements",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat7/generate-contract",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-1",
+      "name": "Webhook - Generate Contract",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/clients/{{ $json.clientId }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-2",
+      "name": "Get Client Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/contract-templates?serviceType={{ $json.serviceType }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-3",
+      "name": "Get Contract Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const client = $json.body[0];\nconst template = $json.body[1];\nconst contract = {\n  clientName: client.name,\n  clientEmail: client.email,\n  clientPhone: client.phone,\n  serviceType: template.serviceType,\n  terms: template.defaultTerms,\n  startDate: new Date().toISOString().split('T')[0],\n  endDate: null,\n  amount: template.defaultAmount,\n  content: template.content\n    .replace('{{CLIENT_NAME}}', client.name)\n    .replace('{{SERVICE_TYPE}}', template.serviceType)\n    .replace('{{AMOUNT}}', template.defaultAmount),\n  status: 'draft',\n  createdAt: new Date().toISOString()\n};\nreturn contract;"
+      },
+      "id": "uuid-4",
+      "name": "Populate Contract Template",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/contracts",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "serviceType", "value": "={{ $json.serviceType }}"},
+            {"name": "content", "value": "={{ $json.content }}"},
+            {"name": "status", "value": "draft"}
+          ]
+        }
+      },
+      "id": "uuid-5",
+      "name": "Save Draft Contract",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat7/send-for-signature",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-6",
+      "name": "Webhook - Send for E-Signature",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/contracts/{{ $json.contractId }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-7",
+      "name": "Get Contract",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hellosign.com/v3/signature_request/send",
+        "authentication": "basicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "title", "value": "Service Contract"},
+            {"name": "client_id", "value": "={{ $json.body.clientId }}"},
+            {"name": "signers[0][email_address]", "value": "={{ $json.body.clientEmail }}"},
+            {"name": "signers[0][name]", "value": "={{ $json.body.clientName }}"}
+          ]
+        }
+      },
+      "id": "uuid-8",
+      "name": "Send to HelloSign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/contracts/{{ $json.contractId }}/tracking",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "esignatureId", "value": "={{ $json.signature_request.id }}"},
+            {"name": "status", "value": "pending_signature"},
+            {"name": "sentAt", "value": "={{ $moment().toISOString() }}"}
+          ]
+        }
+      },
+      "id": "uuid-9",
+      "name": "Track E-Signature Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [{"mode": "everyX", "value": 6, "unit": "hours"}]
+        }
+      },
+      "id": "uuid-10",
+      "name": "Cron - Check Signature Status",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 350]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/contracts?status=pending_signature",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-11",
+      "name": "Get Pending Contracts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat7/signature-webhook",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-12",
+      "name": "Webhook - Contract Signed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/contracts/{{ $json.contractId }}/execute",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "status", "value": "executed"},
+            {"name": "signedAt", "value": "={{ $moment().toISOString() }}"},
+            {"name": "signerName", "value": "={{ $json.signerName }}"}
+          ]
+        }
+      },
+      "id": "uuid-13",
+      "name": "Update Contract Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat7/trigger-onboarding",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-14",
+      "name": "Webhook - Start Onboarding",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [{"mode": "everyX", "value": 1, "unit": "days"}]
+        }
+      },
+      "id": "uuid-15",
+      "name": "Cron - Check Contract Renewal",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/contracts?status=executed&renewalCheck=true",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-16",
+      "name": "Get Active Contracts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "functionCode": "const contracts = $json.body || [];\nconst now = new Date();\nconst renewalAlerts = [];\n\ncontracts.forEach(contract => {\n  const endDate = new Date(contract.end_date);\n  const daysUntilEnd = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));\n  \n  if (daysUntilEnd === 90 || daysUntilEnd === 60 || daysUntilEnd === 30) {\n    renewalAlerts.push({\n      contractId: contract.id,\n      clientId: contract.client_id,\n      daysUntilEnd,\n      renewalDate: contract.end_date\n    });\n  }\n});\n\nreturn { renewalAlerts };"
+      },
+      "id": "uuid-17",
+      "name": "Calculate Renewal Alerts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat7/amendment",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-18",
+      "name": "Webhook - Contract Amendment",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 650]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/contracts/{{ $json.contractId }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-19",
+      "name": "Get Original Contract",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 650]
+    },
+    {
+      "parameters": {
+        "functionCode": "const originalContract = $json.body;\nconst amendments = $json.amendments || [];\n\nconst newVersion = {\n  ...originalContract,\n  version: (originalContract.version || 1) + 1,\n  amendmentHistory: [\n    ...(originalContract.amendmentHistory || []),\n    {\n      date: new Date().toISOString(),\n      changes: amendments\n    }\n  ]\n};\n\nreturn newVersion;"
+      },
+      "id": "uuid-20",
+      "name": "Create Amendment Version",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 650]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/contracts/{{ $json.contractId }}/amendments",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "version", "value": "={{ $json.version }}"},
+            {"name": "content", "value": "={{ $json.content }}"},
+            {"name": "amendments", "value": "={{ $json.amendmentHistory }}"}
+          ]
+        }
+      },
+      "id": "uuid-21",
+      "name": "Save Contract Amendment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat7/compliance-check",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-22",
+      "name": "Webhook - Compliance Check",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 800]
+    },
+    {
+      "parameters": {
+        "functionCode": "const contract = $json.contractContent;\nconst requiredClauses = [\n  'liability',\n  'termination',\n  'payment_terms',\n  'confidentiality',\n  'dispute_resolution'\n];\n\nconst missingClauses = [];\nrequiredClauses.forEach(clause => {\n  if (!contract.toLowerCase().includes(clause.replace('_', ' '))) {\n    missingClauses.push(clause);\n  }\n});\n\nreturn {\n  compliant: missingClauses.length === 0,\n  missingClauses,\n  complianceScore: ((requiredClauses.length - missingClauses.length) / requiredClauses.length * 100).toFixed(0)\n};"
+      },
+      "id": "uuid-23",
+      "name": "Check Required Clauses",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/contracts/{{ $json.contractId }}/compliance",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "compliant", "value": "={{ $json.compliant }}"},
+            {"name": "missingClauses", "value": "={{ $json.missingClauses }}"},
+            {"name": "score", "value": "={{ $json.complianceScore }}"}
+          ]
+        }
+      },
+      "id": "uuid-24",
+      "name": "Log Compliance Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 800]
+    }
+  ],
+  "connections": {
+    "Webhook - Generate Contract": {
+      "main": [[{ "node": "Get Client Data", "branch": 0 }]]
+    },
+    "Get Client Data": {
+      "main": [[{ "node": "Get Contract Template", "branch": 0 }]]
+    },
+    "Get Contract Template": {
+      "main": [[{ "node": "Populate Contract Template", "branch": 0 }]]
+    },
+    "Populate Contract Template": {
+      "main": [[{ "node": "Save Draft Contract", "branch": 0 }]]
+    },
+    "Webhook - Send for E-Signature": {
+      "main": [[{ "node": "Get Contract", "branch": 0 }]]
+    },
+    "Get Contract": {
+      "main": [[{ "node": "Send to HelloSign", "branch": 0 }]]
+    },
+    "Send to HelloSign": {
+      "main": [[{ "node": "Track E-Signature Request", "branch": 0 }]]
+    },
+    "Cron - Check Signature Status": {
+      "main": [[{ "node": "Get Pending Contracts", "branch": 0 }]]
+    },
+    "Webhook - Contract Signed": {
+      "main": [[{ "node": "Update Contract Status", "branch": 0 }]]
+    },
+    "Update Contract Status": {
+      "main": [[{ "node": "Webhook - Start Onboarding", "branch": 0 }]]
+    },
+    "Cron - Check Contract Renewal": {
+      "main": [[{ "node": "Get Active Contracts", "branch": 0 }]]
+    },
+    "Get Active Contracts": {
+      "main": [[{ "node": "Calculate Renewal Alerts", "branch": 0 }]]
+    },
+    "Webhook - Contract Amendment": {
+      "main": [[{ "node": "Get Original Contract", "branch": 0 }]]
+    },
+    "Get Original Contract": {
+      "main": [[{ "node": "Create Amendment Version", "branch": 0 }]]
+    },
+    "Create Amendment Version": {
+      "main": [[{ "node": "Save Contract Amendment", "branch": 0 }]]
+    },
+    "Webhook - Compliance Check": {
+      "main": [[{ "node": "Check Required Clauses", "branch": 0 }]]
+    },
+    "Check Required Clauses": {
+      "main": [[{ "node": "Log Compliance Check", "branch": 0 }]]
+    }
+  }
+}

@@ -1,0 +1,361 @@
+{
+  "moduleId": "no_show_recovery",
+  "version": "1.0.0",
+  "moduleName": "No-Show Recovery",
+  "description": "Automated recovery system that engages customers who miss appointments with empathetic rebooking offers and optional no-show fees",
+  "category": "scheduling_pack",
+  "tier": "core",
+  "pricing": {
+    "packPrice": 49,
+    "packName": "scheduling_pack",
+    "standalone": 29,
+    "currency": "USD",
+    "billingCycle": "monthly"
+  },
+  "activation": {
+    "type": "guided",
+    "estimatedMinutes": 12,
+    "requiredAuths": [
+      {
+        "platform": "Trafft",
+        "scope": "calendar.read,calendar.write",
+        "description": "Read and update appointment status"
+      },
+      {
+        "platform": "Acumbamail",
+        "scope": "email.send",
+        "description": "Send recovery emails"
+      },
+      {
+        "platform": "SMS-iT",
+        "scope": "sms.send",
+        "description": "Send recovery SMS"
+      },
+      {
+        "platform": "Stripe",
+        "scope": "charges.create",
+        "description": "Process no-show fees (optional)"
+      }
+    ],
+    "contractSteps": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+  },
+  "triggers": {
+    "appointmentNoShow": {
+      "event": "appointment.marked_no_show",
+      "source": "Trafft",
+      "description": "Manual marking by staff or auto-detected after appointment window"
+    },
+    "autoDetectNoShow": {
+      "event": "appointment.window_passed_unstarted",
+      "source": "Your Deputy",
+      "conditions": ["status=scheduled AND NOW > scheduled_start + 15min AND status_not_changed"]
+    }
+  },
+  "actions": [
+    {
+      "id": "apply_no_show_tag",
+      "name": "Apply No-Show Tag",
+      "platform": "Your Deputy CRM",
+      "description": "Tag contact with no-show status for tracking",
+      "mandatory": true
+    },
+    {
+      "id": "send_recovery_email",
+      "name": "Send Recovery Email",
+      "platform": "Acumbamail",
+      "description": "Send empathetic rebooking message via email",
+      "template": "recovery_email",
+      "conditional": "settings.channels INCLUDES 'email'"
+    },
+    {
+      "id": "send_recovery_sms",
+      "name": "Send Recovery SMS",
+      "platform": "SMS-iT",
+      "description": "Send recovery message via SMS",
+      "template": "recovery_sms",
+      "conditional": "settings.channels INCLUDES 'sms'"
+    },
+    {
+      "id": "apply_no_show_fee",
+      "name": "Apply No-Show Fee",
+      "platform": "Stripe",
+      "description": "Charge no-show fee if configured",
+      "conditional": "settings.charge_no_show_fee = true"
+    },
+    {
+      "id": "create_followup_task",
+      "name": "Create Follow-up Task",
+      "platform": "Your Deputy",
+      "description": "Create internal task for team follow-up"
+    },
+    {
+      "id": "update_crm_timeline",
+      "name": "Update CRM Timeline",
+      "platform": "Your Deputy CRM",
+      "description": "Log no-show event in contact timeline"
+    },
+    {
+      "id": "send_internal_alert",
+      "name": "Send Internal Alert",
+      "platform": "Your Deputy",
+      "description": "Notify team of no-show for immediate action"
+    }
+  ],
+  "capabilities": [
+    "email",
+    "sms",
+    "calendar",
+    "crm",
+    "payments",
+    "notifications"
+  ],
+  "templates": {
+    "recovery_email": {
+      "subject": "We missed you - let's reschedule your {{serviceType}} appointment",
+      "tone": "empathetic",
+      "variables": [
+        "businessName",
+        "serviceType",
+        "appointmentDate",
+        "appointmentTime",
+        "contactName",
+        "rescheduleLinkEasy",
+        "rescheduleWindowDays",
+        "discountOffer",
+        "supportPhone"
+      ],
+      "includeApology": true,
+      "includeIncentive": true,
+      "callToAction": "Reschedule Now"
+    },
+    "recovery_sms": {
+      "maxLength": 160,
+      "tone": "friendly",
+      "variables": [
+        "businessName",
+        "rescheduleLinkShort",
+        "rescheduleWindowDays"
+      ],
+      "template": "{{businessName}}: We missed you! Reschedule your appointment within {{rescheduleWindowDays}} days: {{rescheduleLinkShort}}"
+    },
+    "internal_alert": {
+      "recipient": "team",
+      "priority": "high",
+      "content": "No-show alert for {{contactName}} - {{serviceType}} on {{appointmentDate}}"
+    },
+    "no_show_fee_notification": {
+      "subject": "No-show fee processed",
+      "type": "notification",
+      "recipient": "contact"
+    }
+  },
+  "settings": {
+    "recovery_delay_minutes": {
+      "type": "number",
+      "default": 15,
+      "min": 0,
+      "max": 120,
+      "description": "Minutes to wait after appointment window before sending recovery message"
+    },
+    "channels": {
+      "type": "array",
+      "allowed": ["email", "sms", "both"],
+      "default": "both",
+      "description": "Communication channels for recovery message"
+    },
+    "charge_no_show_fee": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to charge a no-show fee"
+    },
+    "no_show_fee_amount": {
+      "type": "number",
+      "default": 0,
+      "min": 0,
+      "description": "No-show fee amount in dollars"
+    },
+    "no_show_fee_description": {
+      "type": "string",
+      "default": "No-show fee",
+      "description": "Description for no-show charge"
+    },
+    "max_recovery_attempts": {
+      "type": "number",
+      "default": 3,
+      "min": 1,
+      "max": 10,
+      "description": "Maximum recovery attempts per contact"
+    },
+    "recovery_attempt_interval_hours": {
+      "type": "number",
+      "default": 24,
+      "min": 1,
+      "max": 168,
+      "description": "Hours between recovery attempts"
+    },
+    "escalation_after_attempts": {
+      "type": "number",
+      "default": 2,
+      "min": 1,
+      "description": "After this many attempts, escalate to manual team follow-up"
+    },
+    "reschedule_window_days": {
+      "type": "number",
+      "default": 7,
+      "min": 1,
+      "max": 30,
+      "description": "Days within which customer should reschedule"
+    },
+    "offer_discount": {
+      "type": "boolean",
+      "default": true,
+      "description": "Offer discount on rescheduled appointment"
+    },
+    "discount_percentage": {
+      "type": "number",
+      "default": 10,
+      "min": 0,
+      "max": 100,
+      "description": "Discount percentage offered for rescheduling"
+    },
+    "quiet_hours_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Respect quiet hours for SMS sending"
+    },
+    "quiet_hours": {
+      "type": "object",
+      "start": "21:00",
+      "end": "09:00",
+      "description": "Do not send SMS outside these hours"
+    }
+  },
+  "compliance": {
+    "gdpr": {
+      "status": "compliant",
+      "dataCategories": ["contact", "appointment", "financial"],
+      "notes": "Respects contact preferences and consent"
+    },
+    "ccpa": {
+      "status": "compliant",
+      "notes": "Tracks no-show data and provides opt-out"
+    },
+    "pci_dss": {
+      "status": "compliant",
+      "notes": "No-show fees processed through PCI-compliant Stripe"
+    },
+    "fair_debt_collection": {
+      "status": "compliant",
+      "notes": "Clear fee disclosure and recovery communication"
+    }
+  },
+  "testing": {
+    "test_matrix": [
+      {
+        "id": "test_no_show_detection",
+        "description": "Detect appointment as no-show",
+        "trigger": "appointment window passes without status change",
+        "expected_action": "no-show recovery triggered"
+      },
+      {
+        "id": "test_recovery_email",
+        "description": "Send recovery email",
+        "trigger": "no-show detected",
+        "expected_action": "empathetic email sent to contact"
+      },
+      {
+        "id": "test_recovery_sms",
+        "description": "Send recovery SMS",
+        "trigger": "no-show detected with SMS enabled",
+        "expected_action": "SMS sent to contact"
+      },
+      {
+        "id": "test_no_show_fee",
+        "description": "Process no-show fee",
+        "trigger": "no-show with fee enabled",
+        "expected_action": "Stripe charge created, contact notified"
+      },
+      {
+        "id": "test_crm_tag",
+        "description": "Apply no-show tag to contact",
+        "trigger": "no-show detected",
+        "expected_action": "Contact tagged for follow-up"
+      },
+      {
+        "id": "test_internal_alert",
+        "description": "Alert team of no-show",
+        "trigger": "no-show detected",
+        "expected_action": "Team notification sent"
+      },
+      {
+        "id": "test_reschedule_recovery",
+        "description": "Track rescheduled appointments",
+        "trigger": "contact reschedules after recovery",
+        "expected_action": "Recovery successful logged, metrics updated"
+      }
+    ]
+  },
+  "observability": {
+    "metrics": [
+      "no_shows_detected",
+      "no_shows_by_service_type",
+      "recovery_attempts",
+      "recovery_success_rate",
+      "recovery_conversion_rate",
+      "no_show_fees_collected",
+      "discount_redemptions",
+      "average_recovery_time_to_rebook"
+    ],
+    "logging": {
+      "level": "info",
+      "capture_template_vars": false,
+      "capture_contact_pii": false
+    },
+    "alerts": [
+      {
+        "name": "high_no_show_rate",
+        "threshold": "> 25% daily no-show rate",
+        "severity": "high"
+      },
+      {
+        "name": "recovery_failure",
+        "threshold": "> 5% of recovery messages fail",
+        "severity": "high"
+      }
+    ]
+  },
+  "keyMetrics": {
+    "recoveryRate": {
+      "baseline": "0% (no recovery system)",
+      "withModule": "30-40% of no-shows rebooked",
+      "improvement": "Direct revenue recovery"
+    },
+    "impactMetrics": {
+      "averageBookingValue": "$150-500 per appointment",
+      "recoveryValue": "30-40% of lost appointments = $45-200 per no-show",
+      "feeRevenue": "Additional 10-15% recovery via no-show fees"
+    }
+  },
+  "documentation": {
+    "setupGuide": "setup-no-show-recovery.md",
+    "troubleshooting": "troubleshoot-no-show-recovery.md",
+    "templates": "templates-no-show-recovery.md",
+    "apiDocs": "api-no-show-recovery.md"
+  },
+  "integrations": {
+    "requiresIntegrations": ["Trafft", "Acumbamail", "SMS-iT"],
+    "optionalIntegrations": ["Stripe"]
+  },
+  "dependencies": {
+    "modules": [],
+    "minimumVersions": {
+      "platform": "1.2.0"
+    }
+  },
+  "changelog": {
+    "1.0.0": {
+      "date": "2026-04-16",
+      "changes": ["Initial release", "Multi-channel recovery", "No-show fee support", "Rescheduling incentives"]
+    }
+  }
+}

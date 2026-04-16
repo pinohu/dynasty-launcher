@@ -1,0 +1,161 @@
+{
+  "module_id": "service_due_reminder",
+  "version": "1.0.0",
+  "display_name": "Service Due Reminder",
+  "description": "Scheduled reminders for upcoming service appointments",
+  "category": "Retention Pack",
+  "tier": "wave_2",
+  "pricing": {
+    "standalone_monthly": 19,
+    "pack_monthly": 35,
+    "pack_includes": "retention_pack",
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "schedule.cron",
+    "schedule": "0 8 * * *",
+    "source_system": "scheduler",
+    "conditions": [
+      {
+        "field": "customer.service_due_date",
+        "operator": "within_days",
+        "value": [30, 14, 7],
+        "priority": "high"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_30day_reminder",
+      "type": "email",
+      "target": "customer",
+      "template": "service_due_30day",
+      "trigger_days_before": 30,
+      "includes_booking_link": true
+    },
+    {
+      "id": "action_14day_reminder",
+      "type": "email",
+      "target": "customer",
+      "template": "service_due_14day",
+      "trigger_days_before": 14,
+      "includes_booking_link": true
+    },
+    {
+      "id": "action_7day_reminder",
+      "type": "sms",
+      "target": "customer",
+      "template": "service_due_7day_sms",
+      "trigger_days_before": 7
+    },
+    {
+      "id": "action_track_rebooking",
+      "type": "conditional",
+      "condition": "appointment.booked == true after reminder",
+      "actions": [
+        {
+          "type": "crm_field_update",
+          "field": "rebooking_rate",
+          "increment": 1
+        },
+        {
+          "type": "crm_field_update",
+          "field": "reminder_effectiveness",
+          "value": "high"
+        }
+      ]
+    },
+    {
+      "id": "action_tag_nonresponsive",
+      "type": "conditional",
+      "condition": "service_due_date passed && no appointment booked",
+      "actions": [
+        {
+          "type": "crm_tag",
+          "tag": "nonresponsive_followup",
+          "value": true
+        },
+        {
+          "type": "crm_field_update",
+          "field": "needs_outbound_campaign",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "last_reminder_sent": "{current_date}",
+        "days_until_due": "{days_remaining}",
+        "reminder_stage": "{stage_name}"
+      }
+    }
+  ],
+  "templates": {
+    "service_due_30day": {
+      "subject": "Reminder: Your {service.type} Service is Due in 30 Days",
+      "body_text": "Hi {customer.first_name},\n\nIt's time to schedule your next {service.type} service, scheduled for {service.due_date}.\n\nBook your appointment: {booking_link}\n\nProactive maintenance keeps your systems running smoothly!",
+      "html_template": true
+    },
+    "service_due_14day": {
+      "subject": "Don't Miss: {service.type} Service Due in 2 Weeks",
+      "body_text": "Your {service.type} service is due {service.due_date}. Book now to secure your preferred time slot.\n\nSchedule Now: {booking_link}",
+      "html_template": true
+    },
+    "service_due_7day_sms": {
+      "body": "Reminder: Your {service.type} is due {service.due_date}. Book now: {booking_link}"
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "reminder_intervals": [30, 14, 7],
+    "send_time_hour": 8,
+    "timezone": "business_timezone",
+    "track_opens": true,
+    "track_bookings": true,
+    "required_fields": ["customer.email", "service.due_date", "customer.phone"]
+  },
+  "capabilities_required": ["email", "sms", "calendar", "crm"],
+  "integrations": {
+    "calendar": {
+      "sync": true,
+      "read_service_due_dates": true
+    },
+    "crm": {
+      "sync": true,
+      "fields": ["last_reminder_sent", "days_until_due", "reminder_stage"]
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "frequency_cap_enabled": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "30-day reminder trigger",
+        "input": {"days_until_due": 30},
+        "expected_output": ["email_sent"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Rebooking tracked",
+        "input": {"reminder_sent": true, "appointment_booked": true},
+        "expected_output": ["rebooking_rate_incremented"],
+        "timeout_ms": 5000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": ["reminders_sent", "booking_rate", "engagement_rate"],
+    "logging_level": "info"
+  },
+  "billing": {
+    "unit": "per_reminder_sent",
+    "included_in_pack": "retention_pack",
+    "monthly_minimum": 19
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "module_id": "speed_to_lead_response",
+  "version": "1.0.0",
+  "display_name": "Speed to Lead Response",
+  "description": "Multi-channel lead response within 60 seconds with automatic routing",
+  "category": "Sales",
+  "tier": "wave_3",
+  "pricing": {
+    "standalone_monthly": 19,
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "lead.created",
+    "source_system": "crm",
+    "conditions": [
+      {
+        "field": "lead.status",
+        "operator": "equals",
+        "value": "new",
+        "priority": "critical"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_immediate_email",
+      "type": "email",
+      "target": "lead",
+      "template": "lead_immediate_confirmation",
+      "delay_ms": 100,
+      "priority": "critical"
+    },
+    {
+      "id": "action_immediate_sms",
+      "type": "sms",
+      "target": "lead",
+      "template": "lead_immediate_sms",
+      "delay_ms": 200,
+      "priority": "critical",
+      "conditional": "lead.phone_provided"
+    },
+    {
+      "id": "action_optional_call",
+      "type": "phone_outreach",
+      "target": "lead",
+      "delay_ms": 500,
+      "conditional": "lead.prefers_call == true",
+      "connect_to": "available_rep"
+    },
+    {
+      "id": "action_lead_qualification",
+      "type": "conditional",
+      "condition": "lead.responded == true within 5_minutes",
+      "actions": [
+        {
+          "type": "crm_field_update",
+          "field": "qualification_score",
+          "value": "HIGH"
+        },
+        {
+          "type": "crm_tag",
+          "tag": "hot_lead",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "action_route_to_rep",
+      "type": "crm_assignment",
+      "assign_to": "available_sales_rep",
+      "load_balance": true,
+      "priority": "first_response_critical"
+    },
+    {
+      "id": "action_followup_sequence",
+      "type": "conditional",
+      "condition": "no_response after 15_minutes",
+      "actions": [
+        {
+          "type": "email",
+          "target": "lead",
+          "template": "lead_followup_5min"
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "lead_created_at": "{now}",
+        "first_contact_time": "{response_time}",
+        "response_channel": "{channel}",
+        "speed_metric": "{seconds_to_first_contact}"
+      }
+    }
+  ],
+  "templates": {
+    "lead_immediate_confirmation": {
+      "subject": "We Got Your Request - Thanks for Reaching Out!",
+      "body_text": "Hi {lead.first_name},\n\nThank you for contacting us about {service.type}. We've received your request and will be in touch within the next 5 minutes.\n\nWhat to expect: A specialist from our team will call or email you shortly to discuss your needs.\n\nYour reference number: {lead.id}",
+      "html_template": true,
+      "priority": "critical"
+    },
+    "lead_immediate_sms": {
+      "body": "Hi {lead.first_name}! Thanks for reaching out. A specialist will call you within 5 minutes. -{business.name}"
+    },
+    "lead_followup_5min": {
+      "subject": "Following Up on Your {service.type} Request",
+      "body_text": "Hi {lead.first_name},\n\nWe want to make sure you didn't miss our response. Here's your information:\n\nRequest: {lead.service_requested}\nTime: {lead.created_at}\n\nReply directly to this email or call us at {business.phone}",
+      "html_template": true
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "response_sla_seconds": 60,
+    "email_enabled": true,
+    "sms_enabled": true,
+    "phone_enabled": true,
+    "auto_route_enabled": true,
+    "track_response_time": true,
+    "required_fields": ["lead.email"]
+  },
+  "capabilities_required": ["email", "sms", "phone", "crm"],
+  "integrations": {
+    "crm": {
+      "sync": true,
+      "auto_assign": true,
+      "fields": ["first_contact_time", "response_channel", "qualification_score"]
+    },
+    "phone": {
+      "provider": "CallScaler",
+      "auto_routing": true
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "telephone_consumer_protection_act": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "New lead response < 60 seconds",
+        "input": {"lead.status": "new"},
+        "expected_output": ["email_sent", "sms_sent", "assigned_to_rep"],
+        "timeout_ms": 1000
+      },
+      {
+        "name": "High qualification score on quick response",
+        "input": {"responded": true, "response_time_ms": 5000},
+        "expected_output": ["hot_lead_tagged", "high_score_set"],
+        "timeout_ms": 5000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": ["leads_processed", "avg_response_time_seconds", "qualification_rate", "conversion_rate"],
+    "logging_level": "debug",
+    "critical_metric": "seconds_to_first_contact"
+  },
+  "billing": {
+    "unit": "per_lead",
+    "monthly_minimum": 19,
+    "metered_events": ["lead.created"]
+  }
+}

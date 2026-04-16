@@ -1,0 +1,399 @@
+{
+  "name": "Category 38: Field Service & Dispatch",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "n8n-nodes-base.trigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "rule": {
+          "interval": ["minutes"],
+          "minutesInterval": 5
+        }
+      },
+      "name": "Continuous Dispatch Check"
+    },
+    {
+      "id": "2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, client_id, service_type, priority, created_at FROM jobs WHERE status = 'pending' AND assigned_technician_id IS NULL ORDER BY priority DESC, created_at ASC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Unassigned Jobs"
+    },
+    {
+      "id": "3",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Assign Each Job"
+    },
+    {
+      "id": "4",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, latitude, longitude, active_jobs FROM technicians WHERE status = 'active' AND available = true ORDER BY active_jobs ASC, id ASC LIMIT 10"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Get Available Technicians"
+    },
+    {
+      "id": "5",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "url": "https://maps.googleapis.com/maps/api/distancematrix/json",
+        "method": "GET",
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "origins",
+              "value": "{{ $json.latitude }},{{ $json.longitude }}"
+            },
+            {
+              "name": "destinations",
+              "value": "{{ $json.client_latitude }},{{ $json.client_longitude }}"
+            },
+            {
+              "name": "key",
+              "value": "{{ env.GOOGLE_MAPS_API_KEY }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "google_maps_key"
+      },
+      "name": "Calculate Distance"
+    },
+    {
+      "id": "6",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1050, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE jobs SET assigned_technician_id = {{ $json.nearest_tech_id }}, assigned_at = NOW(), status = 'assigned' WHERE id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Assign to Nearest Tech"
+    },
+    {
+      "id": "7",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT j.id, j.assigned_at, j.arrival_time, j.start_time FROM jobs j WHERE j.status IN ('assigned', 'in_progress') AND j.assigned_at IS NOT NULL ORDER BY j.assigned_at DESC LIMIT 100"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Active Assignments"
+    },
+    {
+      "id": "8",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 250],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Track Response Times"
+    },
+    {
+      "id": "9",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO response_time_logs (job_id, assigned_at, arrival_time, response_minutes) VALUES ({{ $json.id }}, {{ $json.assigned_at }}, NOW(), EXTRACT(EPOCH FROM (NOW() - {{ $json.assigned_at }})) / 60)"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Log Response Time"
+    },
+    {
+      "id": "10",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, technician_id, status FROM jobs WHERE status = 'in_progress' AND completion_photos IS NULL LIMIT 100"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Jobs For Documentation"
+    },
+    {
+      "id": "11",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Collect Job Documentation"
+    },
+    {
+      "id": "12",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "parameters": {
+        "toEmail": "{{ $json.technician_email }}",
+        "subject": "Job Documentation Needed - {{ $json.job_id }}",
+        "textContent": "Please upload photos, checklist completion, and get customer signature for job {{ $json.job_id }}"
+      },
+      "name": "Request Documentation"
+    },
+    {
+      "id": "13",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, current_latitude, current_longitude, technician_id, updated_at FROM technician_locations WHERE updated_at > NOW() - INTERVAL '5 minutes' ORDER BY updated_at DESC LIMIT 100"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Real-Time Locations"
+    },
+    {
+      "id": "14",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO location_history (technician_id, latitude, longitude, recorded_at, accuracy) VALUES ({{ $json.technician_id }}, {{ $json.current_latitude }}, {{ $json.current_longitude }}, NOW(), 10)"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Log Location"
+    },
+    {
+      "id": "15",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 700],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, item_name, quantity_needed FROM job_parts_requests WHERE status = 'pending' ORDER BY requested_at DESC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Parts Requests"
+    },
+    {
+      "id": "16",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 700],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Process Parts"
+    },
+    {
+      "id": "17",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 700],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE inventory_items SET current_stock = current_stock - {{ $json.quantity_needed }} WHERE item_name = '{{ $json.item_name }}'"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Deduct Inventory"
+    },
+    {
+      "id": "18",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 700],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE job_parts_requests SET status = 'fulfilled', fulfilled_at = NOW() WHERE id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Mark Request Fulfilled"
+    }
+  ],
+  "connections": {
+    "Continuous Dispatch Check": {
+      "main": [
+        [
+          {
+            "node": "Fetch Unassigned Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Unassigned Jobs": {
+      "main": [
+        [
+          {
+            "node": "Assign Each Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign Each Job": {
+      "main": [
+        [
+          {
+            "node": "Get Available Technicians",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Available Technicians": {
+      "main": [
+        [
+          {
+            "node": "Calculate Distance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Distance": {
+      "main": [
+        [
+          {
+            "node": "Assign to Nearest Tech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Assignments": {
+      "main": [
+        [
+          {
+            "node": "Track Response Times",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Track Response Times": {
+      "main": [
+        [
+          {
+            "node": "Log Response Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Jobs For Documentation": {
+      "main": [
+        [
+          {
+            "node": "Collect Job Documentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Job Documentation": {
+      "main": [
+        [
+          {
+            "node": "Request Documentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Real-Time Locations": {
+      "main": [
+        [
+          {
+            "node": "Log Location",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Parts Requests": {
+      "main": [
+        [
+          {
+            "node": "Process Parts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Parts": {
+      "main": [
+        [
+          {
+            "node": "Deduct Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduct Inventory": {
+      "main": [
+        [
+          {
+            "node": "Mark Request Fulfilled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

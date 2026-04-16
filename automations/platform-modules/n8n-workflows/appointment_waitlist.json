@@ -1,0 +1,151 @@
+{
+  "name": "Appointment Waitlist Management",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "appointment_cancelled",
+        "options": {}
+      },
+      "id": "appointment_cancelled_webhook",
+      "name": "Appointment Cancelled Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/waitlist?service={{ $json.appointment.service_type }}&limit=1"
+      },
+      "id": "get_next_waitlisted",
+      "name": "Get Next Waitlisted Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Good News! A Spot Just Opened Up",
+        "html": "<p>Great timing! A cancellation freed up a spot for {{ $json.appointment.service_type }} on {{ $json.appointment.date }} at {{ $json.appointment.time }}.</p><p><a href='{{ $env.BOOKING_URL }}/confirm/{{ $json.customer.id }}'>Book This Slot</a></p><p><em>Offer expires in 2 hours.</em></p>"
+      },
+      "id": "send_offer_email",
+      "name": "Send Slot Offer Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "phoneNumber": "{{ $json.customer.phone }}",
+        "message": "Good news! A spot opened for {{ $json.appointment.service_type }} on {{ $json.appointment.date }} at {{ $json.appointment.time }}. Book: {{ $env.BOOKING_URL }}"
+      },
+      "id": "send_offer_sms",
+      "name": "Send Slot Offer SMS",
+      "type": "n8n-nodes-base.sms",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "waitTime": 7200,
+        "timeUnit": "seconds"
+      },
+      "id": "wait_2hours",
+      "name": "Wait 2 Hours for Response",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/waitlist/{{ $json.customer.id }}/status"
+      },
+      "id": "check_confirmation",
+      "name": "Check Confirmation Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{ $json.confirmation_status }}",
+              "operation": "equal",
+              "value2": "confirmed"
+            }
+          ]
+        }
+      },
+      "id": "if_confirmed",
+      "name": "Confirmed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.VERCEL_API_URL }}/calendar/appointments",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "customer_id",
+              "value": "{{ $json.customer.id }}"
+            },
+            {
+              "name": "date",
+              "value": "{{ $json.appointment.date }}"
+            },
+            {
+              "name": "time",
+              "value": "{{ $json.appointment.time }}"
+            }
+          ]
+        }
+      },
+      "id": "create_appointment",
+      "name": "Create Appointment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "phoneNumber": "{{ $json.provider.phone }}",
+        "message": "Appointment scheduled with {{ $json.customer.name }} for {{ $json.appointment.time }}"
+      },
+      "id": "notify_provider",
+      "name": "Notify Provider",
+      "type": "n8n-nodes-base.sms",
+      "typeVersion": 1,
+      "position": [1250, 350]
+    }
+  ],
+  "connections": {
+    "appointment_cancelled_webhook": {
+      "main": [[{"node": "get_next_waitlisted", "type": "main", "index": 0}]]
+    },
+    "get_next_waitlisted": {
+      "main": [[{"node": "send_offer_email", "type": "main", "index": 0}, {"node": "send_offer_sms", "type": "main", "index": 0}, {"node": "wait_2hours", "type": "main", "index": 0}]]
+    },
+    "wait_2hours": {
+      "main": [[{"node": "check_confirmation", "type": "main", "index": 0}]]
+    },
+    "check_confirmation": {
+      "main": [[{"node": "if_confirmed", "type": "main", "index": 0}]]
+    },
+    "if_confirmed": {
+      "main": [[{"node": "create_appointment", "type": "main", "index": 0}]]
+    },
+    "create_appointment": {
+      "main": [[{"node": "notify_provider", "type": "main", "index": 0}]]
+    }
+  }
+}

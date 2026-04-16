@@ -1,0 +1,629 @@
+{
+  "name": "Overdue Invoice Reminder",
+  "description": "Multi-stage automated reminder sequence for overdue invoices with escalating tone and owner alerts",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": "{{$env.CRON_EXPRESSION || '0 9 * * *'}}",
+        "timezone": "{{$env.TIMEZONE || 'America/New_York'}}"
+      },
+      "id": "01_daily_cron",
+      "name": "Daily Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/invoices?status=unpaid&overdue=true&limit=100",
+        "authentication": "predefined",
+        "nodeCredentialType": "httpHeaderAuth"
+      },
+      "id": "02_get_overdue_invoices",
+      "name": "Get Overdue Invoices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "loopOver": "json",
+        "jsonKeyName": "invoices"
+      },
+      "id": "03_loop_over_invoices",
+      "name": "Loop Over Invoices",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsonData": "{\n  \"invoice_id\": \"={{$json[\"id\"]}}\",\n  \"customer_id\": \"={{$json[\"customer_id\"]}}\",\n  \"amount\": \"={{$json[\"amount\"]/100}}\",\n  \"due_date\": \"={{new Date($json[\"due_date\"]*1000).toLocaleDateString()}}\",\n  \"days_overdue\": \"={{Math.floor((Date.now()/1000 - $json[\"due_date\"])/86400)}}\",\n  \"reminder_count\": \"={{$json[\"reminder_count\"] || 0}}\"\n}"
+      },
+      "id": "04_prepare_invoice",
+      "name": "Prepare Invoice Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$node[\"04_prepare_invoice\"].json[\"days_overdue\"]}}",
+              "operation": "equals",
+              "value2": 1
+            }
+          ]
+        }
+      },
+      "id": "05_check_stage_1",
+      "name": "Check If Stage 1 (Day 1)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$node[\"04_prepare_invoice\"].json[\"days_overdue\"]}}",
+              "operation": "equals",
+              "value2": 7
+            }
+          ]
+        }
+      },
+      "id": "06_check_stage_2",
+      "name": "Check If Stage 2 (Day 7)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$node[\"04_prepare_invoice\"].json[\"days_overdue\"]}}",
+              "operation": "equals",
+              "value2": 14
+            }
+          ]
+        }
+      },
+      "id": "07_check_stage_3",
+      "name": "Check If Stage 3 (Day 14)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$node[\"04_prepare_invoice\"].json[\"days_overdue\"]}}",
+              "operation": "equals",
+              "value2": 30
+            }
+          ]
+        }
+      },
+      "id": "08_check_stage_4",
+      "name": "Check If Stage 4 (Day 30)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/customers/{{$node[\"04_prepare_invoice\"].json[\"customer_id\"]}}",
+        "authentication": "predefined",
+        "nodeCredentialType": "httpHeaderAuth"
+      },
+      "id": "09_get_customer_data",
+      "name": "Get Customer Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ACUMBAMAIL_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "acumbamailApi",
+        "body": {
+          "to": "={{$node[\"09_get_customer_data\"].json[\"email\"]}}",
+          "from": "{{$env.YOUR_DEPUTY_FROM_EMAIL}}",
+          "subject": "Just a heads up: Invoice {{$node[\"04_prepare_invoice\"].json[\"invoice_id\"]}} payment due",
+          "html": "<p>Hi {{customer_name}},</p><p>We noticed that invoice #{{invoice_id}} for {{amount}} {{currency}} was due on {{due_date}}. Could you please arrange payment at your earliest convenience?</p><p><a href='{{payment_link}}'>Pay Now</a></p>",
+          "template_variables": {
+            "customer_name": "={{$node[\"09_get_customer_data\"].json[\"name\"]}}",
+            "invoice_id": "={{$node[\"04_prepare_invoice\"].json[\"invoice_id\"]}}",
+            "amount": "={{$node[\"04_prepare_invoice\"].json[\"amount\"]}}",
+            "currency": "USD",
+            "due_date": "={{$node[\"04_prepare_invoice\"].json[\"due_date\"]}}",
+            "payment_link": "{{$env.STRIPE_PAYMENT_URL}}"
+          },
+          "tags": [
+            "invoice_reminder",
+            "stage_1"
+          ]
+        }
+      },
+      "id": "10_send_stage_1_email",
+      "name": "Send Stage 1 Email (Gentle)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ACUMBAMAIL_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "acumbamailApi",
+        "body": {
+          "to": "={{$node[\"09_get_customer_data\"].json[\"email\"]}}",
+          "from": "{{$env.YOUR_DEPUTY_FROM_EMAIL}}",
+          "subject": "Invoice {{$node[\"04_prepare_invoice\"].json[\"invoice_id\"]}} payment now overdue",
+          "html": "<p>Hi {{customer_name}},</p><p>Invoice #{{invoice_id}} for {{amount}} was due on {{due_date}} and is now {{days_overdue}} days overdue.</p><p>Please remit payment immediately to avoid late fees and service interruption.</p><p><a href='{{payment_link}}'>Pay Now</a></p>"
+        }
+      },
+      "id": "11_send_stage_2_email",
+      "name": "Send Stage 2 Email (Firm)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SMS_IT_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "smsItApi",
+        "body": {
+          "phone": "={{$node[\"09_get_customer_data\"].json[\"phone\"]}}",
+          "message": "URGENT: Invoice #{{invoice_id}} for {{amount}} is {{days_overdue}} days overdue. Please pay immediately: {{payment_url}}"
+        }
+      },
+      "id": "12_send_stage_2_sms",
+      "name": "Send Stage 2 SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ACUMBAMAIL_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "acumbamailApi",
+        "body": {
+          "to": "={{$node[\"09_get_customer_data\"].json[\"email\"]}}",
+          "from": "{{$env.YOUR_DEPUTY_FROM_EMAIL}}",
+          "subject": "URGENT: Invoice {{$node[\"04_prepare_invoice\"].json[\"invoice_id\"]}} seriously overdue - action required",
+          "html": "<p>Hi {{customer_name}},</p><p><strong>URGENT:</strong> Invoice #{{invoice_id}} for {{amount}} is {{days_overdue}} days overdue.</p><p>Immediate payment is required to prevent suspension of services and escalation to collections.</p><p><a href='{{payment_link}}'>Pay Immediately</a></p>"
+        }
+      },
+      "id": "13_send_stage_3_email",
+      "name": "Send Stage 3 Email (Urgent)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SMS_IT_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "smsItApi",
+        "body": {
+          "phone": "={{$node[\"09_get_customer_data\"].json[\"phone\"]}}",
+          "message": "FINAL NOTICE: Invoice #{{invoice_id}} is {{days_overdue}} days overdue. Immediate payment required or account will be escalated."
+        }
+      },
+      "id": "14_send_stage_3_sms",
+      "name": "Send Stage 3 SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        530
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ACUMBAMAIL_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "acumbamailApi",
+        "body": {
+          "to": "={{$node[\"09_get_customer_data\"].json[\"email\"]}}",
+          "from": "{{$env.YOUR_DEPUTY_FROM_EMAIL}}",
+          "subject": "FINAL NOTICE: Invoice {{$node[\"04_prepare_invoice\"].json[\"invoice_id\"]}} - Legal Action Pending",
+          "html": "<p><strong>FINAL NOTICE</strong></p><p>Invoice #{{invoice_id}} for {{amount}} is {{days_overdue}} days overdue.</p><p>Payment must be received within 5 business days or your account will be referred to a collections agency and you may face legal action.</p><p><a href='{{payment_link}}'>Pay Now to Avoid Collections</a></p>"
+        }
+      },
+      "id": "15_send_stage_4_email",
+      "name": "Send Stage 4 Email (Final Notice)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SMS_IT_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "smsItApi",
+        "body": {
+          "phone": "={{$node[\"09_get_customer_data\"].json[\"phone\"]}}",
+          "message": "LEGAL ACTION NOTICE: Invoice #{{invoice_id}} {{days_overdue}} days overdue. Payment required within 5 days or collections escalation will begin."
+        }
+      },
+      "id": "16_send_stage_4_sms",
+      "name": "Send Stage 4 SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ACUMBAMAIL_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "acumbamailApi",
+        "body": {
+          "to": "{{$env.OWNER_EMAIL}}}",
+          "from": "{{$env.YOUR_DEPUTY_FROM_EMAIL}}",
+          "subject": "Alert: Invoice {{$node[\"04_prepare_invoice\"].json[\"invoice_id\"]}} from {{$node[\"09_get_customer_data\"].json[\"name\"]}} overdue",
+          "html": "<p>Invoice #{{invoice_id}} from {{customer_name}} ({{amount}}) is {{days_overdue}} days overdue.</p><p>Stage: {{stage}} | Reminder Count: {{reminder_count}}</p><p><a href='{{crm_link}}'>View in CRM</a></p>"
+        }
+      },
+      "id": "17_send_owner_alert",
+      "name": "Send Owner Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/crm/timeline",
+        "authentication": "predefined",
+        "nodeCredentialType": "httpHeaderAuth",
+        "body": {
+          "customer_id": "={{$node[\"04_prepare_invoice\"].json[\"customer_id\"]}}",
+          "invoice_id": "={{$node[\"04_prepare_invoice\"].json[\"invoice_id\"]}}",
+          "event_type": "overdue_reminder_sent",
+          "stage": "={{$json[\"stage\"]}}}",
+          "days_overdue": "={{$node[\"04_prepare_invoice\"].json[\"days_overdue\"]}}",
+          "reminder_count": "={{$node[\"04_prepare_invoice\"].json[\"reminder_count\"]}}",
+          "timestamp": "={{new Date().toISOString()}}"
+        }
+      },
+      "id": "18_log_reminder_to_crm",
+      "name": "Log Reminder to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1650,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "Overdue reminder workflow cycle complete"
+      },
+      "id": "19_completion_node",
+      "name": "Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "01_daily_cron": {
+      "main": [
+        [
+          {
+            "node": "02_get_overdue_invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_get_overdue_invoices": {
+      "main": [
+        [
+          {
+            "node": "03_loop_over_invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_loop_over_invoices": {
+      "main": [
+        [
+          {
+            "node": "04_prepare_invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_prepare_invoice": {
+      "main": [
+        [
+          {
+            "node": "05_check_stage_1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "06_check_stage_2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "07_check_stage_3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "08_check_stage_4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05_check_stage_1": {
+      "main": [
+        [
+          {
+            "node": "09_get_customer_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06_check_stage_2": {
+      "main": [
+        [
+          {
+            "node": "09_get_customer_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07_check_stage_3": {
+      "main": [
+        [
+          {
+            "node": "09_get_customer_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08_check_stage_4": {
+      "main": [
+        [
+          {
+            "node": "09_get_customer_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09_get_customer_data": {
+      "main": [
+        [
+          {
+            "node": "10_send_stage_1_email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "11_send_stage_2_email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "12_send_stage_2_sms",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "13_send_stage_3_email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "14_send_stage_3_sms",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "15_send_stage_4_email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "16_send_stage_4_sms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10_send_stage_1_email": {
+      "main": [
+        [
+          {
+            "node": "17_send_owner_alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11_send_stage_2_email": {
+      "main": [
+        [
+          {
+            "node": "17_send_owner_alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12_send_stage_2_sms": {
+      "main": [
+        [
+          {
+            "node": "17_send_owner_alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13_send_stage_3_email": {
+      "main": [
+        [
+          {
+            "node": "17_send_owner_alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14_send_stage_3_sms": {
+      "main": [
+        [
+          {
+            "node": "17_send_owner_alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15_send_stage_4_email": {
+      "main": [
+        [
+          {
+            "node": "17_send_owner_alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16_send_stage_4_sms": {
+      "main": [
+        [
+          {
+            "node": "17_send_owner_alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17_send_owner_alert": {
+      "main": [
+        [
+          {
+            "node": "18_log_reminder_to_crm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18_log_reminder_to_crm": {
+      "main": [
+        [
+          {
+            "node": "19_completion_node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "module_id": "appointment_waitlist",
+  "version": "1.0.0",
+  "display_name": "Appointment Waitlist Management",
+  "description": "Auto-offer cancelled slots to waitlisted customers in priority order",
+  "category": "Scheduling",
+  "tier": "wave_3",
+  "pricing": {
+    "standalone_monthly": 19,
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "appointment.cancelled",
+    "source_system": "calendar",
+    "conditions": [
+      {
+        "field": "appointment.status",
+        "operator": "equals",
+        "value": "cancelled",
+        "priority": "critical"
+      },
+      {
+        "field": "waitlist.count",
+        "operator": "gt",
+        "value": 0,
+        "priority": "high"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_find_next_waitlisted",
+      "type": "crm_query",
+      "query": "SELECT * FROM waitlist WHERE service_type={cancelled_appointment.service} ORDER BY added_date ASC LIMIT 1"
+    },
+    {
+      "id": "action_offer_slot",
+      "type": "email",
+      "target": "customer",
+      "template": "slot_available_offer",
+      "includes_booking_link": true,
+      "offer_expires_hours": 2,
+      "priority": "high"
+    },
+    {
+      "id": "action_send_sms",
+      "type": "sms",
+      "target": "customer",
+      "template": "slot_available_sms",
+      "delay_ms": 100,
+      "priority": "high",
+      "conditional": "customer.phone_provided"
+    },
+    {
+      "id": "action_track_confirmation",
+      "type": "conditional",
+      "condition": "customer.confirmed == true within 2_hours",
+      "actions": [
+        {
+          "type": "appointment_create",
+          "appointment_date": "{cancelled_appointment.date}",
+          "appointment_time": "{cancelled_appointment.time}",
+          "customer_id": "{customer.id}"
+        },
+        {
+          "type": "crm_field_update",
+          "field": "waitlist_status",
+          "value": "FULFILLED"
+        },
+        {
+          "type": "notification",
+          "target": "provider",
+          "channel": "sms",
+          "message": "Appointment scheduled with {customer.name} for {time}"
+        }
+      ]
+    },
+    {
+      "id": "action_move_to_next",
+      "type": "conditional",
+      "condition": "customer.declined == true OR 2_hours_expired",
+      "actions": [
+        {
+          "type": "crm_field_update",
+          "field": "waitlist_status",
+          "value": "DECLINED_MOVE_TO_NEXT"
+        },
+        {
+          "type": "workflow_call",
+          "workflow": "appointment_waitlist",
+          "trigger_action": "find_next_waitlisted"
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "slot_offered_at": "{now}",
+        "slot_filled": "{status}",
+        "filled_by": "{customer.name}"
+      }
+    }
+  ],
+  "templates": {
+    "slot_available_offer": {
+      "subject": "Good News! A Spot Just Opened Up",
+      "body_text": "Hi {customer.first_name},\n\nGreat timing! A cancellation just freed up a spot for {service.type} on {appointment.date} at {appointment.time}.\n\nWe can schedule you right now if you're interested.\n\nBook This Slot: {booking_link}\n\nThis offer expires in 2 hours, so let us know quickly!",
+      "html_template": true,
+      "urgency_tone": true
+    },
+    "slot_available_sms": {
+      "body": "Great news! A spot opened for {service.type} on {appointment.date} at {appointment.time}. Book now: {booking_link} (expires in 2h)"
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "offer_window_minutes": 120,
+    "email_enabled": true,
+    "sms_enabled": true,
+    "auto_book_if_confirmed": true,
+    "required_fields": ["customer.email", "customer.phone", "appointment.datetime"]
+  },
+  "capabilities_required": ["calendar", "sms", "email", "crm"],
+  "integrations": {
+    "calendar": {
+      "sync": true,
+      "real_time_cancellations": true
+    },
+    "crm": {
+      "sync": true,
+      "fields": ["waitlist_status", "slot_filled", "filled_by"]
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "Appointment cancelled with waitlist",
+        "input": {"status": "cancelled", "waitlist_count": 2},
+        "expected_output": ["offer_sent", "countdown_started"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Slot confirmed within 2 hours",
+        "input": {"confirmed": true, "time_to_confirm_minutes": 30},
+        "expected_output": ["appointment_created", "provider_notified"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Move to next on decline",
+        "input": {"declined": true},
+        "expected_output": ["next_customer_offered"],
+        "timeout_ms": 5000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": ["slots_offered", "acceptance_rate", "time_to_fill", "waitlist_satisfaction"],
+    "logging_level": "info"
+  },
+  "billing": {
+    "unit": "per_cancellation_with_waitlist",
+    "monthly_minimum": 19
+  }
+}

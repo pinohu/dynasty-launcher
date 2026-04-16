@@ -1,0 +1,97 @@
+{
+  "name": "Reputation & Review Management Automations",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/reputation/review-request",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"customerId\": \"{{$json.customerId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"serviceName\": \"{{$json.serviceName}}\",\n  \"platforms\": {{$json.platforms}},\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Automated Review Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/reputation/review-response-draft",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"reviewText\": \"{{$json.reviewText}}\",\n  \"reviewRating\": {{$json.reviewRating}},\n  \"reviewPlatform\": \"{{$json.reviewPlatform}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Review Response Drafter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/reputation/aggregation-dashboard",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"platforms\": {{$json.platforms}},\n  \"period\": \"{{$json.period}}\"\n}"
+      },
+      "name": "Review Aggregation Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/reputation/negative-review-alert",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"reviewId\": \"{{$json.reviewId}}\",\n  \"rating\": {{$json.rating}},\n  \"reviewText\": \"{{$json.reviewText}}\",\n  \"platform\": \"{{$json.platform}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Negative Review Alert System",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/reputation/testimonial-collection",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"customerId\": \"{{$json.customerId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"testimonialText\": \"{{$json.testimonialText}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Testimonial Collection and Publishing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/reputation/multi-location-consolidation",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"locations\": {{$json.locations}},\n  \"consolidateReviews\": true\n}"
+      },
+      "name": "Multi-Location Review Consolidation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/reputation/sentiment-analysis",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"timePeriod\": \"{{$json.timePeriod}}\",\n  \"platforms\": {{$json.platforms}}\n}"
+      },
+      "name": "Review Sentiment Trend Analyzer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 500]
+    }
+  ],
+  "connections": {}
+}

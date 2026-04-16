@@ -1,0 +1,353 @@
+{
+  "name": "Category 10: Project & Task Management",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat10/create-project",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-1",
+      "name": "Webhook - Create Project",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/project-templates?serviceType={{ $json.serviceType }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-2",
+      "name": "Get Project Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const template = $json.body[0];\nconst project = {\n  jobId: $json.jobId,\n  clientId: $json.clientId,\n  name: template.name,\n  serviceType: $json.serviceType,\n  tasks: (template.tasks || []).map(t => ({\n    id: Math.random().toString(36).substring(7),\n    title: t.title,\n    description: t.description,\n    dueDate: new Date(Date.now() + (t.daysUntilDue || 7) * 24 * 60 * 60 * 1000),\n    completed: false,\n    dependencies: t.dependencies || []\n  })),\n  createdAt: new Date().toISOString()\n};\nreturn project;"
+      },
+      "id": "uuid-3",
+      "name": "Instantiate Template",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/projects",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "jobId", "value": "={{ $json.jobId }}"},
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "name", "value": "={{ $json.name }}"},
+            {"name": "tasks", "value": "={{ $json.tasks }}"},
+            {"name": "status", "value": "active"}
+          ]
+        }
+      },
+      "id": "uuid-4",
+      "name": "Save Project",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat10/assign-task",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-5",
+      "name": "Webhook - Auto-Assign Tasks",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "const task = $json;\nconst candidates = task.availableCrew || [];\n\n// Smart assignment: skill + availability + territory\nconst scored = candidates.map(c => ({\n  ...c,\n  score: (\n    (task.requiredSkills.includes(c.skill) ? 10 : 0) +\n    (c.available ? 5 : 0) +\n    (c.territory === task.territory ? 5 : 0)\n  )\n}));\n\nconst best = scored.sort((a, b) => b.score - a.score)[0];\nreturn { assignedTo: best };"
+      },
+      "id": "uuid-6",
+      "name": "Score & Assign",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/tasks/{{ $json.taskId }}/assign",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "assignedTo", "value": "={{ $json.assignedTo.id }}"},
+            {"name": "status", "value": "assigned"}
+          ]
+        }
+      },
+      "id": "uuid-7",
+      "name": "Update Task Assignment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [{"mode": "everyX", "value": 4, "unit": "hours"}]
+        }
+      },
+      "id": "uuid-8",
+      "name": "Cron - Check Due Dates",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 350]
+    },
+    {
+      "parameters": {
+        "functionCode": "const now = new Date();\nconst reminders = [\n  { offset: 3, unit: 'days', label: '3 days' },\n  { offset: 1, unit: 'days', label: '1 day' },\n  { offset: -1, unit: 'days', label: 'overdue' }\n];\nreturn { reminderChecks: reminders };"
+      },
+      "id": "uuid-9",
+      "name": "Build Reminder Checks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/tasks?status=assigned,in_progress",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-10",
+      "name": "Get Active Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat10/dependency-trigger",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-11",
+      "name": "Webhook - Task Completed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/tasks?dependsOn={{ $json.taskId }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-12",
+      "name": "Get Dependent Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/tasks/{{ $json.taskId }}/unlock",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "status", "value": "ready"}
+          ]
+        }
+      },
+      "id": "uuid-13",
+      "name": "Unlock Next Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat10/milestone-notification",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-14",
+      "name": "Webhook - Milestone Reached",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 650]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/projects/{{ $json.projectId }}/progress",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-15",
+      "name": "Get Project Progress",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 650]
+    },
+    {
+      "parameters": {
+        "fromEmail": "updates@deputy.app",
+        "toEmail": "={{ $json.clientEmail }}",
+        "subject": "Project Update: {{ milestone }}",
+        "htmlBody": "<h2>{{ milestone }} Complete!</h2><p>Progress: {{ percentComplete }}%</p>"
+      },
+      "id": "uuid-16",
+      "name": "Send Milestone Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [650, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat10/escalation",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-17",
+      "name": "Webhook - Escalation Alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 800]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/tasks?status=overdue",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-18",
+      "name": "Get Overdue Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 800]
+    },
+    {
+      "parameters": {
+        "fromEmail": "alerts@deputy.app",
+        "toEmail": "={{ $json.managerEmail }}",
+        "subject": "ALERT: {{ count }} Overdue Tasks",
+        "htmlBody": "<p>The following tasks are overdue and need attention.</p>"
+      },
+      "id": "uuid-19",
+      "name": "Send Manager Alert",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [650, 800]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat10/time-tracking",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-20",
+      "name": "Webhook - Time Track Event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 950]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/time-tracking",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "taskId", "value": "={{ $json.taskId }}"},
+            {"name": "event", "value": "={{ $json.event }}"},
+            {"name": "timestamp", "value": "={{ $moment().toISOString() }}"}
+          ]
+        }
+      },
+      "id": "uuid-21",
+      "name": "Log Time Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 950]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [{"mode": "custom", "value": "0 9 * * 1"}]
+        }
+      },
+      "id": "uuid-22",
+      "name": "Cron - Weekly Report",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 1100]
+    },
+    {
+      "parameters": {
+        "functionCode": "const lastWeek = new Date();\nlastWeek.setDate(lastWeek.getDate() - 7);\nreturn { startDate: lastWeek, endDate: new Date() };"
+      },
+      "id": "uuid-23",
+      "name": "Calculate Week Range",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 1100]
+    }
+  ],
+  "connections": {
+    "Webhook - Create Project": {
+      "main": [[{ "node": "Get Project Template", "branch": 0 }]]
+    },
+    "Get Project Template": {
+      "main": [[{ "node": "Instantiate Template", "branch": 0 }]]
+    },
+    "Instantiate Template": {
+      "main": [[{ "node": "Save Project", "branch": 0 }]]
+    },
+    "Webhook - Auto-Assign Tasks": {
+      "main": [[{ "node": "Score & Assign", "branch": 0 }]]
+    },
+    "Score & Assign": {
+      "main": [[{ "node": "Update Task Assignment", "branch": 0 }]]
+    },
+    "Cron - Check Due Dates": {
+      "main": [[{ "node": "Build Reminder Checks", "branch": 0 }]]
+    },
+    "Build Reminder Checks": {
+      "main": [[{ "node": "Get Active Tasks", "branch": 0 }]]
+    },
+    "Webhook - Task Completed": {
+      "main": [[{ "node": "Get Dependent Tasks", "branch": 0 }]]
+    },
+    "Get Dependent Tasks": {
+      "main": [[{ "node": "Unlock Next Task", "branch": 0 }]]
+    },
+    "Webhook - Milestone Reached": {
+      "main": [[{ "node": "Get Project Progress", "branch": 0 }]]
+    },
+    "Get Project Progress": {
+      "main": [[{ "node": "Send Milestone Email", "branch": 0 }]]
+    },
+    "Webhook - Escalation Alert": {
+      "main": [[{ "node": "Get Overdue Tasks", "branch": 0 }]]
+    },
+    "Get Overdue Tasks": {
+      "main": [[{ "node": "Send Manager Alert", "branch": 0 }]]
+    },
+    "Webhook - Time Track Event": {
+      "main": [[{ "node": "Log Time Event", "branch": 0 }]]
+    },
+    "Cron - Weekly Report": {
+      "main": [[{ "node": "Calculate Week Range", "branch": 0 }]]
+    }
+  }
+}

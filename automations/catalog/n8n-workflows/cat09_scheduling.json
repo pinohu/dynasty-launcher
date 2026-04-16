@@ -1,0 +1,354 @@
+{
+  "name": "Category 9: Scheduling & Appointments",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat9/webhook-booking",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-1",
+      "name": "Webhook - Self-Service Booking",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.trafft.com/v1/appointments",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientName", "value": "={{ $json.clientName }}"},
+            {"name": "clientEmail", "value": "={{ $json.clientEmail }}"},
+            {"name": "serviceType", "value": "={{ $json.serviceType }}"},
+            {"name": "preferredDate", "value": "={{ $json.preferredDate }}"},
+            {"name": "duration", "value": "={{ $json.duration || 60 }}"}
+          ]
+        }
+      },
+      "id": "uuid-2",
+      "name": "Create Appointment in Trafft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/appointments",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "trafftId", "value": "={{ $json.id }}"},
+            {"name": "startTime", "value": "={{ $json.startTime }}"},
+            {"name": "duration", "value": "={{ $json.duration }}"},
+            {"name": "status", "value": "scheduled"}
+          ]
+        }
+      },
+      "id": "uuid-3",
+      "name": "Save Appointment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat9/send-confirmation",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-4",
+      "name": "Webhook - Send Confirmation",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/appointments/{{ $json.appointmentId }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-5",
+      "name": "Get Appointment Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "appointments@deputy.app",
+        "toEmail": "={{ $json.body.clientEmail }}",
+        "subject": "Your Appointment Confirmed",
+        "htmlBody": "<h2>Appointment Confirmed</h2><p>Date/Time: {{ startTime }}</p>"
+      },
+      "id": "uuid-6",
+      "name": "Send Email Confirmation",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "to": "={{ $json.body.clientPhone }}",
+        "message": "Your appointment is confirmed for {{ startTime }}"
+      },
+      "id": "uuid-7",
+      "name": "Send SMS Confirmation",
+      "type": "n8n-nodes-base.sendSms",
+      "typeVersion": 1,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "const appt = $json.body;\nconst icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Deputy//Appointments//EN\nBEGIN:VEVENT\nUID:${appt.id}\nDTSTART:${new Date(appt.startTime).toISOString().replace(/[-:]/g, '').split('.')[0]}Z\nDTEND:${new Date(new Date(appt.startTime).getTime() + appt.duration * 60000).toISOString().replace(/[-:]/g, '').split('.')[0]}Z\nSUMMARY:${appt.serviceType}\nDESCRIPTION:Service appointment\nEND:VEVENT\nEND:VCALENDAR`;\nreturn { icsContent };"
+      },
+      "id": "uuid-8",
+      "name": "Generate Calendar Invite",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {"mode": "everyX", "value": 30, "unit": "minutes"}
+          ]
+        }
+      },
+      "id": "uuid-9",
+      "name": "Cron - Send Reminders",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 350]
+    },
+    {
+      "parameters": {
+        "functionCode": "const now = new Date();\nconst reminders = [\n  { days: -1, label: '24 hours before' },\n  { hours: -2, label: '2 hours before' },\n  { minutes: -30, label: '30 minutes before' }\n];\nconst times = [];\n\nreminders.forEach(r => {\n  let time = new Date(now);\n  if (r.days) time.setDate(time.getDate() + r.days);\n  if (r.hours) time.setHours(time.getHours() + r.hours);\n  if (r.minutes) time.setMinutes(time.getMinutes() + r.minutes);\n  times.push({ ...r, timestamp: time });\n});\n\nreturn { reminderTimes: times };"
+      },
+      "id": "uuid-10",
+      "name": "Calculate Reminder Times",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/appointments/due-reminders",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-11",
+      "name": "Get Appointments for Reminders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat9/reschedule",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-12",
+      "name": "Webhook - Reschedule",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.trafft.com/v1/appointments/{{ $json.appointmentId }}/reschedule",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "newStartTime", "value": "={{ $json.newStartTime }}"}
+          ]
+        }
+      },
+      "id": "uuid-13",
+      "name": "Update in Trafft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/appointments/{{ $json.appointmentId }}/reschedule",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "newStartTime", "value": "={{ $json.newStartTime }}"},
+            {"name": "status", "value": "rescheduled"}
+          ]
+        }
+      },
+      "id": "uuid-14",
+      "name": "Update Local Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat9/no-show",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-15",
+      "name": "Webhook - No-Show Detection",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 650]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/appointments/{{ $json.appointmentId }}/no-show",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "status", "value": "no_show"},
+            {"name": "detectedAt", "value": "={{ $moment().toISOString() }}"}
+          ]
+        }
+      },
+      "id": "uuid-16",
+      "name": "Mark No-Show",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 650]
+    },
+    {
+      "parameters": {
+        "fromEmail": "followup@deputy.app",
+        "toEmail": "={{ $json.clientEmail }}",
+        "subject": "We Missed You - Let's Reschedule",
+        "htmlBody": "<p>We noticed you couldn't make it to your appointment.</p>"
+      },
+      "id": "uuid-17",
+      "name": "Send Recovery Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [650, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat9/manage-waitlist",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-18",
+      "name": "Webhook - Waitlist Management",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 800]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/waitlist?order=asc&limit=1",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-19",
+      "name": "Get Next Waitlist Entry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 800]
+    },
+    {
+      "parameters": {
+        "fromEmail": "appointments@deputy.app",
+        "toEmail": "={{ $json.body[0].email }}",
+        "subject": "A Slot Just Opened Up!",
+        "htmlBody": "<p>We have availability on {{ slotDate }}. Interested?</p>"
+      },
+      "id": "uuid-20",
+      "name": "Notify Waitlist",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [650, 800]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat9/multi-staff-scheduling",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-21",
+      "name": "Webhook - Smart Multi-Staff",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 950]
+    },
+    {
+      "parameters": {
+        "functionCode": "const requirement = $json;\nconst availableStaff = requirement.availableStaff || [];\n\n// Load balance: sort by current workload\nconst sorted = availableStaff.sort((a, b) => a.currentLoad - b.currentLoad);\n\nreturn { recommendedStaff: sorted[0] || null };"
+      },
+      "id": "uuid-22",
+      "name": "Load Balance Staff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 950]
+    }
+  ],
+  "connections": {
+    "Webhook - Self-Service Booking": {
+      "main": [[{ "node": "Create Appointment in Trafft", "branch": 0 }]]
+    },
+    "Create Appointment in Trafft": {
+      "main": [[{ "node": "Save Appointment", "branch": 0 }]]
+    },
+    "Webhook - Send Confirmation": {
+      "main": [[{ "node": "Get Appointment Details", "branch": 0 }]]
+    },
+    "Get Appointment Details": {
+      "main": [[{ "node": "Send Email Confirmation", "branch": 0 }]]
+    },
+    "Send Email Confirmation": {
+      "main": [[{ "node": "Send SMS Confirmation", "branch": 0 }]]
+    },
+    "Send SMS Confirmation": {
+      "main": [[{ "node": "Generate Calendar Invite", "branch": 0 }]]
+    },
+    "Cron - Send Reminders": {
+      "main": [[{ "node": "Calculate Reminder Times", "branch": 0 }]]
+    },
+    "Calculate Reminder Times": {
+      "main": [[{ "node": "Get Appointments for Reminders", "branch": 0 }]]
+    },
+    "Webhook - Reschedule": {
+      "main": [[{ "node": "Update in Trafft", "branch": 0 }]]
+    },
+    "Update in Trafft": {
+      "main": [[{ "node": "Update Local Database", "branch": 0 }]]
+    },
+    "Webhook - No-Show Detection": {
+      "main": [[{ "node": "Mark No-Show", "branch": 0 }]]
+    },
+    "Mark No-Show": {
+      "main": [[{ "node": "Send Recovery Email", "branch": 0 }]]
+    },
+    "Webhook - Waitlist Management": {
+      "main": [[{ "node": "Get Next Waitlist Entry", "branch": 0 }]]
+    },
+    "Get Next Waitlist Entry": {
+      "main": [[{ "node": "Notify Waitlist", "branch": 0 }]]
+    },
+    "Webhook - Smart Multi-Staff": {
+      "main": [[{ "node": "Load Balance Staff", "branch": 0 }]]
+    }
+  }
+}

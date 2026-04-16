@@ -1,0 +1,198 @@
+{
+  "module_id": "payment_recovery",
+  "version": "1.0.0",
+  "display_name": "Payment Recovery (Dunning Sequence)",
+  "description": "Automated dunning sequence for failed payments with multi-channel escalation",
+  "category": "Billing Pack",
+  "tier": "wave_2",
+  "pricing": {
+    "standalone_monthly": 19,
+    "pack_monthly": 49,
+    "pack_includes": "billing_pack",
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "payment.failed",
+    "source_system": "stripe",
+    "webhook_event": "invoice.payment_failed",
+    "conditions": [
+      {
+        "field": "invoice.status",
+        "operator": "equals",
+        "value": "failed",
+        "priority": "high"
+      },
+      {
+        "field": "invoice.amount_due",
+        "operator": "gt",
+        "value": 0,
+        "priority": "high"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_immediate_notification",
+      "type": "email",
+      "target": "customer",
+      "template": "payment_failed_soft_notice",
+      "delay_ms": 0,
+      "priority": "high"
+    },
+    {
+      "id": "action_retry_24h",
+      "type": "stripe_retry",
+      "delay_hours": 24,
+      "retry_method": "automatic_charge"
+    },
+    {
+      "id": "action_card_update_48h",
+      "type": "email",
+      "target": "customer",
+      "template": "update_payment_method_48h",
+      "delay_hours": 48,
+      "includes_payment_link": true
+    },
+    {
+      "id": "action_sms_escalation_72h",
+      "type": "sms",
+      "target": "customer",
+      "template": "payment_escalation_sms_72h",
+      "delay_hours": 72,
+      "priority": "high"
+    },
+    {
+      "id": "action_final_notice_7d",
+      "type": "email",
+      "target": "customer",
+      "template": "final_payment_notice_7d",
+      "delay_days": 7,
+      "includes_payment_link": true,
+      "tone": "urgent"
+    },
+    {
+      "id": "action_pause_services_14d",
+      "type": "conditional",
+      "condition": "payment.status == unpaid && days_overdue >= 14",
+      "actions": [
+        {
+          "type": "subscription_pause",
+          "target": "customer_subscription"
+        },
+        {
+          "type": "email",
+          "target": "customer",
+          "template": "service_paused_notice"
+        },
+        {
+          "type": "crm_field_update",
+          "field": "account_status",
+          "value": "PAUSED_UNPAID"
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "last_failed_payment": "{invoice.created_at}",
+        "payment_status": "failed",
+        "days_past_due": "{invoice.days_past_due}",
+        "dunning_stage": "{current_stage}"
+      }
+    }
+  ],
+  "settings": {
+    "enabled_by_default": true,
+    "automatic_retries": true,
+    "retry_attempts": 3,
+    "pause_services_days": 14,
+    "email_notifications_enabled": true,
+    "sms_enabled": true,
+    "soft_decline_attempts": 1,
+    "required_fields": ["customer.email", "invoice.amount_due", "payment_method.id"]
+  },
+  "templates": {
+    "payment_failed_soft_notice": {
+      "subject": "Payment Issue - Please Update Your Payment Method",
+      "body_text": "We attempted to process a payment of ${invoice.amount} on your account but it was declined. This might be due to an expired card or insufficient funds.\n\nPlease update your payment method to avoid service interruption.\n\nUpdate payment method: {payment_link}",
+      "html_template": true
+    },
+    "update_payment_method_48h": {
+      "subject": "Action Required: Update Your Payment Method",
+      "body_text": "Your payment of ${invoice.amount} is still pending. We'll attempt to charge your card again, but it's best to update your payment method to ensure it goes through.\n\nUpdate now: {payment_link}",
+      "html_template": true
+    },
+    "payment_escalation_sms_72h": {
+      "body": "Payment reminder: Your outstanding balance of ${invoice.amount} is now 3 days overdue. Update payment method: {payment_link}"
+    },
+    "final_payment_notice_7d": {
+      "subject": "Final Notice: Outstanding Payment {invoice.number}",
+      "body_text": "This is our final notice regarding your outstanding payment of ${invoice.amount} due on {invoice.due_date}.\n\nIf payment is not received within 7 days, your services will be suspended.\n\nPay now: {payment_link}",
+      "html_template": true,
+      "tone": "urgent"
+    },
+    "service_paused_notice": {
+      "subject": "Your Services Have Been Paused",
+      "body_text": "Due to non-payment of ${invoice.amount}, your services have been paused effective immediately.\n\nTo restore services, please pay the outstanding balance: {payment_link}",
+      "html_template": true
+    }
+  },
+  "capabilities_required": ["email", "sms", "payments", "crm"],
+  "integrations": {
+    "stripe": {
+      "webhook_events": ["invoice.payment_failed", "invoice.payment_action_required"],
+      "sync": true,
+      "auto_retry": true
+    },
+    "crm": {
+      "sync": true,
+      "fields": ["last_failed_payment", "payment_status", "days_past_due", "dunning_stage"]
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "pci_dss_compliant": false,
+    "dunning_law_compliant": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "Payment failed soft notice",
+        "input": {"invoice.status": "failed", "days_past_due": 0},
+        "expected_output": ["email_sent", "retry_scheduled"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Service pause at 14+ days",
+        "input": {"invoice.status": "failed", "days_past_due": 14},
+        "expected_output": ["subscription_paused", "email_sent", "crm_updated"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Payment successful (no action)",
+        "input": {"invoice.status": "paid"},
+        "expected_output": ["no_action"],
+        "timeout_ms": 1000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": [
+      "payments_failed",
+      "recovery_rate",
+      "dunning_stage_distribution",
+      "service_pauses",
+      "repeat_failures"
+    ],
+    "logging_level": "info"
+  },
+  "billing": {
+    "unit": "per_failed_payment",
+    "included_in_pack": "billing_pack",
+    "overages_per_event": 0.02,
+    "monthly_minimum": 19
+  }
+}

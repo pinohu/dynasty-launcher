@@ -1,0 +1,326 @@
+{
+  "name": "Category 6: Proposals & Quoting",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "uuid-1",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [50, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat6/create-estimate",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-2",
+      "name": "Webhook - Create Estimate",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/jobs/{{ $json.jobId }}",
+        "authentication": "bearerToken",
+        "nodeCredentialType": "httpHeaderAuth"
+      },
+      "id": "uuid-3",
+      "name": "Get Job Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/estimate-templates",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-4",
+      "name": "Get Estimate Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const template = $json.body[0];\nconst jobDetails = $json.body;\nconst estimate = {\n  jobId: jobDetails.id,\n  clientId: jobDetails.clientId,\n  serviceType: jobDetails.serviceType,\n  description: jobDetails.description,\n  estimatedHours: jobDetails.estimatedHours || 0,\n  laborRate: jobDetails.laborRate || 75,\n  materials: jobDetails.materials || [],\n  taxes: 0,\n  total: 0,\n  status: 'draft',\n  createdAt: new Date().toISOString()\n};\nconst laborCost = estimate.estimatedHours * estimate.laborRate;\nconst materialsCost = estimate.materials.reduce((sum, m) => sum + (m.cost || 0), 0);\nconst subtotal = laborCost + materialsCost;\nestimate.taxes = subtotal * 0.08;\nestimate.total = subtotal + estimate.taxes;\nreturn estimate;"
+      },
+      "id": "uuid-5",
+      "name": "Auto-Populate Template",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const baseEstimate = $json;\nconst multipliers = { good: 1.0, better: 1.25, best: 1.5 };\nconst tiers = {};\nfor (const [tier, multiplier] of Object.entries(multipliers)) {\n  tiers[tier] = {\n    ...baseEstimate,\n    total: Math.round(baseEstimate.total * multiplier * 100) / 100,\n    description: `${tier.charAt(0).toUpperCase() + tier.slice(1)} option`,\n    tier: tier\n  };\n}\nreturn tiers;"
+      },
+      "id": "uuid-6",
+      "name": "Generate Pricing Tiers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/estimates",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "jobId", "value": "={{ $json.good.jobId }}"},
+            {"name": "tiers", "value": "={{ $json }}"},
+            {"name": "status", "value": "draft"},
+            {"name": "expiresAt", "value": "={{ $moment().add(14, 'days').toISOString() }}"}
+          ]
+        }
+      },
+      "id": "uuid-7",
+      "name": "Save Multi-Tier Estimate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat6/send-estimate",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-8",
+      "name": "Webhook - Send Estimate",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/estimates/{{ $json.estimateId }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-9",
+      "name": "Get Estimate Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/clients/{{ $json.clientId }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-10",
+      "name": "Get Client Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "estimates@deputy.app",
+        "toEmail": "={{ $json.body.email }}",
+        "subject": "Your Estimate from Deputy",
+        "htmlBody": "<h2>Estimate Details</h2><p>Total: ${{ $json.total }}</p>"
+      },
+      "id": "uuid-11",
+      "name": "Send Email with Tracking",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/estimates/{{ $json.estimateId }}/sent",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "sentAt", "value": "={{ $moment().toISOString() }}"},
+            {"name": "status", "value": "sent"}
+          ]
+        }
+      },
+      "id": "uuid-12",
+      "name": "Update Estimate Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [{"mode": "everyX", "value": 12, "unit": "hours"}]
+        }
+      },
+      "id": "uuid-13",
+      "name": "Cron - Check Follow-up Schedule",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 350]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/estimates?status=sent&followUpDue=true",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-14",
+      "name": "Get Estimates Needing Follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "functionCode": "const estimates = $json.body || [];\nconst followUpDays = [2, 5, 10, 14];\nconst tasks = [];\nestimates.forEach(est => {\n  followUpDays.forEach(days => {\n    const sentDate = new Date(est.sentAt);\n    const dueDate = new Date(sentDate.getTime() + days * 24 * 60 * 60 * 1000);\n    if (new Date() >= dueDate) {\n      tasks.push({\n        estimateId: est.id,\n        clientId: est.clientId,\n        daysElapsed: days,\n        message: 'Gentle reminder about your estimate'\n      });\n    }\n  });\n});\nreturn { followUpTasks: tasks };"
+      },
+      "id": "uuid-15",
+      "name": "Calculate Follow-up Schedule",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat6/accept-estimate",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-16",
+      "name": "Webhook - Estimate Accepted",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/jobs",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "estimateId", "value": "={{ $json.estimateId }}"},
+            {"name": "serviceType", "value": "={{ $json.serviceType }}"},
+            {"name": "status", "value": "confirmed"}
+          ]
+        }
+      },
+      "id": "uuid-17",
+      "name": "Create Job from Estimate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat6/price-comparison",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-18",
+      "name": "Webhook - Price Alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 650]
+    },
+    {
+      "parameters": {
+        "functionCode": "const serviceType = $json.serviceType;\nconst yourPrice = $json.yourPrice;\nconst competitors = {\n  'plumbing': [{ name: 'CompA', price: 350 }],\n  'hvac': [{ name: 'TechPro', price: 500 }]\n};\nconst compData = competitors[serviceType] || [];\nconst avgPrice = compData.length > 0 ? compData.reduce((sum, c) => sum + c.price, 0) / compData.length : yourPrice;\nconst percentile = ((yourPrice / avgPrice) * 100).toFixed(0);\nreturn {\n  yourPrice,\n  competitorAverage: Math.round(avgPrice),\n  percentile,\n  alert: percentile > 120 ? 'high' : percentile < 80 ? 'low' : 'competitive'\n};"
+      },
+      "id": "uuid-19",
+      "name": "Compare Competitive Pricing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat6/estimate-to-invoice",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-20",
+      "name": "Webhook - Convert to Invoice",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/invoices",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "estimateId", "value": "={{ $json.estimateId }}"},
+            {"name": "jobId", "value": "={{ $json.jobId }}"},
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "amount", "value": "={{ $json.total }}"},
+            {"name": "status", "value": "draft"}
+          ]
+        }
+      },
+      "id": "uuid-21",
+      "name": "Create Invoice from Estimate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 800]
+    }
+  ],
+  "connections": {
+    "Webhook - Create Estimate": {
+      "main": [[{ "node": "Get Job Details", "branch": 0 }]]
+    },
+    "Get Job Details": {
+      "main": [[{ "node": "Get Estimate Template", "branch": 0 }]]
+    },
+    "Get Estimate Template": {
+      "main": [[{ "node": "Auto-Populate Template", "branch": 0 }]]
+    },
+    "Auto-Populate Template": {
+      "main": [[{ "node": "Generate Pricing Tiers", "branch": 0 }]]
+    },
+    "Generate Pricing Tiers": {
+      "main": [[{ "node": "Save Multi-Tier Estimate", "branch": 0 }]]
+    },
+    "Webhook - Send Estimate": {
+      "main": [[{ "node": "Get Estimate Details", "branch": 0 }]]
+    },
+    "Get Estimate Details": {
+      "main": [[{ "node": "Get Client Email", "branch": 0 }]]
+    },
+    "Get Client Email": {
+      "main": [[{ "node": "Send Email with Tracking", "branch": 0 }]]
+    },
+    "Send Email with Tracking": {
+      "main": [[{ "node": "Update Estimate Status", "branch": 0 }]]
+    },
+    "Cron - Check Follow-up Schedule": {
+      "main": [[{ "node": "Get Estimates Needing Follow-up", "branch": 0 }]]
+    },
+    "Get Estimates Needing Follow-up": {
+      "main": [[{ "node": "Calculate Follow-up Schedule", "branch": 0 }]]
+    },
+    "Webhook - Estimate Accepted": {
+      "main": [[{ "node": "Create Job from Estimate", "branch": 0 }]]
+    },
+    "Webhook - Price Alert": {
+      "main": [[{ "node": "Compare Competitive Pricing", "branch": 0 }]]
+    },
+    "Webhook - Convert to Invoice": {
+      "main": [[{ "node": "Create Invoice from Estimate", "branch": 0 }]]
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "name": "Speed to Lead Response (60 seconds)",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "speed_to_lead",
+        "options": {}
+      },
+      "id": "lead_created_webhook",
+      "name": "Lead Created Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.lead.email }}",
+        "subject": "We Got Your Request - Thanks for Reaching Out!",
+        "html": "<p>Thank you for contacting us about {{ $json.service.type }}. We've received your request and will be in touch within 5 minutes.</p><p>Reference: {{ $json.lead.id }}</p>"
+      },
+      "id": "send_lead_email",
+      "name": "Send Immediate Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "phoneNumber": "{{ $json.lead.phone }}",
+        "message": "Hi {{ $json.lead.first_name }}! Thanks for contacting us. A specialist will reach out within 5 minutes."
+      },
+      "id": "send_lead_sms",
+      "name": "Send Immediate SMS",
+      "type": "n8n-nodes-base.sms",
+      "typeVersion": 1,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/leads/{{ $json.lead.id }}/assign",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "auto_assign",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "id": "assign_to_rep",
+      "name": "Auto-Assign to Available Rep",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/leads/{{ $json.lead.id }}/qualify",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "qualification_score",
+              "value": "HIGH"
+            },
+            {
+              "name": "responded_within_5_min",
+              "value": "{{ $json.quick_response }}"
+            }
+          ]
+        }
+      },
+      "id": "qualify_lead",
+      "name": "Qualify Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "lead_created_webhook": {
+      "main": [[{"node": "send_lead_email", "type": "main", "index": 0}, {"node": "send_lead_sms", "type": "main", "index": 0}, {"node": "assign_to_rep", "type": "main", "index": 0}, {"node": "qualify_lead", "type": "main", "index": 0}]]
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "name": "Customer Support & Help Desk Automations",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/support/ticket-creation",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"customerId\": \"{{$json.customerId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"subject\": \"{{$json.subject}}\",\n  \"description\": \"{{$json.description}}\",\n  \"channel\": \"{{$json.channel}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Ticket Creation and Auto-Categorization",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/support/priority-assignment",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"ticketId\": \"{{$json.ticketId}}\",\n  \"issue\": \"{{$json.issue}}\",\n  \"customerTier\": \"{{$json.customerTier}}\",\n  \"urgency\": \"{{$json.urgency}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Priority Assignment Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/support/sla-breach-alert",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"ticketId\": \"{{$json.ticketId}}\",\n  \"priority\": \"{{$json.priority}}\",\n  \"createdAt\": \"{{$json.createdAt}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "SLA Breach Alerting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/support/escalation-workflow",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"ticketId\": \"{{$json.ticketId}}\",\n  \"currentTier\": {{$json.currentTier}},\n  \"reason\": \"{{$json.reason}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Escalation Workflow (tier 1→2→3)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/support/kb-suggestion",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"ticketId\": \"{{$json.ticketId}}\",\n  \"issue\": \"{{$json.issue}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Knowledge Base Article Suggestion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/support/csat-survey",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"ticketId\": \"{{$json.ticketId}}\",\n  \"customerId\": \"{{$json.customerId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "CSAT Survey After Resolution",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/support/frt-tracker",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"ticketId\": \"{{$json.ticketId}}\",\n  \"createdAt\": \"{{$json.createdAt}}\",\n  \"firstResponseAt\": \"{{$json.firstResponseAt}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "First Response Time Tracker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/support/ticket-deduplication",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"ticketId\": \"{{$json.ticketId}}\",\n  \"subject\": \"{{$json.subject}}\",\n  \"customerId\": \"{{$json.customerId}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Ticket Merge and Deduplication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/support/metrics-reporter",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"period\": \"{{$json.period}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Support Metrics Reporter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 100]
+    }
+  ],
+  "connections": {}
+}

@@ -1,0 +1,443 @@
+{
+  "name": "Category 34: Inventory, Equipment & Assets",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "n8n-nodes-base.trigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "rule": {
+          "interval": ["hours"],
+          "hoursInterval": 2
+        }
+      },
+      "name": "Inventory Check Trigger"
+    },
+    {
+      "id": "2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, item_name, current_stock, reorder_level, reorder_quantity, supplier_id FROM inventory_items WHERE current_stock <= reorder_level AND reorder_level IS NOT NULL"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Check Low Stock Items"
+    },
+    {
+      "id": "3",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Process Low Stock Items"
+    },
+    {
+      "id": "4",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO reorder_alerts (item_id, alert_type, triggered_at, current_level, threshold) VALUES ({{ $json.id }}, 'low_stock', NOW(), {{ $json.current_stock }}, {{ $json.reorder_level }})"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Log Reorder Alert"
+    },
+    {
+      "id": "5",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "toEmail": "{{ $json.supplier_email }}",
+        "subject": "URGENT: Reorder Request - {{ $json.item_name }}",
+        "textContent": "Please expedite delivery of {{ $json.reorder_quantity }} units of {{ $json.item_name }}. Current stock: {{ $json.current_stock }} units."
+      },
+      "name": "Alert Supplier"
+    },
+    {
+      "id": "6",
+      "type": "n8n-nodes-base.trigger",
+      "typeVersion": 1,
+      "position": [50, 250],
+      "parameters": {
+        "rule": {
+          "interval": ["days"],
+          "daysInterval": 1
+        }
+      },
+      "name": "Daily Maintenance Check"
+    },
+    {
+      "id": "7",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT e.id, e.equipment_name, e.last_maintenance, e.maintenance_interval_days FROM equipment e WHERE e.status = 'active' AND (e.last_maintenance IS NULL OR e.last_maintenance < NOW() - INTERVAL '{{ e.maintenance_interval_days }} days')"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Equipment Due for Maintenance"
+    },
+    {
+      "id": "8",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 250],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Schedule Maintenance"
+    },
+    {
+      "id": "9",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO maintenance_schedules (equipment_id, scheduled_date, maintenance_type, status) VALUES ({{ $json.id }}, NOW() + INTERVAL '3 days', 'preventive', 'scheduled')"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Create Maintenance Schedule"
+    },
+    {
+      "id": "10",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, asset_name, purchase_date, asset_cost, depreciation_method FROM fixed_assets WHERE status = 'active' AND depreciation_calculated = false"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Assets for Depreciation"
+    },
+    {
+      "id": "11",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Calculate Depreciation"
+    },
+    {
+      "id": "12",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{ env.OPENAI_API_KEY }}"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"system\", \"content\": \"Calculate tax depreciation based on method\"}, {\"role\": \"user\", \"content\": \"Asset: {{ $json.asset_name }}, Cost: {{ $json.asset_cost }}, Method: {{ $json.depreciation_method }}\"}]"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "openai_credentials"
+      },
+      "name": "AI Depreciation Calculator"
+    },
+    {
+      "id": "13",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO asset_depreciation (asset_id, month, depreciation_amount, book_value, calculation_date) VALUES ({{ $json.id }}, DATE_TRUNC('month', NOW()), ({{ $json.asset_cost }} / 60), ({{ $json.asset_cost }} * 0.85), NOW())"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Store Depreciation Record"
+    },
+    {
+      "id": "14",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, license_name, expiry_date FROM subscriptions WHERE subscription_type = 'license' AND expiry_date IS NOT NULL ORDER BY expiry_date ASC"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Software Licenses"
+    },
+    {
+      "id": "15",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 550],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Check License Expiry"
+    },
+    {
+      "id": "16",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [450, 550],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ (new Date($json.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) }}",
+              "operation": "lessThan",
+              "value2": 30
+            }
+          ]
+        }
+      },
+      "name": "License Expiring Soon?"
+    },
+    {
+      "id": "17",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 550],
+      "parameters": {
+        "toEmail": "{{ env.ADMIN_EMAIL }}",
+        "subject": "License Renewal Required - {{ $json.license_name }}",
+        "textContent": "{{ $json.license_name }} license expires on {{ $json.expiry_date }}. Please renew."
+      },
+      "name": "Send Renewal Reminder"
+    },
+    {
+      "id": "18",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 700],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM equipment_checkouts WHERE check_in_date IS NULL AND checkout_date < NOW() - INTERVAL '5 days' LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Find Overdue Equipment"
+    },
+    {
+      "id": "19",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 700],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Process Overdue"
+    },
+    {
+      "id": "20",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [450, 700],
+      "parameters": {
+        "toEmail": "{{ $json.employee_email }}",
+        "subject": "REMINDER: Equipment Return Due",
+        "textContent": "Please return equipment: {{ $json.equipment_name }}. Checked out on {{ $json.checkout_date }}."
+      },
+      "name": "Send Return Reminder"
+    }
+  ],
+  "connections": {
+    "Inventory Check Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check Low Stock Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Low Stock Items": {
+      "main": [
+        [
+          {
+            "node": "Process Low Stock Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Low Stock Items": {
+      "main": [
+        [
+          {
+            "node": "Log Reorder Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Reorder Alert": {
+      "main": [
+        [
+          {
+            "node": "Alert Supplier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Maintenance Check": {
+      "main": [
+        [
+          {
+            "node": "Fetch Equipment Due for Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Equipment Due for Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Schedule Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Create Maintenance Schedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Assets for Depreciation": {
+      "main": [
+        [
+          {
+            "node": "Calculate Depreciation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Depreciation": {
+      "main": [
+        [
+          {
+            "node": "AI Depreciation Calculator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Depreciation Calculator": {
+      "main": [
+        [
+          {
+            "node": "Store Depreciation Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Software Licenses": {
+      "main": [
+        [
+          {
+            "node": "Check License Expiry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check License Expiry": {
+      "main": [
+        [
+          {
+            "node": "License Expiring Soon?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "License Expiring Soon?": {
+      "main": [
+        [
+          {
+            "node": "Send Renewal Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Overdue Equipment": {
+      "main": [
+        [
+          {
+            "node": "Process Overdue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Overdue": {
+      "main": [
+        [
+          {
+            "node": "Send Return Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

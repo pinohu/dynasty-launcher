@@ -1,0 +1,55 @@
+{
+  "name": "Category 24: Marketing Content",
+  "description": "AI-powered content generation and distribution automations",
+  "version": "1.0",
+  "automations": [
+    {
+      "id": "cat24_001_blog_generator",
+      "name": "Blog Post Generator (AI from Service Topics)",
+      "description": "Uses OpenAI to generate blog posts from service topics",
+      "trigger": "Schedule: Twice weekly or manual"
+    },
+    {
+      "id": "cat24_002_content_calendar",
+      "name": "Content Calendar Automation",
+      "description": "Auto-schedules content across channels based on calendar",
+      "trigger": "Manual or schedule-based"
+    },
+    {
+      "id": "cat24_003_content_repurposing",
+      "name": "Content Repurposing Engine",
+      "description": "Transforms blog posts into social, email, and video scripts",
+      "trigger": "Triggered after blog publication"
+    },
+    {
+      "id": "cat24_004_case_study_builder",
+      "name": "Case Study Builder (from Completed Jobs)",
+      "description": "Auto-generates case studies from successful project data",
+      "trigger": "Manual or on job completion"
+    },
+    {
+      "id": "cat24_005_faq_automation",
+      "name": "FAQ Automation (from Support Tickets)",
+      "description": "Builds FAQ database from common support questions",
+      "trigger": "Schedule: Weekly"
+    },
+    {
+      "id": "cat24_006_content_performance",
+      "name": "Content Performance Tracker",
+      "description": "Monitors engagement and ROI of published content",
+      "trigger": "Schedule: Daily"
+    },
+    {
+      "id": "cat24_007_seasonal_scheduler",
+      "name": "Seasonal Content Scheduler",
+      "description": "Auto-schedules seasonal and holiday-themed content",
+      "trigger": "Schedule: Monthly or manual"
+    },
+    {
+      "id": "cat24_008_local_seo_content",
+      "name": "Local SEO Content Generator",
+      "description": "Generates city + service-specific landing pages",
+      "trigger": "Manual or batch"
+    }
+  ]
+}

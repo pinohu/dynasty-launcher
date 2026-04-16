@@ -1,0 +1,110 @@
+{
+  "name": "Bookkeeping & Accounting Automations",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/bookkeeping/scan-receipt",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"imageUrl\": \"{{$json.imageUrl}}\",\n  \"receiptDate\": \"{{$json.receiptDate}}\",\n  \"vendor\": \"{{$json.vendor}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Receipt Scanning and Categorization",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/bookkeeping/bank-categorization",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"transactionId\": \"{{$json.transactionId}}\",\n  \"amount\": {{$json.amount}},\n  \"description\": \"{{$json.description}}\",\n  \"vendor\": \"{{$json.vendor}}\",\n  \"date\": \"{{$json.date}}\"\n}"
+      },
+      "name": "Bank Transaction Auto-Categorization",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/bookkeeping/monthly-pl",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"month\": {{$json.month}},\n  \"year\": {{$json.year}},\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Monthly P&L Generation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/bookkeeping/tax-estimate",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"quarter\": {{$json.quarter}},\n  \"year\": {{$json.year}},\n  \"businessId\": \"{{$json.businessId}}\",\n  \"businessType\": \"{{$json.businessType}}\"\n}"
+      },
+      "name": "Quarterly Tax Estimate Calculator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/bookkeeping/mileage-log",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"date\": \"{{$json.date}}\",\n  \"startLocation\": \"{{$json.startLocation}}\",\n  \"endLocation\": \"{{$json.endLocation}}\",\n  \"miles\": {{$json.miles}},\n  \"purpose\": \"{{$json.purpose}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Mileage Logging Automation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/bookkeeping/tax-documents",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"year\": {{$json.year}},\n  \"businessId\": \"{{$json.businessId}}\",\n  \"includeReceipts\": true,\n  \"includeInvoices\": true\n}"
+      },
+      "name": "Year-end Tax Document Compilation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/bookkeeping/expense-report",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"period\": \"{{$json.period}}\",\n  \"employeeId\": \"{{$json.employeeId}}\",\n  \"businessId\": \"{{$json.businessId}}\",\n  \"categories\": {{$json.categories}}\n}"
+      },
+      "name": "Expense Report Generator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/bookkeeping/coa-sync",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"chartOfAccounts\": {{$json.chartOfAccounts}}\n}"
+      },
+      "name": "Chart of Accounts Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 700]
+    }
+  ],
+  "connections": {}
+}

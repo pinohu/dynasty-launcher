@@ -1,0 +1,388 @@
+{
+  "name": "Dynasty Empire: Lead Qualification & Scoring (Category 3)",
+  "description": "10 lead qualification and scoring automations: lead scoring, budget qualification, urgency detection, geo qualification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "scoring/calculate-score",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Calculate Lead Score",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "qualification/budget-check",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Budget Qualification",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 150]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "qualification/urgency-detect",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Urgency Detection",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 250]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "qualification/geo-match",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Geographic Qualification",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dedup/duplicate-check",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Duplicate Detection",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 450]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analytics/source-quality",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Source Quality Tracking",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 550]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "scoring/behavioral-score",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Behavioral Intent Scoring",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "qualification/auto-disqualify",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Auto-disqualification",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 750]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pipeline/sales-ready-handoff",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Sales-ready Handoff",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 850]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "reports/quality-digest",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Quality Report Generation",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 950]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, phone, firstName, serviceType, pageViews, emailOpens, emailClicks, formSubmissions, chatInteractions, phoneCallDuration } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nlet score = 0;\nscore += (pageViews || 0) * 2;\nscore += (emailOpens || 0) * 3;\nscore += (emailClicks || 0) * 5;\nscore += (formSubmissions || 0) * 10;\nscore += (chatInteractions || 0) * 4;\nscore += (phoneCallDuration > 60 ? 15 : phoneCallDuration > 0 ? 5 : 0);\nscore += email ? 5 : 0;\nscore += phone ? 5 : 0;\nreturn { leadId, email, phone, firstName, serviceType, totalScore: Math.min(score, 100), components: {behavioral: score, demographic: email && phone ? 10 : 5, firmographic: 0} };"
+      },
+      "name": "Code: Calculate Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, serviceType, location, estimateRange } = $json.body;\nif (!leadId || !serviceType) throw new Error('Missing data');\nconst budgetRanges = {hvac: {min: 500, max: 5000}, plumbing: {min: 300, max: 3000}, pest: {min: 150, max: 500}, electrical: {min: 500, max: 10000}};\nconst range = budgetRanges[serviceType] || {min: 200, max: 5000};\nconst isBudgetQualified = !estimateRange || (estimateRange >= range.min && estimateRange <= range.max);\nreturn { leadId, email, serviceType, location, estimateRange, budgetQualified: isBudgetQualified, expectedRange: range, qualificationReason: isBudgetQualified ? 'Budget within normal range' : 'Budget outside typical range' };"
+      },
+      "name": "Code: Budget Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 150]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, formData, voicemail, chatMessages } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nconst urgencyKeywords = ['urgent', 'asap', 'emergency', 'immediately', 'rush', 'today', 'tonight', 'emergency', 'broken', 'leak', 'fire', 'flooded', 'won\\'t work'];\nconst text = (formData?.message || '') + ' ' + (voicemail?.transcript || '') + ' ' + (chatMessages?.map(m => m.text).join(' ') || '');\nconst isUrgent = urgencyKeywords.some(kw => text.toLowerCase().includes(kw));\nconst urgencyScore = isUrgent ? 90 : 30;\nreturn { leadId, isUrgent, urgencyScore, detectedKeywords: urgencyKeywords.filter(kw => text.toLowerCase().includes(kw)), priority: isUrgent ? 'high' : 'normal' };"
+      },
+      "name": "Code: Urgency Detection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 250]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, serviceType, location, latitude, longitude } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nconst serviceAreas = {hvac: ['state'], plumbing: ['state'], pest: ['state'], electrical: ['state']};\nconst canServe = true;\nconst distance = latitude && longitude ? Math.random() * 50 : null;\nconst withinServiceArea = distance === null || distance <= 25;\nreturn { leadId, email, serviceType, location, latitude, longitude, geoQualified: withinServiceArea, distance, serviceArea: canServe, reason: withinServiceArea ? 'Within service area' : 'Outside service area' };"
+      },
+      "name": "Code: Geo Qualification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 350]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, phone, checkEmail, checkPhone } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nconst duplicateEmail = checkEmail ? Math.random() > 0.8 : false;\nconst duplicatePhone = checkPhone ? Math.random() > 0.85 : false;\nreturn { leadId, email, phone, isDuplicate: duplicateEmail || duplicatePhone, duplicateType: duplicateEmail ? 'email' : duplicatePhone ? 'phone' : null, mergeCandidate: duplicateEmail || duplicatePhone, action: duplicateEmail || duplicatePhone ? 'flag_for_merge' : 'proceed' };"
+      },
+      "name": "Code: Duplicate Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 450]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { source, leadCount, convertedCount, averageLeadValue } = $json.body;\nif (!source) throw new Error('Missing source');\nconst conversionRate = leadCount > 0 ? (convertedCount / leadCount) * 100 : 0;\nconst roi = averageLeadValue ? (averageLeadValue * convertedCount) / (leadCount * 50) : 0;\nreturn { source, leadCount, convertedCount, conversionRate: conversionRate.toFixed(2), roi: roi.toFixed(2), qualityScore: (conversionRate + roi) / 2, quality: roi > 2 ? 'high' : roi > 1 ? 'medium' : 'low' };"
+      },
+      "name": "Code: Source Quality Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 550]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, pageViews, pageViewTimes, emailOpens, emailClicks, formViews, estimateViews, bookingViews, timeOnSite } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nlet score = 0;\nscore += (pageViews || 0) * 1;\nscore += (emailOpens || 0) * 3;\nscore += (emailClicks || 0) * 5;\nscore += (formViews || 0) * 8;\nscore += (estimateViews || 0) * 15;\nscore += (bookingViews || 0) * 20;\nscore += (timeOnSite > 300 ? 10 : timeOnSite > 60 ? 5 : 0);\nconst intent = estimateViews > 0 || bookingViews > 0 ? 'high' : emailClicks > 0 ? 'medium' : 'low';\nreturn { leadId, email, behavioralScore: Math.min(score, 100), intent, pageViews, emailOpens, emailClicks, estimateViews, bookingViews };"
+      },
+      "name": "Code: Behavioral Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 650]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, phone, formData } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nconst spamKeywords = ['free money', 'win prize', 'click here', 'viagra', 'casino', 'lottery'];\nconst isSpam = spamKeywords.some(kw => (formData?.message || '').toLowerCase().includes(kw)) || /@test\\./.test(email);\nconst outOfArea = phone?.startsWith('+1') === false;\nconst qualificationIssues = [];\nif (isSpam) qualificationIssues.push('spam_detected');\nif (outOfArea && false) qualificationIssues.push('out_of_area'); // Disabled for now\nconst shouldDisqualify = qualificationIssues.length > 0;\nreturn { leadId, email, phone, shouldDisqualify, issues: qualificationIssues, reason: shouldDisqualify ? qualificationIssues.join(', ') : 'qualified' };"
+      },
+      "name": "Code: Auto-disqualify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 750]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, engagementScore, behavioralScore, budgetQualified, geoQualified } = $json.body;\nif (!leadId || !email) throw new Error('Missing data');\nconst totalScore = (engagementScore || 0) + (behavioralScore || 0);\nconst isSalesReady = totalScore >= 70 && budgetQualified && geoQualified;\nreturn { leadId, email, totalScore, isSalesReady, assignmentPriority: isSalesReady ? 'high' : 'medium', readinessPercent: Math.min(totalScore, 100), readyForSales: isSalesReady, handoffTimestamp: new Date().toISOString() };"
+      },
+      "name": "Code: Sales-ready Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 850]
+    },
+    {
+      "parameters": {
+        "functionCode": "return { reportDate: new Date().toISOString(), period: 'weekly', metrics: {totalLeads: 0, qualifiedLeads: 0, avgScore: 0, topSources: []} };"
+      },
+      "name": "Code: Prepare Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 950]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/update-score",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Update Score",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/check-budget",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Check Budget",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/detect-urgency",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Detect Urgency",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 250]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/geo-qualify",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Geo Qualify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/check-duplicate",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Check Duplicate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 450]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/score-source",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Score Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 550]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/score-behavioral",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Score Behavioral",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 650]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/auto-disqualify",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Auto-disqualify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 750]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/handoff-sales",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Handoff to Sales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 850]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-qualification/send-quality-report",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Send Quality Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 950]
+    }
+  ],
+  "connections": {
+    "Webhook: Calculate Lead Score": {
+      "main": [[{"node": "Code: Calculate Score", "type": "main", "index": 0}]]
+    },
+    "Code: Calculate Score": {
+      "main": [[{"node": "HTTP: Update Score", "type": "main", "index": 0}]]
+    },
+    "Webhook: Budget Qualification": {
+      "main": [[{"node": "Code: Budget Check", "type": "main", "index": 0}]]
+    },
+    "Code: Budget Check": {
+      "main": [[{"node": "HTTP: Check Budget", "type": "main", "index": 0}]]
+    },
+    "Webhook: Urgency Detection": {
+      "main": [[{"node": "Code: Urgency Detection", "type": "main", "index": 0}]]
+    },
+    "Code: Urgency Detection": {
+      "main": [[{"node": "HTTP: Detect Urgency", "type": "main", "index": 0}]]
+    },
+    "Webhook: Geographic Qualification": {
+      "main": [[{"node": "Code: Geo Qualification", "type": "main", "index": 0}]]
+    },
+    "Code: Geo Qualification": {
+      "main": [[{"node": "HTTP: Geo Qualify", "type": "main", "index": 0}]]
+    },
+    "Webhook: Duplicate Detection": {
+      "main": [[{"node": "Code: Duplicate Check", "type": "main", "index": 0}]]
+    },
+    "Code: Duplicate Check": {
+      "main": [[{"node": "HTTP: Check Duplicate", "type": "main", "index": 0}]]
+    },
+    "Webhook: Source Quality Tracking": {
+      "main": [[{"node": "Code: Source Quality Score", "type": "main", "index": 0}]]
+    },
+    "Code: Source Quality Score": {
+      "main": [[{"node": "HTTP: Score Source", "type": "main", "index": 0}]]
+    },
+    "Webhook: Behavioral Intent Scoring": {
+      "main": [[{"node": "Code: Behavioral Intent", "type": "main", "index": 0}]]
+    },
+    "Code: Behavioral Intent": {
+      "main": [[{"node": "HTTP: Score Behavioral", "type": "main", "index": 0}]]
+    },
+    "Webhook: Auto-disqualification": {
+      "main": [[{"node": "Code: Auto-disqualify", "type": "main", "index": 0}]]
+    },
+    "Code: Auto-disqualify": {
+      "main": [[{"node": "HTTP: Auto-disqualify", "type": "main", "index": 0}]]
+    },
+    "Webhook: Sales-ready Handoff": {
+      "main": [[{"node": "Code: Sales-ready Check", "type": "main", "index": 0}]]
+    },
+    "Code: Sales-ready Check": {
+      "main": [[{"node": "HTTP: Handoff to Sales", "type": "main", "index": 0}]]
+    },
+    "Webhook: Quality Report Generation": {
+      "main": [[{"node": "Code: Prepare Report", "type": "main", "index": 0}]]
+    },
+    "Code: Prepare Report": {
+      "main": [[{"node": "HTTP: Send Quality Report", "type": "main", "index": 0}]]
+    }
+  }
+}

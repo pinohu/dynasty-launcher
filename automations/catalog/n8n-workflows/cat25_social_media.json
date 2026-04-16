@@ -1,0 +1,43 @@
+{
+  "name": "Category 25: Social Media",
+  "description": "Social media management and monitoring automations",
+  "version": "1.0",
+  "automations": [
+    {
+      "id": "cat25_001_multi_post",
+      "name": "Multi-Platform Post Scheduler",
+      "description": "Schedules and publishes posts across multiple social platforms",
+      "trigger": "Manual or schedule-based"
+    },
+    {
+      "id": "cat25_002_comment_monitor",
+      "name": "Comment Monitoring and Alert",
+      "description": "Monitors comments and triggers alerts for engagement",
+      "trigger": "Real-time polling every 5 minutes"
+    },
+    {
+      "id": "cat25_003_ugc_collector",
+      "name": "User-Generated Content Collector",
+      "description": "Collects and curates user-generated content automatically",
+      "trigger": "Schedule: Hourly"
+    },
+    {
+      "id": "cat25_004_hashtag_tracker",
+      "name": "Hashtag Performance Tracker",
+      "description": "Tracks performance metrics for branded hashtags",
+      "trigger": "Schedule: Daily"
+    },
+    {
+      "id": "cat25_005_engagement_aggregator",
+      "name": "Engagement Metric Aggregator",
+      "description": "Aggregates engagement data from all platforms",
+      "trigger": "Schedule: Every 30 minutes"
+    },
+    {
+      "id": "cat25_006_social_listening",
+      "name": "Social Listening Keyword Monitor",
+      "description": "Monitors keywords and brand mentions across platforms",
+      "trigger": "Real-time or hourly"
+    }
+  ]
+}

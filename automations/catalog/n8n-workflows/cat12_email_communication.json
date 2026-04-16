@@ -1,0 +1,246 @@
+{
+  "name": "Category 12: Email Communication",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [50, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "path": "email-communication",
+        "responseMode": "responseNode",
+        "auth": "headerAuth"
+      },
+      "name": "Email Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/email-communication",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ $json }}"
+      },
+      "name": "Email Router",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.emailType }}",
+              "value2": "transactional",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Transactional Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/email-communication/transactional",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {recipient: $json.recipient, emailType: $json.emailType, data: $json.data} }}"
+      },
+      "name": "Send Transactional Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.emailType }}",
+              "value2": "template_management",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Template Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/email-communication/templates",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {templateName: $json.templateName, action: $json.action} }}"
+      },
+      "name": "Manage Templates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.emailType }}",
+              "value2": "tracking",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Tracking Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/email-communication/tracking",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {emailId: $json.emailId, event: $json.event} }}"
+      },
+      "name": "Log Tracking Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.emailType }}",
+              "value2": "crm_logging",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "CRM Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/email-communication/crm-activity",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {contactId: $json.contactId, emailId: $json.emailId} }}"
+      },
+      "name": "Log CRM Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/email-communication/bounce-handling",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {email: $json.email, bounceType: $json.bounceType} }}"
+      },
+      "name": "Handle Bounce",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/email-communication/signature",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {userId: $json.userId, emailContent: $json.emailContent} }}"
+      },
+      "name": "Apply Signature",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/email-communication/scheduled-send",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {emailId: $json.emailId, sendTime: $json.sendTime} }}"
+      },
+      "name": "Queue Scheduled Send",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/email-communication/thread-summarize",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {threadId: $json.threadId} }}"
+      },
+      "name": "Summarize Thread",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "respondWith": "allData"
+      },
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 50]
+    }
+  ],
+  "connections": {
+    "Start": {"main": [{"node": "Email Webhook", "branch": 0}]},
+    "Email Webhook": {"main": [{"node": "Email Router", "branch": 0}]},
+    "Email Router": {"main": [{"node": "Transactional Switch", "branch": 0}]},
+    "Transactional Switch": {
+      "main": [
+        [{"node": "Send Transactional Email", "branch": 0}],
+        [{"node": "Template Switch", "branch": 0}]
+      ]
+    },
+    "Template Switch": {
+      "main": [
+        [{"node": "Manage Templates", "branch": 0}],
+        [{"node": "Tracking Switch", "branch": 0}]
+      ]
+    },
+    "Tracking Switch": {
+      "main": [
+        [{"node": "Log Tracking Event", "branch": 0}],
+        [{"node": "CRM Switch", "branch": 0}]
+      ]
+    },
+    "CRM Switch": {
+      "main": [
+        [{"node": "Log CRM Activity", "branch": 0}],
+        [{"node": "Handle Bounce", "branch": 0}]
+      ]
+    },
+    "Handle Bounce": {"main": [{"node": "Apply Signature", "branch": 0}]},
+    "Apply Signature": {"main": [{"node": "Queue Scheduled Send", "branch": 0}]},
+    "Queue Scheduled Send": {"main": [{"node": "Summarize Thread", "branch": 0}]},
+    "Summarize Thread": {"main": [{"node": "Response", "branch": 0}]},
+    "Send Transactional Email": {"main": [{"node": "Handle Bounce", "branch": 0}]},
+    "Manage Templates": {"main": [{"node": "Handle Bounce", "branch": 0}]},
+    "Log Tracking Event": {"main": [{"node": "Handle Bounce", "branch": 0}]},
+    "Log CRM Activity": {"main": [{"node": "Handle Bounce", "branch": 0}]}
+  }
+}

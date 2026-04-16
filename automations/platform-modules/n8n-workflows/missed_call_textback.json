@@ -1,0 +1,333 @@
+{
+  "name": "Missed Call Text-Back Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/missed-call-textback",
+        "responseMode": "responseNode",
+        "responseData": "success",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.caller_type }}",
+              "condition": "equal",
+              "value2": "new"
+            },
+            {
+              "value1": "={{ $json.is_business_hours }}",
+              "condition": "equal",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "if-condition",
+      "name": "Check New Caller & After Hours",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [350, 300]
+    },
+    {
+      "parameters": {
+        "waitValue": "={{ $node['webhook-trigger'].json.delay_seconds || 30 }}",
+        "unit": "seconds"
+      },
+      "id": "wait-delay",
+      "name": "Wait Before SMS",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [550, 200]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SMS_IT_API_URL }}/send",
+        "method": "POST",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SMS_IT_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "body": {
+          "phone": "={{ $json.caller_phone }}",
+          "message": "Hi! We missed your call to {{ $json.tenant_business_name }}. How can we help? Reply here or call us back at {{ $json.tenant_phone }}. - {{ $json.tenant_owner_first_name }}",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "message_id": "={{ $json.call_id }}"
+        },
+        "options": {
+          "returnFullResponse": true,
+          "timeout": 30000,
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "id": "send-sms",
+      "name": "Send SMS via SMS-iT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 200],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CRM_API_URL }}/leads",
+        "authentication": "bearerToken",
+        "nodeCredentialType": "httpHeaderAuth",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.CRM_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "phone": "={{ $json.caller_phone }}",
+          "source": "missed_call",
+          "status": "new",
+          "tags": ["missed-call", "auto-textback"],
+          "tenant_id": "={{ $json.tenant_id }}",
+          "call_id": "={{ $json.call_id }}",
+          "call_time": "={{ $json.call_time }}",
+          "created_at": "={{ $now.toISO() }}"
+        },
+        "options": {
+          "returnFullResponse": true,
+          "timeout": 30000
+        }
+      },
+      "id": "create-lead",
+      "name": "Create Lead in CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 350],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EMAIL_API_URL }}/send",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.EMAIL_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "to": "={{ $json.tenant_owner_email }}",
+          "subject": "Missed Call Alert: {{ $json.caller_phone }}",
+          "body": "You missed a call from {{ $json.caller_phone }} at {{ $json.call_time }}. An auto-text has been sent. View lead: {{ $env.PLATFORM_URL }}/leads/{{ $node['create-lead'].json.id }}",
+          "tenant_id": "={{ $json.tenant_id }}"
+        },
+        "options": {
+          "returnFullResponse": true,
+          "timeout": 30000
+        }
+      },
+      "id": "send-owner-email",
+      "name": "Notify Owner via Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LOG_API_URL }}/events",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LOG_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "event_type": "sms.sent",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "caller_phone": "={{ $json.caller_phone }}",
+          "lead_id": "={{ $node['create-lead'].json.id }}",
+          "status": "success",
+          "timestamp": "={{ $now.toISO() }}"
+        }
+      },
+      "id": "log-success",
+      "name": "Log Success Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LOG_API_URL }}/alerts",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LOG_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "event_type": "sms.failed",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "caller_phone": "={{ $json.caller_phone }}",
+          "error": "={{ $error.message }}",
+          "timestamp": "={{ $now.toISO() }}"
+        }
+      },
+      "id": "log-error",
+      "name": "Log Error & Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 350]
+    },
+    {
+      "parameters": {
+        "respondWithOptions": {
+          "responseBody": "{\"status\": \"success\", \"message\": \"Missed call processed and SMS sent.\"}"
+        }
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1150, 100]
+    },
+    {
+      "parameters": {
+        "respondWithOptions": {
+          "responseBody": "{\"status\": \"error\", \"message\": \"Call did not meet automation criteria.\"}"
+        }
+      },
+      "id": "respond-no-match",
+      "name": "Respond No Match",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [550, 550]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [
+        [
+          {
+            "node": "if-condition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if-condition": {
+      "main": [
+        [
+          {
+            "node": "wait-delay",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "respond-no-match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait-delay": {
+      "main": [
+        [
+          {
+            "node": "send-sms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-sms": {
+      "main": [
+        [
+          {
+            "node": "create-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-lead": {
+      "main": [
+        [
+          {
+            "node": "send-owner-email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-owner-email": {
+      "main": [
+        [
+          {
+            "node": "log-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log-success": {
+      "main": [
+        [
+          {
+            "node": "respond-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-sms": {
+      "error": [
+        [
+          {
+            "node": "log-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

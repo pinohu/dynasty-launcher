@@ -1,0 +1,220 @@
+{
+  "name": "Category 13: SMS & Chat",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [50, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "path": "sms-chat",
+        "responseMode": "responseNode",
+        "auth": "headerAuth"
+      },
+      "name": "SMS/Chat Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/sms-chat",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ $json }}"
+      },
+      "name": "SMS/Chat Router",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "appointment_reminder",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Reminder Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/sms-chat/appointment-reminder",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {appointmentId: $json.appointmentId, phone: $json.phone} }}"
+      },
+      "name": "Send Reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "conversation_logging",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Logging Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/sms-chat/log-conversation",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {conversationId: $json.conversationId, message: $json.message} }}"
+      },
+      "name": "Log Conversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "after_hours_reply",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "After Hours Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/sms-chat/after-hours-reply",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {phone: $json.phone, channel: $json.channel} }}"
+      },
+      "name": "Send Auto-Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "chat_to_ticket",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Chat Ticket Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/sms-chat/chat-to-ticket",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {chatSessionId: $json.chatSessionId, message: $json.message} }}"
+      },
+      "name": "Create Ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/sms-chat/faq-chatbot",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {chatId: $json.chatId, userMessage: $json.userMessage} }}"
+      },
+      "name": "FAQ Chatbot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/sms-chat/bulk-campaign",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {campaignId: $json.campaignId, message: $json.message} }}"
+      },
+      "name": "Bulk SMS Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "respondWith": "allData"
+      },
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 50]
+    }
+  ],
+  "connections": {
+    "Start": {"main": [{"node": "SMS/Chat Webhook", "branch": 0}]},
+    "SMS/Chat Webhook": {"main": [{"node": "SMS/Chat Router", "branch": 0}]},
+    "SMS/Chat Router": {"main": [{"node": "Reminder Switch", "branch": 0}]},
+    "Reminder Switch": {
+      "main": [
+        [{"node": "Send Reminder", "branch": 0}],
+        [{"node": "Logging Switch", "branch": 0}]
+      ]
+    },
+    "Logging Switch": {
+      "main": [
+        [{"node": "Log Conversation", "branch": 0}],
+        [{"node": "After Hours Switch", "branch": 0}]
+      ]
+    },
+    "After Hours Switch": {
+      "main": [
+        [{"node": "Send Auto-Reply", "branch": 0}],
+        [{"node": "Chat Ticket Switch", "branch": 0}]
+      ]
+    },
+    "Chat Ticket Switch": {
+      "main": [
+        [{"node": "Create Ticket", "branch": 0}],
+        [{"node": "FAQ Chatbot", "branch": 0}]
+      ]
+    },
+    "FAQ Chatbot": {"main": [{"node": "Bulk SMS Campaign", "branch": 0}]},
+    "Bulk SMS Campaign": {"main": [{"node": "Response", "branch": 0}]},
+    "Send Reminder": {"main": [{"node": "FAQ Chatbot", "branch": 0}]},
+    "Log Conversation": {"main": [{"node": "FAQ Chatbot", "branch": 0}]},
+    "Send Auto-Reply": {"main": [{"node": "FAQ Chatbot", "branch": 0}]},
+    "Create Ticket": {"main": [{"node": "FAQ Chatbot", "branch": 0}]}
+  }
+}

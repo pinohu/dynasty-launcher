@@ -1,0 +1,153 @@
+{
+  "name": "Data Enrichment Automations",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "path": "enrichment-webhook"
+      },
+      "name": "Enrichment Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "validate_contact",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Route: Email/Phone Validator",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "lead_enrichment",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Route: Lead Enrichment",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.hunter.io/v2/email-verifier",
+        "requestMethod": "GET",
+        "options": {}
+      },
+      "name": "API: Hunter Email Validation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "url": "https://api.clearbit.com/v1/companies/find",
+        "requestMethod": "GET",
+        "options": {}
+      },
+      "name": "API: Clearbit Company Lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "url": "https://api.linkedin.com/v2/search",
+        "requestMethod": "GET",
+        "options": {}
+      },
+      "name": "API: LinkedIn Profile Finder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO lead_enrichment_logs (lead_id, email_valid, phone_valid, company_data, social_profiles, created_at) VALUES (@leadId, @emailValid, @phoneValid, @companyData, @socialProfiles, NOW())",
+        "options": {}
+      },
+      "name": "DB: Log Enrichment Data",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.clearbit.com/v1/enrichment",
+        "requestMethod": "GET",
+        "options": {}
+      },
+      "name": "API: Firmographic Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://api.stackshare.io/companies",
+        "requestMethod": "GET",
+        "options": {}
+      },
+      "name": "API: Technographic Lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 600]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "UPDATE leads SET email_valid = @emailValid, phone_valid = @phoneValid, enriched_at = NOW(), enrichment_score = @score WHERE id = @leadId",
+        "options": {}
+      },
+      "name": "DB: Update Lead Enrichment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "responseData": "{\"success\": true, \"enrichment\": {{ $json }}, \"timestamp\": \"{{ now() }}\"}"
+      },
+      "name": "Response: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 400]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{"node": "Enrichment Webhook", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+}

@@ -1,0 +1,160 @@
+{
+  "module_id": "voicemail_transcription",
+  "version": "1.0.0",
+  "display_name": "Voicemail Transcription & Intent Detection",
+  "description": "AI-powered voicemail transcription with intent extraction and smart routing",
+  "category": "Sales & Support",
+  "tier": "wave_3",
+  "pricing": {
+    "standalone_monthly": 19,
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "phone.voicemail.received",
+    "source_system": "phone",
+    "conditions": [
+      {
+        "field": "voicemail.duration_seconds",
+        "operator": "gt",
+        "value": 5,
+        "priority": "high"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_transcribe_voicemail",
+      "type": "ai_transcription",
+      "service": "openai_whisper",
+      "language": "auto_detect",
+      "output_field": "transcription"
+    },
+    {
+      "id": "action_extract_intent",
+      "type": "ai_analysis",
+      "service": "openai_gpt4",
+      "prompt": "Extract the caller's primary intent from this voicemail. Categorize as: SCHEDULING, SUPPORT_REQUEST, PAYMENT_ISSUE, COMPLAINT, GENERAL_INQUIRY, or OTHER",
+      "output_fields": ["intent", "urgency_level", "service_type"]
+    },
+    {
+      "id": "action_create_lead_or_task",
+      "type": "conditional",
+      "condition": "intent == SCHEDULING || GENERAL_INQUIRY",
+      "actions": [
+        {
+          "type": "crm_lead_create",
+          "fields": {
+            "name": "{caller.name}",
+            "phone": "{caller.phone}",
+            "service_requested": "{service_type}",
+            "priority": "{urgency_level}",
+            "source": "voicemail"
+          }
+        }
+      ],
+      "alternative_condition": "intent == SUPPORT_REQUEST || COMPLAINT",
+      "alternative_actions": [
+        {
+          "type": "crm_task_create",
+          "task_title": "Follow up on voicemail",
+          "task_type": "{intent}",
+          "priority": "{urgency_level}",
+          "description": "{transcription}"
+        }
+      ]
+    },
+    {
+      "id": "action_send_transcription",
+      "type": "email",
+      "target": "owner",
+      "template": "voicemail_transcription_summary",
+      "includes_audio_link": true,
+      "includes_transcription": true
+    },
+    {
+      "id": "action_tag_service_type",
+      "type": "crm_tag",
+      "tag": "service_type_{service_type}",
+      "value": true
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "voicemail_received_at": "{received_at}",
+        "transcription": "{transcription}",
+        "intent_detected": "{intent}",
+        "urgency": "{urgency_level}",
+        "audio_url": "{voicemail_url}"
+      }
+    }
+  ],
+  "templates": {
+    "voicemail_transcription_summary": {
+      "subject": "Voicemail Transcription: {caller.name} - {intent}",
+      "body_text": "New voicemail from {caller.name} ({caller.phone})\n\nTranscription:\n{transcription}\n\nDetected Intent: {intent}\nUrgency: {urgency_level}\nService Type: {service_type}\n\nAudio: {voicemail_url}",
+      "html_template": true,
+      "includes_audio_player": true
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "ai_transcription_enabled": true,
+    "intent_detection_enabled": true,
+    "auto_create_lead": true,
+    "auto_create_task": true,
+    "min_voicemail_length_seconds": 5,
+    "urgency_levels": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+    "required_fields": ["voicemail.audio_file", "caller.phone"]
+  },
+  "capabilities_required": ["phone", "crm"],
+  "integrations": {
+    "phone": {
+      "provider": "CallScaler",
+      "webhook_events": ["voicemail.received"],
+      "audio_format": "wav,mp3"
+    },
+    "ai_service": {
+      "provider": "OpenAI",
+      "models": ["whisper", "gpt-4"]
+    },
+    "crm": {
+      "sync": true,
+      "auto_lead_creation": true,
+      "auto_task_creation": true
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "audio_retention_days": 30,
+    "pii_redaction": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "Voicemail transcription and intent detection",
+        "input": {"voicemail.duration": 30, "audio_file": "sample.wav"},
+        "expected_output": ["transcribed", "intent_detected", "lead_or_task_created"],
+        "timeout_ms": 10000
+      },
+      {
+        "name": "High urgency complaint",
+        "input": {"intent": "COMPLAINT", "urgency": "HIGH"},
+        "expected_output": ["task_created", "high_priority_set"],
+        "timeout_ms": 5000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": ["voicemails_received", "transcription_accuracy", "intent_detection_accuracy", "auto_lead_creation_rate"],
+    "logging_level": "info"
+  },
+  "billing": {
+    "unit": "per_voicemail",
+    "monthly_minimum": 19,
+    "additional_cost_per_transcription": 0.05,
+    "metered_events": ["voicemail.received"]
+  }
+}

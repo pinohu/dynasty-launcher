@@ -1,0 +1,153 @@
+{
+  "module_code": "missed_call_textback",
+  "display_name": "Missed Call Text-Back",
+  "category": "lead_capture",
+  "pack": "lead_capture_pack",
+  "version": "1.0.0",
+  "status": "spec",
+  "description": "Automatically sends a personalized SMS to new callers whose calls were missed, creating a lead record and notifying the business owner.",
+  "outcome": "Never lose a lead to a missed call again. Respond in under 60 seconds, 24/7.",
+  "pricing": {
+    "standalone_monthly": 19,
+    "pack_included": true,
+    "pack_code": "lead_capture_pack",
+    "pack_monthly": 49
+  },
+  "activation_type": "guided",
+  "activation_estimated_minutes": 8,
+  "capabilities_required": ["sms", "phone", "crm"],
+  "prerequisites": [],
+  "triggers": [
+    {
+      "event": "phone.call.missed",
+      "source": "callscaler_webhook",
+      "conditions": [
+        {"field": "caller_type", "operator": "equals", "value": "new"},
+        {"field": "business_hours", "operator": "equals", "value": false}
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "order": 1,
+      "type": "sms.send",
+      "capability": "sms",
+      "template": "missed_call_textback_default",
+      "delay_seconds": 30,
+      "failure_mode": "log_and_continue",
+      "compliance": {
+        "opt_out_check": true,
+        "quiet_hours": {"start": "21:00", "end": "09:00"},
+        "a2p_required": true
+      }
+    },
+    {
+      "order": 2,
+      "type": "crm.lead.create",
+      "capability": "crm",
+      "fields": {
+        "source": "missed_call",
+        "phone": "{{caller_phone}}",
+        "status": "new",
+        "tags": ["missed-call", "auto-textback"]
+      },
+      "failure_mode": "retry_3x_then_alert"
+    },
+    {
+      "order": 3,
+      "type": "notification.send",
+      "capability": "email",
+      "template": "owner_missed_call_alert",
+      "recipient": "{{tenant.owner_email}}",
+      "failure_mode": "log_and_continue"
+    }
+  ],
+  "configurable_settings": [
+    {
+      "key": "response_delay_seconds",
+      "label": "Delay before sending text",
+      "type": "number",
+      "default": 30,
+      "min": 10,
+      "max": 300
+    },
+    {
+      "key": "message_tone",
+      "label": "Message tone",
+      "type": "select",
+      "options": ["friendly", "professional", "casual"],
+      "default": "friendly"
+    },
+    {
+      "key": "quiet_hours_start",
+      "label": "Quiet hours start",
+      "type": "time",
+      "default": "21:00"
+    },
+    {
+      "key": "quiet_hours_end",
+      "label": "Quiet hours end",
+      "type": "time",
+      "default": "09:00"
+    },
+    {
+      "key": "owner_notification",
+      "label": "Notify owner of missed calls",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "key": "auto_create_lead",
+      "label": "Auto-create lead record",
+      "type": "boolean",
+      "default": true
+    }
+  ],
+  "templates": [
+    {
+      "code": "missed_call_textback_default",
+      "channel": "sms",
+      "subject": null,
+      "body": "Hi! We missed your call to {{tenant.business_name}}. How can we help? Reply here or call us back at {{tenant.phone}}. - {{tenant.owner_first_name}}",
+      "variables": ["tenant.business_name", "tenant.phone", "tenant.owner_first_name"]
+    },
+    {
+      "code": "owner_missed_call_alert",
+      "channel": "email",
+      "subject": "Missed Call Alert: {{caller_phone}}",
+      "body": "You missed a call from {{caller_phone}} at {{call_time}}. An auto-text has been sent. View lead: {{lead_url}}",
+      "variables": ["caller_phone", "call_time", "lead_url"]
+    }
+  ],
+  "compliance_flags": {
+    "sms_opt_out": true,
+    "a2p_registration": true,
+    "quiet_hours": true,
+    "tcpa_consent": "implied_by_inbound_call",
+    "hipaa": false
+  },
+  "test_matrix": {
+    "happy_path": "Missed call from new number → SMS sent within delay → lead created → owner notified",
+    "missing_capability": "SMS not configured → activation deferred → wizard launched for SMS setup",
+    "failed_provisioning": "SMS send fails → retry 3x → alert generated → lead still created",
+    "rollback": "Mid-activation failure → trigger deregistered → template unbound → tenant records cleaned",
+    "cancellation": "Module deactivated → triggers disabled → existing leads preserved → config retained",
+    "reactivation": "Module re-enabled → prior config restored → triggers re-registered → postflight validates"
+  },
+  "downgrade_behavior": "Triggers disabled immediately. Lead records preserved. SMS history retained for 90 days. Configuration preserved for reactivation.",
+  "observability": {
+    "events": ["module.activated", "sms.sent", "sms.failed", "lead.created", "notification.sent"],
+    "metrics": ["sms_delivery_rate", "avg_response_time", "leads_created_count"],
+    "alerts": ["sms_failure_rate_above_5pct", "activation_failure"]
+  },
+  "documentation": {
+    "setup_guide": "Connect your phone provider (CallScaler recommended), verify SMS capability with A2P registration, customize message template and quiet hours.",
+    "known_limitations": ["Requires A2P registration (1-5 business days)", "Quiet hours may delay response to next morning", "Does not handle existing customer calls (new callers only)"],
+    "support_runbook": "Check SMS-iT delivery logs → verify A2P status → confirm webhook registration → test with manual missed call"
+  },
+  "billing": {
+    "entitlement_row": "one_per_module",
+    "metered_usage": "sms_sends_count_toward_tenant_sms_quota",
+    "no_double_billing": true
+  }
+}

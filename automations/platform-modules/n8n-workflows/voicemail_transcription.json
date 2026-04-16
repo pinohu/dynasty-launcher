@@ -1,0 +1,145 @@
+{
+  "name": "Voicemail Transcription & Intent Detection",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "voicemail_transcription",
+        "options": {}
+      },
+      "id": "voicemail_webhook",
+      "name": "Voicemail Received Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "whisper",
+        "audioUrl": "{{ $json.voicemail.audio_url }}",
+        "language": "auto"
+      },
+      "id": "transcribe_audio",
+      "name": "Transcribe with Whisper",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "prompt": "Analyze this voicemail transcription and extract: 1) Primary intent (SCHEDULING/SUPPORT/PAYMENT/COMPLAINT/INQUIRY), 2) Urgency level (LOW/MEDIUM/HIGH/CRITICAL), 3) Service type. Transcription: {{ $json.transcription }}"
+      },
+      "id": "analyze_intent",
+      "name": "Analyze Intent with GPT-4",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{ $json.intent }}",
+              "operation": "contains",
+              "value2": "SCHEDULING"
+            }
+          ]
+        }
+      },
+      "id": "check_intent",
+      "name": "Check Intent Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/leads",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "{{ $json.caller.name }}"
+            },
+            {
+              "name": "phone",
+              "value": "{{ $json.caller.phone }}"
+            },
+            {
+              "name": "service_requested",
+              "value": "{{ $json.service_type }}"
+            },
+            {
+              "name": "source",
+              "value": "voicemail"
+            }
+          ]
+        }
+      },
+      "id": "create_lead",
+      "name": "Create Lead from Voicemail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/tasks",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "Follow up: {{ $json.intent }}"
+            },
+            {
+              "name": "description",
+              "value": "{{ $json.transcription }}"
+            },
+            {
+              "name": "priority",
+              "value": "{{ $json.urgency_level }}"
+            }
+          ]
+        }
+      },
+      "id": "create_task",
+      "name": "Create Task from Voicemail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 450]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.owner.email }}",
+        "subject": "Voicemail: {{ $json.caller.name }} - {{ $json.intent }}",
+        "html": "<p><strong>From:</strong> {{ $json.caller.name }} ({{ $json.caller.phone }})</p><p><strong>Intent:</strong> {{ $json.intent }}</p><p><strong>Urgency:</strong> {{ $json.urgency_level }}</p><p><strong>Transcription:</strong></p><p>{{ $json.transcription }}</p><p><a href='{{ $json.voicemail.audio_url }}'>Listen to Audio</a></p>"
+      },
+      "id": "send_owner_notification",
+      "name": "Send Owner Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "voicemail_webhook": {
+      "main": [[{"node": "transcribe_audio", "type": "main", "index": 0}]]
+    },
+    "transcribe_audio": {
+      "main": [[{"node": "analyze_intent", "type": "main", "index": 0}]]
+    },
+    "analyze_intent": {
+      "main": [[{"node": "check_intent", "type": "main", "index": 0}, {"node": "send_owner_notification", "type": "main", "index": 0}]]
+    },
+    "check_intent": {
+      "main": [[{"node": "create_lead", "type": "main", "index": 0}, {"node": "create_task", "type": "main", "index": 0}]]
+    }
+  }
+}

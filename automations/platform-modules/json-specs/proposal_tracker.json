@@ -1,0 +1,179 @@
+{
+  "module_id": "proposal_tracker",
+  "version": "1.0.0",
+  "display_name": "Proposal Tracker (Real-time)",
+  "description": "Real-time tracking of proposal opens, views, and engagement signals",
+  "category": "Sales",
+  "tier": "wave_3",
+  "pricing": {
+    "standalone_monthly": 19,
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "estimate.sent",
+    "source_system": "estimates",
+    "conditions": [
+      {
+        "field": "estimate.type",
+        "operator": "equals",
+        "value": "proposal",
+        "priority": "high"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_enable_tracking",
+      "type": "estimate_tracking",
+      "track_opens": true,
+      "track_views": true,
+      "track_clicks": true,
+      "send_tracking_pixel": true
+    },
+    {
+      "id": "action_first_open_alert",
+      "type": "conditional",
+      "condition": "estimate.first_opened == true",
+      "actions": [
+        {
+          "type": "notification",
+          "target": "sales_rep",
+          "channel": "email",
+          "template": "proposal_first_opened_alert",
+          "priority": "high"
+        },
+        {
+          "type": "crm_field_update",
+          "field": "first_open_time",
+          "value": "{opened_at}"
+        }
+      ]
+    },
+    {
+      "id": "action_repeated_views_hot_signal",
+      "type": "conditional",
+      "condition": "estimate.view_count >= 2",
+      "actions": [
+        {
+          "type": "notification",
+          "target": "sales_rep",
+          "channel": "email",
+          "template": "hot_signal_multiple_views",
+          "priority": "high"
+        },
+        {
+          "type": "crm_tag",
+          "tag": "hot_signal",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "action_stale_proposal_escalation",
+      "type": "conditional",
+      "condition": "days_since_sent >= 7 && view_count == 0",
+      "actions": [
+        {
+          "type": "email",
+          "target": "customer",
+          "template": "proposal_gentle_followup",
+          "priority": "normal"
+        },
+        {
+          "type": "crm_task_create",
+          "task_title": "Follow up on stale proposal",
+          "priority": "medium",
+          "due_date_days": 1
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "proposal_sent_at": "{sent_at}",
+        "open_count": "{view_count}",
+        "last_viewed_at": "{last_opened_at}",
+        "engagement_score": "{calculated_score}"
+      }
+    }
+  ],
+  "templates": {
+    "proposal_first_opened_alert": {
+      "subject": "HOT: {customer.name} Opened Your Proposal",
+      "body_text": "Great news! {customer.name} just opened your proposal for {service.type}.\n\nProposal Value: ${proposal.amount}\nOpened: {opened_at}\n\nNow is a great time to follow up!",
+      "html_template": true,
+      "priority": "high"
+    },
+    "hot_signal_multiple_views": {
+      "subject": "HOT SIGNAL: {customer.name} Reviewed Proposal {view_count}x",
+      "body_text": "{customer.name} has now viewed your proposal {view_count} times, indicating serious interest.\n\nLast viewed: {last_opened_at}\n\nRecommended: Call them now to address any questions.",
+      "html_template": true,
+      "priority": "high"
+    },
+    "proposal_gentle_followup": {
+      "subject": "Checking In: Any Questions About Your {service.type} Proposal?",
+      "body_text": "Hi {customer.first_name},\n\nI wanted to check in and see if you had any questions about the proposal we sent you.\n\nWe're here to help and would love to discuss your project.\n\nView Proposal: {proposal_link}",
+      "html_template": true
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "real_time_tracking": true,
+    "track_opens": true,
+    "track_clicks": true,
+    "hot_signal_view_threshold": 2,
+    "stale_proposal_days": 7,
+    "required_fields": ["estimate.id", "customer.email"]
+  },
+  "capabilities_required": ["estimates", "email", "crm"],
+  "integrations": {
+    "estimates": {
+      "sync": true,
+      "enable_tracking": true,
+      "tracking_pixel": true
+    },
+    "crm": {
+      "sync": true,
+      "real_time_updates": true,
+      "fields": ["open_count", "last_viewed_at", "engagement_score"]
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "email_consent_required": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "First proposal open detection",
+        "input": {"estimate.status": "sent", "first_open": true},
+        "expected_output": ["alert_sent", "timestamp_recorded"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Hot signal on multiple views",
+        "input": {"view_count": 3},
+        "expected_output": ["hot_signal_tagged", "rep_notified"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Stale proposal escalation",
+        "input": {"days_since_sent": 7, "view_count": 0},
+        "expected_output": ["followup_email_sent", "task_created"],
+        "timeout_ms": 5000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": ["proposals_tracked", "open_rate", "avg_views_per_proposal", "hot_signal_rate", "conversion_rate"],
+    "logging_level": "info"
+  },
+  "billing": {
+    "unit": "per_proposal",
+    "monthly_minimum": 19,
+    "metered_events": ["estimate.sent"]
+  }
+}

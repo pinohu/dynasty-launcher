@@ -1,0 +1,142 @@
+{
+  "name": "Website Operations Automations",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "path": "website-ops-webhook"
+      },
+      "name": "Website Ops Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "{{ $json.domain }}",
+        "requestMethod": "GET",
+        "options": {}
+      },
+      "name": "API: Uptime Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO form_submissions_backup (form_id, data, source, created_at) VALUES (@formId, @data, @source, NOW())",
+        "options": {}
+      },
+      "name": "DB: Backup Form Submission",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT content FROM website_pages WHERE url = @pageUrl AND segment = @visitorSegment",
+        "options": {}
+      },
+      "name": "DB: Get Personalized Content",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "url": "https://www.google-analytics.com/analytics/v3/data/ga",
+        "requestMethod": "GET",
+        "options": {}
+      },
+      "name": "API: Analytics Aggregator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "url": "{{ $json.cdnEndpoint }}/analytics",
+        "requestMethod": "GET",
+        "options": {}
+      },
+      "name": "API: CDN Performance Monitor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT url, http_status FROM page_crawl_results WHERE company_id = @companyId AND http_status = 404 AND crawled_at > NOW() - INTERVAL 24 HOUR",
+        "options": {}
+      },
+      "name": "DB: Find 404 Errors",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "url": "https://api.cloudflare.com/client/v4/zones/{{ $json.zoneId }}/performance",
+        "requestMethod": "GET",
+        "options": {}
+      },
+      "name": "API: Site Speed Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO website_health_logs (company_id, uptime_status, cdn_latency, page_load_time, error_count, checked_at) VALUES (@companyId, @uptime, @cdnLatency, @loadTime, @errorCount, NOW())",
+        "options": {}
+      },
+      "name": "DB: Log Website Health",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 250]
+    },
+    {
+      "parameters": {
+        "fromEmail": "ops@dynasty.app",
+        "toEmail": "={{ $json.adminEmail }}",
+        "subject": "Website Health Alert",
+        "htmlBody": "Your website has performance issues. Details: {{ $json.issues }}"
+      },
+      "name": "Email: Performance Alert",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [1250, 350]
+    },
+    {
+      "parameters": {
+        "responseData": "{\"success\": true, \"status\": \"Website check completed\"}"
+      },
+      "name": "Response: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 250]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{"node": "Website Ops Webhook", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+}

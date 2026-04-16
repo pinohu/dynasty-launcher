@@ -1,0 +1,229 @@
+{
+  "module_id": "post_job_review_request",
+  "module_name": "Post-Job Review Request",
+  "pack": "reviews_pack",
+  "pack_price": "$35/month",
+  "standalone_price": "$19/month",
+  "description": "Automatically request customer reviews after service completion, routing satisfied customers to Google Business Profile and dissatisfied customers to private feedback form",
+  "version": "1.0.0",
+  "status": "production",
+  "capabilities_required": [
+    "email",
+    "sms",
+    "crm",
+    "reviews"
+  ],
+  "trigger": {
+    "event": "job.completed",
+    "description": "Triggered when a service job is marked as complete in the system"
+  },
+  "workflow_steps": [
+    {
+      "step": 1,
+      "action": "Wait after completion",
+      "description": "Configurable delay before sending review request",
+      "setting": "delay_after_completion_hours"
+    },
+    {
+      "step": 2,
+      "action": "Send email review request",
+      "description": "Professional email with star rating preview and instructions"
+    },
+    {
+      "step": 3,
+      "action": "Send SMS review request",
+      "description": "Short SMS with direct Google review link"
+    },
+    {
+      "step": 4,
+      "action": "Customer rates service",
+      "description": "Customer selects rating (1-5 stars) in email/SMS link"
+    },
+    {
+      "step": 5,
+      "action": "Route based on rating",
+      "description": "Happy customers (4-5 stars) → Google review link; Unhappy customers (1-3 stars) → Private feedback form"
+    },
+    {
+      "step": 6,
+      "action": "Track submission",
+      "description": "Log review/feedback submission to CRM"
+    },
+    {
+      "step": 7,
+      "action": "Update CRM status",
+      "description": "Mark review request as completed, store rating, log feedback"
+    },
+    {
+      "step": 8,
+      "action": "Send follow-up",
+      "description": "If no response after X days, send follow-up reminder (optional)"
+    }
+  ],
+  "settings": {
+    "delay_after_completion_hours": {
+      "type": "number",
+      "default": 2,
+      "min": 0,
+      "max": 168,
+      "description": "Hours to wait after job completion before sending review request"
+    },
+    "channels": {
+      "type": "array",
+      "default": [
+        "email",
+        "sms"
+      ],
+      "options": [
+        "email",
+        "sms"
+      ],
+      "description": "Channels to use for review requests"
+    },
+    "happy_threshold": {
+      "type": "number",
+      "default": 4,
+      "min": 1,
+      "max": 5,
+      "description": "Star rating threshold for routing to Google (4-5 stars happy, 1-3 unhappy)"
+    },
+    "unhappy_threshold": {
+      "type": "number",
+      "default": 3,
+      "min": 1,
+      "max": 5,
+      "description": "Star rating threshold for routing to private feedback (below this = unhappy)"
+    },
+    "max_requests_per_customer": {
+      "type": "number",
+      "default": 3,
+      "min": 1,
+      "max": 10,
+      "description": "Maximum review requests to send per customer in 30 days"
+    },
+    "follow_up_if_no_response_days": {
+      "type": "number",
+      "default": 7,
+      "min": 0,
+      "max": 30,
+      "description": "Days before sending follow-up if no response (0 to disable)"
+    },
+    "google_business_profile_url": {
+      "type": "string",
+      "required": true,
+      "description": "Your Google Business Profile URL for review links"
+    },
+    "private_feedback_form_url": {
+      "type": "string",
+      "required": true,
+      "description": "Private feedback form URL for unhappy customers"
+    }
+  },
+  "templates": {
+    "review_request_email": {
+      "name": "Review Request Email",
+      "subject": "How did we do? {{customer_first_name}}, share your feedback",
+      "description": "Professional email with star rating preview and direct links",
+      "variables": [
+        "customer_first_name",
+        "customer_email",
+        "service_type",
+        "job_date",
+        "technician_name",
+        "google_review_link",
+        "feedback_form_link"
+      ]
+    },
+    "review_request_sms": {
+      "name": "Review Request SMS",
+      "description": "Short SMS with direct link",
+      "variables": [
+        "customer_first_name",
+        "google_review_link",
+        "feedback_form_link"
+      ]
+    },
+    "negative_feedback_redirect": {
+      "name": "Negative Feedback Redirect",
+      "description": "Thank you email acknowledging negative rating, directing to private form",
+      "variables": [
+        "customer_first_name",
+        "feedback_form_link",
+        "support_email"
+      ]
+    },
+    "thank_you_for_review": {
+      "name": "Thank You for Review",
+      "description": "Thank you email after review submission",
+      "variables": [
+        "customer_first_name",
+        "review_platform"
+      ]
+    }
+  },
+  "compliance": {
+    "no_incentivized_reviews": true,
+    "description": "Reviews must not be incentivized per Google Business Profile guidelines",
+    "respect_opt_out": true,
+    "gdpr_compliant": true,
+    "ccpa_compliant": true
+  },
+  "activation": {
+    "type": "guided",
+    "required_setup": [
+      "Google Business Profile URL",
+      "Private feedback form URL (or use built-in form)",
+      "Email template customization",
+      "SMS template customization"
+    ]
+  },
+  "key_metrics": {
+    "impact": "Increases Google reviews by 300-400%",
+    "typical_response_rate": "18-25%",
+    "google_review_conversion": "40-60% of responses to Google",
+    "feedback_form_submission": "30-40% of responses to private form"
+  },
+  "observability": {
+    "logs": [
+      "review_request_sent",
+      "review_request_opened",
+      "review_link_clicked",
+      "rating_selected",
+      "google_review_submitted",
+      "feedback_form_submitted",
+      "follow_up_sent",
+      "error_send_failed"
+    ],
+    "webhooks": [
+      "review.request.sent",
+      "review.request.opened",
+      "review.submitted",
+      "feedback.submitted"
+    ]
+  },
+  "pricing": {
+    "pack": "reviews_pack",
+    "pack_price": "$35/month",
+    "standalone_price": "$19/month",
+    "usage_limits": {
+      "review_requests_per_month": "unlimited",
+      "storage_days": 365
+    }
+  },
+  "test_matrix": {
+    "scenarios": [
+      "Job completion triggers review request after delay",
+      "Email review request sent successfully",
+      "SMS review request sent successfully",
+      "Happy customer rating (5 stars) routes to Google",
+      "Unhappy customer rating (2 stars) routes to feedback form",
+      "Follow-up sent after no response",
+      "Max requests per customer respected",
+      "Opt-out customer does not receive requests",
+      "CRM updated with review status",
+      "Google review URL pre-populated correctly",
+      "Feedback form submission logged",
+      "Multi-channel (email + SMS) both sent"
+    ]
+  }
+}

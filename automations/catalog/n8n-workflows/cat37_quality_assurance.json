@@ -1,0 +1,390 @@
+{
+  "name": "Category 37: Quality Assurance",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "n8n-nodes-base.trigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "rule": {
+          "interval": ["days"],
+          "daysInterval": 1
+        }
+      },
+      "name": "Daily QA Trigger"
+    },
+    {
+      "id": "2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, job_id, technician_id, completion_date FROM jobs WHERE status = 'completed' AND qa_checked = false ORDER BY completion_date DESC LIMIT 20"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Completed Jobs"
+    },
+    {
+      "id": "3",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Select Random for QA"
+    },
+    {
+      "id": "4",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{ env.OPENAI_API_KEY }}"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"system\", \"content\": \"Generate QA audit checklist for service job\"}, {\"role\": \"user\", \"content\": \"Job type: {{ $json.job_type }}\"}]"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "openai_credentials"
+      },
+      "name": "Generate QA Checklist"
+    },
+    {
+      "id": "5",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO qa_audits (job_id, audit_checklist, created_at, status) VALUES ({{ $json.id }}, '{{ $json.checklist }}', NOW(), 'pending_review')"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Create QA Audit"
+    },
+    {
+      "id": "6",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.id, c.client_id, c.satisfaction_score, c.rating_date FROM client_surveys c WHERE c.satisfaction_score IS NOT NULL ORDER BY c.rating_date DESC LIMIT 100"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch CSAT Data"
+    },
+    {
+      "id": "7",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [250, 250],
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{ env.OPENAI_API_KEY }}"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"system\", \"content\": \"Analyze satisfaction trends and identify issues\"}, {\"role\": \"user\", \"content\": \"Analyze CSAT data\"}]"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "openai_credentials"
+      },
+      "name": "Analyze CSAT Trends"
+    },
+    {
+      "id": "8",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO satisfaction_analysis (analysis_date, avg_score, trend, insights) VALUES (NOW(), (SELECT AVG(satisfaction_score) FROM client_surveys WHERE rating_date > NOW() - INTERVAL '30 days'), '{{ $json.trend }}', '{{ $json.insights }}')"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Store Analysis"
+    },
+    {
+      "id": "9",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, requirement_name, last_verified_date FROM compliance_requirements WHERE last_verified_date < NOW() - INTERVAL '30 days' ORDER BY last_verified_date ASC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Compliance Items"
+    },
+    {
+      "id": "10",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Verify Compliance"
+    },
+    {
+      "id": "11",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO compliance_checks (requirement_id, check_date, status, next_check_date) VALUES ({{ $json.id }}, NOW(), 'verified', NOW() + INTERVAL '30 days')"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Log Compliance Check"
+    },
+    {
+      "id": "12",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT j.id, j.technician_id, COUNT(CASE WHEN j.status = 'completed' AND j.client_rating < 4 THEN 1 END) as redo_count FROM jobs j GROUP BY j.technician_id ORDER BY redo_count DESC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Calculate Redo Rates"
+    },
+    {
+      "id": "13",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 550],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Track Per Technician"
+    },
+    {
+      "id": "14",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO technician_redo_tracking (technician_id, redo_count, tracked_at, trend) VALUES ({{ $json.technician_id }}, {{ $json.redo_count }}, NOW(), (SELECT trend FROM technician_quality_trends WHERE technician_id = {{ $json.technician_id }} ORDER BY tracked_at DESC LIMIT 1))"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Log Redo Rate"
+    },
+    {
+      "id": "15",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 700],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.id, t.name, AVG(j.client_rating) as avg_rating, COUNT(j.id) as jobs_completed FROM technicians t LEFT JOIN jobs j ON t.id = j.technician_id WHERE j.completion_date > NOW() - INTERVAL '30 days' GROUP BY t.id, t.name ORDER BY avg_rating DESC LIMIT 100"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Calculate Quality Scores"
+    },
+    {
+      "id": "16",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 700],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Store Scores"
+    },
+    {
+      "id": "17",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 700],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO technician_quality_scores (technician_id, quality_score, jobs_completed, avg_rating, calculated_at) VALUES ({{ $json.id }}, ({{ $json.avg_rating }} / 5) * 100, {{ $json.jobs_completed }}, {{ $json.avg_rating }}, NOW())"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Store Quality Score"
+    }
+  ],
+  "connections": {
+    "Daily QA Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Completed Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Completed Jobs": {
+      "main": [
+        [
+          {
+            "node": "Select Random for QA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Random for QA": {
+      "main": [
+        [
+          {
+            "node": "Generate QA Checklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate QA Checklist": {
+      "main": [
+        [
+          {
+            "node": "Create QA Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch CSAT Data": {
+      "main": [
+        [
+          {
+            "node": "Analyze CSAT Trends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze CSAT Trends": {
+      "main": [
+        [
+          {
+            "node": "Store Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Compliance Items": {
+      "main": [
+        [
+          {
+            "node": "Verify Compliance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Compliance": {
+      "main": [
+        [
+          {
+            "node": "Log Compliance Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Redo Rates": {
+      "main": [
+        [
+          {
+            "node": "Track Per Technician",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Track Per Technician": {
+      "main": [
+        [
+          {
+            "node": "Log Redo Rate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Quality Scores": {
+      "main": [
+        [
+          {
+            "node": "Store Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Scores": {
+      "main": [
+        [
+          {
+            "node": "Store Quality Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

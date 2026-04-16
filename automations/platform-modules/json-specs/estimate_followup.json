@@ -1,0 +1,178 @@
+{
+  "module_id": "estimate_followup",
+  "version": "1.0.0",
+  "display_name": "Estimate Follow-up",
+  "description": "Multi-step follow-up sequence for sent estimates with engagement tracking",
+  "category": "Sales Pack",
+  "tier": "wave_2",
+  "pricing": {
+    "standalone_monthly": 19,
+    "pack_monthly": 0,
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "estimate.sent",
+    "source_system": "estimates",
+    "conditions": [
+      {
+        "field": "estimate.status",
+        "operator": "equals",
+        "value": "sent",
+        "priority": "high"
+      },
+      {
+        "field": "days_since_sent",
+        "operator": "gte",
+        "value": 2,
+        "priority": "high"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_day2_checkin",
+      "type": "email",
+      "target": "customer",
+      "template": "estimate_day2_checkin",
+      "trigger_days": 2,
+      "track_opens": true,
+      "includes_estimate_link": true
+    },
+    {
+      "id": "action_day5_value_add",
+      "type": "email",
+      "target": "customer",
+      "template": "estimate_day5_value_add",
+      "trigger_days": 5,
+      "track_opens": true,
+      "content_type": "case_study"
+    },
+    {
+      "id": "action_day10_urgency",
+      "type": "email",
+      "target": "customer",
+      "template": "estimate_day10_urgency",
+      "trigger_days": 10,
+      "track_opens": true,
+      "includes_booking_link": true
+    },
+    {
+      "id": "action_day14_final",
+      "type": "email",
+      "target": "customer",
+      "template": "estimate_day14_final",
+      "trigger_days": 14,
+      "track_opens": true,
+      "tone": "final_offer"
+    },
+    {
+      "id": "action_detect_engagement",
+      "type": "conditional",
+      "condition": "estimate.opened == true OR estimate.viewed_count > 1",
+      "actions": [
+        {
+          "type": "notification",
+          "target": "sales_rep",
+          "channel": "email",
+          "template": "hot_signal_alert",
+          "priority": "high"
+        },
+        {
+          "type": "crm_field_update",
+          "field": "engagement_signal",
+          "value": "HOT"
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "estimate_status": "in_followup",
+        "days_in_followup": "{days_since_sent}",
+        "open_count": "{estimate.open_count}",
+        "last_engagement": "{last_opened_at}"
+      }
+    }
+  ],
+  "templates": {
+    "estimate_day2_checkin": {
+      "subject": "Quick Question About Your Estimate",
+      "body_text": "Hi {customer.first_name},\n\nI wanted to reach out and see if you had any questions about the estimate we sent you for your {service.type} project.\n\nView Estimate: {estimate_link}\n\nLooking forward to helping you!",
+      "track_opens": true
+    },
+    "estimate_day5_value_add": {
+      "subject": "See How Others Saved on {service.type}",
+      "body_text": "Many customers like you have increased their service value by {value_proposition}.\n\nCase Study: {case_study_link}\n\nLet's discuss how this could work for you.",
+      "track_opens": true
+    },
+    "estimate_day10_urgency": {
+      "subject": "{service.type} - Limited Time Availability",
+      "body_text": "Our schedule for {service.date_range} is filling up fast. Your estimate is still valid, and we'd love to lock in your project.\n\nBook Now: {booking_link}",
+      "track_opens": true
+    },
+    "estimate_day14_final": {
+      "subject": "Final: Your {service.type} Estimate Expires Soon",
+      "body_text": "This is your last chance to move forward at the quoted price. Your estimate expires in {days_until_expiry} days.\n\nSecure Your Appointment: {booking_link}",
+      "track_opens": true
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "follow_up_sequence_enabled": true,
+    "track_opens": true,
+    "track_clicks": true,
+    "hot_signal_threshold": 2,
+    "engagement_tracking": true,
+    "required_fields": ["customer.email", "estimate.id", "estimate.created_at"]
+  },
+  "capabilities_required": ["email", "estimates", "crm"],
+  "integrations": {
+    "estimates": {
+      "sync": true,
+      "track_opens": true,
+      "track_views": true
+    },
+    "crm": {
+      "sync": true,
+      "fields": ["estimate_status", "open_count", "last_engagement"]
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "email_consent_required": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "Day 2 check-in trigger",
+        "input": {"days_since_sent": 2},
+        "expected_output": ["email_sent", "opens_tracked"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Hot signal detection",
+        "input": {"opened": true, "view_count": 3},
+        "expected_output": ["sales_rep_notified", "crm_updated"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Estimate with no engagement",
+        "input": {"opened": false, "days_since_sent": 15},
+        "expected_output": ["final_email_sent"],
+        "timeout_ms": 1000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": ["estimates_sent", "follow_ups_initiated", "engagement_rate", "conversion_rate", "hot_signals"],
+    "logging_level": "info"
+  },
+  "billing": {
+    "unit": "per_estimate_sent",
+    "monthly_minimum": 19,
+    "metered_events": ["estimate.sent"]
+  }
+}

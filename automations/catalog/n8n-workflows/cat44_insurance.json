@@ -1,0 +1,108 @@
+{
+  "name": "Insurance & Risk Automations",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "path": "insurance-webhook"
+      },
+      "name": "Insurance Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.insurquote.com/get-quotes",
+        "requestMethod": "POST",
+        "options": {}
+      },
+      "name": "API: Insurance Quote Aggregator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT required_coverage FROM insurance_requirements WHERE industry = @industry AND business_size = @businessSize",
+        "options": {}
+      },
+      "name": "DB: Get Coverage Requirements",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT coverage_type, coverage_amount FROM current_policies WHERE company_id = @companyId",
+        "options": {}
+      },
+      "name": "DB: Get Current Coverage",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://api.claimsmate.com/file-claim",
+        "requestMethod": "POST",
+        "options": {}
+      },
+      "name": "API: Claims Filing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO risk_assessments (company_id, industry, business_size, risk_score, assessment_date) VALUES (@companyId, @industry, @size, @score, NOW())",
+        "options": {}
+      },
+      "name": "DB: Store Risk Assessment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO coverage_gaps (company_id, gap_type, required_coverage, current_coverage, gap_amount) VALUES (@companyId, @gapType, @required, @current, @gap)",
+        "options": {}
+      },
+      "name": "DB: Log Coverage Gap",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "responseData": "{\"success\": true, \"insurance\": {{ $json }}, \"timestamp\": \"{{ now() }}\"}"
+      },
+      "name": "Response: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 250]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{"node": "Insurance Webhook", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+}

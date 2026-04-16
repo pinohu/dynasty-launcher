@@ -1,0 +1,37 @@
+{
+  "name": "Category 29: Referral & Affiliate Programs",
+  "description": "Referral and affiliate program management automations",
+  "version": "1.0",
+  "automations": [
+    {
+      "id": "cat29_001_referral_links",
+      "name": "Unique Referral Link Generator",
+      "description": "Generates unique referral links for each customer",
+      "trigger": "On signup or manual request"
+    },
+    {
+      "id": "cat29_002_conversion_tracker",
+      "name": "Referral Conversion Tracker and Creditor",
+      "description": "Tracks referral conversions and credits referrer",
+      "trigger": "Real-time on conversion"
+    },
+    {
+      "id": "cat29_003_reward_payout",
+      "name": "Reward Payout Processor",
+      "description": "Processes and distributes referral rewards",
+      "trigger": "Schedule: Monthly or on-threshold"
+    },
+    {
+      "id": "cat29_004_partner_dashboard",
+      "name": "Partner Performance Dashboard",
+      "description": "Displays referral performance metrics for partners",
+      "trigger": "Real-time data"
+    },
+    {
+      "id": "cat29_005_referral_campaign",
+      "name": "Quarterly Referral Campaign Launcher",
+      "description": "Launches promotional campaigns for referral programs",
+      "trigger": "Schedule: Quarterly"
+    }
+  ]
+}

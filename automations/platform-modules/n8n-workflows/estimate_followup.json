@@ -1,0 +1,137 @@
+{
+  "name": "Estimate Follow-up Sequence",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "estimate_followup",
+        "options": {}
+      },
+      "id": "estimate_webhook",
+      "name": "Estimate Sent Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "waitTime": 172800,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_day2",
+      "name": "Wait 2 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Quick Question About Your Estimate",
+        "html": "<p>Hi {{ $json.customer.first_name }},</p><p>I wanted to check if you had any questions about your estimate for {{ $json.service.type }}.</p><p><a href='{{ $env.ESTIMATE_URL }}/{{ $json.estimate.id }}'>View Estimate</a></p>"
+      },
+      "id": "send_day2_email",
+      "name": "Send Day 2 Check-in",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "waitTime": 432000,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_day5",
+      "name": "Wait 5 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "See How Others Saved on {{ $json.service.type }}",
+        "html": "<p>Many customers have increased their service value. Check out this case study.</p>"
+      },
+      "id": "send_day5_email",
+      "name": "Send Day 5 Value Add",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "waitTime": 864000,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_day10",
+      "name": "Wait 10 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "{{ $json.service.type }} - Limited Time Availability",
+        "html": "<p>Our schedule is filling up fast. Secure your appointment: <a href='{{ $env.BOOKING_URL }}'>Book Now</a></p>"
+      },
+      "id": "send_day10_email",
+      "name": "Send Day 10 Urgency",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "{{ $json.estimate.open_count }}",
+              "operation": "greaterEqual",
+              "value2": 2
+            }
+          ]
+        }
+      },
+      "id": "check_hot_signal",
+      "name": "Hot Signal Detection?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.sales_rep.email }}",
+        "subject": "HOT SIGNAL: {{ $json.customer.name }} Engaged with Estimate",
+        "html": "<p>Customer has opened estimate {{ $json.estimate.open_count }} times! Ready to book.</p>"
+      },
+      "id": "alert_sales_rep",
+      "name": "Alert Sales Rep",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1050, 250]
+    }
+  ],
+  "connections": {
+    "estimate_webhook": {
+      "main": [[{"node": "delay_day2", "type": "main", "index": 0}, {"node": "delay_day5", "type": "main", "index": 0}, {"node": "delay_day10", "type": "main", "index": 0}]]
+    },
+    "delay_day2": {
+      "main": [[{"node": "send_day2_email", "type": "main", "index": 0}]]
+    },
+    "delay_day5": {
+      "main": [[{"node": "send_day5_email", "type": "main", "index": 0}]]
+    },
+    "delay_day10": {
+      "main": [[{"node": "send_day10_email", "type": "main", "index": 0}, {"node": "check_hot_signal", "type": "main", "index": 0}]]
+    },
+    "check_hot_signal": {
+      "main": [[{"node": "alert_sales_rep", "type": "main", "index": 0}]]
+    }
+  }
+}

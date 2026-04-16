@@ -1,0 +1,244 @@
+{
+  "module_id": "invoice_sent_notification",
+  "module_name": "Invoice Sent Notification",
+  "pack": "billing_pack",
+  "pack_price": "$49/month",
+  "standalone_price": "$19/month",
+  "description": "Send professional invoice notifications via email and SMS when invoices are created or sent, with payment links and automatic follow-up tasks",
+  "version": "1.0.0",
+  "status": "production",
+  "capabilities_required": [
+    "email",
+    "invoicing",
+    "crm",
+    "sms"
+  ],
+  "trigger": {
+    "event": "invoice.created OR invoice.sent",
+    "source": "Stripe Connect",
+    "description": "Triggered when invoice is created or sent from Stripe Connect integration"
+  },
+  "workflow_steps": [
+    {
+      "step": 1,
+      "action": "Receive invoice event",
+      "description": "Webhook triggered from Stripe Connect when invoice.created or invoice.sent"
+    },
+    {
+      "step": 2,
+      "action": "Prepare invoice data",
+      "description": "Extract invoice amount, due date, customer email, payment link from Stripe"
+    },
+    {
+      "step": 3,
+      "action": "Send professional email",
+      "description": "Send formatted invoice notification with payment link and due date"
+    },
+    {
+      "step": 4,
+      "action": "Send optional SMS",
+      "description": "Send SMS notification with payment link if enabled"
+    },
+    {
+      "step": 5,
+      "action": "Log to CRM timeline",
+      "description": "Create timeline entry in CRM for invoice notification"
+    },
+    {
+      "step": 6,
+      "action": "Create follow-up task",
+      "description": "Automatically create task to follow up if invoice not paid after X days"
+    },
+    {
+      "step": 7,
+      "action": "Track open status",
+      "description": "Monitor if customer opens email / clicks payment link"
+    },
+    {
+      "step": 8,
+      "action": "Payment webhook",
+      "description": "Listen for payment completion from Stripe"
+    }
+  ],
+  "settings": {
+    "channels": {
+      "type": "array",
+      "default": [
+        "email"
+      ],
+      "options": [
+        "email",
+        "sms"
+      ],
+      "description": "Channels to use for invoice notifications"
+    },
+    "include_pdf_attachment": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include PDF attachment of invoice in email"
+    },
+    "auto_follow_up_days": {
+      "type": "number",
+      "default": 7,
+      "min": 1,
+      "max": 90,
+      "description": "Days after due date to create follow-up task if unpaid"
+    },
+    "payment_link_expiry": {
+      "type": "number",
+      "default": 30,
+      "min": 7,
+      "max": 365,
+      "description": "Days until payment link expires"
+    },
+    "currency_format": {
+      "type": "string",
+      "default": "USD",
+      "description": "Currency code for invoice display"
+    },
+    "include_company_logo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include company logo in invoice email"
+    },
+    "custom_message": {
+      "type": "string",
+      "default": "",
+      "description": "Optional custom message to include in invoice email"
+    }
+  },
+  "templates": {
+    "invoice_email": {
+      "name": "Invoice Email Notification",
+      "subject": "Invoice {{invoice_number}} from {{company_name}} - Due {{due_date}}",
+      "description": "Professional invoice notification with payment link and due date",
+      "variables": [
+        "customer_name",
+        "customer_email",
+        "company_name",
+        "invoice_number",
+        "invoice_amount",
+        "invoice_date",
+        "due_date",
+        "payment_link",
+        "payment_link_expiry",
+        "currency",
+        "invoice_description",
+        "terms",
+        "support_email"
+      ]
+    },
+    "invoice_sms": {
+      "name": "Invoice SMS Notification",
+      "description": "Short SMS with payment link",
+      "variables": [
+        "customer_name",
+        "invoice_number",
+        "invoice_amount",
+        "payment_link",
+        "company_name"
+      ]
+    },
+    "payment_received_confirmation": {
+      "name": "Payment Received Confirmation",
+      "subject": "Thank you! Payment received for Invoice {{invoice_number}}",
+      "description": "Confirmation email after payment received",
+      "variables": [
+        "customer_name",
+        "invoice_number",
+        "amount_paid",
+        "payment_date",
+        "company_name"
+      ]
+    },
+    "follow_up_reminder": {
+      "name": "Payment Follow-up Reminder",
+      "subject": "Gentle reminder: Invoice {{invoice_number}} is due",
+      "description": "Follow-up reminder for unpaid invoices",
+      "variables": [
+        "customer_name",
+        "invoice_number",
+        "invoice_amount",
+        "due_date",
+        "payment_link",
+        "days_overdue"
+      ]
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "pci_dss_compliant": true,
+    "description": "No sensitive payment data stored locally; payment processing via Stripe"
+  },
+  "activation": {
+    "type": "guided",
+    "required_setup": [
+      "Stripe Connect account linked",
+      "Email configured",
+      "Invoice template customization",
+      "Payment link settings"
+    ]
+  },
+  "key_metrics": {
+    "payment_acceleration": "2-3 days faster average payment",
+    "email_open_rate": "35-45%",
+    "payment_link_click_rate": "25-35%",
+    "follow_up_task_creation": "100% of unpaid invoices after due date"
+  },
+  "observability": {
+    "logs": [
+      "invoice_received",
+      "notification_email_sent",
+      "notification_sms_sent",
+      "notification_opened",
+      "payment_link_clicked",
+      "payment_received",
+      "follow_up_task_created",
+      "error_send_failed",
+      "error_payment_webhook_failed"
+    ],
+    "webhooks": [
+      "invoice.sent",
+      "invoice.payment_received",
+      "invoice.marked_paid",
+      "followup.created"
+    ],
+    "metrics": [
+      "invoices_sent_total",
+      "average_days_to_payment",
+      "email_open_rate",
+      "payment_link_click_rate",
+      "follow_up_tasks_created"
+    ]
+  },
+  "pricing": {
+    "pack": "billing_pack",
+    "pack_price": "$49/month",
+    "standalone_price": "$19/month",
+    "usage_limits": {
+      "invoices_per_month": "unlimited",
+      "sms_per_invoice": "1",
+      "storage_days": 365
+    }
+  },
+  "test_matrix": {
+    "scenarios": [
+      "Invoice created event triggers notification",
+      "Invoice sent event triggers notification",
+      "Email notification sent with correct data",
+      "SMS notification sent with correct data",
+      "Payment link included and valid",
+      "PDF attachment included when enabled",
+      "CRM timeline entry created",
+      "Follow-up task created after due date",
+      "Payment received webhook processed",
+      "Payment confirmation email sent",
+      "Currency formatted correctly",
+      "Custom message appended correctly",
+      "Multi-channel (email + SMS) both sent",
+      "Follow-up task NOT created if already paid",
+      "Payment link expiry date honored"
+    ]
+  }
+}

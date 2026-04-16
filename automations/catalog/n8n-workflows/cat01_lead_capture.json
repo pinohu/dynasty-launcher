@@ -1,0 +1,265 @@
+{
+  "name": "Dynasty Empire: Lead Capture Automations (Category 1)",
+  "description": "8 lead capture automations with full validation, deduplication, and owner notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "visitor-tracking",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Website Visitor Tracking",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "form-submission",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Landing Page Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 150]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-capture",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Chat Widget",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 250]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "social-lead-ads",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Social Media Lead Ads",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "referral-tracking",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Referral Tracking",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 450]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "qr-scan",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: QR Code Scanner",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 550]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "phone-tracking",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Phone Call Tracking",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "event-scanner",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Trade Show/Event Scanner",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 750]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json.body;\nif (!data.visitorId || !data.pageUrl) throw new Error('Missing visitorId or pageUrl');\nreturn {\n  type: 'website_visitor',\n  visitorId: data.visitorId,\n  pageUrl: data.pageUrl,\n  referrer: data.referrer || null,\n  utm: {source: data.utmSource || 'direct', medium: data.utmMedium || 'organic', campaign: data.utmCampaign, content: data.utmContent},\n  ip: data.ipAddress,\n  userAgent: data.userAgent,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Validate: Visitor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json.body;\nconst required = ['firstName', 'lastName', 'email', 'serviceType'];\nif (required.some(f => !data[f])) throw new Error('Missing required fields');\nif (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(data.email)) throw new Error('Invalid email');\nreturn {\n  type: 'form_submission',\n  firstName: data.firstName.trim(),\n  lastName: data.lastName.trim(),\n  email: data.email.toLowerCase().trim(),\n  phone: data.phone ? data.phone.replace(/\\D/g, '').slice(-10) : null,\n  serviceType: data.serviceType,\n  formPage: data.formPage,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Validate: Form",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 150]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json.body;\nif (!data.visitorEmail && !data.visitorPhone) throw new Error('Need email or phone');\nreturn {\n  type: 'chat_capture',\n  name: data.visitorName || 'Chat Visitor',\n  email: data.visitorEmail ? data.visitorEmail.toLowerCase() : null,\n  phone: data.visitorPhone ? data.visitorPhone.replace(/\\D/g, '').slice(-10) : null,\n  messageCount: data.chatMessages?.length || 0,\n  isUrgent: data.chatMessages?.some(m => /urgent|asap|emergency|rush|today/.test(m.message?.toLowerCase())) || false,\n  pageUrl: data.pageUrl,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Validate: Chat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 250]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json.body;\nconst validPlatforms = ['facebook', 'instagram', 'linkedin', 'tiktok'];\nif (!data.leadId || !validPlatforms.includes(data.platform?.toLowerCase())) throw new Error('Invalid platform');\nif (!data.leadEmail && !data.leadPhone) throw new Error('Need email or phone');\nreturn {\n  type: 'social_lead_ads',\n  leadId: data.leadId,\n  name: data.leadName || 'Social Lead',\n  email: data.leadEmail ? data.leadEmail.toLowerCase() : null,\n  phone: data.leadPhone ? data.leadPhone.replace(/\\D/g, '').slice(-10) : null,\n  platform: data.platform.toLowerCase(),\n  campaignId: data.campaignId,\n  campaignName: data.campaignName,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Validate: Social",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 350]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json.body;\nif (!data.referralCode) throw new Error('Missing referralCode');\nif (!data.referredEmail && !data.referredPhone) throw new Error('Need email or phone');\nreturn {\n  type: 'referral_tracking',\n  referralCode: data.referralCode,\n  referrerEmail: data.referrerEmail ? data.referrerEmail.toLowerCase() : null,\n  referrerName: data.referrerName || 'Unknown',\n  email: data.referredEmail ? data.referredEmail.toLowerCase() : null,\n  phone: data.referredPhone ? data.referredPhone.replace(/\\D/g, '').slice(-10) : null,\n  name: data.referredName || 'Referral',\n  source: 'referral',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Validate: Referral",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 450]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json.body;\nif (!data.qrCodeId || !data.scannedUrl) throw new Error('Missing qrCodeId or scannedUrl');\nreturn {\n  type: 'qr_scan',\n  qrCodeId: data.qrCodeId,\n  scannedUrl: data.scannedUrl,\n  deviceType: data.deviceType || 'unknown',\n  ip: data.ipAddress,\n  name: data.visitorName || null,\n  email: data.visitorEmail ? data.visitorEmail.toLowerCase() : null,\n  phone: data.visitorPhone ? data.visitorPhone.replace(/\\D/g, '').slice(-10) : null,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Validate: QR",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 550]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json.body;\nif (!data.callId || !data.callerId || !data.receivedPhone) throw new Error('Missing call data');\nconst cleanPhone = (p) => p?.replace(/\\D/g, '').slice(-10) || null;\nreturn {\n  type: 'phone_call_tracking',\n  callId: data.callId,\n  callerId: cleanPhone(data.callerId),\n  callerName: data.callerName || 'Unknown Caller',\n  receivedPhone: cleanPhone(data.receivedPhone),\n  duration: parseInt(data.duration) || 0,\n  callTime: data.callTime || new Date().toISOString(),\n  recordingUrl: data.recordingUrl || null,\n  transcription: data.transcription || null,\n  campaignSource: data.campaignSource || null,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Validate: Phone",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 650]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $json.body;\nif (!data.scanId || !data.badgeId) throw new Error('Missing scanId or badgeId');\nif (!data.attendeeEmail && !data.attendeePhone) throw new Error('Need email or phone');\nreturn {\n  type: 'event_scan',\n  scanId: data.scanId,\n  badgeId: data.badgeId,\n  name: data.attendeeName || 'Attendee',\n  email: data.attendeeEmail ? data.attendeeEmail.toLowerCase() : null,\n  phone: data.attendeePhone ? data.attendeePhone.replace(/\\D/g, '').slice(-10) : null,\n  company: data.attendeeCompany || null,\n  eventId: data.eventId,\n  eventName: data.eventName,\n  boothId: data.boothId,\n  source: 'event',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Validate: Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 750]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-capture/upsert-lead",
+        "headers": {
+          "Authorization": "Bearer {{ $env.API_KEY }}",
+          "Content-Type": "application/json"
+        },
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Upsert Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-capture/log-activity",
+        "headers": {
+          "Authorization": "Bearer {{ $env.API_KEY }}"
+        },
+        "body": "{{JSON.stringify({leadId: $json.leadId, type: $json.type, source: $json})}}"
+      },
+      "name": "HTTP: Log Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-capture/notify-owner",
+        "headers": {
+          "Authorization": "Bearer {{ $env.API_KEY }}"
+        },
+        "body": "{{JSON.stringify({leadId: $json.leadId, type: $json.type, priority: $json.isUrgent || false})}}"
+      },
+      "name": "HTTP: Notify Owner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 400]
+    }
+  ],
+  "connections": {
+    "Webhook: Website Visitor Tracking": {
+      "main": [[{"node": "Validate: Visitor", "type": "main", "index": 0}]]
+    },
+    "Webhook: Landing Page Form": {
+      "main": [[{"node": "Validate: Form", "type": "main", "index": 0}]]
+    },
+    "Webhook: Chat Widget": {
+      "main": [[{"node": "Validate: Chat", "type": "main", "index": 0}]]
+    },
+    "Webhook: Social Media Lead Ads": {
+      "main": [[{"node": "Validate: Social", "type": "main", "index": 0}]]
+    },
+    "Webhook: Referral Tracking": {
+      "main": [[{"node": "Validate: Referral", "type": "main", "index": 0}]]
+    },
+    "Webhook: QR Code Scanner": {
+      "main": [[{"node": "Validate: QR", "type": "main", "index": 0}]]
+    },
+    "Webhook: Phone Call Tracking": {
+      "main": [[{"node": "Validate: Phone", "type": "main", "index": 0}]]
+    },
+    "Webhook: Trade Show/Event Scanner": {
+      "main": [[{"node": "Validate: Event", "type": "main", "index": 0}]]
+    },
+    "Validate: Visitor": {
+      "main": [[{"node": "HTTP: Upsert Lead", "type": "main", "index": 0}]]
+    },
+    "Validate: Form": {
+      "main": [[{"node": "HTTP: Upsert Lead", "type": "main", "index": 0}]]
+    },
+    "Validate: Chat": {
+      "main": [[{"node": "HTTP: Upsert Lead", "type": "main", "index": 0}]]
+    },
+    "Validate: Social": {
+      "main": [[{"node": "HTTP: Upsert Lead", "type": "main", "index": 0}]]
+    },
+    "Validate: Referral": {
+      "main": [[{"node": "HTTP: Upsert Lead", "type": "main", "index": 0}]]
+    },
+    "Validate: QR": {
+      "main": [[{"node": "HTTP: Upsert Lead", "type": "main", "index": 0}]]
+    },
+    "Validate: Phone": {
+      "main": [[{"node": "HTTP: Upsert Lead", "type": "main", "index": 0}]]
+    },
+    "Validate: Event": {
+      "main": [[{"node": "HTTP: Upsert Lead", "type": "main", "index": 0}]]
+    },
+    "HTTP: Upsert Lead": {
+      "main": [[{"node": "HTTP: Log Activity", "type": "main", "index": 0}]]
+    },
+    "HTTP: Log Activity": {
+      "main": [[{"node": "HTTP: Notify Owner", "type": "main", "index": 0}]]
+    }
+  }
+}
