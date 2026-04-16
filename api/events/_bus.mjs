@@ -1,16 +1,21 @@
-// api/events/_bus.mjs — minimal in-memory event bus (MVP stub)
+// api/events/_bus.mjs — event bus with optional Postgres persistence
 // -----------------------------------------------------------------------------
 // Every module activation, failure, and tenant event flows through this bus.
 //
 // Interface follows docs/operations/ACTIVATION_FLOW_SPEC.md: emit(type, payload)
-// produces a structured event; consumers query via getEvents({...}) with
-// optional filters.
+// produces a structured event. Events stay in the in-memory log (for the
+// current lambda warm period) and are also persisted fire-and-forget to
+// Postgres events_log when DATABASE_URL is set. The persist() call does NOT
+// block the emit — if the DB write fails, we log the error and move on.
 //
-// Track 9 (Observability) replaces this with persistent telemetry flowing to
-// dashboards and alerting. The interface is stable; the storage swaps.
+// Consumers query via getEvents({...}) against in-memory state (fast, but
+// ephemeral). For durable queries across cold starts, use _events_store.mjs
+// getPersistedEvents() directly.
 // -----------------------------------------------------------------------------
 
-const log = []; // append-only
+import { persist } from './_events_store.mjs';
+
+const log = []; // append-only (current warm period)
 const MAX_LOG = 10_000; // cap to avoid runaway memory in long-lived warm lambdas
 
 export function emit(event_type, payload = {}) {
@@ -24,6 +29,10 @@ export function emit(event_type, payload = {}) {
   };
   log.push(event);
   if (log.length > MAX_LOG) log.splice(0, log.length - MAX_LOG);
+
+  // Fire-and-forget to Postgres. persist() is a no-op when DATABASE_URL absent.
+  persist(event);
+
   return event;
 }
 
