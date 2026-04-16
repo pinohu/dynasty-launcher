@@ -22,27 +22,29 @@
 // (steps are omitted to keep payloads small; use ?id= for full detail)
 // -----------------------------------------------------------------------------
 
-import { createRequire } from 'node:module';
 import { corsPreflight, methodGuard, cacheHeaders } from './_lib.mjs';
-
-const require = createRequire(import.meta.url);
-const {
-  CATEGORIES,
-  PACKAGES,
-  ARCHETYPE_PACKAGES,
-  ALL_AUTOMATIONS,
-  getAutomationsForProject,
-  getAutomationsByCategory,
-} = require('../automation-catalog.js');
+import { getCatalogData } from './_automations.mjs';
 
 export const maxDuration = 10;
 
-// Pre-compute: which packages contain each automation id
-const _pkgIndex = {};
-for (const [pkg, ids] of Object.entries(PACKAGES)) {
-  for (const id of ids) {
-    if (!_pkgIndex[id]) _pkgIndex[id] = [];
-    _pkgIndex[id].push(pkg);
+// Lazy-init on first request (cold start)
+let _CATEGORIES, _PACKAGES, _ARCHETYPE_PACKAGES, _ALL_AUTOMATIONS, _getAutomationsForProject;
+let _pkgIndex = null;
+
+function init() {
+  if (_pkgIndex) return;
+  const cat = getCatalogData();
+  _CATEGORIES = cat.CATEGORIES;
+  _PACKAGES = cat.PACKAGES;
+  _ARCHETYPE_PACKAGES = cat.ARCHETYPE_PACKAGES;
+  _ALL_AUTOMATIONS = cat.ALL_AUTOMATIONS;
+  _getAutomationsForProject = cat.getAutomationsForProject;
+  _pkgIndex = {};
+  for (const [pkg, ids] of Object.entries(_PACKAGES)) {
+    for (const id of ids) {
+      if (!_pkgIndex[id]) _pkgIndex[id] = [];
+      _pkgIndex[id].push(pkg);
+    }
   }
 }
 
@@ -50,7 +52,7 @@ function summarize(a) {
   return {
     id: a.id,
     cat: a.cat,
-    category_name: CATEGORIES[a.cat] || `Category ${a.cat}`,
+    category_name: _CATEGORIES[a.cat] || `Category ${a.cat}`,
     name: a.name,
     trigger: a.trigger,
     cron: a.cron || null,
@@ -69,18 +71,19 @@ function fullDetail(a) {
 export default async function handler(req, res) {
   if (corsPreflight(req, res)) return;
   if (!methodGuard(req, res)) return;
+  init();
 
   const q = req.query || {};
 
   // Single automation lookup
   if (q.id) {
-    const found = ALL_AUTOMATIONS.find((a) => a.id === q.id);
+    const found = _ALL_AUTOMATIONS.find((a) => a.id === q.id);
     if (!found) return res.status(404).json({ error: `automation '${q.id}' not found` });
     cacheHeaders(res);
     return res.json({ automation: fullDetail(found) });
   }
 
-  let result = ALL_AUTOMATIONS;
+  let result = _ALL_AUTOMATIONS;
 
   if (q.category) {
     const catNum = parseInt(q.category, 10);
@@ -89,13 +92,13 @@ export default async function handler(req, res) {
     }
   }
 
-  if (q.package && PACKAGES[q.package]) {
-    const idSet = new Set(PACKAGES[q.package]);
+  if (q.package && _PACKAGES[q.package]) {
+    const idSet = new Set(_PACKAGES[q.package]);
     result = result.filter((a) => idSet.has(a.id));
   }
 
   if (q.archetype) {
-    const selected = getAutomationsForProject(q.archetype);
+    const selected = _getAutomationsForProject(q.archetype);
     const idSet = new Set(selected.map((a) => a.id));
     result = result.filter((a) => idSet.has(a.id));
   }
@@ -112,10 +115,10 @@ export default async function handler(req, res) {
   cacheHeaders(res);
   return res.json({
     count: result.length,
-    total: ALL_AUTOMATIONS.length,
-    categories: CATEGORIES,
-    packages: Object.keys(PACKAGES),
-    archetypes: Object.keys(ARCHETYPE_PACKAGES),
+    total: _ALL_AUTOMATIONS.length,
+    categories: _CATEGORIES,
+    packages: Object.keys(_PACKAGES),
+    archetypes: Object.keys(_ARCHETYPE_PACKAGES),
     automations: result.map(summarize),
   });
 }
