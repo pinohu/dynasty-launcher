@@ -93,6 +93,7 @@ tr:hover{background:rgba(255,255,255,.02)}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="card"><h3>Modules by Status</h3><div id="r-cat-status"></div></div>
       <div class="card"><h3>Modules by Category</h3><div id="r-cat-cat"></div></div>
+      <div class="card"><h3>Bundles by Status</h3><div id="r-cat-bstat"></div></div>
     </div>
   </section>
 
@@ -102,6 +103,7 @@ tr:hover{background:rgba(255,255,255,.02)}
       <div class="card"><h3>By Onboarding Status</h3><div id="r-ten-onb"></div></div>
       <div class="card"><h3>By Subscription</h3><div id="r-ten-sub"></div></div>
       <div class="card"><h3>By Blueprint</h3><div id="r-ten-bp"></div></div>
+      <div class="card"><h3>By Compliance Mode</h3><div id="r-ten-comp"></div></div>
     </div>
   </section>
 
@@ -237,12 +239,14 @@ function rCatalog(d){
   html+=stCard('Bundles',fmt(d.bundles?.total));
   html+=stCard('Suites',fmt(d.suites));
   html+=stCard('Editions',fmt(d.editions));
+  html+=stCard('Concierge',fmt(d.concierge));
   html+=stCard('Personas',fmt(d.personas));
   html+=stCard('Blueprints',fmt(d.blueprints));
   html+=stCard('Capabilities',fmt(d.capabilities));
   $('r-cat-stats').innerHTML=html;
   $('r-cat-status').innerHTML=bars(d.modules?.by_status,'var(--accent)');
   $('r-cat-cat').innerHTML=bars(d.modules?.by_category,'var(--warn)');
+  $('r-cat-bstat').innerHTML=bars(d.bundles?.by_effective_status,'var(--success)');
 }
 
 /* ── render: tenants ──────────────────────────── */
@@ -255,6 +259,7 @@ function rTenants(d){
   $('r-ten-onb').innerHTML=bars(d.by_onboarding_status,'var(--warn)');
   $('r-ten-sub').innerHTML=bars(d.by_subscription_status,'var(--success)');
   $('r-ten-bp').innerHTML=bars(d.by_blueprint,'var(--muted)');
+  $('r-ten-comp').innerHTML=bars(d.by_compliance_mode,'var(--warn)');
 }
 
 /* ── render: entitlements ─────────────────────── */
@@ -380,7 +385,7 @@ window.logPage=function(dir){loadLog(Math.max(0,logState.offset+dir*logState.lim
 
 /* ── refresh + countdown ──────────────────────── */
 window.refresh=async function(){
-  countdown=30;
+  countdown=30;$('h-cd').textContent='30s';
   try{data=await fetchMetrics();renderAll(data)}catch(e){console.error('refresh',e)}
 };
 

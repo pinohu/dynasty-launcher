@@ -125,6 +125,8 @@
 
 <script>
 (function() {
+  const TOKEN = localStorage.getItem('dynasty_admin_token');
+  if (!TOKEN) { window.location.href = '/admin'; return; }
   const $ = (s) => document.querySelector(s);
   let currentTenant = null;
 
@@ -246,7 +248,7 @@
       'Compliance': t.compliance_mode || 'standard',
     };
     $('#kpis').innerHTML = Object.entries(counts).map(([label, value]) =>
-      `<div><div class="kpi"><div class="label">${label}</div></div><div class="value">${value}</div></div>`
+      `<div class="kpi"><div class="label">${label}</div><div class="value">${value}</div></div>`
     ).join('');
   }
 
