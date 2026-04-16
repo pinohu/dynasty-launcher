@@ -40,6 +40,52 @@ function newId(prefix) {
 
 const now = () => new Date().toISOString();
 
+// Inline table creation — guarantees tables exist before any insert.
+// Uses IF NOT EXISTS so it's safe to run on every cold start.
+let _tablesReady = false;
+async function ensureAutomationTables() {
+  if (_tablesReady) return;
+  await pool().query(`
+    CREATE TABLE IF NOT EXISTS automations_config (
+      config_id text PRIMARY KEY,
+      tenant_id text NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+      module_code text NOT NULL,
+      is_enabled boolean NOT NULL DEFAULT false,
+      settings jsonb NOT NULL DEFAULT '{}'::jsonb,
+      quiet_hours_start time,
+      quiet_hours_end time,
+      timezone text NOT NULL DEFAULT 'America/New_York',
+      last_triggered_at timestamptz,
+      trigger_count integer NOT NULL DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (tenant_id, module_code)
+    );
+    CREATE INDEX IF NOT EXISTS automations_config_tenant_idx ON automations_config (tenant_id);
+    CREATE INDEX IF NOT EXISTS automations_config_module_idx ON automations_config (module_code);
+    CREATE INDEX IF NOT EXISTS automations_config_enabled_idx ON automations_config (is_enabled);
+
+    CREATE TABLE IF NOT EXISTS automation_runs (
+      run_id text PRIMARY KEY,
+      tenant_id text NOT NULL,
+      module_code text NOT NULL,
+      trigger_event_id text,
+      status text NOT NULL DEFAULT 'running',
+      started_at timestamptz NOT NULL DEFAULT now(),
+      completed_at timestamptz,
+      duration_ms integer,
+      actions_executed integer DEFAULT 0,
+      error_message text,
+      input_payload jsonb,
+      output_payload jsonb
+    );
+    CREATE INDEX IF NOT EXISTS automation_runs_tenant_idx ON automation_runs (tenant_id);
+    CREATE INDEX IF NOT EXISTS automation_runs_module_idx ON automation_runs (module_code);
+    CREATE INDEX IF NOT EXISTS automation_runs_status_idx ON automation_runs (status);
+  `);
+  _tablesReady = true;
+}
+
 export const maxDuration = 60;
 
 export default async function handler(req, res) {
@@ -54,11 +100,13 @@ export default async function handler(req, res) {
   const { tenant_id, blueprint_code } = body || {};
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
 
-  // Verify tenant exists
+  // Verify tenant exists (also triggers base schema migration)
   const tenant = await getTenant(tenant_id);
   if (!tenant) return res.status(404).json({ error: 'tenant_not_found' });
 
   try {
+    // Ensure automation-specific tables exist before inserting
+    await ensureAutomationTables();
     const result = await provisionAutomations(tenant_id, blueprint_code);
     return res.status(200).json(result);
   } catch (err) {

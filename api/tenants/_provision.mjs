@@ -35,6 +35,32 @@ function genId(prefix) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// Inline table creation — no file path resolution needed in lambda sandbox
+let _tablesReady = false;
+async function ensureAutomationTables() {
+  if (_tablesReady) return;
+  await pool().query(`
+    CREATE TABLE IF NOT EXISTS automations_config (
+      config_id text PRIMARY KEY,
+      tenant_id text NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+      module_code text NOT NULL,
+      is_enabled boolean NOT NULL DEFAULT false,
+      settings jsonb NOT NULL DEFAULT '{}'::jsonb,
+      quiet_hours_start time,
+      quiet_hours_end time,
+      timezone text NOT NULL DEFAULT 'America/New_York',
+      last_triggered_at timestamptz,
+      trigger_count integer NOT NULL DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (tenant_id, module_code)
+    );
+    CREATE INDEX IF NOT EXISTS automations_config_tenant_idx ON automations_config (tenant_id);
+    CREATE INDEX IF NOT EXISTS automations_config_module_idx ON automations_config (module_code);
+  `);
+  _tablesReady = true;
+}
+
 /**
  * Provision all automations as dormant for a tenant.
  *
@@ -42,9 +68,12 @@ function genId(prefix) {
  * @returns {{ ok: boolean, total_provisioned: number, by_category: object, recommended_modules: string[], recommended_packs: string[] }}
  */
 export async function provisionAllAutomations({ tenant_id, blueprint_code }) {
-  // Validate tenant exists
+  // Validate tenant exists (triggers base schema migration via _store.mjs)
   const tenant = await getTenant(tenant_id);
   if (!tenant) throw new Error(`tenant '${tenant_id}' not found`);
+
+  // Ensure automation tables exist before inserting
+  await ensureAutomationTables();
 
   // Load full module catalog
   const catalog = getCatalog();
