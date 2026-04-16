@@ -1,0 +1,84 @@
+{
+  "name": "HR & Hiring Automations",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/hr/job-posting-syndication",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"jobTitle\": \"{{$json.jobTitle}}\",\n  \"description\": \"{{$json.description}}\",\n  \"platforms\": {{$json.platforms}},\n  \"salary\": \"{{$json.salary}}\",\n  \"location\": \"{{$json.location}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Job Posting Syndication",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/hr/resume-screening",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"resumeUrl\": \"{{$json.resumeUrl}}\",\n  \"jobDescription\": \"{{$json.jobDescription}}\",\n  \"candidateEmail\": \"{{$json.candidateEmail}}\",\n  \"jobId\": \"{{$json.jobId}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Resume Screening with AI Ranking",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/hr/interview-scheduling",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"candidateId\": \"{{$json.candidateId}}\",\n  \"candidateEmail\": \"{{$json.candidateEmail}}\",\n  \"interviewerId\": \"{{$json.interviewerId}}\",\n  \"availableSlots\": {{$json.availableSlots}},\n  \"jobId\": \"{{$json.jobId}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Interview Scheduling Automation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/hr/rejection-notification",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"candidateEmail\": \"{{$json.candidateEmail}}\",\n  \"candidateName\": \"{{$json.candidateName}}\",\n  \"jobTitle\": \"{{$json.jobTitle}}\",\n  \"rejectionReason\": \"{{$json.rejectionReason}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Rejection Notification Sender",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/hr/new-hire-onboarding",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"employeeId\": \"{{$json.employeeId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"startDate\": \"{{$json.startDate}}\",\n  \"position\": \"{{$json.position}}\",\n  \"department\": \"{{$json.department}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "New Hire Onboarding Checklist",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/hr/document-collection",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"employeeId\": \"{{$json.employeeId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"documents\": {{$json.documents}},\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Document Collection (I-9, W-4, direct deposit)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 300]
+    }
+  ],
+  "connections": {}
+}

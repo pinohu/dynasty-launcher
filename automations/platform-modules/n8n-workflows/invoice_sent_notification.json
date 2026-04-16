@@ -1,0 +1,445 @@
+{
+  "name": "Invoice Sent Notification",
+  "description": "Send professional invoice notifications via email and SMS with payment links when invoices are created or sent",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "01_stripe_webhook",
+      "name": "Stripe Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "stripe_invoice_webhook",
+      "webhookUrl": "{{$env.YOUR_DEPUTY_WEBHOOK_BASE_URL}}/webhooks/stripe-invoice"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{$node[\"01_stripe_webhook\"].json[\"type\"]}}",
+              "operation": "contains",
+              "value2": "invoice"
+            }
+          ]
+        }
+      },
+      "id": "02_check_invoice_event",
+      "name": "Check Invoice Event",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.stripe.com/v1/invoices/{{$node[\"01_stripe_webhook\"].json[\"data\"][\"object\"][\"id\"]}}",
+        "authentication": "predefined",
+        "nodeCredentialType": "stripeApi"
+      },
+      "id": "03_get_invoice_details",
+      "name": "Get Invoice Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/customers/{{$node[\"03_get_invoice_details\"].json[\"customer\"]}}",
+        "authentication": "predefined",
+        "nodeCredentialType": "httpHeaderAuth"
+      },
+      "id": "04_get_customer_details",
+      "name": "Get Customer Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsonData": "{\n  \"payment_url\": \"{{$node[\"03_get_invoice_details\"].json[\"hosted_invoice_url\"]}}\",\n  \"amount_due\": \"{{$node[\"03_get_invoice_details\"].json[\"amount_due\"]/100}}\",\n  \"due_date\": \"{{new Date($node[\"03_get_invoice_details\"].json[\"due_date\"]*1000).toLocaleDateString()}}\",\n  \"currency\": \"{{$node[\"03_get_invoice_details\"].json[\"currency\"].toUpperCase()}}\",\n  \"invoice_pdf\": \"{{$node[\"03_get_invoice_details\"].json[\"invoice_pdf\"]}}\"\n}"
+      },
+      "id": "05_prepare_invoice_data",
+      "name": "Prepare Invoice Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ACUMBAMAIL_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "acumbamailApi",
+        "body": {
+          "to": "={{$node[\"04_get_customer_details\"].json[\"email\"]}}",
+          "from": "{{$env.YOUR_DEPUTY_FROM_EMAIL}}",
+          "subject": "Invoice {{$node[\"03_get_invoice_details\"].json[\"number\"]}} from {{$env.COMPANY_NAME}} - Due {{$node[\"05_prepare_invoice_data\"].json[\"due_date\"]}}",
+          "html": "={{$node[\"06_build_invoice_email\"].json[\"email_html\"]}}",
+          "attachments": "={{$node[\"05_prepare_invoice_data\"].json[\"invoice_pdf\"]}}",
+          "template_variables": {
+            "customer_name": "={{$node[\"04_get_customer_details\"].json[\"name\"]}}",
+            "invoice_number": "={{$node[\"03_get_invoice_details\"].json[\"number\"]}}",
+            "invoice_amount": "={{$node[\"05_prepare_invoice_data\"].json[\"amount_due\"]}}",
+            "currency": "={{$node[\"05_prepare_invoice_data\"].json[\"currency\"]}}",
+            "due_date": "={{$node[\"05_prepare_invoice_data\"].json[\"due_date\"]}}",
+            "payment_link": "={{$node[\"05_prepare_invoice_data\"].json[\"payment_url\"]}}",
+            "company_name": "{{$env.COMPANY_NAME}}"
+          },
+          "tags": [
+            "invoice",
+            "payment_request"
+          ],
+          "track_opens": true,
+          "track_clicks": true
+        }
+      },
+      "id": "07_send_invoice_email",
+      "name": "Send Invoice Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1250,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SMS_IT_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "smsItApi",
+        "body": {
+          "phone": "={{$node[\"04_get_customer_details\"].json[\"phone\"]}}",
+          "message": "Invoice {{$node[\"03_get_invoice_details\"].json[\"number\"]}} for {{$node[\"05_prepare_invoice_data\"].json[\"amount_due\"]}} {{$node[\"05_prepare_invoice_data\"].json[\"currency\"]}} is due {{$node[\"05_prepare_invoice_data\"].json[\"due_date\"]}}. Pay now: {{$node[\"05_prepare_invoice_data\"].json[\"payment_url\"]}}",
+          "sender_id": "{{$env.COMPANY_NAME}}",
+          "tags": [
+            "invoice",
+            "payment_request"
+          ]
+        }
+      },
+      "id": "08_send_invoice_sms",
+      "name": "Send Invoice SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1250,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/crm/timeline",
+        "authentication": "predefined",
+        "nodeCredentialType": "httpHeaderAuth",
+        "body": {
+          "customer_id": "={{$node[\"04_get_customer_details\"].json[\"id\"]}}",
+          "event_type": "invoice_notification_sent",
+          "description": "Invoice {{$node[\"03_get_invoice_details\"].json[\"number\"]}} notification sent",
+          "invoice_id": "={{$node[\"03_get_invoice_details\"].json[\"id\"]}}",
+          "amount": "={{$node[\"05_prepare_invoice_data\"].json[\"amount_due\"]}}",
+          "currency": "={{$node[\"05_prepare_invoice_data\"].json[\"currency\"]}}",
+          "due_date": "={{$node[\"05_prepare_invoice_data\"].json[\"due_date\"]}}",
+          "timestamp": "={{new Date().toISOString()}}"
+        }
+      },
+      "id": "09_log_invoice_notification",
+      "name": "Log Invoice Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1250,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsonData": "{\n  \"email_html\": \"<div style='font-family: Arial, sans-serif; max-width: 600px; color: #333;'><h2>{{customer_name}}, your invoice is ready</h2><p>Invoice <strong>#{{invoice_number}}</strong> for <strong>{{invoice_amount}} {{currency}}</strong> is due on <strong>{{due_date}}</strong>.</p><p><a href='{{payment_link}}' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>Pay Now</a></p><p>Questions? Contact us at {{support_email}}</p></div>\"\n}"
+      },
+      "id": "06_build_invoice_email",
+      "name": "Build Invoice Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{$node[\"03_get_invoice_details\"].json[\"due_date\"] - Math.floor(Date.now()/1000)}}",
+        "unit": "seconds"
+      },
+      "id": "10_wait_until_due_date",
+      "name": "Wait Until Due Date",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.stripe.com/v1/invoices/{{$node[\"01_stripe_webhook\"].json[\"data\"][\"object\"][\"id\"]}}",
+        "authentication": "predefined",
+        "nodeCredentialType": "stripeApi"
+      },
+      "id": "11_check_payment_status",
+      "name": "Check Payment Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1650,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{$node[\"11_check_payment_status\"].json[\"status\"]}}",
+              "operation": "notEquals",
+              "value2": "paid"
+            }
+          ]
+        }
+      },
+      "id": "12_check_if_unpaid",
+      "name": "Check If Unpaid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/tasks",
+        "authentication": "predefined",
+        "nodeCredentialType": "httpHeaderAuth",
+        "body": {
+          "customer_id": "={{$node[\"04_get_customer_details\"].json[\"id\"]}}",
+          "title": "Follow up: Invoice {{$node[\"03_get_invoice_details\"].json[\"number\"]}} still unpaid",
+          "description": "Invoice for {{$node[\"05_prepare_invoice_data\"].json[\"amount_due\"]}} {{$node[\"05_prepare_invoice_data\"].json[\"currency\"]}} is overdue. Follow up with customer.",
+          "due_date": "={{new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0]}}}",
+          "priority": "high",
+          "type": "follow_up"
+        }
+      },
+      "id": "13_create_followup_task",
+      "name": "Create Follow-up Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        2050,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "Invoice notification workflow completed"
+      },
+      "id": "14_success_response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2250,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "01_stripe_webhook": {
+      "main": [
+        [
+          {
+            "node": "02_check_invoice_event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_check_invoice_event": {
+      "main": [
+        [
+          {
+            "node": "03_get_invoice_details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14_success_response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_get_invoice_details": {
+      "main": [
+        [
+          {
+            "node": "04_get_customer_details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_get_customer_details": {
+      "main": [
+        [
+          {
+            "node": "05_prepare_invoice_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05_prepare_invoice_data": {
+      "main": [
+        [
+          {
+            "node": "06_build_invoice_email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06_build_invoice_email": {
+      "main": [
+        [
+          {
+            "node": "07_send_invoice_email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "08_send_invoice_sms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07_send_invoice_email": {
+      "main": [
+        [
+          {
+            "node": "09_log_invoice_notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08_send_invoice_sms": {
+      "main": [
+        [
+          {
+            "node": "09_log_invoice_notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09_log_invoice_notification": {
+      "main": [
+        [
+          {
+            "node": "10_wait_until_due_date",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "14_success_response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10_wait_until_due_date": {
+      "main": [
+        [
+          {
+            "node": "11_check_payment_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11_check_payment_status": {
+      "main": [
+        [
+          {
+            "node": "12_check_if_unpaid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12_check_if_unpaid": {
+      "main": [
+        [
+          {
+            "node": "13_create_followup_task",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14_success_response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13_create_followup_task": {
+      "main": [
+        [
+          {
+            "node": "14_success_response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,246 @@
+{
+  "name": "Category 14: Voice & Phone",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [50, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "path": "voice-phone",
+        "responseMode": "responseNode",
+        "auth": "headerAuth"
+      },
+      "name": "Voice Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/voice-phone",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ $json }}"
+      },
+      "name": "Voice Router",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "call_recording",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Recording Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/voice-phone/call-recording",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {callId: $json.callId, recordingUrl: $json.recordingUrl} }}"
+      },
+      "name": "Log Call Recording",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "call_transcription",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Transcription Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/voice-phone/call-transcription",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {callId: $json.callId, recordingUrl: $json.recordingUrl} }}"
+      },
+      "name": "Transcribe Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "sentiment_analysis",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Sentiment Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/voice-phone/sentiment-analysis",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {callId: $json.callId, transcript: $json.transcript} }}"
+      },
+      "name": "Analyze Sentiment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "missed_call",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Missed Call Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/voice-phone/missed-call-callback",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {callerId: $json.callerId, missedTime: $json.missedTime} }}"
+      },
+      "name": "Schedule Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/voice-phone/ivr-routing",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {callId: $json.callId, selection: $json.selection} }}"
+      },
+      "name": "IVR Router",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/voice-phone/ai-receptionist",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {callId: $json.callId, callerInput: $json.callerInput} }}"
+      },
+      "name": "AI Receptionist",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/voice-phone/call-disposition",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {callId: $json.callId, outcome: $json.outcome, notes: $json.notes} }}"
+      },
+      "name": "Log Disposition",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/voice-phone/outbound-campaign",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {campaignId: $json.campaignId} }}"
+      },
+      "name": "Outbound Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "respondWith": "allData"
+      },
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 50]
+    }
+  ],
+  "connections": {
+    "Start": {"main": [{"node": "Voice Webhook", "branch": 0}]},
+    "Voice Webhook": {"main": [{"node": "Voice Router", "branch": 0}]},
+    "Voice Router": {"main": [{"node": "Recording Switch", "branch": 0}]},
+    "Recording Switch": {
+      "main": [
+        [{"node": "Log Call Recording", "branch": 0}],
+        [{"node": "Transcription Switch", "branch": 0}]
+      ]
+    },
+    "Transcription Switch": {
+      "main": [
+        [{"node": "Transcribe Call", "branch": 0}],
+        [{"node": "Sentiment Switch", "branch": 0}]
+      ]
+    },
+    "Sentiment Switch": {
+      "main": [
+        [{"node": "Analyze Sentiment", "branch": 0}],
+        [{"node": "Missed Call Switch", "branch": 0}]
+      ]
+    },
+    "Missed Call Switch": {
+      "main": [
+        [{"node": "Schedule Callback", "branch": 0}],
+        [{"node": "IVR Router", "branch": 0}]
+      ]
+    },
+    "IVR Router": {"main": [{"node": "AI Receptionist", "branch": 0}]},
+    "AI Receptionist": {"main": [{"node": "Log Disposition", "branch": 0}]},
+    "Log Disposition": {"main": [{"node": "Outbound Campaign", "branch": 0}]},
+    "Outbound Campaign": {"main": [{"node": "Response", "branch": 0}]},
+    "Log Call Recording": {"main": [{"node": "IVR Router", "branch": 0}]},
+    "Transcribe Call": {"main": [{"node": "IVR Router", "branch": 0}]},
+    "Analyze Sentiment": {"main": [{"node": "IVR Router", "branch": 0}]},
+    "Schedule Callback": {"main": [{"node": "IVR Router", "branch": 0}]}
+  }
+}

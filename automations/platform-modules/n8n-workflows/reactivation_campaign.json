@@ -1,0 +1,114 @@
+{
+  "name": "Reactivation Campaign",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "reactivation_campaign",
+        "options": {}
+      },
+      "id": "inactive_customer_trigger",
+      "name": "Inactive Customer Detected",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "We Miss You, {{ $json.customer.first_name }}!",
+        "html": "<p>It's been {{ $json.days_inactive }} days since your last appointment.</p><p>We'd love to serve you again!</p><p><a href='{{ $env.BOOKING_URL }}'>Schedule Now</a></p>"
+      },
+      "id": "send_touch1",
+      "name": "Send Touch 1: We Miss You",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "waitTime": 259200,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_3days",
+      "name": "Wait 3 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Come Back for 15% Off Your Next Service",
+        "html": "<p>Enjoy 15% off with code: <strong>{{ $json.promo_code }}</strong></p><p><a href='{{ $env.BOOKING_URL }}'>Claim Discount</a></p>"
+      },
+      "id": "send_touch2",
+      "name": "Send Touch 2: Special Offer",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "waitTime": 604800,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_7days",
+      "name": "Wait 7 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Last Chance: 15% Off Expires Tomorrow",
+        "html": "<p>Your discount code expires tomorrow at midnight!</p><p><a href='{{ $env.BOOKING_URL }}'>Book Now</a></p>"
+      },
+      "id": "send_touch3",
+      "name": "Send Touch 3: Last Chance",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "waitTime": 864000,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_10days",
+      "name": "Wait 10 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 650]
+    },
+    {
+      "parameters": {
+        "phoneNumber": "{{ $json.customer.phone }}",
+        "message": "Last chance! Enjoy 15% off your next appointment. Code: {{ $json.promo_code }}"
+      },
+      "id": "send_sms_backup",
+      "name": "Send SMS Backup",
+      "type": "n8n-nodes-base.sms",
+      "typeVersion": 1,
+      "position": [650, 650]
+    }
+  ],
+  "connections": {
+    "inactive_customer_trigger": {
+      "main": [[{"node": "send_touch1", "type": "main", "index": 0}, {"node": "delay_3days", "type": "main", "index": 0}, {"node": "delay_7days", "type": "main", "index": 0}, {"node": "delay_10days", "type": "main", "index": 0}]]
+    },
+    "delay_3days": {
+      "main": [[{"node": "send_touch2", "type": "main", "index": 0}]]
+    },
+    "delay_7days": {
+      "main": [[{"node": "send_touch3", "type": "main", "index": 0}]]
+    },
+    "delay_10days": {
+      "main": [[{"node": "send_sms_backup", "type": "main", "index": 0}]]
+    }
+  }
+}

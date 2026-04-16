@@ -1,0 +1,158 @@
+{
+  "name": "Payment Processing Automations",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/generate-link",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{env.STRIPE_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"amount\": {{$json.amount}},\n  \"currency\": \"{{$json.currency}}\",\n  \"email\": \"{{$json.email}}\",\n  \"customerId\": \"{{$json.customerId}}\",\n  \"description\": \"{{$json.description}}\",\n  \"metadata\": {{$json.metadata}}\n}"
+      },
+      "name": "Instant Payment Link Generator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/retry-failed",
+        "method": "POST",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{env.STRIPE_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"paymentIntentId\": \"{{$json.paymentIntentId}}\",\n  \"retryCount\": {{$json.retryCount || 0}},\n  \"backoffMs\": {{(Math.pow(2, $json.retryCount || 0) * 300000)}}\n}"
+      },
+      "name": "Failed Payment Retry (3x with backoff)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/dunning-sequence",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"customerId\": \"{{$json.customerId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"invoiceId\": \"{{$json.invoiceId}}\",\n  \"amount\": {{$json.amount}},\n  \"daysOverdue\": {{$json.daysOverdue}},\n  \"stage\": \"{{$json.daysOverdue > 30 ? 'firm' : $json.daysOverdue > 15 ? 'soft' : 'urgent'}}\"\n}"
+      },
+      "name": "Dunning Email Sequence",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/card-expiry-alert",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"customerId\": \"{{$json.customerId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"daysUntilExpiry\": 30\n}"
+      },
+      "name": "Card Expiry Alert (30 days before)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/deposit-handler",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"customerId\": \"{{$json.customerId}}\",\n  \"amount\": {{$json.amount}},\n  \"invoiceId\": \"{{$json.invoiceId}}\",\n  \"depositPercentage\": {{$json.depositPercentage || 50}},\n  \"scheduledPayments\": {{$json.scheduledPayments}}\n}"
+      },
+      "name": "Deposit/Partial Payment Handler",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/installment-plan",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"customerId\": \"{{$json.customerId}}\",\n  \"totalAmount\": {{$json.totalAmount}},\n  \"numberOfInstallments\": {{$json.numberOfInstallments}},\n  \"frequencyDays\": {{$json.frequencyDays || 30}},\n  \"invoiceId\": \"{{$json.invoiceId}}\"\n}"
+      },
+      "name": "Installment Plan Manager",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/refund-processing",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"chargeId\": \"{{$json.chargeId}}\",\n  \"amount\": {{$json.refundAmount}},\n  \"reason\": \"{{$json.refundReason}}\",\n  \"customerId\": \"{{$json.customerId}}\",\n  \"metadata\": {{$json.metadata}}\n}"
+      },
+      "name": "Refund Processing Automation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/collections-workflow",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"invoiceId\": \"{{$json.invoiceId}}\",\n  \"customerId\": \"{{$json.customerId}}\",\n  \"daysOverdue\": {{$json.daysOverdue}},\n  \"totalDue\": {{$json.totalDue}},\n  \"escalateToLegal\": {{$json.daysOverdue > 60}}\n}"
+      },
+      "name": "Collections Workflow (60+ days overdue)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/update-method-request",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"customerId\": \"{{$json.customerId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"reason\": \"{{$json.reason}}\",\n  \"daysUntilExpiry\": 30\n}"
+      },
+      "name": "Payment Method Update Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payments/revenue-reconciliation",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"startDate\": \"{{$json.startDate}}\",\n  \"endDate\": \"{{$json.endDate}}\",\n  \"includeRefunds\": true,\n  \"includeFees\": true\n}"
+      },
+      "name": "Revenue Reconciliation Reporter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 300]
+    }
+  ],
+  "connections": {}
+}

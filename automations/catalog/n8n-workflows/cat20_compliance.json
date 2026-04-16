@@ -1,0 +1,136 @@
+{
+  "name": "Compliance & Legal Automations",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/annual-report-deadline",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"reportType\": \"{{$json.reportType}}\",\n  \"dueDate\": \"{{$json.dueDate}}\",\n  \"notifyDaysBefore\": {{$json.notifyDaysBefore || 30}}\n}"
+      },
+      "name": "Annual Report Deadline Tracker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/license-renewal",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"licenseType\": \"{{$json.licenseType}}\",\n  \"currentLicenseId\": \"{{$json.currentLicenseId}}\",\n  \"expiryDate\": \"{{$json.expiryDate}}\"\n}"
+      },
+      "name": "Business License Renewal Monitor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/insurance-expiry",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"policyId\": \"{{$json.policyId}}\",\n  \"policyType\": \"{{$json.policyType}}\",\n  \"expiryDate\": \"{{$json.expiryDate}}\"\n}"
+      },
+      "name": "Insurance Policy Expiry Alerts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/tax-filing-deadline",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"filingType\": \"{{$json.filingType}}\",\n  \"taxYear\": {{$json.taxYear}},\n  \"dueDate\": \"{{$json.dueDate}}\"\n}"
+      },
+      "name": "Tax Filing Deadline Calendar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/boi-reporting",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"beneficialOwners\": {{$json.beneficialOwners}},\n  \"reportingYear\": {{$json.reportingYear}}\n}"
+      },
+      "name": "BOI (Beneficial Ownership) Reporting Automation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/gdpr-ccpa-handler",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"requestType\": \"{{$json.requestType}}\",\n  \"subjectEmail\": \"{{$json.subjectEmail}}\",\n  \"businessId\": \"{{$json.businessId}}\",\n  \"jurisdiction\": \"{{$json.jurisdiction}}\"\n}"
+      },
+      "name": "GDPR/CCPA Data Request Handler",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/entity-status",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"entityName\": \"{{$json.entityName}}\",\n  \"state\": \"{{$json.state}}\",\n  \"checkFrequency\": \"{{$json.checkFrequency}}\"\n}"
+      },
+      "name": "Entity Status Monitoring",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/training-tracker",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"employeeId\": \"{{$json.employeeId}}\",\n  \"trainingType\": \"{{$json.trainingType}}\",\n  \"completionDate\": \"{{$json.completionDate}}\",\n  \"expiryDate\": \"{{$json.expiryDate}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Training Compliance Tracker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/contract-monitoring",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"contractId\": \"{{$json.contractId}}\",\n  \"contractName\": \"{{$json.contractName}}\",\n  \"renewalDate\": \"{{$json.renewalDate}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Contract Compliance Monitor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/compliance/regulatory-changes",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"industry\": \"{{$json.industry}}\",\n  \"jurisdictions\": {{$json.jurisdictions}}\n}"
+      },
+      "name": "Regulatory Change Alerting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 300]
+    }
+  ],
+  "connections": {}
+}

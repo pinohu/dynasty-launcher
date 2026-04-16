@@ -1,0 +1,332 @@
+{
+  "name": "Appointment Reminder Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": "everyXMinutes",
+        "value": 15,
+        "timezone": "UTC"
+      },
+      "id": "cron_trigger",
+      "name": "Cron Trigger (Every 15 min)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$node.cron_trigger.json.apiUrl}}/appointments/upcoming?within=24h",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "yourdeputy_api"
+      },
+      "id": "query_upcoming_appointments",
+      "name": "Query Upcoming Appointments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "loopOver": "appointments"
+      },
+      "id": "loop_appointments",
+      "name": "Loop Over Appointments",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const appointment = items[0].json;\nconst now = new Date();\nconst appointmentTime = new Date(appointment.scheduled_start);\nconst minutesUntil = (appointmentTime - now) / (1000 * 60);\nconst hoursUntil = minutesUntil / 60;\n\n// Determine reminder windows\nconst windows = [];\nif (hoursUntil <= 24 && hoursUntil > 23.5) {\n  windows.push('24hr');\n}\nif (hoursUntil <= 2.25 && hoursUntil > 1.75) {\n  windows.push('2hr');\n}\nif (hoursUntil <= 0.75 && hoursUntil > 0.25) {\n  windows.push('30min');\n}\n\nreturn {\n  appointmentId: appointment.id,\n  contactId: appointment.contact_id,\n  tenantId: appointment.tenant_id,\n  email: appointment.contact_email,\n  phone: appointment.contact_phone,\n  contactName: appointment.contact_name,\n  serviceType: appointment.service_type,\n  appointmentDate: appointmentTime.toLocaleDateString(),\n  appointmentTime: appointmentTime.toLocaleTimeString(),\n  location: appointment.location,\n  address: appointment.address,\n  hoursUntil: hoursUntil.toFixed(2),\n  reminderWindows: windows,\n  businessName: appointment.business_name\n};"
+      },
+      "id": "calculate_reminder_windows",
+      "name": "Calculate Reminder Windows",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": [
+            {
+              "key": "reminderWindows.length",
+              "condition": ">",
+              "value": 0
+            }
+          ]
+        }
+      },
+      "id": "check_reminder_needed",
+      "name": "Reminder Needed?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const appointment = items[0].json;\nconst window = appointment.reminderWindows[0];\nlet template = '';\nlet subject = '';\n\nif (window === '24hr') {\n  subject = `Reminder: ${appointment.serviceType} appointment tomorrow at ${appointment.appointmentTime}`;\n  template = `<h2>Appointment Reminder</h2>\n    <p>Hi ${appointment.contactName},</p>\n    <p>This is a friendly reminder that your ${appointment.serviceType} appointment is scheduled for tomorrow.</p>\n    <p><strong>${appointment.appointmentDate} at ${appointment.appointmentTime}</strong></p>\n    <p><strong>Location:</strong> ${appointment.location}<br>${appointment.address}</p>\n    <p><a href=\"{{rescheduleLink}}\">Need to reschedule?</a> | <a href=\"{{confirmationLink}}\">Confirm Appointment</a></p>`;\n} else if (window === '2hr') {\n  subject = `Reminder: ${appointment.businessName} appointment in 2 hours`;\n  template = `Your ${appointment.serviceType} appointment is in 2 hours at ${appointment.appointmentTime} at ${appointment.location}.`;\n} else if (window === '30min') {\n  subject = `${appointment.businessName}: Your appointment is in 30 minutes`;\n  template = `Your appointment is in 30 minutes at ${appointment.appointmentTime}. See you soon!`;\n}\n\nreturn {\n  subject: subject,\n  html: template,\n  window: window,\n  appointmentId: appointment.appointmentId\n};"
+      },
+      "id": "render_reminder_template",
+      "name": "Render Reminder Template",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1200, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.acumbamail.com/1/email/send",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "acumbamail_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "to",
+              "value": "={{$node[\"calculate_reminder_windows\"].json.email}}"
+            },
+            {
+              "name": "subject",
+              "value": "={{$node[\"render_reminder_template\"].json.subject}}"
+            },
+            {
+              "name": "html",
+              "value": "={{$node[\"render_reminder_template\"].json.html}}"
+            }
+          ]
+        }
+      },
+      "id": "send_reminder_email",
+      "name": "Send Reminder Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1350, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.sms-it.net/api/send",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "sms_it_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{$node[\"calculate_reminder_windows\"].json.phone}}"
+            },
+            {
+              "name": "message",
+              "value": "={{$node[\"render_reminder_template\"].json.html}}"
+            },
+            {
+              "name": "senderId",
+              "value": "=YourDeputy"
+            }
+          ]
+        }
+      },
+      "id": "send_reminder_sms",
+      "name": "Send Reminder SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1350, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node.cron_trigger.json.apiUrl}}/appointments/{{$node[\"calculate_reminder_windows\"].json.appointmentId}}/reminder-sent",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "yourdeputy_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "reminderWindow",
+              "value": "={{$node[\"calculate_reminder_windows\"].json.reminderWindows[0]}}"
+            },
+            {
+              "name": "channelsSent",
+              "value": "[\"email\", \"sms\"]"
+            },
+            {
+              "name": "sentAt",
+              "value": "={{new Date().toISOString()}}"
+            }
+          ]
+        }
+      },
+      "id": "update_reminder_status",
+      "name": "Update Reminder Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node.cron_trigger.json.apiUrl}}/crm/timeline",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "yourdeputy_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contactId",
+              "value": "={{$node[\"calculate_reminder_windows\"].json.contactId}}"
+            },
+            {
+              "name": "eventType",
+              "value": "appointment_reminder"
+            },
+            {
+              "name": "title",
+              "value": "Appointment reminder sent"
+            },
+            {
+              "name": "description",
+              "value": "{{window}} reminder sent via email and SMS for {{serviceType}} appointment"
+            }
+          ]
+        }
+      },
+      "id": "log_timeline",
+      "name": "Log Timeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1500, 450]
+    },
+    {
+      "parameters": {},
+      "id": "success_node",
+      "name": "Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1650, 300]
+    }
+  ],
+  "connections": {
+    "cron_trigger": {
+      "main": [
+        [
+          {
+            "node": "query_upcoming_appointments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query_upcoming_appointments": {
+      "main": [
+        [
+          {
+            "node": "loop_appointments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "loop_appointments": {
+      "main": [
+        [
+          {
+            "node": "calculate_reminder_windows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calculate_reminder_windows": {
+      "main": [
+        [
+          {
+            "node": "check_reminder_needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_reminder_needed": {
+      "main": [
+        [
+          {
+            "node": "render_reminder_template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "render_reminder_template": {
+      "main": [
+        [
+          {
+            "node": "send_reminder_email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send_reminder_sms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_reminder_email": {
+      "main": [
+        [
+          {
+            "node": "update_reminder_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_reminder_sms": {
+      "main": [
+        [
+          {
+            "node": "update_reminder_status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_reminder_status": {
+      "main": [
+        [
+          {
+            "node": "log_timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log_timeline": {
+      "main": [
+        [
+          {
+            "node": "success_node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "errorHandler": "continueOnError",
+    "executionOrder": "v1"
+  }
+}

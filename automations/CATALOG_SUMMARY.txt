@@ -1,0 +1,340 @@
+=============================================================================
+DYNASTY EMPIRE AUTOMATION CATALOG - CATEGORIES 1-5
+=============================================================================
+
+GENERATED: April 16, 2026
+STATUS: Production-Ready n8n Workflows + Vercel API Endpoints
+
+=============================================================================
+FILE STRUCTURE
+=============================================================================
+
+/n8n-workflows/
+  - cat01_lead_capture.json (13KB)
+  - cat02_lead_nurture.json (20KB)
+  - cat03_lead_qualification.json (18KB)
+  - cat04_crm_contacts.json (17KB)
+  - cat05_sales_pipeline.json (17KB)
+
+/vercel-api/
+  - cat01_lead_capture.js (14KB)
+  - cat02_lead_nurture.js (17KB)
+  - cat03_lead_qualification.js (15KB)
+  - cat04_crm_contacts.js (15KB)
+  - cat05_sales_pipeline.js (15KB)
+
+=============================================================================
+CATEGORY 1: LEAD CAPTURE (8 Automations)
+=============================================================================
+
+WORKFLOW: cat01_lead_capture.json
+- 8 webhook receivers (one per automation)
+- Validation code nodes for each input type
+- Centralized database upsert
+- Activity logging
+- Owner notification pipeline
+
+AUTOMATIONS IMPLEMENTED:
+1. Website Visitor Tracking - UTM capture, referrer tracking
+2. Landing Page Form Submission - Required field validation, email verification
+3. Chat Widget Lead Capture - Urgency detection, message analysis
+4. Social Media Lead Ads - Facebook/Instagram webhook integration
+5. Referral Link Tracking - Attribution chain, referrer crediting
+6. QR Code Scan Capture - Device detection, location tracking
+7. Phone Call Tracking - Caller ID lookup, duration tracking
+8. Trade Show/Event Scanner - Badge scanning, attendee capture
+
+API ENDPOINTS (cat01_lead_capture.js):
+- POST /upsert-lead - Create/update lead with deduplication
+- POST /log-activity - Record lead interaction
+- POST /notify-owner - Send owner alerts via email
+- GET /lead/:leadId - Fetch lead with activity count
+- POST /search-leads - Email/phone search with pagination
+- GET /recent-captures - Last 24hr capture summary
+- GET /attribution-report - Source quality analysis
+- POST /validate-webhook - Payload validation
+- POST /bulk-import - CSV/JSON batch lead import
+- GET /export/:source - CSV/JSON export by source
+
+=============================================================================
+CATEGORY 2: LEAD NURTURE (10 Automations)
+=============================================================================
+
+WORKFLOW: cat02_lead_nurture.json
+- 10 webhook triggers for different nurture scenarios
+- Service-specific content routing
+- Multi-channel (email, SMS, push) coordination
+- Engagement scoring recalculation
+- Warm lead escalation logic
+
+AUTOMATIONS IMPLEMENTED:
+1. Welcome Drip Sequence - 5-email series over 14 days
+2. Educational Content Drip - Service-specific tips/guides
+3. Case Study Delivery - Triggered by engagement signals
+4. Price Objection Nurture - 3-email objection handling sequence
+5. Seasonal Promotion Campaign - Service-specific seasonal offers
+6. Re-engagement Sequence - 30+ day inactive lead recovery
+7. Warm Lead Escalation - Score 75+ → sales team handoff
+8. Multi-channel Nurture - Email + SMS + push coordination
+9. Service-specific Nurture Paths - HVAC/plumbing/pest/electrical flows
+10. Lead Scoring Recalculation - Daily CRON-triggered updates
+
+API ENDPOINTS (cat02_lead_nurture.js):
+- POST /send-welcome-drip - Schedule 5-email welcome series
+- POST /deliver-content - Send educational content pieces
+- POST /send-case-study - Multi-case study delivery
+- POST /send-objection-sequence - Objection-specific email series
+- POST /send-seasonal-campaign - SMS + email seasonal campaigns
+- POST /send-reengagement - Re-engagement email sequence
+- POST /escalate-warm-lead - Move to sales queue
+- POST /setup-multichannel - Configure email/SMS/push mix
+- POST /start-service-path - Service-specific nurture path
+- POST /recalculate-scores - Daily lead score update (CRON)
+- GET /metrics - Engagement metrics (open/click rates)
+
+=============================================================================
+CATEGORY 3: LEAD QUALIFICATION & SCORING (10 Automations)
+=============================================================================
+
+WORKFLOW: cat03_lead_qualification.json
+- 10 parallel qualification processes
+- Composite scoring (behavior + demographic + firmographic)
+- Real-time disqualification for spam/out-of-area
+- Source quality tracking with ROI calculation
+- Sales-ready handoff with assignment
+
+AUTOMATIONS IMPLEMENTED:
+1. Lead Scoring Calculator - Multi-factor engagement scoring
+2. Budget Qualification Check - Service-type budget matching
+3. Urgency Detection - Keyword analysis in submissions/voicemails
+4. Geographic Qualification - Service area matching
+5. Duplicate Detection & Merge - Email/phone deduplication
+6. Lead Source Quality Scoring - Conversion tracking by source
+7. Behavioral Intent Scoring - Page visits, form views, estimate views
+8. Auto-disqualification - Spam detection, out-of-area flagging
+9. Sales-ready Handoff - Score 70+ → assign to sales rep
+10. Quality Report Generation - Weekly digest to stakeholders
+
+API ENDPOINTS (cat03_lead_qualification.js):
+- POST /update-score - Update engagement score
+- POST /check-budget - Service-type budget validation
+- POST /detect-urgency - Keyword urgency scoring
+- POST /geo-qualify - Service area verification
+- POST /check-duplicate - Duplicate lead detection
+- POST /score-source - Source quality ROI calculation
+- POST /score-behavioral - Intent scoring from page data
+- POST /auto-disqualify - Spam/out-of-area flagging
+- POST /handoff-sales - Move qualified leads to sales
+- POST /send-quality-report - Weekly management report
+- GET /metrics - Qualification performance metrics
+
+=============================================================================
+CATEGORY 4: CRM & CONTACT MANAGEMENT (10 Automations)
+=============================================================================
+
+WORKFLOW: cat04_crm_contacts.json
+- 10 contact data management processes
+- Automatic field standardization
+- Lifecycle stage progression
+- VIP customer identification
+- Multi-CRM synchronization
+- Data completeness scoring
+
+AUTOMATIONS IMPLEMENTED:
+1. Contact Field Standardization - Phone/address/zip formatting
+2. Lifecycle Stage Automation - Lead → Prospect → Customer → Advocate
+3. Activity Timeline Generation - Aggregate all touchpoints
+4. Tag Management Automation - Auto-tag by behavior/service/source
+5. Contact Merge & Deduplication - Consolidate duplicate records
+6. Data Decay Detection - Flag contacts >180 days inactive
+7. VIP Customer Identification - Revenue/frequency scoring
+8. Contact Export/Sync - Bi-directional external CRM sync
+9. Birthday/Anniversary Automation - Special occasion outreach
+10. Contact Completeness Scoring - Flag missing critical data
+
+API ENDPOINTS (cat04_crm_contacts.js):
+- POST /standardize - Format phone/address/zip codes
+- POST /update-lifecycle - Progress through lifecycle stages
+- POST /create-timeline - Aggregate activity history
+- POST /apply-tags - Auto-tagging by category
+- POST /merge - Consolidate duplicate contacts
+- POST /flag-stale - Mark >180 day inactive contacts
+- POST /identify-vip - VIP customer flagging
+- POST /sync-external - Bi-directional CRM sync
+- POST /special-events - Birthday/anniversary notifications
+- POST /check-completeness - Data quality scoring
+- POST /batch-standardize - Bulk field standardization
+- GET /contact/:leadId - Fetch complete contact profile
+
+=============================================================================
+CATEGORY 5: SALES PIPELINE & FOLLOW-UP (10 Automations)
+=============================================================================
+
+WORKFLOW: cat05_sales_pipeline.json
+- 10 sales process automations
+- Multi-channel speed-to-lead (email + SMS + call)
+- Automated 5-touch follow-up sequences
+- Stale deal detection with rep alerts
+- Win/loss outcome logging with rep performance tracking
+- Pipeline forecasting with weighted revenue
+
+AUTOMATIONS IMPLEMENTED:
+1. Speed-to-Lead Response - <60 sec multi-channel outreach
+2. Automated Follow-up Sequence - 5-touch over 14 days
+3. Stale Deal Detection & Alert - No activity X days alert
+4. Pipeline Stage Advancement Triggers - Automated stage updates
+5. Win/Loss Logging & Analysis - Outcome tracking with ROI
+6. Objection Tracking & Response Suggestion - Knowledge base lookup
+7. Competitor Mention Detection - Alert on competitive threats
+8. Deal Value Forecasting - Weighted pipeline calculation
+9. Sales Rep Performance Dashboard - Real-time metrics
+10. Lost Deal Re-engagement - 30/60/90 day check-ins
+
+API ENDPOINTS (cat05_sales_pipeline.js):
+- POST /speed-to-lead - Multi-channel <15min outreach
+- POST /schedule-followup - 5-touch sequence scheduling
+- POST /alert-stale - Inactivity alerts to reps
+- POST /advance-stage - Move deal to next pipeline stage
+- POST /log-outcome - Record win/loss with ROI
+- POST /track-objection - Log objection with suggested response
+- POST /detect-competitor - Flag competitor mentions
+- POST /forecast-value - Update weighted pipeline value
+- POST /update-dashboard - Real-time rep performance metrics
+- POST /schedule-reeng - Lost deal re-engagement campaign
+- GET /pipeline-summary - Current pipeline by stage
+- GET /win-loss-analysis - Win/loss metrics by period
+
+=============================================================================
+TECHNOLOGY STACK
+=============================================================================
+
+n8n Workflows:
+- Webhook triggers for event-based automation
+- Code nodes for data transformation & validation
+- HTTP request nodes for API calls
+- Database nodes for Neon PostgreSQL queries
+- Email/SMS nodes for Acumbamail & SMS-iT integration
+
+Vercel API (Express.js):
+- RESTful endpoints with proper HTTP methods
+- Middleware for authentication (Bearer tokens)
+- Database connection pooling (pg)
+- Error handling & logging
+- CSV/JSON export capabilities
+- Batch processing support
+
+Database (Neon PostgreSQL):
+- leads table (core contact data)
+- lead_activities (interaction history)
+- email_schedules (drip campaign scheduling)
+- deals (sales pipeline)
+- source_analytics (lead source metrics)
+- sales_tasks (rep action items)
+- objections (objection tracking)
+- crm_syncs (external CRM integration)
+- sales_reps (team member data)
+
+=============================================================================
+INTEGRATION POINTS
+=============================================================================
+
+External APIs:
+- Acumbamail (Email delivery)
+- SMS-iT (SMS delivery)
+- CallScaler (Phone tracking & recording)
+- Trafft (Calendar/scheduling)
+- Stripe (Payments)
+- External CRMs (HubSpot, Salesforce, Pipedrive)
+
+Webhook Receivers:
+- Website analytics (visitor tracking)
+- Form submission handlers
+- Chat widget platforms
+- Facebook/Instagram Lead Ads
+- QR code scanning services
+- Phone tracking systems
+- Event registration platforms
+
+=============================================================================
+PRODUCTION DEPLOYMENT CHECKLIST
+=============================================================================
+
+Before deploying to production:
+
+[ ] Set environment variables:
+    - VERCEL_API_URL (API base URL)
+    - API_KEY (n8n to Vercel authentication)
+    - DATABASE_URL (Neon PostgreSQL)
+    - ADMIN_EMAIL (for notifications)
+
+[ ] Configure Neon PostgreSQL:
+    - Create required tables from schema
+    - Set up connection pooling
+    - Enable replication if needed
+
+[ ] n8n Setup:
+    - Import JSON workflows
+    - Configure credentials for external services
+    - Test webhooks with sample payloads
+    - Enable error notifications
+
+[ ] Vercel Deployment:
+    - Deploy Express API to Vercel Functions
+    - Configure environment variables
+    - Set up error tracking (Sentry)
+    - Enable API rate limiting
+
+[ ] Testing:
+    - Run webhook validation tests
+    - Test full automation flows
+    - Verify email/SMS delivery
+    - Check database transactions
+    - Test error scenarios
+
+[ ] Monitoring:
+    - Set up dashboard metrics
+    - Configure alerting for failures
+    - Monitor API performance
+    - Track email deliverability
+
+=============================================================================
+USAGE EXAMPLES
+=============================================================================
+
+Example 1: Capture website visitor and trigger welcome drip
+1. Visitor lands on website
+2. Website tracking pixel triggers cat01 webhook
+3. Lead is created/updated in database
+4. Owner receives email notification
+5. cat02 welcome drip is scheduled automatically
+
+Example 2: Lead qualification and sales handoff
+1. Form submission triggers cat03 qualification
+2. Lead is scored based on multiple factors
+3. If score >= 70, automatically assigned to sales rep
+4. cat05 speed-to-lead initiates contact
+5. Follow-up sequence scheduled for rep tasks
+
+Example 3: Deal pipeline and forecasting
+1. Sales rep advances deal through pipeline stages
+2. cat05 logs stage change and updates forecast
+3. Stale deal detector flags inactive deals
+4. Win/loss outcomes update rep performance metrics
+5. Dashboard reflects real-time pipeline value
+
+=============================================================================
+SUPPORT & DOCUMENTATION
+=============================================================================
+
+For detailed endpoint documentation and request/response examples,
+refer to individual API files in /vercel-api/ directory.
+
+Each endpoint includes:
+- Clear parameter validation
+- Error handling with descriptive messages
+- Success/failure response formats
+- Example use cases
+
+All workflows are importable directly into n8n and ready for customization.
+
+=============================================================================

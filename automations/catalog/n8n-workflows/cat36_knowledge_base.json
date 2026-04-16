@@ -1,0 +1,534 @@
+{
+  "name": "Category 36: Knowledge Base & Training",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "n8n-nodes-base.trigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "rule": {
+          "interval": ["days"],
+          "daysInterval": 1
+        }
+      },
+      "name": "Daily KB Generation"
+    },
+    {
+      "id": "2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, title, description, resolution, created_at FROM support_tickets WHERE status = 'resolved' AND kb_article_created = false ORDER BY created_at DESC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Resolved Tickets"
+    },
+    {
+      "id": "3",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Process Ticket"
+    },
+    {
+      "id": "4",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{ env.OPENAI_API_KEY }}"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"system\", \"content\": \"Create professional KB article from ticket resolution\"}, {\"role\": \"user\", \"content\": \"Issue: {{ $json.title }}, Resolution: {{ $json.resolution }}\"}]"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "openai_credentials"
+      },
+      "name": "AI Generate KB Article"
+    },
+    {
+      "id": "5",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO kb_articles (title, content, source_ticket_id, created_at, status) VALUES ('{{ $json.title }}', '{{ $json.article_content }}', {{ $json.id }}, NOW(), 'draft')"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Create KB Article"
+    },
+    {
+      "id": "6",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1050, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE support_tickets SET kb_article_created = true, kb_article_id = (SELECT id FROM kb_articles WHERE source_ticket_id = {{ $json.id }}) WHERE id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Link Ticket to Article"
+    },
+    {
+      "id": "7",
+      "type": "n8n-nodes-base.trigger",
+      "typeVersion": 1,
+      "position": [50, 250],
+      "parameters": {
+        "rule": {
+          "interval": ["hours"],
+          "hoursInterval": 1
+        }
+      },
+      "name": "New Hire Training Trigger"
+    },
+    {
+      "id": "8",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, email, start_date FROM employees WHERE onboarding_status = 'pending' AND start_date <= NOW() ORDER BY start_date ASC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch New Hires"
+    },
+    {
+      "id": "9",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 250],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Onboard Employee"
+    },
+    {
+      "id": "10",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, course_name, duration_days FROM training_courses WHERE course_type = 'mandatory' ORDER BY course_order ASC LIMIT 10"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Get Training Courses"
+    },
+    {
+      "id": "11",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [850, 250],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Enroll Course"
+    },
+    {
+      "id": "12",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1050, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO training_enrollments (employee_id, course_id, enrolled_at, due_date) VALUES ({{ $json.employee_id }}, {{ $json.course_id }}, NOW(), NOW() + INTERVAL '{{ $json.duration_days }} days')"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Create Enrollment"
+    },
+    {
+      "id": "13",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1250, 250],
+      "parameters": {
+        "toEmail": "{{ $json.employee_email }}",
+        "subject": "Training Course: {{ $json.course_name }}",
+        "textContent": "Welcome! You have been enrolled in {{ $json.course_name }}. Please complete by {{ $json.due_date }}."
+      },
+      "name": "Send Training Notification"
+    },
+    {
+      "id": "14",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, question, answer, times_asked FROM support_faq WHERE status = 'active' ORDER BY times_asked DESC LIMIT 100"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch FAQ Data"
+    },
+    {
+      "id": "15",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{ env.OPENAI_API_KEY }}"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"system\", \"content\": \"Organize FAQs by topic and create knowledge base section\"}, {\"role\": \"user\", \"content\": \"FAQs provided\"}]"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "openai_credentials"
+      },
+      "name": "AI FAQ Organizer"
+    },
+    {
+      "id": "16",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO faq_sections (title, faqs, created_at) VALUES ('{{ $json.section_title }}', '{{ $json.faq_content }}', NOW())"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Store FAQ Section"
+    },
+    {
+      "id": "17",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, employee_id, certification_name, exam_date FROM employee_certifications WHERE exam_date IS NOT NULL AND expiry_date IS NOT NULL ORDER BY exam_date ASC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Track Certifications"
+    },
+    {
+      "id": "18",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 550],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Process Cert"
+    },
+    {
+      "id": "19",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [450, 550],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.expiry_date }}",
+              "operation": "isEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Check If Expires"
+    },
+    {
+      "id": "20",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO certification_records (employee_id, certification_name, exam_date, tracked_at) VALUES ({{ $json.employee_id }}, '{{ $json.certification_name }}', {{ $json.exam_date }}, NOW())"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Record Certification"
+    },
+    {
+      "id": "21",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 700],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, page_title, last_updated FROM internal_wiki_pages WHERE last_updated < NOW() - INTERVAL '30 days' ORDER BY last_updated ASC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Stale Wiki Pages"
+    },
+    {
+      "id": "22",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 700],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Check Updates"
+    },
+    {
+      "id": "23",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [450, 700],
+      "parameters": {
+        "toEmail": "{{ env.ADMIN_EMAIL }}",
+        "subject": "Wiki Update Needed: {{ $json.page_title }}",
+        "textContent": "Page '{{ $json.page_title }}' was last updated {{ $json.last_updated }}. Please review and update if needed."
+      },
+      "name": "Send Wiki Update Notice"
+    }
+  ],
+  "connections": {
+    "Daily KB Generation": {
+      "main": [
+        [
+          {
+            "node": "Fetch Resolved Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Resolved Tickets": {
+      "main": [
+        [
+          {
+            "node": "Process Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Ticket": {
+      "main": [
+        [
+          {
+            "node": "AI Generate KB Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Generate KB Article": {
+      "main": [
+        [
+          {
+            "node": "Create KB Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create KB Article": {
+      "main": [
+        [
+          {
+            "node": "Link Ticket to Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Hire Training Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch New Hires",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch New Hires": {
+      "main": [
+        [
+          {
+            "node": "Onboard Employee",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Onboard Employee": {
+      "main": [
+        [
+          {
+            "node": "Get Training Courses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Training Courses": {
+      "main": [
+        [
+          {
+            "node": "Enroll Course",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enroll Course": {
+      "main": [
+        [
+          {
+            "node": "Create Enrollment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Enrollment": {
+      "main": [
+        [
+          {
+            "node": "Send Training Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch FAQ Data": {
+      "main": [
+        [
+          {
+            "node": "AI FAQ Organizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI FAQ Organizer": {
+      "main": [
+        [
+          {
+            "node": "Store FAQ Section",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Track Certifications": {
+      "main": [
+        [
+          {
+            "node": "Process Cert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Cert": {
+      "main": [
+        [
+          {
+            "node": "Check If Expires",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Expires": {
+      "main": [
+        [
+          {
+            "node": "Record Certification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Stale Wiki Pages": {
+      "main": [
+        [
+          {
+            "node": "Check Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Updates": {
+      "main": [
+        [
+          {
+            "node": "Send Wiki Update Notice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

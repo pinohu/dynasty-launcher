@@ -1,0 +1,279 @@
+{
+  "moduleId": "appointment_confirmation",
+  "version": "1.0.0",
+  "moduleName": "Appointment Confirmation",
+  "description": "Automated confirmation system that sends appointment details via email and SMS when appointments are created or updated",
+  "category": "scheduling_pack",
+  "tier": "core",
+  "pricing": {
+    "packPrice": 49,
+    "packName": "scheduling_pack",
+    "standalone": 19,
+    "currency": "USD",
+    "billingCycle": "monthly"
+  },
+  "activation": {
+    "type": "guided",
+    "estimatedMinutes": 8,
+    "requiredAuths": [
+      {
+        "platform": "Trafft",
+        "scope": "calendar.read,webhooks.create",
+        "description": "Access calendar events and create webhooks"
+      },
+      {
+        "platform": "Acumbamail",
+        "scope": "email.send,templates.read",
+        "description": "Send confirmation emails"
+      },
+      {
+        "platform": "SMS-iT",
+        "scope": "sms.send",
+        "description": "Send SMS confirmations"
+      }
+    ],
+    "contractSteps": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  },
+  "triggers": {
+    "appointmentCreated": {
+      "event": "appointment.created",
+      "source": "Trafft",
+      "conditions": ["status=scheduled"]
+    },
+    "appointmentUpdated": {
+      "event": "appointment.updated",
+      "source": "Trafft",
+      "conditions": ["status=scheduled AND updatedField IN (datetime, location, attendees)"]
+    }
+  },
+  "actions": [
+    {
+      "id": "send_confirmation_email",
+      "name": "Send Confirmation Email",
+      "platform": "Acumbamail",
+      "description": "Send detailed appointment confirmation via email",
+      "template": "confirmation_email",
+      "conditional": "settings.channels INCLUDES 'email'"
+    },
+    {
+      "id": "send_confirmation_sms",
+      "name": "Send Confirmation SMS",
+      "platform": "SMS-iT",
+      "description": "Send concise appointment confirmation via SMS",
+      "template": "confirmation_sms",
+      "conditional": "settings.channels INCLUDES 'sms'"
+    },
+    {
+      "id": "add_crm_timeline",
+      "name": "Add CRM Timeline Entry",
+      "platform": "Your Deputy CRM",
+      "description": "Log confirmation activity in contact timeline",
+      "timeline_type": "appointment_confirmed"
+    },
+    {
+      "id": "sync_calendar",
+      "name": "Sync Calendar Link",
+      "platform": "Trafft",
+      "description": "Include calendar add/subscribe link in confirmation"
+    }
+  ],
+  "capabilities": [
+    "email",
+    "sms",
+    "calendar",
+    "crm"
+  ],
+  "templates": {
+    "confirmation_email": {
+      "subject": "{{businessName}} - Your {{serviceType}} Appointment Confirmed",
+      "variables": [
+        "businessName",
+        "serviceType",
+        "appointmentDate",
+        "appointmentTime",
+        "appointmentDuration",
+        "location",
+        "address",
+        "technician",
+        "prepInstructions",
+        "mapLink",
+        "calendarLink",
+        "rescheduleLink",
+        "cancelLink"
+      ],
+      "includePrepInstructions": true,
+      "includeMapLink": true,
+      "includeCalendarICS": true
+    },
+    "confirmation_sms": {
+      "maxLength": 160,
+      "variables": [
+        "businessName",
+        "appointmentDate",
+        "appointmentTime",
+        "location",
+        "rescheduleLink"
+      ],
+      "template": "{{businessName}} confirmed: {{appointmentDate}} at {{appointmentTime}} at {{location}}. Reschedule: {{rescheduleLink}}"
+    },
+    "reschedule_notification": {
+      "subject": "Appointment Rescheduled",
+      "type": "notification",
+      "recipient": "contact"
+    }
+  },
+  "settings": {
+    "confirmation_channels": {
+      "type": "array",
+      "allowed": ["email", "sms", "both"],
+      "default": "both",
+      "description": "Which channels to use for confirmation"
+    },
+    "include_map_link": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include Google Maps link in confirmation"
+    },
+    "include_prep_instructions": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include preparation instructions from appointment details"
+    },
+    "send_to_all_attendees": {
+      "type": "boolean",
+      "default": true,
+      "description": "Send confirmation to all appointment attendees or primary contact only"
+    },
+    "confirmation_delay_minutes": {
+      "type": "number",
+      "default": 2,
+      "min": 0,
+      "max": 60,
+      "description": "Delay before sending confirmation (for edit prevention)"
+    },
+    "include_calendar_invite": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include .ics calendar file attachment"
+    },
+    "quiet_hours_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Respect quiet hours for SMS sending"
+    },
+    "quiet_hours": {
+      "type": "object",
+      "start": "21:00",
+      "end": "09:00",
+      "description": "Do not send SMS outside these hours"
+    }
+  },
+  "compliance": {
+    "gdpr": {
+      "status": "compliant",
+      "dataCategories": ["contact", "appointment", "location"],
+      "notes": "Respects user consent and opt-out preferences"
+    },
+    "ccpa": {
+      "status": "compliant",
+      "notes": "Provides opt-out mechanism via SMS STOP command"
+    },
+    "tcpa": {
+      "status": "compliant",
+      "notes": "Respects quiet hours and prior express written consent"
+    },
+    "sms_compliance": {
+      "requires_prior_consent": true,
+      "respects_do_not_call": true,
+      "includes_opt_out": true
+    }
+  },
+  "testing": {
+    "test_matrix": [
+      {
+        "id": "test_email_confirmation",
+        "description": "Send email confirmation for new appointment",
+        "trigger": "appointment.created",
+        "expected_action": "email sent to contact"
+      },
+      {
+        "id": "test_sms_confirmation",
+        "description": "Send SMS confirmation for new appointment",
+        "trigger": "appointment.created with SMS enabled",
+        "expected_action": "SMS sent to contact phone"
+      },
+      {
+        "id": "test_prep_instructions",
+        "description": "Include preparation instructions in confirmation",
+        "trigger": "appointment with prepInstructions data",
+        "expected_action": "Instructions appear in email and CRM timeline"
+      },
+      {
+        "id": "test_multiple_attendees",
+        "description": "Send confirmation to all attendees",
+        "trigger": "appointment with multiple attendees",
+        "expected_action": "All attendees receive confirmation"
+      },
+      {
+        "id": "test_crm_sync",
+        "description": "Log confirmation in CRM timeline",
+        "trigger": "appointment confirmation sent",
+        "expected_action": "Timeline entry created in CRM"
+      },
+      {
+        "id": "test_reschedule_link",
+        "description": "Include functional reschedule link",
+        "trigger": "any appointment confirmation",
+        "expected_action": "Link directs to reschedule form"
+      }
+    ]
+  },
+  "observability": {
+    "metrics": [
+      "confirmations_sent",
+      "confirmations_by_channel",
+      "crm_syncs_completed",
+      "template_render_errors",
+      "api_latency_ms"
+    ],
+    "logging": {
+      "level": "info",
+      "capture_template_vars": false,
+      "capture_contact_pii": false
+    },
+    "alerts": [
+      {
+        "name": "confirmation_failure_rate",
+        "threshold": "> 5% in 10 minutes",
+        "severity": "high"
+      },
+      {
+        "name": "api_latency_spike",
+        "threshold": "> 2000ms p95",
+        "severity": "medium"
+      }
+    ]
+  },
+  "documentation": {
+    "setupGuide": "setup-appointment-confirmation.md",
+    "troubleshooting": "troubleshoot-appointment-confirmation.md",
+    "templates": "templates-appointment-confirmation.md",
+    "apiDocs": "api-appointment-confirmation.md"
+  },
+  "integrations": {
+    "requiresIntegrations": ["Trafft", "Acumbamail", "SMS-iT"],
+    "optionalIntegrations": []
+  },
+  "dependencies": {
+    "modules": [],
+    "minimumVersions": {
+      "platform": "1.2.0"
+    }
+  },
+  "changelog": {
+    "1.0.0": {
+      "date": "2026-04-16",
+      "changes": ["Initial release", "Support for email and SMS confirmation", "CRM timeline integration"]
+    }
+  }
+}

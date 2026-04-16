@@ -1,0 +1,399 @@
+{
+  "name": "Web Form Auto-Reply Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/webform-autoreply",
+        "responseMode": "responseNode",
+        "responseData": "success",
+        "options": {}
+      },
+      "id": "webhook-form-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.CRM_API_URL }}/leads/check-duplicate",
+        "method": "POST",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.CRM_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "email": "={{ $json.submitter_email }}",
+          "tenant_id": "={{ $json.tenant_id }}"
+        }
+      },
+      "id": "check-existing-lead",
+      "name": "Check Existing Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [350, 200]
+    },
+    {
+      "parameters": {
+        "waitValue": "={{ $node['webhook-form-trigger'].json.reply_delay_seconds || 2 }}",
+        "unit": "seconds"
+      },
+      "id": "wait-reply",
+      "name": "Wait Before Email",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [550, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EMAIL_API_URL }}/send",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.EMAIL_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "to": "={{ $json.submitter_email }}",
+          "subject": "We received your {{ $json.form_name }} request",
+          "body": "Hi {{ $json.submitter_name }},\n\nThank you for reaching out to {{ $json.tenant_business_name }}! We received your {{ $json.form_name }} request and will get back to you shortly.\n\nOur team typically responds within 2 business hours during business hours.\n\nBest regards,\n{{ $json.tenant_owner_first_name }}\n{{ $json.tenant_business_name }}",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "form_id": "={{ $json.form_id }}"
+        }
+      },
+      "id": "send-autoreply-email",
+      "name": "Send Auto-Reply Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 100],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CRM_API_URL }}/leads",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.CRM_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "email": "={{ $json.submitter_email }}",
+          "name": "={{ $json.submitter_name }}",
+          "phone": "={{ $json.submitter_phone || null }}",
+          "source": "website_form",
+          "form_source": "={{ $json.form_name }}",
+          "status": "new",
+          "tags": ["web-form", "auto-acknowledged"],
+          "priority": "={{ $json.form_priority || 'medium' }}",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "form_id": "={{ $json.form_id }}",
+          "submission_data": "={{ $json.form_data || {} }}",
+          "created_at": "={{ $now.toISO() }}"
+        }
+      },
+      "id": "create-lead",
+      "name": "Create or Update Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 250],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CRM_API_URL }}/leads/{{ $node['create-lead'].json.id }}/assign",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.CRM_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "assignment_method": "={{ $json.assignment_method || 'round_robin' }}",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "form_source": "={{ $json.form_name }}"
+        }
+      },
+      "id": "assign-lead",
+      "name": "Assign Lead to Team Member",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 400],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EMAIL_API_URL }}/send",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.EMAIL_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "to": "={{ $node['assign-lead'].json.assigned_user_email }}",
+          "subject": "New Lead: {{ $json.submitter_name }} ({{ $json.form_name }})",
+          "body": "You've been assigned a new lead from your website.\n\nName: {{ $json.submitter_name }}\nEmail: {{ $json.submitter_email }}\nPhone: {{ $json.submitter_phone }}\nForm: {{ $json.form_name }}\nMessage: {{ $json.form_message }}\n\nView in CRM: {{ $env.PLATFORM_URL }}/leads/{{ $node['create-lead'].json.id }}",
+          "tenant_id": "={{ $json.tenant_id }}"
+        }
+      },
+      "id": "notify-assignee",
+      "name": "Notify Assigned Team Member",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 350],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CRM_API_URL }}/tasks",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.CRM_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "lead_id": "={{ $node['create-lead'].json.id }}",
+          "title": "Follow up: {{ $json.submitter_name }}",
+          "assigned_to": "={{ $node['assign-lead'].json.assigned_user_id }}",
+          "due_date": "={{ $now.addDays(1).toISO() }}",
+          "priority": "high",
+          "description": "Auto-created follow-up for web form submission",
+          "tenant_id": "={{ $json.tenant_id }}"
+        }
+      },
+      "id": "create-task",
+      "name": "Create Follow-Up Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 500],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LOG_API_URL }}/events",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LOG_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "event_type": "webform_autoreply_success",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "submitter_email": "={{ $json.submitter_email }}",
+          "lead_id": "={{ $node['create-lead'].json.id }}",
+          "form_id": "={{ $json.form_id }}",
+          "assigned_to": "={{ $node['assign-lead'].json.assigned_user_id }}",
+          "timestamp": "={{ $now.toISO() }}"
+        }
+      },
+      "id": "log-success",
+      "name": "Log Success Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1150, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LOG_API_URL }}/alerts",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LOG_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "event_type": "webform_autoreply_error",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "error": "={{ $error.message }}",
+          "step": "={{ $node.name }}",
+          "timestamp": "={{ $now.toISO() }}"
+        }
+      },
+      "id": "log-error",
+      "name": "Log Error & Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1150, 350]
+    },
+    {
+      "parameters": {
+        "respondWithOptions": {
+          "responseBody": "{\"status\": \"success\", \"message\": \"Form processed and reply sent.\"}"
+        }
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1300, 100]
+    }
+  ],
+  "connections": {
+    "webhook-form-trigger": {
+      "main": [
+        [
+          {
+            "node": "check-existing-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check-existing-lead": {
+      "main": [
+        [
+          {
+            "node": "wait-reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait-reply": {
+      "main": [
+        [
+          {
+            "node": "send-autoreply-email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-autoreply-email": {
+      "main": [
+        [
+          {
+            "node": "create-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-lead": {
+      "main": [
+        [
+          {
+            "node": "assign-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "assign-lead": {
+      "main": [
+        [
+          {
+            "node": "notify-assignee",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "create-task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notify-assignee": {
+      "main": [
+        [
+          {
+            "node": "log-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-task": {
+      "main": [
+        [
+          {
+            "node": "log-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log-success": {
+      "main": [
+        [
+          {
+            "node": "respond-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-autoreply-email": {
+      "error": [
+        [
+          {
+            "node": "log-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-lead": {
+      "error": [
+        [
+          {
+            "node": "log-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

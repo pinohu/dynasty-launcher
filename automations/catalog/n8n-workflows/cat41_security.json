@@ -1,0 +1,154 @@
+{
+  "name": "Security & Access Automations",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "path": "security-webhook"
+      },
+      "name": "Security Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "failed_login_monitor",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Route: Failed Login Monitor",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "permission_audit",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Route: Permission Audit",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT COUNT(*) as failed_attempts FROM login_attempts WHERE user_id = @userId AND success = false AND created_at > NOW() - INTERVAL 1 HOUR",
+        "options": {}
+      },
+      "name": "DB: Count Failed Logins",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 100]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "UPDATE users SET account_locked = true, locked_until = NOW() + INTERVAL 24 HOUR WHERE id = @userId AND (SELECT COUNT(*) FROM login_attempts WHERE user_id = @userId AND success = false AND created_at > NOW() - INTERVAL 1 HOUR) > 5",
+        "options": {}
+      },
+      "name": "DB: Lock Account on Failed Attempts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 100]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT u.id, u.email, r.role_name, r.permissions FROM users u JOIN user_roles r ON u.id = r.user_id WHERE u.company_id = @companyId",
+        "options": {}
+      },
+      "name": "DB: Audit User Permissions",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT * FROM ssl_certificates WHERE company_id = @companyId AND expiry_date < NOW() + INTERVAL 30 DAY",
+        "options": {}
+      },
+      "name": "DB: Check SSL Expiry",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT * FROM role_permissions WHERE role_id = @roleId",
+        "options": {}
+      },
+      "name": "DB: Validate RBAC",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 450]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO security_events (event_type, severity, user_id, company_id, details, created_at) VALUES (@eventType, @severity, @userId, @companyId, @details, NOW())",
+        "options": {}
+      },
+      "name": "DB: Log Security Event",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "security@dynasty.app",
+        "toEmail": "={{ $json.adminEmail }}",
+        "subject": "Security Alert",
+        "htmlBody": "A security event has been detected: {{ $json.event }}"
+      },
+      "name": "Email: Security Alert",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [1250, 450]
+    },
+    {
+      "parameters": {
+        "responseData": "{\"success\": true, \"status\": \"Security check completed\"}"
+      },
+      "name": "Response: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{"node": "Security Webhook", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+}

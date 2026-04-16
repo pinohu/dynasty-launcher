@@ -1,0 +1,115 @@
+{
+  "name": "Category 23: Reporting & Analytics",
+  "description": "Comprehensive reporting and analytics automations for service businesses",
+  "version": "1.0",
+  "automations": [
+    {
+      "id": "cat23_001_daily_revenue",
+      "name": "Daily Revenue Snapshot",
+      "description": "Generates daily revenue report from completed jobs and payments",
+      "trigger": "Schedule: Daily at 8:00 AM",
+      "nodes": [
+        {
+          "id": "trigger",
+          "type": "Schedule",
+          "config": {
+            "cronExpression": "0 8 * * *"
+          }
+        },
+        {
+          "id": "query_payments",
+          "type": "PostgreSQL",
+          "config": {
+            "query": "SELECT SUM(amount) as total_revenue, COUNT(*) as transaction_count, DATE(created_at) as date FROM payments WHERE DATE(created_at) = CURRENT_DATE AND status = 'completed' GROUP BY DATE(created_at)"
+          }
+        },
+        {
+          "id": "calculate_metrics",
+          "type": "Function",
+          "config": {
+            "code": "const revenue = data[0]; return { totalRevenue: revenue.total_revenue, transactionCount: revenue.transaction_count, date: revenue.date, avgTransaction: revenue.total_revenue / revenue.transaction_count }"
+          }
+        },
+        {
+          "id": "send_email",
+          "type": "Acumbamail",
+          "config": {
+            "recipient": "${admin_email}",
+            "subject": "Daily Revenue Snapshot - ${date}",
+            "template": "revenue_snapshot",
+            "variables": {
+              "total_revenue": "${totalRevenue}",
+              "transaction_count": "${transactionCount}",
+              "avg_transaction": "${avgTransaction}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat23_002_kpi_dashboard",
+      "name": "KPI Dashboard Data Collector",
+      "description": "Collects and aggregates KPI data for dashboard visualization",
+      "trigger": "Schedule: Every 30 minutes",
+      "nodes": [
+        {
+          "id": "trigger",
+          "type": "Schedule",
+          "config": {
+            "cronExpression": "*/30 * * * *"
+          }
+        },
+        {
+          "id": "fetch_kpis",
+          "type": "Function",
+          "config": {
+            "code": "return { revenue: await db.query('SELECT SUM(amount) FROM payments WHERE created_at > NOW() - interval 30 days'), jobsCompleted: await db.query('SELECT COUNT(*) FROM jobs WHERE status = completed AND updated_at > NOW() - interval 30 days'), clientCount: await db.query('SELECT COUNT(DISTINCT client_id) FROM jobs WHERE created_at > NOW() - interval 30 days') }"
+          }
+        },
+        {
+          "id": "publish_to_dashboard",
+          "type": "HTTP",
+          "config": {
+            "method": "POST",
+            "url": "https://api.deputy.local/dashboard/kpis",
+            "headers": {
+              "Authorization": "Bearer ${API_KEY}",
+              "Content-Type": "application/json"
+            },
+            "body": "${kpiData}"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat23_003_client_roi",
+      "name": "Client ROI Report Generator",
+      "description": "Generates ROI reports for individual clients",
+      "trigger": "Manual or scheduled weekly",
+      "nodes": [
+        {
+          "id": "trigger",
+          "type": "Manual",
+          "config": {
+            "displayName": "Generate ROI Report"
+          }
+        },
+        {
+          "id": "get_clients",
+          "type": "PostgreSQL",
+          "config": {
+            "query": "SELECT DISTINCT client_id FROM jobs WHERE created_at > NOW() - interval 90 days"
+          }
+        },
+        {
+          "id": "store_report",
+          "type": "PostgreSQL",
+          "config": {
+            "query": "INSERT INTO reports (type, date, data) VALUES ('client_roi', CURRENT_DATE, $1)",
+            "params": ["${reportData}"]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+{
+  "name": "Unhappy Customer Interception",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "unhappy_customer_interception",
+        "options": {}
+      },
+      "id": "review_webhook_trigger",
+      "name": "Review Submitted Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "{{ $json.rating }}",
+              "operation": "lessEqual",
+              "value2": 3
+            }
+          ]
+        }
+      },
+      "id": "check_low_rating",
+      "name": "Check Rating ≤ 3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.owner.email }}",
+        "subject": "Alert: Low Rating Review from {{ $json.customer.name }}",
+        "textOnly": false,
+        "html": "<p>A review with rating <strong>{{ $json.rating }}/5</strong> was just posted.</p><p><strong>Customer:</strong> {{ $json.customer.name }}<br><strong>Service:</strong> {{ $json.service.type }}<br><strong>Review:</strong> {{ $json.review.text }}</p><p>Action required: Contact customer to resolve issue immediately.</p>"
+      },
+      "id": "send_owner_alert",
+      "name": "Send Owner Alert Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "We Want to Make This Right, {{ $json.customer.first_name }}",
+        "textOnly": false,
+        "html": "<p>Thank you for taking the time to share your feedback. We're sorry that your recent experience didn't meet your expectations. Your satisfaction is our priority.</p><p>Our manager will contact you within 24 hours to discuss how we can resolve this.</p><p>Best regards,<br>{{ $json.business.name }}</p>"
+      },
+      "id": "send_customer_empathy",
+      "name": "Send Empathetic Response",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/tasks",
+        "authentication": "bearerToken",
+        "nodeCredentialType": "bearerTokenAuth",
+        "options": {}
+      },
+      "id": "create_recovery_task",
+      "name": "Create Recovery Task in CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 450]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "{{ $json.customer.vip_status }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check_vip",
+      "name": "Is VIP Customer?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "phoneNumber": "{{ $json.manager.phone }}",
+        "message": "URGENT: VIP customer {{ $json.customer.name }} left {{ $json.rating }}★ review. Please respond immediately."
+      },
+      "id": "send_vip_sms",
+      "name": "Send VIP Escalation SMS",
+      "type": "n8n-nodes-base.sms",
+      "typeVersion": 1,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/customers/{{ $json.customer.id }}",
+        "authentication": "bearerToken",
+        "nodeCredentialType": "bearerTokenAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "last_review_rating",
+              "value": "{{ $json.rating }}"
+            },
+            {
+              "name": "review_status",
+              "value": "low_rating_detected"
+            },
+            {
+              "name": "requires_followup",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "id": "update_crm_fields",
+      "name": "Update CRM Customer Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 450]
+    },
+    {
+      "parameters": {},
+      "id": "end_success",
+      "name": "Workflow Complete",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "review_webhook_trigger": {
+      "main": [
+        [
+          {
+            "node": "check_low_rating",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_low_rating": {
+      "main": [
+        [
+          {
+            "node": "send_owner_alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "send_customer_empathy",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "create_recovery_task",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "check_vip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_vip": {
+      "main": [
+        [
+          {
+            "node": "send_vip_sms",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "update_crm_fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_owner_alert": {
+      "main": [
+        [
+          {
+            "node": "end_success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_customer_empathy": {
+      "main": [
+        [
+          {
+            "node": "end_success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_recovery_task": {
+      "main": [
+        [
+          {
+            "node": "end_success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_crm_fields": {
+      "main": [
+        [
+          {
+            "node": "end_success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

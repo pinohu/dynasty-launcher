@@ -1,0 +1,430 @@
+{
+  "name": "Category 31: Client Retention & Renewals",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "n8n-nodes-base.trigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "rule": {
+          "interval": ["days"],
+          "daysInterval": 1
+        }
+      },
+      "name": "Daily Trigger"
+    },
+    {
+      "id": "2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.id, c.name, c.email, c.renewal_date, c.contract_value FROM clients c WHERE c.status = 'active' AND c.renewal_date IS NOT NULL AND c.last_contact < NOW() - INTERVAL '7 days'"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Renewal Clients"
+    },
+    {
+      "id": "3",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Loop Through Clients"
+    },
+    {
+      "id": "4",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 50],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXTRACT(DAY FROM c.renewal_date - NOW()) as days_until FROM clients c WHERE c.id = {{ $input.all()[0].id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Calculate Days Until Renewal"
+    },
+    {
+      "id": "5",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.days_until }}",
+              "operation": "equal",
+              "value2": 60
+            },
+            {
+              "value1": "={{ $json.days_until }}",
+              "operation": "equal",
+              "value2": 30
+            },
+            {
+              "value1": "={{ $json.days_until }}",
+              "operation": "equal",
+              "value2": 14
+            },
+            {
+              "value1": "={{ $json.days_until }}",
+              "operation": "equal",
+              "value2": 7
+            }
+          ]
+        }
+      },
+      "name": "Check Days Interval"
+    },
+    {
+      "id": "6",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [1050, 50],
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{ env.OPENAI_API_KEY }}"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"system\", \"content\": \"Analyze churn risk\"}, {\"role\": \"user\", \"content\": \"Client analysis\"}]"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "openai_credentials"
+      },
+      "name": "AI Churn Risk Detector"
+    },
+    {
+      "id": "7",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [1250, 50],
+      "parameters": {
+        "operation": "sendCampaign",
+        "email": "{{ $json.email }}",
+        "campaignId": "renewal_reminder_60d"
+      },
+      "credentials": {
+        "acumbamailApi": "acumbamail_key"
+      },
+      "name": "Send 60-Day Renewal Reminder"
+    },
+    {
+      "id": "8",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1050, 150],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO client_interactions (client_id, interaction_type, timestamp) VALUES ({{ $json.id }}, 'renewal_reminder', NOW())"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Log Reminder Sent"
+    },
+    {
+      "id": "9",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1250, 150],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT AVG(service_rating) as avg_rating, COUNT(*) as service_count FROM services WHERE client_id = {{ $json.id }} AND completed_date > NOW() - INTERVAL '30 days'"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Calculate Client Health Score"
+    },
+    {
+      "id": "10",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1450, 150],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO client_health_scores (client_id, score, calculated_at) VALUES ({{ $json.id }}, ({{ $json.avg_rating }} * {{ $json.service_count }}) / 100, NOW())"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Store Health Score"
+    },
+    {
+      "id": "11",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1050, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXTRACT(YEAR FROM AGE(NOW(), created_at)) as years_customer FROM clients WHERE id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Check Anniversary"
+    },
+    {
+      "id": "12",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1250, 250],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.years_customer }}",
+              "operation": "equal",
+              "value2": 1
+            },
+            {
+              "value1": "={{ $json.years_customer }}",
+              "operation": "equal",
+              "value2": 5
+            },
+            {
+              "value1": "={{ $json.years_customer }}",
+              "operation": "equal",
+              "value2": 10
+            }
+          ]
+        }
+      },
+      "name": "Milestone Check"
+    },
+    {
+      "id": "13",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [1450, 250],
+      "parameters": {
+        "operation": "sendCampaign",
+        "email": "{{ $json.email }}",
+        "campaignId": "milestone_recognition"
+      },
+      "credentials": {
+        "acumbamailApi": "acumbamail_key"
+      },
+      "name": "Send Anniversary Recognition"
+    },
+    {
+      "id": "14",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1050, 350],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT SUM(cost) as monthly_value, COUNT(*) as service_count FROM services WHERE client_id = {{ $json.id }} AND service_date > NOW() - INTERVAL '1 month'"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Generate Monthly Usage Report"
+    },
+    {
+      "id": "15",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [1250, 350],
+      "parameters": {
+        "operation": "sendCampaign",
+        "email": "{{ $json.email }}",
+        "campaignId": "monthly_value_report"
+      },
+      "credentials": {
+        "acumbamailApi": "acumbamail_key"
+      },
+      "name": "Send Value Report"
+    },
+    {
+      "id": "16",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1450, 350],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients SET last_contact = NOW() WHERE id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Update Contact Timestamp"
+    }
+  ],
+  "connections": {
+    "Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Renewal Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Renewal Clients": {
+      "main": [
+        [
+          {
+            "node": "Loop Through Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Through Clients": {
+      "main": [
+        [
+          {
+            "node": "Calculate Days Until Renewal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Days Until Renewal": {
+      "main": [
+        [
+          {
+            "node": "Check Days Interval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Days Interval": {
+      "main": [
+        [
+          {
+            "node": "AI Churn Risk Detector",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Anniversary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Monthly Usage Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Churn Risk Detector": {
+      "main": [
+        [
+          {
+            "node": "Send 60-Day Renewal Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send 60-Day Renewal Reminder": {
+      "main": [
+        [
+          {
+            "node": "Log Reminder Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Reminder Sent": {
+      "main": [
+        [
+          {
+            "node": "Calculate Client Health Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Client Health Score": {
+      "main": [
+        [
+          {
+            "node": "Store Health Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Anniversary": {
+      "main": [
+        [
+          {
+            "node": "Milestone Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Milestone Check": {
+      "main": [
+        [
+          {
+            "node": "Send Anniversary Recognition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Monthly Usage Report": {
+      "main": [
+        [
+          {
+            "node": "Send Value Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Value Report": {
+      "main": [
+        [
+          {
+            "node": "Update Contact Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

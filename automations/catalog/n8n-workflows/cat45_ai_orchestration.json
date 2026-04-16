@@ -1,0 +1,152 @@
+{
+  "name": "AI Orchestration Automations",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "path": "ai-orchestration-webhook"
+      },
+      "name": "AI Orchestration Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT workflow_id, last_run, status, error_count FROM workflow_health WHERE checked_at > NOW() - INTERVAL 1 HOUR",
+        "options": {}
+      },
+      "name": "DB: Check Workflow Health",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT primary_workflow, backup_workflow FROM failover_config WHERE company_id = @companyId",
+        "options": {}
+      },
+      "name": "DB: Get Failover Config",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT tool_name, status FROM integration_status WHERE company_id = @companyId",
+        "options": {}
+      },
+      "name": "DB: Check Integration Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "requestMethod": "POST",
+        "options": {}
+      },
+      "name": "API: NLP Task Decomposer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "requestMethod": "POST",
+        "options": {}
+      },
+      "name": "API: AI Response Scorer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT template_id, template_content FROM prompt_templates WHERE category = @category LIMIT 10",
+        "options": {}
+      },
+      "name": "DB: Get Prompt Templates",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT api_name, usage_count, cost, cost_date FROM api_usage_logs WHERE company_id = @companyId AND cost_date > NOW() - INTERVAL 30 DAY",
+        "options": {}
+      },
+      "name": "DB: Track API Costs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT error_pattern, frequency, last_occurrence FROM error_patterns WHERE company_id = @companyId ORDER BY frequency DESC",
+        "options": {}
+      },
+      "name": "DB: Analyze Error Patterns",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT process_step, avg_duration, bottleneck_score FROM process_mining_analysis WHERE company_id = @companyId ORDER BY bottleneck_score DESC",
+        "options": {}
+      },
+      "name": "DB: Process Mining Analysis",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 150]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT best_workflow FROM intelligent_routing WHERE request_type = @requestType AND success_rate > 0.85",
+        "options": {}
+      },
+      "name": "DB: Get Intelligent Routes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1250, 250]
+    },
+    {
+      "parameters": {
+        "responseData": "{\"success\": true, \"orchestration\": {{ $json }}, \"timestamp\": \"{{ now() }}\"}"
+      },
+      "name": "Response: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 200]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{"node": "AI Orchestration Webhook", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+}

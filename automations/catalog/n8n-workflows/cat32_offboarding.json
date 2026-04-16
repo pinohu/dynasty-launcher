@@ -1,0 +1,460 @@
+{
+  "name": "Category 32: Client Offboarding & Churn",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "n8n-nodes-base.trigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "rule": {
+          "interval": ["hours"],
+          "hoursInterval": 6
+        }
+      },
+      "name": "Periodic Offboarding Check"
+    },
+    {
+      "id": "2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, email, cancellation_date FROM clients WHERE status = 'pending_cancellation' AND cancellation_date IS NOT NULL"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Canceling Clients"
+    },
+    {
+      "id": "3",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Loop Through Clients"
+    },
+    {
+      "id": "4",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [650, 50],
+      "parameters": {
+        "operation": "sendCampaign",
+        "email": "{{ $json.email }}",
+        "campaignId": "exit_survey"
+      },
+      "credentials": {
+        "acumbamailApi": "acumbamail_key"
+      },
+      "name": "Send Exit Survey"
+    },
+    {
+      "id": "5",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [650, 150],
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{ env.OPENAI_API_KEY }}"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"system\", \"content\": \"Generate personalized retention offer\"}, {\"role\": \"user\", \"content\": \"Client: {{ $json.name }}\"}]"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "openai_credentials"
+      },
+      "name": "Generate Retention Offer"
+    },
+    {
+      "id": "6",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [850, 150],
+      "parameters": {
+        "operation": "sendCampaign",
+        "email": "{{ $json.email }}",
+        "campaignId": "last_minute_offer"
+      },
+      "credentials": {
+        "acumbamailApi": "acumbamail_key"
+      },
+      "name": "Send Retention Offer"
+    },
+    {
+      "id": "7",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id FROM subscriptions WHERE client_id = {{ $json.id }} AND status = 'active'"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Active Subscriptions"
+    },
+    {
+      "id": "8",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [850, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE subscriptions SET status = 'canceled', canceled_at = NOW() WHERE client_id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Cancel Active Subscriptions"
+    },
+    {
+      "id": "9",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1050, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM invoices WHERE client_id = {{ $json.id }} AND status = 'unpaid' ORDER BY due_date DESC LIMIT 1"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Get Final Invoice"
+    },
+    {
+      "id": "10",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [1050, 350],
+      "parameters": {
+        "url": "{{ env.VERCEL_EXPORT_API }}/export-client-data",
+        "method": "POST",
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "clientId",
+              "value": "{{ $json.id }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "vercel_api_key"
+      },
+      "name": "Export Client Data"
+    },
+    {
+      "id": "11",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [1250, 350],
+      "parameters": {
+        "operation": "sendCampaign",
+        "email": "{{ $json.email }}",
+        "campaignId": "final_invoice_data_export"
+      },
+      "credentials": {
+        "acumbamailApi": "acumbamail_key"
+      },
+      "name": "Send Final Invoice & Export"
+    },
+    {
+      "id": "12",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1250, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE clients SET status = 'inactive', deactivated_at = NOW() WHERE id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Deactivate Account"
+    },
+    {
+      "id": "13",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO client_churn_log (client_id, churn_date, reason) VALUES ({{ $json.id }}, NOW(), 'manual_cancellation')"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Log Churn Event"
+    },
+    {
+      "id": "14",
+      "type": "n8n-nodes-base.schedule",
+      "typeVersion": 1,
+      "position": [50, 250],
+      "parameters": {
+        "rule": {
+          "interval": ["days"],
+          "daysInterval": 30
+        }
+      },
+      "name": "30-Day Post-Cancellation Check"
+    },
+    {
+      "id": "15",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 350],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, email FROM clients WHERE status = 'inactive' AND deactivated_at > NOW() - INTERVAL '32 days' AND deactivated_at < NOW() - INTERVAL '28 days'"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Recently Churned Clients"
+    },
+    {
+      "id": "16",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 350],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Loop Churned Clients"
+    },
+    {
+      "id": "17",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [650, 350],
+      "parameters": {
+        "operation": "sendCampaign",
+        "email": "{{ $json.email }}",
+        "campaignId": "feedback_request_30day"
+      },
+      "credentials": {
+        "acumbamailApi": "acumbamail_key"
+      },
+      "name": "Send Post-Churn Feedback"
+    },
+    {
+      "id": "18",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [850, 350],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO client_interactions (client_id, interaction_type, timestamp) VALUES ({{ $json.id }}, 'feedback_request', NOW())"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Log Feedback Request"
+    }
+  ],
+  "connections": {
+    "Periodic Offboarding Check": {
+      "main": [
+        [
+          {
+            "node": "Fetch Canceling Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Canceling Clients": {
+      "main": [
+        [
+          {
+            "node": "Loop Through Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Through Clients": {
+      "main": [
+        [
+          {
+            "node": "Send Exit Survey",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Retention Offer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Active Subscriptions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Churn Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Exit Survey": {
+      "main": [
+        [
+          {
+            "node": "Generate Retention Offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Retention Offer": {
+      "main": [
+        [
+          {
+            "node": "Send Retention Offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Retention Offer": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Subscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Subscriptions": {
+      "main": [
+        [
+          {
+            "node": "Cancel Active Subscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel Active Subscriptions": {
+      "main": [
+        [
+          {
+            "node": "Get Final Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Final Invoice": {
+      "main": [
+        [
+          {
+            "node": "Export Client Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export Client Data": {
+      "main": [
+        [
+          {
+            "node": "Send Final Invoice & Export",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Final Invoice & Export": {
+      "main": [
+        [
+          {
+            "node": "Deactivate Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "30-Day Post-Cancellation Check": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recently Churned Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recently Churned Clients": {
+      "main": [
+        [
+          {
+            "node": "Loop Churned Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Churned Clients": {
+      "main": [
+        [
+          {
+            "node": "Send Post-Churn Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Post-Churn Feedback": {
+      "main": [
+        [
+          {
+            "node": "Log Feedback Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

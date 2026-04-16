@@ -1,0 +1,423 @@
+{
+  "name": "Category 33: Vendor & Supplier Management",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "n8n-nodes-base.trigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "rule": {
+          "interval": ["days"],
+          "daysInterval": 1
+        }
+      },
+      "name": "Daily Vendor Check"
+    },
+    {
+      "id": "2",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, vendor_name, email, contract_end_date FROM vendors WHERE status = 'active' AND contract_end_date IS NOT NULL"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Active Vendors"
+    },
+    {
+      "id": "3",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Loop Vendors"
+    },
+    {
+      "id": "4",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXTRACT(DAY FROM v.contract_end_date - NOW()) as days_until FROM vendors v WHERE v.id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Check Contract Expiry"
+    },
+    {
+      "id": "5",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.days_until }}",
+              "operation": "lessThan",
+              "value2": 30
+            }
+          ]
+        }
+      },
+      "name": "Check If Expiring Soon"
+    },
+    {
+      "id": "6",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [1050, 100],
+      "parameters": {
+        "toEmail": "{{ $json.email }}",
+        "subject": "Contract Renewal Notice - {{ $json.vendor_name }}",
+        "textContent": "Your contract with us expires on {{ $json.contract_end_date }}. Please confirm renewal status."
+      },
+      "name": "Send Expiry Notification"
+    },
+    {
+      "id": "7",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT i.id, i.vendor_id, i.amount, i.project_id FROM vendor_invoices i WHERE i.status = 'received' AND i.processed = false LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Unprocessed Invoices"
+    },
+    {
+      "id": "8",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 250],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Process Each Invoice"
+    },
+    {
+      "id": "9",
+      "type": "n8n-nodes-base.http",
+      "typeVersion": 1,
+      "position": [450, 250],
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{ env.OPENAI_API_KEY }}"
+        },
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "model",
+              "value": "gpt-4-vision"
+            },
+            {
+              "name": "messages",
+              "value": "[{\"role\": \"system\", \"content\": \"Extract invoice data and match to projects\"}, {\"role\": \"user\", \"content\": \"Process invoice\"}]"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": "openai_credentials"
+      },
+      "name": "Extract Invoice Data via AI"
+    },
+    {
+      "id": "10",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 250],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE vendor_invoices SET processed = true, processed_at = NOW(), matched_project = {{ $json.project_id }} WHERE id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Mark Invoice Processed"
+    },
+    {
+      "id": "11",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT v.id, v.vendor_name, AVG(vi.rating) as performance_score, COUNT(DISTINCT CASE WHEN vi.on_time = true THEN vi.id END) as on_time_count, COUNT(*) as total_invoices FROM vendors v LEFT JOIN vendor_invoices vi ON v.id = vi.vendor_id WHERE v.status = 'active' GROUP BY v.id, v.vendor_name"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Calculate Vendor Scores"
+    },
+    {
+      "id": "12",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Store Scores"
+    },
+    {
+      "id": "13",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO vendor_performance_scores (vendor_id, score, calculated_at, timeliness_percent) VALUES ({{ $json.id }}, {{ $json.performance_score }}, NOW(), ({{ $json.on_time_count }}::float / {{ $json.total_invoices }}::float) * 100)"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Insert Performance Score"
+    },
+    {
+      "id": "14",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [50, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, vendor_id, client_id, description, quantity, unit_price FROM pending_purchase_orders WHERE status = 'draft' ORDER BY created_at DESC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Draft Purchase Orders"
+    },
+    {
+      "id": "15",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [250, 550],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Process PO"
+    },
+    {
+      "id": "16",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [450, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE pending_purchase_orders SET status = 'issued', issued_at = NOW() WHERE id = {{ $json.id }}"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Finalize Purchase Order"
+    },
+    {
+      "id": "17",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [650, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, vendor_id, next_payment_date, payment_terms FROM vendor_contracts WHERE status = 'active' ORDER BY next_payment_date ASC LIMIT 50"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Fetch Payment Schedules"
+    },
+    {
+      "id": "18",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [850, 550],
+      "parameters": {
+        "operation": "forEach"
+      },
+      "name": "Schedule Payments"
+    },
+    {
+      "id": "19",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1050, 550],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO scheduled_payments (vendor_id, scheduled_date, amount, terms) VALUES ({{ $json.vendor_id }}, {{ $json.next_payment_date }}, (SELECT SUM(amount) FROM vendor_invoices WHERE vendor_id = {{ $json.vendor_id }} AND status = 'approved'), {{ $json.payment_terms }})"
+      },
+      "credentials": {
+        "postgresConnection": "neon_db"
+      },
+      "name": "Create Payment Schedule"
+    }
+  ],
+  "connections": {
+    "Daily Vendor Check": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Vendors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Vendors": {
+      "main": [
+        [
+          {
+            "node": "Loop Vendors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Vendors": {
+      "main": [
+        [
+          {
+            "node": "Check Contract Expiry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Contract Expiry": {
+      "main": [
+        [
+          {
+            "node": "Check If Expiring Soon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Expiring Soon": {
+      "main": [
+        [
+          {
+            "node": "Send Expiry Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Unprocessed Invoices": {
+      "main": [
+        [
+          {
+            "node": "Process Each Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each Invoice": {
+      "main": [
+        [
+          {
+            "node": "Extract Invoice Data via AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Invoice Data via AI": {
+      "main": [
+        [
+          {
+            "node": "Mark Invoice Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Vendor Scores": {
+      "main": [
+        [
+          {
+            "node": "Store Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Scores": {
+      "main": [
+        [
+          {
+            "node": "Insert Performance Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Draft Purchase Orders": {
+      "main": [
+        [
+          {
+            "node": "Process PO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process PO": {
+      "main": [
+        [
+          {
+            "node": "Finalize Purchase Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Payment Schedules": {
+      "main": [
+        [
+          {
+            "node": "Schedule Payments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Payments": {
+      "main": [
+        [
+          {
+            "node": "Create Payment Schedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,210 @@
+{
+  "module_code": "instant_lead_ack",
+  "display_name": "Instant Lead Acknowledgment",
+  "category": "lead_capture",
+  "pack": "lead_capture_pack",
+  "version": "1.0.0",
+  "status": "spec",
+  "description": "Instantly engages every new lead with multi-channel acknowledgment (email and optional SMS), enriches lead data, scores leads, assigns to team members, and creates follow-up tasks—all automatically when a lead is created.",
+  "outcome": "Every new lead gets instant, personalized engagement. Smart scoring and routing. Automatic follow-up tasks.",
+  "pricing": {
+    "standalone_monthly": 19,
+    "pack_included": true,
+    "pack_code": "lead_capture_pack",
+    "pack_monthly": 49
+  },
+  "activation_type": "instant",
+  "activation_estimated_minutes": 2,
+  "capabilities_required": ["email", "crm"],
+  "capabilities_optional": ["sms"],
+  "prerequisites": [],
+  "triggers": [
+    {
+      "event": "lead.created",
+      "source": "native_crm_event",
+      "conditions": [
+        {"field": "lead_type", "operator": "not_equals", "value": "existing_customer"}
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "order": 1,
+      "type": "lead.enrich",
+      "capability": "crm",
+      "enrichment_sources": ["phone_lookup", "email_verification", "company_data"],
+      "failure_mode": "log_and_continue"
+    },
+    {
+      "order": 2,
+      "type": "lead.score",
+      "capability": "crm",
+      "scoring_model": "{{scoring_model}}",
+      "factors": ["engagement_history", "company_size", "industry", "job_title", "location"],
+      "failure_mode": "log_and_continue"
+    },
+    {
+      "order": 3,
+      "type": "email.send",
+      "capability": "email",
+      "template": "instant_lead_ack_welcome_email",
+      "delay_seconds": 1,
+      "failure_mode": "log_and_continue",
+      "compliance": {
+        "opt_out_check": true,
+        "unsubscribe_link": true
+      }
+    },
+    {
+      "order": 4,
+      "type": "sms.send",
+      "capability": "sms",
+      "template": "instant_lead_ack_sms",
+      "condition": "{{enable_sms}}",
+      "delay_seconds": 5,
+      "failure_mode": "log_and_continue",
+      "compliance": {
+        "opt_out_check": true,
+        "quiet_hours": {"start": "21:00", "end": "09:00"}
+      }
+    },
+    {
+      "order": 5,
+      "type": "crm.lead.assign",
+      "capability": "crm",
+      "assignment_method": "{{assignment_method}}",
+      "assignment_strategy": "intelligent_routing",
+      "failure_mode": "log_and_continue"
+    },
+    {
+      "order": 6,
+      "type": "notification.send",
+      "capability": "email",
+      "template": "assignee_instant_lead_ack",
+      "recipient": "{{assigned_user_email}}",
+      "failure_mode": "log_and_continue"
+    },
+    {
+      "order": 7,
+      "type": "crm.task.create",
+      "capability": "crm",
+      "title": "Engage {{lead_name}} - Lead Score {{lead_score}}",
+      "assigned_to": "{{assigned_user_id}}",
+      "due_date": "{{task_due_date}}",
+      "priority": "{{task_priority_from_score}}",
+      "tags": ["auto-created", "lead-engagement"],
+      "failure_mode": "log_and_continue"
+    }
+  ],
+  "configurable_settings": [
+    {
+      "key": "enable_sms",
+      "label": "Send SMS to new leads",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "key": "assignment_method",
+      "label": "Assignment method",
+      "type": "select",
+      "options": ["round_robin", "territory", "skill_based", "manual"],
+      "default": "round_robin"
+    },
+    {
+      "key": "scoring_model",
+      "label": "Lead scoring model",
+      "type": "select",
+      "options": ["basic", "advanced", "custom"],
+      "default": "basic"
+    },
+    {
+      "key": "auto_create_task",
+      "label": "Create follow-up task automatically",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "key": "task_due_hours",
+      "label": "Task due in hours",
+      "type": "number",
+      "default": 24,
+      "min": 1,
+      "max": 168
+    },
+    {
+      "key": "personalization_level",
+      "label": "Email personalization depth",
+      "type": "select",
+      "options": ["basic", "medium", "advanced"],
+      "default": "medium"
+    },
+    {
+      "key": "enrich_lead_data",
+      "label": "Enrich lead data automatically",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "key": "score_leads",
+      "label": "Score leads automatically",
+      "type": "boolean",
+      "default": true
+    }
+  ],
+  "templates": [
+    {
+      "code": "instant_lead_ack_welcome_email",
+      "channel": "email",
+      "subject": "Welcome to {{tenant.business_name}}, {{lead_first_name}}!",
+      "body": "Hi {{lead_first_name}},\n\nWelcome! We're excited to connect with {{lead_company || 'you'}}.\n\nOur team specializes in {{tenant.service_focus}} and we'd love to explore how we can help.\n\nA member of our team will reach out shortly to discuss your needs.\n\nIn the meantime, feel free to reply to this email with any questions.\n\nBest regards,\n{{tenant.owner_first_name}}\n{{tenant.business_name}}",
+      "variables": ["lead_first_name", "lead_company", "tenant.business_name", "tenant.service_focus", "tenant.owner_first_name"]
+    },
+    {
+      "code": "instant_lead_ack_sms",
+      "channel": "sms",
+      "subject": null,
+      "body": "Hi {{lead_first_name}}! Thanks for your interest in {{tenant.business_name}}. A team member will contact you soon. Reply STOP to opt out.",
+      "variables": ["lead_first_name", "tenant.business_name"]
+    },
+    {
+      "code": "assignee_instant_lead_ack",
+      "channel": "email",
+      "subject": "New Lead Assigned: {{lead_name}} (Score: {{lead_score}})",
+      "body": "A new high-potential lead has been assigned to you.\n\nLead: {{lead_name}}\nCompany: {{lead_company}}\nEmail: {{lead_email}}\nPhone: {{lead_phone}}\nLead Score: {{lead_score}}/100\nScore Notes: {{lead_score_notes}}\n\nView in CRM: {{lead_url}}\nQuick Actions:\n- Send introduction: {{action_send_intro}}\n- Schedule demo: {{action_schedule_demo}}\n- Add to sequence: {{action_add_sequence}}",
+      "variables": ["lead_name", "lead_company", "lead_email", "lead_phone", "lead_score", "lead_score_notes", "lead_url"]
+    }
+  ],
+  "compliance_flags": {
+    "email_opt_out": true,
+    "sms_opt_out": true,
+    "unsubscribe_link": true,
+    "consent_tracking": true,
+    "gdpr": true,
+    "ccpa": true,
+    "hipaa": false
+  },
+  "test_matrix": {
+    "happy_path": "Lead created → Data enriched → Lead scored → Welcome email sent → SMS sent (if enabled) → Lead assigned → Assignee notified → Task created",
+    "no_email": "Lead without email → Email skipped → SMS sent if phone exists → Assignment proceeds",
+    "high_score_lead": "Lead scores above 80 → Priority task created → Immediate assignee notification",
+    "existing_customer": "Lead marked as existing customer → Module actions skipped → CRM only",
+    "sms_disabled": "SMS capability disabled → Email sent only → No SMS attempt → Workflow completes",
+    "assignment_failure": "Assignment fails → Lead created and engaged anyway → Admin alert generated → Manual routing needed"
+  },
+  "downgrade_behavior": "Module disabled. New leads no longer auto-engaged. Existing leads preserved. All configuration settings retained for reactivation.",
+  "observability": {
+    "events": ["module.activated", "lead.enriched", "lead.scored", "email.sent", "sms.sent", "lead.assigned", "task.created"],
+    "metrics": ["leads_engaged_count", "avg_response_time", "assignment_success_rate", "email_delivery_rate", "lead_score_distribution"],
+    "alerts": ["email_failure_rate_above_5pct", "assignment_failure_rate_above_2pct", "low_engagement_rate"]
+  },
+  "documentation": {
+    "setup_guide": "Configure email capability. Optionally enable SMS. Choose assignment method and lead scoring model. Customize welcome email template.",
+    "known_limitations": ["Requires email address for all leads", "SMS requires A2P registration", "Enrichment depends on external data provider availability", "Scoring accuracy improves with historical data"],
+    "support_runbook": "Verify email service active → Check SMS capability if enabled → Confirm CRM integration → Test with sample lead creation"
+  },
+  "billing": {
+    "entitlement_row": "one_per_module",
+    "metered_usage": "email_sends_and_sms_sends_count_toward_quotas",
+    "no_double_billing": true
+  }
+}

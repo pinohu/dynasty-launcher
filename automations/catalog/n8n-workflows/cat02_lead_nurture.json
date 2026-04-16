@@ -1,0 +1,475 @@
+{
+  "name": "Dynasty Empire: Lead Nurture Automations (Category 2)",
+  "description": "10 lead nurture automations: welcome drips, content, case studies, objection handling, promotions, re-engagement, scoring",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": "{{$json.body.leadScore >= 60 && $json.body.type === 'welcome_trigger'}}",
+        "errorOutput": 0
+      },
+      "name": "Trigger: Welcome Drip Start",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [100, 50]
+    },
+    {
+      "parameters": {
+        "rule": "{{$json.body.type === 'content_request'}}",
+        "errorOutput": 0
+      },
+      "name": "Trigger: Content Delivery",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [100, 200]
+    },
+    {
+      "parameters": {
+        "rule": "{{$json.body.engagementScore >= 70}}",
+        "errorOutput": 0
+      },
+      "name": "Trigger: Case Study Delivery",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [100, 350]
+    },
+    {
+      "parameters": {
+        "rule": "{{$json.body.type === 'price_objection'}}",
+      "errorOutput": 0
+      },
+      "name": "Trigger: Price Objection Nurture",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [100, 500]
+    },
+    {
+      "parameters": {
+        "rule": "{{$json.body.type === 'seasonal'}}",
+        "errorOutput": 0
+      },
+      "name": "Trigger: Seasonal Campaign",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [100, 650]
+    },
+    {
+      "parameters": {
+        "rule": "{{$json.body.daysSinceContact >= 30}}",
+        "errorOutput": 0
+      },
+      "name": "Trigger: Re-engagement",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [100, 800]
+    },
+    {
+      "parameters": {
+        "rule": "{{$json.body.engagementScore >= 75}}",
+        "errorOutput": 0
+      },
+      "name": "Trigger: Warm Lead Escalation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [100, 950]
+    },
+    {
+      "parameters": {
+        "rule": "{{$json.body.type === 'multi_channel'}}",
+        "errorOutput": 0
+      },
+      "name": "Trigger: Multi-channel Nurture",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [100, 1100]
+    },
+    {
+      "parameters": {
+        "rule": "{{$json.body.type === 'service_path'}}",
+        "errorOutput": 0
+      },
+      "name": "Trigger: Service-specific Path",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [100, 1250]
+    },
+    {
+      "parameters": {
+        "expression": "{{new Date().toISOString().split('T')[0]}}"
+      },
+      "name": "Trigger: Daily Lead Scoring",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [100, 1400]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drip/welcome-sequence",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Welcome Drip Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, firstName } = $json.body;\nif (!leadId || !email) throw new Error('Missing leadId or email');\nreturn {\n  leadId,\n  email,\n  firstName: firstName || 'Lead',\n  sequence: 'welcome_drip',\n  emailCount: 0,\n  startDate: new Date().toISOString(),\n  emails: [\n    {day: 0, subject: 'Welcome to {{Company}}!', template: 'welcome_1'},\n    {day: 2, subject: 'Here\\'s what we can do for you', template: 'welcome_2'},\n    {day: 4, subject: 'See how {{Company}} saves time', template: 'welcome_3'},\n    {day: 7, subject: 'Your free {{Service}} consultation', template: 'welcome_4'},\n    {day: 10, subject: 'Limited: {{Promo}} offer', template: 'welcome_5'}\n  ]\n};"
+      },
+      "name": "Prepare: Welcome Sequence",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/send-welcome-drip",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Send Welcome Email 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drip/content-delivery",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Content Delivery Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, serviceType, engagementLevel } = $json.body;\nif (!leadId || !email) throw new Error('Missing leadId or email');\nconst contentMap = {\n  'hvac': ['hvac_efficiency_tips', 'seasonal_maintenance', 'energy_savings_guide'],\n  'plumbing': ['pipe_care_tips', 'leak_prevention', 'water_conservation'],\n  'pest': ['common_pests', 'prevention_tips', 'seasonal_threats'],\n  'electrical': ['electrical_safety', 'energy_audit', 'upgrade_benefits']\n};\nconst selectedContent = contentMap[serviceType] || ['general_tips', 'industry_guide', 'case_studies'];\nreturn {\n  leadId, email, serviceType, engagementLevel,\n  contentPieces: selectedContent,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Prepare: Content Selection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/deliver-content",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Deliver Educational Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drip/case-study-delivery",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Case Study Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 350]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, serviceType, companySize } = $json.body;\nif (!leadId || !email) throw new Error('Missing data');\nconst caseStudies = {\n  'hvac': ['hospital_hvac_upgrade', 'mall_installation', 'factory_efficiency'],\n  'plumbing': ['office_plumbing_overhaul', 'restaurant_upgrade', 'emergency_response'],\n  'pest': ['school_pest_control', 'warehouse_prevention', 'retail_solution'],\n  'electrical': ['building_automation', 'solar_installation', 'safety_upgrade']\n};\nconst studies = caseStudies[serviceType] || ['enterprise_case_study_1', 'smb_case_study_1'];\nreturn {\n  leadId, email, serviceType, companySize,\n  caseStudies: studies,\n  sendTime: new Date().toISOString()\n};"
+      },
+      "name": "Prepare: Case Studies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/send-case-study",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Send Case Study",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drip/objection-handling",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Price Objection Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 500]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, objectionType, estimateAmount } = $json.body;\nif (!leadId || !email) throw new Error('Missing data');\nconst objections = {\n  'too_expensive': 'price_justification_sequence',\n  'budget_constraints': 'payment_plan_options',\n  'alternative_quotes': 'value_comparison',\n  'timing_uncertain': 'urgency_triggers'\n};\nreturn {\n  leadId, email,\n  objectionType: objectionType || 'too_expensive',\n  sequence: objections[objectionType] || 'standard_objection_response',\n  emails: 3,\n  timeline: 7,\n  startDate: new Date().toISOString()\n};"
+      },
+      "name": "Prepare: Objection Sequence",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/send-objection-sequence",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Send Objection Handling",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 500]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "campaigns/seasonal",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Seasonal Campaign Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 650]
+    },
+    {
+      "parameters": {
+        "functionCode": "const month = new Date().getMonth();\nconst campaigns = {\n  'hvac': {\n    0: 'winter_heating_prep',\n    5: 'summer_cooling_prep',\n    default: 'maintenance_reminders'\n  },\n  'pest': {\n    2: 'spring_pest_prevention',\n    8: 'fall_rodent_prevention',\n    default: 'general_pest_control'\n  },\n  'plumbing': {\n    11: 'holiday_emergency_prep',\n    default: 'maintenance_bundles'\n  }\n};\nconst { leadId, email, serviceType } = $json.body;\nif (!leadId || !email) throw new Error('Missing data');\nconst campaignMap = campaigns[serviceType] || {default: 'seasonal_offer'};\nconst campaignKey = campaignMap[month] || campaignMap.default;\nreturn {\n  leadId, email, serviceType, month,\n  campaign: campaignKey,\n  emailCount: 2,\n  smsPush: true,\n  startDate: new Date().toISOString()\n};"
+      },
+      "name": "Prepare: Seasonal Campaign",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 650]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/send-seasonal-campaign",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Send Seasonal Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drip/reengagement",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Re-engagement Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 800]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, daysSinceContact } = $json.body;\nif (!leadId || !email) throw new Error('Missing data');\nreturn {\n  leadId, email,\n  daysSinceContact: daysSinceContact || 30,\n  emailCount: 3,\n  emails: [\n    {template: 'reeng_1', subject: 'We miss you!'},\n    {template: 'reeng_2', subject: 'Quick question about your needs'},\n    {template: 'reeng_3', subject: 'Last chance: special offer inside'}\n  ],\n  timeline: 10,\n  startDate: new Date().toISOString()\n};"
+      },
+      "name": "Prepare: Re-engagement Sequence",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/send-reengagement",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Send Re-engagement",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 800]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "leads/escalate-warm",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Warm Lead Escalation",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 950]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, engagementScore, activityCount } = $json.body;\nif (!leadId || !email) throw new Error('Missing data');\nif (engagementScore < 75) throw new Error('Not warm enough for escalation');\nreturn {\n  leadId, email,\n  engagementScore,\n  activityCount: activityCount || 0,\n  escalationLevel: 'high_priority',\n  notifyOwner: true,\n  assignToRep: true,\n  sendHandoffEmail: true,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Prepare: Warm Lead Escalation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 950]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/escalate-warm-lead",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Escalate Warm Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 950]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "campaigns/multichannel",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Multi-channel Nurture",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 1100]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, phone, preferences } = $json.body;\nif (!leadId || !email) throw new Error('Missing data');\nconst channels = ['email', 'sms', 'push_notification'];\nconst selectedChannels = channels.filter((c, i) => preferences && preferences[i]);\nreturn {\n  leadId, email, phone: phone || null,\n  channels: selectedChannels.length ? selectedChannels : ['email', 'sms'],\n  campaignName: 'multi_channel_nurture',\n  emailFreq: 'weekly',\n  smsFreq: 'every_3_days',\n  pushFreq: 'twice_weekly',\n  startDate: new Date().toISOString()\n};"
+      },
+      "name": "Prepare: Multi-channel Setup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 1100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/setup-multichannel",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Setup Multi-channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 1100]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nurture/service-paths",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Service Path Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 1250]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, serviceType } = $json.body;\nif (!leadId || !email || !serviceType) throw new Error('Missing data');\nconst paths = {\n  'hvac': ['hvac_sales_tips', 'seasonal_scheduling', 'maintenance_plans'],\n  'plumbing': ['emergency_response', 'fixture_upgrades', 'water_treatment'],\n  'pest': ['treatment_options', 'prevention_education', 'warranty_info'],\n  'electrical': ['safety_codes', 'energy_efficiency', 'smart_home_tech']\n};\nreturn {\n  leadId, email, serviceType,\n  contentPath: paths[serviceType] || ['general_service_path'],\n  emails: 5,\n  timeline: 21,\n  startDate: new Date().toISOString()\n};"
+      },
+      "name": "Prepare: Service Path",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 1250]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/start-service-path",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Start Service Path",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 1250]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "scoring/daily-recalc",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Daily Scoring Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 1400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/lead-nurture/recalculate-scores",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{JSON.stringify({trigger: 'daily_cron', timestamp: new Date().toISOString()})}}"
+      },
+      "name": "HTTP: Recalculate Scores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [700, 1400]
+    }
+  ],
+  "connections": {
+    "Webhook: Welcome Drip Trigger": {
+      "main": [[{"node": "Prepare: Welcome Sequence", "type": "main", "index": 0}]]
+    },
+    "Prepare: Welcome Sequence": {
+      "main": [[{"node": "HTTP: Send Welcome Email 1", "type": "main", "index": 0}]]
+    },
+    "Webhook: Content Delivery Trigger": {
+      "main": [[{"node": "Prepare: Content Selection", "type": "main", "index": 0}]]
+    },
+    "Prepare: Content Selection": {
+      "main": [[{"node": "HTTP: Deliver Educational Content", "type": "main", "index": 0}]]
+    },
+    "Webhook: Case Study Trigger": {
+      "main": [[{"node": "Prepare: Case Studies", "type": "main", "index": 0}]]
+    },
+    "Prepare: Case Studies": {
+      "main": [[{"node": "HTTP: Send Case Study", "type": "main", "index": 0}]]
+    },
+    "Webhook: Price Objection Trigger": {
+      "main": [[{"node": "Prepare: Objection Sequence", "type": "main", "index": 0}]]
+    },
+    "Prepare: Objection Sequence": {
+      "main": [[{"node": "HTTP: Send Objection Handling", "type": "main", "index": 0}]]
+    },
+    "Webhook: Seasonal Campaign Trigger": {
+      "main": [[{"node": "Prepare: Seasonal Campaign", "type": "main", "index": 0}]]
+    },
+    "Prepare: Seasonal Campaign": {
+      "main": [[{"node": "HTTP: Send Seasonal Campaign", "type": "main", "index": 0}]]
+    },
+    "Webhook: Re-engagement Trigger": {
+      "main": [[{"node": "Prepare: Re-engagement Sequence", "type": "main", "index": 0}]]
+    },
+    "Prepare: Re-engagement Sequence": {
+      "main": [[{"node": "HTTP: Send Re-engagement", "type": "main", "index": 0}]]
+    },
+    "Webhook: Warm Lead Escalation": {
+      "main": [[{"node": "Prepare: Warm Lead Escalation", "type": "main", "index": 0}]]
+    },
+    "Prepare: Warm Lead Escalation": {
+      "main": [[{"node": "HTTP: Escalate Warm Lead", "type": "main", "index": 0}]]
+    },
+    "Webhook: Multi-channel Nurture": {
+      "main": [[{"node": "Prepare: Multi-channel Setup", "type": "main", "index": 0}]]
+    },
+    "Prepare: Multi-channel Setup": {
+      "main": [[{"node": "HTTP: Setup Multi-channel", "type": "main", "index": 0}]]
+    },
+    "Webhook: Service Path Trigger": {
+      "main": [[{"node": "Prepare: Service Path", "type": "main", "index": 0}]]
+    },
+    "Prepare: Service Path": {
+      "main": [[{"node": "HTTP: Start Service Path", "type": "main", "index": 0}]]
+    },
+    "Webhook: Daily Scoring Trigger": {
+      "main": [[{"node": "HTTP: Recalculate Scores", "type": "main", "index": 0}]]
+    }
+  }
+}

@@ -1,0 +1,388 @@
+{
+  "name": "Dynasty Empire: CRM & Contact Management (Category 4)",
+  "description": "10 contact management automations: standardization, lifecycle, tagging, deduplication, data quality, VIP identification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/standardize",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Standardize Fields",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/lifecycle-stage",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Lifecycle Automation",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 150]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/activity-timeline",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Activity Timeline",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 250]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/auto-tag",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Auto-tag",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/merge-dedup",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Merge Duplicates",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 450]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/data-decay",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Data Decay Detection",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 550]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/vip-identification",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: VIP Identification",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/sync-external",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: External Sync",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 750]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/special-events",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Birthday/Anniversary",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 850]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contacts/completeness-check",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Completeness Check",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 950]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { phone, address, zipCode, state, email } = $json.body;\nconst cleanPhone = phone ? phone.replace(/\\D/g, '').slice(-10) : null;\nconst cleanZip = zipCode ? zipCode.replace(/\\D/g, '').substring(0, 5) : null;\nconst cleanState = state ? state.toUpperCase().substring(0, 2) : null;\nreturn { ...JSON.parse(JSON.stringify($json.body)), phone: cleanPhone, zipCode: cleanZip, state: cleanState, email: email?.toLowerCase() };"
+      },
+      "name": "Code: Standardize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, status, emailCount, pageViews, lastActivity } = $json.body;\nconst daysSinceActivity = lastActivity ? Math.floor((new Date() - new Date(lastActivity)) / (1000 * 60 * 60 * 24)) : 999;\nlet lifecycle = 'lead';\nif (emailCount > 5) lifecycle = 'prospect';\nif (status === 'customer') lifecycle = 'customer';\nif (lifecycle === 'customer' && daysSinceActivity > 90) lifecycle = 'advocate';\nreturn { leadId, currentLifecycle: lifecycle, daysSinceActivity, signals: {emailCount, pageViews}, nextStage: lifecycle };"
+      },
+      "name": "Code: Lifecycle Stage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 150]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, activities } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nconst timeline = (activities || []).map((a, i) => ({id: i, timestamp: a.timestamp, type: a.type, description: a.description})).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));\nreturn { leadId, timeline, totalActivities: timeline.length, lastActivity: timeline[0] || null };"
+      },
+      "name": "Code: Activity Timeline",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 250]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, serviceType, behavior, source, quality } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nconst tags = [];\nif (serviceType) tags.push(serviceType);\nif (quality === 'high') tags.push('high_quality');\nif (source) tags.push(source);\nif (behavior?.includes('urgent')) tags.push('urgent');\nif (behavior?.includes('engaged')) tags.push('engaged');\ntags.push(`lead_source_${source}`);\nreturn { leadId, email, autoTags: tags, tagCount: tags.length };"
+      },
+      "name": "Code: Auto-tag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 350]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId1, leadId2, email1, email2, phone1, phone2 } = $json.body;\nif (!leadId1 || !leadId2) throw new Error('Missing leadIds');\nconst scoreMatch = (email1 && email1.toLowerCase() === email2.toLowerCase()) ? 100 : (phone1 && phone1 === phone2) ? 95 : 0;\nreturn { primary: leadId1, duplicate: leadId2, matchScore: scoreMatch, shouldMerge: scoreMatch > 80, mergeStrategy: scoreMatch === 100 ? 'email_match' : 'phone_match' };"
+      },
+      "name": "Code: Duplicate Detection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 450]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, lastActivityDate } = $json.body;\nconst daysSinceActivity = lastActivityDate ? Math.floor((new Date() - new Date(lastActivityDate)) / (1000 * 60 * 60 * 24)) : 999;\nconst isStale = daysSinceActivity > 180;\nreturn { leadId, daysSinceActivity, isStale, dataDecayLevel: daysSinceActivity > 180 ? 'critical' : daysSinceActivity > 90 ? 'warning' : 'healthy', flagForCleanup: isStale };"
+      },
+      "name": "Code: Data Decay Detection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 550]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, totalRevenue, orderCount, averageOrderValue, lastPurchaseDate } = $json.body;\nlet vipScore = 0;\nvipScore += (totalRevenue > 5000 ? 40 : totalRevenue > 2000 ? 25 : 10);\nvipScore += (orderCount > 10 ? 40 : orderCount > 5 ? 25 : 10);\nvipScore += (averageOrderValue > 500 ? 20 : 10);\nconst isVip = vipScore > 60;\nreturn { leadId, vipScore, isVip, tier: isVip ? 'vip' : 'regular', metrics: {totalRevenue, orderCount, averageOrderValue}, lastPurchase: lastPurchaseDate };"
+      },
+      "name": "Code: VIP Identification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 650]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, externalCrm } = $json.body;\nif (!leadId || !externalCrm) throw new Error('Missing data');\nreturn { leadId, email, crmSystem: externalCrm, syncDirection: 'bidirectional', lastSync: new Date().toISOString(), status: 'pending' };"
+      },
+      "name": "Code: Prepare Sync",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 750]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, birthDate, anniversaryDate } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nconst today = new Date();\nconst upcomingDays = 30;\nconst events = [];\nif (birthDate) {\n  const bd = new Date(birthDate);\n  const upcoming = new Date(today.getFullYear(), bd.getMonth(), bd.getDate());\n  if (upcoming < today) upcoming.setFullYear(upcoming.getFullYear() + 1);\n  const daysUntil = Math.floor((upcoming - today) / (1000 * 60 * 60 * 24));\n  if (daysUntil <= upcomingDays && daysUntil >= 0) events.push({type: 'birthday', date: upcoming, daysUntil});\n}\nif (anniversaryDate) {\n  const ann = new Date(anniversaryDate);\n  const upcoming = new Date(today.getFullYear(), ann.getMonth(), ann.getDate());\n  if (upcoming < today) upcoming.setFullYear(upcoming.getFullYear() + 1);\n  const daysUntil = Math.floor((upcoming - today) / (1000 * 60 * 60 * 24));\n  if (daysUntil <= upcomingDays && daysUntil >= 0) events.push({type: 'anniversary', date: upcoming, daysUntil});\n}\nreturn { leadId, email, upcomingEvents: events, shouldNotify: events.length > 0 };"
+      },
+      "name": "Code: Event Detection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 850]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, phone, address, firstName, lastName } = $json.body;\nif (!leadId) throw new Error('Missing leadId');\nconst missing = [];\nif (!email) missing.push('email');\nif (!phone) missing.push('phone');\nif (!address) missing.push('address');\nif (!firstName) missing.push('firstName');\nif (!lastName) missing.push('lastName');\nconst completeness = Math.round(((5 - missing.length) / 5) * 100);\nreturn { leadId, completeness, score: completeness, missing, hasCriticalGaps: missing.length >= 2, flagForEnrichment: completeness < 60 };"
+      },
+      "name": "Code: Completeness Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 950]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/standardize",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Standardize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/update-lifecycle",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Update Lifecycle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/create-timeline",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Create Timeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 250]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/apply-tags",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Apply Tags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/merge",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Merge Duplicates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 450]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/flag-stale",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Flag Stale",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 550]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/identify-vip",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Identify VIP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 650]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/sync-external",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Sync External",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 750]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/special-events",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Handle Special Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 850]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/crm-contacts/check-completeness",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Check Completeness",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 950]
+    }
+  ],
+  "connections": {
+    "Webhook: Standardize Fields": {
+      "main": [[{"node": "Code: Standardize", "type": "main", "index": 0}]]
+    },
+    "Code: Standardize": {
+      "main": [[{"node": "HTTP: Standardize", "type": "main", "index": 0}]]
+    },
+    "Webhook: Lifecycle Automation": {
+      "main": [[{"node": "Code: Lifecycle Stage", "type": "main", "index": 0}]]
+    },
+    "Code: Lifecycle Stage": {
+      "main": [[{"node": "HTTP: Update Lifecycle", "type": "main", "index": 0}]]
+    },
+    "Webhook: Activity Timeline": {
+      "main": [[{"node": "Code: Activity Timeline", "type": "main", "index": 0}]]
+    },
+    "Code: Activity Timeline": {
+      "main": [[{"node": "HTTP: Create Timeline", "type": "main", "index": 0}]]
+    },
+    "Webhook: Auto-tag": {
+      "main": [[{"node": "Code: Auto-tag", "type": "main", "index": 0}]]
+    },
+    "Code: Auto-tag": {
+      "main": [[{"node": "HTTP: Apply Tags", "type": "main", "index": 0}]]
+    },
+    "Webhook: Merge Duplicates": {
+      "main": [[{"node": "Code: Duplicate Detection", "type": "main", "index": 0}]]
+    },
+    "Code: Duplicate Detection": {
+      "main": [[{"node": "HTTP: Merge Duplicates", "type": "main", "index": 0}]]
+    },
+    "Webhook: Data Decay Detection": {
+      "main": [[{"node": "Code: Data Decay Detection", "type": "main", "index": 0}]]
+    },
+    "Code: Data Decay Detection": {
+      "main": [[{"node": "HTTP: Flag Stale", "type": "main", "index": 0}]]
+    },
+    "Webhook: VIP Identification": {
+      "main": [[{"node": "Code: VIP Identification", "type": "main", "index": 0}]]
+    },
+    "Code: VIP Identification": {
+      "main": [[{"node": "HTTP: Identify VIP", "type": "main", "index": 0}]]
+    },
+    "Webhook: External Sync": {
+      "main": [[{"node": "Code: Prepare Sync", "type": "main", "index": 0}]]
+    },
+    "Code: Prepare Sync": {
+      "main": [[{"node": "HTTP: Sync External", "type": "main", "index": 0}]]
+    },
+    "Webhook: Birthday/Anniversary": {
+      "main": [[{"node": "Code: Event Detection", "type": "main", "index": 0}]]
+    },
+    "Code: Event Detection": {
+      "main": [[{"node": "HTTP: Handle Special Events", "type": "main", "index": 0}]]
+    },
+    "Webhook: Completeness Check": {
+      "main": [[{"node": "Code: Completeness Check", "type": "main", "index": 0}]]
+    },
+    "Code: Completeness Check": {
+      "main": [[{"node": "HTTP: Check Completeness", "type": "main", "index": 0}]]
+    }
+  }
+}

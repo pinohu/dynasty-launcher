@@ -1,0 +1,177 @@
+{
+  "name": "Payment Recovery Dunning Sequence",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "payment_recovery",
+        "options": {}
+      },
+      "id": "payment_webhook",
+      "name": "Payment Failed Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Payment Issue - Please Update Your Payment Method",
+        "html": "<p>We attempted to process a payment of ${{ $json.invoice.amount }} but it was declined.</p><p>Please update your payment method: <a href='{{ $env.PAYMENT_UPDATE_URL }}/{{ $json.invoice.id }}'>Update Payment Method</a></p>"
+      },
+      "id": "send_soft_notice",
+      "name": "Send Soft Notice (Immediate)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.STRIPE_API_URL }}/invoices/{{ $json.invoice.id }}/retry",
+        "authentication": "bearerToken"
+      },
+      "id": "schedule_retry_24h",
+      "name": "Schedule Retry (24h)",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "waitTime": 172800,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_48h",
+      "name": "Wait 48 Hours",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Action Required: Update Your Payment Method",
+        "html": "<p>Your payment of ${{ $json.invoice.amount }} is still pending.</p><p><a href='{{ $env.PAYMENT_UPDATE_URL }}/{{ $json.invoice.id }}'>Update Payment Method Now</a></p>"
+      },
+      "id": "send_card_update_48h",
+      "name": "Send Card Update Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "waitTime": 259200,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_72h",
+      "name": "Wait 72 Hours",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "phoneNumber": "{{ $json.customer.phone }}",
+        "message": "Payment reminder: Your outstanding balance of ${{ $json.invoice.amount }} is now overdue. Please update: {{ $env.PAYMENT_UPDATE_URL }}"
+      },
+      "id": "send_sms_72h",
+      "name": "Send SMS Escalation",
+      "type": "n8n-nodes-base.sms",
+      "typeVersion": 1,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "waitTime": 604800,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_7d",
+      "name": "Wait 7 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [650, 650]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Final Notice: Outstanding Payment",
+        "html": "<p><strong>This is our final notice regarding your outstanding payment of ${{ $json.invoice.amount }}.</strong></p><p>If payment is not received within 7 days, your services will be suspended.</p><p><a href='{{ $env.PAYMENT_UPDATE_URL }}/{{ $json.invoice.id }}'>Pay Now</a></p>"
+      },
+      "id": "send_final_notice",
+      "name": "Send Final Notice",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [850, 650]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/customers/{{ $json.customer.id }}/subscription",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "paused"
+            }
+          ]
+        }
+      },
+      "id": "pause_subscription",
+      "name": "Pause Services (14d)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 650]
+    }
+  ],
+  "connections": {
+    "payment_webhook": {
+      "main": [
+        [
+          {
+            "node": "send_soft_notice",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "schedule_retry_24h",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "delay_48h",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "delay_72h",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "delay_7d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delay_48h": {
+      "main": [[{"node": "send_card_update_48h", "type": "main", "index": 0}]]
+    },
+    "delay_72h": {
+      "main": [[{"node": "send_sms_72h", "type": "main", "index": 0}]]
+    },
+    "delay_7d": {
+      "main": [[{"node": "send_final_notice", "type": "main", "index": 0}]]
+    },
+    "send_final_notice": {
+      "main": [[{"node": "pause_subscription", "type": "main", "index": 0}]]
+    }
+  }
+}

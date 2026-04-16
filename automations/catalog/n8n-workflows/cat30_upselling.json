@@ -1,0 +1,37 @@
+{
+  "name": "Category 30: Upselling & Cross-Selling",
+  "description": "Revenue expansion through upselling and cross-selling automations",
+  "version": "1.0",
+  "automations": [
+    {
+      "id": "cat30_001_usage_trigger",
+      "name": "Usage Limit Approach Trigger",
+      "description": "Triggers upsell when customer approaches usage limits",
+      "trigger": "Real-time usage monitoring"
+    },
+    {
+      "id": "cat30_002_service_recommender",
+      "name": "Complementary Service Recommender",
+      "description": "Recommends related services based on purchase history",
+      "trigger": "On purchase or schedule-based"
+    },
+    {
+      "id": "cat30_003_upgrade_packager",
+      "name": "Upgrade Renewal Packager",
+      "description": "Creates upgrade packages for renewals",
+      "trigger": "30 days before renewal"
+    },
+    {
+      "id": "cat30_004_cart_recovery",
+      "name": "Abandoned Cart/Estimate Recovery",
+      "description": "Recovers abandoned carts and quotes",
+      "trigger": "On cart/estimate abandonment"
+    },
+    {
+      "id": "cat30_005_anniversary_offers",
+      "name": "Service Anniversary Offer Generator",
+      "description": "Generates renewal offers on service anniversaries",
+      "trigger": "On customer anniversary date"
+    }
+  ]
+}

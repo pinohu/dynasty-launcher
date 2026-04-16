@@ -1,0 +1,131 @@
+{
+  "name": "Business Formation Automations",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "path": "business-formation-webhook"
+      },
+      "name": "Formation Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.legalzoom.com/entity-filing",
+        "requestMethod": "POST",
+        "options": {}
+      },
+      "name": "API: Entity Filing Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "url": "https://api.irs.gov/ein/apply",
+        "requestMethod": "POST",
+        "options": {}
+      },
+      "name": "API: EIN Application",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT agreement_template FROM agreement_templates WHERE entity_type = @entityType AND state = @state",
+        "options": {}
+      },
+      "name": "DB: Get Agreement Template",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO business_formations (company_id, entity_type, state, status, filing_date, created_at) VALUES (@companyId, @entityType, @state, 'pending', NOW(), NOW())",
+        "options": {}
+      },
+      "name": "DB: Create Formation Record",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://api.incfile.com/registered-agent",
+        "requestMethod": "POST",
+        "options": {}
+      },
+      "name": "API: Registered Agent Setup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO generated_documents (company_id, document_type, content, generated_at) VALUES (@companyId, @docType, @content, NOW())",
+        "options": {}
+      },
+      "name": "DB: Store Generated Agreement",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT state_requirements FROM state_filing_rules WHERE state = @state AND entity_type = @entityType",
+        "options": {}
+      },
+      "name": "DB: Get State Requirements",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "formation@dynasty.app",
+        "toEmail": "={{ $json.ownerEmail }}",
+        "subject": "Business Formation Complete",
+        "htmlBody": "Your business has been filed. EIN: {{ $json.ein }}. Documents: {{ $json.documents }}"
+      },
+      "name": "Email: Formation Confirmation",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "responseData": "{\"success\": true, \"formation\": {{ $json }}, \"nextSteps\": \"Check email for documentation\"}"
+      },
+      "name": "Response: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 250]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{"node": "Formation Webhook", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+}

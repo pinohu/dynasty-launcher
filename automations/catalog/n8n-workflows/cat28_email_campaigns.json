@@ -1,0 +1,55 @@
+{
+  "name": "Category 28: Email Campaigns",
+  "description": "Email marketing automation and campaign management",
+  "version": "1.0",
+  "automations": [
+    {
+      "id": "cat28_001_welcome_sequence",
+      "name": "Welcome Sequence Builder",
+      "description": "Auto-sends welcome email series to new subscribers",
+      "trigger": "On new lead/subscriber"
+    },
+    {
+      "id": "cat28_002_nurture_campaigns",
+      "name": "Nurture Campaign Manager",
+      "description": "Manages multi-touch nurture campaigns with delays",
+      "trigger": "Scheduled segments"
+    },
+    {
+      "id": "cat28_003_list_hygiene",
+      "name": "List Hygiene Automation",
+      "description": "Removes bounces, unsubscribes, and inactive contacts",
+      "trigger": "Schedule: Weekly"
+    },
+    {
+      "id": "cat28_004_ab_subject",
+      "name": "Subject Line A/B Tester",
+      "description": "Tests subject lines and auto-sends winner to rest",
+      "trigger": "Before campaign send"
+    },
+    {
+      "id": "cat28_005_seasonal_scheduler",
+      "name": "Seasonal Campaign Scheduler",
+      "description": "Auto-schedules seasonal and holiday emails",
+      "trigger": "Scheduled calendar-based"
+    },
+    {
+      "id": "cat28_006_segmentation",
+      "name": "Segmentation Engine",
+      "description": "Auto-segments lists by behavior, purchase history, etc",
+      "trigger": "Real-time or batch"
+    },
+    {
+      "id": "cat28_007_lifecycle_trigger",
+      "name": "Lifecycle Trigger Manager",
+      "description": "Sends emails based on lifecycle events",
+      "trigger": "Event-triggered"
+    },
+    {
+      "id": "cat28_008_campaign_reporter",
+      "name": "Campaign Performance Reporter",
+      "description": "Tracks and reports campaign metrics automatically",
+      "trigger": "Schedule: Daily/Weekly"
+    }
+  ]
+}

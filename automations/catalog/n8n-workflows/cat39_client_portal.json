@@ -1,0 +1,189 @@
+{
+  "name": "Client Portal Automations",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "path": "portal-webhook"
+      },
+      "name": "Portal Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "password_reset",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Route: Password Reset",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "invoice_view",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Route: Invoice View",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "UPDATE users SET password_reset_token = @token, password_reset_expires = NOW() + INTERVAL 24 HOUR WHERE id = @userId",
+        "options": {}
+      },
+      "name": "DB: Create Password Reset Token",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT id, email, company FROM users WHERE id = @userId",
+        "options": {}
+      },
+      "name": "DB: Get User Data",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@dynasty.app",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Reset Your Password",
+        "htmlBody": "Click here to reset: {{ $env.RESET_URL }}?token={{ $json.token }}"
+      },
+      "name": "Email: Password Reset Link",
+      "type": "n8n-nodes-base.acumbamail",
+      "typeVersion": 1,
+      "position": [1050, 150]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT id, amount, status, created_at FROM invoices WHERE client_id = @clientId ORDER BY created_at DESC",
+        "options": {}
+      },
+      "name": "DB: Get Client Invoices",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 350]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO clients (name, email, phone, company_id, status, created_at) VALUES (@name, @email, @phone, @companyId, 'active', NOW())",
+        "options": {}
+      },
+      "name": "DB: Create Client Account",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT * FROM sso_integrations WHERE client_id = @clientId AND provider = @provider",
+        "options": {}
+      },
+      "name": "DB: Check SSO Config",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [850, 650]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT id, file_name, file_path, uploaded_at FROM client_documents WHERE client_id = @clientId ORDER BY uploaded_at DESC",
+        "options": {}
+      },
+      "name": "DB: Get Client Documents",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 500]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "SELECT s.id, s.name, s.date, s.status FROM services s JOIN client_services cs ON s.id = cs.service_id WHERE cs.client_id = @clientId ORDER BY s.date DESC",
+        "options": {}
+      },
+      "name": "DB: Get Service History",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 650]
+    },
+    {
+      "parameters": {
+        "resource": "executeQuery",
+        "query": "INSERT INTO support_tickets (client_id, subject, description, status, created_at) VALUES (@clientId, @subject, @description, 'open', NOW())",
+        "options": {}
+      },
+      "name": "DB: Create Support Ticket",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1050, 800]
+    },
+    {
+      "parameters": {
+        "responseData": "{\"success\": true, \"message\": \"Portal action processed\", \"data\": {{ $json }}}"
+      },
+      "name": "Response: Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 500]
+    },
+    {
+      "parameters": {
+        "responseData": "{\"success\": false, \"error\": \"Portal action failed\"}"
+      },
+      "name": "Response: Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 650]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{"node": "Portal Webhook", "type": "main", "index": 0}]
+      ]
+    },
+    "Portal Webhook": {
+      "main": [[{"node": "Route: Password Reset", "type": "main", "index": 0}, {"node": "Route: Invoice View", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1"
+}

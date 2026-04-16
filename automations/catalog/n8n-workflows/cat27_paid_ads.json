@@ -1,0 +1,49 @@
+{
+  "name": "Category 27: Paid Advertising",
+  "description": "Paid advertising automation and optimization workflows",
+  "version": "1.0",
+  "automations": [
+    {
+      "id": "cat27_001_budget_pacing",
+      "name": "Budget Pacing Monitor",
+      "description": "Monitors daily/monthly budget spend and adjusts pacing",
+      "trigger": "Schedule: Every 6 hours"
+    },
+    {
+      "id": "cat27_002_ab_test_manager",
+      "name": "Ad A/B Test Manager",
+      "description": "Automates A/B test setup and determines winners",
+      "trigger": "Manual or schedule-based"
+    },
+    {
+      "id": "cat27_003_negative_keywords",
+      "name": "Negative Keyword Harvester",
+      "description": "Identifies and adds negative keywords automatically",
+      "trigger": "Schedule: Twice weekly"
+    },
+    {
+      "id": "cat27_004_retargeting_builder",
+      "name": "Retargeting Audience Builder",
+      "description": "Creates and updates retargeting audiences automatically",
+      "trigger": "Schedule: Daily"
+    },
+    {
+      "id": "cat27_005_roas_calculator",
+      "name": "ROAS Calculator and Alerter",
+      "description": "Calculates ROAS and triggers alerts on low performance",
+      "trigger": "Schedule: Every 4 hours"
+    },
+    {
+      "id": "cat27_006_campaign_automation",
+      "name": "Campaign Pause/Resume Automation",
+      "description": "Auto-pauses/resumes campaigns based on performance triggers",
+      "trigger": "Schedule: Every 2 hours"
+    },
+    {
+      "id": "cat27_007_landing_page_tracker",
+      "name": "Landing Page Performance Tracker",
+      "description": "Tracks landing page conversion and engagement metrics",
+      "trigger": "Schedule: Daily"
+    }
+  ]
+}

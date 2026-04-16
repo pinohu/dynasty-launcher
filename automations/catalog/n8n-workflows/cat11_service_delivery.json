@@ -1,0 +1,99 @@
+{
+  "name": "Category 11: Service Delivery & Fulfillment",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [50, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "path": "service-delivery",
+        "responseMode": "responseNode",
+        "auth": "headerAuth"
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/service-delivery",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ $json }}"
+      },
+      "name": "Service Delivery Router",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "start_notification",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Start Notification Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/service-delivery/start-notification",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {jobId: $json.jobId, techId: $json.techId, clientId: $json.clientId, eta: $json.eta} }}"
+      },
+      "name": "Send Start Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 50]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "value2": "upload_progress_photo",
+              "operation": "equals"
+            }
+          ]
+        }
+      },
+      "name": "Progress Photo Switch",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:3000/api/service-delivery/progress-photo",
+        "method": "POST",
+        "bodyParametersUi": "json",
+        "body": "={{ {jobId: $json.jobId, photoUrl: $json.photoUrl, caption: $json.caption} }}"
+      },
+      "name": "Handle Progress Photo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 150]
+    }
+  ],
+  "connections": {
+    "Start": {"main": [{"node": "Webhook", "branch": 0}]},
+    "Webhook": {"main": [{"node": "Service Delivery Router", "branch": 0}]},
+    "Service Delivery Router": {"main": [{"node": "Start Notification Switch", "branch": 0}]}
+  }
+}

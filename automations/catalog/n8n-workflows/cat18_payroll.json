@@ -1,0 +1,84 @@
+{
+  "name": "Payroll & Team Management Automations",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payroll/timesheet-reminder",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"employeeId\": \"{{$json.employeeId}}\",\n  \"email\": \"{{$json.email}}\",\n  \"weekEnding\": \"{{$json.weekEnding}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Timesheet Reminder and Approval Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payroll/contractor-invoice",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"contractorId\": \"{{$json.contractorId}}\",\n  \"amount\": {{$json.amount}},\n  \"description\": \"{{$json.description}}\",\n  \"dueDate\": \"{{$json.dueDate}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Contractor Invoice Processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payroll/pto-request",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"employeeId\": \"{{$json.employeeId}}\",\n  \"startDate\": \"{{$json.startDate}}\",\n  \"endDate\": \"{{$json.endDate}}\",\n  \"type\": \"{{$json.type}}\",\n  \"managerId\": \"{{$json.managerId}}\",\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "PTO Request and Tracking",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payroll/performance-dashboard",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"businessId\": \"{{$json.businessId}}\",\n  \"period\": \"{{$json.period}}\",\n  \"includeMetrics\": {{$json.includeMetrics}}\n}"
+      },
+      "name": "Performance Dashboard Data Collector",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 700]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payroll/commission-calculator",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"employeeId\": \"{{$json.employeeId}}\",\n  \"salesAmount\": {{$json.salesAmount}},\n  \"period\": \"{{$json.period}}\",\n  \"commissionRate\": {{$json.commissionRate}},\n  \"businessId\": \"{{$json.businessId}}\"\n}"
+      },
+      "name": "Commission Calculator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 100]
+    },
+    {
+      "parameters": {
+        "url": "=https://{{env.VERCEL_URL}}/api/payroll/tax-forms-prep",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParametersUi": "json",
+        "jsonBody": "={\n  \"year\": {{$json.year}},\n  \"businessId\": \"{{$json.businessId}}\",\n  \"formType\": \"{{$json.formType}}\"\n}"
+      },
+      "name": "1099/W2 Preparation Helper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 300]
+    }
+  ],
+  "connections": {}
+}

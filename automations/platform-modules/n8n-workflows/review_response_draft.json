@@ -1,0 +1,87 @@
+{
+  "name": "Review Response Draft Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "review_response_draft",
+        "options": {}
+      },
+      "id": "review_webhook",
+      "name": "New Review Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "prompt": "Write a professional and friendly response to this {{ $json.review.rating }}-star review on {{ $json.review.platform }}. Review: '{{ $json.review.text }}'. Acknowledge the feedback, offer solutions if needed, and invite them back. Keep under 300 characters. Business: {{ $json.business.name }}"
+      },
+      "id": "generate_response",
+      "name": "Generate Response with GPT-4",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.owner.email }}",
+        "subject": "Review Response Needed: {{ $json.review.platform }} - {{ $json.review.rating }}★",
+        "html": "<p>New review on {{ $json.review.platform }}:</p><p>\"{{ $json.review.text }}\"</p><p><strong>AI-Generated Response:</strong></p><p>{{ $json.generated_response }}</p><p><a href='{{ $env.REVIEW_URL }}/{{ $json.review.id }}/approve'>Approve & Post</a> | <a href='{{ $env.REVIEW_URL }}/{{ $json.review.id }}/edit'>Edit & Post</a></p>"
+      },
+      "id": "send_approval_email",
+      "name": "Send for Approval",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "waitTime": 172800,
+        "timeUnit": "seconds"
+      },
+      "id": "wait_for_approval",
+      "name": "Wait 48 Hours or Until Approved",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [650, 450]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.VERCEL_API_URL }}/reviews/{{ $json.review.id }}/post-response",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "response_text",
+              "value": "{{ $json.approved_response || $json.generated_response }}"
+            },
+            {
+              "name": "platform",
+              "value": "{{ $json.review.platform }}"
+            }
+          ]
+        }
+      },
+      "id": "auto_post_response",
+      "name": "Auto-Post Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 450]
+    }
+  ],
+  "connections": {
+    "review_webhook": {
+      "main": [[{"node": "generate_response", "type": "main", "index": 0}]]
+    },
+    "generate_response": {
+      "main": [[{"node": "send_approval_email", "type": "main", "index": 0}, {"node": "wait_for_approval", "type": "main", "index": 0}]]
+    },
+    "wait_for_approval": {
+      "main": [[{"node": "auto_post_response", "type": "main", "index": 0}]]
+    }
+  }
+}

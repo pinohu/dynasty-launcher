@@ -1,0 +1,133 @@
+{
+  "name": "Proposal Tracker (Real-time)",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "proposal_tracker",
+        "options": {}
+      },
+      "id": "proposal_sent_webhook",
+      "name": "Proposal Sent Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "proposal_opened",
+        "options": {}
+      },
+      "id": "proposal_opened_webhook",
+      "name": "Proposal Opened Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 450]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "{{ $json.is_first_open }}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check_first_open",
+      "name": "Is First Open?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 450]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.sales_rep.email }}",
+        "subject": "HOT: {{ $json.customer.name }} Opened Your Proposal",
+        "html": "<p>{{ $json.customer.name }} just opened your proposal!</p><p>Proposal Value: ${{ $json.proposal.amount }}</p><p>Time to follow up!</p>"
+      },
+      "id": "alert_first_open",
+      "name": "Alert: First Open",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "{{ $json.view_count }}",
+              "operation": "greaterEqual",
+              "value2": 2
+            }
+          ]
+        }
+      },
+      "id": "check_hot_signal",
+      "name": "Multiple Views (Hot Signal)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.sales_rep.email }}",
+        "subject": "HOT SIGNAL: {{ $json.customer.name }} Reviewed Proposal {{ $json.view_count }}x",
+        "html": "<p><strong>{{ $json.customer.name }} has viewed your proposal {{ $json.view_count }} times!</strong></p><p>This is a strong buying signal. Call them now!</p>"
+      },
+      "id": "alert_hot_signal",
+      "name": "Alert: Hot Signal",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "{{ $env.VERCEL_API_URL }}/crm/estimates/{{ $json.estimate.id }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "view_count",
+              "value": "{{ $json.view_count }}"
+            },
+            {
+              "name": "last_viewed_at",
+              "value": "{{ $json.opened_at }}"
+            },
+            {
+              "name": "engagement_score",
+              "value": "{{ $json.engagement_score }}"
+            }
+          ]
+        }
+      },
+      "id": "update_crm_metrics",
+      "name": "Update CRM Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "proposal_sent_webhook": {
+      "main": [[{"node": "update_crm_metrics", "type": "main", "index": 0}]]
+    },
+    "proposal_opened_webhook": {
+      "main": [[{"node": "check_first_open", "type": "main", "index": 0}, {"node": "check_hot_signal", "type": "main", "index": 0}]]
+    },
+    "check_first_open": {
+      "main": [[{"node": "alert_first_open", "type": "main", "index": 0}]]
+    },
+    "check_hot_signal": {
+      "main": [[{"node": "alert_hot_signal", "type": "main", "index": 0}]]
+    }
+  }
+}

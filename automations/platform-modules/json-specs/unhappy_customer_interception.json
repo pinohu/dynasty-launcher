@@ -1,0 +1,197 @@
+{
+  "module_id": "unhappy_customer_interception",
+  "version": "1.0.0",
+  "display_name": "Unhappy Customer Interception",
+  "description": "Automatically detects negative reviews and initiates recovery protocol",
+  "category": "Reviews Pack",
+  "tier": "wave_2",
+  "pricing": {
+    "standalone_monthly": 19,
+    "pack_monthly": 35,
+    "pack_includes": "reviews_pack",
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "review.submitted",
+    "source_system": "reviews",
+    "conditions": [
+      {
+        "field": "rating",
+        "operator": "lte",
+        "value": 3,
+        "priority": "high"
+      },
+      {
+        "field": "feedback.sentiment",
+        "operator": "contains",
+        "value": "negative",
+        "priority": "high"
+      },
+      {
+        "field": "customer.vip_status",
+        "operator": "equals",
+        "value": true,
+        "priority": "escalation"
+      }
+    ],
+    "webhook_event": "review.submitted"
+  },
+  "actions": [
+    {
+      "id": "action_immediate_alert",
+      "type": "notification",
+      "target": "owner",
+      "channel": "email",
+      "template": "alert_low_rating_owner",
+      "delay_ms": 0,
+      "priority": "critical"
+    },
+    {
+      "id": "action_empathetic_response",
+      "type": "email",
+      "target": "customer",
+      "template": "empathetic_response_review",
+      "delay_ms": 300000,
+      "personalization": ["first_name", "service_type", "issue_category"],
+      "required_approval": false
+    },
+    {
+      "id": "action_recovery_task",
+      "type": "crm_task",
+      "target": "owner",
+      "task_title": "Customer Recovery: {customer.name}",
+      "task_description": "Review rating {review.rating}/5: {review.text}",
+      "priority": "high",
+      "due_date_hours": 24,
+      "tags": ["customer_recovery", "urgent"]
+    },
+    {
+      "id": "action_vip_escalation",
+      "type": "conditional",
+      "condition": "customer.vip_status == true",
+      "actions": [
+        {
+          "type": "notification",
+          "target": "manager",
+          "channel": "sms",
+          "template": "vip_escalation_sms"
+        },
+        {
+          "type": "crm_field_update",
+          "field": "escalation_level",
+          "value": "vip_recovery"
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "last_review_rating": "{review.rating}",
+        "last_review_date": "{review.submitted_at}",
+        "review_status": "low_rating_detected",
+        "sentiment": "{feedback.sentiment}",
+        "requires_followup": true
+      }
+    }
+  ],
+  "templates": {
+    "alert_low_rating_owner": {
+      "subject": "Alert: Low Rating Review",
+      "body_text": "A review with rating {review.rating}/5 was just posted.\n\nCustomer: {customer.name}\nService: {service.type}\nReview: {review.text}\n\nAction required: Contact customer to resolve issue.",
+      "html_template": true,
+      "includes_review_link": true
+    },
+    "empathetic_response_review": {
+      "subject": "We Want to Make This Right, {customer.first_name}",
+      "body_text": "Thank you for taking the time to share your feedback. We're sorry that {issue_summary} didn't meet your expectations. Your satisfaction is our priority, and we'd like the opportunity to make this right.\n\nOur manager will contact you within 24 hours to discuss how we can resolve this.\n\nBest regards,\n{business.name}",
+      "html_template": true,
+      "tone": "empathetic",
+      "includes_callback_link": true
+    },
+    "vip_escalation_sms": {
+      "body": "URGENT: VIP customer {customer.name} left {review.rating}★ review. Please review & respond immediately. Link: {review.url}"
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "min_rating_threshold": 3,
+    "sentiment_detection": "enabled",
+    "auto_response_delay_minutes": 5,
+    "vip_auto_escalate": true,
+    "vip_escalate_to_role": "manager",
+    "crm_logging": "enabled",
+    "required_fields": ["customer.email", "review.rating", "review.text"]
+  },
+  "capabilities_required": ["email", "sms", "crm", "reviews"],
+  "integrations": {
+    "crm": {
+      "sync": true,
+      "fields": ["last_review_rating", "review_status", "requires_followup", "escalation_level"],
+      "relationship": "customer"
+    },
+    "reviews": {
+      "source": "google_business_profile",
+      "sync": true,
+      "polling_interval_minutes": 5
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "data_retention_days": 365,
+    "pii_fields": ["customer.name", "customer.email"],
+    "requires_customer_consent": false,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "Low rating trigger",
+        "input": {"rating": 2, "sentiment": "negative"},
+        "expected_output": ["alert_sent", "task_created", "crm_updated"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "VIP customer escalation",
+        "input": {"rating": 1, "vip_status": true},
+        "expected_output": ["alert_sent", "sms_sent", "task_created", "manager_notified"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Positive review (no trigger)",
+        "input": {"rating": 5, "sentiment": "positive"},
+        "expected_output": ["no_action"],
+        "timeout_ms": 1000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": [
+      "reviews_processed",
+      "low_ratings_detected",
+      "recovery_rate",
+      "response_time_minutes",
+      "vip_escalations"
+    ],
+    "logging_level": "info",
+    "alert_conditions": [
+      {
+        "metric": "low_ratings_detected",
+        "threshold": 5,
+        "time_window_minutes": 60,
+        "action": "notify_manager"
+      }
+    ]
+  },
+  "billing": {
+    "unit": "per_review_processed",
+    "included_in_pack": "reviews_pack",
+    "overages_per_review": 0.01,
+    "monthly_minimum": 19,
+    "metered_events": ["review.submitted"]
+  },
+  "dependencies": [],
+  "created_at": "2026-04-16",
+  "last_updated": "2026-04-16"
+}

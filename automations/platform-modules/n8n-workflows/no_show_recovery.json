@@ -1,0 +1,496 @@
+{
+  "name": "No-Show Recovery Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/no-show-recovery",
+        "options": {}
+      },
+      "id": "webhook_trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "no_show_recovery_webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "const noShowEvent = items[0].json;\nreturn {\n  appointmentId: noShowEvent.appointmentId,\n  contactId: noShowEvent.contactId,\n  tenantId: noShowEvent.tenantId,\n  businessId: noShowEvent.businessId,\n  contactName: noShowEvent.contactName,\n  contactEmail: noShowEvent.contactEmail,\n  contactPhone: noShowEvent.contactPhone,\n  serviceType: noShowEvent.serviceType,\n  appointmentDate: noShowEvent.appointmentDate,\n  appointmentTime: noShowEvent.appointmentTime,\n  businessName: noShowEvent.businessName,\n  businessPhone: noShowEvent.businessPhone,\n  attemptCount: noShowEvent.attemptCount || 1,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "parse_no_show_data",
+      "name": "Parse No-Show Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node.webhook_trigger.json.apiUrl}}/crm/contacts/{{$node[\"parse_no_show_data\"].json.contactId}}/tags",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "yourdeputy_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "tags",
+              "value": "[\"no_show\", \"needs_followup\"]"
+            }
+          ]
+        }
+      },
+      "id": "apply_no_show_tag",
+      "name": "Apply No-Show Tag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": [
+            {
+              "key": "channels",
+              "condition": "contains",
+              "value": "email"
+            }
+          ]
+        }
+      },
+      "id": "check_email_channel",
+      "name": "Email Channel Enabled?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [850, 150]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": [
+            {
+              "key": "channels",
+              "condition": "contains",
+              "value": "sms"
+            }
+          ]
+        }
+      },
+      "id": "check_sms_channel",
+      "name": "SMS Channel Enabled?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [850, 450]
+    },
+    {
+      "parameters": {
+        "functionCode": "const noShow = items[0].json;\nconst rescheduleLinkEasy = `${noShow.businessName.toLowerCase().replace(/\\s+/g, '-')}/reschedule/${noShow.contactId}/${noShow.appointmentId}`;\nconst discountOffer = items[0].json.settings?.offer_discount ? ` Special ${items[0].json.settings?.discount_percentage || 10}% discount on your rescheduled appointment!` : '';\n\nconst html = `\n<html>\n<body style=\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;\">\n<div style=\"background: #f8f9fa; padding: 30px; text-align: center;\">\n<h2 style=\"color: #333; margin: 0;\">We Missed You!</h2>\n</div>\n\n<div style=\"padding: 30px; background: white;\">\n<p>Hi ${noShow.contactName},</p>\n\n<p>We noticed that you weren't able to make your <strong>${noShow.serviceType}</strong> appointment on <strong>${noShow.appointmentDate} at ${noShow.appointmentTime}</strong>.</p>\n\n<p>We understand that life happens, and scheduling can be tricky. We'd love to help you get back on track!</p>\n\n<div style=\"background: #e7f3ff; padding: 20px; border-radius: 4px; margin: 20px 0;\">\n<h3 style=\"margin-top: 0; color: #333;\">Let's Reschedule</h3>\n<p>We make it easy to book your next appointment. Simply click the button below to choose a time that works for you.${discountOffer}</p>\n<p style=\"text-align: center; margin: 20px 0;\">\n<a href=\"${rescheduleLinkEasy}\" style=\"display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; font-weight: bold;\">Reschedule Now</a>\n</p>\n</div>\n\n<p>If you have any questions or need to discuss your appointment, feel free to reach out to us at <a href=\"tel:${noShow.businessPhone}\" style=\"color: #667eea;\">${noShow.businessPhone}</a>.</p>\n\n<p>We look forward to seeing you soon!</p>\n\n<p>Best regards,<br><strong>${noShow.businessName}</strong></p>\n</div>\n\n<div style=\"background: #f0f0f0; padding: 20px; text-align: center; color: #666; font-size: 12px;\">\n<p style=\"margin: 0;\">© ${new Date().getFullYear()} ${noShow.businessName}. All rights reserved.</p>\n</div>\n</body>\n</html>\n`;\n\nreturn { html: html, rescheduleLink: rescheduleLinkEasy };"
+      },
+      "id": "render_recovery_email",
+      "name": "Render Recovery Email",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1000, 100]
+    },
+    {
+      "parameters": {
+        "functionCode": "const noShow = items[0].json;\nconst message = `${noShow.businessName}: We missed you on ${noShow.appointmentDate}! Reschedule within 7 days: {{rescheduleLinkShort}} or call ${noShow.businessPhone}`;\nreturn { message: message.substring(0, 160) };"
+      },
+      "id": "render_recovery_sms",
+      "name": "Render Recovery SMS",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1000, 450]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.acumbamail.com/1/email/send",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "acumbamail_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "to",
+              "value": "={{$node[\"parse_no_show_data\"].json.contactEmail}}"
+            },
+            {
+              "name": "subject",
+              "value": "We missed you - let's reschedule your {{serviceType}} appointment"
+            },
+            {
+              "name": "from",
+              "value": "=noreply@{{domain}}"
+            },
+            {
+              "name": "html",
+              "value": "={{$node[\"render_recovery_email\"].json.html}}"
+            }
+          ]
+        }
+      },
+      "id": "send_recovery_email",
+      "name": "Send Recovery Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1150, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.sms-it.net/api/send",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "sms_it_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{$node[\"parse_no_show_data\"].json.contactPhone}}"
+            },
+            {
+              "name": "message",
+              "value": "={{$node[\"render_recovery_sms\"].json.message}}"
+            },
+            {
+              "name": "senderId",
+              "value": "=YourDeputy"
+            }
+          ]
+        }
+      },
+      "id": "send_recovery_sms",
+      "name": "Send Recovery SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1150, 450]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": [
+            {
+              "key": "charge_no_show_fee",
+              "condition": "is",
+              "value": true
+            }
+          ]
+        }
+      },
+      "id": "check_charge_fee",
+      "name": "Charge Fee Enabled?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [850, 750]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.stripe.com/v1/charges",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "stripe_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "amount",
+              "value": "={{($node[\"parse_no_show_data\"].json.no_show_fee_amount || 0) * 100}}"
+            },
+            {
+              "name": "currency",
+              "value": "=usd"
+            },
+            {
+              "name": "customer",
+              "value": "={{$node[\"parse_no_show_data\"].json.stripe_customer_id}}"
+            },
+            {
+              "name": "description",
+              "value": "={{$node[\"parse_no_show_data\"].json.business_name}} - No-show fee for {{serviceType}} appointment"
+            }
+          ]
+        }
+      },
+      "id": "charge_no_show_fee",
+      "name": "Charge No-Show Fee",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1000, 750]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node.webhook_trigger.json.apiUrl}}/crm/timeline",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "yourdeputy_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contactId",
+              "value": "={{$node[\"parse_no_show_data\"].json.contactId}}"
+            },
+            {
+              "name": "eventType",
+              "value": "no_show_detected"
+            },
+            {
+              "name": "title",
+              "value": "No-show detected and recovery initiated"
+            },
+            {
+              "name": "description",
+              "value": "No-show for {{serviceType}} appointment on {{appointmentDate}}. Recovery message sent."
+            }
+          ]
+        }
+      },
+      "id": "log_crm_timeline",
+      "name": "Log CRM Timeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node.webhook_trigger.json.apiUrl}}/tasks",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "yourdeputy_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "Follow up on no-show: {{contactName}}"
+            },
+            {
+              "name": "description",
+              "value": "Contact {{contactName}} regarding no-show for {{serviceType}} appointment on {{appointmentDate}}"
+            },
+            {
+              "name": "contactId",
+              "value": "={{$node[\"parse_no_show_data\"].json.contactId}}"
+            },
+            {
+              "name": "businessId",
+              "value": "={{$node[\"parse_no_show_data\"].json.businessId}}"
+            },
+            {
+              "name": "priority",
+              "value": "=high"
+            }
+          ]
+        }
+      },
+      "id": "create_followup_task",
+      "name": "Create Followup Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1300, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node.webhook_trigger.json.apiUrl}}/notifications/internal",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "yourdeputy_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "businessId",
+              "value": "={{$node[\"parse_no_show_data\"].json.businessId}}"
+            },
+            {
+              "name": "type",
+              "value": "=no_show_alert"
+            },
+            {
+              "name": "title",
+              "value": "No-show Alert: {{contactName}}"
+            },
+            {
+              "name": "message",
+              "value": "{{contactName}} missed their {{serviceType}} appointment on {{appointmentDate}} at {{appointmentTime}}. Recovery message sent."
+            }
+          ]
+        }
+      },
+      "id": "send_internal_alert",
+      "name": "Send Internal Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1300, 700]
+    },
+    {
+      "parameters": {},
+      "id": "success_response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1500, 400]
+    }
+  ],
+  "connections": {
+    "webhook_trigger": {
+      "main": [
+        [
+          {
+            "node": "parse_no_show_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse_no_show_data": {
+      "main": [
+        [
+          {
+            "node": "apply_no_show_tag",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "check_email_channel",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "check_sms_channel",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "check_charge_fee",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "apply_no_show_tag": {
+      "main": [
+        [
+          {
+            "node": "log_crm_timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_email_channel": {
+      "main": [
+        [
+          {
+            "node": "render_recovery_email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_sms_channel": {
+      "main": [
+        [
+          {
+            "node": "render_recovery_sms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "render_recovery_email": {
+      "main": [
+        [
+          {
+            "node": "send_recovery_email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "render_recovery_sms": {
+      "main": [
+        [
+          {
+            "node": "send_recovery_sms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_charge_fee": {
+      "main": [
+        [
+          {
+            "node": "charge_no_show_fee",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create_followup_task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "charge_no_show_fee": {
+      "main": [
+        [
+          {
+            "node": "create_followup_task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log_crm_timeline": {
+      "main": [
+        [
+          {
+            "node": "create_followup_task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_followup_task": {
+      "main": [
+        [
+          {
+            "node": "send_internal_alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_internal_alert": {
+      "main": [
+        [
+          {
+            "node": "success_response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "errorHandler": "continueOnError",
+    "executionOrder": "v1"
+  }
+}

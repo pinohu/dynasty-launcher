@@ -1,0 +1,383 @@
+{
+  "name": "Appointment Confirmation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/appointment-confirmation",
+        "options": {}
+      },
+      "id": "webhook_trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "appointment_confirmation_webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "const appointment = items[0].json.appointment;\nreturn {\n  appointmentId: appointment.id,\n  contactId: appointment.contactId,\n  dateTime: appointment.dateTime,\n  location: appointment.location,\n  address: appointment.address,\n  serviceType: appointment.serviceType,\n  technician: appointment.technician,\n  duration: appointment.duration,\n  contactName: appointment.contactName,\n  contactEmail: appointment.contactEmail,\n  contactPhone: appointment.contactPhone,\n  prepInstructions: appointment.prepInstructions,\n  attendees: appointment.attendees,\n  status: appointment.status,\n  tenantId: items[0].json.tenantId,\n  businessName: items[0].json.businessName\n};"
+      },
+      "id": "parse_appointment_data",
+      "name": "Parse Appointment Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": [
+            {
+              "key": "channels",
+              "condition": "contains",
+              "value": "email"
+            }
+          ]
+        }
+      },
+      "id": "check_email_channel",
+      "name": "Email Channel Enabled?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": [
+            {
+              "key": "channels",
+              "condition": "contains",
+              "value": "sms"
+            }
+          ]
+        }
+      },
+      "id": "check_sms_channel",
+      "name": "SMS Channel Enabled?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.acumbamail.com/1/email/send",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "acumbamail_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "to",
+              "value": "={{$node[\"parse_appointment_data\"].json.contactEmail}}"
+            },
+            {
+              "name": "subject",
+              "value": "{{businessName}} - Your {{serviceType}} Appointment Confirmed"
+            },
+            {
+              "name": "from",
+              "value": "=noreply@{{domain}}"
+            },
+            {
+              "name": "html",
+              "value": "={{$node[\"render_email_template\"].json.html}}"
+            },
+            {
+              "name": "attachments",
+              "value": "={{$node[\"generate_ics_attachment\"].json.attachment}}"
+            }
+          ]
+        }
+      },
+      "id": "send_email_acumbamail",
+      "name": "Send Email via Acumbamail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.sms-it.net/api/send",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "sms_it_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{$node[\"parse_appointment_data\"].json.contactPhone}}"
+            },
+            {
+              "name": "message",
+              "value": "={{$node[\"render_sms_template\"].json.message}}"
+            },
+            {
+              "name": "senderId",
+              "value": "=YourDeputy"
+            }
+          ]
+        }
+      },
+      "id": "send_sms_sms_it",
+      "name": "Send SMS via SMS-iT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "functionCode": "const appointment = items[0].json;\nconst template = `\n<html>\n<body style=\"font-family: Arial, sans-serif; color: #333;\">\n<h2>Appointment Confirmed</h2>\n<p>Hi {{contactName}},</p>\n<p>Your {{serviceType}} appointment has been confirmed:</p>\n<ul>\n<li><strong>Date & Time:</strong> {{appointmentDate}} at {{appointmentTime}}</li>\n<li><strong>Duration:</strong> {{duration}} minutes</li>\n<li><strong>Location:</strong> {{location}}</li>\n<li><strong>Address:</strong> {{address}}</li>\n<li><strong>Technician:</strong> {{technician}}</li>\n</ul>\n{{#if prepInstructions}}\n<h3>Before Your Appointment</h3>\n<p>{{prepInstructions}}</p>\n{{/if}}\n<p><a href=\"{{mapLink}}\">View Location on Map</a></p>\n<p><a href=\"{{calendarLink}}\">Add to Calendar</a></p>\n<p><a href=\"{{rescheduleLink}}\">Need to Reschedule?</a> | <a href=\"{{cancelLink}}\">Cancel</a></p>\n<p>Questions? Contact {{businessName}} directly.</p>\n</body>\n</html>\n`;\nreturn { html: template, variables: appointment };"
+      },
+      "id": "render_email_template",
+      "name": "Render Email Template",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const appointment = items[0].json;\nconst message = `{{businessName}} confirmed: {{appointmentDate}} at {{appointmentTime}} at {{location}}. Reschedule: {{rescheduleLink}}`;\nreturn { message: message.substring(0, 160), variables: appointment };"
+      },
+      "id": "render_sms_template",
+      "name": "Render SMS Template",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "const appointment = items[0].json;\nconst icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Your Deputy//Appointment//EN\nCALSCALE:GREGORIAN\nMETHOD:REQUEST\nBEGIN:VEVENT\nDTSTART:${appointment.dateTime}\nDTEND:${new Date(new Date(appointment.dateTime).getTime() + appointment.duration * 60000).toISOString()}\nSUMMARY:${appointment.serviceType} - ${appointment.businessName}\nDESCRIPTION:${appointment.prepInstructions || ''}\nLOCATION:${appointment.address}\nUID:appointment-${appointment.appointmentId}@yourdeputy.com\nEND:VEVENT\nEND:VCALENDAR`;\nreturn { attachment: { filename: 'appointment.ics', content: icsContent } };"
+      },
+      "id": "generate_ics_attachment",
+      "name": "Generate ICS Attachment",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node.webhook_trigger.json.apiUrl}}/crm/timeline",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "yourdeputy_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contactId",
+              "value": "={{$node[\"parse_appointment_data\"].json.contactId}}"
+            },
+            {
+              "name": "eventType",
+              "value": "appointment_confirmed"
+            },
+            {
+              "name": "title",
+              "value": "Confirmation sent for {{serviceType}} appointment"
+            },
+            {
+              "name": "description",
+              "value": "Appointment confirmation email and SMS sent for appointment on {{appointmentDate}} at {{appointmentTime}}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{$node[\"parse_appointment_data\"].json}}"
+            }
+          ]
+        }
+      },
+      "id": "update_crm_timeline",
+      "name": "Update CRM Timeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$node.webhook_trigger.json.apiUrl}}/logging/event",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "yourdeputy_api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "eventType",
+              "value": "appointment_confirmation"
+            },
+            {
+              "name": "tenantId",
+              "value": "={{$node[\"parse_appointment_data\"].json.tenantId}}"
+            },
+            {
+              "name": "appointmentId",
+              "value": "={{$node[\"parse_appointment_data\"].json.appointmentId}}"
+            },
+            {
+              "name": "status",
+              "value": "success"
+            },
+            {
+              "name": "channelsSent",
+              "value": "[\"email\", \"sms\"]"
+            }
+          ]
+        }
+      },
+      "id": "log_confirmation_event",
+      "name": "Log Confirmation Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, 500]
+    },
+    {
+      "parameters": {},
+      "id": "success_response",
+      "name": "Send Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1300, 300]
+    }
+  ],
+  "connections": {
+    "webhook_trigger": {
+      "main": [
+        [
+          {
+            "node": "parse_appointment_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse_appointment_data": {
+      "main": [
+        [
+          {
+            "node": "check_email_channel",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "check_sms_channel",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "update_crm_timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_email_channel": {
+      "main": [
+        [
+          {
+            "node": "render_email_template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_sms_channel": {
+      "main": [
+        [
+          {
+            "node": "render_sms_template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "render_email_template": {
+      "main": [
+        [
+          {
+            "node": "generate_ics_attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_ics_attachment": {
+      "main": [
+        [
+          {
+            "node": "send_email_acumbamail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "render_sms_template": {
+      "main": [
+        [
+          {
+            "node": "send_sms_sms_it",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_email_acumbamail": {
+      "main": [
+        [
+          {
+            "node": "log_confirmation_event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_sms_sms_it": {
+      "main": [
+        [
+          {
+            "node": "log_confirmation_event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_crm_timeline": {
+      "main": [
+        [
+          {
+            "node": "success_response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log_confirmation_event": {
+      "main": [
+        [
+          {
+            "node": "success_response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "errorHandler": "continueOnError",
+    "executionOrder": "v1"
+  }
+}

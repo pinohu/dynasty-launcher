@@ -1,0 +1,179 @@
+{
+  "module_id": "reactivation_campaign",
+  "version": "1.0.0",
+  "display_name": "Reactivation Campaign",
+  "description": "3-touch sequence to reactivate inactive customers",
+  "category": "Retention Pack",
+  "tier": "wave_2",
+  "pricing": {
+    "standalone_monthly": 19,
+    "pack_monthly": 35,
+    "pack_includes": "retention_pack",
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "customer.inactive",
+    "source_system": "crm",
+    "conditions": [
+      {
+        "field": "days_since_last_appointment",
+        "operator": "gte",
+        "value": 90,
+        "priority": "high"
+      },
+      {
+        "field": "customer.status",
+        "operator": "equals",
+        "value": "inactive",
+        "priority": "high"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_touch1_wemissyou",
+      "type": "email",
+      "target": "customer",
+      "template": "reactivation_touch1_wemissyou",
+      "delay_ms": 0,
+      "personalization": ["first_name", "last_appointment"]
+    },
+    {
+      "id": "action_touch2_special_offer",
+      "type": "email",
+      "target": "customer",
+      "template": "reactivation_touch2_offer",
+      "delay_days": 3,
+      "includes_promo_code": true,
+      "offer_value": "15_percent"
+    },
+    {
+      "id": "action_touch3_last_chance",
+      "type": "email",
+      "target": "customer",
+      "template": "reactivation_touch3_last_chance",
+      "delay_days": 7,
+      "urgency_tone": true
+    },
+    {
+      "id": "action_sms_followup",
+      "type": "sms",
+      "target": "customer",
+      "template": "reactivation_sms_backup",
+      "delay_days": 10,
+      "conditional": "no_email_response"
+    },
+    {
+      "id": "action_track_engagement",
+      "type": "conditional",
+      "condition": "email.opened == true OR sms.delivered == true",
+      "actions": [
+        {
+          "type": "crm_field_update",
+          "field": "reactivation_engagement",
+          "value": "responsive"
+        }
+      ]
+    },
+    {
+      "id": "action_update_status",
+      "type": "conditional",
+      "condition": "appointment.booked == true after campaign",
+      "actions": [
+        {
+          "type": "crm_field_update",
+          "field": "customer_status",
+          "value": "ACTIVE"
+        },
+        {
+          "type": "crm_field_update",
+          "field": "winback_date",
+          "value": "{booking_date}"
+        },
+        {
+          "type": "crm_tag",
+          "tag": "reactivated",
+          "value": true
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "reactivation_campaign_started": "{current_date}",
+        "campaign_status": "{stage}",
+        "engagement_score": "{engagement_metric}"
+      }
+    }
+  ],
+  "templates": {
+    "reactivation_touch1_wemissyou": {
+      "subject": "We Miss You, {customer.first_name}!",
+      "body_text": "Hi {customer.first_name},\n\nIt's been {days_inactive} days since your last {service.type} appointment. We'd love to see you again!\n\nSchedule Your Next Appointment: {booking_link}\n\nLooking forward to serving you,\n{business.name}",
+      "html_template": true,
+      "tone": "friendly"
+    },
+    "reactivation_touch2_offer": {
+      "subject": "Come Back for 15% Off Your Next Service",
+      "body_text": "We want to make it easy for you to get back on track. Enjoy 15% off your next {service.type} appointment with code: {promo_code}\n\nBook Now: {booking_link}\n\nOffer valid for 14 days.",
+      "html_template": true,
+      "includes_discount": true
+    },
+    "reactivation_touch3_last_chance": {
+      "subject": "Last Chance: 15% Off Expires Tomorrow",
+      "body_text": "Your exclusive 15% discount ({promo_code}) expires tomorrow at midnight.\n\nDon't miss out! Book your appointment now: {booking_link}",
+      "html_template": true,
+      "tone": "urgent"
+    },
+    "reactivation_sms_backup": {
+      "body": "Hey {customer.first_name}! It's been a while. Enjoy 15% off your next service. Code: {promo_code}. Book: {booking_link}"
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "inactivity_threshold_days": 90,
+    "offer_discount_percent": 15,
+    "offer_expiry_days": 14,
+    "track_opens": true,
+    "track_clicks": true,
+    "required_fields": ["customer.email", "customer.last_appointment_date"]
+  },
+  "capabilities_required": ["email", "sms", "crm"],
+  "integrations": {
+    "crm": {
+      "sync": true,
+      "fields": ["reactivation_campaign_started", "campaign_status", "engagement_score"]
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "Inactive customer trigger (90+ days)",
+        "input": {"days_since_appointment": 90},
+        "expected_output": ["campaign_initiated", "email_sent"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Reactivation success",
+        "input": {"campaign_status": "active", "appointment_booked": true},
+        "expected_output": ["status_updated_to_active", "winback_date_set"],
+        "timeout_ms": 5000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": ["inactive_customers_identified", "reactivation_rate", "winback_rate", "offer_redemption"],
+    "logging_level": "info"
+  },
+  "billing": {
+    "unit": "per_reactivation_campaign",
+    "included_in_pack": "retention_pack",
+    "monthly_minimum": 19
+  }
+}

@@ -1,0 +1,407 @@
+{
+  "name": "Category 8: Client Onboarding",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat8/start-onboarding",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-1",
+      "name": "Webhook - Start Onboarding",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 50]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/clients/{{ $json.clientId }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-2",
+      "name": "Get Client Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 50]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/onboarding-templates?serviceType={{ $json.serviceType }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-3",
+      "name": "Get Onboarding Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const client = $json.body[0];\nconst template = $json.body[1];\nconst docs = template.documents || [];\nconst links = template.links || [];\nconst credentials = template.credentials || [];\n\nconst packet = {\n  clientId: client.id,\n  clientName: client.name,\n  clientEmail: client.email,\n  documents: docs.map(d => ({\n    ...d,\n    url: `${process.env.APP_URL}/docs/${d.id}`\n  })),\n  importantLinks: links.map(l => ({\n    ...l,\n    customized: l.placeholder ? l.placeholder.replace('{{CLIENT_NAME}}', client.name) : l.url\n  })),\n  credentials: credentials.map(c => ({\n    username: c.username_template ? c.username_template.replace('{{CLIENT_NAME}}', client.name) : '',\n    passwordLink: `${process.env.APP_URL}/credentials/${c.id}?clientId=${client.id}`,\n    platform: c.platform\n  })),\n  createdAt: new Date().toISOString()\n};\n\nreturn packet;"
+      },
+      "id": "uuid-4",
+      "name": "Build Welcome Packet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 50]
+    },
+    {
+      "parameters": {
+        "fromEmail": "onboarding@deputy.app",
+        "toEmail": "={{ $json.clientEmail }}",
+        "subject": "Welcome to Deputy! Here's Everything You Need",
+        "htmlBody": "<h2>Welcome {{ clientName }}!</h2><p>Here are your documents, links, and credentials:</p>"
+      },
+      "id": "uuid-5",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [1050, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/onboarding",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "status", "value": "welcome_sent"},
+            {"name": "startedAt", "value": "={{ $moment().toISOString() }}"}
+          ]
+        }
+      },
+      "id": "uuid-6",
+      "name": "Log Onboarding Start",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat8/generate-checklist",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-7",
+      "name": "Webhook - Generate Checklist",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/checklist-templates?serviceType={{ $json.serviceType }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-8",
+      "name": "Get Checklist Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "const template = $json.body[0] || {};\nconst checklist = {\n  clientId: $json.clientId,\n  items: (template.items || []).map(item => ({\n    id: item.id,\n    title: item.title,\n    description: item.description,\n    dueDate: new Date(Date.now() + (item.daysUntilDue || 14) * 24 * 60 * 60 * 1000),\n    completed: false,\n    assignedTo: item.assignedTo || 'client'\n  })),\n  createdAt: new Date().toISOString()\n};\nreturn checklist;"
+      },
+      "id": "uuid-9",
+      "name": "Create Checklist",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/onboarding-checklists",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "items", "value": "={{ $json.items }}"}
+          ]
+        }
+      },
+      "id": "uuid-10",
+      "name": "Save Checklist",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat8/request-documents",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-11",
+      "name": "Webhook - Request Documents",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/document-requests",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "documents", "value": "={{ $json.requiredDocuments }}"},
+            {"name": "dueDate", "value": "={{ $moment().add(5, 'days').toISOString() }}"}
+          ]
+        }
+      },
+      "id": "uuid-12",
+      "name": "Create Document Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "documents@deputy.app",
+        "toEmail": "={{ $json.clientEmail }}",
+        "subject": "Please Submit Your Documents",
+        "htmlBody": "<p>We need the following documents:</p><ul><li>Document 1</li></ul>"
+      },
+      "id": "uuid-13",
+      "name": "Send Document Request",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat8/provision-portal",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-14",
+      "name": "Webhook - Provision Portal",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "functionCode": "const clientId = $json.clientId;\nconst tempPassword = Math.random().toString(36).substring(2, 15);\nconst portalUser = {\n  clientId,\n  email: $json.clientEmail,\n  role: 'client',\n  tempPassword,\n  createdAt: new Date().toISOString()\n};\nreturn portalUser;"
+      },
+      "id": "uuid-15",
+      "name": "Generate Portal Credentials",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/portal-users",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "email", "value": "={{ $json.email }}"},
+            {"name": "tempPassword", "value": "={{ $json.tempPassword }}"},\n            {"name": "role", "value": "client"}
+          ]
+        }
+      },
+      "id": "uuid-16",
+      "name": "Create Portal Account",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "fromEmail": "portal@deputy.app",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Your Client Portal Account",
+        "htmlBody": "<p>Your account has been created. Login: {{ email }}</p>"
+      },
+      "id": "uuid-17",
+      "name": "Send Portal Credentials",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat8/team-introduction",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-18",
+      "name": "Webhook - Send Team Intro",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 650]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DATABASE_URL }}/api/team-members?assignedToClient={{ $json.clientId }}",
+        "authentication": "bearerToken"
+      },
+      "id": "uuid-19",
+      "name": "Get Assigned Team",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 650]
+    },
+    {
+      "parameters": {
+        "fromEmail": "team@deputy.app",
+        "toEmail": "={{ $json.clientEmail }}",
+        "subject": "Meet Your Dedicated Team",
+        "htmlBody": "<p>Your dedicated team members are:</p>"
+      },
+      "id": "uuid-20",
+      "name": "Send Team Intro Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [650, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat8/set-expectations",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-21",
+      "name": "Webhook - Set Expectations",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DATABASE_URL }}/api/service-expectations",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "timeline", "value": "={{ $json.timeline }}"},
+            {"name": "milestones", "value": "={{ $json.milestones }}"}
+          ]
+        }
+      },
+      "id": "uuid-22",
+      "name": "Store Service Expectations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 800]
+    },
+    {
+      "parameters": {
+        "fromEmail": "services@deputy.app",
+        "toEmail": "={{ $json.clientEmail }}",
+        "subject": "Here's What to Expect",
+        "htmlBody": "<h2>Service Timeline & Milestones</h2>"
+      },
+      "id": "uuid-23",
+      "name": "Send Expectations Email",
+      "type": "n8n-nodes-base.sendGrid",
+      "typeVersion": 2,
+      "position": [650, 800]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cat8/schedule-first-appointment",
+        "responseMode": "responseNode"
+      },
+      "id": "uuid-24",
+      "name": "Webhook - Schedule Appointment",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 950]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.trafft.com/v1/appointments",
+        "authentication": "bearerToken",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameter": [
+            {"name": "clientId", "value": "={{ $json.clientId }}"},
+            {"name": "type", "value": "initial_consultation"},
+            {"name": "duration", "value": "60"}
+          ]
+        }
+      },
+      "id": "uuid-25",
+      "name": "Create Appointment in Trafft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 950]
+    }
+  ],
+  "connections": {
+    "Webhook - Start Onboarding": {
+      "main": [[{ "node": "Get Client Details", "branch": 0 }]]
+    },
+    "Get Client Details": {
+      "main": [[{ "node": "Get Onboarding Template", "branch": 0 }]]
+    },
+    "Get Onboarding Template": {
+      "main": [[{ "node": "Build Welcome Packet", "branch": 0 }]]
+    },
+    "Build Welcome Packet": {
+      "main": [[{ "node": "Send Welcome Email", "branch": 0 }]]
+    },
+    "Send Welcome Email": {
+      "main": [[{ "node": "Log Onboarding Start", "branch": 0 }]]
+    },
+    "Webhook - Generate Checklist": {
+      "main": [[{ "node": "Get Checklist Template", "branch": 0 }]]
+    },
+    "Get Checklist Template": {
+      "main": [[{ "node": "Create Checklist", "branch": 0 }]]
+    },
+    "Create Checklist": {
+      "main": [[{ "node": "Save Checklist", "branch": 0 }]]
+    },
+    "Webhook - Request Documents": {
+      "main": [[{ "node": "Create Document Request", "branch": 0 }]]
+    },
+    "Create Document Request": {
+      "main": [[{ "node": "Send Document Request", "branch": 0 }]]
+    },
+    "Webhook - Provision Portal": {
+      "main": [[{ "node": "Generate Portal Credentials", "branch": 0 }]]
+    },
+    "Generate Portal Credentials": {
+      "main": [[{ "node": "Create Portal Account", "branch": 0 }]]
+    },
+    "Create Portal Account": {
+      "main": [[{ "node": "Send Portal Credentials", "branch": 0 }]]
+    },
+    "Webhook - Send Team Intro": {
+      "main": [[{ "node": "Get Assigned Team", "branch": 0 }]]
+    },
+    "Get Assigned Team": {
+      "main": [[{ "node": "Send Team Intro Email", "branch": 0 }]]
+    },
+    "Webhook - Set Expectations": {
+      "main": [[{ "node": "Store Service Expectations", "branch": 0 }]]
+    },
+    "Store Service Expectations": {
+      "main": [[{ "node": "Send Expectations Email", "branch": 0 }]]
+    },
+    "Webhook - Schedule Appointment": {
+      "main": [[{ "node": "Create Appointment in Trafft", "branch": 0 }]]
+    }
+  }
+}

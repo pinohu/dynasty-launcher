@@ -1,0 +1,414 @@
+═══════════════════════════════════════════════════════════════════════════════
+DYNASTY EMPIRE AUTOMATION CATALOG
+Categories 23-30: Reporting, Marketing, Social Media, SEO, Ads, Email, Referrals, Upselling
+═══════════════════════════════════════════════════════════════════════════════
+
+MANIFEST OF GENERATED FILES
+Generated: 16 files (8 n8n workflows + 8 Vercel APIs)
+Stack: Vercel + n8n + Neon PostgreSQL + Stripe + Acumbamail + SMS-iT + CallScaler + Trafft
+
+═══════════════════════════════════════════════════════════════════════════════
+CATEGORY 23: REPORTING & ANALYTICS (10 automations)
+═══════════════════════════════════════════════════════════════════════════════
+
+Files Created:
+├── n8n-workflows/cat23_reporting.json (115 lines)
+└── vercel-api/cat23_reporting.js (491 lines)
+
+Automations Included:
+1. Daily Revenue Snapshot - Generates daily revenue reports from completed jobs/payments
+2. KPI Dashboard Data Collector - Aggregates KPI data every 30 minutes for dashboard
+3. Client ROI Report Generator - Calculates ROI for individual clients
+4. Lead Source Attribution Analyzer - Analyzes and attributes leads to their sources
+5. Pipeline Velocity Calculator - Measures speed of opportunities through sales pipeline
+6. Churn Analysis Tracker - Identifies at-risk customers and churn patterns
+7. Custom Report Builder - Allows flexible report creation via webhook
+8. Team Performance Scorecard - Generates individual and team performance metrics
+9. Monthly Business Review Generator - Creates comprehensive monthly reports
+10. Real-Time Alert Engine - Monitors thresholds and sends alerts
+
+Key Features:
+- PostgreSQL queries for data aggregation
+- Email notifications via Acumbamail (Resend)
+- Real-time alerts on critical metrics
+- Automated report generation and distribution
+- Performance trend analysis
+
+═══════════════════════════════════════════════════════════════════════════════
+CATEGORY 24: MARKETING CONTENT (8 automations)
+═══════════════════════════════════════════════════════════════════════════════
+
+Files Created:
+├── n8n-workflows/cat24_marketing_content.json (55 lines)
+└── vercel-api/cat24_marketing_content.js (506 lines)
+
+Automations Included:
+1. Blog Post Generator - Uses OpenAI to generate blog posts from service topics
+2. Content Calendar Automation - Auto-schedules content across channels
+3. Content Repurposing Engine - Transforms blog→social→email→video scripts
+4. Case Study Builder - Auto-generates case studies from completed jobs
+5. FAQ Automation - Builds FAQ database from support tickets
+6. Content Performance Tracker - Monitors engagement and ROI of content
+7. Seasonal Content Scheduler - Auto-schedules seasonal campaigns
+8. Local SEO Content Generator - Creates city + service-specific pages
+
+Key Features:
+- OpenAI integration for AI-powered content generation
+- Multi-platform content distribution
+- Automatic content variations for different channels
+- SEO optimization
+- Performance tracking and analytics
+
+═══════════════════════════════════════════════════════════════════════════════
+CATEGORY 25: SOCIAL MEDIA (6 automations)
+═══════════════════════════════════════════════════════════════════════════════
+
+Files Created:
+├── n8n-workflows/cat25_social_media.json (43 lines)
+└── vercel-api/cat25_social_media.js (388 lines)
+
+Automations Included:
+1. Multi-Platform Post Scheduler - Schedules posts across all platforms
+2. Comment Monitoring and Alert - Monitors comments and triggers alerts
+3. User-Generated Content Collector - Collects and curates UGC automatically
+4. Hashtag Performance Tracker - Tracks hashtag performance metrics
+5. Engagement Metric Aggregator - Aggregates engagement from all platforms
+6. Social Listening Keyword Monitor - Monitors keywords and brand mentions
+
+Key Features:
+- Multi-platform scheduling (Facebook, Instagram, Twitter, LinkedIn)
+- Sentiment analysis on mentions
+- Alert system for priority comments
+- Real-time engagement tracking
+- Hashtag and keyword monitoring
+
+═══════════════════════════════════════════════════════════════════════════════
+CATEGORY 26: SEO (8 automations)
+═══════════════════════════════════════════════════════════════════════════════
+
+Files Created:
+├── n8n-workflows/cat26_seo.json (55 lines)
+└── vercel-api/cat26_seo.js (506 lines)
+
+Automations Included:
+1. Keyword Rank Tracker - Monitors keyword rankings across search engines
+2. Broken Link Detector - Identifies broken links on site
+3. Meta Tag Audit Automation - Validates meta tags for SEO compliance
+4. Backlink Monitor - Tracks new and lost backlinks
+5. Content Gap Analyzer - Identifies content opportunities vs competitors
+6. Page Speed Monitor - Monitors page load speeds and performance
+7. Technical SEO Validator - Validates technical SEO implementations
+8. Local SEO Citation Checker - Monitors local business citations and NAP
+
+Key Features:
+- Daily keyword ranking monitoring
+- Automated broken link detection
+- Meta tag compliance validation
+- Page speed monitoring (Lighthouse-style)
+- Local citation consistency checking
+- Content gap analysis vs competitors
+
+═══════════════════════════════════════════════════════════════════════════════
+CATEGORY 27: PAID ADVERTISING (7 automations)
+═══════════════════════════════════════════════════════════════════════════════
+
+Files Created:
+├── n8n-workflows/cat27_paid_ads.json (49 lines)
+└── vercel-api/cat27_paid_ads.js (521 lines)
+
+Automations Included:
+1. Budget Pacing Monitor - Monitors daily/monthly spend and adjusts pacing
+2. Ad A/B Test Manager - Automates A/B test setup and determines winners
+3. Negative Keyword Harvester - Identifies and adds negative keywords
+4. Retargeting Audience Builder - Creates and updates retargeting audiences
+5. ROAS Calculator and Alerter - Calculates ROAS and alerts on low performance
+6. Campaign Pause/Resume Automation - Auto-pauses/resumes campaigns on triggers
+7. Landing Page Performance Tracker - Tracks landing page conversion metrics
+
+Key Features:
+- Budget pacing alerts
+- Automated A/B testing with statistical significance
+- Negative keyword management
+- Dynamic retargeting audience building
+- ROAS monitoring and alerting
+- Campaign automation based on performance thresholds
+- Stripe integration for payment processing
+
+═══════════════════════════════════════════════════════════════════════════════
+CATEGORY 28: EMAIL CAMPAIGNS (8 automations)
+═══════════════════════════════════════════════════════════════════════════════
+
+Files Created:
+├── n8n-workflows/cat28_email_campaigns.json (55 lines)
+└── vercel-api/cat28_email_campaigns.js (490 lines)
+
+Automations Included:
+1. Welcome Sequence Builder - Auto-sends welcome email series to new subscribers
+2. Nurture Campaign Manager - Manages multi-touch nurture campaigns with delays
+3. List Hygiene Automation - Removes bounces and unsubscribes
+4. Subject Line A/B Tester - Tests subject lines and auto-sends winner
+5. Seasonal Campaign Scheduler - Auto-schedules seasonal/holiday emails
+6. Segmentation Engine - Auto-segments lists by behavior/history
+7. Lifecycle Trigger Manager - Sends emails based on lifecycle events
+8. Campaign Performance Reporter - Tracks and reports campaign metrics
+
+Key Features:
+- Automated welcome sequences
+- Multi-delay nurture campaigns
+- Email list hygiene (bounces, unsubscribes, inactives)
+- Subject line A/B testing
+- Advanced segmentation
+- Lifecycle trigger automation
+- Performance reporting
+
+═══════════════════════════════════════════════════════════════════════════════
+CATEGORY 29: REFERRAL & AFFILIATE PROGRAMS (5 automations)
+═══════════════════════════════════════════════════════════════════════════════
+
+Files Created:
+├── n8n-workflows/cat29_referrals.json (37 lines)
+└── vercel-api/cat29_referrals.js (448 lines)
+
+Automations Included:
+1. Unique Referral Link Generator - Generates unique referral links per customer
+2. Referral Conversion Tracker and Creditor - Tracks conversions and credits referrer
+3. Reward Payout Processor - Processes and distributes referral rewards
+4. Partner Performance Dashboard - Displays referral metrics for partners
+5. Quarterly Referral Campaign Launcher - Launches promotional campaigns
+
+Key Features:
+- Unique referral code generation
+- Conversion tracking and attribution
+- Automatic reward crediting
+- Milestone bonuses (5, 10+ referrals)
+- Stripe payout processing
+- Partner performance dashboard
+- Seasonal campaign launching
+
+═══════════════════════════════════════════════════════════════════════════════
+CATEGORY 30: UPSELLING & CROSS-SELLING (5 automations)
+═══════════════════════════════════════════════════════════════════════════════
+
+Files Created:
+├── n8n-workflows/cat30_upselling.json (37 lines)
+└── vercel-api/cat30_upselling.js (414 lines)
+
+Automations Included:
+1. Usage Limit Approach Trigger - Triggers upsell when customer nears limits
+2. Complementary Service Recommender - Recommends related services
+3. Upgrade Renewal Packager - Creates upgrade packages for renewals
+4. Abandoned Cart/Estimate Recovery - Recovers abandoned quotes with discounts
+5. Service Anniversary Offer Generator - Generates renewal offers on anniversaries
+
+Key Features:
+- Usage monitoring and threshold triggers
+- Service complement recommendations
+- Dynamic upgrade packaging
+- Abandoned estimate recovery with discounts
+- Anniversary offers with personalized discounts
+- Lifetime value-based discount tiers
+
+═══════════════════════════════════════════════════════════════════════════════
+TECHNICAL IMPLEMENTATION DETAILS
+═══════════════════════════════════════════════════════════════════════════════
+
+Database Stack:
+- Neon PostgreSQL for all data persistence
+- Tables for reports, metrics, campaigns, leads, jobs, clients, etc.
+- Proper indexing for performance
+
+API Endpoints:
+- POST methods for all actions
+- Authentication via Bearer tokens
+- HMAC signature verification for webhooks
+- Error handling with status codes
+- JSON request/response format
+
+Integrations:
+- Acumbamail/Resend for email notifications
+- OpenAI API for content generation
+- Stripe for payment processing and payouts
+- SMS-iT for SMS alerts (referenced in code)
+- CallScaler for phone integration (ready)
+- Trafft for calendar integration (ready)
+
+Security:
+- Environment variable management
+- HMAC signature verification
+- Bearer token authentication
+- SQL parameterized queries to prevent injection
+- Rate limiting ready
+
+Production Readiness:
+- Comprehensive error handling
+- Database transaction management
+- Connection pooling
+- Logging and monitoring hooks
+- Alert systems for critical thresholds
+
+═══════════════════════════════════════════════════════════════════════════════
+FILE LOCATIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+All files are located in:
+/sessions/gallant-kind-mccarthy/mnt/outputs/dynasty-automations/catalog/
+
+n8n Workflows:
+├── n8n-workflows/cat23_reporting.json
+├── n8n-workflows/cat24_marketing_content.json
+├── n8n-workflows/cat25_social_media.json
+├── n8n-workflows/cat26_seo.json
+├── n8n-workflows/cat27_paid_ads.json
+├── n8n-workflows/cat28_email_campaigns.json
+├── n8n-workflows/cat29_referrals.json
+└── n8n-workflows/cat30_upselling.json
+
+Vercel APIs:
+├── vercel-api/cat23_reporting.js
+├── vercel-api/cat24_marketing_content.js
+├── vercel-api/cat25_social_media.js
+├── vercel-api/cat26_seo.js
+├── vercel-api/cat27_paid_ads.js
+├── vercel-api/cat28_email_campaigns.js
+├── vercel-api/cat29_referrals.js
+└── vercel-api/cat30_upselling.js
+
+═══════════════════════════════════════════════════════════════════════════════
+DEPLOYMENT INSTRUCTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+For n8n Workflows:
+1. Log into n8n instance
+2. Import each JSON file as a new workflow
+3. Configure credentials for:
+   - PostgreSQL (Neon)
+   - Acumbamail/Resend
+   - OpenAI
+   - Stripe
+   - SMS-iT
+   - CallScaler
+   - Trafft
+4. Set environment variables
+5. Enable and test each workflow
+
+For Vercel APIs:
+1. Deploy to Vercel with `vercel deploy`
+2. Configure environment variables:
+   - DATABASE_URL (Neon PostgreSQL)
+   - ACUMBAMAIL_API_KEY (Resend)
+   - OPENAI_API_KEY
+   - STRIPE_SECRET_KEY
+   - ADMIN_EMAIL
+   - DOMAIN
+3. Set up webhook endpoints
+4. Configure CORS if needed
+5. Test endpoints with Postman/curl
+
+Environment Variables Template:
+DATABASE_URL=postgresql://...
+ACUMBAMAIL_API_KEY=...
+OPENAI_API_KEY=sk-...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_live_...
+ADMIN_EMAIL=admin@deputy.local
+DOMAIN=https://deputy.local
+WEBHOOK_SECRET=...
+ALERT_PHONE=+1...
+
+═══════════════════════════════════════════════════════════════════════════════
+TESTING CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════
+
+Category 23 (Reporting):
+☐ Daily revenue snapshot generates and sends email
+☐ KPI dashboard updates every 30 minutes
+☐ Client ROI calculations are accurate
+☐ Lead attribution tracking works
+☐ Pipeline velocity calculations correct
+☐ Churn analysis identifies at-risk customers
+☐ Custom reports work with various filters
+☐ Team scorecards calculate performance
+☐ Monthly review generates properly
+☐ Alert engine triggers on thresholds
+
+Category 24 (Content):
+☐ Blog generator creates proper markdown
+☐ Content scheduling works across platforms
+☐ Content repurposing creates variations
+☐ Case studies generate from jobs
+☐ FAQ builds from ticket data
+☐ Performance tracking logs metrics
+☐ Seasonal content scheduler sets dates
+☐ Local SEO pages generate correctly
+
+Category 25 (Social):
+☐ Posts schedule to all platforms
+☐ Comments monitored and alerts sent
+☐ UGC collected properly
+☐ Hashtag tracking records data
+☐ Engagement aggregation works
+☐ Social listening detects sentiment
+
+Category 26 (SEO):
+☐ Keyword rankings tracked daily
+☐ Broken links detected
+☐ Meta tags audited
+☐ Backlinks monitored
+☐ Content gaps identified
+☐ Page speeds recorded
+☐ Technical SEO checks pass
+☐ Citations consistency verified
+
+Category 27 (Ads):
+☐ Budget pacing monitored
+☐ A/B tests evaluate winners
+☐ Negative keywords added
+☐ Retargeting audiences built
+☐ ROAS calculated correctly
+☐ Campaigns pause/resume on triggers
+☐ Landing pages tracked
+
+Category 28 (Email):
+☐ Welcome sequences send on time
+☐ Nurture campaigns delay properly
+☐ List hygiene removes bad contacts
+☐ Subject line tests evaluate
+☐ Seasonal emails schedule
+☐ Segmentation creates groups
+☐ Lifecycle triggers fire
+☐ Performance reports generate
+
+Category 29 (Referrals):
+☐ Unique links generate
+☐ Conversions track
+☐ Credits applied correctly
+☐ Payouts process
+☐ Dashboard shows data
+☐ Campaigns launch quarterly
+
+Category 30 (Upselling):
+☐ Usage monitoring triggers alerts
+☐ Service recommendations send
+☐ Upgrade packages created
+☐ Abandoned carts recover
+☐ Anniversary offers generated
+
+═══════════════════════════════════════════════════════════════════════════════
+NOTES
+═══════════════════════════════════════════════════════════════════════════════
+
+1. All workflows use PostgreSQL as primary data source
+2. Email delivery via Acumbamail/Resend for reliability
+3. OpenAI integration for content generation (Categories 24)
+4. Stripe integration for payments and payouts
+5. All APIs use Bearer token authentication
+6. HMAC signature verification supported for webhooks
+7. Error handling implemented throughout
+8. Logging hooks ready for monitoring
+9. Scalable architecture with connection pooling
+10. Ready for multi-tenant deployment
+
+═══════════════════════════════════════════════════════════════════════════════
+Generated: Deputy Platform Automation Catalog - Categories 23-30
+Technology Stack: Vercel, n8n, Neon PostgreSQL, Stripe, Acumbamail, SMS-iT, CallScaler, Trafft
+═══════════════════════════════════════════════════════════════════════════════

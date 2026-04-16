@@ -1,0 +1,154 @@
+{
+  "name": "Client Welcome Sequence (30-day)",
+  "nodes": [
+    {
+      "parameters": {
+        "eventTriggerType": "webhookReceived",
+        "webhookPath": "client_welcome",
+        "options": {}
+      },
+      "id": "customer_created_webhook",
+      "name": "Customer Created Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Welcome to {{ $json.business.name }}, {{ $json.customer.first_name }}!",
+        "html": "<p>Welcome! Thank you for choosing us for your {{ $json.service.type }} needs.</p><p>We're excited to have you. Here's what to expect:</p><ul><li>Professional service</li><li>Rapid response</li><li>Exclusive benefits</li></ul>"
+      },
+      "id": "send_day0_welcome",
+      "name": "Send Day 0: Welcome Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "waitTime": 259200,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_day3",
+      "name": "Wait 3 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 350]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "How's Everything Going, {{ $json.customer.first_name }}?",
+        "html": "<p>A few days have passed. Are you satisfied? Any questions?</p><p>Reply to this email—we read every message!</p>"
+      },
+      "id": "send_day3_checkin",
+      "name": "Send Day 3: Check-in",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 350]
+    },
+    {
+      "parameters": {
+        "phoneNumber": "{{ $json.customer.phone }}",
+        "message": "Hi {{ $json.customer.first_name }}! How's everything? Reply with any questions."
+      },
+      "id": "send_day3_sms",
+      "name": "Send Day 3: SMS",
+      "type": "n8n-nodes-base.sms",
+      "typeVersion": 1,
+      "position": [650, 450]
+    },
+    {
+      "parameters": {
+        "waitTime": 604800,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_day7",
+      "name": "Wait 7 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Pro Tips for Your {{ $json.service.type }}",
+        "html": "<p>Here are expert tips to maximize your {{ $json.service.type }}:</p><p>1. Tip 1</p><p>2. Tip 2</p><p>3. Tip 3</p>"
+      },
+      "id": "send_day7_tips",
+      "name": "Send Day 7: Tips",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 500]
+    },
+    {
+      "parameters": {
+        "waitTime": 1209600,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_day14",
+      "name": "Wait 14 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 650]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "{{ $json.customer.first_name }}, Your Feedback Matters",
+        "html": "<p>Would you take 2 minutes to share your experience?</p><p><a href='{{ $env.REVIEW_GOOGLE_URL }}'>Leave Google Review</a> | <a href='{{ $env.REVIEW_FACEBOOK_URL }}'>Facebook</a></p>"
+      },
+      "id": "send_day14_review",
+      "name": "Send Day 14: Review Request",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 650]
+    },
+    {
+      "parameters": {
+        "waitTime": 1814400,
+        "timeUnit": "seconds"
+      },
+      "id": "delay_day30",
+      "name": "Wait 30 Days",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [450, 800]
+    },
+    {
+      "parameters": {
+        "fromEmail": "{{ $env.SENDER_EMAIL }}",
+        "toEmail": "{{ $json.customer.email }}",
+        "subject": "Refer Friends, Earn Rewards!",
+        "html": "<p>Love our service? Refer a friend and earn {{ $json.referral_incentive }}.</p><p><a href='{{ $json.referral_link }}'>Share Your Link</a></p>"
+      },
+      "id": "send_day30_referral",
+      "name": "Send Day 30: Referral Program",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [650, 800]
+    }
+  ],
+  "connections": {
+    "customer_created_webhook": {
+      "main": [[{"node": "send_day0_welcome", "type": "main", "index": 0}, {"node": "delay_day3", "type": "main", "index": 0}, {"node": "delay_day7", "type": "main", "index": 0}, {"node": "delay_day14", "type": "main", "index": 0}, {"node": "delay_day30", "type": "main", "index": 0}]]
+    },
+    "delay_day3": {
+      "main": [[{"node": "send_day3_checkin", "type": "main", "index": 0}, {"node": "send_day3_sms", "type": "main", "index": 0}]]
+    },
+    "delay_day7": {
+      "main": [[{"node": "send_day7_tips", "type": "main", "index": 0}]]
+    },
+    "delay_day14": {
+      "main": [[{"node": "send_day14_review", "type": "main", "index": 0}]]
+    },
+    "delay_day30": {
+      "main": [[{"node": "send_day30_referral", "type": "main", "index": 0}]]
+    }
+  }
+}

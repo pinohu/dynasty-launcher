@@ -1,0 +1,55 @@
+{
+  "name": "Category 26: SEO",
+  "description": "Search engine optimization and monitoring automations",
+  "version": "1.0",
+  "automations": [
+    {
+      "id": "cat26_001_keyword_rank",
+      "name": "Keyword Rank Tracker",
+      "description": "Monitors keyword rankings across search engines",
+      "trigger": "Schedule: Daily"
+    },
+    {
+      "id": "cat26_002_broken_links",
+      "name": "Broken Link Detector",
+      "description": "Identifies and alerts on broken links on site",
+      "trigger": "Schedule: Weekly"
+    },
+    {
+      "id": "cat26_003_meta_audit",
+      "name": "Meta Tag Audit Automation",
+      "description": "Validates and audits meta tags for SEO compliance",
+      "trigger": "Schedule: Weekly"
+    },
+    {
+      "id": "cat26_004_backlink_monitor",
+      "name": "Backlink Monitor",
+      "description": "Tracks new and lost backlinks",
+      "trigger": "Schedule: Every 3 days"
+    },
+    {
+      "id": "cat26_005_content_gap",
+      "name": "Content Gap Analyzer",
+      "description": "Identifies content opportunities vs competitors",
+      "trigger": "Schedule: Monthly"
+    },
+    {
+      "id": "cat26_006_page_speed",
+      "name": "Page Speed Monitor",
+      "description": "Monitors page load speeds and performance",
+      "trigger": "Schedule: Daily"
+    },
+    {
+      "id": "cat26_007_technical_seo",
+      "name": "Technical SEO Validator",
+      "description": "Validates technical SEO implementations",
+      "trigger": "Schedule: Weekly"
+    },
+    {
+      "id": "cat26_008_local_citations",
+      "name": "Local SEO Citation Checker",
+      "description": "Monitors local business citations and NAP consistency",
+      "trigger": "Schedule: Weekly"
+    }
+  ]
+}

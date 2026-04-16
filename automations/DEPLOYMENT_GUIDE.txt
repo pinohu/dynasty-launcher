@@ -1,0 +1,448 @@
+=============================================================================
+DYNASTY EMPIRE AUTOMATION CATALOG
+DEPLOYMENT & IMPLEMENTATION GUIDE
+=============================================================================
+
+PROJECT OVERVIEW
+=============================================================================
+A comprehensive automation platform for service businesses (HVAC, plumbing, 
+pest control, electrical) built on:
+- n8n (workflow orchestration)
+- Vercel (API hosting)
+- Neon PostgreSQL (data storage)
+- Acumbamail (email), SMS-iT (SMS), CallScaler (phone)
+
+DELIVERABLES (Categories 1-5)
+=============================================================================
+
+10 JSON Files: n8n Workflow Files
+- 85KB total | Ready to import into n8n
+- 50 webhook receivers + 70 automated nodes
+- Full validation, error handling, logging
+
+10 JS Files: Express API Endpoints  
+- 76KB total | Vercel Functions compatible
+- 100+ API endpoints across 5 categories
+- Database queries, business logic, integrations
+
+QUICK START
+=============================================================================
+
+1. IMPORT n8n WORKFLOWS
+   a. Log into n8n instance
+   b. Go to Workflows → Import
+   c. Select each cat##_*.json file from n8n-workflows/
+   d. Configure n8n credentials for:
+      - Neon PostgreSQL (DATABASE_URL)
+      - Acumbamail API key
+      - SMS-iT API key
+      - CallScaler integration
+   e. Activate workflows
+
+2. DEPLOY VERCEL API
+   a. Create Vercel project (Next.js)
+   b. Create /api/automations/ directory
+   c. Create subdirectory structure:
+      /api/automations/
+      ├── lead-capture/
+      ├── lead-nurture/
+      ├── lead-qualification/
+      ├── crm-contacts/
+      └── sales-pipeline/
+   d. Extract each API file (cat##.js) into respective subdirectory
+   c. Create /lib directory with supporting utilities:
+      - db.js (Postgres connection)
+      - email.js (Acumbamail integration)
+      - messaging.js (SMS, email, push)
+      - validation.js (phone/email validation)
+      - crm.js (CRM business logic)
+      - audit.js (logging)
+      - notifications.js (push notifications)
+      - templates.js (email templates)
+   f. Deploy with: vercel deploy
+
+3. CONFIGURE DATABASE
+   PostgreSQL schema setup (Neon):
+   
+   CREATE TABLE leads (
+     id BIGSERIAL PRIMARY KEY,
+     email VARCHAR(255),
+     phone VARCHAR(20),
+     first_name VARCHAR(100),
+     last_name VARCHAR(100),
+     source VARCHAR(100),
+     service_type VARCHAR(50),
+     engagement_score INT DEFAULT 0,
+     behavioral_score INT DEFAULT 0,
+     status VARCHAR(50) DEFAULT 'lead',
+     lifecycle_stage VARCHAR(50),
+     is_urgent BOOLEAN DEFAULT false,
+     is_vip BOOLEAN DEFAULT false,
+     budget_qualified BOOLEAN,
+     geo_qualified BOOLEAN,
+     tags TEXT[],
+     attributes JSONB,
+     created_at TIMESTAMP DEFAULT NOW(),
+     updated_at TIMESTAMP DEFAULT NOW(),
+     UNIQUE(email, phone)
+   );
+
+   CREATE TABLE lead_activities (
+     id BIGSERIAL PRIMARY KEY,
+     lead_id BIGINT REFERENCES leads(id),
+     activity_type VARCHAR(100),
+     description TEXT,
+     source_data JSONB,
+     created_at TIMESTAMP DEFAULT NOW()
+   );
+
+   CREATE TABLE email_schedules (
+     id BIGSERIAL PRIMARY KEY,
+     lead_id BIGINT REFERENCES leads(id),
+     email VARCHAR(255),
+     subject TEXT,
+     template_name VARCHAR(100),
+     scheduled_time TIMESTAMP,
+     sequence_name VARCHAR(100),
+     status VARCHAR(50),
+     opened_at TIMESTAMP,
+     clicked_at TIMESTAMP,
+     created_at TIMESTAMP DEFAULT NOW()
+   );
+
+   CREATE TABLE deals (
+     id BIGSERIAL PRIMARY KEY,
+     lead_id BIGINT REFERENCES leads(id),
+     assigned_rep BIGINT,
+     stage VARCHAR(50),
+     deal_value DECIMAL(10,2),
+     win_probability DECIMAL(3,2),
+     status VARCHAR(50),
+     outcome VARCHAR(50),
+     created_at TIMESTAMP DEFAULT NOW(),
+     updated_at TIMESTAMP DEFAULT NOW()
+   );
+
+   CREATE TABLE source_analytics (
+     id BIGSERIAL PRIMARY KEY,
+     source VARCHAR(100) UNIQUE,
+     total_leads INT DEFAULT 0,
+     converted_leads INT DEFAULT 0,
+     conversion_rate DECIMAL(5,2),
+     quality_score VARCHAR(50),
+     last_updated TIMESTAMP
+   );
+
+4. SET ENVIRONMENT VARIABLES
+   Create .env.local file:
+   
+   DATABASE_URL=postgresql://[user:password@]host/database
+   VERCEL_API_URL=https://yourdomain.vercel.app
+   API_KEY=your_secure_n8n_api_key
+   ADMIN_EMAIL=admin@yourdomain.com
+   
+   Acumbamail:
+   ACUMBAMAIL_API_KEY=your_key
+   ACUMBAMAIL_ACCOUNT_ID=your_id
+   
+   SMS-iT:
+   SMS_IT_API_KEY=your_key
+   SMS_IT_SENDER=YourBrand
+   
+   CallScaler:
+   CALLSCALER_API_KEY=your_key
+   CALLSCALER_PHONE=+1XXXXXXXXXX
+   
+   Stripe (if using payments):
+   STRIPE_SECRET_KEY=sk_live_...
+   STRIPE_PUBLIC_KEY=pk_live_...
+
+WORKFLOW INTEGRATION FLOW
+=============================================================================
+
+Incoming Lead → Capture → Qualify → Nurture → Sales → Win/Loss
+   ↓
+[Category 1]    [Category 3]  [Category 2]  [Category 5]
+Lead Capture    Qualification Lead Nurture  Sales Pipeline
+   ↓                ↓             ↓            ↓
+[Category 4 - CRM & Contact Management - Throughout]
+   
+Real-time Updates:
+- Automatic lead deduplication
+- Instant score calculation
+- Email/SMS coordination
+- Activity logging
+- Rep assignment
+
+TESTING WORKFLOW
+=============================================================================
+
+1. TEST WEBHOOKS (Before going live)
+   
+   curl -X POST https://yourdomain/api/automations/lead-capture/webhook \
+     -H "Content-Type: application/json" \
+     -d '{
+       "body": {
+         "visitorId": "visitor123",
+         "pageUrl": "https://yoursite.com/hvac-estimate",
+         "utmSource": "google",
+         "utmMedium": "cpc",
+         "utmCampaign": "summer_hvac"
+       }
+     }'
+
+2. TEST LEAD CREATION
+   
+   curl -X POST https://yourdomain/api/automations/lead-capture/upsert-lead \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "type": "form_submission",
+       "email": "test@example.com",
+       "phone": "5555551234",
+       "firstName": "John",
+       "lastName": "Doe",
+       "serviceType": "hvac"
+     }'
+
+3. TEST QUALIFICATION
+   
+   curl -X POST https://yourdomain/api/automations/lead-qualification/update-score \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -d '{
+       "leadId": 123,
+       "totalScore": 75,
+       "components": {"behavioral": 50, "demographic": 25}
+     }'
+
+4. TEST NURTURE
+   
+   curl -X POST https://yourdomain/api/automations/lead-nurture/send-welcome-drip \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -d '{
+       "leadId": 123,
+       "email": "test@example.com",
+       "firstName": "John"
+     }'
+
+5. TEST PIPELINE
+   
+   curl -X POST https://yourdomain/api/automations/sales-pipeline/speed-to-lead \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -d '{
+       "leadId": 123,
+       "email": "test@example.com",
+       "phone": "5555551234",
+       "withinSLA": true
+     }'
+
+API AUTHENTICATION
+=============================================================================
+
+All endpoints require Bearer token in Authorization header:
+
+Authorization: Bearer YOUR_API_KEY
+
+Generate API key:
+1. Create /lib/auth.js with JWT signing
+2. Create key generation endpoint
+3. Store securely in environment variables
+4. Rotate regularly
+
+Example middleware:
+```javascript
+app.use((req, res, next) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return res.status(401).json({success: false, error: 'Unauthorized'});
+  }
+  const token = auth.slice(7);
+  if (token !== process.env.API_KEY) {
+    return res.status(403).json({success: false, error: 'Forbidden'});
+  }
+  next();
+});
+```
+
+MONITORING & ALERTS
+=============================================================================
+
+Key metrics to monitor:
+
+1. Lead Capture Rate
+   - Leads per hour/day
+   - Source attribution
+   - Conversion by source
+
+2. Email Metrics
+   - Send rate
+   - Bounce rate
+   - Open rate (target: 25%+)
+   - Click rate (target: 5%+)
+
+3. Pipeline Health
+   - Deal velocity (avg days to close)
+   - Win rate (target: 20%+)
+   - Forecast accuracy
+   - Stale deal count
+
+4. API Performance
+   - Response time (<500ms)
+   - Error rate (<0.5%)
+   - Database query time
+   - Webhook reliability
+
+Set up monitoring:
+- Datadog/New Relic for APM
+- Sentry for error tracking
+- PagerDuty for alerting
+- Grafana for dashboards
+
+COMMON INTEGRATION SCENARIOS
+=============================================================================
+
+Scenario 1: Website Form to Sales Rep Contact
+1. Website form → cat01 webhook
+2. Lead created in database
+3. cat03 calculates score
+4. If score >= 70 → cat05 speed-to-lead
+5. Email + SMS sent to prospect
+6. Task created for sales rep
+
+Scenario 2: Social Media Lead Ads
+1. Facebook Lead Ads → cat01 webhook
+2. Lead imported with source attribution
+3. cat02 welcome drip started
+4. cat04 tags applied (source: facebook, platform: facebook)
+5. After engagement → cat03 qualification
+6. Warm leads → cat05 pipeline entry
+
+Scenario 3: Phone Call Lead
+1. CallScaler tracks inbound call
+2. cat01 phone tracking webhook fired
+3. Caller ID lookup for contact info
+4. New lead created with high priority
+5. cat05 speed-to-lead immediately contacts
+6. Call recording linked in activity timeline
+
+Scenario 4: Event Scanning
+1. Badge scanned at trade show
+2. cat01 event scanner webhook
+3. Attendee data captured
+4. cat04 standardizes phone/address
+5. cat02 nurture drip started
+6. Follow-up scheduled for sales team
+
+TROUBLESHOOTING
+=============================================================================
+
+Common Issues & Solutions:
+
+Issue: Webhooks not triggering
+- Check webhook URL is accessible
+- Verify n8n credentials in workflow
+- Test with curl command
+- Check API logs for errors
+
+Issue: Emails not sending
+- Verify Acumbamail API key
+- Check email template existence
+- Review bounce rate in Acumbamail dashboard
+- Ensure email addresses are valid
+
+Issue: Database connection failed
+- Verify DATABASE_URL format
+- Check Neon connection limits
+- Review database logs
+- Test with psql directly
+
+Issue: API returns 403 Unauthorized
+- Verify API_KEY environment variable
+- Check Authorization header format
+- Confirm token hasn't expired
+- Review API key rotation schedule
+
+Issue: High database query latency
+- Add indexes on frequently queried columns
+- Monitor query execution plans
+- Consider caching with Redis
+- Review n/n activity volume
+
+SCALING CONSIDERATIONS
+=============================================================================
+
+For high-volume deployments (1000+ leads/day):
+
+1. Database optimization
+   - Add indexes on email, phone, source
+   - Partition leads table by date
+   - Set up read replicas for reporting
+   - Implement connection pooling
+
+2. API optimization
+   - Enable caching (Redis)
+   - Use serverless functions
+   - Implement rate limiting
+   - Add CDN for static assets
+
+3. Workflow optimization
+   - Process batches instead of individual items
+   - Add delayed processing for non-critical tasks
+   - Use n8n queues for reliability
+   - Monitor workflow execution times
+
+4. Email optimization
+   - Use Acumbamail transactional API
+   - Implement queue system
+   - Set up bounce handling
+   - Monitor deliverability
+
+SECURITY BEST PRACTICES
+=============================================================================
+
+1. API Security
+   - Use HTTPS only
+   - Implement API rate limiting
+   - Rotate API keys regularly
+   - Log all API calls
+
+2. Database Security
+   - Use encrypted connections
+   - Restrict database access to Vercel IPs
+   - Enable audit logging
+   - Regular backups
+
+3. Data Privacy
+   - Encrypt PII at rest
+   - Comply with GDPR/CCPA
+   - Implement data retention policies
+   - Regular security audits
+
+4. Webhook Security
+   - Verify webhook signatures
+   - Use HTTPS for webhooks
+   - Implement webhook retry logic
+   - Log webhook activity
+
+COST OPTIMIZATION
+=============================================================================
+
+Approximate monthly costs:
+
+Component           | Tier      | Cost
+--------------------|-----------|----------
+Vercel             | Pro       | $20
+Neon PostgreSQL    | Pro       | $10
+n8n Self-hosted    | Docker    | Free
+Acumbamail         | 5K/month  | $15
+SMS-iT             | PAYG      | $0.02/SMS
+CallScaler         | PAYG      | $0.03/min
+Total Monthly      |           | ~$45+
+
+Cost reduction strategies:
+- Use shared database for test environments
+- Batch email sends to reduce volume
+- Optimize API calls to reduce serverless invocations
+- Monitor and remove old lead records
+
+=============================================================================

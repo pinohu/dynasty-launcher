@@ -1,0 +1,388 @@
+{
+  "name": "Dynasty Empire: Sales Pipeline & Follow-Up (Category 5)",
+  "description": "10 sales pipeline automations: speed-to-lead, follow-ups, stale deal alerts, pipeline advancement, win/loss tracking, objection handling",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/speed-to-lead",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Speed-to-Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 50]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/followup-sequence",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Follow-up Sequence",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 150]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/stale-deal-alert",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Stale Deal Detection",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 250]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/pipeline-advancement",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Pipeline Stage Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 350]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/win-loss-log",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Win/Loss Logging",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 450]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/objection-tracking",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Objection Tracking",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 550]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/competitor-detection",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Competitor Detection",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 650]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/deal-forecast",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Deal Forecasting",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 750]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/rep-performance",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Performance Dashboard",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 850]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales/lost-deal-reeng",
+        "responseMode": "onReceived"
+      },
+      "name": "Webhook: Lost Deal Re-engagement",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 950]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { leadId, email, phone, firstName, source, captureTime } = $json.body;\nif (!leadId || !email) throw new Error('Missing data');\nconst now = new Date();\nconst captureDate = new Date(captureTime);\nconst minutesSinceCapture = Math.floor((now - captureDate) / (1000 * 60));\nconst withinSLA = minutesSinceCapture < 60;\nreturn { leadId, email, phone, firstName, source, minutesSinceCapture, withinSLA, priority: withinSLA ? 'normal' : 'urgent', contactChannels: ['email', 'sms', 'call'] };"
+      },
+      "name": "Code: Speed-to-Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 50]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { dealId, email, lastContactDate, touchCount = 0 } = $json.body;\nif (!dealId || !email) throw new Error('Missing data');\nconst daysSinceContact = lastContactDate ? Math.floor((new Date() - new Date(lastContactDate)) / (1000 * 60 * 60 * 24)) : 999;\nconst sequence = [\n  {touch: 1, delay: 0, type: 'email', subject: 'Following up on our conversation'},\n  {touch: 2, delay: 2, type: 'sms', message: 'Quick check-in'},\n  {touch: 3, delay: 4, type: 'call', subject: 'Need your input'},\n  {touch: 4, delay: 7, type: 'email', subject: 'Final offer before deadline'},\n  {touch: 5, delay: 10, type: 'sms', message: 'Last chance - ending soon'}\n];\nconst nextTouch = sequence[Math.min(touchCount, sequence.length - 1)];\nreturn { dealId, email, daysSinceContact, currentTouch: touchCount + 1, nextTouch, totalTouches: 5, sequenceComplete: touchCount >= 5 };"
+      },
+      "name": "Code: Follow-up Planning",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 150]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { dealId, lastActivityDate, inactivityThreshold = 7 } = $json.body;\nif (!dealId) throw new Error('Missing dealId');\nconst daysSinceActivity = lastActivityDate ? Math.floor((new Date() - new Date(lastActivityDate)) / (1000 * 60 * 60 * 24)) : 999;\nconst isStale = daysSinceActivity > inactivityThreshold;\nconst alertLevel = daysSinceActivity > 30 ? 'critical' : daysSinceActivity > 14 ? 'warning' : 'normal';\nreturn { dealId, daysSinceActivity, isStale, alertLevel, action: isStale ? 'alert_rep' : 'monitor', actionItems: isStale ? ['contact_prospect', 'review_status', 'adjust_strategy'] : [] };"
+      },
+      "name": "Code: Stale Deal Detection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 250]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { dealId, fromStage, toStage, dealValue } = $json.body;\nif (!dealId || !toStage) throw new Error('Missing data');\nconst stages = ['prospect', 'quote', 'negotiation', 'closing', 'won', 'lost'];\nconst toIndex = stages.indexOf(toStage);\nconst isValidAdvancement = toIndex > -1;\nreturn { dealId, fromStage, toStage, isValidAdvancement, dealValue, advanceTime: new Date().toISOString(), updatePipeline: isValidAdvancement };"
+      },
+      "name": "Code: Pipeline Advancement",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 350]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { dealId, outcome, dealValue, closedDate, repId } = $json.body;\nif (!dealId || !outcome) throw new Error('Missing data');\nconst isWin = outcome === 'won';\nconst revenueImpact = isWin ? dealValue : 0;\nreturn { dealId, outcome, isWin, dealValue, closedDate: closedDate || new Date().toISOString(), repId, revenueImpact, logTime: new Date().toISOString() };"
+      },
+      "name": "Code: Win/Loss Logging",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 450]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { dealId, objectionType, responseGiven } = $json.body;\nif (!dealId || !objectionType) throw new Error('Missing data');\nconst objections = {\n  'price': 'Focus on ROI and payment plans',\n  'timing': 'Highlight urgency and limited offers',\n  'competitor': 'Emphasize unique differentiators',\n  'budget': 'Offer flexible pricing options',\n  'authority': 'Arrange decision-maker meeting'\n};\nconst suggestedResponse = objections[objectionType] || 'Request more information';\nreturn { dealId, objectionType, suggestedResponse, responseGiven: responseGiven || null, trackingId: `obj_${dealId}_${Date.now()}` };"
+      },
+      "name": "Code: Objection Handling",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 550]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { dealId, conversationText } = $json.body;\nif (!dealId || !conversationText) throw new Error('Missing data');\nconst competitors = ['competitor1', 'competitor2', 'competitor3'];\nconst mentioned = competitors.filter(c => conversationText.toLowerCase().includes(c.toLowerCase()));\nconst hasCompetitorMention = mentioned.length > 0;\nreturn { dealId, competitorsMentioned: mentioned, hasCompetitorMention, alertLevel: hasCompetitorMention ? 'high' : 'low', action: hasCompetitorMention ? 'escalate_to_manager' : 'continue_normal_process' };"
+      },
+      "name": "Code: Competitor Detection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 650]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { dealId, dealValue, winProbability, estimatedCloseDate } = $json.body;\nif (!dealId || !dealValue) throw new Error('Missing data');\nconst probability = winProbability || 0.5;\nconst weightedValue = dealValue * probability;\nconst monthToClose = new Date(estimatedCloseDate);\nconst forecastMonth = monthToClose.toLocaleString('default', {month: 'long', year: 'numeric'});\nreturn { dealId, dealValue, probability, weightedValue, forecastMonth, forecastCategory: weightedValue > 5000 ? 'high' : weightedValue > 1000 ? 'medium' : 'low' };"
+      },
+      "name": "Code: Deal Forecasting",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 750]
+    },
+    {
+      "parameters": {
+        "functionCode": "return { repId: $json.body.repId, period: 'current_month', metrics: {totalDeals: 0, closedDeals: 0, totalRevenue: 0, avgDealSize: 0, winRate: 0} };"
+      },
+      "name": "Code: Performance Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 850]
+    },
+    {
+      "parameters": {
+        "functionCode": "const { dealId, lostReason, dealValue } = $json.body;\nif (!dealId || !lostReason) throw new Error('Missing data');\nconst reEngagementDays = [30, 60, 90];\nconst schedule = reEngagementDays.map(d => ({day: d, message: `Checking back in - hope things have changed!`}));\nreturn { dealId, lostReason, dealValue, reEngagementSchedule: schedule, firstReEngagementDate: new Date(Date.now() + 30*24*60*60*1000).toISOString() };"
+      },
+      "name": "Code: Lost Deal Re-engagement",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 950]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/speed-to-lead",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Speed-to-Lead Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 50]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/schedule-followup",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Schedule Follow-up",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/alert-stale",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Alert on Stale",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 250]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/advance-stage",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Advance Stage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/log-outcome",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Log Win/Loss",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 450]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/track-objection",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Track Objection",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 550]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/detect-competitor",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Flag Competitor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 650]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/forecast-value",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Update Forecast",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 750]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/update-dashboard",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Update Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 850]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VERCEL_API_URL }}/api/automations/sales-pipeline/schedule-reeng",
+        "headers": {"Authorization": "Bearer {{ $env.API_KEY }}"},
+        "body": "{{ JSON.stringify($json) }}"
+      },
+      "name": "HTTP: Schedule Re-engagement",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 950]
+    }
+  ],
+  "connections": {
+    "Webhook: Speed-to-Lead": {
+      "main": [[{"node": "Code: Speed-to-Lead", "type": "main", "index": 0}]]
+    },
+    "Code: Speed-to-Lead": {
+      "main": [[{"node": "HTTP: Speed-to-Lead Contact", "type": "main", "index": 0}]]
+    },
+    "Webhook: Follow-up Sequence": {
+      "main": [[{"node": "Code: Follow-up Planning", "type": "main", "index": 0}]]
+    },
+    "Code: Follow-up Planning": {
+      "main": [[{"node": "HTTP: Schedule Follow-up", "type": "main", "index": 0}]]
+    },
+    "Webhook: Stale Deal Detection": {
+      "main": [[{"node": "Code: Stale Deal Detection", "type": "main", "index": 0}]]
+    },
+    "Code: Stale Deal Detection": {
+      "main": [[{"node": "HTTP: Alert on Stale", "type": "main", "index": 0}]]
+    },
+    "Webhook: Pipeline Stage Trigger": {
+      "main": [[{"node": "Code: Pipeline Advancement", "type": "main", "index": 0}]]
+    },
+    "Code: Pipeline Advancement": {
+      "main": [[{"node": "HTTP: Advance Stage", "type": "main", "index": 0}]]
+    },
+    "Webhook: Win/Loss Logging": {
+      "main": [[{"node": "Code: Win/Loss Logging", "type": "main", "index": 0}]]
+    },
+    "Code: Win/Loss Logging": {
+      "main": [[{"node": "HTTP: Log Win/Loss", "type": "main", "index": 0}]]
+    },
+    "Webhook: Objection Tracking": {
+      "main": [[{"node": "Code: Objection Handling", "type": "main", "index": 0}]]
+    },
+    "Code: Objection Handling": {
+      "main": [[{"node": "HTTP: Track Objection", "type": "main", "index": 0}]]
+    },
+    "Webhook: Competitor Detection": {
+      "main": [[{"node": "Code: Competitor Detection", "type": "main", "index": 0}]]
+    },
+    "Code: Competitor Detection": {
+      "main": [[{"node": "HTTP: Flag Competitor", "type": "main", "index": 0}]]
+    },
+    "Webhook: Deal Forecasting": {
+      "main": [[{"node": "Code: Deal Forecasting", "type": "main", "index": 0}]]
+    },
+    "Code: Deal Forecasting": {
+      "main": [[{"node": "HTTP: Update Forecast", "type": "main", "index": 0}]]
+    },
+    "Webhook: Performance Dashboard": {
+      "main": [[{"node": "Code: Performance Metrics", "type": "main", "index": 0}]]
+    },
+    "Code: Performance Metrics": {
+      "main": [[{"node": "HTTP: Update Dashboard", "type": "main", "index": 0}]]
+    },
+    "Webhook: Lost Deal Re-engagement": {
+      "main": [[{"node": "Code: Lost Deal Re-engagement", "type": "main", "index": 0}]]
+    },
+    "Code: Lost Deal Re-engagement": {
+      "main": [[{"node": "HTTP: Schedule Re-engagement", "type": "main", "index": 0}]]
+    }
+  }
+}

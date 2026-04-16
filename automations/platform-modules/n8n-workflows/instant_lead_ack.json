@@ -1,0 +1,497 @@
+{
+  "name": "Instant Lead Acknowledgment Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/instant-lead-ack",
+        "responseMode": "responseNode",
+        "responseData": "success",
+        "options": {}
+      },
+      "id": "webhook-lead-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ENRICHMENT_API_URL }}/enrich",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.ENRICHMENT_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "email": "={{ $json.lead_email }}",
+          "phone": "={{ $json.lead_phone || null }}",
+          "company": "={{ $json.lead_company || null }}",
+          "name": "={{ $json.lead_name }}",
+          "tenant_id": "={{ $json.tenant_id }}"
+        }
+      },
+      "id": "enrich-lead",
+      "name": "Enrich Lead Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [350, 150],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SCORING_API_URL }}/score",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SCORING_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "lead_id": "={{ $json.lead_id }}",
+          "lead_data": "={{ { ...($node['enrich-lead'].json), lead_email: $json.lead_email, lead_phone: $json.lead_phone, lead_company: $json.lead_company } }}",
+          "scoring_model": "={{ $json.scoring_model || 'basic' }}",
+          "tenant_id": "={{ $json.tenant_id }}"
+        }
+      },
+      "id": "score-lead",
+      "name": "Score Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [550, 150],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "waitValue": 1,
+        "unit": "seconds"
+      },
+      "id": "wait-before-email",
+      "name": "Wait Before Email",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [550, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EMAIL_API_URL }}/send",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.EMAIL_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "to": "={{ $json.lead_email }}",
+          "subject": "Welcome to {{ $json.tenant_business_name }}, {{ $json.lead_first_name }}!",
+          "body": "Hi {{ $json.lead_first_name }},\n\nWelcome! We're excited to connect with {{ $json.lead_company || 'you' }}.\n\nOur team specializes in {{ $json.tenant_service_focus }} and we'd love to explore how we can help.\n\nA member of our team will reach out shortly to discuss your needs.\n\nIn the meantime, feel free to reply to this email with any questions.\n\nBest regards,\n{{ $json.tenant_owner_first_name }}\n{{ $json.tenant_business_name }}",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "lead_id": "={{ $json.lead_id }}"
+        }
+      },
+      "id": "send-welcome-email",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 300],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.enable_sms }}",
+              "condition": "equal",
+              "value2": true
+            },
+            {
+              "value1": "={{ $json.lead_phone }}",
+              "condition": "exist"
+            }
+          ]
+        }
+      },
+      "id": "if-sms-enabled",
+      "name": "SMS Enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [750, 450]
+    },
+    {
+      "parameters": {
+        "waitValue": 5,
+        "unit": "seconds"
+      },
+      "id": "wait-before-sms",
+      "name": "Wait Before SMS",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [950, 350]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SMS_IT_API_URL }}/send",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SMS_IT_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "phone": "={{ $json.lead_phone }}",
+          "message": "Hi {{ $json.lead_first_name }}! Thanks for your interest in {{ $json.tenant_business_name }}. A team member will contact you soon. Reply STOP to opt out.",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "lead_id": "={{ $json.lead_id }}"
+        }
+      },
+      "id": "send-sms",
+      "name": "Send SMS Intro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, 350],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CRM_API_URL }}/leads/{{ $json.lead_id }}/assign",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.CRM_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "assignment_method": "={{ $json.assignment_method || 'round_robin' }}",
+          "lead_score": "={{ $node['score-lead'].json.score }}",
+          "tenant_id": "={{ $json.tenant_id }}"
+        }
+      },
+      "id": "assign-lead",
+      "name": "Assign Lead to Team Member",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 600],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EMAIL_API_URL }}/send",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.EMAIL_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "to": "={{ $node['assign-lead'].json.assigned_user_email }}",
+          "subject": "New Lead Assigned: {{ $json.lead_name }} (Score: {{ $node['score-lead'].json.score }})",
+          "body": "A new high-potential lead has been assigned to you.\n\nLead: {{ $json.lead_name }}\nCompany: {{ $json.lead_company }}\nEmail: {{ $json.lead_email }}\nPhone: {{ $json.lead_phone }}\nLead Score: {{ $node['score-lead'].json.score }}/100\n\nView in CRM: {{ $env.PLATFORM_URL }}/leads/{{ $json.lead_id }}\n\nQuick Actions: [Send Introduction] [Schedule Demo] [Add to Sequence]",
+          "tenant_id": "={{ $json.tenant_id }}"
+        }
+      },
+      "id": "notify-assignee",
+      "name": "Notify Assigned Team Member",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 600],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CRM_API_URL }}/tasks",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.CRM_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "lead_id": "={{ $json.lead_id }}",
+          "title": "Engage {{ $json.lead_name }} - Lead Score {{ $node['score-lead'].json.score }}",
+          "assigned_to": "={{ $node['assign-lead'].json.assigned_user_id }}",
+          "due_date": "={{ $now.addHours($json.task_due_hours || 24).toISO() }}",
+          "priority": "={{ $node['score-lead'].json.score > 80 ? 'high' : $node['score-lead'].json.score > 50 ? 'medium' : 'low' }}",
+          "tags": ["auto-created", "lead-engagement"],
+          "description": "Auto-created follow-up task for new lead. Lead Score: {{ $node['score-lead'].json.score }}/100",
+          "tenant_id": "={{ $json.tenant_id }}"
+        }
+      },
+      "id": "create-task",
+      "name": "Create Follow-Up Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 750],
+      "onError": "continueErrorHandling"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LOG_API_URL }}/events",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LOG_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "event_type": "instant_lead_ack_success",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "lead_id": "={{ $json.lead_id }}",
+          "lead_email": "={{ $json.lead_email }}",
+          "lead_score": "={{ $node['score-lead'].json.score }}",
+          "assigned_to": "={{ $node['assign-lead'].json.assigned_user_id }}",
+          "timestamp": "={{ $now.toISO() }}"
+        }
+      },
+      "id": "log-success",
+      "name": "Log Success Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1150, 450]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.LOG_API_URL }}/alerts",
+        "authentication": "bearerToken",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.LOG_API_KEY }}"
+            }
+          ]
+        },
+        "body": {
+          "event_type": "instant_lead_ack_error",
+          "tenant_id": "={{ $json.tenant_id }}",
+          "lead_id": "={{ $json.lead_id }}",
+          "error": "={{ $error.message }}",
+          "step": "={{ $node.name }}",
+          "timestamp": "={{ $now.toISO() }}"
+        }
+      },
+      "id": "log-error",
+      "name": "Log Error & Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1150, 650]
+    },
+    {
+      "parameters": {
+        "respondWithOptions": {
+          "responseBody": "{\"status\": \"success\", \"message\": \"Lead acknowledged and engaged.\"}"
+        }
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1300, 300]
+    }
+  ],
+  "connections": {
+    "webhook-lead-trigger": {
+      "main": [
+        [
+          {
+            "node": "enrich-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enrich-lead": {
+      "main": [
+        [
+          {
+            "node": "score-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "score-lead": {
+      "main": [
+        [
+          {
+            "node": "wait-before-email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait-before-email": {
+      "main": [
+        [
+          {
+            "node": "send-welcome-email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-welcome-email": {
+      "main": [
+        [
+          {
+            "node": "if-sms-enabled",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "assign-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if-sms-enabled": {
+      "main": [
+        [
+          {
+            "node": "wait-before-sms",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "assign-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wait-before-sms": {
+      "main": [
+        [
+          {
+            "node": "send-sms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-sms": {
+      "main": [
+        [
+          {
+            "node": "assign-lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "assign-lead": {
+      "main": [
+        [
+          {
+            "node": "notify-assignee",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notify-assignee": {
+      "main": [
+        [
+          {
+            "node": "create-task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-task": {
+      "main": [
+        [
+          {
+            "node": "log-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log-success": {
+      "main": [
+        [
+          {
+            "node": "respond-success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enrich-lead": {
+      "error": [
+        [
+          {
+            "node": "log-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-welcome-email": {
+      "error": [
+        [
+          {
+            "node": "log-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

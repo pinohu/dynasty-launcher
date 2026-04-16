@@ -1,0 +1,502 @@
+{
+  "name": "Post-Job Review Request",
+  "description": "Automatically request customer reviews after service completion, routing satisfied customers to Google and unhappy to private feedback",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "01_webhook_job_completed",
+      "name": "Job Completed Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "job_completed_webhook",
+      "webhookUrl": "{{$env.YOUR_DEPUTY_WEBHOOK_BASE_URL}}/webhooks/job-completed"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "{{$node[\"01_webhook_job_completed\"].json[\"event\"]}}"
+            }
+          ]
+        }
+      },
+      "id": "02_check_if_valid_event",
+      "name": "Check if Valid Event",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{$node[\"01_webhook_job_completed\"].json[\"delay_hours\"] || 2}}",
+        "unit": "hours"
+      },
+      "id": "03_wait_after_completion",
+      "name": "Wait After Completion",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/customers/{{$node[\"01_webhook_job_completed\"].json[\"customer_id\"]}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "specifyHeaders": true,
+        "headers": {
+          "Authorization": "Bearer {{$env.YOUR_DEPUTY_API_KEY}}"
+        }
+      },
+      "id": "04_get_customer_data",
+      "name": "Get Customer Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/jobs/{{$node[\"01_webhook_job_completed\"].json[\"job_id\"]}}",
+        "authentication": "predefined",
+        "nodeCredentialType": "httpHeaderAuth"
+      },
+      "id": "05_get_job_data",
+      "name": "Get Job Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        850,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ACUMBAMAIL_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "acumbamailApi",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "to": "={{$node[\"04_get_customer_data\"].json[\"email\"]}}",
+          "from": "={{$env.YOUR_DEPUTY_FROM_EMAIL}}",
+          "subject": "How did we do? {{$node[\"04_get_customer_data\"].json[\"first_name\"]}}, share your feedback",
+          "html": "={{$node[\"09_build_email_body\"].json[\"html_body\"]}}",
+          "template_variables": {
+            "customer_first_name": "={{$node[\"04_get_customer_data\"].json[\"first_name\"]}}",
+            "service_type": "={{$node[\"05_get_job_data\"].json[\"service_type\"]}}",
+            "job_date": "={{$node[\"05_get_job_data\"].json[\"completion_date\"]}}",
+            "technician_name": "={{$node[\"05_get_job_data\"].json[\"technician_name\"]}}",
+            "google_review_link": "={{$env.GOOGLE_REVIEW_LINK}}?utm_source=your-deputy&utm_campaign=post-job-review",
+            "feedback_form_link": "={{$env.PRIVATE_FEEDBACK_FORM_URL}}?job_id={{$node[\"01_webhook_job_completed\"].json[\"job_id\"]}}&customer_id={{$node[\"01_webhook_job_completed\"].json[\"customer_id\"]}}"
+          },
+          "tags": [
+            "review_request",
+            "post_job"
+          ],
+          "track_opens": true,
+          "track_clicks": true
+        }
+      },
+      "id": "06_send_review_email",
+      "name": "Send Review Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1050,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.SMS_IT_API_URL}}/send",
+        "authentication": "predefined",
+        "nodeCredentialType": "smsItApi",
+        "body": {
+          "phone": "={{$node[\"04_get_customer_data\"].json[\"phone\"]}}",
+          "message": "Hi {{$node[\"04_get_customer_data\"].json[\"first_name\"]}}! We'd love your feedback. Leave a review: {{$env.GOOGLE_REVIEW_LINK}}",
+          "sender_id": "YourDeputy",
+          "tags": [
+            "review_request",
+            "post_job"
+          ]
+        }
+      },
+      "id": "07_send_review_sms",
+      "name": "Send Review SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1050,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/crm/timeline",
+        "authentication": "predefined",
+        "nodeCredentialType": "httpHeaderAuth",
+        "body": {
+          "customer_id": "={{$node[\"01_webhook_job_completed\"].json[\"customer_id\"]}}",
+          "job_id": "={{$node[\"01_webhook_job_completed\"].json[\"job_id\"]}}",
+          "event_type": "review_request_sent",
+          "description": "Review request email and SMS sent",
+          "channels": [
+            "email",
+            "sms"
+          ],
+          "timestamp": "={{new Date().toISOString()}}"
+        }
+      },
+      "id": "08_log_to_crm",
+      "name": "Log to CRM Timeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1050,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "jsonData": "{\n  \"html_body\": \"<div style='font-family: Arial, sans-serif; max-width: 600px;'><h2>We'd love your feedback!</h2><p>Hi {{customer_first_name}},</p><p>Thank you for choosing us for your {{service_type}} service on {{job_date}}. We appreciate your business and would love to hear about your experience with {{technician_name}}.</p><p><strong>Please rate your experience:</strong></p><p><a href='{{google_review_link}}&rating=1'>★☆☆☆☆ 1 Star</a> | <a href='{{google_review_link}}&rating=2'>★★☆☆☆ 2 Stars</a> | <a href='{{google_review_link}}&rating=3'>★★★☆☆ 3 Stars</a> | <a href='{{google_review_link}}&rating=4'>★★★★☆ 4 Stars</a> | <a href='{{google_review_link}}&rating=5'>★★★★★ 5 Stars</a></p><p>Or <a href='{{feedback_form_link}}'>share detailed feedback here</a>.</p><p>Thank you!</p></div>\"\n}"
+      },
+      "id": "09_build_email_body",
+      "name": "Build Email Body",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        850,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/customers/{{$node[\"01_webhook_job_completed\"].json[\"customer_id\"]}}/review-count",
+        "authentication": "predefined"
+      },
+      "id": "10_check_review_count",
+      "name": "Check Review Count",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        650,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$node[\"10_check_review_count\"].json[\"review_count_30_days\"]}}",
+              "operation": "lessThan",
+              "value2": "={{$node[\"01_webhook_job_completed\"].json[\"max_requests\"] || 3}}"
+            }
+          ]
+        }
+      },
+      "id": "11_check_max_requests",
+      "name": "Check Max Requests",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        850,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{$node[\"01_webhook_job_completed\"].json[\"follow_up_days\"] || 7}}",
+        "unit": "days"
+      },
+      "id": "12_schedule_follow_up",
+      "name": "Schedule Follow-up",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.YOUR_DEPUTY_API_BASE_URL}}/api/jobs/{{$node[\"01_webhook_job_completed\"].json[\"job_id\"]}}/review-status",
+        "authentication": "predefined"
+      },
+      "id": "13_check_if_review_submitted",
+      "name": "Check If Review Submitted",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1450,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{!$node[\"13_check_if_review_submitted\"].json[\"review_submitted\"]}}"
+            }
+          ]
+        }
+      },
+      "id": "14_check_if_no_review_response",
+      "name": "Check If No Review Response",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1650,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ACUMBAMAIL_API_URL}}/send",
+        "authentication": "predefined",
+        "body": {
+          "to": "={{$node[\"04_get_customer_data\"].json[\"email\"]}}",
+          "subject": "{{$node[\"04_get_customer_data\"].json[\"first_name\"]}}, we'd still love your feedback",
+          "html": "<p>Hi {{customer_first_name}}, just following up on our previous request for feedback.</p>"
+        }
+      },
+      "id": "15_send_follow_up_email",
+      "name": "Send Follow-up Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1850,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "Review request workflow completed"
+      },
+      "id": "16_completion_node",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2050,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "01_webhook_job_completed": {
+      "main": [
+        [
+          {
+            "node": "02_check_if_valid_event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02_check_if_valid_event": {
+      "main": [
+        [
+          {
+            "node": "03_wait_after_completion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "16_completion_node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03_wait_after_completion": {
+      "main": [
+        [
+          {
+            "node": "04_get_customer_data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "05_get_job_data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "10_check_review_count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04_get_customer_data": {
+      "main": [
+        [
+          {
+            "node": "09_build_email_body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09_build_email_body": {
+      "main": [
+        [
+          {
+            "node": "06_send_review_email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "07_send_review_sms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06_send_review_email": {
+      "main": [
+        [
+          {
+            "node": "08_log_to_crm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07_send_review_sms": {
+      "main": [
+        [
+          {
+            "node": "08_log_to_crm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10_check_review_count": {
+      "main": [
+        [
+          {
+            "node": "11_check_max_requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11_check_max_requests": {
+      "main": [
+        [
+          {
+            "node": "12_schedule_follow_up",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "16_completion_node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12_schedule_follow_up": {
+      "main": [
+        [
+          {
+            "node": "13_check_if_review_submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13_check_if_review_submitted": {
+      "main": [
+        [
+          {
+            "node": "14_check_if_no_review_response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14_check_if_no_review_response": {
+      "main": [
+        [
+          {
+            "node": "15_send_follow_up_email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "16_completion_node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15_send_follow_up_email": {
+      "main": [
+        [
+          {
+            "node": "16_completion_node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08_log_to_crm": {
+      "main": [
+        [
+          {
+            "node": "16_completion_node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

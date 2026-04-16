@@ -1,0 +1,144 @@
+{
+  "module_id": "review_response_draft",
+  "version": "1.0.0",
+  "display_name": "Review Response Draft Generator",
+  "description": "AI-generated personalized review responses with approval workflow",
+  "category": "Reputation Management",
+  "tier": "wave_3",
+  "pricing": {
+    "standalone_monthly": 19,
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "review.new",
+    "source_system": "reviews",
+    "conditions": [
+      {
+        "field": "review.platform",
+        "operator": "in",
+        "value": ["google", "facebook", "yelp", "trustpilot"],
+        "priority": "high"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_generate_draft",
+      "type": "ai_generation",
+      "service": "openai_gpt4",
+      "prompt_template": "generate_review_response",
+      "input_fields": {
+        "review_text": "{review.text}",
+        "review_rating": "{review.rating}",
+        "business_name": "{business.name}",
+        "service_type": "{service.type}",
+        "tone": "{tone_adjustment}",
+        "max_length": 300
+      },
+      "output_field": "response_draft"
+    },
+    {
+      "id": "action_route_for_approval",
+      "type": "email",
+      "target": "owner",
+      "template": "review_response_draft_approval",
+      "includes_review_link": true,
+      "includes_draft_response": true,
+      "action_required": "APPROVE_OR_EDIT"
+    },
+    {
+      "id": "action_auto_post_approved",
+      "type": "conditional",
+      "condition": "owner.approved == true OR auto_post_delay_expired",
+      "actions": [
+        {
+          "type": "review_post",
+          "target": "{review.platform}",
+          "response_text": "{approved_response}"
+        },
+        {
+          "type": "crm_field_update",
+          "field": "response_status",
+          "value": "POSTED"
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "review_detected_at": "{detected_at}",
+        "response_draft_generated": true,
+        "response_status": "{status}",
+        "response_posted_at": "{posted_at}"
+      }
+    }
+  ],
+  "templates": {
+    "review_response_draft_approval": {
+      "subject": "Review Response Needed: {review.platform} - {review.rating}★ from {review.author}",
+      "body_text": "A new review has been posted on {review.platform}.\n\nReview:\n{review.text}\n\nAI-Generated Response Draft:\n{response_draft}\n\nActions:\n[Approve & Post] [Edit & Post] [Decline & Dismiss]\n\nIf no action taken within 48 hours, response will auto-post.",
+      "html_template": true,
+      "includes_action_buttons": true
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "ai_generation_enabled": true,
+    "auto_post_enabled": true,
+    "auto_post_delay_hours": 48,
+    "requires_approval": true,
+    "platforms_monitored": ["google", "facebook", "yelp"],
+    "tone_adjustment": "professional_friendly",
+    "required_fields": ["review.text", "review.platform", "business.id"]
+  },
+  "capabilities_required": ["reviews", "crm"],
+  "integrations": {
+    "reviews": {
+      "platforms": ["google_business_profile", "facebook", "yelp", "trustpilot"],
+      "auto_post": true,
+      "sync": true
+    },
+    "ai_service": {
+      "provider": "OpenAI",
+      "model": "gpt-4"
+    },
+    "crm": {
+      "sync": true,
+      "fields": ["response_status", "response_posted_at"]
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "ftc_disclosure_compliant": true,
+    "review_platform_tos_compliant": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "Low rating response generation",
+        "input": {"rating": 2, "platform": "google"},
+        "expected_output": ["draft_generated", "approval_email_sent"],
+        "timeout_ms": 10000
+      },
+      {
+        "name": "Auto-post after approval",
+        "input": {"approved": true},
+        "expected_output": ["response_posted", "crm_updated"],
+        "timeout_ms": 5000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": ["reviews_detected", "drafts_generated", "approval_rate", "response_post_rate"],
+    "logging_level": "info"
+  },
+  "billing": {
+    "unit": "per_review_response",
+    "monthly_minimum": 19,
+    "additional_cost_per_generation": 0.10,
+    "metered_events": ["review.new"]
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "module_id": "client_welcome_sequence",
+  "version": "1.0.0",
+  "display_name": "Client Welcome Sequence",
+  "description": "5-touch 30-day onboarding sequence for new customers",
+  "category": "Customer Success",
+  "tier": "wave_3",
+  "pricing": {
+    "standalone_monthly": 19,
+    "currency": "USD"
+  },
+  "trigger": {
+    "event_type": "customer.created",
+    "source_system": "crm",
+    "conditions": [
+      {
+        "field": "customer.status",
+        "operator": "equals",
+        "value": "new",
+        "priority": "high"
+      },
+      {
+        "field": "first_job.completed",
+        "operator": "equals",
+        "value": true,
+        "priority": "high"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "action_day0_welcome",
+      "type": "email",
+      "target": "customer",
+      "template": "welcome_email_personalized",
+      "delay_ms": 0,
+      "personalization": ["first_name", "service_type", "vertical"]
+    },
+    {
+      "id": "action_day3_checkin",
+      "type": "email",
+      "target": "customer",
+      "template": "welcome_day3_checkin",
+      "trigger_days": 3,
+      "personalization": ["first_name", "service_quality_points"]
+    },
+    {
+      "id": "action_day7_tips",
+      "type": "email",
+      "target": "customer",
+      "template": "welcome_day7_tips",
+      "trigger_days": 7,
+      "content_type": "educational",
+      "personalization": ["service_type"]
+    },
+    {
+      "id": "action_day14_review_request",
+      "type": "email",
+      "target": "customer",
+      "template": "review_request_email",
+      "trigger_days": 14,
+      "includes_review_links": true
+    },
+    {
+      "id": "action_day30_referral",
+      "type": "email",
+      "target": "customer",
+      "template": "referral_program_intro",
+      "trigger_days": 30,
+      "includes_referral_link": true,
+      "personalization": ["first_name", "referral_incentive"]
+    },
+    {
+      "id": "action_sms_day3_checkin",
+      "type": "sms",
+      "target": "customer",
+      "template": "welcome_sms_day3",
+      "trigger_days": 3,
+      "conditional": "customer.phone_provided"
+    },
+    {
+      "id": "action_track_engagement",
+      "type": "conditional",
+      "condition": "email.opened == true OR sms.delivered == true",
+      "actions": [
+        {
+          "type": "crm_field_update",
+          "field": "welcome_engagement",
+          "value": "high"
+        }
+      ]
+    },
+    {
+      "id": "action_crm_logging",
+      "type": "crm_field_update",
+      "fields": {
+        "welcome_sequence_started": "{now}",
+        "sequence_stage": "{current_stage}",
+        "customer_lifecycle_stage": "onboarding"
+      }
+    }
+  ],
+  "templates": {
+    "welcome_email_personalized": {
+      "subject": "Welcome to {business.name}, {customer.first_name}!",
+      "body_text": "Welcome aboard! Thank you for choosing us for your {service_type} needs.\n\nWe're excited to have you as part of the {business.name} family. Here's what you can expect:\n\n✓ Professional, reliable service\n✓ Rapid response to any issues\n✓ Ongoing support & maintenance tips\n✓ Exclusive member benefits\n\nWe're here for you!",
+      "html_template": true,
+      "personalization_required": ["first_name", "service_type", "business_name"]
+    },
+    "welcome_day3_checkin": {
+      "subject": "How's Everything Going, {customer.first_name}?",
+      "body_text": "A few days have passed since our service. We'd love to know:\n\n- Are you satisfied with the work?\n- Any questions or concerns?\n- Tips to maximize your new {service_type}\n\nReply to this email—we read every message!",
+      "html_template": true
+    },
+    "welcome_day7_tips": {
+      "subject": "Pro Tips to Extend Your {service_type} Lifespan",
+      "body_text": "Here are some expert tips to get the most out of your {service_type}:\n\n1. [Tip 1 based on service type]\n2. [Tip 2 based on service type]\n3. [Tip 3 based on service type]\n\nFollow these and your system will run smoothly for years!",
+      "html_template": true,
+      "content_type": "educational"
+    },
+    "review_request_email": {
+      "subject": "{customer.first_name}, Your Feedback Matters",
+      "body_text": "Would you take 2 minutes to share your experience?\n\nYour review helps us improve and helps other customers like you make great decisions.\n\n⭐ Leave a Review:\n[Google Review Link]\n[Facebook Review Link]\n[Yelp Review Link]\n\nThank you!",
+      "html_template": true
+    },
+    "referral_program_intro": {
+      "subject": "Refer Friends, Earn Rewards!",
+      "body_text": "Love our service? Share the love!\n\nRefer a friend and earn {referral_incentive}.\n\nYour Unique Referral Link: {referral_link}\n\nIt's that easy!",
+      "html_template": true
+    },
+    "welcome_sms_day3": {
+      "body": "Hi {customer.first_name}! How's everything? Reply with any questions. We're here to help!"
+    }
+  },
+  "settings": {
+    "enabled_by_default": true,
+    "sequence_duration_days": 30,
+    "touchpoints": 5,
+    "personalization_enabled": true,
+    "vertical_specific_templates": true,
+    "track_opens": true,
+    "track_clicks": true,
+    "required_fields": ["customer.email", "customer.first_name", "service_type"]
+  },
+  "capabilities_required": ["email", "sms", "crm"],
+  "integrations": {
+    "crm": {
+      "sync": true,
+      "fields": ["welcome_sequence_started", "sequence_stage", "customer_lifecycle_stage"]
+    }
+  },
+  "compliance": {
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "email_consent_required": true,
+    "audit_logging": true
+  },
+  "test_matrix": {
+    "test_cases": [
+      {
+        "name": "New customer welcome trigger",
+        "input": {"status": "new", "first_job_completed": true},
+        "expected_output": ["welcome_email_sent", "sequence_initialized"],
+        "timeout_ms": 5000
+      },
+      {
+        "name": "Multi-touch sequence execution",
+        "input": {"customer_id": "test123"},
+        "expected_output": ["day3_email_sent", "day7_email_sent", "day14_review_sent", "day30_referral_sent"],
+        "timeout_ms": 60000
+      }
+    ]
+  },
+  "observability": {
+    "metrics": ["customers_onboarded", "sequence_completion_rate", "engagement_rate", "review_submission_rate", "referral_rate"],
+    "logging_level": "info"
+  },
+  "billing": {
+    "unit": "per_customer",
+    "monthly_minimum": 19,
+    "metered_events": ["customer.created"]
+  }
+}

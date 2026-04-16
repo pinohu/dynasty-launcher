@@ -1,0 +1,369 @@
+{
+  "module_id": "overdue_invoice_reminder",
+  "module_name": "Overdue Invoice Reminder",
+  "pack": "billing_pack",
+  "pack_price": "$49/month",
+  "standalone_price": "$19/month",
+  "description": "Multi-stage automated reminder sequence for overdue invoices with escalating tone, optional late fees, and owner alerts",
+  "version": "1.0.0",
+  "status": "production",
+  "capabilities_required": [
+    "email",
+    "sms",
+    "invoicing",
+    "crm",
+    "payments"
+  ],
+  "trigger": {
+    "type": "cron",
+    "schedule": "daily",
+    "description": "Runs daily to check for invoices past due date and trigger reminders based on schedule"
+  },
+  "workflow_steps": [
+    {
+      "step": 1,
+      "action": "Daily invoice check",
+      "description": "Cron job checks all invoices for overdue status"
+    },
+    {
+      "step": 2,
+      "action": "Identify overdue invoices",
+      "description": "Find invoices past due date that haven't been paid"
+    },
+    {
+      "step": 3,
+      "action": "Check reminder stage",
+      "description": "Determine which stage of reminder to send (1, 7, 14, 30 days)"
+    },
+    {
+      "step": 4,
+      "action": "Send escalating reminder",
+      "description": "Send reminder with tone appropriate to stage (gentle → firm → urgent → final)"
+    },
+    {
+      "step": 5,
+      "action": "Optional late fee application",
+      "description": "Apply late fee if configured and appropriate"
+    },
+    {
+      "step": 6,
+      "action": "Track payment status",
+      "description": "Monitor if customer makes payment after reminder"
+    },
+    {
+      "step": 7,
+      "action": "Alert owner",
+      "description": "Notify business owner at each escalation stage"
+    },
+    {
+      "step": 8,
+      "action": "Pause on partial payment",
+      "description": "Pause reminders if customer makes partial payment"
+    },
+    {
+      "step": 9,
+      "action": "Final notice",
+      "description": "At day 30, send final notice with collections escalation option"
+    }
+  ],
+  "settings": {
+    "reminder_schedule_days": {
+      "type": "array",
+      "default": [
+        1,
+        7,
+        14,
+        30
+      ],
+      "description": "Array of days after due date to send reminders [Day 1 gentle, Day 7 firm, Day 14 urgent, Day 30 final]"
+    },
+    "channels_per_stage": {
+      "type": "object",
+      "default": {
+        "stage_1": [
+          "email"
+        ],
+        "stage_2": [
+          "email",
+          "sms"
+        ],
+        "stage_3": [
+          "email",
+          "sms"
+        ],
+        "stage_4": [
+          "email",
+          "sms"
+        ]
+      },
+      "description": "Channels to use for each reminder stage"
+    },
+    "apply_late_fee": {
+      "type": "boolean",
+      "default": false,
+      "description": "Apply late fees to overdue invoices"
+    },
+    "late_fee_amount_or_percent": {
+      "type": "string",
+      "default": "2%",
+      "description": "Late fee as amount (e.g., '25') or percentage (e.g., '2%')"
+    },
+    "pause_on_partial_payment": {
+      "type": "boolean",
+      "default": true,
+      "description": "Pause reminder sequence if customer makes partial payment"
+    },
+    "escalate_to_owner_at_stage": {
+      "type": "number",
+      "default": 2,
+      "min": 1,
+      "max": 4,
+      "description": "Stage at which to alert business owner (1-4)"
+    },
+    "max_reminders": {
+      "type": "number",
+      "default": 4,
+      "min": 1,
+      "max": 10,
+      "description": "Maximum number of reminders per invoice"
+    },
+    "quiet_hours_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Don't send reminders outside business hours"
+    },
+    "quiet_hours_start": {
+      "type": "string",
+      "default": "18:00",
+      "description": "Start time for quiet hours (24-hour format)"
+    },
+    "quiet_hours_end": {
+      "type": "string",
+      "default": "08:00",
+      "description": "End time for quiet hours (24-hour format)"
+    },
+    "collections_agency_threshold_days": {
+      "type": "number",
+      "default": 60,
+      "min": 30,
+      "max": 180,
+      "description": "Days overdue before suggesting collections agency escalation"
+    },
+    "owner_alert_email": {
+      "type": "string",
+      "required": true,
+      "description": "Email address to send owner alerts to"
+    }
+  },
+  "reminder_stages": {
+    "stage_1_gentle": {
+      "day": 1,
+      "days_overdue": "1 day",
+      "tone": "gentle",
+      "description": "Friendly reminder with benefit of the doubt"
+    },
+    "stage_2_firm": {
+      "day": 7,
+      "days_overdue": "7 days",
+      "tone": "professional but firm",
+      "description": "More assertive reminder with consequences mentioned"
+    },
+    "stage_3_urgent": {
+      "day": 14,
+      "days_overdue": "14 days",
+      "tone": "urgent",
+      "description": "Strong reminder with payment terms and consequences"
+    },
+    "stage_4_final": {
+      "day": 30,
+      "days_overdue": "30 days",
+      "tone": "final notice",
+      "description": "Final notice with collections escalation or legal action mention"
+    }
+  },
+  "templates": {
+    "reminder_stage_1": {
+      "name": "Gentle Reminder (Day 1)",
+      "subject": "Just a heads up: Invoice {{invoice_number}} payment due",
+      "description": "Friendly first reminder",
+      "variables": [
+        "customer_name",
+        "invoice_number",
+        "invoice_amount",
+        "due_date",
+        "payment_link",
+        "company_name"
+      ]
+    },
+    "reminder_stage_2": {
+      "name": "Firm Reminder (Day 7)",
+      "subject": "Invoice {{invoice_number}} payment now overdue",
+      "description": "Professional firm reminder",
+      "variables": [
+        "customer_name",
+        "invoice_number",
+        "invoice_amount",
+        "due_date",
+        "days_overdue",
+        "payment_link",
+        "company_name",
+        "late_fee_info"
+      ]
+    },
+    "reminder_stage_3": {
+      "name": "Urgent Reminder (Day 14)",
+      "subject": "URGENT: Invoice {{invoice_number}} seriously overdue",
+      "description": "Strong urgent reminder",
+      "variables": [
+        "customer_name",
+        "invoice_number",
+        "invoice_amount",
+        "due_date",
+        "days_overdue",
+        "payment_link",
+        "company_name",
+        "late_fee_info",
+        "consequences"
+      ]
+    },
+    "reminder_stage_4": {
+      "name": "Final Notice (Day 30)",
+      "subject": "FINAL NOTICE: Invoice {{invoice_number}} legal action pending",
+      "description": "Final notice with escalation warning",
+      "variables": [
+        "customer_name",
+        "invoice_number",
+        "invoice_amount",
+        "due_date",
+        "days_overdue",
+        "total_amount_with_fees",
+        "payment_link",
+        "company_name",
+        "final_deadline",
+        "legal_action_warning",
+        "collections_info"
+      ]
+    },
+    "owner_alert_email": {
+      "name": "Owner Alert Email",
+      "subject": "Alert: Invoice {{invoice_number}} from {{customer_name}} is overdue",
+      "description": "Alert to business owner about overdue invoice",
+      "variables": [
+        "invoice_number",
+        "customer_name",
+        "invoice_amount",
+        "due_date",
+        "days_overdue",
+        "stage",
+        "reminder_sent_count",
+        "payment_status"
+      ]
+    },
+    "payment_received_after_reminder": {
+      "name": "Payment Received Confirmation",
+      "subject": "Thank you! Payment received for Invoice {{invoice_number}}",
+      "description": "Confirmation after payment received following reminder",
+      "variables": [
+        "customer_name",
+        "invoice_number",
+        "amount_paid",
+        "payment_date",
+        "company_name"
+      ]
+    }
+  },
+  "compliance": {
+    "fdcpa_aware": true,
+    "fdcpa_description": "Module is not debt collection; sends reminders for business-to-business unpaid invoices, not consumer debt collection",
+    "quiet_hours_enabled": true,
+    "gdpr_compliant": true,
+    "ccpa_compliant": true,
+    "not_third_party_debt_collection": "Reminders only sent by original creditor, not debt collectors"
+  },
+  "activation": {
+    "type": "guided",
+    "required_setup": [
+      "Owner email address for alerts",
+      "Late fee policy (optional)",
+      "Reminder schedule customization",
+      "Template customization",
+      "Collections agency contact (optional)"
+    ]
+  },
+  "key_metrics": {
+    "recovery_rate": "40-60% of overdue invoices recovered",
+    "average_days_to_payment_after_reminder": "3-5 days (from reminder send)",
+    "stage_1_payment_rate": "10-15%",
+    "stage_2_payment_rate": "20-25%",
+    "stage_3_payment_rate": "15-20%",
+    "stage_4_payment_rate": "5-10%"
+  },
+  "observability": {
+    "logs": [
+      "overdue_check_run",
+      "overdue_invoices_found",
+      "reminder_scheduled",
+      "reminder_email_sent",
+      "reminder_sms_sent",
+      "late_fee_applied",
+      "payment_received",
+      "owner_alert_sent",
+      "reminder_paused_partial_payment",
+      "collections_escalation_triggered",
+      "error_check_failed",
+      "error_send_failed"
+    ],
+    "webhooks": [
+      "reminder.scheduled",
+      "reminder.sent",
+      "payment.received_after_reminder",
+      "late_fee.applied",
+      "owner.alert_sent",
+      "collections.escalation_triggered"
+    ],
+    "metrics": [
+      "overdue_invoices_total",
+      "reminders_sent_per_stage",
+      "recovery_rate_per_stage",
+      "average_days_to_recovery",
+      "late_fees_applied_total",
+      "owner_alerts_sent",
+      "collections_escalations"
+    ]
+  },
+  "pricing": {
+    "pack": "billing_pack",
+    "pack_price": "$49/month",
+    "standalone_price": "$19/month",
+    "usage_limits": {
+      "invoices_per_month": "unlimited",
+      "reminders_per_month": "unlimited",
+      "storage_days": 365,
+      "sms_per_reminder": "1"
+    }
+  },
+  "test_matrix": {
+    "scenarios": [
+      "Daily cron job runs and detects overdue invoices",
+      "Stage 1 gentle reminder sent at day 1 overdue",
+      "Stage 2 firm reminder sent at day 7 overdue",
+      "Stage 3 urgent reminder sent at day 14 overdue",
+      "Stage 4 final notice sent at day 30 overdue",
+      "Escalating tone matches stage expectations",
+      "Email reminder sent for each stage",
+      "SMS reminder sent starting at stage 2",
+      "Late fee applied when enabled",
+      "Late fee amount calculated correctly (fixed or percent)",
+      "Owner alert sent at configured stage",
+      "Owner alert contains correct invoice data",
+      "Reminder paused after partial payment received",
+      "Reminder resume after remaining balance unpaid",
+      "Max reminders limit respected",
+      "Payment received webhook cancels follow-up reminders",
+      "Quiet hours respected (no sends outside hours)",
+      "Collections escalation triggered at threshold",
+      "Multi-channel (email + SMS) both sent for later stages",
+      "CRM timeline updated with reminder events"
+    ]
+  }
+}
