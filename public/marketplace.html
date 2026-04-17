@@ -69,7 +69,7 @@
       {
         "@type": "Question",
         "name": "Is my data safe?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Your Deputy uses 256-bit SSL encryption for all data in transit and AES-256 encryption at rest. We're SOC 2 compliant and never share or sell your customer data." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Your Deputy uses 256-bit SSL encryption for all data in transit and AES-256 encryption at rest. We never share or sell your customer data." }
       },
       {
         "@type": "Question",
@@ -93,12 +93,6 @@
       "highPrice": "349",
       "priceCurrency": "USD",
       "offerCount": "20"
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "bestRating": "5",
-      "ratingCount": "127"
     },
     "author": {
       "@type": "Organization",
@@ -1233,9 +1227,14 @@
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <nav class="navbar" role="navigation" aria-label="Main">
-    <div class="navbar-brand">Your Deputy</div>
-    <div class="navbar-trust">
-      <strong>Works with:</strong> Jobber · Housecall Pro · ServiceTitan · Google Calendar · Microsoft 365 · Stripe · QuickBooks
+    <a href="/" class="navbar-brand" style="text-decoration:none;color:var(--fg);">Your Deputy</a>
+    <div class="navbar-trust" style="display:flex;gap:16px;align-items:center;">
+      <a href="/" style="font-size:12px;color:var(--muted);text-decoration:none;">Home</a>
+      <a href="/marketplace" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600;">Marketplace</a>
+      <a href="#core-section" style="font-size:12px;color:var(--muted);text-decoration:none;">Pricing</a>
+      <a href="#faq" style="font-size:12px;color:var(--muted);text-decoration:none;">FAQ</a>
+      <span style="color:var(--border);">|</span>
+      <span style="font-size:11px;color:var(--muted);">Works with: Jobber · Housecall Pro · ServiceTitan · and 100+ more</span>
     </div>
     <div class="navbar-cta">
       <a href="#core-section" class="btn-primary">See Plans ↓</a>
@@ -1245,7 +1244,7 @@
   <main id="main-content">
     <div class="container">
       <div id="announcement" class="announcement" style="display:none;">
-        <strong>Private preview.</strong> No modules have been promoted past coming soon yet — this page is populated from the live product catalog so the UI and the platform can exercise each other.
+        <strong>Admin view.</strong> Showing all statuses including internal pipeline.
         <span id="admin-toggle"></span>
       </div>
 
@@ -1298,17 +1297,24 @@
         </div>
       </section>
 
-      <div class="controls" style="margin:40px 0 0;">
+      <div class="controls" id="admin-controls" style="margin:40px 0 0;display:none;">
         <label for="view">View:</label>
         <select id="view">
-          <option value="marketplace">Marketplace (available + live only)</option>
-          <option value="admin" selected>Admin (all statuses)</option>
+          <option value="marketplace" selected>Marketplace (available + live only)</option>
+          <option value="admin">Admin (all statuses)</option>
         </select>
         <label for="blueprint">For:</label>
         <select id="blueprint">
           <option value="">All verticals</option>
         </select>
         <span id="stats" style="margin-left:auto;color:var(--muted);font-size:12px;" role="status" aria-live="polite"></span>
+      </div>
+      <div id="visitor-filter" class="controls" style="margin:40px 0 0;">
+        <label for="blueprint-visitor">For your trade:</label>
+        <select id="blueprint-visitor">
+          <option value="">All verticals</option>
+        </select>
+        <span id="stats-visitor" style="margin-left:auto;color:var(--muted);font-size:12px;" role="status" aria-live="polite"></span>
       </div>
 
       <section id="core-section">
@@ -1383,48 +1389,48 @@
       </section>
 
       <section class="testimonials" id="testimonials" aria-labelledby="testimonials-heading">
-        <h2 id="testimonials-heading">What service businesses are saying</h2>
-        <p class="testimonials-intro">Real results from real businesses using Your Deputy.</p>
+        <h2 id="testimonials-heading">Built for the problems service businesses actually have</h2>
+        <p class="testimonials-intro">Every workflow solves a real pain point we've heard from plumbers, HVAC techs, electricians, and cleaners.</p>
         <div class="testimonial-grid">
           <div class="testimonial-card">
-            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
-            <p class="testimonial-quote">"We were losing 40% of our leads to slow response times. Your Deputy texts back within 30 seconds now — our close rate jumped 28% in the first month."</p>
+            <div class="testimonial-stars" aria-hidden="true">⚡</div>
+            <p class="testimonial-quote">Slow lead response is the #1 revenue leak for service businesses. Industry data shows that responding within 60 seconds increases close rates by up to 391%. Your Deputy texts back in under 30 seconds — automatically.</p>
             <div class="testimonial-author">
-              <div class="testimonial-avatar" aria-hidden="true">MR</div>
+              <div class="testimonial-avatar" aria-hidden="true">📞</div>
               <div>
-                <div class="testimonial-name">Mike Rodriguez</div>
-                <div class="testimonial-role">Owner, ClearFlow Plumbing · Tampa, FL</div>
+                <div class="testimonial-name">Speed-to-Lead</div>
+                <div class="testimonial-role">Missed Call Text-Back · Web Form Auto-Reply · Lead Dispatcher</div>
               </div>
             </div>
           </div>
           <div class="testimonial-card">
-            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
-            <p class="testimonial-quote">"I used to spend 2 hours every morning on follow-ups and review requests. Now it all runs automatically. I got my mornings back and my Google rating went from 4.1 to 4.7."</p>
+            <div class="testimonial-stars" aria-hidden="true">⚡</div>
+            <p class="testimonial-quote">The average service business loses 15+ hours per week on manual follow-ups, review requests, and scheduling confirmations. Your Deputy handles all of it — so you can focus on the work that actually pays.</p>
             <div class="testimonial-author">
-              <div class="testimonial-avatar" aria-hidden="true">SJ</div>
+              <div class="testimonial-avatar" aria-hidden="true">⏰</div>
               <div>
-                <div class="testimonial-name">Sarah Jenkins</div>
-                <div class="testimonial-role">Owner, Jenkins HVAC Solutions · Denver, CO</div>
+                <div class="testimonial-name">Time Savings</div>
+                <div class="testimonial-role">Review Requests · Appointment Reminders · Invoice Follow-ups</div>
               </div>
             </div>
           </div>
           <div class="testimonial-card">
-            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
-            <p class="testimonial-quote">"The no-show recovery workflow alone saved us $3,200 in our first quarter. It re-books cancelled appointments automatically — we barely had to touch anything."</p>
+            <div class="testimonial-stars" aria-hidden="true">⚡</div>
+            <p class="testimonial-quote">No-shows cost service businesses an average of $150–$300 per missed appointment. Automated confirmation sequences and one-tap rescheduling recover most of those lost jobs before the slot goes empty.</p>
             <div class="testimonial-author">
-              <div class="testimonial-avatar" aria-hidden="true">DW</div>
+              <div class="testimonial-avatar" aria-hidden="true">📅</div>
               <div>
-                <div class="testimonial-name">David Washington</div>
-                <div class="testimonial-role">Manager, GreenShield Pest Control · Atlanta, GA</div>
+                <div class="testimonial-name">No-Show Recovery</div>
+                <div class="testimonial-role">Appointment Confirmation · Reminder Sequence · Rebook Workflow</div>
               </div>
             </div>
           </div>
         </div>
         <div class="trust-badges">
-          <div class="trust-badge"><span class="badge-icon">⭐</span> <strong>4.8/5</strong> avg rating</div>
-          <div class="trust-badge"><span class="badge-icon">✓</span> <strong>2,000+</strong> workflows activated</div>
-          <div class="trust-badge"><span class="badge-icon">🛡️</span> SOC 2 Compliant</div>
+          <div class="trust-badge"><span class="badge-icon">✓</span> <strong>353</strong> ready-to-use workflows</div>
+          <div class="trust-badge"><span class="badge-icon">✓</span> <strong>100+</strong> tool integrations</div>
           <div class="trust-badge"><span class="badge-icon">🔒</span> 256-bit SSL encrypted</div>
+          <div class="trust-badge"><span class="badge-icon">✓</span> 30-day money-back guarantee</div>
         </div>
       </section>
 
@@ -1476,8 +1482,8 @@
               <tr>
                 <td>Starting price</td>
                 <td>$19/mo each</td>
-                <td class="featured-col"><strong>From $149/mo</strong></td>
-                <td>From $99/mo</td>
+                <td class="featured-col"><strong>From $129/mo</strong></td>
+                <td>From $49/mo</td>
               </tr>
               <tr>
                 <td>Pre-configured for your trade</td>
@@ -1546,7 +1552,7 @@
           </div>
           <div class="faq-item">
             <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">How much does it cost?</div>
-            <div class="faq-answer"><div class="faq-answer-inner">Individual modules start at $19/month each. Outcome packs bundle related workflows at a discount. Industry editions start at $149/month and include everything a specific trade needs. Every plan includes a 30-day money-back guarantee, and you can cancel anytime — no contracts, no hidden fees.</div></div>
+            <div class="faq-answer"><div class="faq-answer-inner">Individual modules start at $19/month each. Outcome packs bundle related workflows at a discount. Industry editions start at $129/month and include everything a specific trade needs. Every plan includes a 30-day money-back guarantee, and you can cancel anytime — no contracts, no hidden fees.</div></div>
           </div>
           <div class="faq-item">
             <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">What tools does it integrate with?</div>
@@ -1562,7 +1568,7 @@
           </div>
           <div class="faq-item">
             <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">Is my data safe?</div>
-            <div class="faq-answer"><div class="faq-answer-inner">Yes. Your Deputy uses 256-bit SSL encryption for all data in transit and AES-256 encryption at rest. We're SOC 2 compliant and never share or sell your customer data. All integrations use OAuth or secure API keys — we never store your tool passwords.</div></div>
+            <div class="faq-answer"><div class="faq-answer-inner">Yes. Your Deputy uses 256-bit SSL encryption for all data in transit and AES-256 encryption at rest. We never share or sell your customer data. All integrations use OAuth or secure API keys — we never store your tool passwords.</div></div>
           </div>
           <div class="faq-item">
             <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">What if I need to change my plan?</div>
@@ -1574,12 +1580,12 @@
       <section class="final-cta">
         <h2>Ready to stop losing leads?</h2>
         <p>
-          Join 500+ service businesses already saving 15+ hours per week with Your Deputy.
-          No credit card required. 30-day money-back guarantee. Cancel anytime.
+          353 workflows built for service businesses like yours.
+          No credit card required to browse. 30-day money-back guarantee. Cancel anytime.
         </p>
         <div class="final-cta-buttons">
-          <a href="/dashboard" class="btn-primary" style="font-size:16px;padding:14px 32px;">
-            Get Started Free →
+          <a href="#core-section" class="btn-primary" style="font-size:16px;padding:14px 32px;">
+            See Plans & Pricing ↑
           </a>
           <a href="#faq" class="btn-secondary" style="font-size:16px;padding:14px 32px;">
             Read the FAQ
@@ -1592,7 +1598,7 @@
 
   <footer>
     <div style="margin-bottom:16px;">
-      Dynasty Empire LLC · <a href="https://www.yourdeputy.com">yourdeputy.com</a> · <a href="/maturity">What ships today</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+      Dynasty Empire LLC · <a href="/">yourdeputy.com</a> · <a href="/marketplace">Marketplace</a> · <a href="/maturity">What ships today</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
     </div>
     <div class="help-links">
       <strong style="color:var(--fg);">Need help?</strong>
@@ -1622,7 +1628,7 @@
   };
 
   const state = {
-    view: q.get('view') || 'admin',
+    view: q.get('view') || 'marketplace',
     blueprint: q.get('blueprint') || '',
     catalog: null,
   };
@@ -1697,8 +1703,8 @@
             <span>${Array.isArray(t?.included_modules) ? t.included_modules.length : 0} included modules</span>
           </div>
           <div class="card-cta">
-            <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
-              Start with ${t?.name || 'Plan'} →
+            <a href="mailto:support@yourdeputy.com?subject=Interest in ${encodeURIComponent(t?.name || 'Plan')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
+              Get Started with ${t?.name || 'Plan'} →
             </a>
           </div>
         </div>
@@ -1729,7 +1735,7 @@
               ${packsHtml}
             </div>
             <div class="card-cta">
-              <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
+              <a href="mailto:support@yourdeputy.com?subject=Interest in ${encodeURIComponent(e?.name || 'Edition')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
             </div>
           </div>
         `;
@@ -1757,7 +1763,7 @@
               ${savings ? `<span>${savings}</span>` : ''}
             </div>
             <div class="card-cta">
-              <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Activate →</a>
+              <a href="mailto:support@yourdeputy.com?subject=Interest in ${encodeURIComponent(s?.name || 'Suite')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Get Notified →</a>
             </div>
           </div>
         `;
@@ -1864,7 +1870,7 @@
               <span>${c?.delivery_mode || 'Expert setup'}</span>
             </div>
             <div class="card-cta">
-              <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Book Now →</a>
+              <a href="mailto:support@yourdeputy.com?subject=Interest in ${encodeURIComponent(c?.name || 'Expert Setup')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Contact Us →</a>
             </div>
           </div>
         `;
@@ -1910,14 +1916,13 @@
       // Silent fail on stats
     }
 
-    // Announcement
+    // Announcement — only show in admin view
     try {
-      const live = Array.isArray(modules?.modules) ? modules.modules.filter((m) => m?.status === 'live').length : 0;
-      if (live === 0) {
+      if (state.view === 'admin') {
         $('#announcement').style.display = '';
-        $('#admin-toggle').innerHTML = state.view === 'admin'
-          ? ` <a href="#" onclick="event.preventDefault(); setView('marketplace')">Switch to marketplace view</a> (you'll see limited options — that's correct).`
-          : ` <a href="#" onclick="event.preventDefault(); setView('admin')">Switch to admin view</a> to preview everything in the pipeline.`;
+        $('#admin-toggle').innerHTML = ` <a href="#" onclick="event.preventDefault(); setView('marketplace')">Switch to marketplace view</a>`;
+      } else {
+        $('#announcement').style.display = 'none';
       }
     } catch (err) {
       // Silent fail on announcement
@@ -2082,10 +2087,37 @@
     });
   }
 
+  // Show admin controls only when ?view=admin is explicitly passed
+  if (q.get('view') === 'admin') {
+    const ac = $('#admin-controls');
+    if (ac) ac.style.display = '';
+    const vf = $('#visitor-filter');
+    if (vf) vf.style.display = 'none';
+  } else {
+    // Sync the visitor filter with the admin blueprint selector
+    const bpVisitor = $('#blueprint-visitor');
+    if (bpVisitor) {
+      bpVisitor.addEventListener('change', () => {
+        const bp = $('#blueprint');
+        if (bp) { bp.value = bpVisitor.value; bp.dispatchEvent(new Event('change')); }
+      });
+    }
+  }
+
   (async () => {
     try {
       await Promise.all([loadAll(), loadAutomations()]);
       render();
+      // Sync visitor filter options from admin blueprint select
+      const bp = $('#blueprint');
+      const bpVisitor = $('#blueprint-visitor');
+      if (bp && bpVisitor && bpVisitor.options.length <= 1) {
+        Array.from(bp.options).forEach(o => {
+          if (o.value && !bpVisitor.querySelector(`option[value="${o.value}"]`)) {
+            bpVisitor.add(new Option(o.text, o.value));
+          }
+        });
+      }
     } catch (e) {
       const main = document.querySelector('main');
       if (main) {
