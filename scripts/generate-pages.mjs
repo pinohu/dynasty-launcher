@@ -252,6 +252,8 @@ function page({ title, description, canonical, breadcrumbs, body, jsonLd }) {
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${escHtml(title)}">
 <meta name="twitter:description" content="${escHtml(description)}">
+<meta property="og:image" content="https://www.yourdeputy.com/og-default.png">
+<meta name="twitter:image" content="https://www.yourdeputy.com/og-default.png">
 <meta name="theme-color" content="#4da3ff">
 <script type="application/ld+json">${JSON.stringify(finalJsonLd)}</script>
 <script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</script>
@@ -369,11 +371,12 @@ function generateModulePage(mod) {
   <h1>${valueProp}</h1>
   <p class="tagline">${escHtml(mod.description_short || mod.outcome || 'Automate your workflow and save time every day.')}</p>
   <div class="price-tag">$${mod.price_monthly}<span>/mo per client</span></div>
+  <a href="/dashboard" class="btn" style="margin-top:16px">Activate Now</a>
   <p class="reassurance">30-day money-back guarantee · Cancel anytime · Works with Jobber, Housecall Pro, ServiceTitan, and more</p>
 </div>
 
-<div class="section">
-  <h2>Who This Is For</h2>
+<div class="section" aria-labelledby="who-this-is-for">
+  <h2 id="who-this-is-for">Who This Is For</h2>
   <div class="two-col">
     <div>
       <h3>Industries</h3>
@@ -386,29 +389,29 @@ function generateModulePage(mod) {
   </div>
 </div>
 
-<div class="section">
-  <h2>How It Works</h2>
+<div class="section" aria-labelledby="how-it-works">
+  <h2 id="how-it-works">How It Works</h2>
   <p style="margin-bottom:12px"><strong>Trigger:</strong> <code>${escHtml(mod.trigger?.event || 'manual')}</code></p>
   ${mod.trigger?.conditions ? `<p style="margin-bottom:12px"><strong>Conditions:</strong> <code>${escHtml(JSON.stringify(mod.trigger.conditions))}</code></p>` : ''}
   ${actions ? `<p style="margin-bottom:8px"><strong>Actions performed:</strong></p><ol class="steps-list">${actions}</ol>` : ''}
 </div>
 
-${settings ? `<div class="section">
-  <h2>Configuration</h2>
+${settings ? `<div class="section" aria-labelledby="configuration">
+  <h2 id="configuration">Configuration</h2>
   <table><thead><tr><th>Setting</th><th>Type</th><th>Default</th></tr></thead><tbody>${settings}</tbody></table>
 </div>` : ''}
 
-${kpis ? `<div class="section">
-  <h2>Key Metrics</h2>
+${kpis ? `<div class="section" aria-labelledby="key-metrics">
+  <h2 id="key-metrics">Key Metrics</h2>
   <ul>${kpis}</ul>
 </div>` : ''}
 
-${relatedHtml ? `<div class="section">
-  <h2>Related Modules</h2>
+${relatedHtml ? `<div class="section" aria-labelledby="related-modules">
+  <h2 id="related-modules">Related Modules</h2>
   <div class="card-grid">${relatedHtml}</div>
 </div>` : ''}
 
-<div class="trust-bar">
+<div class="trust-bar" aria-label="Trust signals">
   <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
   <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
     <span>⭐ <strong>4.8/5</strong> avg rating</span>
@@ -445,7 +448,7 @@ ${relatedHtml ? `<div class="section">
 
   return {
     html: page({
-      title: `${mod.name} — ${mod.category} Automation | Your Deputy`,
+      title: `${mod.name} | Your Deputy`,
       description: desc,
       canonical,
       breadcrumbs: [
@@ -499,22 +502,23 @@ function generateBundlePage(bundle) {
   <p class="tagline">${escHtml(bundle.description || 'Achieve measurable business results with coordinated automations.')}</p>
   <div class="price-tag">$${bundle.price_monthly}<span>/mo per client</span></div>
   <p style="color:var(--muted);font-size:13px;margin-top:8px"><strong>Save $${savings}/mo vs. $${standaloneTotal}/mo</strong> if purchased individually</p>
+  <a href="/dashboard" class="btn" style="margin-top:16px">Activate Pack</a>
   <p class="reassurance">30-day money-back guarantee · Cancel anytime · Works with Jobber, Housecall Pro, ServiceTitan, and more</p>
 </div>
 
-<div class="section">
-  <h2>Business Outcome</h2>
+<div class="section" aria-labelledby="business-outcome">
+  <h2 id="business-outcome">Business Outcome</h2>
   <p>${escHtml(bundle.outcome || 'Achieve measurable business results with a coordinated set of automations.')}</p>
   ${bundle.hero_kpi ? `<p style="margin-top:12px"><strong>Hero KPI:</strong> ${escHtml(bundle.hero_kpi.replace(/_/g, ' '))}</p>` : ''}
 </div>
 
-<div class="section">
-  <h2>What's Included (${mods.length} modules)</h2>
+<div class="section" aria-labelledby="whats-included">
+  <h2 id="whats-included">What's Included (${mods.length} modules)</h2>
   <div class="card-grid">${moduleCards}</div>
 </div>
 
-<div class="section">
-  <h2>Who This Is For</h2>
+<div class="section" aria-labelledby="bundle-who-for">
+  <h2 id="bundle-who-for">Who This Is For</h2>
   <div class="two-col">
     <div>
       <h3>Industries</h3>
@@ -527,7 +531,7 @@ function generateBundlePage(bundle) {
   </div>
 </div>
 
-<div class="trust-bar">
+<div class="trust-bar" aria-label="Trust signals">
   <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
   <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
     <span>⭐ <strong>4.8/5</strong> avg rating</span>
@@ -607,10 +611,11 @@ function generateCategoryPage(catNum, catName) {
   </div>
   <h1>${categoryHeadline}</h1>
   <p class="tagline">Find the right ${catName.toLowerCase()} workflow for your service business. All automations integrate seamlessly with Jobber, Housecall Pro, ServiceTitan, and more.</p>
+  <a href="/dashboard" class="btn" style="margin-top:16px">Get Started</a>
 </div>
 
-<div class="section">
-  <h2>All Automations in ${escHtml(catName)}</h2>
+<div class="section" aria-labelledby="all-automations">
+  <h2 id="all-automations">All Automations in ${escHtml(catName)}</h2>
   <div class="card-grid">${autoCards}</div>
 </div>
 
@@ -702,36 +707,38 @@ function generateAutomationPage(auto) {
   </div>
   <h1>${escHtml(auto.name)}</h1>
   <p class="tagline">${autoDesc}</p>
+  <a href="/dashboard" class="btn" style="margin-top:16px">Activate Now</a>
+  <p class="reassurance">30-day money-back guarantee · Cancel anytime · Works with Jobber, Housecall Pro, ServiceTitan</p>
 </div>
 
-<div class="section">
-  <h2>What This Does</h2>
+<div class="section" aria-labelledby="what-this-does">
+  <h2 id="what-this-does">What This Does</h2>
   <p>${autoDesc}</p>
 </div>
 
-<div class="section">
-  <h2>Workflow Steps</h2>
+<div class="section" aria-labelledby="workflow-steps">
+  <h2 id="workflow-steps">Workflow Steps</h2>
   <ol class="steps-list">${stepsHtml}</ol>
 </div>
 
 <div class="two-col">
-  <div class="section">
-    <h2>Trigger Details</h2>
+  <div class="section" aria-labelledby="trigger-details">
+    <h2 id="trigger-details">Trigger Details</h2>
     <p><strong>Type:</strong> <code>${escHtml(auto.trigger)}</code></p>
     ${auto.cron ? `<p style="margin-top:8px"><strong>Schedule:</strong> <code>${escHtml(auto.cron)}</code></p>` : '<p style="margin-top:8px">Fires on incoming event</p>'}
   </div>
-  <div class="section">
-    <h2>Included In</h2>
+  <div class="section" aria-labelledby="included-in">
+    <h2 id="included-in">Included In</h2>
     ${pkgs.length ? `<div class="pills">${pkgs.map(p => `<span class="pill pill-success">${escHtml(p)}</span>`).join('')}</div>` : '<p style="color:var(--muted)">Available as add-on to all packs</p>'}
   </div>
 </div>
 
-${siblingCards ? `<div class="section">
-  <h2>More in ${escHtml(catName)}</h2>
+${siblingCards ? `<div class="section" aria-labelledby="more-in-category">
+  <h2 id="more-in-category">More in ${escHtml(catName)}</h2>
   <div class="card-grid">${siblingCards}</div>
 </div>` : ''}
 
-<div class="trust-bar">
+<div class="trust-bar" aria-label="Trust signals">
   <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
   <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
     <span>⭐ <strong>4.8/5</strong> avg rating</span>
@@ -762,7 +769,7 @@ ${siblingCards ? `<div class="section">
 
   return {
     html: page({
-      title: `${auto.name} — ${catName} Workflow | Your Deputy`,
+      title: `${auto.name} | Your Deputy`,
       description: desc.substring(0, 155),
       canonical,
       breadcrumbs: [
