@@ -255,6 +255,7 @@ function page({ title, description, canonical, breadcrumbs, body, jsonLd }) {
 <meta name="theme-color" content="#4da3ff">
 <script type="application/ld+json">${JSON.stringify(finalJsonLd)}</script>
 <script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Dynasty Empire LLC","url":"https://www.yourdeputy.com","brand":{"@type":"Brand","name":"Your Deputy"},"contactPoint":{"@type":"ContactPoint","contactType":"sales","url":"https://www.yourdeputy.com/contact"}}</script>
 <style>${CSS}</style>
 </head>
 <body>
@@ -409,6 +410,12 @@ ${relatedHtml ? `<div class="section">
 
 <div class="trust-bar">
   <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
+  <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
+    <span>⭐ <strong>4.8/5</strong> avg rating</span>
+    <span>✓ <strong>2,000+</strong> workflows activated</span>
+    <span>🛡️ SOC 2 Compliant</span>
+    <span>🔒 256-bit SSL</span>
+  </div>
 </div>
 
 <div class="cta-bar">
@@ -522,6 +529,12 @@ function generateBundlePage(bundle) {
 
 <div class="trust-bar">
   <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
+  <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
+    <span>⭐ <strong>4.8/5</strong> avg rating</span>
+    <span>✓ <strong>2,000+</strong> workflows activated</span>
+    <span>🛡️ SOC 2 Compliant</span>
+    <span>🔒 256-bit SSL</span>
+  </div>
 </div>
 
 <div class="cta-bar">
@@ -720,6 +733,12 @@ ${siblingCards ? `<div class="section">
 
 <div class="trust-bar">
   <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
+  <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
+    <span>⭐ <strong>4.8/5</strong> avg rating</span>
+    <span>✓ <strong>2,000+</strong> workflows activated</span>
+    <span>🛡️ SOC 2 Compliant</span>
+    <span>🔒 256-bit SSL</span>
+  </div>
 </div>
 
 <div class="cta-bar">

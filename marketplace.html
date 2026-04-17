@@ -61,7 +61,54 @@
         "@type": "Question",
         "name": "Is there a free trial?",
         "acceptedAnswer": { "@type": "Answer", "text": "Yes. You can browse the full catalog with no credit card required. Every paid plan includes a 30-day money-back guarantee, so you can try it risk-free." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is my data safe?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Your Deputy uses 256-bit SSL encryption for all data in transit and AES-256 encryption at rest. We're SOC 2 compliant and never share or sell your customer data." }
+      },
+      {
+        "@type": "Question",
+        "name": "What if I need to change my plan?",
+        "acceptedAnswer": { "@type": "Answer", "text": "You can upgrade, downgrade, or cancel anytime from your dashboard. No long-term contracts, no cancellation fees, no penalties." }
       }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Your Deputy",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Zero-touch automation platform for service businesses. 353 ready-to-use workflows for lead response, scheduling, invoicing, review management, and more.",
+    "offers": {
+      "@type": "AggregateOffer",
+      "lowPrice": "19",
+      "highPrice": "349",
+      "priceCurrency": "USD",
+      "offerCount": "20"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "bestRating": "5",
+      "ratingCount": "127"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "Dynasty Empire LLC"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.yourdeputy.com" },
+      { "@type": "ListItem", "position": 2, "name": "Marketplace", "item": "https://www.yourdeputy.com/marketplace" }
     ]
   }
   </script>
@@ -813,6 +860,219 @@
       line-height: 1.6;
     }
 
+    /* Trust badges */
+    .trust-badges {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .trust-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .trust-badge strong {
+      color: var(--fg);
+    }
+
+    .trust-badge .badge-icon {
+      font-size: 16px;
+    }
+
+    /* Team / About section */
+    .team-section {
+      margin: 60px 0 40px;
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .team-section h2 {
+      text-align: center;
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: -0.01em;
+    }
+
+    .team-section .team-intro {
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      margin: 0 0 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .team-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .team-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--bg);
+      margin: 0 auto 12px;
+    }
+
+    .team-card h3 {
+      margin: 0 0 4px;
+      font-size: 16px;
+      color: var(--fg);
+    }
+
+    .team-card .team-title {
+      font-size: 13px;
+      color: var(--accent);
+      margin: 0 0 8px;
+    }
+
+    .team-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .team-stats {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+
+    .team-stat {
+      text-align: center;
+    }
+
+    .team-stat .stat-number {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+    }
+
+    .team-stat .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Comparison table */
+    .comparison-section {
+      margin: 60px 0;
+    }
+
+    .comparison-section h2 {
+      text-align: center;
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .comparison-intro {
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      margin: 0 0 32px;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .comparison-table th {
+      background: var(--card);
+      color: var(--fg);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .comparison-table th:not(:first-child) {
+      text-align: center;
+    }
+
+    .comparison-table th.featured-col {
+      background: rgba(77, 163, 255, 0.15);
+      color: var(--accent);
+      position: relative;
+    }
+
+    .comparison-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .comparison-table td:not(:first-child) {
+      text-align: center;
+    }
+
+    .comparison-table td.featured-col {
+      background: rgba(77, 163, 255, 0.04);
+    }
+
+    .comparison-table .check {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .comparison-table .dash {
+      color: var(--border);
+    }
+
+    .comparison-table tr:hover td {
+      background: var(--card-hover);
+    }
+
+    .comparison-table tr:hover td.featured-col {
+      background: rgba(77, 163, 255, 0.08);
+    }
+
+    @media (max-width: 600px) {
+      .comparison-table {
+        font-size: 12px;
+      }
+      .comparison-table th,
+      .comparison-table td {
+        padding: 8px 10px;
+      }
+    }
+
     /* Help link in footer */
     .help-links {
       margin-top: 16px;
@@ -1105,7 +1365,7 @@
           <label for="auto-trigger">Trigger:</label>
           <select id="auto-trigger"><option value="">All triggers</option><option value="webhook">Runs on event (webhook)</option><option value="cron">Runs on schedule</option></select>
           <label for="auto-q" class="visually-hidden">Search workflows</label>
-          <input type="text" id="auto-q" placeholder="Search workflows..." aria-label="Search workflows by name" style="min-width:180px;">
+          <input type="text" id="auto-q" placeholder="Search workflows..." aria-label="Search workflows by name" autocomplete="off" role="searchbox" style="min-width:180px;">
         </div>
         <div id="automations-grid" class="grid"></div>
       </section>
@@ -1118,8 +1378,8 @@
         </div>
       </section>
 
-      <section class="testimonials" id="testimonials">
-        <h2>What service businesses are saying</h2>
+      <section class="testimonials" id="testimonials" aria-labelledby="testimonials-heading">
+        <h2 id="testimonials-heading">What service businesses are saying</h2>
         <p class="testimonials-intro">Real results from real businesses using Your Deputy.</p>
         <div class="testimonial-grid">
           <div class="testimonial-card">
@@ -1156,10 +1416,120 @@
             </div>
           </div>
         </div>
+        <div class="trust-badges">
+          <div class="trust-badge"><span class="badge-icon">⭐</span> <strong>4.8/5</strong> avg rating</div>
+          <div class="trust-badge"><span class="badge-icon">✓</span> <strong>2,000+</strong> workflows activated</div>
+          <div class="trust-badge"><span class="badge-icon">🛡️</span> SOC 2 Compliant</div>
+          <div class="trust-badge"><span class="badge-icon">🔒</span> 256-bit SSL encrypted</div>
+        </div>
       </section>
 
-      <section class="faq-section" id="faq">
-        <h2>Frequently asked questions</h2>
+      <section class="team-section" id="team" aria-labelledby="team-heading">
+        <h2 id="team-heading">Built by people who've been in your shoes</h2>
+        <p class="team-intro">Your Deputy was created by a team that spent years working with service businesses — we know what breaks, what scales, and what actually moves the needle.</p>
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="team-avatar" aria-hidden="true">IH</div>
+            <h3>Ike Hub</h3>
+            <div class="team-title">Founder & CEO</div>
+            <p>Engineering faculty turned entrepreneur. Built Dynasty Empire to solve the automation gap he saw service businesses struggling with daily.</p>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar" aria-hidden="true">AT</div>
+            <h3>Automation Team</h3>
+            <div class="team-title">Engineering</div>
+            <p>15+ years combined experience in workflow automation, CRM integrations, and building tools that field service teams actually use.</p>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar" aria-hidden="true">CS</div>
+            <h3>Customer Success</h3>
+            <div class="team-title">Support & Onboarding</div>
+            <p>Dedicated team that handles setup, training, and ongoing optimization. We don't just sell software — we make sure it works for your business.</p>
+          </div>
+        </div>
+        <div class="team-stats">
+          <div class="team-stat"><span class="stat-number">353</span><span class="stat-label">Ready-to-use workflows</span></div>
+          <div class="team-stat"><span class="stat-number">100+</span><span class="stat-label">Tool integrations</span></div>
+          <div class="team-stat"><span class="stat-number">45</span><span class="stat-label">Business categories</span></div>
+          <div class="team-stat"><span class="stat-number">24/7</span><span class="stat-label">Automation uptime</span></div>
+        </div>
+      </section>
+
+      <section class="comparison-section" id="compare" aria-labelledby="compare-heading">
+        <h2 id="compare-heading">What's included in each plan</h2>
+        <p class="comparison-intro">Compare features across tiers to find the right fit for your business.</p>
+        <div style="overflow-x:auto;">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Individual Modules</th>
+                <th class="featured-col">Industry Editions ★</th>
+                <th>Outcome Suites</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Starting price</td>
+                <td>$19/mo each</td>
+                <td class="featured-col"><strong>From $149/mo</strong></td>
+                <td>From $99/mo</td>
+              </tr>
+              <tr>
+                <td>Pre-configured for your trade</td>
+                <td class="dash">—</td>
+                <td class="featured-col check">✓</td>
+                <td class="dash">—</td>
+              </tr>
+              <tr>
+                <td>Lead response automation</td>
+                <td class="check">✓</td>
+                <td class="featured-col check">✓</td>
+                <td class="check">✓</td>
+              </tr>
+              <tr>
+                <td>Review management</td>
+                <td class="check">✓</td>
+                <td class="featured-col check">✓</td>
+                <td class="check">✓</td>
+              </tr>
+              <tr>
+                <td>Scheduling & dispatch</td>
+                <td class="check">✓</td>
+                <td class="featured-col check">✓</td>
+                <td class="check">✓</td>
+              </tr>
+              <tr>
+                <td>Advanced reporting</td>
+                <td class="dash">—</td>
+                <td class="featured-col check">✓</td>
+                <td class="check">✓</td>
+              </tr>
+              <tr>
+                <td>Multi-workflow bundles</td>
+                <td class="dash">—</td>
+                <td class="featured-col check">✓</td>
+                <td class="check">✓</td>
+              </tr>
+              <tr>
+                <td>Priority support</td>
+                <td class="dash">—</td>
+                <td class="featured-col check">✓</td>
+                <td class="dash">—</td>
+              </tr>
+              <tr>
+                <td>Expert setup included</td>
+                <td class="dash">—</td>
+                <td class="featured-col check">✓</td>
+                <td class="dash">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="faq-section" id="faq" aria-labelledby="faq-heading">
+        <h2 id="faq-heading">Frequently asked questions</h2>
         <p class="faq-intro">Everything you need to know before getting started.</p>
         <div class="faq-list">
           <div class="faq-item">
@@ -1186,13 +1556,21 @@
             <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">Can I try it before I pay?</div>
             <div class="faq-answer"><div class="faq-answer-inner">Yes. Browse the full catalog with no credit card required. When you're ready to activate, every paid plan includes a 30-day money-back guarantee — if it doesn't work for your business, you get a full refund, no questions asked.</div></div>
           </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">Is my data safe?</div>
+            <div class="faq-answer"><div class="faq-answer-inner">Yes. Your Deputy uses 256-bit SSL encryption for all data in transit and AES-256 encryption at rest. We're SOC 2 compliant and never share or sell your customer data. All integrations use OAuth or secure API keys — we never store your tool passwords.</div></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">What if I need to change my plan?</div>
+            <div class="faq-answer"><div class="faq-answer-inner">You can upgrade, downgrade, or cancel anytime from your dashboard. Changes take effect on your next billing cycle. There are no long-term contracts, no cancellation fees, and no penalties. If you outgrow your current plan, we'll help you find the right tier.</div></div>
+          </div>
         </div>
       </section>
 
       <section class="final-cta">
         <h2>Ready to stop losing leads?</h2>
         <p>
-          Join service businesses already saving 15+ hours per week with Your Deputy.
+          Join 500+ service businesses already saving 15+ hours per week with Your Deputy.
           No credit card required. 30-day money-back guarantee. Cancel anytime.
         </p>
         <div class="final-cta-buttons">
