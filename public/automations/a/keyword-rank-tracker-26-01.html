@@ -3,18 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Keyword Rank Tracker — Your Deputy</title>
-<meta name="description" content="Keyword Rank Tracker — cron-triggered automation with 3 steps for marketing — seo. Part of Your Deputy's service business automation platform.">
+<title>Keyword Rank Tracker</title>
+<meta name="description" content="Keyword Rank Tracker automation. Automation that makes an API call, checks a condition, and sends a notification. Part of Your Deputy's service business au">
 <link rel="canonical" href="https://www.yourdeputy.com/automations/a/keyword-rank-tracker-26-01">
-<meta property="og:type" content="product">
-<meta property="og:title" content="Keyword Rank Tracker — Your Deputy">
-<meta property="og:description" content="Keyword Rank Tracker — cron-triggered automation with 3 steps for marketing — seo. Part of Your Deputy's service business automation platform.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Keyword Rank Tracker">
+<meta property="og:description" content="Keyword Rank Tracker automation. Automation that makes an API call, checks a condition, and sends a notification. Part of Your Deputy's service business au">
 <meta property="og:url" content="https://www.yourdeputy.com/automations/a/keyword-rank-tracker-26-01">
 <meta property="og:site_name" content="Your Deputy">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Keyword Rank Tracker — Your Deputy">
-<meta name="twitter:description" content="Keyword Rank Tracker — cron-triggered automation with 3 steps for marketing — seo. Part of Your Deputy's service business automation platform.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Keyword Rank Tracker","description":"Keyword Rank Tracker — cron-triggered automation with 3 steps for marketing — seo. Part of Your Deputy's service business automation platform.","brand":{"@type":"Brand","name":"Your Deputy"},"url":"https://www.yourdeputy.com/automations/a/keyword-rank-tracker-26-01"}</script>
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Keyword Rank Tracker">
+<meta name="twitter:description" content="Keyword Rank Tracker automation. Automation that makes an API call, checks a condition, and sends a notification. Part of Your Deputy's service business au">
+<meta name="theme-color" content="#4da3ff">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Keyword Rank Tracker","description":"Keyword Rank Tracker automation. Automation that makes an API call, checks a condition, and sends a notification. Part of Your Deputy's service business au","brand":{"@type":"Organization","name":"Your Deputy","url":"https://www.yourdeputy.com"},"url":"https://www.yourdeputy.com/automations/a/keyword-rank-tracker-26-01","applicationCategory":"BusinessApplication","operatingSystem":"Web"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Marketplace","item":"https://www.yourdeputy.com/marketplace"},{"@type":"ListItem","position":2,"name":"Marketing — SEO","item":"https://www.yourdeputy.com/automations/categories/marketing-seo"},{"@type":"ListItem","position":3,"name":"Keyword Rank Tracker"}]}</script>
 <style>
 :root {
   --bg: #0b0d10; --card: #13171c; --card-hover: #1a1f26;
@@ -26,10 +28,14 @@
 body { background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; line-height: 1.6; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { padding: 40px 0; }
 .wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+.skip-link { position: absolute; top: -40px; left: 0; background: var(--accent); color: #000; padding: 8px; text-decoration: none; z-index: 100; }
+.skip-link:focus { top: 0; }
 .breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
-.breadcrumb a { color: var(--muted); }
-.breadcrumb a:hover { color: var(--accent); }
+.breadcrumb a { color: var(--muted); text-decoration: none; }
+.breadcrumb a:hover { color: var(--accent); text-decoration: underline; }
 .hero-section {
   border: 1px solid var(--border); border-radius: 12px; padding: 36px;
   background: linear-gradient(180deg, #121621 0%, #0b0d10 100%);
@@ -40,22 +46,25 @@ a:hover { text-decoration: underline; }
 .hero-section .price-tag { font-size: 22px; font-weight: 700; color: var(--success); margin-bottom: 12px; }
 .hero-section .price-tag span { font-size: 14px; font-weight: 400; color: var(--muted); }
 .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.pill { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px; font-size: 12px; color: var(--muted); }
+.pill { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; font-size: 12px; color: var(--muted); display: inline-block; }
 .pill-accent { border-color: var(--accent); color: var(--accent); }
 .pill-success { border-color: var(--success); color: var(--success); }
+.pill-warn { border-color: var(--warn); color: var(--warn); }
 .section { margin-bottom: 36px; }
 .section h2 { font-size: 18px; margin-bottom: 14px; letter-spacing: -0.01em; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.section p, .section li { color: var(--muted); font-size: 14px; }
-.section ul { padding-left: 20px; }
-.section li { margin-bottom: 6px; }
+.section p, .section li { color: var(--muted); font-size: 14px; line-height: 1.7; }
+.section ul { padding-left: 20px; margin: 12px 0; }
+.section li { margin-bottom: 8px; }
 .card-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .card-sm {
   background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-  padding: 16px; transition: border-color 0.15s;
+  padding: 16px; transition: border-color 0.15s, background-color 0.15s;
+  text-decoration: none; display: block;
 }
-.card-sm:hover { border-color: var(--accent); }
-.card-sm h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-.card-sm p { font-size: 12px; color: var(--muted); }
+.card-sm:hover { border-color: var(--accent); background-color: var(--card-hover); text-decoration: none; }
+.card-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card-sm h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: var(--fg); }
+.card-sm p { font-size: 12px; color: var(--muted); margin: 6px 0; }
 .card-sm .meta { font-size: 11px; color: var(--muted); margin-top: 8px; }
 .cta-bar {
   margin-top: 40px; padding: 24px; border-radius: 10px;
@@ -67,22 +76,30 @@ a:hover { text-decoration: underline; }
 .cta-bar p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
 .btn {
   display: inline-block; padding: 12px 28px; border-radius: 8px;
-  background: var(--accent); color: #fff; font-weight: 600; font-size: 14px;
-  text-decoration: none; transition: opacity 0.15s;
+  background: var(--accent); color: #000; font-weight: 600; font-size: 14px;
+  text-decoration: none; transition: opacity 0.15s; border: none; cursor: pointer;
 }
 .btn:hover { opacity: 0.85; text-decoration: none; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.trust-bar {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 20px; margin: 24px 0; font-size: 13px; color: var(--muted); text-align: center;
+}
+.trust-bar strong { color: var(--fg); }
 @media (max-width: 640px) {
   .wrap { padding: 24px 16px; }
+  main { padding: 24px 0; }
   .hero-section { padding: 24px; }
   .hero-section h1 { font-size: 22px; }
-  .two-col { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; gap: 14px; }
+  .card-grid { grid-template-columns: 1fr; }
 }
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { text-align: left; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
-th { color: var(--fg); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+th, td { text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+th { color: var(--fg); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; background: var(--card); }
 td { color: var(--muted); }
-.steps-list { counter-reset: step; list-style: none; padding: 0; }
+.steps-list { counter-reset: step; list-style: none; padding: 0; margin: 12px 0; }
 .steps-list li { counter-increment: step; padding: 10px 0 10px 40px; position: relative; border-left: 2px solid var(--border); margin-left: 12px; }
 .steps-list li::before {
   content: counter(step); position: absolute; left: -14px; top: 8px;
@@ -93,40 +110,48 @@ td { color: var(--muted); }
 }
 .steps-list li:last-child { border-left-color: transparent; }
 footer { border-top: 1px solid var(--border); margin-top: 60px; padding: 24px 0; color: var(--muted); font-size: 12px; text-align: center; }
+code { background: var(--card); padding: 2px 6px; border-radius: 3px; font-family: "Monaco", "Courier New", monospace; font-size: 12px; }
 </style>
 </head>
 <body>
+<a href="#main" class="skip-link">Skip to main content</a>
 <div class="wrap">
-<nav class="breadcrumb"><a href="/marketplace">Marketplace</a> › <a href="/automations/categories/marketing-seo">Marketing — SEO</a> › <span>Keyword Rank Tracker</span></nav>
-
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/marketplace">Marketplace</a> › <a href="/automations/categories/marketing-seo">Marketing — SEO</a> › <span>Keyword Rank Tracker</span></nav>
+<main id="main">
+<article>
 <div class="hero-section">
-  <div class="pills" style="margin-bottom:12px">
+  <div class="pills">
     <span class="pill pill-accent">Marketing — SEO</span>
-    <span class="pill">cron-triggered</span>
+    <span class="pill">cron</span>
     <span class="pill">0 6 * * *</span>
-    <span class="pill pill-success">marketing package</span>
+    <span class="pill pill-success">marketing</span>
     <span class="pill">3 steps</span>
   </div>
   <h1>Keyword Rank Tracker</h1>
-  <p class="tagline">Automation 26.01 — a cron-triggered workflow with 3 steps for marketing — seo.</p>
+  <p class="tagline">Automation that makes an API call, checks a condition, and sends a notification.</p>
+</div>
+
+<div class="section">
+  <h2>What This Automation Does</h2>
+  <p>Automation that makes an API call, checks a condition, and sends a notification.</p>
 </div>
 
 <div class="section">
   <h2>Workflow Steps</h2>
-  <ol class="steps-list"><li><strong>API Call</strong> — Check Rankings</li>
-<li><strong>Condition</strong> — Changes?</li>
-<li><strong>Notification</strong> — ={{ $json.changes.length + &quot; keyword ranking change(s)&quot; }}</li></ol>
+  <ol class="steps-list"><li><strong>API Call</strong>: Check Rankings</li>
+<li><strong>Condition</strong>: Changes?</li>
+<li><strong>Notification</strong>: ={{ $json.changes.length + &quot; keyword ranking change(s)&quot; }}</li></ol>
 </div>
 
 <div class="two-col">
   <div class="section">
-    <h2>Trigger</h2>
-    <p><strong>Type:</strong> cron</p>
-    <p><strong>Schedule:</strong> <code>0 6 * * *</code></p>
+    <h2>Trigger Details</h2>
+    <p><strong>Type:</strong> <code>cron</code></p>
+    <p style="margin-top:8px"><strong>Schedule:</strong> <code>0 6 * * *</code></p>
   </div>
   <div class="section">
     <h2>Included In</h2>
-    <p><span class="pill pill-success" style="margin-right:6px">marketing</span></p>
+    <div class="pills"><span class="pill pill-success">marketing</span></div>
   </div>
 </div>
 
@@ -158,11 +183,16 @@ footer { border-top: 1px solid var(--border); margin-top: 60px; padding: 24px 0;
     </a></div>
 </div>
 
+<div class="trust-bar">
+  <strong>Works with Jobber, Housecall Pro, ServiceTitan, and more.</strong> 30-day money-back guarantee · Cancel anytime
+</div>
+
 <div class="cta-bar">
-  <h3>Activate this automation</h3>
-  <p>Part of the Your Deputy platform for service businesses. One click to turn on.</p>
+  <h3>Activate This Automation</h3>
+  <p>Part of Your Deputy — the automation platform for service businesses.</p>
   <a href="/dashboard" class="btn">Get Started</a>
 </div>
+</article></main>
 <footer>© 2026 Dynasty Empire LLC · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/marketplace">Back to Marketplace</a></footer>
 </div>
 </body>

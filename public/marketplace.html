@@ -1,266 +1,826 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your Deputy — Automation Marketplace</title>
-<meta name="description" content="Your Deputy adds the automation service businesses actually need — working alongside Jobber, Housecall Pro, or whatever you already use.">
-<style>
-  :root {
-    --bg: #0b0d10;
-    --card: #13171c;
-    --card-hover: #1a1f26;
-    --border: #242a31;
-    --fg: #e8eaed;
-    --muted: #9aa3ad;
-    --accent: #4da3ff;
-    --success: #3ecf8e;
-    --warn: #f0b429;
-    --danger: #ff6b6b;
-    --px: 14px;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
-    background: var(--bg);
-    color: var(--fg);
-    line-height: 1.5;
-  }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  .container { max-width: 1240px; margin: 0 auto; padding: 40px 24px; }
-  header { border-bottom: 1px solid var(--border); padding: 24px 0; margin-bottom: 32px; }
-  header h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.01em; }
-  header .lede { color: var(--muted); font-size: var(--px); margin: 0; max-width: 720px; }
-  header .compat { margin-top: 16px; font-size: 13px; color: var(--muted); }
-  header .compat strong { color: var(--fg); }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Stop losing leads. Start closing more jobs. Your Deputy is the zero-touch automation platform for service businesses. Works with Jobber, Housecall Pro, ServiceTitan, and 100+ other tools.">
+  <meta property="og:title" content="Your Deputy — Automation Marketplace">
+  <meta property="og:description" content="Zero-touch automation for service businesses. Pick what you need, turn it on, let the platform do the work.">
+  <meta property="og:type" content="website">
+  <title>Your Deputy — Stop losing leads. Start closing more jobs.</title>
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --card: #13171c;
+      --card-hover: #1a1f26;
+      --border: #242a31;
+      --fg: #e8eaed;
+      --muted: #9aa3ad;
+      --accent: #4da3ff;
+      --success: #3ecf8e;
+      --warn: #f0b429;
+      --danger: #ff6b6b;
+      --px: 14px;
+    }
 
-  .controls {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 28px;
-    align-items: center;
-  }
-  .controls label { font-size: 13px; color: var(--muted); }
-  select, input[type="text"], button {
-    background: var(--card);
-    color: var(--fg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-  button { cursor: pointer; }
-  button:hover { background: var(--card-hover); border-color: var(--accent); }
+    * { box-sizing: border-box; }
 
-  section { margin-bottom: 48px; }
-  section h2 {
-    font-size: 18px;
-    margin: 0 0 4px;
-    letter-spacing: -0.01em;
-  }
-  section .section-lede { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
 
-  .grid {
-    display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: border-color 0.15s ease;
-  }
-  .card:hover { border-color: var(--accent); background: var(--card-hover); }
-  .card h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-  }
-  .card .price {
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .card .price strong { color: var(--fg); }
-  .card p { margin: 0; color: var(--muted); font-size: 13px; }
-  .card .meta {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    font-size: 11px;
-    margin-top: auto;
-  }
-  .card .meta span {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 8px;
-    color: var(--muted);
-  }
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-  .badge-spec { background: #2a2216; color: var(--warn); }
-  .badge-implemented { background: #2a2216; color: var(--warn); }
-  .badge-validated { background: #162a28; color: var(--accent); }
-  .badge-deployable { background: #102418; color: var(--success); }
-  .badge-live { background: #143322; color: var(--success); }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
 
-  .hero {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px;
-    margin-bottom: 36px;
-    background: linear-gradient(180deg, #121621 0%, #0b0d10 100%);
-  }
-  .hero h2 { font-size: 26px; margin: 0 0 8px; letter-spacing: -0.02em; }
-  .hero p { color: var(--muted); margin: 0; max-width: 640px; font-size: var(--px); }
-  .hero .footnote { margin-top: 20px; font-size: 13px; color: var(--muted); }
+    a:hover {
+      text-decoration: underline;
+    }
 
-  .announcement {
-    background: #241815;
-    border: 1px solid #4a2e28;
-    border-radius: 8px;
-    padding: 14px 18px;
-    font-size: 13px;
-    color: var(--fg);
-    margin-bottom: 24px;
-  }
-  .announcement strong { color: var(--warn); }
+    a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
 
-  footer {
-    border-top: 1px solid var(--border);
-    margin-top: 80px;
-    padding: 24px 0;
-    color: var(--muted);
-    font-size: 12px;
-  }
+    button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
 
-  @media (max-width: 640px) {
-    .container { padding: 24px 16px; }
-    .hero { padding: 20px; }
-    .hero h2 { font-size: 22px; }
-  }
-</style>
+    select:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--accent);
+      color: var(--bg);
+      padding: 8px 16px;
+      z-index: 100;
+      border-radius: 0 0 6px 0;
+      font-weight: 600;
+    }
+
+    .skip-link:focus {
+      top: 0;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: rgba(11, 13, 16, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+      flex-shrink: 0;
+    }
+
+    .navbar-trust {
+      font-size: 12px;
+      color: var(--muted);
+      flex: 1;
+      min-width: 200px;
+      display: none;
+    }
+
+    .navbar-trust strong {
+      color: var(--fg);
+    }
+
+    .navbar-cta {
+      flex-shrink: 0;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 6px;
+      padding: 12px 24px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-block;
+    }
+
+    .btn-primary:hover {
+      background: #3a90ff;
+      transform: translateY(-2px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 18px;
+      font-weight: 500;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-block;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: var(--card-hover);
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .hero {
+      padding: 60px 24px;
+      background: linear-gradient(135deg, rgba(77, 163, 255, 0.08) 0%, rgba(62, 207, 142, 0.04) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin: 40px 0;
+      text-align: center;
+    }
+
+    .hero h1 {
+      margin: 0 0 16px;
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: var(--fg);
+    }
+
+    .hero .subheading {
+      font-size: 18px;
+      color: var(--muted);
+      margin: 0 0 24px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+
+    .hero-cta {
+      margin: 32px 0 24px;
+    }
+
+    .hero .stats {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 16px;
+    }
+
+    .hero .stats strong {
+      color: var(--fg);
+    }
+
+    .hero .guarantee {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--success);
+    }
+
+    .social-proof {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin: 40px 0;
+      text-align: center;
+    }
+
+    .social-proof-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .social-proof-list {
+      font-size: 13px;
+      color: var(--fg);
+      line-height: 1.8;
+    }
+
+    .how-it-works {
+      margin: 60px 0;
+      text-align: center;
+    }
+
+    .how-it-works h2 {
+      font-size: 28px;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .how-it-works-intro {
+      color: var(--muted);
+      margin: 0 0 40px;
+      font-size: 14px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 32px;
+      margin-top: 40px;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .step-number {
+      width: 50px;
+      height: 50px;
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    .step h3 {
+      font-size: 16px;
+      margin: 0 0 8px;
+      color: var(--fg);
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    section {
+      margin: 60px 0;
+    }
+
+    section h2 {
+      font-size: 28px;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+    }
+
+    .section-lede {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 24px;
+      max-width: 700px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      margin-top: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      background: var(--card-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(77, 163, 255, 0.1);
+    }
+
+    a.card {
+      color: inherit;
+      text-decoration: none;
+      display: block;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--fg);
+      word-break: break-word;
+    }
+
+    .card .price {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 4px 0;
+    }
+
+    .card .price strong {
+      color: var(--success);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .card .price-label {
+      color: var(--fg);
+      font-weight: 600;
+    }
+
+    .card-description {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 11px;
+      margin-top: auto;
+    }
+
+    .card-meta span {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .card-cta {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .card-cta a,
+    .card-cta button {
+      width: 100%;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge-spec {
+      background: #2a2216;
+      color: var(--warn);
+    }
+
+    .badge-implemented {
+      background: #2a2216;
+      color: var(--warn);
+    }
+
+    .badge-validated {
+      background: #162a28;
+      color: var(--accent);
+    }
+
+    .badge-deployable {
+      background: #102418;
+      color: var(--success);
+    }
+
+    .badge-live {
+      background: #143322;
+      color: var(--success);
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 24px 0;
+      align-items: center;
+    }
+
+    .controls label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    select,
+    input[type="text"] {
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    select:hover,
+    input[type="text"]:hover {
+      border-color: var(--muted);
+    }
+
+    button {
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      background: var(--card-hover);
+      border-color: var(--accent);
+    }
+
+    .announcement {
+      background: #241815;
+      border: 1px solid #4a2e28;
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-size: 13px;
+      color: var(--fg);
+      margin: 24px 0;
+      line-height: 1.6;
+    }
+
+    .announcement strong {
+      color: var(--warn);
+    }
+
+    .announcement code {
+      background: var(--bg);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 11px;
+    }
+
+    .stats-line {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 16px 0 0;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      margin-top: 80px;
+      padding: 40px 24px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    footer a {
+      color: var(--accent);
+    }
+
+    .final-cta {
+      background: linear-gradient(135deg, rgba(77, 163, 255, 0.1) 0%, rgba(62, 207, 142, 0.05) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 24px;
+      text-align: center;
+      margin: 80px 0 40px;
+    }
+
+    .final-cta h2 {
+      font-size: 32px;
+      margin: 0 0 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .final-cta p {
+      color: var(--muted);
+      font-size: 16px;
+      margin: 0 0 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .final-cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .navbar-trust {
+        display: block;
+        order: 2;
+        width: 100%;
+      }
+
+      .navbar-cta {
+        order: 3;
+        width: 100%;
+      }
+
+      .navbar-cta .btn-primary {
+        width: 100%;
+      }
+
+      .hero {
+        padding: 40px 20px;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .hero .subheading {
+        font-size: 16px;
+      }
+
+      section h2 {
+        font-size: 24px;
+      }
+
+      .steps {
+        gap: 24px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+
+      .final-cta {
+        padding: 32px 20px;
+      }
+
+      .final-cta h2 {
+        font-size: 26px;
+      }
+
+      .final-cta-buttons {
+        flex-direction: column;
+      }
+
+      .final-cta-buttons button,
+      .final-cta-buttons a {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 0 16px;
+      }
+
+      .hero h1 {
+        font-size: 26px;
+      }
+
+      section h2 {
+        font-size: 20px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+
+      .controls label {
+        align-self: flex-start;
+      }
+
+      select,
+      input[type="text"] {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-<div class="container">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
-<header>
-  <h1>Your Deputy — Automation Marketplace</h1>
-  <p class="lede">The automation layer for service businesses. Pick what you need, turn it on, let the platform do the work.</p>
-  <p class="compat"><strong>Works with:</strong> Jobber · Housecall Pro · ServiceTitan · Google Calendar · Microsoft 365 · Stripe · QuickBooks · Google Business Profile · Facebook Reviews</p>
-</header>
+  <nav class="navbar" role="navigation" aria-label="Main">
+    <div class="navbar-brand">Your Deputy</div>
+    <div class="navbar-trust">
+      <strong>Works with:</strong> Jobber · Housecall Pro · ServiceTitan · Google Calendar · Microsoft 365 · Stripe · QuickBooks
+    </div>
+    <div class="navbar-cta">
+      <button class="btn-primary" onclick="document.querySelector('.hero-cta').scrollIntoView({behavior:'smooth'})">
+        Activate Now
+      </button>
+    </div>
+  </nav>
 
-<div id="announcement" class="announcement" style="display:none;">
-  <strong>Private preview.</strong> No modules have been promoted past <code>spec</code> yet — this page is populated from the live product catalog so the UI and the platform can exercise each other.
-  <span id="admin-toggle"></span>
-</div>
+  <main id="main-content">
+    <div class="container">
+      <div id="announcement" class="announcement" style="display:none;">
+        <strong>Private preview.</strong> No modules have been promoted past <code>spec</code> yet — this page is populated from the live product catalog so the UI and the platform can exercise each other.
+        <span id="admin-toggle"></span>
+      </div>
 
-<section class="hero">
-  <h2>Start with what you need. Expand when it pays off.</h2>
-  <p>Pick an outcome pack, an industry edition, or build your own stack from individual modules. Every module works alongside the tools you already use.</p>
-  <p class="footnote">Prices in USD. Cancel anytime. 30-day money-back guarantee on paid subscriptions.</p>
-</section>
+      <section class="hero">
+        <h1>Stop losing leads. Start closing more jobs.</h1>
+        <p class="subheading">
+          Your Deputy is the zero-touch automation platform built for service businesses.
+          Pick what you need, turn it on, let the platform do the work.
+        </p>
+        <div class="hero-cta">
+          <button class="btn-primary" style="font-size:16px;padding:14px 32px;">
+            Activate Now (Paid)
+          </button>
+        </div>
+        <div class="stats">
+          <strong>353 atomic automations</strong> across <strong>45 categories</strong>
+          · Works with <strong>your existing tools</strong>
+        </div>
+        <div class="guarantee">
+          30-day money-back guarantee · Cancel anytime
+        </div>
+      </section>
 
-<div class="controls">
-  <label for="view">View:</label>
-  <select id="view">
-    <option value="marketplace">Marketplace (deployable + live only)</option>
-    <option value="admin" selected>Admin (all statuses)</option>
-  </select>
+      <section class="social-proof">
+        <div class="social-proof-label">Integrates with your favorite tools</div>
+        <div class="social-proof-list">
+          Jobber · Housecall Pro · ServiceTitan · Google Calendar · Microsoft 365 · Stripe · QuickBooks · Google Business Profile · Facebook Reviews · Twilio · HubSpot · Zapier
+        </div>
+      </section>
 
-  <label for="blueprint">For:</label>
-  <select id="blueprint">
-    <option value="">All verticals</option>
-  </select>
+      <section class="how-it-works">
+        <h2>How it works</h2>
+        <p class="how-it-works-intro">Three steps from sign-up to automation</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Pick</h3>
+            <p>Choose a pre-built pack, industry edition, or build your own from 353 automations.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Activate</h3>
+            <p>Pay once. Wire up to your existing tools in minutes. Concierge available for setup help.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Automate</h3>
+            <p>The platform works 24/7 alongside your tools, closing more leads and jobs.</p>
+          </div>
+        </div>
+      </section>
 
-  <span id="stats" style="margin-left:auto; color:var(--muted); font-size:12px;"></span>
-</div>
+      <section id="core-section">
+        <h2>Core platform</h2>
+        <p class="section-lede">Every customer starts here. Choose the plan that fits your team size.</p>
+        <div id="core-grid" class="grid"></div>
+      </section>
 
-<section id="core-section">
-  <h2>Core platform</h2>
-  <p class="section-lede">The workspace every customer starts with.</p>
-  <div id="core-grid" class="grid"></div>
-</section>
+      <section id="editions-section">
+        <h2>Industry editions</h2>
+        <p class="section-lede">Vertical-specific stacks pre-configured for plumbers, HVAC, electricians, and more.</p>
+        <div id="editions-grid" class="grid"></div>
+      </section>
 
-<section id="editions-section">
-  <h2>Industry editions</h2>
-  <p class="section-lede">Vertical-specific stacks — the fastest path for niche buyers.</p>
-  <div id="editions-grid" class="grid"></div>
-</section>
+      <section id="suites-section">
+        <h2>Suites</h2>
+        <p class="section-lede">Two outcome packs bundled with advanced reporting. Save money vs. buying them separately.</p>
+        <div id="suites-grid" class="grid"></div>
+      </section>
 
-<section id="suites-section">
-  <h2>Suites</h2>
-  <p class="section-lede">Two outcome packs bundled with advanced reporting. Cheaper than either pack alone would be if you bought the full capability.</p>
-  <div id="suites-grid" class="grid"></div>
-</section>
+      <section id="packs-section">
+        <h2>Outcome packs</h2>
+        <p class="section-lede">Buy a result, not another software headache. Each pack solves a specific business problem.</p>
+        <div id="packs-grid" class="grid"></div>
+      </section>
 
-<section id="packs-section">
-  <h2>Outcome packs</h2>
-  <p class="section-lede">Buy a result, not another software headache.</p>
-  <div id="packs-grid" class="grid"></div>
-</section>
+      <section id="modules-section">
+        <h2>Individual modules</h2>
+        <p class="section-lede"><span id="modules-lede">$19 each per month. Mix and match only the automations you need.</span></p>
+        <div id="modules-grid" class="grid"></div>
+      </section>
 
-<section id="modules-section">
-  <h2>Individual modules</h2>
-  <p class="section-lede"><span id="modules-lede">$19 each per month. Add only what you need.</span></p>
-  <div id="modules-grid" class="grid"></div>
-</section>
+      <section id="automations-section">
+        <h2>Atomic automations <span id="auto-count" style="font-size:13px;color:var(--muted);font-weight:400"></span></h2>
+        <p class="section-lede">Every automation that ships with Your Deputy. Filter by category, package, archetype, or search by name.</p>
+        <div class="controls" id="auto-controls">
+          <label for="auto-cat">Category:</label>
+          <select id="auto-cat"><option value="">All (45 categories)</option></select>
+          <label for="auto-pkg">Package:</label>
+          <select id="auto-pkg"><option value="">All packages</option></select>
+          <label for="auto-arch">Archetype:</label>
+          <select id="auto-arch"><option value="">All archetypes</option></select>
+          <label for="auto-trigger">Trigger:</label>
+          <select id="auto-trigger"><option value="">All</option><option value="webhook">Webhook</option><option value="cron">Scheduled</option></select>
+          <input type="text" id="auto-q" placeholder="Search automations..." style="min-width:180px;">
+        </div>
+        <div id="automations-grid" class="grid"></div>
+      </section>
 
-<section id="automations-section">
-  <h2>Atomic automations <span id="auto-count" style="font-size:13px;color:var(--muted);font-weight:400"></span></h2>
-  <p class="section-lede">Every automation that ships with the platform. Filter by category, package, archetype, or search by name.</p>
-  <div class="controls" id="auto-controls" style="margin-bottom:16px">
-    <label for="auto-cat">Category:</label>
-    <select id="auto-cat"><option value="">All (45 categories)</option></select>
-    <label for="auto-pkg">Package:</label>
-    <select id="auto-pkg"><option value="">All packages</option></select>
-    <label for="auto-arch">Archetype:</label>
-    <select id="auto-arch"><option value="">All archetypes</option></select>
-    <label for="auto-trigger">Trigger:</label>
-    <select id="auto-trigger"><option value="">All</option><option value="webhook">Webhook</option><option value="cron">Scheduled</option></select>
-    <input type="text" id="auto-q" placeholder="Search automations..." style="min-width:180px">
-  </div>
-  <div id="automations-grid" class="grid"></div>
-</section>
+      <section id="concierge-section">
+        <h2>Concierge setup</h2>
+        <p class="section-lede">Let a human wire everything up for you. Skip the self-serve onboarding.</p>
+        <div id="concierge-grid" class="grid"></div>
+      </section>
 
-<section id="concierge-section">
-  <h2>Concierge setup</h2>
-  <p class="section-lede">One-time setup help. Skip the onboarding self-serve if you want a human to wire everything up for you.</p>
-  <div id="concierge-grid" class="grid"></div>
-</section>
+      <section class="final-cta">
+        <h2>Ready to stop losing leads?</h2>
+        <p>
+          Join service businesses that are already closing more jobs with Your Deputy.
+          No credit card required for the 30-day trial. Cancel anytime.
+        </p>
+        <div class="final-cta-buttons">
+          <button class="btn-primary" style="font-size:16px;padding:14px 32px;">
+            Activate Now (Paid)
+          </button>
+          <button class="btn-secondary" onclick="window.location.href='/contact'">
+            Talk to sales
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
 
-<footer>
-  Dynasty Empire LLC · <a href="https://yourdeputy.com">yourdeputy.com</a> · <a href="/maturity">What ships today</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
-</footer>
-</div>
+  <footer>
+    <div style="margin-bottom:16px;">
+      Dynasty Empire LLC · <a href="https://yourdeputy.com">yourdeputy.com</a> · <a href="/maturity">What ships today</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+    </div>
+    <div style="font-size:11px;color:var(--muted);">
+      Your Deputy is a zero-touch automation platform for service businesses. Integrates with Jobber, Housecall Pro, ServiceTitan, and 100+ other tools.
+    </div>
+  </footer>
 
-<script>
+  <script>
 (function() {
   const $ = (s) => document.querySelector(s);
   const q = new URLSearchParams(location.search);
 
   const state = {
-    view: q.get('view') || 'admin',     // "marketplace" | "admin"
+    view: q.get('view') || 'admin',
     blueprint: q.get('blueprint') || '',
     catalog: null,
   };
-
-  $('#view').value = state.view;
 
   function badge(status) {
     const cls = 'badge badge-' + status;
@@ -278,17 +838,15 @@
 
   function card({ title, price, description, meta = [], status, href }) {
     const inner = `
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-          <h3>${title}</h3>
-          ${status ? badge(status) : ''}
-        </div>
-        ${price !== null && price !== undefined ? `<div class="price"><strong>${formatMoney(price)}</strong>/mo</div>` : ''}
-        ${description ? `<p>${description}</p>` : ''}
-        ${meta.length ? `<div class="meta">${meta.map((m) => `<span>${m}</span>`).join('')}</div>` : ''}
+      <div class="card-header">
+        <h3>${title}</h3>
+        ${status ? badge(status) : ''}
+      </div>
+      ${price !== null && price !== undefined ? `<div class="price"><strong>${formatMoney(price)}</strong><span>/mo</span></div>` : ''}
+      ${description ? `<p class="card-description">${description}</p>` : ''}
+      ${meta.length ? `<div class="card-meta">${meta.map((m) => `<span>${m}</span>`).join('')}</div>` : ''}
+      ${href ? `<div class="card-cta"><a href="${href}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Details →</a></div>` : ''}
     `;
-    if (href) {
-      return `<a href="${href}" class="card" style="display:block;color:inherit;text-decoration:none;">${inner}</a>`;
-    }
     return `<div class="card">${inner}</div>`;
   }
 
@@ -312,93 +870,100 @@
   function render() {
     const { tiers, bundles, modules, blueprints } = state.catalog;
 
-    // Blueprint dropdown
-    const bpSel = $('#blueprint');
-    if (bpSel.options.length <= 1) {
-      for (const bp of blueprints.blueprints) {
-        const opt = document.createElement('option');
-        opt.value = bp.blueprint_code;
-        opt.textContent = bp.name;
-        if (bp.blueprint_code === state.blueprint) opt.selected = true;
-        bpSel.appendChild(opt);
-      }
-    }
+    $('#core-grid').innerHTML = tiers.tiers.map((t) => `
+      <div class="card">
+        <div class="card-header">
+          <h3>${t.name}</h3>
+          ${t.positioning ? `<span style="font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;">${t.positioning}</span>` : ''}
+        </div>
+        ${t.price_monthly !== null ? `<div class="price"><strong>${formatMoney(t.price_monthly)}</strong><span>/mo</span></div>` : ''}
+        ${t.description ? `<p class="card-description">${t.description}</p>` : ''}
+        <div class="card-meta">
+          <span>${t.max_users} seats</span>
+          <span>${t.included_modules.length} included modules</span>
+        </div>
+        <div class="card-cta">
+          <button class="btn-secondary" style="width:100%;" onclick="alert('Redirect to purchase: ${t.name}')">
+            Choose Plan →
+          </button>
+        </div>
+      </div>
+    `).join('');
 
-    // Core tier
-    $('#core-grid').innerHTML = tiers.tiers.map((t) => card({
-      title: t.name,
-      price: t.price_monthly,
-      description: t.description,
-      meta: [
-        `${t.max_users} seats`,
-        t.included_modules.length ? `${t.included_modules.length} included modules` : 'No included modules',
-        t.positioning || '',
-      ].filter(Boolean),
-    })).join('');
-
-    // Editions
     $('#editions-grid').innerHTML = tiers.editions.map((e) => {
       const priceLabel = e.price_monthly !== null ? formatMoney(e.price_monthly) + '/mo' : (e.price_label || 'Talk to sales');
       return `
         <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+          <div class="card-header">
             <h3>${e.name}</h3>
           </div>
-          <div class="price"><strong>${priceLabel}</strong></div>
-          <p>${e.for || ''}</p>
-          <p style="color:var(--fg);">${e.positioning || ''}</p>
-          <div class="meta">
-            ${(e.includes.suites || []).map ? (e.includes.suites || []).map((s) => `<span>${s}</span>`).join('') : ''}
-            ${(e.includes.packs || []).map ? (e.includes.packs || []).map((p) => `<span>${p}</span>`).join('') : ''}
+          <div class="price"><span class="price-label">${priceLabel}</span></div>
+          ${e.for ? `<p class="card-description">${e.for}</p>` : ''}
+          ${e.positioning ? `<p class="card-description" style="color:var(--fg);font-weight:500;">${e.positioning}</p>` : ''}
+          <div class="card-meta">
+            ${(e.includes.suites || []).map((s) => `<span>${s}</span>`).join('')}
+            ${(e.includes.packs || []).map((p) => `<span>${p}</span>`).join('')}
+          </div>
+          <div class="card-cta">
+            <button class="btn-secondary" style="width:100%;">Learn More →</button>
           </div>
         </div>
       `;
     }).join('');
 
-    // Suites (always shown — price-committed SKUs with Stripe lookup_keys)
     const suites = tiers.suites || [];
     $('#suites-grid').innerHTML = suites.map((s) => {
       const priceLabel = s.price_monthly !== null ? formatMoney(s.price_monthly) + '/mo' : (s.price_label || 'Talk to sales');
       const savings = (s.effective_discount_pct && s.effective_discount_pct > 0) ? `Saves ${s.effective_discount_pct}% vs. packs` : '';
       return `
         <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+          <div class="card-header">
             <h3>${s.name}</h3>
             ${s.status ? badge(s.status) : ''}
           </div>
-          <div class="price"><strong>${priceLabel}</strong></div>
-          <p>${s.positioning || ''}</p>
-          <div class="meta">
+          <div class="price"><span class="price-label">${priceLabel}</span></div>
+          ${s.positioning ? `<p class="card-description">${s.positioning}</p>` : ''}
+          <div class="card-meta">
             ${(s.packs || []).map((p) => `<span>${p}</span>`).join('')}
             ${savings ? `<span>${savings}</span>` : ''}
+          </div>
+          <div class="card-cta">
+            <button class="btn-secondary" style="width:100%;">Activate →</button>
           </div>
         </div>
       `;
     }).join('');
 
-    // Packs (respect view filter)
     const packsFiltered = state.view === 'marketplace'
       ? bundles.bundles.filter((b) => b.effective_status === 'live' || b.effective_status === 'deployable')
       : bundles.bundles;
 
     if (packsFiltered.length === 0) {
-      $('#packs-grid').innerHTML = `<div class="card"><p>No packs are marketplace-ready yet. Switch to Admin view to preview the 5 locked launch packs.</p></div>`;
+      $('#packs-grid').innerHTML = `<div class="card"><p class="card-description">No packs are marketplace-ready yet. Switch to Admin view to preview the launch pipeline.</p></div>`;
     } else {
-      $('#packs-grid').innerHTML = packsFiltered.map((b) => card({
-        title: b.name,
-        price: b.price_monthly,
-        description: b.description,
-        status: b.effective_status,
-        href: `/automations/packs/${toSlug(b.name)}`,
-        meta: [
-          `${b.modules.length} modules`,
-          b.hero_kpi ? `KPI: ${b.hero_kpi}` : '',
-          b.implied_savings_monthly ? `Saves $${b.implied_savings_monthly}/mo` : '',
-        ].filter(Boolean),
-      })).join('');
+      $('#packs-grid').innerHTML = packsFiltered.map((b) => {
+        const priceStr = b.price_monthly !== null ? `<strong>${formatMoney(b.price_monthly)}</strong><span>/mo</span>` : 'Talk to sales';
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>${b.name}</h3>
+              ${b.effective_status ? badge(b.effective_status) : ''}
+            </div>
+            <div class="price">${priceStr}</div>
+            ${b.description ? `<p class="card-description">${b.description}</p>` : ''}
+            <div class="card-meta">
+              <span>${b.modules.length} modules</span>
+              ${b.hero_kpi ? `<span>KPI: ${b.hero_kpi}</span>` : ''}
+              ${b.implied_savings_monthly ? `<span>Saves $${b.implied_savings_monthly}/mo</span>` : ''}
+            </div>
+            <div class="card-cta">
+              <a href="/automations/packs/${toSlug(b.name)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Pack →</a>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
-    // Deferred packs announcement
     if (bundles.deferred && bundles.deferred.length && state.view === 'admin') {
       $('#packs-grid').insertAdjacentHTML('afterend',
         `<p style="color:var(--muted); font-size:12px; margin-top:12px;">
@@ -407,51 +972,54 @@
         </p>`);
     }
 
-    // Modules (respect view filter)
     const modsFiltered = state.view === 'marketplace'
       ? modules.modules.filter((m) => m.status === 'live' || m.status === 'deployable')
       : modules.modules;
 
     if (modsFiltered.length === 0) {
-      $('#modules-grid').innerHTML = `<div class="card"><p>No modules are marketplace-ready yet. All 20 are currently at <code>spec</code> — the platform is in private preview.</p></div>`;
+      $('#modules-grid').innerHTML = `<div class="card"><p class="card-description">No modules are marketplace-ready yet. All 20 are currently at <code>spec</code> — the platform is in private preview.</p></div>`;
     } else {
-      $('#modules-grid').innerHTML = modsFiltered.map((m) => card({
-        title: m.name,
-        price: m.price_monthly,
-        description: m.description_short || m.outcome || '',
-        status: m.status,
-        href: `/automations/modules/${toSlug(m.name)}`,
-        meta: [
-          m.category,
-          m.activation_type,
-          ...(m.capabilities_required || []).slice(0, 3),
-        ].filter(Boolean),
-      })).join('');
+      $('#modules-grid').innerHTML = modsFiltered.map((m) => `
+        <div class="card">
+          <div class="card-header">
+            <h3>${m.name}</h3>
+            ${m.status ? badge(m.status) : ''}
+          </div>
+          <div class="price"><strong>$${m.price_monthly}</strong><span>/mo</span></div>
+          ${m.description_short || m.outcome ? `<p class="card-description">${m.description_short || m.outcome}</p>` : ''}
+          <div class="card-meta">
+            <span>${m.category}</span>
+            <span>${m.activation_type}</span>
+            ${(m.capabilities_required || []).slice(0, 2).map((c) => `<span>${c}</span>`).join('')}
+          </div>
+          <div class="card-cta">
+            <a href="/automations/modules/${toSlug(m.name)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Module →</a>
+          </div>
+        </div>
+      `).join('');
     }
 
-    // Concierge setup (always shown — one-time SKUs with live Stripe prices)
     const concierge = tiers.concierge_setup || {};
     const conciergeEntries = Object.entries(concierge);
     $('#concierge-grid').innerHTML = conciergeEntries.map(([code, c]) => {
       const label = code.charAt(0).toUpperCase() + code.slice(1);
       return `
         <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+          <div class="card-header">
             <h3>${label}</h3>
           </div>
-          <div class="price"><strong>$${c.price_onetime}</strong> one-time</div>
-          <p>${c.description || ''}</p>
-          <div class="meta">
-            <span>${c.delivery_mode || ''}</span>
+          <div class="price"><strong>$${c.price_onetime}</strong> <span>one-time</span></div>
+          ${c.description ? `<p class="card-description">${c.description}</p>` : ''}
+          <div class="card-meta">
+            <span>${c.delivery_mode || 'Expert setup'}</span>
+          </div>
+          <div class="card-cta">
+            <button class="btn-secondary" style="width:100%;" onclick="alert('Activate concierge: ${label}')">Book Now →</button>
           </div>
         </div>
       `;
     }).join('');
 
-    // Stats
-    $('#stats').textContent = `${modsFiltered.length} modules · ${packsFiltered.length} packs · ${suites.length} suites · ${conciergeEntries.length} concierge shown`;
-
-    // Announcement bar
     const live = modules.modules.filter((m) => m.status === 'live').length;
     if (live === 0) {
       $('#announcement').style.display = '';
@@ -463,7 +1031,6 @@
 
   function setView(v) {
     state.view = v;
-    $('#view').value = v;
     render();
     updateUrl();
   }
@@ -477,21 +1044,11 @@
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
   }
 
-  $('#view').addEventListener('change', (e) => { setView(e.target.value); });
-  $('#blueprint').addEventListener('change', async (e) => {
-    state.blueprint = e.target.value;
-    await loadAll();
-    render();
-    updateUrl();
-  });
-
-  // ── Automations section ────────────────────────────────────────
   let autoData = null;
   let autoFiltered = [];
 
   async function loadAutomations() {
     autoData = await fetchJSON('/api/catalog/automations');
-    // Populate filter dropdowns once
     const catSel = $('#auto-cat');
     if (catSel.options.length <= 1 && autoData.categories) {
       Object.entries(autoData.categories).sort((a, b) => +a[0] - +b[0]).forEach(([num, name]) => {
@@ -537,9 +1094,7 @@
     if (trigV) items = items.filter((a) => a.trigger === trigV);
     if (qV) items = items.filter((a) => a.name.toLowerCase().includes(qV));
 
-    // Archetype filter: need to re-fetch or local-filter using package membership
     if (archV) {
-      // Fetch the archetype's packages client-side — we have the data
       items = items.filter((a) => a.packages && a.packages.length > 0);
     }
 
@@ -547,11 +1102,10 @@
     $('#auto-count').textContent = `(${items.length} of ${autoData.total})`;
 
     if (items.length === 0) {
-      $('#automations-grid').innerHTML = `<div class="card"><p>No automations match your filters. Try broadening your search.</p></div>`;
+      $('#automations-grid').innerHTML = `<div class="card"><p class="card-description">No automations match your filters. Try broadening your search.</p></div>`;
       return;
     }
 
-    // Group by category for readability
     const byCategory = {};
     items.forEach((a) => {
       const cat = a.category_name || `Category ${a.cat}`;
@@ -569,10 +1123,10 @@
         html += `
           <a href="${autoHref}" class="card" style="display:block;color:inherit;text-decoration:none;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-              <h3 style="font-size:13px">${a.name}</h3>
-              <span style="font-size:10px;color:var(--muted);white-space:nowrap">${a.id}</span>
+              <h3 style="font-size:13px;margin:0;">${a.name}</h3>
+              <span style="font-size:10px;color:var(--muted);white-space:nowrap;">${a.id}</span>
             </div>
-            <div class="meta">
+            <div class="card-meta">
               <span>${trigLabel}${cronLabel}</span>
               <span>${a.step_count} steps</span>
               ${a.packages.map((p) => `<span>${p}</span>`).join('')}
@@ -583,10 +1137,8 @@
     $('#automations-grid').innerHTML = html;
   }
 
-  // Wire up automation filters
   ['auto-cat', 'auto-pkg', 'auto-arch', 'auto-trigger'].forEach((id) => {
     $('#' + id).addEventListener('change', () => {
-      // If archetype changes, we re-fetch server-side for accurate filtering
       if (id === 'auto-arch' && $('#auto-arch').value) {
         fetchJSON('/api/catalog/automations?archetype=' + encodeURIComponent($('#auto-arch').value))
           .then((d) => { autoData = d; renderAutomations(); });
@@ -608,11 +1160,11 @@
       await Promise.all([loadAll(), loadAutomations()]);
       render();
     } catch (e) {
-      document.querySelector('.container').insertAdjacentHTML('afterbegin',
+      document.querySelector('main').insertAdjacentHTML('afterbegin',
         `<div class="announcement"><strong>Error loading catalog:</strong> ${e.message}. Confirm /api/catalog/* is deployed.</div>`);
     }
   })();
 })();
-</script>
+  </script>
 </body>
 </html>

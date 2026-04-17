@@ -3,18 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lead Qualification &amp; Scoring — Your Deputy</title>
+<title>Lead Qualification &amp; Scoring</title>
 <meta name="description" content="10 lead qualification &amp; scoring automations for service businesses. Trigger-based workflows that integrate with your existing tools.">
 <link rel="canonical" href="https://www.yourdeputy.com/automations/categories/lead-qualification-scoring">
-<meta property="og:type" content="product">
-<meta property="og:title" content="Lead Qualification &amp; Scoring — Your Deputy">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Lead Qualification &amp; Scoring">
 <meta property="og:description" content="10 lead qualification &amp; scoring automations for service businesses. Trigger-based workflows that integrate with your existing tools.">
 <meta property="og:url" content="https://www.yourdeputy.com/automations/categories/lead-qualification-scoring">
 <meta property="og:site_name" content="Your Deputy">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Lead Qualification &amp; Scoring — Your Deputy">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lead Qualification &amp; Scoring">
 <meta name="twitter:description" content="10 lead qualification &amp; scoring automations for service businesses. Trigger-based workflows that integrate with your existing tools.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Lead Qualification & Scoring","description":"10 lead qualification & scoring automations for service businesses. Trigger-based workflows that integrate with your existing tools.","brand":{"@type":"Brand","name":"Your Deputy"},"url":"https://www.yourdeputy.com/automations/categories/lead-qualification-scoring"}</script>
+<meta name="theme-color" content="#4da3ff">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Lead Qualification & Scoring","description":"10 lead qualification & scoring automations for service businesses. Trigger-based workflows that integrate with your existing tools.","brand":{"@type":"Organization","name":"Your Deputy","url":"https://www.yourdeputy.com"},"url":"https://www.yourdeputy.com/automations/categories/lead-qualification-scoring","applicationCategory":"BusinessApplication","operatingSystem":"Web"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Marketplace","item":"https://www.yourdeputy.com/marketplace"},{"@type":"ListItem","position":2,"name":"Categories","item":"https://www.yourdeputy.com/automations/categories"},{"@type":"ListItem","position":3,"name":"Lead Qualification & Scoring"}]}</script>
 <style>
 :root {
   --bg: #0b0d10; --card: #13171c; --card-hover: #1a1f26;
@@ -26,10 +28,14 @@
 body { background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; line-height: 1.6; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { padding: 40px 0; }
 .wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+.skip-link { position: absolute; top: -40px; left: 0; background: var(--accent); color: #000; padding: 8px; text-decoration: none; z-index: 100; }
+.skip-link:focus { top: 0; }
 .breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
-.breadcrumb a { color: var(--muted); }
-.breadcrumb a:hover { color: var(--accent); }
+.breadcrumb a { color: var(--muted); text-decoration: none; }
+.breadcrumb a:hover { color: var(--accent); text-decoration: underline; }
 .hero-section {
   border: 1px solid var(--border); border-radius: 12px; padding: 36px;
   background: linear-gradient(180deg, #121621 0%, #0b0d10 100%);
@@ -40,22 +46,25 @@ a:hover { text-decoration: underline; }
 .hero-section .price-tag { font-size: 22px; font-weight: 700; color: var(--success); margin-bottom: 12px; }
 .hero-section .price-tag span { font-size: 14px; font-weight: 400; color: var(--muted); }
 .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.pill { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px; font-size: 12px; color: var(--muted); }
+.pill { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; font-size: 12px; color: var(--muted); display: inline-block; }
 .pill-accent { border-color: var(--accent); color: var(--accent); }
 .pill-success { border-color: var(--success); color: var(--success); }
+.pill-warn { border-color: var(--warn); color: var(--warn); }
 .section { margin-bottom: 36px; }
 .section h2 { font-size: 18px; margin-bottom: 14px; letter-spacing: -0.01em; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.section p, .section li { color: var(--muted); font-size: 14px; }
-.section ul { padding-left: 20px; }
-.section li { margin-bottom: 6px; }
+.section p, .section li { color: var(--muted); font-size: 14px; line-height: 1.7; }
+.section ul { padding-left: 20px; margin: 12px 0; }
+.section li { margin-bottom: 8px; }
 .card-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .card-sm {
   background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-  padding: 16px; transition: border-color 0.15s;
+  padding: 16px; transition: border-color 0.15s, background-color 0.15s;
+  text-decoration: none; display: block;
 }
-.card-sm:hover { border-color: var(--accent); }
-.card-sm h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-.card-sm p { font-size: 12px; color: var(--muted); }
+.card-sm:hover { border-color: var(--accent); background-color: var(--card-hover); text-decoration: none; }
+.card-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card-sm h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: var(--fg); }
+.card-sm p { font-size: 12px; color: var(--muted); margin: 6px 0; }
 .card-sm .meta { font-size: 11px; color: var(--muted); margin-top: 8px; }
 .cta-bar {
   margin-top: 40px; padding: 24px; border-radius: 10px;
@@ -67,22 +76,30 @@ a:hover { text-decoration: underline; }
 .cta-bar p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
 .btn {
   display: inline-block; padding: 12px 28px; border-radius: 8px;
-  background: var(--accent); color: #fff; font-weight: 600; font-size: 14px;
-  text-decoration: none; transition: opacity 0.15s;
+  background: var(--accent); color: #000; font-weight: 600; font-size: 14px;
+  text-decoration: none; transition: opacity 0.15s; border: none; cursor: pointer;
 }
 .btn:hover { opacity: 0.85; text-decoration: none; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.trust-bar {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 20px; margin: 24px 0; font-size: 13px; color: var(--muted); text-align: center;
+}
+.trust-bar strong { color: var(--fg); }
 @media (max-width: 640px) {
   .wrap { padding: 24px 16px; }
+  main { padding: 24px 0; }
   .hero-section { padding: 24px; }
   .hero-section h1 { font-size: 22px; }
-  .two-col { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; gap: 14px; }
+  .card-grid { grid-template-columns: 1fr; }
 }
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { text-align: left; padding: 8px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
-th { color: var(--fg); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+th, td { text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+th { color: var(--fg); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; background: var(--card); }
 td { color: var(--muted); }
-.steps-list { counter-reset: step; list-style: none; padding: 0; }
+.steps-list { counter-reset: step; list-style: none; padding: 0; margin: 12px 0; }
 .steps-list li { counter-increment: step; padding: 10px 0 10px 40px; position: relative; border-left: 2px solid var(--border); margin-left: 12px; }
 .steps-list li::before {
   content: counter(step); position: absolute; left: -14px; top: 8px;
@@ -93,81 +110,88 @@ td { color: var(--muted); }
 }
 .steps-list li:last-child { border-left-color: transparent; }
 footer { border-top: 1px solid var(--border); margin-top: 60px; padding: 24px 0; color: var(--muted); font-size: 12px; text-align: center; }
+code { background: var(--card); padding: 2px 6px; border-radius: 3px; font-family: "Monaco", "Courier New", monospace; font-size: 12px; }
 </style>
 </head>
 <body>
+<a href="#main" class="skip-link">Skip to main content</a>
 <div class="wrap">
-<nav class="breadcrumb"><a href="/marketplace">Marketplace</a> › <a href="/automations/categories">Categories</a> › <span>Lead Qualification &amp; Scoring</span></nav>
-
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/marketplace">Marketplace</a> › <a href="/automations/categories">Categories</a> › <span>Lead Qualification &amp; Scoring</span></nav>
+<main id="main">
+<article>
 <div class="hero-section">
-  <div class="pills" style="margin-bottom:12px">
-    <span class="pill pill-accent">Category 3</span>
+  <div class="pills">
+    <span class="pill pill-accent">Category</span>
     <span class="pill">10 automations</span>
-    <span class="pill">9 webhook-triggered</span><span class="pill">1 cron-triggered</span>
   </div>
   <h1>Lead Qualification &amp; Scoring</h1>
-  <p class="tagline">10 ready-to-deploy automations for lead qualification &amp; scoring. Each automation works alongside your existing tools — Jobber, Housecall Pro, ServiceTitan, and more.</p>
+  <p class="tagline">10 ready-to-deploy automations for lead qualification &amp; scoring. Each works seamlessly with your existing tools — Jobber, Housecall Pro, ServiceTitan, and more.</p>
 </div>
 
 <div class="section">
   <h2>All Automations in Lead Qualification &amp; Scoring</h2>
   <div class="card-grid"><a href="/automations/a/lead-score-calculator-3-01" class="card-sm">
       <h3>Lead Score Calculator</h3>
-      <p>Trigger: webhook · 5 steps</p>
+      <p>Trigger: <code>webhook</code> · 5 steps</p>
       <div class="meta">core</div>
     </a>
 <a href="/automations/a/behavioral-score-incrementer-3-02" class="card-sm">
       <h3>Behavioral Score Incrementer</h3>
-      <p>Trigger: webhook · 3 steps</p>
+      <p>Trigger: <code>webhook</code> · 3 steps</p>
       <div class="meta">sales</div>
     </a>
 <a href="/automations/a/budget-qualifier-3-03" class="card-sm">
       <h3>Budget Qualifier</h3>
-      <p>Trigger: webhook · 4 steps</p>
+      <p>Trigger: <code>webhook</code> · 4 steps</p>
       <div class="meta">sales</div>
     </a>
 <a href="/automations/a/service-area-validator-3-04" class="card-sm">
       <h3>Service Area Validator</h3>
-      <p>Trigger: webhook · 4 steps</p>
+      <p>Trigger: <code>webhook</code> · 4 steps</p>
       <div class="meta">sales</div>
     </a>
 <a href="/automations/a/company-size-enrichment-3-05" class="card-sm">
       <h3>Company Size Enrichment</h3>
-      <p>Trigger: webhook · 4 steps</p>
+      <p>Trigger: <code>webhook</code> · 4 steps</p>
       <div class="meta">sales</div>
     </a>
 <a href="/automations/a/decision-maker-validator-3-06" class="card-sm">
       <h3>Decision-Maker Validator</h3>
-      <p>Trigger: webhook · 4 steps</p>
+      <p>Trigger: <code>webhook</code> · 4 steps</p>
       <div class="meta">sales</div>
     </a>
 <a href="/automations/a/hot-lead-alert-3-07" class="card-sm">
       <h3>Hot Lead Alert</h3>
-      <p>Trigger: webhook · 5 steps</p>
+      <p>Trigger: <code>webhook</code> · 5 steps</p>
       <div class="meta">core</div>
     </a>
 <a href="/automations/a/lead-decay-timer-3-08" class="card-sm">
       <h3>Lead Decay Timer</h3>
-      <p>Trigger: cron (0 6 * * *) · 4 steps</p>
+      <p>Trigger: <code>cron</code> · 4 steps</p>
       <div class="meta">sales</div>
     </a>
 <a href="/automations/a/competitor-customer-detector-3-09" class="card-sm">
       <h3>Competitor Customer Detector</h3>
-      <p>Trigger: webhook · 4 steps</p>
+      <p>Trigger: <code>webhook</code> · 4 steps</p>
       <div class="meta">sales</div>
     </a>
 <a href="/automations/a/urgency-detector-3-10" class="card-sm">
       <h3>Urgency Detector</h3>
-      <p>Trigger: webhook · 5 steps</p>
+      <p>Trigger: <code>webhook</code> · 5 steps</p>
       <div class="meta">sales</div>
     </a></div>
 </div>
 
+<div class="trust-bar">
+  <strong>Works with Jobber, Housecall Pro, ServiceTitan, and more.</strong> One-click activation · 30-day money-back guarantee
+</div>
+
 <div class="cta-bar">
   <h3>Ready to automate lead qualification &amp; scoring?</h3>
-  <p>Pick the automations you need, activate with one click, and let Your Deputy do the work.</p>
+  <p>Pick the automations you need. Activate with one click. Let Your Deputy do the work.</p>
   <a href="/dashboard" class="btn">Get Started</a>
 </div>
+</article></main>
 <footer>© 2026 Dynasty Empire LLC · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/marketplace">Back to Marketplace</a></footer>
 </div>
 </body>
