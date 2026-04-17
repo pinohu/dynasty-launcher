@@ -101,7 +101,7 @@ console.log(`Loaded: ${modules.length} modules, ${bundles.length} bundles, ${Obj
 const CSS = `
 :root {
   --bg: #0b0d10; --card: #13171c; --card-hover: #1a1f26;
-  --border: #242a31; --fg: #e8eaed; --muted: #9aa3ad;
+  --border: #242a31; --fg: #e8eaed; --muted: #b0b8c4;
   --accent: #4da3ff; --success: #3ecf8e; --warn: #f0b429;
   --danger: #ff6b6b;
 }
@@ -262,7 +262,7 @@ function page({ title, description, canonical, breadcrumbs, body, jsonLd }) {
 <div class="wrap">
 <nav class="breadcrumb" aria-label="Breadcrumb">${bc}</nav>
 <main id="main">${body}</main>
-<footer>© 2026 Dynasty Empire LLC · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/marketplace">Back to Marketplace</a></footer>
+<footer>© 2026 Dynasty Empire LLC · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/marketplace">Marketplace</a> · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Support</a></footer>
 </div>
 </body>
 </html>`;
@@ -408,7 +408,7 @@ ${relatedHtml ? `<div class="section">
 </div>` : ''}
 
 <div class="trust-bar">
-  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime.
+  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
 </div>
 
 <div class="cta-bar">
@@ -521,7 +521,7 @@ function generateBundlePage(bundle) {
 </div>
 
 <div class="trust-bar">
-  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime.
+  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
 </div>
 
 <div class="cta-bar">
@@ -719,7 +719,7 @@ ${siblingCards ? `<div class="section">
 </div>` : ''}
 
 <div class="trust-bar">
-  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime.
+  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
 </div>
 
 <div class="cta-bar">

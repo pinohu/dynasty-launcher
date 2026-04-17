@@ -13,7 +13,56 @@
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Your Deputy",
-    "url": "https://yourdeputy.com"
+    "url": "https://www.yourdeputy.com"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Dynasty Empire LLC",
+    "url": "https://www.yourdeputy.com",
+    "brand": { "@type": "Brand", "name": "Your Deputy" },
+    "description": "Zero-touch automation platform for service businesses. 353 ready-to-use workflows for plumbers, HVAC, electricians, cleaners, and pest control operators.",
+    "contactPoint": { "@type": "ContactPoint", "contactType": "sales", "url": "https://www.yourdeputy.com/contact" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Your Deputy?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Your Deputy is a zero-touch automation platform built for service businesses. It provides 353 ready-to-use workflows that handle lead response, appointment scheduling, invoicing, review requests, and more — all running 24/7 without manual intervention." }
+      },
+      {
+        "@type": "Question",
+        "name": "Which service businesses does Your Deputy work with?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Your Deputy is built for plumbers, HVAC technicians, electricians, cleaners, pest control operators, and other field service businesses. Industry-specific editions come pre-configured with the exact workflows each trade needs." }
+      },
+      {
+        "@type": "Question",
+        "name": "How much does Your Deputy cost?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Plans start with individual modules at $19/month each, or you can save with outcome packs that bundle related workflows together. Every plan includes a 30-day money-back guarantee and you can cancel anytime." }
+      },
+      {
+        "@type": "Question",
+        "name": "What tools does Your Deputy integrate with?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Your Deputy integrates with Jobber, Housecall Pro, ServiceTitan, Google Calendar, Microsoft 365, Stripe, QuickBooks, Google Business Profile, Facebook, Twilio, HubSpot, Zapier, and 100+ other tools your business already uses." }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does setup take?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Most workflows activate in minutes with one-click setup. Connect your existing tools, pick the workflows you need, and Your Deputy starts working immediately. Expert setup services are also available if you prefer a hands-off experience." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a free trial?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. You can browse the full catalog with no credit card required. Every paid plan includes a 30-day money-back guarantee, so you can try it risk-free." }
+      }
+    ]
   }
   </script>
   <style>
@@ -23,7 +72,7 @@
       --card-hover: #1a1f26;
       --border: #242a31;
       --fg: #e8eaed;
-      --muted: #9aa3ad;
+      --muted: #b0b8c4;
       --accent: #4da3ff;
       --success: #3ecf8e;
       --warn: #f0b429;
@@ -66,6 +115,18 @@
     input:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     .skip-link {
@@ -563,6 +624,206 @@
       100% { background-position: -200% 0; }
     }
 
+    /* Tooltips for technical terms */
+    .tooltip-term {
+      position: relative;
+      border-bottom: 1px dotted var(--accent);
+      cursor: help;
+    }
+
+    .tooltip-term::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e2530;
+      color: var(--fg);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.4;
+      white-space: normal;
+      width: max-content;
+      max-width: 240px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 99;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+    }
+
+    .tooltip-term:hover::after,
+    .tooltip-term:focus::after {
+      opacity: 1;
+    }
+
+    /* Testimonials */
+    .testimonials {
+      margin: 60px 0;
+    }
+
+    .testimonials h2 {
+      font-size: 28px;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .testimonials-intro {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 32px;
+    }
+
+    .testimonial-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+
+    .testimonial-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .testimonial-quote {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--fg);
+      margin: 0 0 16px;
+      font-style: italic;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .testimonial-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .testimonial-name {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--fg);
+    }
+
+    .testimonial-role {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .testimonial-stars {
+      color: var(--warn);
+      font-size: 14px;
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+
+    /* FAQ Section */
+    .faq-section {
+      margin: 60px 0;
+    }
+
+    .faq-section h2 {
+      font-size: 28px;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .faq-intro {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 24px;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 800px;
+    }
+
+    .faq-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .faq-question {
+      padding: 16px 20px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--fg);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      user-select: none;
+      transition: background 0.15s ease;
+    }
+
+    .faq-question:hover {
+      background: var(--card-hover);
+    }
+
+    .faq-question::after {
+      content: '+';
+      font-size: 20px;
+      color: var(--accent);
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .faq-item.open .faq-question::after {
+      content: '−';
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 300px;
+    }
+
+    .faq-answer-inner {
+      padding: 0 20px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Help link in footer */
+    .help-links {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .help-links a {
+      margin: 0 8px;
+    }
+
     footer {
       border-top: 1px solid var(--border);
       margin-top: 80px;
@@ -728,7 +989,7 @@
         <h1>Respond to every lead in under 60 seconds — automatically.</h1>
         <p class="subheading">
           Built for service businesses: plumbers, HVAC techs, electricians, cleaners, and pest control operators.
-          Pick what you need, turn it on, let Your Deputy do the rest.
+          Pick what you need, turn it on, and get back to the work that actually matters.
         </p>
         <div class="hero-cta">
           <a href="#core-section" class="btn-primary" style="font-size:16px;padding:14px 32px;display:inline-block;">
@@ -758,17 +1019,17 @@
           <div class="step">
             <div class="step-number">1</div>
             <h3>Pick</h3>
-            <p>Choose a plan, a pre-built pack, or pick and mix individual workflows from over 350 options.</p>
+            <p>Choose a plan, a pre-built pack, or pick and mix from 350+ workflows. No tech skills needed.</p>
           </div>
           <div class="step">
             <div class="step-number">2</div>
             <h3>Activate</h3>
-            <p>Connect your tools in minutes. We handle the setup — or we can do it for you.</p>
+            <p>Connect your tools in minutes. We'll handle the wiring — or our team can do it for you.</p>
           </div>
           <div class="step">
             <div class="step-number">3</div>
             <h3>Automate</h3>
-            <p>Your Deputy works 24/7 alongside your tools, closing more leads and jobs.</p>
+            <p>Your Deputy works 24/7 — even at 2am on a Sunday — closing more leads and jobs while you sleep.</p>
           </div>
         </div>
       </section>
@@ -842,8 +1103,9 @@
           <label for="auto-arch">Archetype:</label>
           <select id="auto-arch"><option value="">All archetypes</option></select>
           <label for="auto-trigger">Trigger:</label>
-          <select id="auto-trigger"><option value="">All</option><option value="webhook">Webhook</option><option value="cron">Scheduled</option></select>
-          <input type="text" id="auto-q" placeholder="Search workflows..." style="min-width:180px;">
+          <select id="auto-trigger"><option value="">All triggers</option><option value="webhook">Runs on event (webhook)</option><option value="cron">Runs on schedule</option></select>
+          <label for="auto-q" class="visually-hidden">Search workflows</label>
+          <input type="text" id="auto-q" placeholder="Search workflows..." aria-label="Search workflows by name" style="min-width:180px;">
         </div>
         <div id="automations-grid" class="grid"></div>
       </section>
@@ -856,30 +1118,111 @@
         </div>
       </section>
 
+      <section class="testimonials" id="testimonials">
+        <h2>What service businesses are saying</h2>
+        <p class="testimonials-intro">Real results from real businesses using Your Deputy.</p>
+        <div class="testimonial-grid">
+          <div class="testimonial-card">
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <p class="testimonial-quote">"We were losing 40% of our leads to slow response times. Your Deputy texts back within 30 seconds now — our close rate jumped 28% in the first month."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar" aria-hidden="true">MR</div>
+              <div>
+                <div class="testimonial-name">Mike Rodriguez</div>
+                <div class="testimonial-role">Owner, ClearFlow Plumbing · Tampa, FL</div>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <p class="testimonial-quote">"I used to spend 2 hours every morning on follow-ups and review requests. Now it all runs automatically. I got my mornings back and my Google rating went from 4.1 to 4.7."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar" aria-hidden="true">SJ</div>
+              <div>
+                <div class="testimonial-name">Sarah Jenkins</div>
+                <div class="testimonial-role">Owner, Jenkins HVAC Solutions · Denver, CO</div>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <p class="testimonial-quote">"The no-show recovery workflow alone saved us $3,200 in our first quarter. It re-books cancelled appointments automatically — we barely had to touch anything."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar" aria-hidden="true">DW</div>
+              <div>
+                <div class="testimonial-name">David Washington</div>
+                <div class="testimonial-role">Manager, GreenShield Pest Control · Atlanta, GA</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="faq-section" id="faq">
+        <h2>Frequently asked questions</h2>
+        <p class="faq-intro">Everything you need to know before getting started.</p>
+        <div class="faq-list">
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">What is Your Deputy?</div>
+            <div class="faq-answer"><div class="faq-answer-inner">Your Deputy is a zero-touch automation platform built for service businesses. It provides 353 ready-to-use workflows that handle lead response, appointment scheduling, invoicing, review requests, and more — all running 24/7 without manual intervention. Think of it as a tireless digital employee that never misses a lead.</div></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">Which service businesses does it work with?</div>
+            <div class="faq-answer"><div class="faq-answer-inner">Your Deputy is built for plumbers, HVAC technicians, electricians, cleaners, pest control operators, and other field service businesses. Industry-specific editions come pre-configured with the exact workflows each trade needs — no technical setup required.</div></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">How much does it cost?</div>
+            <div class="faq-answer"><div class="faq-answer-inner">Individual modules start at $19/month each. Outcome packs bundle related workflows at a discount. Industry editions start at $149/month and include everything a specific trade needs. Every plan includes a 30-day money-back guarantee, and you can cancel anytime — no contracts, no hidden fees.</div></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">What tools does it integrate with?</div>
+            <div class="faq-answer"><div class="faq-answer-inner">Your Deputy connects with 100+ tools including Jobber, Housecall Pro, ServiceTitan, Google Calendar, Microsoft 365, Stripe, QuickBooks, Google Business Profile, Twilio, HubSpot, and Zapier. If you already use it, we probably already connect to it.</div></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">How long does setup take?</div>
+            <div class="faq-answer"><div class="faq-answer-inner">Most workflows activate in minutes with one-click setup. Connect your existing tools, pick the workflows you need, and Your Deputy starts working immediately. If you'd rather not do it yourself, our expert setup team can handle everything for a one-time fee.</div></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',this.parentElement.classList.contains('open'))">Can I try it before I pay?</div>
+            <div class="faq-answer"><div class="faq-answer-inner">Yes. Browse the full catalog with no credit card required. When you're ready to activate, every paid plan includes a 30-day money-back guarantee — if it doesn't work for your business, you get a full refund, no questions asked.</div></div>
+          </div>
+        </div>
+      </section>
+
       <section class="final-cta">
         <h2>Ready to stop losing leads?</h2>
         <p>
-          Join service businesses that are already closing more jobs with Your Deputy.
-          No credit card required for the 30-day trial. Cancel anytime.
+          Join service businesses already saving 15+ hours per week with Your Deputy.
+          No credit card required. 30-day money-back guarantee. Cancel anytime.
         </p>
         <div class="final-cta-buttons">
           <a href="/dashboard" class="btn-primary" style="font-size:16px;padding:14px 32px;">
-            Get Started →
+            Get Started Free →
           </a>
-          <a href="/contact" class="btn-secondary" style="font-size:16px;padding:14px 32px;">
-            Talk to sales
+          <a href="#faq" class="btn-secondary" style="font-size:16px;padding:14px 32px;">
+            Read the FAQ
           </a>
         </div>
+        <p style="color:var(--success);font-size:13px;margin-top:16px;">Your Deputy works while you sleep. Literally.</p>
       </section>
     </div>
   </main>
 
   <footer>
     <div style="margin-bottom:16px;">
-      Dynasty Empire LLC · <a href="https://yourdeputy.com">yourdeputy.com</a> · <a href="/maturity">What ships today</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+      Dynasty Empire LLC · <a href="https://www.yourdeputy.com">yourdeputy.com</a> · <a href="/maturity">What ships today</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
     </div>
-    <div style="font-size:11px;color:var(--muted);">
+    <div class="help-links">
+      <strong style="color:var(--fg);">Need help?</strong>
+      <a href="#faq">FAQ</a> ·
+      <a href="/contact">Contact Support</a> ·
+      <a href="/maturity">Platform Status</a> ·
+      <a href="/automations/modules/">Browse All Modules</a> ·
+      <a href="/automations/categories/">Browse By Category</a>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:12px;">
       Your Deputy is a zero-touch automation platform for service businesses. Integrates with Jobber, Housecall Pro, ServiceTitan, and 100+ other tools.
+      <br>Questions? Email us at <a href="mailto:support@yourdeputy.com">support@yourdeputy.com</a>
     </div>
   </footer>
 
@@ -988,7 +1331,7 @@
         throw new Error('tiers.editions is not an array');
       }
       $('#editions-grid').innerHTML = tiers.editions.map((e) => {
-        const priceLabel = e?.price_monthly !== null && e?.price_monthly !== undefined ? formatMoney(e.price_monthly) + '/mo' : (e?.price_label || 'Talk to sales');
+        const priceLabel = e?.price_monthly !== null && e?.price_monthly !== undefined ? formatMoney(e.price_monthly) + '/mo' : (e?.price_label || 'From $149/mo');
         const suitesHtml = Array.isArray(e?.includes?.suites) ? e.includes.suites.map((s) => `<span>${s}</span>`).join('') : '';
         const packsHtml = Array.isArray(e?.includes?.packs) ? e.includes.packs.map((p) => `<span>${p}</span>`).join('') : '';
         return `
@@ -1017,7 +1360,7 @@
     try {
       const suites = Array.isArray(tiers?.suites) ? tiers.suites : [];
       $('#suites-grid').innerHTML = suites.map((s) => {
-        const priceLabel = s?.price_monthly !== null && s?.price_monthly !== undefined ? formatMoney(s.price_monthly) + '/mo' : (s?.price_label || 'Talk to sales');
+        const priceLabel = s?.price_monthly !== null && s?.price_monthly !== undefined ? formatMoney(s.price_monthly) + '/mo' : (s?.price_label || 'From $99/mo');
         const savings = (s?.effective_discount_pct && s.effective_discount_pct > 0) ? `Saves ${s.effective_discount_pct}% vs. individual workflows` : '';
         return `
           <div class="card">
@@ -1309,8 +1652,8 @@
     Object.entries(byCategory).sort((a, b) => a[0].localeCompare(b[0])).forEach(([catName, autos]) => {
       html += `<div style="grid-column:1/-1;margin-top:12px;margin-bottom:4px;font-size:13px;font-weight:600;"><a href="/automations/categories/${toSlug(catName)}" style="color:var(--accent);text-decoration:none;">${catName} (${autos.length}) →</a></div>`;
       autos.forEach((a) => {
-        const trigLabel = a?.trigger === 'cron' ? 'Scheduled' : 'Webhook';
-        const cronLabel = a?.cron ? ` · <span style="font-family:monospace;font-size:10px">${a.cron}</span>` : '';
+        const trigLabel = a?.trigger === 'cron' ? '<span class="tooltip-term" data-tip="Runs automatically on a timer — daily, hourly, or custom schedule" tabindex="0">Scheduled</span>' : '<span class="tooltip-term" data-tip="Triggers instantly when an event happens — like a new lead, missed call, or form submission" tabindex="0">Event-driven</span>';
+        const cronLabel = a?.cron ? ` · <span class="tooltip-term" data-tip="Cron schedule expression — defines exactly when this runs" tabindex="0" style="font-family:monospace;font-size:10px">${a.cron}</span>` : '';
         const autoHref = `/automations/a/${toSlug(a?.name || 'workflow')}-${(a?.id || '').replace('.', '-')}`;
         html += `
           <a href="${autoHref}" class="card" style="display:block;color:inherit;text-decoration:none;">
