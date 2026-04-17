@@ -1703,7 +1703,7 @@
             <span>${Array.isArray(t?.included_modules) ? t.included_modules.length : 0} included modules</span>
           </div>
           <div class="card-cta">
-            <a href="mailto:support@yourdeputy.com?subject=Interest in ${encodeURIComponent(t?.name || 'Plan')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
+            <a href="/plans/${toSlug(t?.name || 'plan')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
               Get Started with ${t?.name || 'Plan'} →
             </a>
           </div>
@@ -1735,7 +1735,7 @@
               ${packsHtml}
             </div>
             <div class="card-cta">
-              <a href="mailto:support@yourdeputy.com?subject=Interest in ${encodeURIComponent(e?.name || 'Edition')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
+              <a href="/editions/${toSlug(e?.name || 'edition')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
             </div>
           </div>
         `;
@@ -1763,7 +1763,7 @@
               ${savings ? `<span>${savings}</span>` : ''}
             </div>
             <div class="card-cta">
-              <a href="mailto:support@yourdeputy.com?subject=Interest in ${encodeURIComponent(s?.name || 'Suite')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Get Notified →</a>
+              <a href="/suites/${toSlug(s?.name || 'suite')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
             </div>
           </div>
         `;
@@ -1870,7 +1870,7 @@
               <span>${c?.delivery_mode || 'Expert setup'}</span>
             </div>
             <div class="card-cta">
-              <a href="mailto:support@yourdeputy.com?subject=Interest in ${encodeURIComponent(c?.name || 'Expert Setup')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Contact Us →</a>
+              <a href="/setup/${toSlug(code)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
             </div>
           </div>
         `;
