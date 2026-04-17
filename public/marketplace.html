@@ -3,11 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Stop losing leads. Start closing more jobs. Your Deputy is the zero-touch automation platform for service businesses. Works with Jobber, Housecall Pro, ServiceTitan, and 100+ other tools.">
+  <meta name="description" content="Service business automation platform. Pick pre-built workflows or customize from 353 ready-to-use automations. Works with Jobber, Housecall Pro, ServiceTitan, and 100+ other tools.">
   <meta property="og:title" content="Your Deputy — Automation Marketplace">
   <meta property="og:description" content="Zero-touch automation for service businesses. Pick what you need, turn it on, let the platform do the work.">
   <meta property="og:type" content="website">
-  <title>Your Deputy — Stop losing leads. Start closing more jobs.</title>
+  <title>Service Business Automation Platform — Your Deputy</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Your Deputy",
+    "url": "https://yourdeputy.com"
+  }
+  </script>
   <style>
     :root {
       --bg: #0b0d10;
@@ -104,7 +112,6 @@
       color: var(--muted);
       flex: 1;
       min-width: 200px;
-      display: none;
     }
 
     .navbar-trust strong {
@@ -126,6 +133,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       display: inline-block;
+      text-decoration: none;
     }
 
     .btn-primary:hover {
@@ -148,6 +156,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       display: inline-block;
+      text-decoration: none;
     }
 
     .btn-secondary:hover {
@@ -167,7 +176,7 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       margin: 40px 0;
-      text-align: center;
+      text-align: left;
     }
 
     .hero h1 {
@@ -177,15 +186,14 @@
       letter-spacing: -0.02em;
       line-height: 1.2;
       color: var(--fg);
+      max-width: 600px;
     }
 
     .hero .subheading {
       font-size: 18px;
       color: var(--muted);
       margin: 0 0 24px;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
+      max-width: 600px;
       line-height: 1.6;
     }
 
@@ -325,6 +333,7 @@
       gap: 12px;
       transition: all 0.2s ease;
       position: relative;
+      cursor: pointer;
     }
 
     .card:hover {
@@ -419,22 +428,22 @@
       white-space: nowrap;
     }
 
-    .badge-spec {
+    .badge-coming-soon {
       background: #2a2216;
       color: var(--warn);
     }
 
-    .badge-implemented {
+    .badge-in-testing {
       background: #2a2216;
       color: var(--warn);
     }
 
-    .badge-validated {
+    .badge-verified {
       background: #162a28;
       color: var(--accent);
     }
 
-    .badge-deployable {
+    .badge-available {
       background: #102418;
       color: var(--success);
     }
@@ -514,10 +523,44 @@
       font-size: 11px;
     }
 
+    .section-error {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .section-error a {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
     .stats-line {
       color: var(--muted);
       font-size: 12px;
       margin: 16px 0 0;
+    }
+
+    .skeleton-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .skeleton-line {
+      background: linear-gradient(90deg, var(--border) 25%, var(--card-hover) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      border-radius: 4px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
 
     footer {
@@ -572,9 +615,9 @@
       }
 
       .navbar-trust {
-        display: block;
         order: 2;
         width: 100%;
+        font-size: 11px;
       }
 
       .navbar-cta {
@@ -588,6 +631,7 @@
 
       .hero {
         padding: 40px 20px;
+        text-align: left;
       }
 
       .hero h1 {
@@ -669,36 +713,34 @@
       <strong>Works with:</strong> Jobber · Housecall Pro · ServiceTitan · Google Calendar · Microsoft 365 · Stripe · QuickBooks
     </div>
     <div class="navbar-cta">
-      <button class="btn-primary" onclick="document.querySelector('.hero-cta').scrollIntoView({behavior:'smooth'})">
-        Activate Now
-      </button>
+      <a href="#core-section" class="btn-primary">See Plans ↓</a>
     </div>
   </nav>
 
   <main id="main-content">
     <div class="container">
       <div id="announcement" class="announcement" style="display:none;">
-        <strong>Private preview.</strong> No modules have been promoted past <code>spec</code> yet — this page is populated from the live product catalog so the UI and the platform can exercise each other.
+        <strong>Private preview.</strong> No modules have been promoted past coming soon yet — this page is populated from the live product catalog so the UI and the platform can exercise each other.
         <span id="admin-toggle"></span>
       </div>
 
       <section class="hero">
-        <h1>Stop losing leads. Start closing more jobs.</h1>
+        <h1>Respond to every lead in under 60 seconds — automatically.</h1>
         <p class="subheading">
-          Your Deputy is the zero-touch automation platform built for service businesses.
-          Pick what you need, turn it on, let the platform do the work.
+          Built for service businesses: plumbers, HVAC techs, electricians, cleaners, and pest control operators.
+          Pick what you need, turn it on, let Your Deputy do the rest.
         </p>
         <div class="hero-cta">
-          <button class="btn-primary" style="font-size:16px;padding:14px 32px;">
-            Activate Now (Paid)
-          </button>
+          <a href="#core-section" class="btn-primary" style="font-size:16px;padding:14px 32px;display:inline-block;">
+            See Plans & Pricing ↓
+          </a>
         </div>
         <div class="stats">
-          <strong>353 atomic automations</strong> across <strong>45 categories</strong>
+          <strong>353 ready-to-use workflows</strong> across <strong>45 categories</strong>
           · Works with <strong>your existing tools</strong>
         </div>
         <div class="guarantee">
-          30-day money-back guarantee · Cancel anytime
+          30-day money-back guarantee · Cancel anytime · No credit card required to browse
         </div>
       </section>
 
@@ -716,17 +758,17 @@
           <div class="step">
             <div class="step-number">1</div>
             <h3>Pick</h3>
-            <p>Choose a pre-built pack, industry edition, or build your own from 353 automations.</p>
+            <p>Choose a plan, a pre-built pack, or pick and mix individual workflows from over 350 options.</p>
           </div>
           <div class="step">
             <div class="step-number">2</div>
             <h3>Activate</h3>
-            <p>Pay once. Wire up to your existing tools in minutes. Concierge available for setup help.</p>
+            <p>Connect your tools in minutes. We handle the setup — or we can do it for you.</p>
           </div>
           <div class="step">
             <div class="step-number">3</div>
             <h3>Automate</h3>
-            <p>The platform works 24/7 alongside your tools, closing more leads and jobs.</p>
+            <p>Your Deputy works 24/7 alongside your tools, closing more leads and jobs.</p>
           </div>
         </div>
       </section>
@@ -734,67 +776,84 @@
       <div class="controls" style="margin:40px 0 0;">
         <label for="view">View:</label>
         <select id="view">
-          <option value="marketplace">Marketplace (deployable + live only)</option>
+          <option value="marketplace">Marketplace (available + live only)</option>
           <option value="admin" selected>Admin (all statuses)</option>
         </select>
         <label for="blueprint">For:</label>
         <select id="blueprint">
           <option value="">All verticals</option>
         </select>
-        <span id="stats" style="margin-left:auto;color:var(--muted);font-size:12px;" role="status"></span>
+        <span id="stats" style="margin-left:auto;color:var(--muted);font-size:12px;" role="status" aria-live="polite"></span>
       </div>
 
       <section id="core-section">
-        <h2>Core platform</h2>
-        <p class="section-lede">Every customer starts here. Choose the plan that fits your team size.</p>
-        <div id="core-grid" class="grid"></div>
+        <h2>Plans</h2>
+        <p class="section-lede">Choose the plan that fits your team size. Every customer starts here.</p>
+        <div id="core-grid" class="grid">
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+        </div>
       </section>
 
       <section id="editions-section">
-        <h2>Industry editions</h2>
-        <p class="section-lede">Vertical-specific stacks pre-configured for plumbers, HVAC, electricians, and more.</p>
-        <div id="editions-grid" class="grid"></div>
+        <h2>Industry Editions</h2>
+        <p class="section-lede">Vertical-specific packages pre-configured for plumbers, HVAC techs, electricians, and more.</p>
+        <div id="editions-grid" class="grid">
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+        </div>
       </section>
 
       <section id="suites-section">
-        <h2>Suites</h2>
-        <p class="section-lede">Two outcome packs bundled with advanced reporting. Save money vs. buying them separately.</p>
-        <div id="suites-grid" class="grid"></div>
+        <h2>Outcome Suites</h2>
+        <p class="section-lede">Bundle multiple workflows with advanced reporting. Save money vs. buying them separately.</p>
+        <div id="suites-grid" class="grid">
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+        </div>
       </section>
 
       <section id="packs-section">
-        <h2>Outcome packs</h2>
+        <h2>Outcome Packs</h2>
         <p class="section-lede">Buy a result, not another software headache. Each pack solves a specific business problem.</p>
-        <div id="packs-grid" class="grid"></div>
+        <div id="packs-grid" class="grid">
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+        </div>
       </section>
 
       <section id="modules-section">
-        <h2>Individual modules</h2>
-        <p class="section-lede"><span id="modules-lede">$19 each per month. Mix and match only the automations you need.</span></p>
-        <div id="modules-grid" class="grid"></div>
+        <h2>Individual Modules</h2>
+        <p class="section-lede"><span id="modules-lede">$19 each per month. Mix and match only the workflows you need.</span></p>
+        <div id="modules-grid" class="grid">
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+        </div>
       </section>
 
       <section id="automations-section">
-        <h2>Atomic automations <span id="auto-count" style="font-size:13px;color:var(--muted);font-weight:400"></span></h2>
-        <p class="section-lede">Every automation that ships with Your Deputy. Filter by category, package, archetype, or search by name.</p>
+        <h2>All Workflows <span id="auto-count" style="font-size:13px;color:var(--muted);font-weight:400"></span></h2>
+        <p class="section-lede">Browse every workflow that ships with Your Deputy. Filter by category, package, or search by name.</p>
         <div class="controls" id="auto-controls">
           <label for="auto-cat">Category:</label>
-          <select id="auto-cat"><option value="">All (45 categories)</option></select>
+          <select id="auto-cat"><option value="">All categories</option></select>
           <label for="auto-pkg">Package:</label>
           <select id="auto-pkg"><option value="">All packages</option></select>
           <label for="auto-arch">Archetype:</label>
           <select id="auto-arch"><option value="">All archetypes</option></select>
           <label for="auto-trigger">Trigger:</label>
           <select id="auto-trigger"><option value="">All</option><option value="webhook">Webhook</option><option value="cron">Scheduled</option></select>
-          <input type="text" id="auto-q" placeholder="Search automations..." style="min-width:180px;">
+          <input type="text" id="auto-q" placeholder="Search workflows..." style="min-width:180px;">
         </div>
         <div id="automations-grid" class="grid"></div>
       </section>
 
       <section id="concierge-section">
-        <h2>Concierge setup</h2>
-        <p class="section-lede">Let a human wire everything up for you. Skip the self-serve onboarding.</p>
-        <div id="concierge-grid" class="grid"></div>
+        <h2>Expert Setup</h2>
+        <p class="section-lede">Let our team wire everything up for you. Skip the self-serve onboarding.</p>
+        <div id="concierge-grid" class="grid">
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+        </div>
       </section>
 
       <section class="final-cta">
@@ -804,12 +863,12 @@
           No credit card required for the 30-day trial. Cancel anytime.
         </p>
         <div class="final-cta-buttons">
-          <button class="btn-primary" style="font-size:16px;padding:14px 32px;">
-            Activate Now (Paid)
-          </button>
-          <button class="btn-secondary" onclick="window.location.href='/contact'">
+          <a href="/dashboard" class="btn-primary" style="font-size:16px;padding:14px 32px;">
+            Get Started →
+          </a>
+          <a href="/contact" class="btn-secondary" style="font-size:16px;padding:14px 32px;">
             Talk to sales
-          </button>
+          </a>
         </div>
       </section>
     </div>
@@ -829,15 +888,39 @@
   const $ = (s) => document.querySelector(s);
   const q = new URLSearchParams(location.search);
 
+  const STATUS_LABELS = {
+    spec: 'Coming soon',
+    implemented: 'In testing',
+    validated: 'Verified',
+    deployable: 'Available',
+    live: 'Live'
+  };
+
   const state = {
     view: q.get('view') || 'admin',
     blueprint: q.get('blueprint') || '',
     catalog: null,
   };
 
+  function statusToBadgeClass(status) {
+    if (!status) return '';
+    const map = {
+      'spec': 'badge-coming-soon',
+      'implemented': 'badge-in-testing',
+      'validated': 'badge-verified',
+      'deployable': 'badge-available',
+      'live': 'badge-live'
+    };
+    return map[status] || 'badge-coming-soon';
+  }
+
+  function statusLabel(status) {
+    return STATUS_LABELS[status] || status;
+  }
+
   function badge(status) {
-    const cls = 'badge badge-' + status;
-    return `<span class="${cls}">${status}</span>`;
+    const cls = 'badge ' + statusToBadgeClass(status);
+    return `<span class="${cls}">${statusLabel(status)}</span>`;
   }
 
   function formatMoney(n) {
@@ -847,20 +930,6 @@
 
   function toSlug(s) {
     return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  }
-
-  function card({ title, price, description, meta = [], status, href }) {
-    const inner = `
-      <div class="card-header">
-        <h3>${title}</h3>
-        ${status ? badge(status) : ''}
-      </div>
-      ${price !== null && price !== undefined ? `<div class="price"><strong>${formatMoney(price)}</strong><span>/mo</span></div>` : ''}
-      ${description ? `<p class="card-description">${description}</p>` : ''}
-      ${meta.length ? `<div class="card-meta">${meta.map((m) => `<span>${m}</span>`).join('')}</div>` : ''}
-      ${href ? `<div class="card-cta"><a href="${href}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Details →</a></div>` : ''}
-    `;
-    return `<div class="card">${inner}</div>`;
   }
 
   async function fetchJSON(url) {
@@ -881,182 +950,252 @@
   }
 
   function render() {
+    if (!state.catalog) return;
+
     const { tiers, bundles, modules, blueprints } = state.catalog;
 
-    $('#core-grid').innerHTML = tiers.tiers.map((t) => `
-      <div class="card">
-        <div class="card-header">
-          <h3>${t.name}</h3>
-          ${t.positioning ? `<span style="font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;">${t.positioning}</span>` : ''}
-        </div>
-        ${t.price_monthly !== null ? `<div class="price"><strong>${formatMoney(t.price_monthly)}</strong><span>/mo</span></div>` : ''}
-        ${t.description ? `<p class="card-description">${t.description}</p>` : ''}
-        <div class="card-meta">
-          <span>${t.max_users} seats</span>
-          <span>${t.included_modules.length} included modules</span>
-        </div>
-        <div class="card-cta">
-          <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
-            Choose Plan →
-          </a>
-        </div>
-      </div>
-    `).join('');
-
-    $('#editions-grid').innerHTML = tiers.editions.map((e) => {
-      const priceLabel = e.price_monthly !== null ? formatMoney(e.price_monthly) + '/mo' : (e.price_label || 'Talk to sales');
-      return `
+    // CORE TIERS
+    try {
+      if (!Array.isArray(tiers?.tiers)) {
+        throw new Error('tiers.tiers is not an array');
+      }
+      $('#core-grid').innerHTML = tiers.tiers.map((t) => `
         <div class="card">
           <div class="card-header">
-            <h3>${e.name}</h3>
+            <h3>${t?.name || 'Untitled'}</h3>
+            ${t?.positioning ? `<span style="font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;">${t.positioning}</span>` : ''}
           </div>
-          <div class="price"><span class="price-label">${priceLabel}</span></div>
-          ${e.for ? `<p class="card-description">${e.for}</p>` : ''}
-          ${e.positioning ? `<p class="card-description" style="color:var(--fg);font-weight:500;">${e.positioning}</p>` : ''}
+          ${t?.price_monthly !== null && t?.price_monthly !== undefined ? `<div class="price"><strong>${formatMoney(t.price_monthly)}</strong><span>/mo</span></div>` : ''}
+          ${t?.description ? `<p class="card-description">${t.description}</p>` : ''}
           <div class="card-meta">
-            ${Array.isArray(e.includes?.suites) ? e.includes.suites.map((s) => `<span>${s}</span>`).join('') : ''}
-            ${Array.isArray(e.includes?.packs) ? e.includes.packs.map((p) => `<span>${p}</span>`).join('') : ''}
+            <span>${t?.max_users || 0} seats</span>
+            <span>${Array.isArray(t?.included_modules) ? t.included_modules.length : 0} included modules</span>
           </div>
           <div class="card-cta">
-            <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
+            <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
+              Start with ${t?.name || 'Plan'} →
+            </a>
           </div>
         </div>
-      `;
-    }).join('');
+      `).join('');
+    } catch (err) {
+      $('#core-grid').innerHTML = `<p class="section-error">Could not load plans. <a href="" onclick="location.reload();return false">Retry</a></p>`;
+    }
 
-    const suites = tiers.suites || [];
-    $('#suites-grid').innerHTML = suites.map((s) => {
-      const priceLabel = s.price_monthly !== null ? formatMoney(s.price_monthly) + '/mo' : (s.price_label || 'Talk to sales');
-      const savings = (s.effective_discount_pct && s.effective_discount_pct > 0) ? `Saves ${s.effective_discount_pct}% vs. packs` : '';
-      return `
-        <div class="card">
-          <div class="card-header">
-            <h3>${s.name}</h3>
-            ${s.status ? badge(s.status) : ''}
-          </div>
-          <div class="price"><span class="price-label">${priceLabel}</span></div>
-          ${s.positioning ? `<p class="card-description">${s.positioning}</p>` : ''}
-          <div class="card-meta">
-            ${(s.packs || []).map((p) => `<span>${p}</span>`).join('')}
-            ${savings ? `<span>${savings}</span>` : ''}
-          </div>
-          <div class="card-cta">
-            <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Activate →</a>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    const packsFiltered = state.view === 'marketplace'
-      ? bundles.bundles.filter((b) => b.effective_status === 'live' || b.effective_status === 'deployable')
-      : bundles.bundles;
-
-    if (packsFiltered.length === 0) {
-      $('#packs-grid').innerHTML = `<div class="card"><p class="card-description">No packs are marketplace-ready yet. Switch to Admin view to preview the launch pipeline.</p></div>`;
-    } else {
-      $('#packs-grid').innerHTML = packsFiltered.map((b) => {
-        const priceStr = b.price_monthly !== null ? `<strong>${formatMoney(b.price_monthly)}</strong><span>/mo</span>` : 'Talk to sales';
+    // EDITIONS
+    try {
+      if (!Array.isArray(tiers?.editions)) {
+        throw new Error('tiers.editions is not an array');
+      }
+      $('#editions-grid').innerHTML = tiers.editions.map((e) => {
+        const priceLabel = e?.price_monthly !== null && e?.price_monthly !== undefined ? formatMoney(e.price_monthly) + '/mo' : (e?.price_label || 'Talk to sales');
+        const suitesHtml = Array.isArray(e?.includes?.suites) ? e.includes.suites.map((s) => `<span>${s}</span>`).join('') : '';
+        const packsHtml = Array.isArray(e?.includes?.packs) ? e.includes.packs.map((p) => `<span>${p}</span>`).join('') : '';
         return `
           <div class="card">
             <div class="card-header">
-              <h3>${b.name}</h3>
-              ${b.effective_status ? badge(b.effective_status) : ''}
+              <h3>${e?.name || 'Untitled'}</h3>
             </div>
-            <div class="price">${priceStr}</div>
-            ${b.description ? `<p class="card-description">${b.description}</p>` : ''}
+            <div class="price"><span class="price-label">${priceLabel}</span></div>
+            ${e?.for ? `<p class="card-description">${e.for}</p>` : ''}
+            ${e?.positioning ? `<p class="card-description" style="color:var(--fg);font-weight:500;">${e.positioning}</p>` : ''}
             <div class="card-meta">
-              <span>${b.modules.length} modules</span>
-              ${b.hero_kpi ? `<span>KPI: ${b.hero_kpi}</span>` : ''}
-              ${b.implied_savings_monthly ? `<span>Saves $${b.implied_savings_monthly}/mo</span>` : ''}
+              ${suitesHtml}
+              ${packsHtml}
             </div>
             <div class="card-cta">
-              <a href="/automations/packs/${toSlug(b.name)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Pack →</a>
+              <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
             </div>
           </div>
         `;
       }).join('');
+    } catch (err) {
+      $('#editions-grid').innerHTML = `<p class="section-error">Could not load editions. <a href="" onclick="location.reload();return false">Retry</a></p>`;
     }
 
-    if (bundles.deferred && bundles.deferred.length && state.view === 'admin') {
-      $('#packs-grid').insertAdjacentHTML('afterend',
-        `<p style="color:var(--muted); font-size:12px; margin-top:12px;">
-          Deferred from launch: ${bundles.deferred.map((d) => d.bundle_code).join(', ')}.
-          Promoted when their underlying modules reach <code>live</code>.
-        </p>`);
+    // SUITES
+    try {
+      const suites = Array.isArray(tiers?.suites) ? tiers.suites : [];
+      $('#suites-grid').innerHTML = suites.map((s) => {
+        const priceLabel = s?.price_monthly !== null && s?.price_monthly !== undefined ? formatMoney(s.price_monthly) + '/mo' : (s?.price_label || 'Talk to sales');
+        const savings = (s?.effective_discount_pct && s.effective_discount_pct > 0) ? `Saves ${s.effective_discount_pct}% vs. individual workflows` : '';
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>${s?.name || 'Untitled'}</h3>
+              ${s?.status ? badge(s.status) : ''}
+            </div>
+            <div class="price"><span class="price-label">${priceLabel}</span></div>
+            ${s?.positioning ? `<p class="card-description">${s.positioning}</p>` : ''}
+            <div class="card-meta">
+              ${Array.isArray(s?.packs) ? s.packs.map((p) => `<span>${p}</span>`).join('') : ''}
+              ${savings ? `<span>${savings}</span>` : ''}
+            </div>
+            <div class="card-cta">
+              <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Activate →</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      $('#suites-grid').innerHTML = `<p class="section-error">Could not load suites. <a href="" onclick="location.reload();return false">Retry</a></p>`;
     }
 
-    const modsFiltered = state.view === 'marketplace'
-      ? modules.modules.filter((m) => m.status === 'live' || m.status === 'deployable')
-      : modules.modules;
+    // PACKS
+    try {
+      if (!Array.isArray(bundles?.bundles)) {
+        throw new Error('bundles.bundles is not an array');
+      }
+      const packsFiltered = state.view === 'marketplace'
+        ? bundles.bundles.filter((b) => b?.effective_status === 'live' || b?.effective_status === 'deployable')
+        : bundles.bundles;
 
-    if (modsFiltered.length === 0) {
-      $('#modules-grid').innerHTML = `<div class="card"><p class="card-description">No modules are marketplace-ready yet. All 20 are currently at <code>spec</code> — the platform is in private preview.</p></div>`;
-    } else {
-      $('#modules-grid').innerHTML = modsFiltered.map((m) => `
-        <div class="card">
-          <div class="card-header">
-            <h3>${m.name}</h3>
-            ${m.status ? badge(m.status) : ''}
-          </div>
-          <div class="price"><strong>$${m.price_monthly}</strong><span>/mo</span></div>
-          ${m.description_short || m.outcome ? `<p class="card-description">${m.description_short || m.outcome}</p>` : ''}
-          <div class="card-meta">
-            <span>${m.category}</span>
-            <span>${m.activation_type}</span>
-            ${(m.capabilities_required || []).slice(0, 2).map((c) => `<span>${c}</span>`).join('')}
-          </div>
-          <div class="card-cta">
-            <a href="/automations/modules/${toSlug(m.name)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Module →</a>
-          </div>
-        </div>
-      `).join('');
+      if (packsFiltered.length === 0) {
+        $('#packs-grid').innerHTML = `<div class="card"><p class="card-description">No outcome packs are ready yet. Switch to Admin view to see what's coming.</p></div>`;
+      } else {
+        $('#packs-grid').innerHTML = packsFiltered.map((b) => {
+          const priceStr = b?.price_monthly !== null && b?.price_monthly !== undefined ? `<strong>${formatMoney(b.price_monthly)}</strong><span>/mo</span>` : 'Talk to sales';
+          return `
+            <div class="card">
+              <div class="card-header">
+                <h3>${b?.name || 'Untitled'}</h3>
+                ${b?.effective_status ? badge(b.effective_status) : ''}
+              </div>
+              <div class="price">${priceStr}</div>
+              ${b?.description ? `<p class="card-description">${b.description}</p>` : ''}
+              <div class="card-meta">
+                <span>${Array.isArray(b?.modules) ? b.modules.length : 0} workflows</span>
+                ${b?.hero_kpi ? `<span>KPI: ${b.hero_kpi}</span>` : ''}
+                ${b?.implied_savings_monthly ? `<span>Saves $${b.implied_savings_monthly}/mo</span>` : ''}
+              </div>
+              <div class="card-cta">
+                <a href="/automations/packs/${toSlug(b?.name || 'pack')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Pack →</a>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (Array.isArray(bundles?.deferred) && bundles.deferred.length && state.view === 'admin') {
+        $('#packs-grid').insertAdjacentHTML('afterend',
+          `<p style="color:var(--muted); font-size:12px; margin-top:12px;">
+            Coming soon: ${bundles.deferred.map((d) => d?.bundle_code || 'unnamed').join(', ')}.
+            Promoted when their underlying workflows reach live status.
+          </p>`);
+      }
+    } catch (err) {
+      $('#packs-grid').innerHTML = `<p class="section-error">Could not load outcome packs. <a href="" onclick="location.reload();return false">Retry</a></p>`;
     }
 
-    const concierge = tiers.concierge_setup || {};
-    const conciergeEntries = Object.entries(concierge);
-    $('#concierge-grid').innerHTML = conciergeEntries.map(([code, c]) => {
-      const label = code.charAt(0).toUpperCase() + code.slice(1);
-      return `
-        <div class="card">
-          <div class="card-header">
-            <h3>${label}</h3>
+    // MODULES
+    try {
+      if (!Array.isArray(modules?.modules)) {
+        throw new Error('modules.modules is not an array');
+      }
+      const modsFiltered = state.view === 'marketplace'
+        ? modules.modules.filter((m) => m?.status === 'live' || m?.status === 'deployable')
+        : modules.modules;
+
+      if (modsFiltered.length === 0) {
+        $('#modules-grid').innerHTML = `<div class="card"><p class="card-description">No individual workflows are available yet. They're in testing — the platform is in private preview.</p></div>`;
+      } else {
+        $('#modules-grid').innerHTML = modsFiltered.map((m) => `
+          <div class="card">
+            <div class="card-header">
+              <h3>${m?.name || 'Untitled'}</h3>
+              ${m?.status ? badge(m.status) : ''}
+            </div>
+            <div class="price"><strong>$${m?.price_monthly || '0'}</strong><span>/mo</span></div>
+            ${(m?.description_short || m?.outcome) ? `<p class="card-description">${m.description_short || m.outcome}</p>` : ''}
+            <div class="card-meta">
+              <span>${m?.category || 'uncategorized'}</span>
+              <span>${m?.activation_type || 'standard'}</span>
+              ${Array.isArray(m?.capabilities_required) ? m.capabilities_required.slice(0, 2).map((c) => `<span>${c}</span>`).join('') : ''}
+            </div>
+            <div class="card-cta">
+              <a href="/automations/modules/${toSlug(m?.name || 'module')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Workflow →</a>
+            </div>
           </div>
-          <div class="price"><strong>$${c.price_onetime}</strong> <span>one-time</span></div>
-          ${c.description ? `<p class="card-description">${c.description}</p>` : ''}
-          <div class="card-meta">
-            <span>${c.delivery_mode || 'Expert setup'}</span>
+        `).join('');
+      }
+    } catch (err) {
+      $('#modules-grid').innerHTML = `<p class="section-error">Could not load workflows. <a href="" onclick="location.reload();return false">Retry</a></p>`;
+    }
+
+    // CONCIERGE
+    try {
+      const concierge = tiers?.concierge_setup || {};
+      const conciergeEntries = Object.entries(concierge);
+      $('#concierge-grid').innerHTML = conciergeEntries.map(([code, c]) => {
+        const label = code.charAt(0).toUpperCase() + code.slice(1);
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>${label}</h3>
+            </div>
+            <div class="price"><strong>$${c?.price_onetime || '0'}</strong> <span>one-time</span></div>
+            ${c?.description ? `<p class="card-description">${c.description}</p>` : ''}
+            <div class="card-meta">
+              <span>${c?.delivery_mode || 'Expert setup'}</span>
+            </div>
+            <div class="card-cta">
+              <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Book Now →</a>
+            </div>
           </div>
-          <div class="card-cta">
-            <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Book Now →</a>
-          </div>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
+    } catch (err) {
+      $('#concierge-grid').innerHTML = `<p class="section-error">Could not load expert setup options. <a href="" onclick="location.reload();return false">Retry</a></p>`;
+    }
 
     // Blueprint dropdown population
-    const bpSel = $('#blueprint');
-    if (bpSel && bpSel.options.length <= 1) {
-      for (const bp of blueprints.blueprints) {
-        const opt = document.createElement('option');
-        opt.value = bp.blueprint_code;
-        opt.textContent = bp.name;
-        if (bp.blueprint_code === state.blueprint) opt.selected = true;
-        bpSel.appendChild(opt);
+    try {
+      const bpSel = $('#blueprint');
+      if (bpSel && bpSel.options.length <= 1) {
+        if (Array.isArray(blueprints?.blueprints)) {
+          for (const bp of blueprints.blueprints) {
+            const opt = document.createElement('option');
+            opt.value = bp?.blueprint_code || '';
+            opt.textContent = bp?.name || 'Unnamed';
+            if (bp?.blueprint_code === state.blueprint) opt.selected = true;
+            bpSel.appendChild(opt);
+          }
+        }
       }
+    } catch (err) {
+      // Silent fail on blueprint population
     }
 
     // Stats line
-    const statsEl = $('#stats');
-    if (statsEl) {
-      statsEl.textContent = `${modsFiltered.length} modules · ${packsFiltered.length} packs · ${suites.length} suites · ${conciergeEntries.length} concierge`;
+    try {
+      const statsEl = $('#stats');
+      if (statsEl) {
+        const modsFiltered = state.view === 'marketplace'
+          ? modules.modules.filter((m) => m?.status === 'live' || m?.status === 'deployable')
+          : modules.modules;
+        const packsFiltered = state.view === 'marketplace'
+          ? bundles.bundles.filter((b) => b?.effective_status === 'live' || b?.effective_status === 'deployable')
+          : bundles.bundles;
+        const suites = Array.isArray(tiers?.suites) ? tiers.suites : [];
+        const concierge = tiers?.concierge_setup || {};
+        const conciergeCount = Object.keys(concierge).length;
+        statsEl.textContent = `${modsFiltered.length} workflows · ${packsFiltered.length} outcome packs · ${suites.length} suites · ${conciergeCount} concierge options`;
+      }
+    } catch (err) {
+      // Silent fail on stats
     }
 
-    const live = modules.modules.filter((m) => m.status === 'live').length;
-    if (live === 0) {
-      $('#announcement').style.display = '';
-      $('#admin-toggle').innerHTML = state.view === 'admin'
-        ? ` <a href="#" onclick="event.preventDefault(); setView('marketplace')">Switch to marketplace view</a> (you'll see an empty catalog — that's correct).`
-        : ` <a href="#" onclick="event.preventDefault(); setView('admin')">Switch to admin view</a> to preview the locked ladder.`;
+    // Announcement
+    try {
+      const live = Array.isArray(modules?.modules) ? modules.modules.filter((m) => m?.status === 'live').length : 0;
+      if (live === 0) {
+        $('#announcement').style.display = '';
+        $('#admin-toggle').innerHTML = state.view === 'admin'
+          ? ` <a href="#" onclick="event.preventDefault(); setView('marketplace')">Switch to marketplace view</a> (you'll see limited options — that's correct).`
+          : ` <a href="#" onclick="event.preventDefault(); setView('admin')">Switch to admin view</a> to preview everything in the pipeline.`;
+      }
+    } catch (err) {
+      // Silent fail on announcement
     }
   }
 
@@ -1083,9 +1222,14 @@
   if ($('#blueprint')) {
     $('#blueprint').addEventListener('change', async (e) => {
       state.blueprint = e.target.value;
-      await loadAll();
-      render();
-      updateUrl();
+      try {
+        await loadAll();
+        render();
+        updateUrl();
+      } catch (err) {
+        document.querySelector('main').insertAdjacentHTML('afterbegin',
+          `<div class="announcement"><strong>Error changing vertical:</strong> ${err.message}</div>`);
+      }
     });
   }
 
@@ -1095,7 +1239,7 @@
   async function loadAutomations() {
     autoData = await fetchJSON('/api/catalog/automations');
     const catSel = $('#auto-cat');
-    if (catSel.options.length <= 1 && autoData.categories) {
+    if (catSel && catSel.options.length <= 1 && autoData?.categories) {
       Object.entries(autoData.categories).sort((a, b) => +a[0] - +b[0]).forEach(([num, name]) => {
         const opt = document.createElement('option');
         opt.value = num;
@@ -1104,20 +1248,20 @@
       });
     }
     const pkgSel = $('#auto-pkg');
-    if (pkgSel.options.length <= 1 && autoData.packages) {
+    if (pkgSel && pkgSel.options.length <= 1 && Array.isArray(autoData?.packages)) {
       autoData.packages.forEach((p) => {
         const opt = document.createElement('option');
         opt.value = p;
-        opt.textContent = p.replace(/_/g, ' ');
+        opt.textContent = (p || '').replace(/_/g, ' ');
         pkgSel.appendChild(opt);
       });
     }
     const archSel = $('#auto-arch');
-    if (archSel.options.length <= 1 && autoData.archetypes) {
+    if (archSel && archSel.options.length <= 1 && Array.isArray(autoData?.archetypes)) {
       autoData.archetypes.forEach((a) => {
         const opt = document.createElement('option');
         opt.value = a;
-        opt.textContent = a.replace(/_/g, ' ');
+        opt.textContent = (a || '').replace(/_/g, ' ');
         archSel.appendChild(opt);
       });
     }
@@ -1125,35 +1269,38 @@
   }
 
   function renderAutomations() {
-    if (!autoData) return;
+    if (!autoData || !Array.isArray(autoData?.automations)) return;
     let items = autoData.automations || [];
 
-    const catV = $('#auto-cat').value;
-    const pkgV = $('#auto-pkg').value;
-    const archV = $('#auto-arch').value;
-    const trigV = $('#auto-trigger').value;
-    const qV = ($('#auto-q').value || '').toLowerCase();
+    const catV = $('#auto-cat')?.value || '';
+    const pkgV = $('#auto-pkg')?.value || '';
+    const archV = $('#auto-arch')?.value || '';
+    const trigV = $('#auto-trigger')?.value || '';
+    const qV = ($('#auto-q')?.value || '').toLowerCase();
 
-    if (catV) items = items.filter((a) => String(a.cat) === catV);
-    if (pkgV) items = items.filter((a) => (a.packages || []).includes(pkgV));
-    if (trigV) items = items.filter((a) => a.trigger === trigV);
-    if (qV) items = items.filter((a) => a.name.toLowerCase().includes(qV));
+    if (catV) items = items.filter((a) => String(a?.cat) === catV);
+    if (pkgV) items = items.filter((a) => Array.isArray(a?.packages) && a.packages.includes(pkgV));
+    if (trigV) items = items.filter((a) => a?.trigger === trigV);
+    if (qV) items = items.filter((a) => (a?.name || '').toLowerCase().includes(qV));
 
     if (archV) {
-      items = items.filter((a) => a.packages && a.packages.length > 0);
+      items = items.filter((a) => Array.isArray(a?.packages) && a.packages.length > 0);
     }
 
     autoFiltered = items;
-    $('#auto-count').textContent = `(${items.length} of ${autoData.total})`;
+    const countEl = $('#auto-count');
+    if (countEl) {
+      countEl.textContent = `(${items.length} of ${autoData?.total || items.length})`;
+    }
 
     if (items.length === 0) {
-      $('#automations-grid').innerHTML = `<div class="card"><p class="card-description">No automations match your filters. Try broadening your search.</p></div>`;
+      $('#automations-grid').innerHTML = `<div class="card"><p class="card-description">No workflows match your filters. Try broadening your search.</p></div>`;
       return;
     }
 
     const byCategory = {};
     items.forEach((a) => {
-      const cat = a.category_name || `Category ${a.cat}`;
+      const cat = a?.category_name || `Category ${a?.cat}`;
       if (!byCategory[cat]) byCategory[cat] = [];
       byCategory[cat].push(a);
     });
@@ -1162,19 +1309,19 @@
     Object.entries(byCategory).sort((a, b) => a[0].localeCompare(b[0])).forEach(([catName, autos]) => {
       html += `<div style="grid-column:1/-1;margin-top:12px;margin-bottom:4px;font-size:13px;font-weight:600;"><a href="/automations/categories/${toSlug(catName)}" style="color:var(--accent);text-decoration:none;">${catName} (${autos.length}) →</a></div>`;
       autos.forEach((a) => {
-        const trigLabel = a.trigger === 'cron' ? 'Scheduled' : 'Webhook';
-        const cronLabel = a.cron ? ` · <span style="font-family:monospace;font-size:10px">${a.cron}</span>` : '';
-        const autoHref = `/automations/a/${toSlug(a.name)}-${a.id.replace('.', '-')}`;
+        const trigLabel = a?.trigger === 'cron' ? 'Scheduled' : 'Webhook';
+        const cronLabel = a?.cron ? ` · <span style="font-family:monospace;font-size:10px">${a.cron}</span>` : '';
+        const autoHref = `/automations/a/${toSlug(a?.name || 'workflow')}-${(a?.id || '').replace('.', '-')}`;
         html += `
           <a href="${autoHref}" class="card" style="display:block;color:inherit;text-decoration:none;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-              <h3 style="font-size:13px;margin:0;">${a.name}</h3>
-              <span style="font-size:10px;color:var(--muted);white-space:nowrap;">${a.id}</span>
+              <h3 style="font-size:13px;margin:0;">${a?.name || 'Untitled'}</h3>
+              <span style="font-size:10px;color:var(--muted);white-space:nowrap;">${a?.id || ''}</span>
             </div>
             <div class="card-meta">
               <span>${trigLabel}${cronLabel}</span>
-              <span>${a.step_count} steps</span>
-              ${a.packages.map((p) => `<span>${p}</span>`).join('')}
+              <span>${a?.step_count || 0} steps</span>
+              ${Array.isArray(a?.packages) ? a.packages.map((p) => `<span>${p}</span>`).join('') : ''}
             </div>
           </a>`;
       });
@@ -1183,30 +1330,43 @@
   }
 
   ['auto-cat', 'auto-pkg', 'auto-arch', 'auto-trigger'].forEach((id) => {
-    $('#' + id).addEventListener('change', () => {
-      if (id === 'auto-arch' && $('#auto-arch').value) {
-        fetchJSON('/api/catalog/automations?archetype=' + encodeURIComponent($('#auto-arch').value))
-          .then((d) => { autoData = d; renderAutomations(); });
-      } else if (id === 'auto-arch' && !$('#auto-arch').value) {
-        fetchJSON('/api/catalog/automations').then((d) => { autoData = d; renderAutomations(); });
-      } else {
-        renderAutomations();
-      }
-    });
+    const el = $('#' + id);
+    if (el) {
+      el.addEventListener('change', () => {
+        if (id === 'auto-arch' && $('#auto-arch')?.value) {
+          fetchJSON('/api/catalog/automations?archetype=' + encodeURIComponent($('#auto-arch').value))
+            .then((d) => { autoData = d; renderAutomations(); })
+            .catch(() => {});
+        } else if (id === 'auto-arch' && !$('#auto-arch')?.value) {
+          fetchJSON('/api/catalog/automations')
+            .then((d) => { autoData = d; renderAutomations(); })
+            .catch(() => {});
+        } else {
+          renderAutomations();
+        }
+      });
+    }
   });
+
   let _autoDebounce = null;
-  $('#auto-q').addEventListener('input', () => {
-    clearTimeout(_autoDebounce);
-    _autoDebounce = setTimeout(renderAutomations, 200);
-  });
+  const autoQEl = $('#auto-q');
+  if (autoQEl) {
+    autoQEl.addEventListener('input', () => {
+      clearTimeout(_autoDebounce);
+      _autoDebounce = setTimeout(renderAutomations, 200);
+    });
+  }
 
   (async () => {
     try {
       await Promise.all([loadAll(), loadAutomations()]);
       render();
     } catch (e) {
-      document.querySelector('main').insertAdjacentHTML('afterbegin',
-        `<div class="announcement"><strong>Error loading catalog:</strong> ${e.message}. Confirm /api/catalog/* is deployed.</div>`);
+      const main = document.querySelector('main');
+      if (main) {
+        main.insertAdjacentHTML('afterbegin',
+          `<div class="announcement"><strong>Error loading catalog:</strong> ${e.message}. Confirm /api/catalog/* is deployed.</div>`);
+      }
     }
   })();
 })();

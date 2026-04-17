@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // scripts/generate-pages.mjs — Static page generator for all automations
 // Reads product catalog + automation-catalog.js and generates 426 SEO-optimized
-// static HTML pages in public/automations/
+// static HTML pages in public/automations/ applying Nielsen, Norman, Morville,
+// Baymard, CXL, W3C WAI, Walter, and Solís principles.
 // Usage: node scripts/generate-pages.mjs
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
@@ -111,7 +112,7 @@ a:hover { text-decoration: underline; }
 a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 main { padding: 40px 0; }
 .wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
-.skip-link { position: absolute; top: -40px; left: 0; background: var(--accent); color: #000; padding: 8px; text-decoration: none; z-index: 100; }
+.skip-link { position: absolute; top: -40px; left: 0; background: var(--accent); color: #000; padding: 8px 12px; text-decoration: none; z-index: 100; font-weight: 600; }
 .skip-link:focus { top: 0; }
 .breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
 .breadcrumb a { color: var(--muted); text-decoration: none; }
@@ -121,19 +122,21 @@ main { padding: 40px 0; }
   background: linear-gradient(180deg, #121621 0%, #0b0d10 100%);
   margin-bottom: 36px;
 }
-.hero-section h1 { font-size: 28px; letter-spacing: -0.02em; margin-bottom: 8px; }
-.hero-section .tagline { color: var(--muted); font-size: 16px; max-width: 640px; margin-bottom: 16px; }
-.hero-section .price-tag { font-size: 22px; font-weight: 700; color: var(--success); margin-bottom: 12px; }
+.hero-section h1 { font-size: 28px; letter-spacing: -0.02em; margin-bottom: 8px; font-weight: 700; }
+.hero-section .tagline { color: var(--muted); font-size: 16px; max-width: 640px; margin: 16px 0; line-height: 1.7; }
+.hero-section .price-tag { font-size: 22px; font-weight: 700; color: var(--success); margin: 16px 0 8px 0; }
 .hero-section .price-tag span { font-size: 14px; font-weight: 400; color: var(--muted); }
-.pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.hero-section .reassurance { color: var(--muted); font-size: 13px; margin-top: 12px; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
 .pill { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 6px 12px; font-size: 12px; color: var(--muted); display: inline-block; }
 .pill-accent { border-color: var(--accent); color: var(--accent); }
 .pill-success { border-color: var(--success); color: var(--success); }
 .pill-warn { border-color: var(--warn); color: var(--warn); }
-.section { margin-bottom: 36px; }
-.section h2 { font-size: 18px; margin-bottom: 14px; letter-spacing: -0.01em; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.section { margin-bottom: 48px; }
+.section h2 { font-size: 18px; margin-bottom: 14px; letter-spacing: -0.01em; border-bottom: 1px solid var(--border); padding-bottom: 8px; font-weight: 600; }
+.section h3 { font-size: 16px; margin: 16px 0 8px 0; font-weight: 600; }
 .section p, .section li { color: var(--muted); font-size: 14px; line-height: 1.7; }
-.section ul { padding-left: 20px; margin: 12px 0; }
+.section ul, .section ol { padding-left: 20px; margin: 12px 0; }
 .section li { margin-bottom: 8px; }
 .card-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 .card-sm {
@@ -146,13 +149,13 @@ main { padding: 40px 0; }
 .card-sm h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: var(--fg); }
 .card-sm p { font-size: 12px; color: var(--muted); margin: 6px 0; }
 .card-sm .meta { font-size: 11px; color: var(--muted); margin-top: 8px; }
+.card-sm::after { content: ' →'; color: var(--accent); }
 .cta-bar {
   margin-top: 40px; padding: 24px; border-radius: 10px;
   background: linear-gradient(135deg, #162238 0%, #0f1922 100%);
   border: 1px solid var(--accent);
-  text-align: center;
 }
-.cta-bar h3 { font-size: 18px; margin-bottom: 8px; }
+.cta-bar h3 { font-size: 18px; margin-bottom: 8px; font-weight: 600; }
 .cta-bar p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
 .btn {
   display: inline-block; padding: 12px 28px; border-radius: 8px;
@@ -164,9 +167,16 @@ main { padding: 40px 0; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .trust-bar {
   background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-  padding: 20px; margin: 24px 0; font-size: 13px; color: var(--muted); text-align: center;
+  padding: 20px; margin: 24px 0; font-size: 13px; color: var(--muted);
 }
 .trust-bar strong { color: var(--fg); }
+.status-badge {
+  display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600;
+}
+.status-badge-coming { background: var(--warn); color: #000; }
+.status-badge-testing { background: var(--accent); color: #000; }
+.status-badge-available { background: var(--success); color: #000; }
+.status-badge-live { background: var(--success); color: #000; }
 @media (max-width: 640px) {
   .wrap { padding: 24px 16px; }
   main { padding: 24px 0; }
@@ -174,6 +184,7 @@ main { padding: 40px 0; }
   .hero-section h1 { font-size: 22px; }
   .two-col { grid-template-columns: 1fr; gap: 14px; }
   .card-grid { grid-template-columns: 1fr; }
+  .section { margin-bottom: 32px; }
 }
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 th, td { text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
@@ -189,7 +200,8 @@ td { color: var(--muted); }
   font-size: 12px; font-weight: 700; color: var(--accent);
 }
 .steps-list li:last-child { border-left-color: transparent; }
-footer { border-top: 1px solid var(--border); margin-top: 60px; padding: 24px 0; color: var(--muted); font-size: 12px; text-align: center; }
+footer { border-top: 1px solid var(--border); margin-top: 60px; padding: 24px 0; color: var(--muted); font-size: 12px; }
+footer a { color: var(--accent); }
 code { background: var(--card); padding: 2px 6px; border-radius: 3px; font-family: "Monaco", "Courier New", monospace; font-size: 12px; }
 `;
 
@@ -258,47 +270,66 @@ function page({ title, description, canonical, breadcrumbs, body, jsonLd }) {
 
 // ── Automation description generator ──────────────────────────────────────────
 
-function generateAutomationDescription(steps) {
-  if (!steps || steps.length === 0) return 'A multi-step workflow automation';
+const STEP_DESCRIPTIONS = {
+  http: 'connects to an external service',
+  email: 'sends an email',
+  sms: 'sends a text message',
+  crm_contact: 'updates the customer record',
+  if: 'checks conditions and routes accordingly',
+  notify: 'sends a team notification',
+  extract: 'pulls key details from the incoming data',
+  set: 'prepares data for the next step',
+  wait: 'pauses for the right timing',
+  switch: 'routes to different actions based on criteria',
+  log: 'records the activity for reporting',
+  code: 'runs custom business logic',
+  webhook: 'receives an incoming event',
+  loop: 'repeats for multiple items',
+  db: 'updates the database',
+  transform: 'transforms data between formats',
+};
 
-  const stepTypes = {
-    http: 'makes an API call',
-    email: 'sends an email',
-    sms: 'sends a text message',
-    crm_contact: 'updates the CRM record',
-    if: 'checks a condition',
-    notify: 'sends a notification',
-    extract: 'extracts relevant data',
-    set: 'sets a workflow variable',
-    wait: 'pauses for timing',
-    switch: 'routes based on criteria',
-    log: 'logs the event',
-    code: 'runs custom logic',
-    webhook: 'triggers via webhook',
-    loop: 'loops through items',
-    db: 'accesses a database',
-    transform: 'transforms data format',
-  };
+function generateAutomationDescription(steps) {
+  if (!steps || steps.length === 0) return 'A multi-step workflow automation for service businesses.';
 
   const descriptions = [];
   for (const step of steps) {
-    const desc = stepTypes[step.t] || `performs a ${step.t} action`;
+    const desc = STEP_DESCRIPTIONS[step.t] || `performs a ${step.t} action`;
     descriptions.push(desc);
   }
 
   if (descriptions.length === 1) {
-    return `Automation that ${descriptions[0]}.`;
+    return `When triggered, this workflow ${descriptions[0]}.`;
   }
 
   const joined = descriptions.slice(0, -1).join(', ');
-  return `Automation that ${joined}, and ${descriptions[descriptions.length - 1]}.`;
+  return `When triggered, this workflow ${joined}, and finally ${descriptions[descriptions.length - 1]}.`;
+}
+
+// ── Status label mapping ─────────────────────────────────────────────────────
+
+const STATUS_LABELS = {
+  spec: 'Coming soon',
+  implemented: 'In testing',
+  validated: 'Verified',
+  deployable: 'Available',
+  live: 'Live'
+};
+
+function getStatusBadge(status) {
+  const label = STATUS_LABELS[status] || status;
+  const className = status === 'spec' ? 'status-badge-coming' :
+                     status === 'implemented' ? 'status-badge-testing' :
+                     status === 'validated' ? 'status-badge-available' :
+                     status === 'deployable' || status === 'live' ? 'status-badge-available' : '';
+  return `<span class="status-badge ${className}">${escHtml(label)}</span>`;
 }
 
 // ── Module pages (20) ────────────────────────────────────────────────────────
 
 function generateModulePage(mod) {
   const s = slug(mod.name);
-  const caps = (mod.capabilities_required || []).map(c => escHtml(c)).join(', ') || 'None';
+  const caps = (mod.capabilities_required || []).map(c => escHtml(c)).join(', ') || 'All integrations';
   const verts = (mod.recommended_for_blueprints || []).map(b => {
     const bp = blueprintsByCode[b] || blueprintsByCode[b.replace(/-/g, '_')];
     return bp ? escHtml(bp.name) : escHtml(b);
@@ -308,37 +339,50 @@ function generateModulePage(mod) {
     `<tr><td><strong>${escHtml(s.label)}</strong></td><td>${escHtml(s.type)}</td><td>${s.default !== undefined ? escHtml(String(s.default)) : '—'}</td></tr>`
   ).join('\n');
 
-  const relatedModules = [...(mod.upsell_from || []), ...(mod.upsell_to || [])].filter(Boolean);
+  const relatedModules = [...(mod.upsell_from || []), ...(mod.upsell_to || [])].filter(Boolean).slice(0, 6);
   const relatedHtml = relatedModules.map(code => {
     const rm = modulesByCode[code];
     if (!rm) return '';
-    return `<a href="/automations/modules/${slug(rm.name)}" class="card-sm">
+    return `<a href="/automations/modules/${slug(rm.name)}" class="card-sm" title="View ${escHtml(rm.name)} module">
       <h3>${escHtml(rm.name)}</h3>
       <p>${escHtml(rm.description_short || rm.outcome || '')}</p>
-      <div class="meta">$${rm.price_monthly}/mo · ${escHtml(rm.category)}</div>
+      <div class="meta">$${rm.price_monthly}/mo</div>
     </a>`;
   }).filter(Boolean).join('\n');
 
   const kpis = (mod.kpis || []).map(k => `<li>${escHtml(k.replace(/_/g, ' '))}</li>`).join('\n');
   const actions = (mod.actions || []).map(a => `<li>${escHtml(a.replace(/_/g, ' '))}</li>`).join('\n');
 
+  // CXL: Value proposition as headline
+  const valueProp = `${escHtml(mod.name)}: ${escHtml(mod.outcome || mod.description_short || 'Streamline your service delivery')}`;
+
   const body = `
 <article>
 <div class="hero-section">
   <div class="pills">
     <span class="pill pill-accent">${escHtml(mod.category)}</span>
+    ${mod.status ? getStatusBadge(mod.status) : '<span class="pill pill-success">Available</span>'}
     <span class="pill">${escHtml(mod.activation_type || 'Instant')} activation</span>
     ${(mod.compliance_flags || []).map(f => `<span class="pill pill-warn">${escHtml(f)}</span>`).join('')}
   </div>
-  <h1>${escHtml(mod.name)}</h1>
-  <p class="tagline">${escHtml(mod.description_short || mod.outcome || '')}</p>
+  <h1>${valueProp}</h1>
+  <p class="tagline">${escHtml(mod.description_short || mod.outcome || 'Automate your workflow and save time every day.')}</p>
   <div class="price-tag">$${mod.price_monthly}<span>/mo per client</span></div>
-  <p style="color:var(--muted);font-size:14px;margin-top:8px">Available in: <strong>${(mod.tier_availability || []).map(t => escHtml(t)).join(', ') || 'All plans'}</strong></p>
+  <p class="reassurance">30-day money-back guarantee · Cancel anytime · Works with Jobber, Housecall Pro, ServiceTitan, and more</p>
 </div>
 
 <div class="section">
-  <h2>Business Outcome</h2>
-  <p>${escHtml(mod.outcome || 'Streamline your service delivery with automated workflows.')}</p>
+  <h2>Who This Is For</h2>
+  <div class="two-col">
+    <div>
+      <h3>Industries</h3>
+      <p>${verts}</p>
+    </div>
+    <div>
+      <h3>Roles</h3>
+      <p>${(mod.recommended_for_personas || []).map(p => escHtml(p.replace(/-/g, ' '))).join(', ') || 'All team members'}</p>
+    </div>
+  </div>
 </div>
 
 <div class="section">
@@ -349,24 +393,12 @@ function generateModulePage(mod) {
 </div>
 
 ${settings ? `<div class="section">
-  <h2>Configurable Settings</h2>
+  <h2>Configuration</h2>
   <table><thead><tr><th>Setting</th><th>Type</th><th>Default</th></tr></thead><tbody>${settings}</tbody></table>
 </div>` : ''}
 
-<div class="two-col">
-  <div class="section">
-    <h2>Integrations</h2>
-    <p>${caps}</p>
-  </div>
-  <div class="section">
-    <h2>Recommended For</h2>
-    <p><strong>Industries:</strong> ${verts}</p>
-    <p style="margin-top:8px"><strong>Personas:</strong> ${(mod.recommended_for_personas || []).map(p => escHtml(p.replace(/-/g, ' '))).join(', ') || 'All roles'}</p>
-  </div>
-</div>
-
 ${kpis ? `<div class="section">
-  <h2>Key Performance Indicators</h2>
+  <h2>Key Metrics</h2>
   <ul>${kpis}</ul>
 </div>` : ''}
 
@@ -376,7 +408,7 @@ ${relatedHtml ? `<div class="section">
 </div>` : ''}
 
 <div class="trust-bar">
-  <strong>Works with Jobber, Housecall Pro, ServiceTitan, and more.</strong> 30-day money-back guarantee · Cancel anytime
+  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime.
 </div>
 
 <div class="cta-bar">
@@ -386,12 +418,27 @@ ${relatedHtml ? `<div class="section">
 </div>
 </article>`;
 
-  const desc = (mod.description_short || mod.outcome || `${mod.name} automation module for service businesses`).substring(0, 155);
+  const desc = `${escHtml(mod.name)}: ${(mod.description_short || mod.outcome || 'Automation module for service businesses').substring(0, 120)}`;
   const canonical = `/automations/modules/${s}`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: mod.name,
+    description: desc,
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: mod.price_monthly,
+      priceCurrency: 'USD',
+      priceValidUntil: '2027-12-31'
+    }
+  };
 
   return {
     html: page({
-      title: mod.name,
+      title: `${mod.name} — ${mod.category} Automation | Your Deputy`,
       description: desc,
       canonical,
       breadcrumbs: [
@@ -400,6 +447,7 @@ ${relatedHtml ? `<div class="section">
         { label: mod.name },
       ],
       body,
+      jsonLd
     }),
     path: join(OUT, 'modules', `${s}.html`),
     slug: s,
@@ -413,10 +461,10 @@ function generateBundlePage(bundle) {
   const mods = (bundle.modules || []).map(code => modulesByCode[code]).filter(Boolean);
 
   const moduleCards = mods.map(m =>
-    `<a href="/automations/modules/${slug(m.name)}" class="card-sm">
+    `<a href="/automations/modules/${slug(m.name)}" class="card-sm" title="View ${escHtml(m.name)} module">
       <h3>${escHtml(m.name)}</h3>
       <p>${escHtml(m.description_short || m.outcome || '')}</p>
-      <div class="meta">$${m.price_monthly}/mo · ${escHtml(m.category)}</div>
+      <div class="meta">$${m.price_monthly}/mo</div>
     </a>`
   ).join('\n');
 
@@ -428,6 +476,9 @@ function generateBundlePage(bundle) {
     return bp ? escHtml(bp.name) : escHtml(b);
   }).join(', ') || 'All verticals';
 
+  // CXL: Tagline as value prop
+  const valueProp = escHtml(bundle.tagline || bundle.name);
+
   const body = `
 <article>
 <div class="hero-section">
@@ -437,10 +488,11 @@ function generateBundlePage(bundle) {
     ${savings > 0 ? `<span class="pill pill-success">Save $${savings}/mo</span>` : ''}
   </div>
   <h1>${escHtml(bundle.name)}</h1>
-  <p class="tagline" style="font-size:18px;margin:12px 0">${escHtml(bundle.tagline || bundle.name)}</p>
-  <p class="tagline">${escHtml(bundle.description || '')}</p>
+  <p class="tagline" style="font-style:italic;margin:12px 0;font-size:18px">${valueProp}</p>
+  <p class="tagline">${escHtml(bundle.description || 'Achieve measurable business results with coordinated automations.')}</p>
   <div class="price-tag">$${bundle.price_monthly}<span>/mo per client</span></div>
-  <p style="color:var(--muted);font-size:13px;margin-top:8px"><strong>vs. $${standaloneTotal}/mo</strong> if purchased individually</p>
+  <p style="color:var(--muted);font-size:13px;margin-top:8px"><strong>Save $${savings}/mo vs. $${standaloneTotal}/mo</strong> if purchased individually</p>
+  <p class="reassurance">30-day money-back guarantee · Cancel anytime · Works with Jobber, Housecall Pro, ServiceTitan, and more</p>
 </div>
 
 <div class="section">
@@ -450,23 +502,26 @@ function generateBundlePage(bundle) {
 </div>
 
 <div class="section">
-  <h2>Included Modules (${mods.length})</h2>
+  <h2>What's Included (${mods.length} modules)</h2>
   <div class="card-grid">${moduleCards}</div>
 </div>
 
-<div class="two-col">
-  <div class="section">
-    <h2>Recommended Industries</h2>
-    <p>${verts}</p>
-  </div>
-  <div class="section">
-    <h2>Best For</h2>
-    <p>${(bundle.recommended_for_personas || []).map(p => escHtml(p.replace(/-/g, ' '))).join(', ') || 'All team members'}</p>
+<div class="section">
+  <h2>Who This Is For</h2>
+  <div class="two-col">
+    <div>
+      <h3>Industries</h3>
+      <p>${verts}</p>
+    </div>
+    <div>
+      <h3>Roles</h3>
+      <p>${(bundle.recommended_for_personas || []).map(p => escHtml(p.replace(/-/g, ' '))).join(', ') || 'All team members'}</p>
+    </div>
   </div>
 </div>
 
 <div class="trust-bar">
-  <strong>Works with Jobber, Housecall Pro, ServiceTitan, and more.</strong> 30-day money-back guarantee · Cancel anytime
+  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime.
 </div>
 
 <div class="cta-bar">
@@ -476,12 +531,27 @@ function generateBundlePage(bundle) {
 </div>
 </article>`;
 
-  const desc = (bundle.description || bundle.tagline || `${bundle.name} — automation bundle`).substring(0, 155);
+  const desc = `${bundle.name}: ${(bundle.tagline || bundle.description || 'Automation pack for service businesses').substring(0, 120)}`;
   const canonical = `/automations/packs/${s}`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: bundle.name,
+    description: desc,
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: bundle.price_monthly,
+      priceCurrency: 'USD',
+      priceValidUntil: '2027-12-31'
+    }
+  };
 
   return {
     html: page({
-      title: bundle.name,
+      title: `${bundle.name} — Automation Pack | Your Deputy`,
       description: desc,
       canonical,
       breadcrumbs: [
@@ -490,6 +560,7 @@ function generateBundlePage(bundle) {
         { label: bundle.name },
       ],
       body,
+      jsonLd
     }),
     path: join(OUT, 'packs', `${s}.html`),
     slug: s,
@@ -504,17 +575,15 @@ function generateCategoryPage(catNum, catName) {
 
   const autoCards = autos.map(a => {
     const pkgs = getPackagesForAutomation(a.id);
-    return `<a href="/automations/a/${slug(a.name)}-${a.id.replace(/\./g, '-')}" class="card-sm">
+    return `<a href="/automations/a/${slug(a.name)}-${a.id.replace(/\./g, '-')}" class="card-sm" title="View ${escHtml(a.name)} automation">
       <h3>${escHtml(a.name)}</h3>
-      <p>Trigger: <code>${escHtml(a.trigger)}</code> · ${a.steps?.length || 0} steps</p>
+      <p><code>${escHtml(a.trigger)}</code> · ${a.steps?.length || 0} steps</p>
       <div class="meta">${pkgs.length ? pkgs.map(p => escHtml(p)).join(', ') : 'Add-on'}</div>
     </a>`;
   }).join('\n');
 
-  const triggerBreakdown = {};
-  for (const a of autos) {
-    triggerBreakdown[a.trigger] = (triggerBreakdown[a.trigger] || 0) + 1;
-  }
+  // Nielsen: Real world language for category
+  const categoryHeadline = `${autos.length} ready-to-deploy ${catName.toLowerCase()} automations`;
 
   const body = `
 <article>
@@ -523,8 +592,8 @@ function generateCategoryPage(catNum, catName) {
     <span class="pill pill-accent">Category</span>
     <span class="pill">${autos.length} automations</span>
   </div>
-  <h1>${escHtml(catName)}</h1>
-  <p class="tagline">${autos.length} ready-to-deploy automations for ${escHtml(catName.toLowerCase())}. Each works seamlessly with your existing tools — Jobber, Housecall Pro, ServiceTitan, and more.</p>
+  <h1>${categoryHeadline}</h1>
+  <p class="tagline">Find the right ${catName.toLowerCase()} workflow for your service business. All automations integrate seamlessly with Jobber, Housecall Pro, ServiceTitan, and more.</p>
 </div>
 
 <div class="section">
@@ -533,23 +602,23 @@ function generateCategoryPage(catNum, catName) {
 </div>
 
 <div class="trust-bar">
-  <strong>Works with Jobber, Housecall Pro, ServiceTitan, and more.</strong> One-click activation · 30-day money-back guarantee
+  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. One-click activation · 30-day money-back guarantee.
 </div>
 
 <div class="cta-bar">
-  <h3>Ready to automate ${escHtml(catName.toLowerCase())}?</h3>
-  <p>Pick the automations you need. Activate with one click. Let Your Deputy do the work.</p>
+  <h3>Ready to automate ${catName.toLowerCase()}?</h3>
+  <p>Pick the automations you need. Activate in seconds. Let Your Deputy do the work.</p>
   <a href="/dashboard" class="btn">Get Started</a>
 </div>
 </article>`;
 
-  const desc = `${autos.length} ${catName.toLowerCase()} automations for service businesses. Trigger-based workflows that integrate with your existing tools.`.substring(0, 155);
+  const desc = `${autos.length} ${catName.toLowerCase()} automations for service businesses. Trigger-based workflows that work with Jobber, Housecall Pro, ServiceTitan.`;
   const canonical = `/automations/categories/${s}`;
 
   return {
     html: page({
-      title: catName,
-      description: desc,
+      title: `${catName} Automations | Your Deputy`,
+      description: desc.substring(0, 155),
       canonical,
       breadcrumbs: [
         { label: 'Marketplace', href: '/marketplace' },
@@ -600,9 +669,9 @@ function generateAutomationPage(auto) {
   // Find related automations in same category
   const siblings = (automationsByCat[auto.cat] || []).filter(a => a.id !== auto.id).slice(0, 6);
   const siblingCards = siblings.map(a =>
-    `<a href="/automations/a/${slug(a.name)}-${a.id.replace(/\./g, '-')}" class="card-sm">
+    `<a href="/automations/a/${slug(a.name)}-${a.id.replace(/\./g, '-')}" class="card-sm" title="View ${escHtml(a.name)} automation">
       <h3>${escHtml(a.name)}</h3>
-      <p>${a.steps?.length || 0} steps · ${escHtml(a.trigger)}-triggered</p>
+      <p>${a.steps?.length || 0} steps · ${escHtml(a.trigger)}</p>
     </a>`
   ).join('\n');
 
@@ -623,7 +692,7 @@ function generateAutomationPage(auto) {
 </div>
 
 <div class="section">
-  <h2>What This Automation Does</h2>
+  <h2>What This Does</h2>
   <p>${autoDesc}</p>
 </div>
 
@@ -640,7 +709,7 @@ function generateAutomationPage(auto) {
   </div>
   <div class="section">
     <h2>Included In</h2>
-    ${pkgs.length ? `<div class="pills">${pkgs.map(p => `<span class="pill pill-success">${escHtml(p)}</span>`).join('')}</div>` : '<p style="color:var(--muted)">Available as add-on</p>'}
+    ${pkgs.length ? `<div class="pills">${pkgs.map(p => `<span class="pill pill-success">${escHtml(p)}</span>`).join('')}</div>` : '<p style="color:var(--muted)">Available as add-on to all packs</p>'}
   </div>
 </div>
 
@@ -650,7 +719,7 @@ ${siblingCards ? `<div class="section">
 </div>` : ''}
 
 <div class="trust-bar">
-  <strong>Works with Jobber, Housecall Pro, ServiceTitan, and more.</strong> 30-day money-back guarantee · Cancel anytime
+  <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime.
 </div>
 
 <div class="cta-bar">
@@ -660,13 +729,22 @@ ${siblingCards ? `<div class="section">
 </div>
 </article>`;
 
-  const desc = `${auto.name} automation. ${autoDesc} Part of Your Deputy's service business automation platform.`.substring(0, 155);
+  const desc = `${auto.name}: ${autoDesc.substring(0, 100)} - Service business automation platform`;
   const canonical = `/automations/a/${s}`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: auto.name,
+    description: desc,
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web'
+  };
 
   return {
     html: page({
-      title: auto.name,
-      description: desc,
+      title: `${auto.name} — ${catName} Workflow | Your Deputy`,
+      description: desc.substring(0, 155),
       canonical,
       breadcrumbs: [
         { label: 'Marketplace', href: '/marketplace' },
@@ -674,6 +752,7 @@ ${siblingCards ? `<div class="section">
         { label: auto.name },
       ],
       body,
+      jsonLd
     }),
     path: join(OUT, 'a', `${s}.html`),
     slug: s,
@@ -684,10 +763,10 @@ ${siblingCards ? `<div class="section">
 
 function generateModulesIndex() {
   const cards = modules.map(m =>
-    `<a href="/automations/modules/${slug(m.name)}" class="card-sm">
+    `<a href="/automations/modules/${slug(m.name)}" class="card-sm" title="View ${escHtml(m.name)} module">
       <h3>${escHtml(m.name)}</h3>
       <p>${escHtml(m.description_short || m.outcome || '')}</p>
-      <div class="meta">$${m.price_monthly}/mo · ${escHtml(m.category)}</div>
+      <div class="meta">$${m.price_monthly}/mo</div>
     </a>`
   ).join('\n');
 
@@ -695,23 +774,26 @@ function generateModulesIndex() {
 <article>
 <div class="hero-section">
   <h1>Automation Modules</h1>
-  <p class="tagline">${modules.length} individual modules at $19/mo each. Pick exactly what you need.</p>
+  <p class="tagline">Pick exactly what you need. ${modules.length} individual modules at $19/mo each. Works with Jobber, Housecall Pro, ServiceTitan, and more.</p>
 </div>
 <div class="section"><div class="card-grid">${cards}</div></div>
 </article>`;
 
   return page({
-    title: 'Automation Modules',
+    title: 'Automation Modules — Individual Workflows | Your Deputy',
     description: `${modules.length} individual automation modules for service businesses. $19/mo each. Integrate with Jobber, Housecall Pro, ServiceTitan.`,
     canonical: '/automations/modules',
-    breadcrumbs: [{ label: 'Marketplace', href: '/marketplace' }, { label: 'Modules' }],
+    breadcrumbs: [
+      { label: 'Marketplace', href: '/marketplace' },
+      { label: 'Modules' }
+    ],
     body,
   });
 }
 
 function generatePacksIndex() {
   const cards = bundles.map(b =>
-    `<a href="/automations/packs/${slug(b.name)}" class="card-sm">
+    `<a href="/automations/packs/${slug(b.name)}" class="card-sm" title="View ${escHtml(b.name)} pack">
       <h3>${escHtml(b.name)}</h3>
       <p>${escHtml(b.tagline || b.description || '')}</p>
       <div class="meta">$${b.price_monthly}/mo · ${(b.modules || []).length} modules</div>
@@ -722,16 +804,19 @@ function generatePacksIndex() {
 <article>
 <div class="hero-section">
   <h1>Outcome Packs</h1>
-  <p class="tagline">${bundles.length} outcome packs bundling related modules at a discount.</p>
+  <p class="tagline">${bundles.length} curated outcome packs. Get related automations bundled at a discount. Works with Jobber, Housecall Pro, ServiceTitan, and more.</p>
 </div>
 <div class="section"><div class="card-grid">${cards}</div></div>
 </article>`;
 
   return page({
-    title: 'Outcome Packs',
-    description: `${bundles.length} outcome-focused automation bundles for service businesses. Save money with combined modules from Your Deputy.`,
+    title: 'Outcome Packs — Automation Bundles | Your Deputy',
+    description: `${bundles.length} outcome-focused automation bundles. Save money with combined modules. Works with Jobber, Housecall Pro, ServiceTitan.`,
     canonical: '/automations/packs',
-    breadcrumbs: [{ label: 'Marketplace', href: '/marketplace' }, { label: 'Packs' }],
+    breadcrumbs: [
+      { label: 'Marketplace', href: '/marketplace' },
+      { label: 'Packs' }
+    ],
     body,
   });
 }
@@ -739,7 +824,7 @@ function generatePacksIndex() {
 function generateCategoriesIndex() {
   const cards = Object.entries(CATEGORIES).map(([num, name]) => {
     const count = (automationsByCat[num] || []).length;
-    return `<a href="/automations/categories/${slug(name)}" class="card-sm">
+    return `<a href="/automations/categories/${slug(name)}" class="card-sm" title="View ${escHtml(name)} automations">
       <h3>${escHtml(name)}</h3>
       <p>${count} automations</p>
     </a>`;
@@ -749,16 +834,19 @@ function generateCategoriesIndex() {
 <article>
 <div class="hero-section">
   <h1>Automation Categories</h1>
-  <p class="tagline">${Object.keys(CATEGORIES).length} categories covering ${AUTOMATIONS.length} automations across every business function.</p>
+  <p class="tagline">Browse ${Object.keys(CATEGORIES).length} categories of ${AUTOMATIONS.length} automations. Find the right workflow for every part of your service business.</p>
 </div>
 <div class="section"><div class="card-grid">${cards}</div></div>
 </article>`;
 
   return page({
-    title: 'Automation Categories',
-    description: `Browse ${Object.keys(CATEGORIES).length} automation categories with ${AUTOMATIONS.length} workflows for service businesses. Find the automations you need.`,
+    title: 'Automation Categories | Your Deputy',
+    description: `Browse ${Object.keys(CATEGORIES).length} automation categories with ${AUTOMATIONS.length} workflows for service businesses. Find what you need.`,
     canonical: '/automations/categories',
-    breadcrumbs: [{ label: 'Marketplace', href: '/marketplace' }, { label: 'Categories' }],
+    breadcrumbs: [
+      { label: 'Marketplace', href: '/marketplace' },
+      { label: 'Categories' }
+    ],
     body,
   });
 }
