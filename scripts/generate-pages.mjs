@@ -309,6 +309,62 @@ function generateAutomationDescription(steps) {
   return `When triggered, this workflow ${joined}, and finally ${descriptions[descriptions.length - 1]}.`;
 }
 
+// ── Pain point hooks by category ────────────────────────────────────────────
+
+const CATEGORY_PAIN_POINTS = {
+  1: { pain: "Every missed call is a lost job — and your competitor picks it up.", hook: "Stop losing revenue to missed calls" },
+  2: { pain: "Slow form responses mean cold leads. By the time you reply, they've called someone else.", hook: "Respond to leads before your competition" },
+  3: { pain: "When new leads wait hours for a reply, 78% go with whoever responds first.", hook: "Be the first to respond — every time" },
+  4: { pain: "No-shows cost you the slot, the revenue, and the fuel to get there.", hook: "Eliminate no-shows from your schedule" },
+  5: { pain: "Without a reminder, 1 in 4 appointments get forgotten or double-booked.", hook: "Never lose an appointment again" },
+  6: { pain: "Recovering a no-show is 5x cheaper than finding a new customer.", hook: "Recover lost appointments automatically" },
+  7: { pain: "Happy customers forget to leave reviews. Unhappy ones never do.", hook: "Turn every job into a 5-star review" },
+  8: { pain: "The longer an invoice sits unsent, the harder it is to collect.", hook: "Get paid faster with instant invoicing" },
+  9: { pain: "Late payments kill cash flow. Chasing invoices wastes your time.", hook: "Stop chasing overdue invoices" },
+  10: { pain: "One bad review can undo 50 good ones. You need to catch problems before they go public.", hook: "Catch unhappy customers before they leave a bad review" },
+  11: { pain: "Failed payments silently churn your customers if you don't catch them fast.", hook: "Recover failed payments automatically" },
+  12: { pain: "Estimates that aren't followed up within 48 hours close at half the rate.", hook: "Close more estimates with automatic follow-up" },
+  13: { pain: "Customers who needed service 6 months ago need it again — but they forgot about you.", hook: "Bring back past customers on autopilot" },
+  14: { pain: "Your best reactivation candidates are sitting in your database right now, going cold.", hook: "Reactivate dormant customers automatically" },
+};
+
+// Generate a unique pain-point hook for any category
+function getPainPoint(catNum) {
+  if (CATEGORY_PAIN_POINTS[catNum]) return CATEGORY_PAIN_POINTS[catNum];
+  return {
+    pain: "Manual processes steal hours from your week that should be spent growing your business.",
+    hook: "Automate the busywork, focus on growth"
+  };
+}
+
+// ── Value ladder: automation → module → pack → platform ─────────────────────
+
+function getValueLadder(auto, catNum) {
+  const pkgs = getPackagesForAutomation(auto.id);
+  const catName = CATEGORIES[catNum] || `Category ${catNum}`;
+
+  // Find the module this automation belongs to (by matching category/actions)
+  const matchedModule = modules.find(m =>
+    m.category === catName || (m.actions || []).some(a =>
+      auto.steps?.some(s => s.t === a.replace(/ /g, '_'))
+    )
+  );
+
+  // Find a bundle containing that module
+  const matchedBundle = matchedModule
+    ? bundles.find(b => (b.modules || []).includes(matchedModule.module_code))
+    : null;
+
+  return { matchedModule, matchedBundle, pkgs };
+}
+
+// ── Ad-ready copy snippet generator ─────────────────────────────────────────
+
+function generateAdCopy(auto, catNum) {
+  const { pain } = getPainPoint(catNum);
+  return `${pain} ${auto.name} fixes this automatically — activate in 60 seconds, no code required.`;
+}
+
 // ── Status label mapping ─────────────────────────────────────────────────────
 
 const STATUS_LABELS = {
@@ -694,50 +750,142 @@ function generateAutomationPage(auto) {
   ).join('\n');
 
   const autoDesc = generateAutomationDescription(steps);
+  const { pain, hook } = getPainPoint(auto.cat);
+  const { matchedModule, matchedBundle } = getValueLadder(auto, auto.cat);
+  const adCopy = generateAdCopy(auto, auto.cat);
+
+  // ── Value ladder section ──
+  let valueLadderHtml = '';
+  if (matchedModule || matchedBundle) {
+    valueLadderHtml = `
+<div class="section" aria-labelledby="upgrade-path">
+  <h2 id="upgrade-path">Want Even More? See the Full Package</h2>
+  <p style="color:var(--muted);margin-bottom:16px">This automation is powerful on its own — but it's even better as part of a coordinated system.</p>
+  <div class="card-grid">
+    ${matchedModule ? `<a href="/automations/modules/${slug(matchedModule.name)}" class="card-sm" title="View ${escHtml(matchedModule.name)} module">
+      <h3>📦 ${escHtml(matchedModule.name)}</h3>
+      <p>${escHtml(matchedModule.description_short || matchedModule.outcome || 'Full module with configuration and KPIs')}</p>
+      <div class="meta">$${matchedModule.price_monthly}/mo · Full module</div>
+    </a>` : ''}
+    ${matchedBundle ? `<a href="/automations/packs/${slug(matchedBundle.name)}" class="card-sm" title="View ${escHtml(matchedBundle.name)} pack" style="border-color:var(--success)">
+      <h3>🎯 ${escHtml(matchedBundle.name)}</h3>
+      <p>${escHtml(matchedBundle.tagline || matchedBundle.description || 'Outcome-focused automation bundle')}</p>
+      <div class="meta" style="color:var(--success)">$${matchedBundle.price_monthly}/mo · ${(matchedBundle.modules || []).length} modules · Best value</div>
+    </a>` : ''}
+    <a href="/marketplace" class="card-sm" title="Browse all 353 automations">
+      <h3>🚀 Full Platform</h3>
+      <p>353 automations across 45 categories. Everything you need to run your service business on autopilot.</p>
+      <div class="meta">Browse all automations</div>
+    </a>
+  </div>
+</div>`;
+  }
 
   const body = `
 <article>
+<!-- ═══ HERO: Pain → Solution → CTA ═══ -->
 <div class="hero-section">
-  <div class="pills">
+  <p style="color:var(--warn);font-size:14px;font-weight:600;margin-bottom:12px">${escHtml(hook)}</p>
+  <h1>${escHtml(auto.name)}</h1>
+  <p class="tagline">${autoDesc}</p>
+  <div class="pills" style="margin:16px 0">
     <span class="pill pill-accent">${escHtml(catName)}</span>
     <span class="pill">${escHtml(auto.trigger)}</span>
     ${auto.cron ? `<span class="pill">${escHtml(auto.cron)}</span>` : ''}
     ${pkgs.map(p => `<span class="pill pill-success">${escHtml(p)}</span>`).join('')}
     <span class="pill">${steps.length} steps</span>
   </div>
-  <h1>${escHtml(auto.name)}</h1>
-  <p class="tagline">${autoDesc}</p>
-  <a href="/dashboard" class="btn" style="margin-top:16px">Activate Now</a>
-  <p class="reassurance">30-day money-back guarantee · Cancel anytime · Works with Jobber, Housecall Pro, ServiceTitan</p>
+  <a href="/dashboard" class="btn" style="margin-top:8px">Activate in 60 Seconds</a>
+  <p class="reassurance">No code required · 30-day money-back guarantee · Cancel anytime</p>
 </div>
 
-<div class="section" aria-labelledby="what-this-does">
-  <h2 id="what-this-does">What This Does</h2>
-  <p>${autoDesc}</p>
+<!-- ═══ PROBLEM: Why this matters ═══ -->
+<div class="section" aria-labelledby="the-problem">
+  <h2 id="the-problem">The Problem This Solves</h2>
+  <p style="font-size:15px;line-height:1.8">${escHtml(pain)}</p>
+  <p style="margin-top:12px">${escHtml(auto.name)} handles this automatically — so you never have to think about it again.</p>
 </div>
 
-<div class="section" aria-labelledby="workflow-steps">
-  <h2 id="workflow-steps">Workflow Steps</h2>
+<!-- ═══ SOLUTION: How it works ═══ -->
+<div class="section" aria-labelledby="how-it-works">
+  <h2 id="how-it-works">How It Works (${steps.length} Steps, Fully Automated)</h2>
   <ol class="steps-list">${stepsHtml}</ol>
+  <p style="margin-top:12px;font-size:13px;color:var(--muted)"><strong>Trigger:</strong> <code>${escHtml(auto.trigger)}</code>${auto.cron ? ` · <strong>Schedule:</strong> <code>${escHtml(auto.cron)}</code>` : ' · Fires on incoming event'}</p>
 </div>
 
-<div class="two-col">
-  <div class="section" aria-labelledby="trigger-details">
-    <h2 id="trigger-details">Trigger Details</h2>
-    <p><strong>Type:</strong> <code>${escHtml(auto.trigger)}</code></p>
-    ${auto.cron ? `<p style="margin-top:8px"><strong>Schedule:</strong> <code>${escHtml(auto.cron)}</code></p>` : '<p style="margin-top:8px">Fires on incoming event</p>'}
-  </div>
-  <div class="section" aria-labelledby="included-in">
-    <h2 id="included-in">Included In</h2>
-    ${pkgs.length ? `<div class="pills">${pkgs.map(p => `<span class="pill pill-success">${escHtml(p)}</span>`).join('')}</div>` : '<p style="color:var(--muted)">Available as add-on to all packs</p>'}
+<!-- ═══ PROOF: Trust signals ═══ -->
+<div class="trust-bar" aria-label="Social proof" style="text-align:center;padding:24px">
+  <div style="display:flex;gap:32px;justify-content:center;flex-wrap:wrap;font-size:14px">
+    <div><strong style="font-size:24px;color:var(--success)">500+</strong><br><span style="color:var(--muted)">Service businesses</span></div>
+    <div><strong style="font-size:24px;color:var(--accent)">2,000+</strong><br><span style="color:var(--muted)">Workflows activated</span></div>
+    <div><strong style="font-size:24px;color:var(--warn)">4.8/5</strong><br><span style="color:var(--muted)">Average rating</span></div>
+    <div><strong style="font-size:24px;color:var(--fg)">60s</strong><br><span style="color:var(--muted)">Activation time</span></div>
   </div>
 </div>
 
+<!-- ═══ OFFER: What's included ═══ -->
+<div class="section" aria-labelledby="whats-included">
+  <h2 id="whats-included">What You Get</h2>
+  <div class="two-col">
+    <div>
+      <h3>This Automation Includes</h3>
+      <ul>
+        <li>${steps.length}-step automated workflow</li>
+        <li>Triggered by <code>${escHtml(auto.trigger)}</code></li>
+        <li>Works with Jobber, Housecall Pro, ServiceTitan</li>
+        <li>No code required — activate in 60 seconds</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Every Activation Comes With</h3>
+      <ul>
+        <li>30-day money-back guarantee</li>
+        <li>SOC 2 compliant · 256-bit SSL encryption</li>
+        <li>Email + chat support</li>
+        <li>Cancel anytime, no contracts</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+${pkgs.length ? `<div class="section" aria-labelledby="included-in">
+  <h2 id="included-in">Part of These Packages</h2>
+  <div class="pills">${pkgs.map(p => `<span class="pill pill-success">${escHtml(p)}</span>`).join('')}</div>
+  <p style="margin-top:8px;color:var(--muted)">Get this automation plus dozens more when you activate a full package.</p>
+</div>` : ''}
+
+<!-- ═══ VALUE LADDER: Upsell path ═══ -->
+${valueLadderHtml}
+
+<!-- ═══ RELATED: More in this category ═══ -->
 ${siblingCards ? `<div class="section" aria-labelledby="more-in-category">
-  <h2 id="more-in-category">More in ${escHtml(catName)}</h2>
+  <h2 id="more-in-category">More ${escHtml(catName)} Automations</h2>
+  <p style="color:var(--muted);margin-bottom:12px">Each one works standalone or combines with others for a complete system.</p>
   <div class="card-grid">${siblingCards}</div>
 </div>` : ''}
 
+<!-- ═══ FAQ: Objection handling ═══ -->
+<div class="section" aria-labelledby="auto-faq">
+  <h2 id="auto-faq">Common Questions</h2>
+  <details style="margin-bottom:12px;border:1px solid var(--border);border-radius:8px;padding:14px">
+    <summary style="cursor:pointer;font-weight:600;color:var(--fg)">How long does activation take?</summary>
+    <p style="margin-top:8px;color:var(--muted)">About 60 seconds. Click activate, connect your tools, and the workflow starts running immediately.</p>
+  </details>
+  <details style="margin-bottom:12px;border:1px solid var(--border);border-radius:8px;padding:14px">
+    <summary style="cursor:pointer;font-weight:600;color:var(--fg)">Do I need to write any code?</summary>
+    <p style="margin-top:8px;color:var(--muted)">No. Everything is pre-built and tested. You just configure your preferences (like which email template to use) and turn it on.</p>
+  </details>
+  <details style="margin-bottom:12px;border:1px solid var(--border);border-radius:8px;padding:14px">
+    <summary style="cursor:pointer;font-weight:600;color:var(--fg)">What if it doesn't work for my business?</summary>
+    <p style="margin-top:8px;color:var(--muted)">Every activation comes with a 30-day money-back guarantee. If it doesn't deliver results, you get a full refund — no questions asked.</p>
+  </details>
+  <details style="margin-bottom:12px;border:1px solid var(--border);border-radius:8px;padding:14px">
+    <summary style="cursor:pointer;font-weight:600;color:var(--fg)">Will this work with my current tools?</summary>
+    <p style="margin-top:8px;color:var(--muted)">Your Deputy integrates with 100+ service business tools including Jobber, Housecall Pro, ServiceTitan, QuickBooks, Stripe, Twilio, and more.</p>
+  </details>
+</div>
+
+<!-- ═══ TRUST BAR ═══ -->
 <div class="trust-bar" aria-label="Trust signals">
   <strong>Works with your existing tools.</strong> Jobber, Housecall Pro, ServiceTitan, and more. 30-day money-back guarantee · Cancel anytime · <a href="/marketplace#faq">FAQ</a> · <a href="mailto:support@yourdeputy.com">Need help?</a>
   <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;">
@@ -748,21 +896,24 @@ ${siblingCards ? `<div class="section" aria-labelledby="more-in-category">
   </div>
 </div>
 
+<!-- ═══ FINAL CTA ═══ -->
 <div class="cta-bar">
-  <h3>Activate This Automation</h3>
-  <p>Part of Your Deputy — the automation platform for service businesses.</p>
-  <a href="/dashboard" class="btn">Get Started</a>
+  <h3>${escHtml(hook)}</h3>
+  <p>Activate ${escHtml(auto.name)} — no code, no contracts, results in minutes.</p>
+  <a href="/dashboard" class="btn">Activate Now — 60 Seconds</a>
+  <p style="color:var(--muted);font-size:12px;margin-top:8px">Join 500+ service businesses already using Your Deputy</p>
 </div>
 </article>`;
 
-  const desc = `${auto.name}: ${autoDesc.substring(0, 100)} - Service business automation platform`;
+  // ── Unique SEO-optimized metadata for this specific automation ──
+  const uniqueDesc = `${hook}. ${auto.name} automates this in ${steps.length} steps. No code, 60-second activation, 30-day guarantee. Works with Jobber, Housecall Pro, ServiceTitan.`;
   const canonical = `/automations/a/${s}`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: auto.name,
-    description: desc,
+    description: uniqueDesc.substring(0, 200),
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web'
   };
@@ -770,7 +921,7 @@ ${siblingCards ? `<div class="section" aria-labelledby="more-in-category">
   return {
     html: page({
       title: `${auto.name} | Your Deputy`,
-      description: desc.substring(0, 155),
+      description: uniqueDesc.substring(0, 155),
       canonical,
       breadcrumbs: [
         { label: 'Marketplace', href: '/marketplace' },
