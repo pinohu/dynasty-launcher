@@ -731,6 +731,19 @@
         </div>
       </section>
 
+      <div class="controls" style="margin:40px 0 0;">
+        <label for="view">View:</label>
+        <select id="view">
+          <option value="marketplace">Marketplace (deployable + live only)</option>
+          <option value="admin" selected>Admin (all statuses)</option>
+        </select>
+        <label for="blueprint">For:</label>
+        <select id="blueprint">
+          <option value="">All verticals</option>
+        </select>
+        <span id="stats" style="margin-left:auto;color:var(--muted);font-size:12px;" role="status"></span>
+      </div>
+
       <section id="core-section">
         <h2>Core platform</h2>
         <p class="section-lede">Every customer starts here. Choose the plan that fits your team size.</p>
@@ -883,9 +896,9 @@
           <span>${t.included_modules.length} included modules</span>
         </div>
         <div class="card-cta">
-          <button class="btn-secondary" style="width:100%;" onclick="alert('Redirect to purchase: ${t.name}')">
+          <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
             Choose Plan →
-          </button>
+          </a>
         </div>
       </div>
     `).join('');
@@ -901,11 +914,11 @@
           ${e.for ? `<p class="card-description">${e.for}</p>` : ''}
           ${e.positioning ? `<p class="card-description" style="color:var(--fg);font-weight:500;">${e.positioning}</p>` : ''}
           <div class="card-meta">
-            ${(e.includes.suites || []).map((s) => `<span>${s}</span>`).join('')}
-            ${(e.includes.packs || []).map((p) => `<span>${p}</span>`).join('')}
+            ${Array.isArray(e.includes?.suites) ? e.includes.suites.map((s) => `<span>${s}</span>`).join('') : ''}
+            ${Array.isArray(e.includes?.packs) ? e.includes.packs.map((p) => `<span>${p}</span>`).join('') : ''}
           </div>
           <div class="card-cta">
-            <button class="btn-secondary" style="width:100%;">Learn More →</button>
+            <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
           </div>
         </div>
       `;
@@ -928,7 +941,7 @@
             ${savings ? `<span>${savings}</span>` : ''}
           </div>
           <div class="card-cta">
-            <button class="btn-secondary" style="width:100%;">Activate →</button>
+            <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Activate →</a>
           </div>
         </div>
       `;
@@ -1014,11 +1027,29 @@
             <span>${c.delivery_mode || 'Expert setup'}</span>
           </div>
           <div class="card-cta">
-            <button class="btn-secondary" style="width:100%;" onclick="alert('Activate concierge: ${label}')">Book Now →</button>
+            <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Book Now →</a>
           </div>
         </div>
       `;
     }).join('');
+
+    // Blueprint dropdown population
+    const bpSel = $('#blueprint');
+    if (bpSel && bpSel.options.length <= 1) {
+      for (const bp of blueprints.blueprints) {
+        const opt = document.createElement('option');
+        opt.value = bp.blueprint_code;
+        opt.textContent = bp.name;
+        if (bp.blueprint_code === state.blueprint) opt.selected = true;
+        bpSel.appendChild(opt);
+      }
+    }
+
+    // Stats line
+    const statsEl = $('#stats');
+    if (statsEl) {
+      statsEl.textContent = `${modsFiltered.length} modules · ${packsFiltered.length} packs · ${suites.length} suites · ${conciergeEntries.length} concierge`;
+    }
 
     const live = modules.modules.filter((m) => m.status === 'live').length;
     if (live === 0) {
@@ -1042,6 +1073,20 @@
     if (state.blueprint) p.set('blueprint', state.blueprint);
     const qs = p.toString();
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+  }
+
+  // Wire up view/blueprint controls
+  if ($('#view')) {
+    $('#view').value = state.view;
+    $('#view').addEventListener('change', (e) => { setView(e.target.value); });
+  }
+  if ($('#blueprint')) {
+    $('#blueprint').addEventListener('change', async (e) => {
+      state.blueprint = e.target.value;
+      await loadAll();
+      render();
+      updateUrl();
+    });
   }
 
   let autoData = null;
