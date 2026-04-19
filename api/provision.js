@@ -5,6 +5,51 @@ export const maxDuration = 300; // 5 min — AI content generation takes time
 // Enforced: we do not POST real third-party secrets to customer Vercel projects (placeholders only).
 
 // ── Helpers ───────────────────────────────────────────────────────────────
+
+// Free LLM helper — calls Google Gemini (AI Studio free tier) first, then
+// falls back to Groq's Llama 3.3 70B. Returns plain text or '' on failure.
+// Use this for any one-shot text generation inside provisioning modules
+// instead of calling api.anthropic.com directly.
+async function freeLLM(prompt, maxTokens = 4000) {
+  const geminiKey = process.env.GOOGLE_AI_KEY || process.env.GEMINI_API_KEY || '';
+  const groqKey   = process.env.GROQ_API_KEY || '';
+  if (geminiKey) {
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: Math.min(maxTokens, 8192), temperature: 0.7 }
+        })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        const text = d.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+        if (text) return text;
+      }
+    } catch {}
+  }
+  if (groqKey) {
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: Math.min(maxTokens, 8000),
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        return d.choices?.[0]?.message?.content || '';
+      }
+    } catch {}
+  }
+  return '';
+}
+
 async function pushFile(ghToken, org, repo, path, content, message, isBase64 = false) {
   const b64 = isBase64 ? content : Buffer.from(content).toString('base64');
   const h = { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json',
@@ -763,17 +808,13 @@ async function mod_chatbot(config, project, liveUrl) {
   try {
     const businessContext = `Business: ${project.name}\nType: ${project.type || 'business'}\nDescription: ${project.description || ''}\nWebsite: ${liveUrl || ''}\nLocation: ${project.location || ''}\nServices: ${project.services || 'Professional services'}`;
 
-    // Generate comprehensive FAQ at BUILD TIME using Dynasty's AI key (one-time cost)
+    // Generate comprehensive FAQ at BUILD TIME using a free LLM (Gemini → Groq Llama)
     let faqItems = [];
     try {
-      const faqResp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST', headers: { 'x-api-key': aiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 3000,
-          messages: [{ role: 'user', content: `Generate 20 FAQ items for this business. Return ONLY a valid JSON array where each item has "q" (question) and "a" (detailed answer, 2-4 sentences). Cover: services offered, pricing, process/how it works, qualifications/experience, hours/availability, location/service area, guarantees/warranties, payment methods, booking/scheduling, what to expect, turnaround time, cancellation policy, support/contact, comparison to competitors, getting started.\n\n${businessContext}\n\nReturn ONLY the JSON array. No markdown, no backticks.` }]
-        })
-      });
-      const faqData = await faqResp.json();
-      const faqText = faqData.content?.[0]?.text || '';
+      const faqText = await freeLLM(
+        `Generate 20 FAQ items for this business. Return ONLY a valid JSON array where each item has "q" (question) and "a" (detailed answer, 2-4 sentences). Cover: services offered, pricing, process/how it works, qualifications/experience, hours/availability, location/service area, guarantees/warranties, payment methods, booking/scheduling, what to expect, turnaround time, cancellation policy, support/contact, comparison to competitors, getting started.\n\n${businessContext}\n\nReturn ONLY the JSON array. No markdown, no backticks.`,
+        3000
+      );
       try { faqItems = JSON.parse(faqText.match(/\[[\s\S]*\]/)?.[0] || '[]'); } catch {}
     } catch {}
 
@@ -874,17 +915,9 @@ async function mod_seo(config, project, liveUrl) {
   const GH_TOKEN = process.env.GITHUB_TOKEN;
   if (!aiKey && !wzKey && !nwKey) { results.error = 'No SEO keys configured'; results.fallback = 'Add ANTHROPIC_API_KEY, writerzen, or neuronwriter to config'; return results; }
 
-  // AI content generation helper
+  // AI content generation helper — uses free LLMs (Gemini → Groq Llama)
   async function aiGenSeo(prompt, maxTokens = 4000) {
-    if (!aiKey) return '';
-    try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST', headers: { 'x-api-key': aiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] })
-      });
-      const d = await r.json();
-      return d.content?.[0]?.text || '';
-    } catch { return ''; }
+    return freeLLM(prompt, maxTokens);
   }
 
   try {
@@ -1260,13 +1293,8 @@ async function mod_docs(config, project) {
         { file: 'docs/PRIVACY-POLICY.md', name: 'Privacy Policy' },
         { file: 'docs/SERVICE-AGREEMENT.md', name: 'Service Agreement' }
       ];
-      const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-      let legalRaw = '';
-      if (ANTHROPIC_KEY) {
-        const aiResp = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 6000, messages: [{ role: 'user', content: `Generate 3 legal documents for "${project.name}" (${project.type || 'business'}) at ${domain}. Contact: ${email}. Jurisdiction: United States.
+      const legalRaw = await freeLLM(
+        `Generate 3 legal documents for "${project.name}" (${project.type || 'business'}) at ${domain}. Contact: ${email}. Jurisdiction: United States.
 
 Return in this exact format:
 ---BEGIN:tos---
@@ -1277,11 +1305,9 @@ Return in this exact format:
 ---END:privacy---
 ---BEGIN:sla---
 [Complete Service Agreement - 1500+ words, covering: scope of services, deliverables, timeline, compensation, confidentiality, IP assignment, warranties, limitation of liability, termination, force majeure]
----END:sla---` }] })
-        });
-        const aiData = await aiResp.json();
-        legalRaw = aiData.content?.[0]?.text || '';
-      }
+---END:sla---`,
+        6000
+      );
 
       const sections = { tos: '', privacy: '', sla: '' };
       for (const key of Object.keys(sections)) {
@@ -2333,17 +2359,7 @@ Each headline should be under 60 chars. Subtitles under 120 chars. Target primar
     const clustersRaw = clustersMatch ? clustersMatch[1] : '';
 
     async function aiGenerate(prompt, maxTokens = 4000) {
-      if (!AI_KEY) return '';
-      try {
-        const r = await fetch('https://api.anthropic.com/v1/messages', {
-          method:'POST',
-          headers:{'x-api-key':AI_KEY,'anthropic-version':'2023-06-01','content-type':'application/json'},
-          body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,
-            messages:[{role:'user',content:prompt}]})
-        });
-        const d = await r.json();
-        return d.content?.[0]?.text || '';
-      } catch { return ''; }
+      return freeLLM(prompt, maxTokens);
     }
 
     // 4a. Generate blog articles

@@ -524,7 +524,7 @@ export default async function handler(req, res) {
   try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { config = {}; }
   const body = req.body || {};
   const usageContext = (body.usage_context || 'standard').toString();
-  const requestedModel = (body.model || 'claude-sonnet-4-20250514').toString();
+  const requestedModel = (body.model || 'gemini-2.0-flash').toString();
   const claimedTier = (body.tier || 'free').toString().toLowerCase();
   const stripeSessionId = (body.stripe_session_id || body.session_id || '').toString().trim();
   const accessToken = (body.access_token || '').toString().trim();

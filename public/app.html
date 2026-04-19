@@ -1697,7 +1697,7 @@ let V2_MODE = 'quick'; // 'quick' or 'strategic'
 let V2_VIEW = 'wizard'; // 'wizard' or 'scroll'
 let V2_FRAMEWORKS = ['blue-ocean']; // always includes blue-ocean
 let V2_SCORECARD = null;
-let V2_MODEL = 'claude-sonnet-4-20250514';
+let V2_MODEL = 'gemini-2.0-flash';
 let V2_MODEL_MAP = {}; // per-phase model overrides
 let V2_DEPLOY_TARGET = 'fullstack'; // 'backend-only' | 'fullstack' | 'authority' | 'wordpress' | 'static'
 let V2_MODELS_CACHE = null;
@@ -1987,7 +1987,7 @@ Return ONLY valid JSON:
     "etc"
   ]
 }`,
-      'claude-sonnet-4-20250514', 4000
+      'gemini-2.0-flash', 4000
     );
 
     const match = plan.match(/\{[\s\S]*\}/);
@@ -4035,7 +4035,7 @@ async function applySelectedRefinements() {
 // Review models — full pool including free/open-weight models. More voters = stronger consensus.
 const REVIEW_MODELS_POOL = [
   // ── Paid frontier models (highest weight — strongest reasoning) ─────────
-  { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4', icon: '🟣', color: '#A855F7', weight: 1.5 },
+  // Claude Sonnet 4 removed — cost-prohibitive. Re-add to REVIEW_MODELS_POOL if/when paid access is desired.
   { id: 'gpt-4o', label: 'GPT-4o', icon: '🟢', color: '#22C55E', weight: 1.3 },
   { id: 'deepseek-chat', label: 'DeepSeek V3', icon: '🟠', color: '#F97316', weight: 1.1 },
   { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', icon: '💎', color: '#4285F4', weight: 1.2 },
@@ -4092,7 +4092,7 @@ async function aiRawWithModel(prompt, modelId, max = 4000) {
   const freeTier = isFreeTier();
   const fallbackModels = freeTier
     ? [modelId, 'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant']
-    : [modelId, 'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'claude-haiku-4-5-20251001'];
+    : [modelId, 'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
     try {
@@ -4651,7 +4651,7 @@ Return ONLY valid JSON:
   "predicted_score": 8.5,
   "confidence": "high/medium/low"
 }`,
-        'claude-sonnet-4-20250514', 3000
+        'llama-3.3-70b-versatile', 3000
       );
 
       const match = refineRaw.match(/\{[\s\S]*\}/);
@@ -5052,7 +5052,7 @@ async function handleImageUpload(file) {
     const r = await fetch('/api/ai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'gemini-2.0-flash',
         max_tokens: 1500,
         ...getAiAuthPayload(),
         usage_context: isFreeTier() ? 'free_scoring' : 'standard',
@@ -5333,7 +5333,7 @@ async function handleVideoUpload(file, options = {}) {
     const r = await fetch('/api/ai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'gemini-2.0-flash',
         max_tokens: 2000,
         ...getAiAuthPayload(),
         usage_context: isFreeTier() ? 'free_scoring' : 'standard',
@@ -5385,7 +5385,7 @@ async function handleDocUpload(file) {
       const r = await fetch('/api/ai', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 1500,
+          model: 'gemini-2.0-flash', max_tokens: 1500,
           ...getAiAuthPayload(),
           usage_context: isFreeTier() ? 'free_scoring' : 'standard',
           messages: [{
@@ -5450,7 +5450,7 @@ Ask ONE question at a time. Be conversational and encouraging. After 3-5 exchang
     const r = await fetch('/api/ai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 500,
+        model: 'gemini-2.0-flash', max_tokens: 500,
         ...getAiAuthPayload(),
         usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         system: systemPrompt,
@@ -6048,10 +6048,10 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
   // Template/boilerplate phases use free models to minimize cost
   const PHASE_MODELS = {
     'g1': 'gemini-2.0-flash',              // Design system — FREE (structured template, quality sufficient)
-    'g2': 'claude-sonnet-4-20250514',      // Product docs — PAID (SPEC.md requires deep technical reasoning)
+    'g2': 'llama-3.3-70b-versatile',       // Product docs — FREE (Llama 70B handles SPEC.md reasoning well)
     'g3': 'gemini-2.0-flash',              // Tech docs — FREE (structured specs, template-driven)
-    'g4a': 'claude-sonnet-4-20250514',     // Business strategy — PAID (MUST be frontier model for consulting-grade analysis)
-    'g4b': 'claude-sonnet-4-20250514',     // Agent system — PAID (requires deep architectural reasoning)
+    'g4a': 'llama-3.3-70b-versatile',      // Business strategy — FREE (Groq Llama 70B handles consulting-grade analysis)
+    'g4b': 'gemini-2.0-flash',             // Agent system — FREE (Gemini handles architectural reasoning)
     'g5': 'llama-3.3-70b-versatile',       // Backend code — FREE (Llama 70B writes good Python)
     'g7': 'gemini-2.0-flash',              // Frontend — FREE (template scaffolding)
   };
@@ -6067,7 +6067,7 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
     model = V2_MODEL;
   }
   
-  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'claude-haiku-4-5-20251001'];
+  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
@@ -6129,12 +6129,12 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
       const qualityOk = validateOutputQuality(result, keys, max);
       if (qualityOk) return result;
       
-      // Quality check failed — retry with Haiku (cheap but reliable)
-      console.warn(`Quality check failed on ${useModel}, retrying with Haiku...`);
+      // Quality check failed — retry with a free high-quality model (Llama 70B via Groq)
+      console.warn(`Quality check failed on ${useModel}, retrying with llama-3.3-70b-versatile...`);
       try {
         const qr = await fetch('/api/ai', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: max, ...getAiAuthPayload(), usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: max, ...getAiAuthPayload(), usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: prompt }] })
         });
         if (qr.ok) {
           const qd = await qr.json();
@@ -6168,7 +6168,7 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
     budget: 'gemini-2.0-flash',                       // FREE (Google) — fast for boilerplate
   };
   const model = COST_MODELS[costTier] || COST_MODELS.standard;
-  const fallbackModels = [model, 'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'claude-haiku-4-5-20251001'];
+  const fallbackModels = [model, 'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];

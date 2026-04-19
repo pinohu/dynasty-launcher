@@ -27,19 +27,20 @@ export default async function handler(req, res) {
     checks.github = r.ok ? { ok: true, user: d.login } : { ok: false, error: d.message };
   } catch(e) { checks.github = { ok: false, error: _se(e.message) }; }
 
-  // Anthropic API
+  // Primary AI provider — Google Gemini (free tier). Previously pinged Anthropic;
+  // removed to eliminate Claude spend on routine health checks.
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5, messages: [{ role: 'user', content: 'ping' }] })
-    });
-    checks.anthropic = r.ok ? { ok: true } : { ok: false, status: r.status };
-  } catch(e) { checks.anthropic = { ok: false, error: _se(e.message) }; }
+    const geminiKey = process.env.GOOGLE_AI_KEY || process.env.GEMINI_API_KEY || '';
+    if (!geminiKey) { checks.gemini = { ok: false, error: 'GOOGLE_AI_KEY not set' }; }
+    else {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'ping' }] }], generationConfig: { maxOutputTokens: 5 } })
+      });
+      checks.gemini = r.ok ? { ok: true } : { ok: false, status: r.status };
+    }
+  } catch(e) { checks.gemini = { ok: false, error: _se(e.message) }; }
 
   // Stripe
   try {

@@ -11,30 +11,25 @@ export const maxDuration = 300;
 // Maps task complexity to optimal model (like Claude Code's internal routing)
 const ROUTING_TIERS = {
   // Architect-level: complex strategy, needs highest quality
+  // Free-first: Gemini 2.5 Pro (free tier on AI Studio) → Groq Llama 70B → Gemini Flash
   architect: {
-    anthropic: 'claude-opus-4-20250514',
-    openai: 'gpt-4o',
     google: 'gemini-2.5-pro',
-    deepseek: 'deepseek-reasoner',
-    fallback: 'claude-sonnet-4-20250514',
-  },
-  // Standard: most generation tasks
-  standard: {
-    anthropic: 'claude-sonnet-4-20250514',
-    openai: 'gpt-4.1',
-    google: 'gemini-2.5-pro',
-    deepseek: 'deepseek-chat',
-    mistral: 'mistral-large-latest',
-    fallback: 'claude-sonnet-4-20250514',
-  },
-  // Fast: boilerplate, templates, simple generation
-  fast: {
-    anthropic: 'claude-haiku-4-5-20251001',
-    openai: 'gpt-4.1-mini',
-    google: 'gemini-2.5-flash',
     groq: 'llama-3.3-70b-versatile',
-    mistral: 'mistral-small-latest',
-    fallback: 'claude-haiku-4-5-20251001',
+    deepseek: 'deepseek-reasoner',
+    fallback: 'gemini-2.0-flash',
+  },
+  // Standard: most generation tasks — all free tier
+  standard: {
+    google: 'gemini-2.0-flash',
+    groq: 'llama-3.3-70b-versatile',
+    deepseek: 'deepseek-chat',
+    fallback: 'gemini-2.0-flash',
+  },
+  // Fast: boilerplate, templates, simple generation — all free tier
+  fast: {
+    google: 'gemini-2.5-flash',
+    groq: 'llama-3.1-8b-instant',
+    fallback: 'gemini-2.0-flash',
   },
 };
 
