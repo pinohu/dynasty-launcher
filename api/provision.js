@@ -22,6 +22,11 @@ async function freeLLM(prompt, maxTokens = 4000) {
   const fireworks = process.env.FIREWORKS_API_KEY || '';
   const deepseek1 = process.env.DEEPSEEK_API_KEY || '';
   const deepseek2 = process.env.DEEPSEEK_API_KEY_2 || '';
+  const hyperbolic = process.env.HYPERBOLIC_API_KEY || '';
+  const together   = process.env.TOGETHER_API_KEY || '';
+  const dashscope  = process.env.DASHSCOPE_API_KEY || process.env.QWEN_API_KEY || '';
+  const nvidia     = process.env.NVIDIA_API_KEY || process.env.NIM_API_KEY || '';
+  const baseten    = process.env.BASETEN_API_KEY || '';
 
   // 1) Google Gemini (AI Studio — multiple keys for rotation)
   for (const key of [gemini1, gemini2].filter(Boolean)) {
@@ -57,13 +62,27 @@ async function freeLLM(prompt, maxTokens = 4000) {
   };
 
   const attempts = [
+    // Tier 1 — fastest free frontier models
+    [groq1,     'https://api.groq.com/openai/v1/chat/completions',             'meta-llama/llama-4-scout-17b-16e-instruct'],
+    [groq2,     'https://api.groq.com/openai/v1/chat/completions',             'meta-llama/llama-4-scout-17b-16e-instruct'],
+    [cerebras,  'https://api.cerebras.ai/v1/chat/completions',                 'llama-4-scout-17b-16e-instruct'],
+
+    // Tier 2 — reasoning specialists
+    [zai,       'https://open.bigmodel.cn/api/paas/v4/chat/completions',       'glm-4.6'],
+    [moonshot,  'https://api.moonshot.ai/v1/chat/completions',                 'kimi-k2-0905-preview'],
+
+    // Tier 3 — proven workhorses
     [groq1,     'https://api.groq.com/openai/v1/chat/completions',             'llama-3.3-70b-versatile'],
     [groq2,     'https://api.groq.com/openai/v1/chat/completions',             'llama-3.3-70b-versatile'],
-    [cerebras,  'https://api.cerebras.ai/v1/chat/completions',                 'llama-3.3-70b'],
-    [moonshot,  'https://api.moonshot.ai/v1/chat/completions',                 'kimi-k2-0905-preview'],
-    [zai,       'https://open.bigmodel.cn/api/paas/v4/chat/completions',       'glm-4.5'],
+    [together,  'https://api.together.xyz/v1/chat/completions',                'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free'],
+    [hyperbolic, 'https://api.hyperbolic.xyz/v1/chat/completions',             'meta-llama/Llama-3.3-70B-Instruct'],
+    [nvidia,    'https://integrate.api.nvidia.com/v1/chat/completions',        'meta/llama-4-maverick-17b-128e-instruct'],
+    [dashscope, 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions', 'qwen3-max'],
+
+    // Tier 4 — last-resort cheap or smaller
     [minimax,   'https://api.minimax.io/v1/text/chatcompletion_v2',            'MiniMax-M1'],
     [fireworks, 'https://api.fireworks.ai/inference/v1/chat/completions',      'accounts/fireworks/models/llama-v3p3-70b-instruct'],
+    [baseten,   'https://inference.baseten.co/v1/chat/completions',            'meta-llama/Llama-3.3-70B-Instruct@baseten'],
     [deepseek1, 'https://api.deepseek.com/v1/chat/completions',                'deepseek-chat'],
     [deepseek2, 'https://api.deepseek.com/v1/chat/completions',                'deepseek-chat'],
   ];

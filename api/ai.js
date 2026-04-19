@@ -76,6 +76,55 @@ const PROVIDERS = {
   'accounts/fireworks/models/llama-v3p3-70b-instruct': { provider: 'fireworks', label: 'Llama 3.3 70B (Fireworks)', costPer1kIn: 0.0001, costPer1kOut: 0.0004, free: true },
   'accounts/fireworks/models/qwen2p5-72b-instruct':    { provider: 'fireworks', label: 'Qwen 2.5 72B (Fireworks)',  costPer1kIn: 0.0001, costPer1kOut: 0.0004, free: true },
   'accounts/fireworks/models/deepseek-v3':             { provider: 'fireworks', label: 'DeepSeek V3 (Fireworks)',   costPer1kIn: 0.00027, costPer1kOut: 0.0011, free: true },
+
+  // ── Hyperbolic (free tier — hosts open-weights) ──────────────────────
+  'meta-llama/Llama-3.3-70B-Instruct':           { provider: 'hyperbolic', label: 'Llama 3.3 70B (Hyperbolic)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'deepseek-ai/DeepSeek-V3':                     { provider: 'hyperbolic', label: 'DeepSeek V3 (Hyperbolic)',       costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'Qwen/Qwen2.5-Coder-32B-Instruct':             { provider: 'hyperbolic', label: 'Qwen 2.5 Coder 32B (Hyperbolic)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Together AI (free tier + cheap Llama 4 / Qwen3 / DeepSeek V3.2) ──
+  'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free':                 { provider: 'together', label: 'Llama 3.3 70B Turbo Free (Together)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'meta-llama/Llama-4-Scout-17B-16E-Instruct':                    { provider: 'together', label: 'Llama 4 Scout (Together)',                costPer1kIn: 0.00018, costPer1kOut: 0.00059, free: true },
+  'deepseek-ai/DeepSeek-V3.2-Exp':                                { provider: 'together', label: 'DeepSeek V3.2 Exp (Together)',            costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8':                      { provider: 'together', label: 'Qwen3 Coder 480B (Together)',             costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Perplexity Sonar (free tier — grounded web search, unique) ───────
+  'sonar':                       { provider: 'perplexity', label: 'Sonar (Perplexity)',       costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'sonar-pro':                   { provider: 'perplexity', label: 'Sonar Pro (Perplexity)',   costPer1kIn: 0.003, costPer1kOut: 0.015, free: false },
+  'sonar-reasoning':             { provider: 'perplexity', label: 'Sonar Reasoning (Perplexity)', costPer1kIn: 0.001, costPer1kOut: 0.005, free: false },
+
+  // ── Alibaba DashScope / Qwen (free tier — best open-weight coder) ────
+  'qwen3-coder-plus':            { provider: 'dashscope', label: 'Qwen3 Coder Plus',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen3-max':                   { provider: 'dashscope', label: 'Qwen3 Max',                 costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen3-vl-plus':               { provider: 'dashscope', label: 'Qwen3 VL Plus (vision)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen3-235b-a22b-instruct-2507': { provider: 'dashscope', label: 'Qwen3 235B Instruct',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Nvidia NIM (free dev preview — Llama 4, Nemotron, etc.) ──────────
+  'meta/llama-4-maverick-17b-128e-instruct':     { provider: 'nvidia', label: 'Llama 4 Maverick (Nvidia)',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'nvidia/llama-3.3-nemotron-super-49b-v1':      { provider: 'nvidia', label: 'Llama 3.3 Nemotron 49B (Nvidia)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'deepseek-ai/deepseek-r1':                     { provider: 'nvidia', label: 'DeepSeek R1 (Nvidia)',               costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen/qwen3-coder-480b-a35b-instruct':         { provider: 'nvidia', label: 'Qwen3 Coder 480B (Nvidia)',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Baseten (free tier — open-weight hosting) ────────────────────────
+  'meta-llama/Llama-3.3-70B-Instruct@baseten':   { provider: 'baseten', label: 'Llama 3.3 70B (Baseten)',           costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Additions to existing providers ──────────────────────────────────
+  // Groq — Llama 4, Kimi K2 (hosted on Groq), QwQ
+  'moonshotai/kimi-k2-instruct':                          { provider: 'groq', label: 'Kimi K2 (Groq)',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'meta-llama/llama-4-scout-17b-16e-instruct':            { provider: 'groq', label: 'Llama 4 Scout (Groq)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'meta-llama/llama-4-maverick-17b-128e-instruct':        { provider: 'groq', label: 'Llama 4 Maverick (Groq)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen-qwq-32b':                                         { provider: 'groq', label: 'QwQ 32B (Groq)',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+  // Cerebras — Llama 4
+  'llama-4-scout-17b-16e-instruct':                       { provider: 'cerebras', label: 'Llama 4 Scout (Cerebras)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  // SambaNova — DeepSeek R1
+  'DeepSeek-R1':                                          { provider: 'sambanova', label: 'DeepSeek R1 (SambaNova)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  // Z.AI — GLM-4.6
+  'glm-4.6':                                              { provider: 'zai',  label: 'GLM-4.6 (Z.AI)',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+  // OpenRouter — free top open-weights
+  'deepseek/deepseek-chat-v3.1:free':                     { provider: 'openrouter', label: 'DeepSeek V3.1 (OR free)',  costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen/qwen3-coder:free':                                { provider: 'openrouter', label: 'Qwen3 Coder (OR free)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'meta-llama/llama-4-maverick:free':                     { provider: 'openrouter', label: 'Llama 4 Maverick (OR free)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'z-ai/glm-4.5-air:free':                                { provider: 'openrouter', label: 'GLM-4.5 Air (OR free)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
 };
 
 const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_DAILY_LIMIT || '30', 10));
@@ -226,12 +275,34 @@ async function incrementUsage(actorKey) {
 
 function resolveFreeModel(config) {
   // Ordered by quality × availability × speed. First match with an available
-  // API key wins. New free providers (Moonshot/Z.AI/MiniMax/Fireworks) slot
-  // in after Google/Groq/Cerebras/SambaNova to preserve existing behavior.
+  // API key wins. Top tier: latest open-weight frontier models. Second tier:
+  // proven free fallbacks. Third tier: lightweight last-resorts.
   const preferred = [
+    // Frontier open-weights (Llama 4, GLM-4.6, Qwen3)
+    'meta-llama/llama-4-scout-17b-16e-instruct',  // Groq Llama 4 Scout — fastest frontier
+    'llama-4-scout-17b-16e-instruct',              // Cerebras Llama 4 Scout
+    'glm-4.6', 'glm-4.5',                          // Z.AI reasoning specialists
+    'gemini-2.5-pro',                              // Google reasoning frontier
+    'qwen3-max',                                   // Alibaba general flagship
+    'kimi-k2-0905-preview',                        // Moonshot — long context, strong creative
+    'DeepSeek-R1',                                 // SambaNova — best OSS reasoning
+    'meta/llama-4-maverick-17b-128e-instruct',     // Nvidia Llama 4 Maverick
+
+    // Workhorses (consistently fast + good)
     'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash',
-    'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct',
-    'kimi-k2-0905-preview', 'glm-4.5', 'MiniMax-M1',
+    'llama-3.3-70b-versatile',                     // Groq Llama 3.3 70B
+    'llama-3.3-70b',                               // Cerebras
+    'Meta-Llama-3.3-70B-Instruct',                 // SambaNova
+    'meta-llama/Llama-3.3-70B-Instruct',           // Hyperbolic
+    'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free', // Together free
+    'deepseek-ai/DeepSeek-V3.2-Exp',               // Together DeepSeek V3.2
+
+    // Specialists (used directly via task router; here as fallback)
+    'qwen3-coder-plus',                            // DashScope coder
+    'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8',     // Together coder
+    'MiniMax-M1',                                  // 1M context
+
+    // Last-resorts
     'accounts/fireworks/models/llama-v3p3-70b-instruct',
     'llama-3.1-8b-instant', 'mixtral-8x7b-32768',
     'glm-4.5-air', 'moonshot-v1-auto',
@@ -246,6 +317,68 @@ function resolveFreeModel(config) {
     if (getApiKey(info.provider, config)) return model;
   }
   return null;
+}
+
+// ── Task-type router ────────────────────────────────────────────────────
+// Examines a prompt and picks the best specialist model. Each task type
+// maps to a primary model; if its provider key is missing, we fall back
+// through a per-task fallback list, then to resolveFreeModel().
+//
+// This is invoked from the handler when the client doesn't pin a model
+// (i.e. body.model is missing). Pinning a model bypasses the router.
+function detectTaskType(prompt) {
+  if (!prompt || typeof prompt !== 'string') return 'general';
+  const len = prompt.length;
+  // Long-context wins over everything — only specific models can handle it.
+  if (len > 50000) return 'long_context';
+  // Vision content (data URLs / image_url markers) — Gemini handles these natively.
+  if (/data:image\/|image_url|<img\s|\.(png|jpg|jpeg|webp|gif)\b/i.test(prompt)) return 'vision';
+  // Code: explicit fenced blocks OR multiple language signals.
+  if (/```[a-z]*\n/i.test(prompt) || /\b(function\s+\w+\s*\(|class\s+\w+\s*[({:]|def\s+\w+\s*\(|import\s+\w+\s+from\s+|const\s+\w+\s*=\s*(?:async\s*)?\(?|=>\s*\{)/i.test(prompt)) return 'code';
+  // Math / formal reasoning.
+  if (/\b(prove|theorem|step[\s-]by[\s-]step|chain[\s-]of[\s-]thought|derive|integral|derivative|matrix|big[\s-]?o\b|reasoning chain)\b/i.test(prompt)) return 'reasoning';
+  // Web / current — needs grounded search.
+  if (/\b(latest|today|currently|2025|2026|breaking|recent news|current price|live data)\b/i.test(prompt)) return 'web_current';
+  // Structured output (delimiter format / JSON schema / strict shape).
+  if (/---BEGIN:|return\s+(?:only\s+)?(?:a\s+)?(?:valid\s+)?json|delimiter format|json\s*array|json\s*schema/i.test(prompt)) return 'structured';
+  // Creative / brand voice.
+  if (/\b(write\s+a\s+(?:story|poem|copy|tagline|brand|voice|email|landing)|brand voice|creative writing|tone of voice)\b/i.test(prompt)) return 'creative';
+  return 'general';
+}
+
+const TASK_PRIMARY = {
+  general:      'gemini-2.5-pro',
+  code:         'qwen3-coder-plus',
+  reasoning:    'glm-4.6',
+  long_context: 'kimi-k2-0905-preview',
+  web_current:  'sonar',
+  vision:       'gemini-2.5-pro',
+  structured:   'llama-3.3-70b',          // Cerebras — fast + reliable structured output
+  creative:     'kimi-k2-0905-preview',
+};
+
+const TASK_FALLBACKS = {
+  general:      ['gemini-2.5-pro', 'glm-4.6', 'meta-llama/llama-4-scout-17b-16e-instruct', 'gemini-2.0-flash'],
+  code:         ['qwen3-coder-plus', 'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8', 'qwen/qwen3-coder:free', 'deepseek-ai/DeepSeek-V3.2-Exp', 'deepseek-chat'],
+  reasoning:    ['glm-4.6', 'DeepSeek-R1', 'deepseek-reasoner', 'gemini-2.5-pro', 'qwen-qwq-32b'],
+  long_context: ['kimi-k2-0905-preview', 'MiniMax-M1', 'gemini-2.5-pro', 'moonshotai/kimi-k2-instruct'],
+  web_current:  ['sonar', 'sonar-reasoning', 'gemini-2.5-pro'],
+  vision:       ['gemini-2.5-pro', 'gemini-2.0-flash', 'qwen3-vl-plus'],
+  structured:   ['llama-3.3-70b', 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'Meta-Llama-3.3-70B-Instruct'],
+  creative:     ['kimi-k2-0905-preview', 'moonshotai/kimi-k2-instruct', 'glm-4.6', 'gemini-2.5-pro'],
+};
+
+function routeByTask(prompt, config) {
+  const taskType = detectTaskType(prompt);
+  const candidates = TASK_FALLBACKS[taskType] || [TASK_PRIMARY[taskType] || 'gemini-2.0-flash'];
+  for (const model of candidates) {
+    const info = PROVIDERS[model];
+    if (!info) continue;
+    if (getApiKey(info.provider, config)) return { model, taskType };
+  }
+  // Nothing in the task chain has a key — fall back to general free model.
+  const freeModel = resolveFreeModel(config);
+  return { model: freeModel || 'gemini-2.0-flash', taskType: taskType + '_fallback' };
 }
 
 async function fetchStripeCheckoutSession(sessionId) {
@@ -324,6 +457,12 @@ function getApiKey(provider, config) {
     minimax:     process.env.MINIMAX_API_KEY || config?.ai?.minimax,
     grok:        process.env.GROK_API_KEY || process.env.XAI_API_KEY || config?.ai?.grok,
     fireworks:   process.env.FIREWORKS_API_KEY || config?.ai?.fireworks,
+    hyperbolic:  process.env.HYPERBOLIC_API_KEY || config?.ai?.hyperbolic,
+    together:    process.env.TOGETHER_API_KEY || config?.ai?.together,
+    perplexity:  process.env.PERPLEXITY_API_KEY || config?.ai?.perplexity,
+    dashscope:   process.env.DASHSCOPE_API_KEY || process.env.QWEN_API_KEY || config?.ai?.dashscope,
+    nvidia:      process.env.NVIDIA_API_KEY || process.env.NIM_API_KEY || config?.ai?.nvidia,
+    baseten:     process.env.BASETEN_API_KEY || config?.ai?.baseten,
   };
   return keys[provider] || null;
 }
@@ -536,16 +675,25 @@ async function callOpenAICompat(apiKey, body, endpoint, providerLabel) {
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
 
-async function callMoonshot(apiKey, body)  { return callOpenAICompat(apiKey, body, 'https://api.moonshot.ai/v1/chat/completions',          'Moonshot'); }
-async function callZAI(apiKey, body)       { return callOpenAICompat(apiKey, body, 'https://open.bigmodel.cn/api/paas/v4/chat/completions', 'Z.AI'); }
-async function callMinimax(apiKey, body)   { return callOpenAICompat(apiKey, body, 'https://api.minimax.io/v1/text/chatcompletion_v2',      'MiniMax'); }
-async function callGrok(apiKey, body)      { return callOpenAICompat(apiKey, body, 'https://api.x.ai/v1/chat/completions',                  'Grok'); }
-async function callFireworks(apiKey, body) { return callOpenAICompat(apiKey, body, 'https://api.fireworks.ai/inference/v1/chat/completions', 'Fireworks'); }
+async function callMoonshot(apiKey, body)   { return callOpenAICompat(apiKey, body, 'https://api.moonshot.ai/v1/chat/completions',          'Moonshot'); }
+async function callZAI(apiKey, body)        { return callOpenAICompat(apiKey, body, 'https://open.bigmodel.cn/api/paas/v4/chat/completions', 'Z.AI'); }
+async function callMinimax(apiKey, body)    { return callOpenAICompat(apiKey, body, 'https://api.minimax.io/v1/text/chatcompletion_v2',      'MiniMax'); }
+async function callGrok(apiKey, body)       { return callOpenAICompat(apiKey, body, 'https://api.x.ai/v1/chat/completions',                  'Grok'); }
+async function callFireworks(apiKey, body)  { return callOpenAICompat(apiKey, body, 'https://api.fireworks.ai/inference/v1/chat/completions', 'Fireworks'); }
+async function callHyperbolic(apiKey, body) { return callOpenAICompat(apiKey, body, 'https://api.hyperbolic.xyz/v1/chat/completions',         'Hyperbolic'); }
+async function callTogether(apiKey, body)   { return callOpenAICompat(apiKey, body, 'https://api.together.xyz/v1/chat/completions',          'Together'); }
+async function callPerplexity(apiKey, body) { return callOpenAICompat(apiKey, body, 'https://api.perplexity.ai/chat/completions',            'Perplexity'); }
+async function callDashscope(apiKey, body)  { return callOpenAICompat(apiKey, body, 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions', 'DashScope'); }
+async function callNvidia(apiKey, body)     { return callOpenAICompat(apiKey, body, 'https://integrate.api.nvidia.com/v1/chat/completions',  'Nvidia NIM'); }
+// Baseten model URLs are deployment-specific; assume the model ID encodes the deployment.
+async function callBaseten(apiKey, body)    { return callOpenAICompat(apiKey, body, 'https://inference.baseten.co/v1/chat/completions',       'Baseten'); }
 
 const CALLERS = {
   anthropic: callAnthropic, openai: callOpenAI, google: callGoogle, groq: callGroq, deepseek: callDeepSeek,
   mistral: callMistral, openrouter: callOpenRouter, ollama: callOllama, cerebras: callCerebras, sambanova: callSambaNova,
   moonshot: callMoonshot, zai: callZAI, minimax: callMinimax, grok: callGrok, fireworks: callFireworks,
+  hyperbolic: callHyperbolic, together: callTogether, perplexity: callPerplexity, dashscope: callDashscope,
+  nvidia: callNvidia, baseten: callBaseten,
 };
 
 export default async function handler(req, res) {
@@ -596,7 +744,26 @@ export default async function handler(req, res) {
   try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { config = {}; }
   const body = req.body || {};
   const usageContext = (body.usage_context || 'standard').toString();
-  const requestedModel = (body.model || 'gemini-2.0-flash').toString();
+  // Task-type routing: when caller doesn't pin a model, examine the prompt
+  // and route to a specialist (code → Qwen3-Coder, reasoning → GLM-4.6,
+  // long-context → Kimi K2, web/current → Perplexity Sonar, etc.).
+  // Pinning a model bypasses this entirely. Set body.use_task_router=false
+  // to force the legacy default.
+  let requestedModel;
+  let routedTask = null;
+  if (body.model) {
+    requestedModel = body.model.toString();
+  } else if (body.use_task_router !== false) {
+    // Pull last user message text for routing decision (falls back to system or first message).
+    const msgs = Array.isArray(body.messages) ? body.messages : [];
+    const lastUser = [...msgs].reverse().find(m => m && m.role === 'user');
+    const sample = (lastUser && typeof lastUser.content === 'string' ? lastUser.content : '') || (typeof body.system === 'string' ? body.system : '') || (msgs[0] && typeof msgs[0].content === 'string' ? msgs[0].content : '');
+    const routed = routeByTask(sample, config);
+    requestedModel = routed.model;
+    routedTask = routed.taskType;
+  } else {
+    requestedModel = 'gemini-2.0-flash';
+  }
   const claimedTier = (body.tier || 'free').toString().toLowerCase();
   const stripeSessionId = (body.stripe_session_id || body.session_id || '').toString().trim();
   const accessToken = (body.access_token || '').toString().trim();
@@ -793,6 +960,7 @@ export default async function handler(req, res) {
       model,
       provider: info.provider,
     };
+    if (routedTask) result._routed_task = routedTask;
     // Only count quota AFTER successful model call (failed calls shouldn't consume quota)
     if (_scoringQuotaCtx) {
       await incrementQuotaUsage(_scoringQuotaCtx.periodKey, _scoringQuotaCtx.quotaActorKey, _scoringQuotaCtx.quotaBucket).catch(() => {});

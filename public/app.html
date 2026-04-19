@@ -6048,12 +6048,12 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
   // Template/boilerplate phases use free models to minimize cost
   const PHASE_MODELS = {
     'g1': 'gemini-2.0-flash',              // Design system — FREE (structured template, quality sufficient)
-    'g2': 'llama-3.3-70b-versatile',       // Product docs — FREE (Llama 70B handles SPEC.md reasoning well)
-    'g3': 'gemini-2.0-flash',              // Tech docs — FREE (structured specs, template-driven)
-    'g4a': 'llama-3.3-70b-versatile',      // Business strategy — FREE (Groq Llama 70B handles consulting-grade analysis)
-    'g4b': 'gemini-2.0-flash',             // Agent system — FREE (Gemini handles architectural reasoning)
-    'g5': 'llama-3.3-70b-versatile',       // Backend code — FREE (Llama 70B writes good Python)
-    'g7': 'gemini-2.0-flash',              // Frontend — FREE (template scaffolding)
+    'g2': 'glm-4.6',                       // Product docs — FREE (Z.AI GLM-4.6, deep reasoning for SPEC.md)
+    'g3': 'qwen3-coder-plus',              // Tech docs — FREE (Qwen3-Coder, best OSS for API contracts/data models)
+    'g4a': 'glm-4.6',                      // Business strategy — FREE (GLM-4.6 matches Claude Sonnet on consulting-grade analysis)
+    'g4b': 'DeepSeek-R1',                  // Agent system — FREE (DeepSeek R1 via SambaNova, best OSS architectural reasoning)
+    'g5': 'qwen3-coder-plus',              // Backend code — FREE (Qwen3-Coder 480B, best OSS coder, beats Claude on SWE-bench)
+    'g7': 'meta-llama/llama-4-scout-17b-16e-instruct',  // Frontend — FREE (Llama 4 via Groq, fast + frontier-class)
   };
   
   let model;
@@ -6067,7 +6067,7 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
     model = V2_MODEL;
   }
   
-  const fallbackModels = [model, 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant'];
+  const fallbackModels = [model, 'glm-4.6', 'meta-llama/llama-4-scout-17b-16e-instruct', 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'llama-3.3-70b', 'DeepSeek-R1', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
@@ -6168,7 +6168,7 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
     budget: 'gemini-2.0-flash',                       // FREE (Google) — fast for boilerplate
   };
   const model = COST_MODELS[costTier] || COST_MODELS.standard;
-  const fallbackModels = [model, 'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant'];
+  const fallbackModels = [model, 'glm-4.6', 'meta-llama/llama-4-scout-17b-16e-instruct', 'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'DeepSeek-R1', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant'];
   
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];

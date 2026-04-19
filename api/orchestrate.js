@@ -11,22 +11,27 @@ export const maxDuration = 300;
 // Maps task complexity to optimal model (like Claude Code's internal routing)
 const ROUTING_TIERS = {
   // Architect-level: complex strategy, highest quality. Free-first.
+  // Lead with reasoning specialists that match Claude Sonnet on benchmarks.
   architect: {
-    google: 'gemini-2.5-pro',
-    zai: 'glm-4.5',
-    moonshot: 'kimi-k2-0905-preview',
-    groq: 'llama-3.3-70b-versatile',
+    zai: 'glm-4.6',                                              // GLM-4.6 — beats Sonnet on MMLU
+    sambanova: 'DeepSeek-R1',                                    // DeepSeek R1 — best OSS reasoner
+    google: 'gemini-2.5-pro',                                    // Gemini 2.5 Pro
+    moonshot: 'kimi-k2-0905-preview',                            // Kimi K2 — long context + creative
+    nvidia: 'meta/llama-4-maverick-17b-128e-instruct',           // Llama 4 Maverick
+    dashscope: 'qwen3-max',                                      // Qwen3 Max
     deepseek: 'deepseek-reasoner',
     fireworks: 'accounts/fireworks/models/qwen2p5-72b-instruct',
-    fallback: 'gemini-2.0-flash',
+    fallback: 'gemini-2.5-pro',
   },
   // Standard: most generation tasks — all free tier
   standard: {
     google: 'gemini-2.0-flash',
-    groq: 'llama-3.3-70b-versatile',
-    moonshot: 'moonshot-v1-auto',
+    groq: 'meta-llama/llama-4-scout-17b-16e-instruct',           // Llama 4 Scout via Groq — fastest frontier
+    cerebras: 'llama-4-scout-17b-16e-instruct',                  // Cerebras Llama 4 — 2000 tok/s
     zai: 'glm-4.5-air',
+    moonshot: 'moonshot-v1-auto',
     minimax: 'MiniMax-M1',
+    together: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
     deepseek: 'deepseek-chat',
     fireworks: 'accounts/fireworks/models/llama-v3p3-70b-instruct',
     fallback: 'gemini-2.0-flash',
@@ -35,9 +40,45 @@ const ROUTING_TIERS = {
   fast: {
     google: 'gemini-2.5-flash',
     groq: 'llama-3.1-8b-instant',
+    cerebras: 'llama-3.3-70b',
     zai: 'glm-4.5-air',
     fallback: 'gemini-2.0-flash',
   },
+  // Code: dedicated tier for backend/frontend/infrastructure code generation
+  code: {
+    dashscope: 'qwen3-coder-plus',                               // Qwen3-Coder — best OSS coder
+    together: 'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8',
+    openrouter: 'qwen/qwen3-coder:free',
+    deepseek: 'deepseek-chat',
+    nvidia: 'qwen/qwen3-coder-480b-a35b-instruct',
+    fallback: 'gemini-2.0-flash',
+  },
+  // Reasoning: math, proofs, complex multi-step logic
+  reasoning: {
+    sambanova: 'DeepSeek-R1',
+    zai: 'glm-4.6',
+    deepseek: 'deepseek-reasoner',
+    groq: 'qwen-qwq-32b',
+    google: 'gemini-2.5-pro',
+    fallback: 'gemini-2.5-pro',
+  },
+  // Web/current: needs grounded search — Perplexity is unique here
+  web_current: {
+    perplexity: 'sonar',
+    google: 'gemini-2.5-pro',                                    // Has Google Search grounding
+    fallback: 'gemini-2.0-flash',
+  },
+};
+
+// Phase → tier mapping enriched with new specialist tiers.
+const PHASE_TIER_OVERRIDES = {
+  backend:           'code',         // FastAPI / Next.js backend
+  frontend:          'code',
+  api_contracts:     'code',
+  data_model:        'code',
+  business:          'reasoning',    // Business strategy, market analysis
+  agent_system:      'reasoning',    // Architectural decisions
+  competitive:       'web_current',  // Competitor research wants current data
 };
 
 // Phase → tier mapping (which phases need which quality level)
