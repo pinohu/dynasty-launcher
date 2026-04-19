@@ -10,25 +10,32 @@ export const maxDuration = 300;
 // ── Smart Model Routing ──────────────────────────────────────────────────────
 // Maps task complexity to optimal model (like Claude Code's internal routing)
 const ROUTING_TIERS = {
-  // Architect-level: complex strategy, needs highest quality
-  // Free-first: Gemini 2.5 Pro (free tier on AI Studio) → Groq Llama 70B → Gemini Flash
+  // Architect-level: complex strategy, highest quality. Free-first.
   architect: {
     google: 'gemini-2.5-pro',
+    zai: 'glm-4.5',
+    moonshot: 'kimi-k2-0905-preview',
     groq: 'llama-3.3-70b-versatile',
     deepseek: 'deepseek-reasoner',
+    fireworks: 'accounts/fireworks/models/qwen2p5-72b-instruct',
     fallback: 'gemini-2.0-flash',
   },
   // Standard: most generation tasks — all free tier
   standard: {
     google: 'gemini-2.0-flash',
     groq: 'llama-3.3-70b-versatile',
+    moonshot: 'moonshot-v1-auto',
+    zai: 'glm-4.5-air',
+    minimax: 'MiniMax-M1',
     deepseek: 'deepseek-chat',
+    fireworks: 'accounts/fireworks/models/llama-v3p3-70b-instruct',
     fallback: 'gemini-2.0-flash',
   },
   // Fast: boilerplate, templates, simple generation — all free tier
   fast: {
     google: 'gemini-2.5-flash',
     groq: 'llama-3.1-8b-instant',
+    zai: 'glm-4.5-air',
     fallback: 'gemini-2.0-flash',
   },
 };

@@ -6,22 +6,29 @@ export const maxDuration = 300; // 5 min — AI content generation takes time
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-// Free LLM helper — calls Google Gemini (AI Studio free tier) first, then
-// falls back to Groq's Llama 3.3 70B. Returns plain text or '' on failure.
-// Use this for any one-shot text generation inside provisioning modules
-// instead of calling api.anthropic.com directly.
+// Free LLM helper — multi-provider fallback chain for provisioning modules.
+// Order: Gemini → Groq (Llama 3.3 70B) → Cerebras → Moonshot Kimi →
+//        Z.AI GLM-4.5 → Fireworks Llama → DeepSeek. Returns text or '' on failure.
+// Use instead of calling api.anthropic.com directly.
 async function freeLLM(prompt, maxTokens = 4000) {
-  const geminiKey = process.env.GOOGLE_AI_KEY || process.env.GEMINI_API_KEY || '';
-  const groqKey   = process.env.GROQ_API_KEY || '';
-  if (geminiKey) {
+  const gemini1 = process.env.GOOGLE_AI_KEY || '';
+  const gemini2 = process.env.GEMINI_API_KEY || '';
+  const groq1   = process.env.GROQ_API_KEY || '';
+  const groq2   = process.env.GROQ_API_KEY_2 || '';
+  const cerebras = process.env.CEREBRAS_API_KEY || '';
+  const moonshot = process.env.MOONSHOT_API_KEY || '';
+  const zai      = process.env.ZAI_API_KEY || process.env.Z_AI_API_KEY || '';
+  const minimax  = process.env.MINIMAX_API_KEY || '';
+  const fireworks = process.env.FIREWORKS_API_KEY || '';
+  const deepseek1 = process.env.DEEPSEEK_API_KEY || '';
+  const deepseek2 = process.env.DEEPSEEK_API_KEY_2 || '';
+
+  // 1) Google Gemini (AI Studio — multiple keys for rotation)
+  for (const key of [gemini1, gemini2].filter(Boolean)) {
     try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: Math.min(maxTokens, 8192), temperature: 0.7 }
-        })
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: Math.min(maxTokens, 8192), temperature: 0.7 } })
       });
       if (r.ok) {
         const d = await r.json();
@@ -30,22 +37,40 @@ async function freeLLM(prompt, maxTokens = 4000) {
       }
     } catch {}
   }
-  if (groqKey) {
+
+  // OpenAI-compatible fallback (Groq, Cerebras, Moonshot, Z.AI, MiniMax, Fireworks, DeepSeek)
+  const openAICompatTry = async (key, endpoint, model) => {
+    if (!key) return null;
     try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const r = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: Math.min(maxTokens, 8000),
-          messages: [{ role: 'user', content: prompt }]
-        })
+        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, max_tokens: Math.min(maxTokens, 8000), messages: [{ role: 'user', content: prompt }] })
       });
       if (r.ok) {
         const d = await r.json();
-        return d.choices?.[0]?.message?.content || '';
+        const text = d.choices?.[0]?.message?.content || '';
+        if (text) return text;
       }
     } catch {}
+    return null;
+  };
+
+  const attempts = [
+    [groq1,     'https://api.groq.com/openai/v1/chat/completions',             'llama-3.3-70b-versatile'],
+    [groq2,     'https://api.groq.com/openai/v1/chat/completions',             'llama-3.3-70b-versatile'],
+    [cerebras,  'https://api.cerebras.ai/v1/chat/completions',                 'llama-3.3-70b'],
+    [moonshot,  'https://api.moonshot.ai/v1/chat/completions',                 'kimi-k2-0905-preview'],
+    [zai,       'https://open.bigmodel.cn/api/paas/v4/chat/completions',       'glm-4.5'],
+    [minimax,   'https://api.minimax.io/v1/text/chatcompletion_v2',            'MiniMax-M1'],
+    [fireworks, 'https://api.fireworks.ai/inference/v1/chat/completions',      'accounts/fireworks/models/llama-v3p3-70b-instruct'],
+    [deepseek1, 'https://api.deepseek.com/v1/chat/completions',                'deepseek-chat'],
+    [deepseek2, 'https://api.deepseek.com/v1/chat/completions',                'deepseek-chat'],
+  ];
+
+  for (const [key, endpoint, model] of attempts) {
+    const result = await openAICompatTry(key, endpoint, model);
+    if (result) return result;
   }
   return '';
 }

@@ -55,6 +55,27 @@ const PROVIDERS = {
 
   // ── SambaNova (free tier — fast inference) ───────────────────────────
   'Meta-Llama-3.3-70B-Instruct':  { provider: 'sambanova', label: 'Llama 3.3 70B (SambaNova)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Moonshot / Kimi (free tier — 200K+ context) ──────────────────────
+  'kimi-k2-0905-preview':         { provider: 'moonshot', label: 'Kimi K2 (Moonshot)',       costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'moonshot-v1-auto':             { provider: 'moonshot', label: 'Moonshot v1 Auto',         costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Z.AI / ZhipuAI (free tier — GLM-4.5 reasoning) ───────────────────
+  'glm-4.5':                      { provider: 'zai', label: 'GLM-4.5 (Z.AI)',                costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'glm-4.5-air':                  { provider: 'zai', label: 'GLM-4.5 Air (Z.AI)',            costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── MiniMax (free tier — 1M context) ─────────────────────────────────
+  'MiniMax-M1':                   { provider: 'minimax', label: 'MiniMax M1',                costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'abab6.5s-chat':                { provider: 'minimax', label: 'MiniMax abab6.5s',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── xAI / Grok (paid — optional fallback) ────────────────────────────
+  'grok-2-latest':                { provider: 'grok', label: 'Grok 2 (xAI)',                 costPer1kIn: 0.002, costPer1kOut: 0.01, free: false },
+  'grok-4-latest':                { provider: 'grok', label: 'Grok 4 (xAI)',                 costPer1kIn: 0.003, costPer1kOut: 0.015, free: false },
+
+  // ── Fireworks.ai (near-free — hosts Llama/Qwen/DeepSeek cheaply) ─────
+  'accounts/fireworks/models/llama-v3p3-70b-instruct': { provider: 'fireworks', label: 'Llama 3.3 70B (Fireworks)', costPer1kIn: 0.0001, costPer1kOut: 0.0004, free: true },
+  'accounts/fireworks/models/qwen2p5-72b-instruct':    { provider: 'fireworks', label: 'Qwen 2.5 72B (Fireworks)',  costPer1kIn: 0.0001, costPer1kOut: 0.0004, free: true },
+  'accounts/fireworks/models/deepseek-v3':             { provider: 'fireworks', label: 'DeepSeek V3 (Fireworks)',   costPer1kIn: 0.00027, costPer1kOut: 0.0011, free: true },
 };
 
 const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_DAILY_LIMIT || '30', 10));
@@ -204,7 +225,17 @@ async function incrementUsage(actorKey) {
 }
 
 function resolveFreeModel(config) {
-  const preferred = ['gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash', 'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
+  // Ordered by quality × availability × speed. First match with an available
+  // API key wins. New free providers (Moonshot/Z.AI/MiniMax/Fireworks) slot
+  // in after Google/Groq/Cerebras/SambaNova to preserve existing behavior.
+  const preferred = [
+    'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash',
+    'llama-3.3-70b-versatile', 'llama-3.3-70b', 'Meta-Llama-3.3-70B-Instruct',
+    'kimi-k2-0905-preview', 'glm-4.5', 'MiniMax-M1',
+    'accounts/fireworks/models/llama-v3p3-70b-instruct',
+    'llama-3.1-8b-instant', 'mixtral-8x7b-32768',
+    'glm-4.5-air', 'moonshot-v1-auto',
+  ];
   for (const model of preferred) {
     const info = PROVIDERS[model];
     if (!info || !info.free) continue;
@@ -264,18 +295,35 @@ async function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
   return tse(Buffer.from(expected), Buffer.from(sig));
 }
 
+// Round-robin counter for multi-key providers (Groq, DeepSeek). Bumped on
+// every call; resets if process restarts. In-memory is fine — rate limits
+// are per-key per-minute, so any distribution across keys helps.
+let __keyRotationCounter = 0;
+function pickRotated(...keys) {
+  const filled = keys.filter(k => !!k);
+  if (filled.length === 0) return null;
+  if (filled.length === 1) return filled[0];
+  const idx = (__keyRotationCounter++) % filled.length;
+  return filled[idx];
+}
+
 function getApiKey(provider, config) {
   const keys = {
     anthropic:   process.env.ANTHROPIC_API_KEY,
     openai:      process.env.OPENAI_API_KEY || config?.ai?.openai,
-    google:      process.env.GOOGLE_AI_KEY || config?.ai?.google_ai,
-    groq:        process.env.GROQ_API_KEY || config?.ai?.groq,
-    deepseek:    process.env.DEEPSEEK_API_KEY || config?.ai?.deepseek,
+    google:      pickRotated(process.env.GOOGLE_AI_KEY, process.env.GEMINI_API_KEY, config?.ai?.google_ai),
+    groq:        pickRotated(process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, config?.ai?.groq),
+    deepseek:    pickRotated(process.env.DEEPSEEK_API_KEY, process.env.DEEPSEEK_API_KEY_2, config?.ai?.deepseek),
     mistral:     process.env.MISTRAL_API_KEY || config?.ai?.mistral,
     openrouter:  process.env.OPENROUTER_API_KEY || config?.ai?.openrouter,
     ollama:      process.env.OLLAMA_URL || config?.ai?.ollama_url || null,
     cerebras:    process.env.CEREBRAS_API_KEY || config?.ai?.cerebras,
     sambanova:   process.env.SAMBANOVA_API_KEY || config?.ai?.sambanova,
+    moonshot:    process.env.MOONSHOT_API_KEY || config?.ai?.moonshot,
+    zai:         process.env.ZAI_API_KEY || process.env.Z_AI_API_KEY || config?.ai?.zai,
+    minimax:     process.env.MINIMAX_API_KEY || config?.ai?.minimax,
+    grok:        process.env.GROK_API_KEY || process.env.XAI_API_KEY || config?.ai?.grok,
+    fireworks:   process.env.FIREWORKS_API_KEY || config?.ai?.fireworks,
   };
   return keys[provider] || null;
 }
@@ -474,7 +522,31 @@ async function callSambaNova(apiKey, body) {
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
 
-const CALLERS = { anthropic: callAnthropic, openai: callOpenAI, google: callGoogle, groq: callGroq, deepseek: callDeepSeek, mistral: callMistral, openrouter: callOpenRouter, ollama: callOllama, cerebras: callCerebras, sambanova: callSambaNova };
+// Shared OpenAI-compatible caller — used by Moonshot, Z.AI, MiniMax, xAI, Fireworks.
+async function callOpenAICompat(apiKey, body, endpoint, providerLabel) {
+  const messages = (body.messages || []).map(m => ({ role: m.role, content: m.content }));
+  if (body.system) messages.unshift({ role: 'system', content: body.system });
+  const r = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
+  });
+  if (!r.ok) { const errBody = await r.text().catch(() => ""); throw new Error(`${providerLabel} API error ${r.status}: ${errBody.slice(0, 200)}`); }
+  const d = await r.json();
+  return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
+}
+
+async function callMoonshot(apiKey, body)  { return callOpenAICompat(apiKey, body, 'https://api.moonshot.ai/v1/chat/completions',          'Moonshot'); }
+async function callZAI(apiKey, body)       { return callOpenAICompat(apiKey, body, 'https://open.bigmodel.cn/api/paas/v4/chat/completions', 'Z.AI'); }
+async function callMinimax(apiKey, body)   { return callOpenAICompat(apiKey, body, 'https://api.minimax.io/v1/text/chatcompletion_v2',      'MiniMax'); }
+async function callGrok(apiKey, body)      { return callOpenAICompat(apiKey, body, 'https://api.x.ai/v1/chat/completions',                  'Grok'); }
+async function callFireworks(apiKey, body) { return callOpenAICompat(apiKey, body, 'https://api.fireworks.ai/inference/v1/chat/completions', 'Fireworks'); }
+
+const CALLERS = {
+  anthropic: callAnthropic, openai: callOpenAI, google: callGoogle, groq: callGroq, deepseek: callDeepSeek,
+  mistral: callMistral, openrouter: callOpenRouter, ollama: callOllama, cerebras: callCerebras, sambanova: callSambaNova,
+  moonshot: callMoonshot, zai: callZAI, minimax: callMinimax, grok: callGrok, fireworks: callFireworks,
+};
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
