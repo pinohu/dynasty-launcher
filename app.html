@@ -834,9 +834,9 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
 
     <!-- Depth Tier Selector -->
     <div style="display:flex;gap:8px;margin-bottom:16px" id="depth-tier-selector">
-      <button class="im-btn" onclick="setDepthTier('quick')" id="tier-quick">⚡ Quick <span style="color:var(--dim);font-size:10px">~15s · FREE</span></button>
-      <button class="im-btn active" onclick="setDepthTier('standard')" id="tier-standard">📊 Standard <span style="color:var(--dim);font-size:10px">~45s · FREE</span></button>
-      <button class="im-btn" onclick="setDepthTier('deep')" id="tier-deep">🔬 Deep <span style="color:var(--dim);font-size:10px">~2min · FREE</span></button>
+      <button class="im-btn" onclick="setDepthTier('quick')" id="tier-quick">⚡ Quick <span style="color:var(--dim);font-size:10px">~15s</span></button>
+      <button class="im-btn active" onclick="setDepthTier('standard')" id="tier-standard">📊 Standard <span style="color:var(--dim);font-size:10px">~45s</span></button>
+      <button class="im-btn" onclick="setDepthTier('deep')" id="tier-deep">🔬 Deep <span style="color:var(--dim);font-size:10px">~2min</span></button>
     </div>
 
     <div class="fw-grid" id="fw-grid">
@@ -915,13 +915,11 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
           <div class="sc-act-icon">🔧</div>
           <h4>Get refinements</h4>
           <p>AI suggests specific improvements to boost your score.</p>
-          <div class="sc-act-cost">FREE</div>
         </div>
         <div class="sc-action sc-action-premium" onclick="runPivotReview()">
           <div class="sc-act-icon">🧠</div>
           <h4>Multi-model pivot review</h4>
           <p>Every configured model with a working key analyzes, cross-reviews, and converges on the strongest pivot (minimum three for consensus).</p>
-          <div class="sc-act-cost">FREE</div>
         </div>
       </div>
       <div id="refinement-results" style="display:none"></div>
@@ -941,7 +939,6 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
       <h3 class="cfg-label">AI Model</h3>
       <p class="cfg-desc">Select the model for all generation phases. All routed models are free tier.</p>
       <div class="model-grid" id="model-grid"></div>
-      <div class="model-cost" id="model-cost">Estimated build cost: <strong>FREE</strong></div>
 
       <details class="cfg-advanced">
         <summary>Advanced: per-phase model assignment</summary>
@@ -2083,7 +2080,6 @@ function renderBuildPlanPreview(plan) {
   ).join('');
   el.innerHTML = `
     <div style="display:flex;gap:16px;margin-bottom:6px;flex-wrap:wrap">
-      <div><span style="font-size:10px;font-weight:600;color:var(--dim)">COST</span><div style="font-size:12px;color:var(--gold);font-weight:600">${plan.estimated_cost || 'FREE'}</div></div>
       <div><span style="font-size:10px;font-weight:600;color:var(--dim)">TIME (parallel)</span><div style="font-size:12px;color:var(--grn);font-weight:600">${plan.estimated_time_parallel || '~35s'}</div></div>
       <div><span style="font-size:10px;font-weight:600;color:var(--dim)">TIME (sequential)</span><div style="font-size:12px;color:var(--sec)">${plan.estimated_time_sequential || '~90s'}</div></div>
     </div>
@@ -2234,9 +2230,8 @@ function showPreflightModal(report) {
             ${infraItems || '<div class="pf-muted">No infrastructure provisioning</div>'}
           </div>
           <div class="pf-section">
-            <h4>Estimated Cost & Time</h4>
-            <div class="pf-infra-item"><span class="pf-label">With smart routing</span><span class="pf-value">${report.estimated_cost?.with_smart_routing || 'FREE'}</span></div>
-            <div class="pf-infra-item"><span class="pf-label">Estimated time</span><span class="pf-value">${report.estimated_time?.with_parallel || '~30s'}</span></div>
+            <h4>Estimated Time</h4>
+            <div class="pf-infra-item"><span class="pf-label">With parallel execution</span><span class="pf-value">${report.estimated_time?.with_parallel || '~30s'}</span></div>
           </div>
           <div class="pf-section">
             <h4>Active Flags</h4>
@@ -2454,7 +2449,6 @@ document.getElementById('settings-btn').onclick=()=>{
       <div style="border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:12px;background:rgba(255,255,255,.02)">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
           <h4 style="font-size:12px;font-weight:700;color:var(--gold);margin:0">Anchor Guardrails</h4>
-          <div style="font-size:10px;color:var(--dim)">Observed avg AI/build: <strong id="gr-observed-ai" style="color:var(--tx)">$0.00</strong></div>
         </div>
         <div style="font-size:10px;color:var(--dim);line-height:1.45;margin-bottom:10px">Floor formula uses fully-loaded cost and target margin: floor = cost / (1 - fee% - targetMargin).</div>
 
@@ -3840,7 +3834,6 @@ async function populateModels() {
            onclick="selectModel('${escapeHtml(id)}', this)" data-model="${escapeHtml(id)}" data-cost="${m.estimatedBuildCost}">
         <div class="mc-name">${m.label}</div>
         <div class="mc-provider">${m.provider}</div>
-        <div class="mc-cost">${m.free ? 'FREE' : m.estimatedBuildCost}</div>
       </div>
     `).join('');
   populatePhaseModels(data.models);
@@ -3850,7 +3843,6 @@ function selectModel(id, el) {
   V2_MODEL = id;
   document.querySelectorAll('.model-chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  document.getElementById('model-cost').innerHTML = 'Estimated build cost: <strong>' + (el.dataset.cost || 'FREE') + '</strong>';
 }
 
 function populatePhaseModels(models) {
@@ -4185,7 +4177,7 @@ function showPipelineUI() {
       <div class="pipe-phase" id="phase4">
         <div class="pipe-phase-label">Phase 4: Devil's Advocate <span class="pipe-phase-status waiting" id="p4-status">Waiting</span></div>
       </div>
-      <div class="pipe-cost" id="pipe-cost">Running cost: $0.00</div>
+      <div class="pipe-cost" id="pipe-cost" style="display:none"></div>
     </div>
     <div id="consensus-result"></div>
   `;
@@ -4935,7 +4927,7 @@ async function proceedToBuild(desc, opts) {
     `🏗 Dynasty Build Complete\n\n` +
     `📦 ${INFERRED.name}\n` +
     `✅ ${okCount} phases completed${errCount ? ` · ❌ ${errCount} errors` : ''}\n` +
-    `💰 $${V2_BUILD_COST.toFixed(4)} · ⏱ ${buildDur}s\n` +
+    `⏱ ${buildDur}s\n` +
     `🔗 https://github.com/${ORG}/${INFERRED.repo}\n` +
     `🌐 https://${INFERRED.repo}.vercel.app`
   );
@@ -14296,7 +14288,6 @@ function generateBuildReport() {
       <tr><td class="meta-label">Template Used</td><td>${inf.type_id}</td></tr>
       <tr><td class="meta-label">Files Generated</td><td>${fileCount}</td></tr>
       <tr><td class="meta-label">Build Duration</td><td>${buildDuration}s</td></tr>
-      ${canSeeInternalCost ? `<tr><td class="meta-label">API Cost</td><td>$${V2_BUILD_COST?.toFixed(4) || '0.00'}</td></tr>` : ''}
       <tr><td class="meta-label">Research Sources</td><td>${research?.sources?.join(', ') || 'None'}</td></tr>
     </table>`;
 

@@ -259,10 +259,6 @@ function generatePreflightReport(inf, svcs, flags) {
       twentyi: svcs.includes('twentyi') ? inf.domain : null,
       stripe: svcs.includes('stripe') ? 'Product + recurring price' : null,
     },
-    estimated_cost: {
-      with_smart_routing: '$0.08-0.15 (Opus for architecture, Haiku for boilerplate)',
-      without_smart_routing: '$0.20-0.40 (Sonnet for everything)',
-    },
     estimated_time: {
       with_parallel: '~30-45 seconds',
       without_parallel: '~90-120 seconds',
