@@ -18,11 +18,26 @@ const PROVIDERS = {
   'llama-3.1-8b-instant':       { provider: 'groq', label: 'Llama 3.1 8B',   costPer1kIn: 0, costPer1kOut: 0, free: true },
   'mixtral-8x7b-32768':         { provider: 'groq', label: 'Mixtral 8x7B',   costPer1kIn: 0, costPer1kOut: 0, free: true },
   'gemma2-9b-it':               { provider: 'groq', label: 'Gemma 2 9B',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'openai/gpt-oss-120b':        { provider: 'groq', label: 'GPT-OSS 120B (Groq)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'openai/gpt-oss-20b':         { provider: 'groq', label: 'GPT-OSS 20B (Groq)',  costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'deepseek-r1-distill-llama-70b': { provider: 'groq', label: 'DeepSeek R1 Distill Llama 70B (Groq)', costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── OpenRouter (aggregator — free models only) ────────────────────────────
   'meta-llama/llama-3.3-70b-instruct:free': { provider: 'openrouter', label: 'Llama 3.3 70B (OR)', costPer1kIn: 0, costPer1kOut: 0, free: true },
   'google/gemma-2-9b-it:free':               { provider: 'openrouter', label: 'Gemma 2 9B (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
   'microsoft/phi-3-mini-128k-instruct:free': { provider: 'openrouter', label: 'Phi-3 Mini (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'deepseek/deepseek-chat-v3.1:free':        { provider: 'openrouter', label: 'DeepSeek V3.1 (OR)',  costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen/qwen3-coder:free':                   { provider: 'openrouter', label: 'Qwen3 Coder (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'meta-llama/llama-4-maverick:free':        { provider: 'openrouter', label: 'Llama 4 Maverick (OR)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'z-ai/glm-4.5-air:free':                   { provider: 'openrouter', label: 'GLM-4.5 Air (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'nousresearch/hermes-3-llama-3.1-405b:free': { provider: 'openrouter', label: 'Hermes 3 Llama 405B (OR)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'nvidia/llama-3.1-nemotron-70b-instruct:free': { provider: 'openrouter', label: 'Nemotron 70B (OR)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'mistralai/mistral-nemo:free':             { provider: 'openrouter', label: 'Mistral Nemo (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'mistralai/mistral-7b-instruct:free':      { provider: 'openrouter', label: 'Mistral 7B (OR)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen/qwen-2.5-72b-instruct:free':         { provider: 'openrouter', label: 'Qwen 2.5 72B (OR)',   costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen/qwen-2.5-coder-32b-instruct:free':   { provider: 'openrouter', label: 'Qwen 2.5 Coder 32B (OR)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'google/gemini-2.0-flash-exp:free':        { provider: 'openrouter', label: 'Gemini 2.0 Flash Exp (OR)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'tencent/hunyuan-a13b-instruct:free':      { provider: 'openrouter', label: 'Hunyuan A13B (OR)',   costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── Ollama (self-hosted — any model you run locally) ──────────────────
   'ollama/gemma4':                { provider: 'ollama', label: 'Gemma 4 (Ollama)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
@@ -93,13 +108,41 @@ const PROVIDERS = {
   'llama-4-scout-17b-16e-instruct':                       { provider: 'cerebras', label: 'Llama 4 Scout (Cerebras)', costPer1kIn: 0, costPer1kOut: 0, free: true },
   // SambaNova — DeepSeek R1
   'DeepSeek-R1':                                          { provider: 'sambanova', label: 'DeepSeek R1 (SambaNova)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'Meta-Llama-3.1-405B-Instruct':                         { provider: 'sambanova', label: 'Llama 3.1 405B (SambaNova)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'Meta-Llama-3.1-8B-Instruct':                           { provider: 'sambanova', label: 'Llama 3.1 8B (SambaNova)',   costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'Qwen2.5-72B-Instruct':                                 { provider: 'sambanova', label: 'Qwen 2.5 72B (SambaNova)',   costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'DeepSeek-V3-0324':                                     { provider: 'sambanova', label: 'DeepSeek V3-0324 (SambaNova)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  // Cerebras — Qwen 3 + GPT-OSS
+  'qwen-3-32b':                                           { provider: 'cerebras', label: 'Qwen 3 32B (Cerebras)',       costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'qwen-3-235b-a22b-instruct-2507':                       { provider: 'cerebras', label: 'Qwen 3 235B (Cerebras)',      costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'gpt-oss-120b':                                         { provider: 'cerebras', label: 'GPT-OSS 120B (Cerebras)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
   // Z.AI — GLM-4.6
   'glm-4.6':                                              { provider: 'zai',  label: 'GLM-4.6 (Z.AI)',          costPer1kIn: 0, costPer1kOut: 0, free: true },
-  // OpenRouter — free top open-weights
-  'deepseek/deepseek-chat-v3.1:free':                     { provider: 'openrouter', label: 'DeepSeek V3.1 (OR free)',  costPer1kIn: 0, costPer1kOut: 0, free: true },
-  'qwen/qwen3-coder:free':                                { provider: 'openrouter', label: 'Qwen3 Coder (OR free)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
-  'meta-llama/llama-4-maverick:free':                     { provider: 'openrouter', label: 'Llama 4 Maverick (OR free)', costPer1kIn: 0, costPer1kOut: 0, free: true },
-  'z-ai/glm-4.5-air:free':                                { provider: 'openrouter', label: 'GLM-4.5 Air (OR free)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── GitHub Models (free via GITHUB_TOKEN — no separate API key needed) ──
+  'openai/gpt-oss-120b@github':                           { provider: 'github', label: 'GPT-OSS 120B (GitHub)',       costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'meta/Llama-3.3-70B-Instruct':                          { provider: 'github', label: 'Llama 3.3 70B (GitHub)',      costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'deepseek/DeepSeek-R1':                                 { provider: 'github', label: 'DeepSeek R1 (GitHub)',        costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'microsoft/Phi-4':                                      { provider: 'github', label: 'Phi-4 (GitHub)',              costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'mistral-ai/Mistral-Large-2411':                        { provider: 'github', label: 'Mistral Large (GitHub)',      costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'cohere/cohere-command-r-plus':                         { provider: 'github', label: 'Command R+ (GitHub)',         costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'xai/grok-3':                                           { provider: 'github', label: 'Grok 3 (GitHub)',             costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Cloudflare Workers AI (10k neurons/day free — edge inference) ──
+  '@cf/meta/llama-3.3-70b-instruct-fp8-fast':             { provider: 'cloudflare', label: 'Llama 3.3 70B FP8 Fast (CF)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  '@cf/meta/llama-3.1-70b-instruct':                      { provider: 'cloudflare', label: 'Llama 3.1 70B (CF)',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+  '@cf/qwen/qwen2.5-coder-32b-instruct':                  { provider: 'cloudflare', label: 'Qwen 2.5 Coder 32B (CF)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+  '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b':         { provider: 'cloudflare', label: 'DeepSeek R1 Distill 32B (CF)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  '@cf/google/gemma-3-12b-it':                            { provider: 'cloudflare', label: 'Gemma 3 12B (CF)',            costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Chutes.ai (decentralized Bittensor-backed — genuinely unlimited free) ──
+  'deepseek-ai/DeepSeek-V3-0324@chutes':                  { provider: 'chutes', label: 'DeepSeek V3 (Chutes)',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'meta-llama/Llama-3.3-70B-Instruct@chutes':             { provider: 'chutes', label: 'Llama 3.3 70B (Chutes)',        costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'Qwen/Qwen3-235B-A22B@chutes':                          { provider: 'chutes', label: 'Qwen 3 235B (Chutes)',          costPer1kIn: 0, costPer1kOut: 0, free: true },
+
+  // ── Inception Labs Mercury (diffusion LLM — 10x faster parallel generation) ──
+  'mercury':                                              { provider: 'inception', label: 'Mercury (Inception)',        costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'mercury-coder':                                        { provider: 'inception', label: 'Mercury Coder (Inception)',  costPer1kIn: 0, costPer1kOut: 0, free: true },
 };
 
 const FREE_SCORING_DAILY_LIMIT = Math.max(1, parseInt(process.env.FREE_SCORING_DAILY_LIMIT || '30', 10));
@@ -252,29 +295,46 @@ function resolveFreeModel(config) {
   // FREE-ONLY preferred order. First match with a working API key wins.
   // All entries below are genuinely free tier (no per-token charges).
   const preferred = [
-    // Frontier open-weights (Llama 4, GLM-4.6, Qwen3)
-    'meta-llama/llama-4-scout-17b-16e-instruct',  // Groq Llama 4 Scout
+    // Frontier tier — GPT-OSS, Llama 4, GLM-4.6, DeepSeek R1, Qwen 3
+    'openai/gpt-oss-120b',                         // Groq GPT-OSS 120B (OpenAI open-weight)
+    'gpt-oss-120b',                                // Cerebras GPT-OSS 120B
+    'meta-llama/llama-4-scout-17b-16e-instruct',   // Groq Llama 4 Scout
     'llama-4-scout-17b-16e-instruct',              // Cerebras Llama 4 Scout
-    'glm-4.6', 'glm-4.5',                          // Z.AI reasoning specialists
+    'deepseek-r1-distill-llama-70b',               // Groq DeepSeek R1 Distill (reasoning specialist)
+    'glm-4.6', 'glm-4.5',                          // Z.AI
     'gemini-2.5-pro',                              // Google (free tier)
-    'qwen3-max',                                   // Alibaba general flagship
-    'kimi-k2-0905-preview',                        // Moonshot
     'DeepSeek-R1',                                 // SambaNova
-    'meta/llama-4-maverick-17b-128e-instruct',     // Nvidia Llama 4 Maverick
+    'Meta-Llama-3.1-405B-Instruct',                // SambaNova Llama 3.1 405B
+    'qwen3-max',                                   // Alibaba
+    'kimi-k2-0905-preview',                        // Moonshot
+    'meta/llama-4-maverick-17b-128e-instruct',     // Nvidia
+    'openai/gpt-oss-120b@github',                  // GitHub Models GPT-OSS
+    'deepseek/DeepSeek-R1',                        // GitHub Models DeepSeek R1
 
     // Workhorses
-    'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash',
+    'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash', 'gemini-2.5-flash',
+    'qwen-3-235b-a22b-instruct-2507',              // Cerebras Qwen 3 235B
+    'qwen-3-32b',                                  // Cerebras Qwen 3 32B
     'llama-3.3-70b-versatile',
     'llama-3.3-70b',
     'Meta-Llama-3.3-70B-Instruct',
     'meta-llama/Llama-3.3-70B-Instruct',
     'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
-    'deepseek-ai/DeepSeek-V3.2-Exp',               // DeepSeek via Together free tier
+    'deepseek-ai/DeepSeek-V3.2-Exp',
+    '@cf/meta/llama-3.3-70b-instruct-fp8-fast',    // Cloudflare Workers AI
+    'deepseek-ai/DeepSeek-V3-0324@chutes',         // Chutes (unlimited free)
+    'meta/Llama-3.3-70B-Instruct',                 // GitHub Models Llama 3.3
 
     // Specialists
     'qwen3-coder-plus',
     'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8',
+    '@cf/qwen/qwen2.5-coder-32b-instruct',
     'MiniMax-M1',
+    'mercury',                                     // Inception diffusion LLM
+    'openai/gpt-oss-20b',                          // Groq smaller GPT-OSS
+    'microsoft/Phi-4',                             // GitHub Phi-4
+    'nousresearch/hermes-3-llama-3.1-405b:free',                // via OpenRouter
+    'nvidia/llama-3.1-nemotron-70b-instruct:free', // via OpenRouter
 
     // Last-resorts
     'accounts/fireworks/models/llama-v3p3-70b-instruct',
@@ -332,14 +392,14 @@ const TASK_PRIMARY = {
 };
 
 const TASK_FALLBACKS = {
-  general:      ['gemini-2.5-pro', 'glm-4.6', 'meta-llama/llama-4-scout-17b-16e-instruct', 'gemini-2.0-flash'],
-  code:         ['qwen3-coder-plus', 'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8', 'qwen/qwen3-coder:free', 'deepseek-ai/DeepSeek-V3.2-Exp'],
-  reasoning:    ['glm-4.6', 'DeepSeek-R1', 'gemini-2.5-pro', 'qwen-qwq-32b'],
+  general:      ['openai/gpt-oss-120b', 'gemini-2.5-pro', 'glm-4.6', 'meta-llama/llama-4-scout-17b-16e-instruct', 'gpt-oss-120b', 'deepseek-ai/DeepSeek-V3-0324@chutes', 'gemini-2.0-flash'],
+  code:         ['qwen3-coder-plus', 'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8', 'qwen/qwen3-coder:free', 'deepseek-ai/DeepSeek-V3.2-Exp', '@cf/qwen/qwen2.5-coder-32b-instruct', 'mercury-coder', 'qwen/qwen-2.5-coder-32b-instruct:free'],
+  reasoning:    ['deepseek-r1-distill-llama-70b', 'DeepSeek-R1', 'glm-4.6', 'openai/gpt-oss-120b', 'deepseek/DeepSeek-R1', 'gemini-2.5-pro', 'qwen-qwq-32b', '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b'],
   long_context: ['kimi-k2-0905-preview', 'MiniMax-M1', 'gemini-2.5-pro', 'moonshotai/kimi-k2-instruct'],
   web_current:  ['sonar', 'gemini-2.5-pro'],
   vision:       ['gemini-2.5-pro', 'gemini-2.0-flash', 'qwen3-vl-plus'],
-  structured:   ['llama-3.3-70b', 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'Meta-Llama-3.3-70B-Instruct'],
-  creative:     ['kimi-k2-0905-preview', 'moonshotai/kimi-k2-instruct', 'glm-4.6', 'gemini-2.5-pro'],
+  structured:   ['llama-3.3-70b', 'openai/gpt-oss-120b', 'llama-3.3-70b-versatile', '@cf/meta/llama-3.3-70b-instruct-fp8-fast', 'gemini-2.0-flash', 'Meta-Llama-3.3-70B-Instruct'],
+  creative:     ['kimi-k2-0905-preview', 'moonshotai/kimi-k2-instruct', 'glm-4.6', 'nousresearch/hermes-3-llama-3.1-405b:free', 'gemini-2.5-pro'],
 };
 
 function routeByTask(prompt, config) {
@@ -436,6 +496,10 @@ function getApiKey(provider, config) {
     dashscope:   process.env.DASHSCOPE_API_KEY || process.env.QWEN_API_KEY || config?.ai?.dashscope,
     nvidia:      process.env.NVIDIA_API_KEY || process.env.NIM_API_KEY || config?.ai?.nvidia,
     baseten:     process.env.BASETEN_API_KEY || config?.ai?.baseten,
+    github:      process.env.GITHUB_MODELS_TOKEN || process.env.GITHUB_TOKEN || config?.ai?.github,
+    cloudflare:  process.env.CLOUDFLARE_API_TOKEN || config?.ai?.cloudflare,
+    chutes:      process.env.CHUTES_API_KEY || config?.ai?.chutes,
+    inception:   process.env.INCEPTION_API_KEY || config?.ai?.inception,
   };
   return keys[provider] || null;
 }
@@ -602,6 +666,35 @@ async function callNvidia(apiKey, body)     { return callOpenAICompat(apiKey, bo
 // Baseten model URLs are deployment-specific; assume the model ID encodes the deployment.
 async function callBaseten(apiKey, body)    { return callOpenAICompat(apiKey, body, 'https://inference.baseten.co/v1/chat/completions',       'Baseten'); }
 
+// GitHub Models — OpenAI-compatible endpoint gated behind GitHub PAT. Free tier
+// per-model quotas (e.g. GPT-OSS-120B 15 RPM / 150 RPD). Strip the "@github"
+// suffix we use internally to disambiguate from the Groq-hosted copies.
+async function callGithubModels(apiKey, body) {
+  const model = (body.model || '').replace(/@github$/, '');
+  return callOpenAICompat(apiKey, { ...body, model }, 'https://models.github.ai/inference/chat/completions', 'GitHub Models');
+}
+
+// Cloudflare Workers AI — OpenAI-compatible gateway. Requires BOTH the API
+// token and the account ID (url-embedded). 10k neurons/day free.
+async function callCloudflare(apiKey, body) {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || '';
+  if (!accountId) throw new Error('CLOUDFLARE_ACCOUNT_ID env var required for Cloudflare Workers AI');
+  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`;
+  return callOpenAICompat(apiKey, body, endpoint, 'Cloudflare Workers AI');
+}
+
+// Chutes.ai — Bittensor-backed decentralized inference. OpenAI-compatible.
+// Strip the "@chutes" disambiguation suffix.
+async function callChutes(apiKey, body) {
+  const model = (body.model || '').replace(/@chutes$/, '');
+  return callOpenAICompat(apiKey, { ...body, model }, 'https://llm.chutes.ai/v1/chat/completions', 'Chutes');
+}
+
+// Inception Labs Mercury — diffusion LLM, OpenAI-compatible.
+async function callInception(apiKey, body) {
+  return callOpenAICompat(apiKey, body, 'https://api.inceptionlabs.ai/v1/chat/completions', 'Inception');
+}
+
 // FREE-ONLY: anthropic/openai/deepseek/mistral/grok callers purged.
 const CALLERS = {
   google: callGoogle, groq: callGroq, openrouter: callOpenRouter, ollama: callOllama,
@@ -609,6 +702,7 @@ const CALLERS = {
   moonshot: callMoonshot, zai: callZAI, minimax: callMinimax, fireworks: callFireworks,
   hyperbolic: callHyperbolic, together: callTogether, perplexity: callPerplexity,
   dashscope: callDashscope, nvidia: callNvidia, baseten: callBaseten,
+  github: callGithubModels, cloudflare: callCloudflare, chutes: callChutes, inception: callInception,
 };
 
 export default async function handler(req, res) {
