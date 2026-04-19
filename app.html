@@ -2499,6 +2499,16 @@ document.getElementById('settings-btn').onclick=()=>{
         </select>
       </div>
 
+      <div style="margin-bottom:14px;padding:10px;border:1px solid var(--bdr);border-radius:var(--r);background:rgba(201,168,76,0.03)">
+        <div style="display:flex;align-items:flex-start;gap:8px">
+          <input type="checkbox" id="set-deep-mode" ${localStorage.getItem('dynasty_deep_mode') === 'true' ? 'checked' : ''} style="accent-color:var(--gold);margin-top:2px" />
+          <label for="set-deep-mode" style="font-size:11px;color:var(--sec);line-height:1.5">
+            <strong style="color:var(--gold)">Deep Mode — Adversarial Debate</strong><br>
+            <span style="color:var(--dim)">Runs advocate + skeptic + judge orchestration on the highest-stakes phases (Business Intelligence, Agent System). Adds ~30–60s per phase. All free. Produces harder-to-break strategy + architecture docs with quantified claims and defended assumptions. Recommended for builds you ship to paying customers.</span>
+          </label>
+        </div>
+      </div>
+
       <div style="border-top:1px solid var(--bdr);padding-top:12px;margin-bottom:12px">
         <details>
           <summary style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px;cursor:pointer">Integration Modules (advanced)</summary>
@@ -2546,6 +2556,7 @@ function saveSettings() {
   const whiteLabel = document.getElementById('set-whitelabel')?.checked;
   const byoKeys = document.getElementById('set-byo-keys')?.checked;
   const automationMode = document.getElementById('set-automation-mode')?.value || 'zero_cost';
+  const deepMode = document.getElementById('set-deep-mode')?.checked;
   const location = document.getElementById('set-location')?.value?.trim();
   const pricePro = document.getElementById('set-price-pro')?.value?.trim();
   const priceEnterprise = document.getElementById('set-price-enterprise')?.value?.trim();
@@ -2556,6 +2567,7 @@ function saveSettings() {
   localStorage.setItem('dynasty_white_label', whiteLabel ? 'true' : 'false');
   localStorage.setItem('dynasty_byo_keys', byoKeys ? 'true' : 'false');
   localStorage.setItem('dynasty_automation_mode', automationMode);
+  localStorage.setItem('dynasty_deep_mode', deepMode ? 'true' : 'false');
   if (location !== undefined) localStorage.setItem('dynasty_location', location);
   if (pricePro) localStorage.setItem('dynasty_price_pro', pricePro);
   if (priceEnterprise) localStorage.setItem('dynasty_price_enterprise', priceEnterprise);
@@ -6246,6 +6258,54 @@ async function aiSelfConsistency(prompt, keys, max = 8000, phaseId = null, opts 
   }
   console.log(`[self-consistency] ${phaseId} merged from ${successful.length}/${models.length} models`);
   return merged;
+}
+
+// ADVERSARIAL DEBATE — writer drafts → advocate defends → skeptic attacks →
+// judge synthesizes. 4 inference calls (3-4x latency of single-shot). For
+// the highest-stakes phases only. Gated behind Deep Mode toggle in Settings.
+// Free-model alternative to Claude Opus + massive CoT — empirically beats
+// single-shot frontier models on strategy / architecture / high-stakes
+// reasoning tasks per research (Socratic debate, Multi-Agent Debate papers).
+async function aiAdversarialDebate(prompt, keys, max = 12000, phaseId = null, opts = {}) {
+  const advocateModel = opts.advocateModel ?? 'glm-4.6';
+  const skepticModel  = opts.skepticModel  ?? 'DeepSeek-R1';
+  const projectContext = opts.context      ?? '';
+
+  // Stage 1: Initial draft (writer uses PHASE_MODELS specialist)
+  const draft = await ai(prompt, keys, max, phaseId);
+  if (!draft || typeof draft !== 'object') return draft;
+  const draftText = Object.entries(draft)
+    .filter(([, v]) => typeof v === 'string' && v.length > 0)
+    .map(([k, v]) => `=== ${k} ===\n${v}`).join('\n\n')
+    .slice(0, 25000);
+
+  // Stage 2 + 3: Advocate + Skeptic run in PARALLEL (each takes ~3-5s)
+  const advocatePrompt = `You are a senior partner defending a proposal to the board.${projectContext ? `\n\nProject context: ${projectContext}` : ''}\n\nList the 5-7 STRONGEST reasons why this proposal succeeds. Be specific — cite concrete mechanisms, precedents, measurable advantages. No generic cheerleading. Plain text, numbered list.\n\n[Proposal]\n${draftText}`;
+  const skepticPrompt = `You are a senior skeptic red-teaming this proposal. Your job is to find what will kill it.${projectContext ? `\n\nProject context: ${projectContext}` : ''}\n\nList the 5-7 most DAMAGING weaknesses, failure modes, missed edge cases, unstated risky assumptions, or conditions that would break the plan. Be specific — "competition" is weak; "entrenched incumbent X with $Y ARR and feature-parity" is strong. Plain text, numbered list.\n\n[Proposal]\n${draftText}`;
+  const [advocacy, critique] = await Promise.allSettled([
+    aiRawWithModel(advocatePrompt, advocateModel, 2500),
+    aiRawWithModel(skepticPrompt,  skepticModel,  2500),
+  ]).then(res => res.map(r => r.status === 'fulfilled' ? r.value : ''));
+
+  if (!advocacy && !critique) {
+    console.warn(`[debate] ${phaseId} both advocate + skeptic failed — returning draft`);
+    return draft;
+  }
+
+  // Stage 4: Judge synthesizes — writer resolves the tension
+  const synthesisPrompt = `${prompt}\n\n──────────────────────────────────────────────────────────────\nA senior panel reviewed your initial draft. Produce a REVISED version that preserves the advocate's strongest points and resolves every skeptic's attack.\n\nAdvocate's strongest points (preserve these in the revision):\n${(advocacy || '').slice(0, 7000) || '(advocate unavailable)'}\n\nSkeptic's strongest attacks (address every one, don't hand-wave):\n${(critique || '').slice(0, 7000) || '(skeptic unavailable)'}\n\nProduce a final version that is tougher than the original — specific mechanisms for defending against each attack, quantified measures where claims were vague, concrete falsifiable success criteria. Maintain the EXACT same delimiter format. Return ONLY the delimited documents — no commentary.`;
+  try {
+    const synthesized = await ai(synthesisPrompt, keys, max, phaseId);
+    console.log(`[debate] ${phaseId} synthesized from advocate (${(advocacy || '').length} chars) + skeptic (${(critique || '').length} chars)`);
+    return synthesized && typeof synthesized === 'object' ? synthesized : draft;
+  } catch (e) { console.warn(`[debate] ${phaseId} synthesis failed: ${e.message} — returning draft`); return draft; }
+}
+
+// Runtime check — read localStorage toggle. True when user enabled Deep Mode
+// in Settings. Adds ~15-30s per debate phase but meaningfully improves output
+// on high-stakes reasoning tasks.
+function isDeepMode() {
+  try { return localStorage.getItem('dynasty_deep_mode') === 'true'; } catch { return false; }
 }
 
 async function aiRaw(prompt, max = 4000, costTier = 'standard') {
@@ -11804,7 +11864,8 @@ ${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.r
     addP('g4a','Generating comprehensive business intelligence suite','','⬡ Business Intelligence');setP('g4a','run');
     updateGlobalProgress(4, 12, 'Phase 4 of 14 \u00b7 Business Intelligence Suite');
     let bz1;try{
-      bz1=await aiCriticRevise(`You are a senior partner at McKinsey & Company preparing a board-ready strategic analysis that will be delivered to the CEO and investors. This document must be indistinguishable from a $50,000 consulting engagement.
+      const g4aStrategy = isDeepMode() ? aiAdversarialDebate : aiCriticRevise;
+      bz1=await g4aStrategy(`You are a senior partner at McKinsey & Company preparing a board-ready strategic analysis that will be delivered to the CEO and investors. This document must be indistinguishable from a $50,000 consulting engagement.
 
 QUALITY STANDARDS (non-negotiable):
 - Every paragraph must contain at least one specific number, percentage, or dollar figure
@@ -12375,7 +12436,8 @@ Be extremely detailed and specific. Use real numbers based on the business model
     addP('g4b','Generating AGENT-SYSTEM + FAILURE-MODES','');setP('g4b','run');
     updateGlobalProgress(5, 12, 'Phase 5 of 14 \u00b7 Agent System');
     let bz2;try{
-      bz2=await aiCriticRevise(`You are a systems architect presenting to a CTO. Write with technical authority and operational precision. Every component must have measurable success criteria. No filler. No generic descriptions. Return in delimiter format ONLY. No preamble.
+      const g4bStrategy = isDeepMode() ? aiAdversarialDebate : aiCriticRevise;
+      bz2=await g4bStrategy(`You are a systems architect presenting to a CTO. Write with technical authority and operational precision. Every component must have measurable success criteria. No filler. No generic descriptions. Return in delimiter format ONLY. No preamble.
 
 ${cx(desc,inf)}
 
