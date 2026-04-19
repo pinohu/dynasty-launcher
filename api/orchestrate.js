@@ -9,34 +9,34 @@ export const maxDuration = 300;
 
 // ── Smart Model Routing ──────────────────────────────────────────────────────
 // Maps task complexity to optimal model (like Claude Code's internal routing)
+// FREE-ONLY ROUTING: paid providers (DeepSeek direct, xAI Grok, paid
+// Mistral, paid Sonar, Anthropic, OpenAI) removed. DeepSeek models are
+// still reachable via Together / Fireworks / Hyperbolic free tiers.
 const ROUTING_TIERS = {
   // Architect-level: complex strategy, highest quality. Free-first.
-  // Lead with reasoning specialists that match Claude Sonnet on benchmarks.
   architect: {
-    zai: 'glm-4.6',                                              // GLM-4.6 — beats Sonnet on MMLU
-    sambanova: 'DeepSeek-R1',                                    // DeepSeek R1 — best OSS reasoner
-    google: 'gemini-2.5-pro',                                    // Gemini 2.5 Pro
-    moonshot: 'kimi-k2-0905-preview',                            // Kimi K2 — long context + creative
-    nvidia: 'meta/llama-4-maverick-17b-128e-instruct',           // Llama 4 Maverick
-    dashscope: 'qwen3-max',                                      // Qwen3 Max
-    deepseek: 'deepseek-reasoner',
+    zai: 'glm-4.6',
+    sambanova: 'DeepSeek-R1',
+    google: 'gemini-2.5-pro',
+    moonshot: 'kimi-k2-0905-preview',
+    nvidia: 'meta/llama-4-maverick-17b-128e-instruct',
+    dashscope: 'qwen3-max',
     fireworks: 'accounts/fireworks/models/qwen2p5-72b-instruct',
     fallback: 'gemini-2.5-pro',
   },
-  // Standard: most generation tasks — all free tier
+  // Standard: most generation tasks
   standard: {
     google: 'gemini-2.0-flash',
-    groq: 'meta-llama/llama-4-scout-17b-16e-instruct',           // Llama 4 Scout via Groq — fastest frontier
-    cerebras: 'llama-4-scout-17b-16e-instruct',                  // Cerebras Llama 4 — 2000 tok/s
+    groq: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    cerebras: 'llama-4-scout-17b-16e-instruct',
     zai: 'glm-4.5-air',
     moonshot: 'moonshot-v1-auto',
     minimax: 'MiniMax-M1',
     together: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
-    deepseek: 'deepseek-chat',
     fireworks: 'accounts/fireworks/models/llama-v3p3-70b-instruct',
     fallback: 'gemini-2.0-flash',
   },
-  // Fast: boilerplate, templates, simple generation — all free tier
+  // Fast: boilerplate, templates, simple generation
   fast: {
     google: 'gemini-2.5-flash',
     groq: 'llama-3.1-8b-instant',
@@ -44,28 +44,27 @@ const ROUTING_TIERS = {
     zai: 'glm-4.5-air',
     fallback: 'gemini-2.0-flash',
   },
-  // Code: dedicated tier for backend/frontend/infrastructure code generation
+  // Code: dedicated tier for backend/frontend code generation
   code: {
-    dashscope: 'qwen3-coder-plus',                               // Qwen3-Coder — best OSS coder
+    dashscope: 'qwen3-coder-plus',
     together: 'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8',
     openrouter: 'qwen/qwen3-coder:free',
-    deepseek: 'deepseek-chat',
     nvidia: 'qwen/qwen3-coder-480b-a35b-instruct',
+    fireworks: 'accounts/fireworks/models/deepseek-v3',
     fallback: 'gemini-2.0-flash',
   },
   // Reasoning: math, proofs, complex multi-step logic
   reasoning: {
     sambanova: 'DeepSeek-R1',
     zai: 'glm-4.6',
-    deepseek: 'deepseek-reasoner',
     groq: 'qwen-qwq-32b',
     google: 'gemini-2.5-pro',
     fallback: 'gemini-2.5-pro',
   },
-  // Web/current: needs grounded search — Perplexity is unique here
+  // Web/current: grounded search via Perplexity Sonar (free tier)
   web_current: {
     perplexity: 'sonar',
-    google: 'gemini-2.5-pro',                                    // Has Google Search grounding
+    google: 'gemini-2.5-pro',
     fallback: 'gemini-2.0-flash',
   },
 };

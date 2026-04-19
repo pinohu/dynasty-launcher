@@ -1,27 +1,17 @@
-// ── Your Deputy v2 — Multi-Model AI Router ──────────────────────────────
-// Routes to: Anthropic, OpenAI, Google, Groq, DeepSeek, Mistral, OpenRouter
-// Adapts prompt format per provider. Returns unified response shape.
+// ── Your Deputy v2 — Multi-Model AI Router (FREE-ONLY) ──────────────────
+// All entries below are free-tier providers. Paid providers (Anthropic,
+// OpenAI, paid Mistral, paid Grok, paid Perplexity Sonar Pro) were
+// purged to guarantee zero inference cost. Gemini 2.5 Pro / 2.5 Flash
+// are kept because Google AI Studio ships them with a free quota tier.
 export const maxDuration = 300;
 
 const PROVIDERS = {
-  // ── Anthropic ──────────────────────────────────────────────────────────────
-  'claude-sonnet-4-20250514':   { provider: 'anthropic', label: 'Claude Sonnet 4',  costPer1kIn: 0.003, costPer1kOut: 0.015, free: false },
-  'claude-opus-4-20250514':     { provider: 'anthropic', label: 'Claude Opus 4',    costPer1kIn: 0.015, costPer1kOut: 0.075, free: false },
-  'claude-haiku-4-5-20251001':  { provider: 'anthropic', label: 'Claude Haiku 4.5', costPer1kIn: 0.0008, costPer1kOut: 0.004, free: false },
-
-  // ── OpenAI ─────────────────────────────────────────────────────────────────
-  'gpt-4o':                     { provider: 'openai', label: 'GPT-4o',         costPer1kIn: 0.0025, costPer1kOut: 0.01, free: false },
-  'gpt-4o-mini':                { provider: 'openai', label: 'GPT-4o Mini',    costPer1kIn: 0.00015, costPer1kOut: 0.0006, free: false },
-  'gpt-4.1':                    { provider: 'openai', label: 'GPT-4.1',        costPer1kIn: 0.002, costPer1kOut: 0.008, free: false },
-  'gpt-4.1-mini':               { provider: 'openai', label: 'GPT-4.1 Mini',   costPer1kIn: 0.0004, costPer1kOut: 0.0016, free: false },
-  'o3-mini':                    { provider: 'openai', label: 'o3-mini',         costPer1kIn: 0.0011, costPer1kOut: 0.0044, free: false },
-
-  // ── Google ─────────────────────────────────────────────────────────────────
-  'gemini-2.5-pro':             { provider: 'google', label: 'Gemini 2.5 Pro',   costPer1kIn: 0.00125, costPer1kOut: 0.01, free: false },
-  'gemini-2.5-flash':           { provider: 'google', label: 'Gemini 2.5 Flash', costPer1kIn: 0.00015, costPer1kOut: 0.001, free: false },
-  'gemini-2.0-flash':           { provider: 'google', label: 'Gemini 2.0 Flash', costPer1kIn: 0.0001, costPer1kOut: 0.0004, free: true },
-  'gemma-4-31b-it':             { provider: 'google', label: 'Gemma 4 31B',        costPer1kIn: 0, costPer1kOut: 0, free: true },
-  'gemma-4-26b-a4b-it':         { provider: 'google', label: 'Gemma 4 26B MoE',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  // ── Google (all via AI Studio free tier) ───────────────────────────────
+  'gemini-2.5-pro':             { provider: 'google', label: 'Gemini 2.5 Pro',      costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'gemini-2.5-flash':           { provider: 'google', label: 'Gemini 2.5 Flash',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'gemini-2.0-flash':           { provider: 'google', label: 'Gemini 2.0 Flash',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'gemma-4-31b-it':             { provider: 'google', label: 'Gemma 4 31B',         costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'gemma-4-26b-a4b-it':         { provider: 'google', label: 'Gemma 4 26B MoE',     costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── Groq (free tier) ──────────────────────────────────────────────────────
   'llama-3.3-70b-versatile':    { provider: 'groq', label: 'Llama 3.3 70B',  costPer1kIn: 0, costPer1kOut: 0, free: true },
@@ -29,16 +19,7 @@ const PROVIDERS = {
   'mixtral-8x7b-32768':         { provider: 'groq', label: 'Mixtral 8x7B',   costPer1kIn: 0, costPer1kOut: 0, free: true },
   'gemma2-9b-it':               { provider: 'groq', label: 'Gemma 2 9B',     costPer1kIn: 0, costPer1kOut: 0, free: true },
 
-  // ── DeepSeek ──────────────────────────────────────────────────────────────
-  'deepseek-chat':              { provider: 'deepseek', label: 'DeepSeek V3',    costPer1kIn: 0.00027, costPer1kOut: 0.0011, free: false },
-  'deepseek-reasoner':          { provider: 'deepseek', label: 'DeepSeek R1',    costPer1kIn: 0.00055, costPer1kOut: 0.0022, free: false },
-
-  // ── Mistral ───────────────────────────────────────────────────────────────
-  'mistral-large-latest':       { provider: 'mistral', label: 'Mistral Large',   costPer1kIn: 0.002, costPer1kOut: 0.006, free: false },
-  'mistral-small-latest':       { provider: 'mistral', label: 'Mistral Small',   costPer1kIn: 0.0002, costPer1kOut: 0.0006, free: false },
-  'codestral-latest':           { provider: 'mistral', label: 'Codestral',       costPer1kIn: 0.0003, costPer1kOut: 0.0009, free: false },
-
-  // ── OpenRouter (aggregator — free models) ─────────────────────────────────
+  // ── OpenRouter (aggregator — free models only) ────────────────────────────
   'meta-llama/llama-3.3-70b-instruct:free': { provider: 'openrouter', label: 'Llama 3.3 70B (OR)', costPer1kIn: 0, costPer1kOut: 0, free: true },
   'google/gemma-2-9b-it:free':               { provider: 'openrouter', label: 'Gemma 2 9B (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
   'microsoft/phi-3-mini-128k-instruct:free': { provider: 'openrouter', label: 'Phi-3 Mini (OR)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
@@ -68,30 +49,24 @@ const PROVIDERS = {
   'MiniMax-M1':                   { provider: 'minimax', label: 'MiniMax M1',                costPer1kIn: 0, costPer1kOut: 0, free: true },
   'abab6.5s-chat':                { provider: 'minimax', label: 'MiniMax abab6.5s',          costPer1kIn: 0, costPer1kOut: 0, free: true },
 
-  // ── xAI / Grok (paid — optional fallback) ────────────────────────────
-  'grok-2-latest':                { provider: 'grok', label: 'Grok 2 (xAI)',                 costPer1kIn: 0.002, costPer1kOut: 0.01, free: false },
-  'grok-4-latest':                { provider: 'grok', label: 'Grok 4 (xAI)',                 costPer1kIn: 0.003, costPer1kOut: 0.015, free: false },
-
-  // ── Fireworks.ai (near-free — hosts Llama/Qwen/DeepSeek cheaply) ─────
-  'accounts/fireworks/models/llama-v3p3-70b-instruct': { provider: 'fireworks', label: 'Llama 3.3 70B (Fireworks)', costPer1kIn: 0.0001, costPer1kOut: 0.0004, free: true },
-  'accounts/fireworks/models/qwen2p5-72b-instruct':    { provider: 'fireworks', label: 'Qwen 2.5 72B (Fireworks)',  costPer1kIn: 0.0001, costPer1kOut: 0.0004, free: true },
-  'accounts/fireworks/models/deepseek-v3':             { provider: 'fireworks', label: 'DeepSeek V3 (Fireworks)',   costPer1kIn: 0.00027, costPer1kOut: 0.0011, free: true },
+  // ── Fireworks.ai (free tier hosting — Llama 4 + Qwen + DeepSeek) ─────
+  'accounts/fireworks/models/llama-v3p3-70b-instruct': { provider: 'fireworks', label: 'Llama 3.3 70B (Fireworks)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'accounts/fireworks/models/qwen2p5-72b-instruct':    { provider: 'fireworks', label: 'Qwen 2.5 72B (Fireworks)',  costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'accounts/fireworks/models/deepseek-v3':             { provider: 'fireworks', label: 'DeepSeek V3 (Fireworks)',   costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── Hyperbolic (free tier — hosts open-weights) ──────────────────────
   'meta-llama/Llama-3.3-70B-Instruct':           { provider: 'hyperbolic', label: 'Llama 3.3 70B (Hyperbolic)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
   'deepseek-ai/DeepSeek-V3':                     { provider: 'hyperbolic', label: 'DeepSeek V3 (Hyperbolic)',       costPer1kIn: 0, costPer1kOut: 0, free: true },
   'Qwen/Qwen2.5-Coder-32B-Instruct':             { provider: 'hyperbolic', label: 'Qwen 2.5 Coder 32B (Hyperbolic)', costPer1kIn: 0, costPer1kOut: 0, free: true },
 
-  // ── Together AI (free tier + cheap Llama 4 / Qwen3 / DeepSeek V3.2) ──
+  // ── Together AI (free tier — Llama 4 + Qwen3 Coder + DeepSeek V3.2) ──
   'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free':                 { provider: 'together', label: 'Llama 3.3 70B Turbo Free (Together)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
-  'meta-llama/Llama-4-Scout-17B-16E-Instruct':                    { provider: 'together', label: 'Llama 4 Scout (Together)',                costPer1kIn: 0.00018, costPer1kOut: 0.00059, free: true },
+  'meta-llama/Llama-4-Scout-17B-16E-Instruct':                    { provider: 'together', label: 'Llama 4 Scout (Together)',                costPer1kIn: 0, costPer1kOut: 0, free: true },
   'deepseek-ai/DeepSeek-V3.2-Exp':                                { provider: 'together', label: 'DeepSeek V3.2 Exp (Together)',            costPer1kIn: 0, costPer1kOut: 0, free: true },
   'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8':                      { provider: 'together', label: 'Qwen3 Coder 480B (Together)',             costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── Perplexity Sonar (free tier — grounded web search, unique) ───────
   'sonar':                       { provider: 'perplexity', label: 'Sonar (Perplexity)',       costPer1kIn: 0, costPer1kOut: 0, free: true },
-  'sonar-pro':                   { provider: 'perplexity', label: 'Sonar Pro (Perplexity)',   costPer1kIn: 0.003, costPer1kOut: 0.015, free: false },
-  'sonar-reasoning':             { provider: 'perplexity', label: 'Sonar Reasoning (Perplexity)', costPer1kIn: 0.001, costPer1kOut: 0.005, free: false },
 
   // ── Alibaba DashScope / Qwen (free tier — best open-weight coder) ────
   'qwen3-coder-plus':            { provider: 'dashscope', label: 'Qwen3 Coder Plus',          costPer1kIn: 0, costPer1kOut: 0, free: true },
@@ -274,33 +249,32 @@ async function incrementUsage(actorKey) {
 }
 
 function resolveFreeModel(config) {
-  // Ordered by quality × availability × speed. First match with an available
-  // API key wins. Top tier: latest open-weight frontier models. Second tier:
-  // proven free fallbacks. Third tier: lightweight last-resorts.
+  // FREE-ONLY preferred order. First match with a working API key wins.
+  // All entries below are genuinely free tier (no per-token charges).
   const preferred = [
     // Frontier open-weights (Llama 4, GLM-4.6, Qwen3)
-    'meta-llama/llama-4-scout-17b-16e-instruct',  // Groq Llama 4 Scout — fastest frontier
+    'meta-llama/llama-4-scout-17b-16e-instruct',  // Groq Llama 4 Scout
     'llama-4-scout-17b-16e-instruct',              // Cerebras Llama 4 Scout
     'glm-4.6', 'glm-4.5',                          // Z.AI reasoning specialists
-    'gemini-2.5-pro',                              // Google reasoning frontier
+    'gemini-2.5-pro',                              // Google (free tier)
     'qwen3-max',                                   // Alibaba general flagship
-    'kimi-k2-0905-preview',                        // Moonshot — long context, strong creative
-    'DeepSeek-R1',                                 // SambaNova — best OSS reasoning
+    'kimi-k2-0905-preview',                        // Moonshot
+    'DeepSeek-R1',                                 // SambaNova
     'meta/llama-4-maverick-17b-128e-instruct',     // Nvidia Llama 4 Maverick
 
-    // Workhorses (consistently fast + good)
+    // Workhorses
     'gemma-4-31b-it', 'gemma-4-26b-a4b-it', 'gemini-2.0-flash',
-    'llama-3.3-70b-versatile',                     // Groq Llama 3.3 70B
-    'llama-3.3-70b',                               // Cerebras
-    'Meta-Llama-3.3-70B-Instruct',                 // SambaNova
-    'meta-llama/Llama-3.3-70B-Instruct',           // Hyperbolic
-    'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free', // Together free
-    'deepseek-ai/DeepSeek-V3.2-Exp',               // Together DeepSeek V3.2
+    'llama-3.3-70b-versatile',
+    'llama-3.3-70b',
+    'Meta-Llama-3.3-70B-Instruct',
+    'meta-llama/Llama-3.3-70B-Instruct',
+    'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+    'deepseek-ai/DeepSeek-V3.2-Exp',               // DeepSeek via Together free tier
 
-    // Specialists (used directly via task router; here as fallback)
-    'qwen3-coder-plus',                            // DashScope coder
-    'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8',     // Together coder
-    'MiniMax-M1',                                  // 1M context
+    // Specialists
+    'qwen3-coder-plus',
+    'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8',
+    'MiniMax-M1',
 
     // Last-resorts
     'accounts/fireworks/models/llama-v3p3-70b-instruct',
@@ -359,10 +333,10 @@ const TASK_PRIMARY = {
 
 const TASK_FALLBACKS = {
   general:      ['gemini-2.5-pro', 'glm-4.6', 'meta-llama/llama-4-scout-17b-16e-instruct', 'gemini-2.0-flash'],
-  code:         ['qwen3-coder-plus', 'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8', 'qwen/qwen3-coder:free', 'deepseek-ai/DeepSeek-V3.2-Exp', 'deepseek-chat'],
-  reasoning:    ['glm-4.6', 'DeepSeek-R1', 'deepseek-reasoner', 'gemini-2.5-pro', 'qwen-qwq-32b'],
+  code:         ['qwen3-coder-plus', 'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8', 'qwen/qwen3-coder:free', 'deepseek-ai/DeepSeek-V3.2-Exp'],
+  reasoning:    ['glm-4.6', 'DeepSeek-R1', 'gemini-2.5-pro', 'qwen-qwq-32b'],
   long_context: ['kimi-k2-0905-preview', 'MiniMax-M1', 'gemini-2.5-pro', 'moonshotai/kimi-k2-instruct'],
-  web_current:  ['sonar', 'sonar-reasoning', 'gemini-2.5-pro'],
+  web_current:  ['sonar', 'gemini-2.5-pro'],
   vision:       ['gemini-2.5-pro', 'gemini-2.0-flash', 'qwen3-vl-plus'],
   structured:   ['llama-3.3-70b', 'llama-3.3-70b-versatile', 'gemini-2.0-flash', 'Meta-Llama-3.3-70B-Instruct'],
   creative:     ['kimi-k2-0905-preview', 'moonshotai/kimi-k2-instruct', 'glm-4.6', 'gemini-2.5-pro'],
@@ -441,13 +415,13 @@ function pickRotated(...keys) {
 }
 
 function getApiKey(provider, config) {
+  // FREE-ONLY: Anthropic/OpenAI/Grok/Mistral/DeepSeek providers removed
+  // from the registry. Their API key entries are intentionally omitted
+  // here so any lingering reference fails fast rather than silently
+  // spending money.
   const keys = {
-    anthropic:   process.env.ANTHROPIC_API_KEY,
-    openai:      process.env.OPENAI_API_KEY || config?.ai?.openai,
     google:      pickRotated(process.env.GOOGLE_AI_KEY, process.env.GEMINI_API_KEY, config?.ai?.google_ai),
     groq:        pickRotated(process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, config?.ai?.groq),
-    deepseek:    pickRotated(process.env.DEEPSEEK_API_KEY, process.env.DEEPSEEK_API_KEY_2, config?.ai?.deepseek),
-    mistral:     process.env.MISTRAL_API_KEY || config?.ai?.mistral,
     openrouter:  process.env.OPENROUTER_API_KEY || config?.ai?.openrouter,
     ollama:      process.env.OLLAMA_URL || config?.ai?.ollama_url || null,
     cerebras:    process.env.CEREBRAS_API_KEY || config?.ai?.cerebras,
@@ -455,7 +429,6 @@ function getApiKey(provider, config) {
     moonshot:    process.env.MOONSHOT_API_KEY || config?.ai?.moonshot,
     zai:         process.env.ZAI_API_KEY || process.env.Z_AI_API_KEY || config?.ai?.zai,
     minimax:     process.env.MINIMAX_API_KEY || config?.ai?.minimax,
-    grok:        process.env.GROK_API_KEY || process.env.XAI_API_KEY || config?.ai?.grok,
     fireworks:   process.env.FIREWORKS_API_KEY || config?.ai?.fireworks,
     hyperbolic:  process.env.HYPERBOLIC_API_KEY || config?.ai?.hyperbolic,
     together:    process.env.TOGETHER_API_KEY || config?.ai?.together,
@@ -467,46 +440,9 @@ function getApiKey(provider, config) {
   return keys[provider] || null;
 }
 
-async function callAnthropic(apiKey, body) {
-  // Never forward app auth fields (tier, admin_token, etc.) — Anthropic rejects unknown keys.
-  const payload = {
-    model: body.model,
-    max_tokens: body.max_tokens ?? 4096,
-    messages: Array.isArray(body.messages) ? body.messages : [],
-  };
-  if (body.system != null && String(body.system).length) payload.system = body.system;
-  if (typeof body.temperature === 'number') payload.temperature = body.temperature;
-  if (typeof body.top_p === 'number') payload.top_p = body.top_p;
-  if (typeof body.top_k === 'number') payload.top_k = body.top_k;
-  if (Array.isArray(body.stop_sequences) && body.stop_sequences.length) payload.stop_sequences = body.stop_sequences;
-  if (body.stream === true) payload.stream = true;
-  if (body.metadata && typeof body.metadata === 'object') payload.metadata = body.metadata;
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify(payload),
-  });
-  const d = await r.json();
-  if (!r.ok) {
-    const msg = d?.error?.message || d?.message || `Anthropic request failed (${r.status})`;
-    throw new Error(msg);
-  }
-  return d;
-}
-
-async function callOpenAI(apiKey, body) {
-  // Convert Anthropic message format to OpenAI format
-  const messages = (body.messages || []).map(m => ({ role: m.role, content: m.content }));
-  if (body.system) messages.unshift({ role: 'system', content: body.system });
-  const r = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens, temperature: body.temperature || 0.7 }),
-  });
-  if (!r.ok) { const errBody = await r.text().catch(() => ''); throw new Error(`OpenAI API error ${r.status}: ${errBody.slice(0, 200)}`); }
-  const d = await r.json();
-  return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
-}
+// callAnthropic / callOpenAI removed — free-only routing.
+// callOpenAITranscription kept for audio-to-text (requires OpenAI key;
+// unused unless user explicitly calls the transcription flow).
 
 async function callOpenAITranscription(apiKey, { audioBase64, mimeType, prompt }) {
   if (!audioBase64) throw new Error('Missing audio payload');
@@ -580,31 +516,9 @@ async function callGroq(apiKey, body) {
   return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
 }
 
-async function callDeepSeek(apiKey, body) {
-  const messages = (body.messages || []).map(m => ({ role: m.role, content: m.content }));
-  if (body.system) messages.unshift({ role: 'system', content: body.system });
-  const r = await fetch('https://api.deepseek.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
-  });
-  if (!r.ok) { const errBody = await r.text().catch(() => ""); throw new Error(`DeepSeek API error ${r.status}: ${errBody.slice(0, 200)}`); }
-  const d = await r.json();
-  return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
-}
+// callDeepSeek removed — free-only routing (DeepSeek V3 / R1 still reachable via Together / Hyperbolic / Fireworks free tiers).
 
-async function callMistral(apiKey, body) {
-  const messages = (body.messages || []).map(m => ({ role: m.role, content: m.content }));
-  if (body.system) messages.unshift({ role: 'system', content: body.system });
-  const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({ model: body.model, messages, max_tokens: body.max_tokens || 4096, temperature: body.temperature || 0.7 }),
-  });
-  if (!r.ok) { const errBody = await r.text().catch(() => ""); throw new Error(`Mistral API error ${r.status}: ${errBody.slice(0, 200)}`); }
-  const d = await r.json();
-  return { content: [{ type: 'text', text: d.choices?.[0]?.message?.content || '' }], model: d.model, usage: d.usage };
-}
+// callMistral removed — free-only routing.
 
 async function callOllama(apiKey, body) {
   // Ollama uses OpenAI-compatible API. apiKey = the base URL (e.g., http://localhost:11434)
@@ -678,7 +592,7 @@ async function callOpenAICompat(apiKey, body, endpoint, providerLabel) {
 async function callMoonshot(apiKey, body)   { return callOpenAICompat(apiKey, body, 'https://api.moonshot.ai/v1/chat/completions',          'Moonshot'); }
 async function callZAI(apiKey, body)        { return callOpenAICompat(apiKey, body, 'https://open.bigmodel.cn/api/paas/v4/chat/completions', 'Z.AI'); }
 async function callMinimax(apiKey, body)    { return callOpenAICompat(apiKey, body, 'https://api.minimax.io/v1/text/chatcompletion_v2',      'MiniMax'); }
-async function callGrok(apiKey, body)       { return callOpenAICompat(apiKey, body, 'https://api.x.ai/v1/chat/completions',                  'Grok'); }
+// callGrok removed — free-only routing.
 async function callFireworks(apiKey, body)  { return callOpenAICompat(apiKey, body, 'https://api.fireworks.ai/inference/v1/chat/completions', 'Fireworks'); }
 async function callHyperbolic(apiKey, body) { return callOpenAICompat(apiKey, body, 'https://api.hyperbolic.xyz/v1/chat/completions',         'Hyperbolic'); }
 async function callTogether(apiKey, body)   { return callOpenAICompat(apiKey, body, 'https://api.together.xyz/v1/chat/completions',          'Together'); }
@@ -688,12 +602,13 @@ async function callNvidia(apiKey, body)     { return callOpenAICompat(apiKey, bo
 // Baseten model URLs are deployment-specific; assume the model ID encodes the deployment.
 async function callBaseten(apiKey, body)    { return callOpenAICompat(apiKey, body, 'https://inference.baseten.co/v1/chat/completions',       'Baseten'); }
 
+// FREE-ONLY: anthropic/openai/deepseek/mistral/grok callers purged.
 const CALLERS = {
-  anthropic: callAnthropic, openai: callOpenAI, google: callGoogle, groq: callGroq, deepseek: callDeepSeek,
-  mistral: callMistral, openrouter: callOpenRouter, ollama: callOllama, cerebras: callCerebras, sambanova: callSambaNova,
-  moonshot: callMoonshot, zai: callZAI, minimax: callMinimax, grok: callGrok, fireworks: callFireworks,
-  hyperbolic: callHyperbolic, together: callTogether, perplexity: callPerplexity, dashscope: callDashscope,
-  nvidia: callNvidia, baseten: callBaseten,
+  google: callGoogle, groq: callGroq, openrouter: callOpenRouter, ollama: callOllama,
+  cerebras: callCerebras, sambanova: callSambaNova,
+  moonshot: callMoonshot, zai: callZAI, minimax: callMinimax, fireworks: callFireworks,
+  hyperbolic: callHyperbolic, together: callTogether, perplexity: callPerplexity,
+  dashscope: callDashscope, nvidia: callNvidia, baseten: callBaseten,
 };
 
 export default async function handler(req, res) {
