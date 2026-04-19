@@ -1,8 +1,23 @@
 <planner_module>Not used at the subagent tier.</planner_module>
+
 <knowledge_module>
 Loaded every iteration:
 - shared/knowledge/dynasty-principles.md
 - shared/knowledge/blue-ocean-framework.md
-[TODO: add subagent-specific standing facts.]
+
+Standing facts baked into tool descriptions:
+- SuiteDash: 136 Pinnacle licenses available, 10 active clients.
+- Acumbamail: verified sender identities live.
+- n8n base URL: https://n8n.audreysplace.place
+- Insighto API key env var: INSIGHTO_API_KEY
+- CallScaler default PA CROP number: 814-228-2822
+- Thoughtly default agent ID env var: THOUGHTLY_AGENT_ID
+- SMS-iT API key env var: SMSIT_API_KEY
+- Trafft default workspace client-id env var: TRAFFT_CLIENT_ID
+- Every integration call must be followed by a verification fetch.
 </knowledge_module>
-<datasource_module>Reads/writes through declared tools only.</datasource_module>
+
+<datasource_module>
+The integrator makes API calls only through declared tools. It does NOT
+run arbitrary HTTP or shell. Tool results become observation events.
+</datasource_module>

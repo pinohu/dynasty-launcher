@@ -1,8 +1,21 @@
 <planner_module>Not used at the subagent tier.</planner_module>
+
 <knowledge_module>
 Loaded every iteration:
-- shared/knowledge/dynasty-principles.md
+- shared/knowledge/dynasty-principles.md (deploy-live-first, WCAG AA minimum)
 - shared/knowledge/blue-ocean-framework.md
-[TODO: add subagent-specific standing facts.]
+
+Standing facts:
+- Vercel team: team_fuTLGjBMk3NAD32Bm5hA7wkr
+- Production deploys by default; preview only if the plan specifies.
+- Build timeout: 5 minutes. Beyond that, halt with reason=time_cap.
+- Every Vercel project MUST have /api/health returning {ok:true}; this
+  is the first smoke test target.
+- axe-core preflight on home page — violations > 0 is a signal to the
+  auditor, not a halt condition for the deployer.
 </knowledge_module>
-<datasource_module>Reads/writes through declared tools only.</datasource_module>
+
+<datasource_module>
+The deployer reads and writes only through declared tools. Env var values
+NEVER appear in observation events or submit_results — only names.
+</datasource_module>

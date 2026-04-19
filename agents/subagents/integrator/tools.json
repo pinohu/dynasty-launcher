@@ -1,6 +1,59 @@
 {
   "tools": [
-    {"name":"emit_halt","description":"Halt per halt-conditions or escalation policy.","input_schema":{"type":"object","properties":{"run_id":{"type":"string"},"reason":{"type":"string"},"context":{"type":"string"}},"required":["run_id","reason"]}},
-    {"name":"submit_results","description":"[TODO: match this subagent's submit contract from loop.txt]","input_schema":{"type":"object","properties":{"plan_item_id":{"type":"string"},"run_id":{"type":"string"}},"required":["plan_item_id","run_id"]}}
+    {
+      "name": "mod_suitedash_wire",
+      "description": "Create or confirm a SuiteDash client record, optionally wire client portal and billing hooks. ALWAYS include operating_llc, run_id, and dynasty_component in the client's custom fields. NEVER create a duplicate — if the client matches an existing record by email or business name, return the existing record.",
+      "input_schema": {"type": "object", "properties": {"business_name": {"type": "string"}, "contact_email": {"type": "string"}, "portal_enabled": {"type": "boolean"}, "billing_tier": {"type": "string"}, "operating_llc": {"type": "string"}, "run_id": {"type": "string"}}, "required": ["business_name", "contact_email", "operating_llc", "run_id"]}
+    },
+    {
+      "name": "mod_acumbamail_wire",
+      "description": "Create an Acumbamail list and upload a welcome sequence. ALWAYS use a verified sender identity — attempting to send from an unverified domain fails silently and breaks the verification signal. The welcome sequence must be at least 3 emails.",
+      "input_schema": {"type": "object", "properties": {"list_name": {"type": "string"}, "sender_identity": {"type": "string"}, "welcome_sequence": {"type": "array", "items": {"type": "object"}}, "run_id": {"type": "string"}}, "required": ["list_name", "sender_identity", "welcome_sequence", "run_id"]}
+    },
+    {
+      "name": "mod_n8n_import_and_activate",
+      "description": "Import a workflow JSON from the run's GitHub repo into n8n, then activate it. ALWAYS use the n8n base at https://n8n.audreysplace.place. The Code node on the Flint VM is sandboxed — workflows that need child_process/fs/os must use SSH or the bridge instead; verify the workflow definition does not rely on forbidden modules before activating.",
+      "input_schema": {"type": "object", "properties": {"repo": {"type": "string"}, "workflow_path": {"type": "string"}, "run_id": {"type": "string"}}, "required": ["repo", "workflow_path", "run_id"]}
+    },
+    {
+      "name": "mod_insighto_wire",
+      "description": "Create an Insighto chatbot, wire its knowledge base from the run's repo content, test one message round-trip. ALWAYS run a verification fetch after wiring — a 200 on create does not guarantee the bot will respond.",
+      "input_schema": {"type": "object", "properties": {"bot_name": {"type": "string"}, "knowledge_source_repo": {"type": "string"}, "run_id": {"type": "string"}}, "required": ["bot_name", "knowledge_source_repo", "run_id"]}
+    },
+    {
+      "name": "mod_callscaler_wire",
+      "description": "Wire a CallScaler number. For PA CROP the default is 814-228-2822; new properties get new numbers per the plan. ALWAYS verify inbound routing by triggering a test webhook.",
+      "input_schema": {"type": "object", "properties": {"number": {"type": "string"}, "target_webhook_url": {"type": "string"}, "run_id": {"type": "string"}}, "required": ["target_webhook_url", "run_id"]}
+    },
+    {
+      "name": "mod_thoughtly_wire",
+      "description": "Wire a Thoughtly voice agent to a provisioned number. Test one call round-trip before marking verified.",
+      "input_schema": {"type": "object", "properties": {"agent_id": {"type": "string"}, "number": {"type": "string"}, "run_id": {"type": "string"}}, "required": ["agent_id", "number", "run_id"]}
+    },
+    {
+      "name": "mod_smsit_wire",
+      "description": "Wire the SMS-iT flow. Send one test message to a verified internal number (not the customer's) and confirm delivery before marking verified.",
+      "input_schema": {"type": "object", "properties": {"flow_name": {"type": "string"}, "test_recipient": {"type": "string"}, "run_id": {"type": "string"}}, "required": ["flow_name", "test_recipient", "run_id"]}
+    },
+    {
+      "name": "mod_trafft_wire",
+      "description": "Wire Trafft scheduling. Verify by creating and immediately cancelling one test booking against an internal test slot.",
+      "input_schema": {"type": "object", "properties": {"workspace_client_id": {"type": "string"}, "service_name": {"type": "string"}, "run_id": {"type": "string"}}, "required": ["workspace_client_id", "service_name", "run_id"]}
+    },
+    {
+      "name": "verify_integration",
+      "description": "Generic verification fetch — GET or read-only call to confirm a prior wiring took effect. Use whenever a wire tool's 200 response does not by itself prove the integration works.",
+      "input_schema": {"type": "object", "properties": {"module": {"type": "string"}, "external_id": {"type": "string"}, "expected_shape": {"type": "object"}, "run_id": {"type": "string"}}, "required": ["module", "external_id", "run_id"]}
+    },
+    {
+      "name": "emit_halt",
+      "description": "Halt per halt-conditions or escalation policy.",
+      "input_schema": {"type": "object", "properties": {"run_id": {"type": "string"}, "reason": {"type": "string"}, "context": {"type": "string"}}, "required": ["run_id", "reason"]}
+    },
+    {
+      "name": "submit_results",
+      "description": "Return the list of wired integrations per the submit contract in loop.txt.",
+      "input_schema": {"type": "object", "properties": {"plan_item_id": {"type": "string"}, "run_id": {"type": "string"}, "integrations": {"type": "array"}, "acceptance_met": {"type": "array"}}, "required": ["plan_item_id", "run_id", "integrations"]}
+    }
   ]
 }

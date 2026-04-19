@@ -1,8 +1,30 @@
-<planner_module>Not used at the subagent tier.</planner_module>
+<planner_module>
+Not used at the subagent tier. Your task arrives pre-planned from the
+orchestrator.
+</planner_module>
+
 <knowledge_module>
 Loaded every iteration:
-- shared/knowledge/dynasty-principles.md
-- shared/knowledge/blue-ocean-framework.md
-[TODO: add subagent-specific standing facts.]
+- shared/knowledge/dynasty-principles.md  (authority site on every launch,
+  WCAG AA minimum, entity routing)
+- shared/knowledge/blue-ocean-framework.md (consulted only if the plan
+  requires niche-specific code decisions)
+
+Standing facts:
+- Node 20.x is the runtime. ES modules throughout.
+- Next.js projects use app router unless the plan specifies pages.
+- Python services use FastAPI; avoid Flask for new work.
+- Every Vercel-hosted project ships with `/api/health` returning
+  `{ok:true, version, commit}`.
+- Every project's README ends with a "Deploying" section that names the
+  Vercel team and GitHub owner.
+- Every n8n workflow exported from this project lives under
+  `automations/workflows/` as JSON with a sibling README.
 </knowledge_module>
-<datasource_module>Reads/writes through declared tools only.</datasource_module>
+
+<datasource_module>
+The code-generator reads and writes files only through its declared
+tools. It does NOT run arbitrary shell commands that bypass the tool
+layer. For code validation (typecheck, lint, tests), use the declared
+run_validation tool — it routes through the non-interactive shell wrapper.
+</datasource_module>

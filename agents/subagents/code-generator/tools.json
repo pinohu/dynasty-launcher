@@ -1,6 +1,101 @@
 {
   "tools": [
-    {"name":"emit_halt","description":"Halt per halt-conditions or escalation policy.","input_schema":{"type":"object","properties":{"run_id":{"type":"string"},"reason":{"type":"string"},"context":{"type":"string"}},"required":["run_id","reason"]}},
-    {"name":"submit_results","description":"[TODO: match this subagent's submit contract from loop.txt]","input_schema":{"type":"object","properties":{"plan_item_id":{"type":"string"},"run_id":{"type":"string"}},"required":["plan_item_id","run_id"]}}
+    {
+      "name": "read_file",
+      "description": "Read a file from the run's workspace. ALWAYS call this before apply_patch if the target file was not read in the last 5 iterations — the file may have changed between your reads. Returns content plus a content_sha the patch tool verifies.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "repo": {"type": "string"},
+          "path": {"type": "string"}
+        },
+        "required": ["repo", "path"]
+      }
+    },
+    {
+      "name": "write_file",
+      "description": "Create a new file or fully overwrite an existing one. PREFER apply_patch for modifications — write_file for partial edits loses context. NEVER write files over 500 lines; split into modules.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "repo": {"type": "string"},
+          "path": {"type": "string"},
+          "content": {"type": "string"},
+          "commit_message": {"type": "string"}
+        },
+        "required": ["repo", "path", "content", "commit_message"]
+      }
+    },
+    {
+      "name": "apply_patch",
+      "description": "Apply a unified-diff patch to one file. REQUIRES the content_sha from your most recent read_file on that path — if the sha doesn't match, the patch is rejected and you must re-read the file. NEVER call apply_patch more than 3 times on the same file without a read_file in between.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "repo": {"type": "string"},
+          "path": {"type": "string"},
+          "content_sha": {"type": "string"},
+          "patch": {"type": "string"},
+          "commit_message": {"type": "string"}
+        },
+        "required": ["repo", "path", "content_sha", "patch", "commit_message"]
+      }
+    },
+    {
+      "name": "emit_thinking",
+      "description": "Emit a <Thinking> block to the event stream before the first file write of a new project. Contains framework, schema, integration plan, dependencies. The orchestrator may gate execution on this (Phase 4 approval seam). Optional for iterative edits.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {"type": "string"},
+          "framework": {"type": "string"},
+          "schema_outline": {"type": "string"},
+          "integration_plan": {"type": "string"},
+          "dependencies": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["run_id", "framework"]
+      }
+    },
+    {
+      "name": "run_validation",
+      "description": "Run typecheck, lint, or tests through the non-interactive shell wrapper. NEVER pass interactive flags. Returns structured pass/fail per category. A fail result does not auto-halt — include it in submit_results.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "repo": {"type": "string"},
+          "step": {"enum": ["typecheck", "lint", "test", "all"]}
+        },
+        "required": ["repo", "step"]
+      }
+    },
+    {
+      "name": "emit_halt",
+      "description": "Halt per halt-conditions or escalation policy. Validation failures are NOT a halt reason — submit them and let the orchestrator decide.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {"type": "string"},
+          "reason": {"type": "string"},
+          "context": {"type": "string"}
+        },
+        "required": ["run_id", "reason"]
+      }
+    },
+    {
+      "name": "submit_results",
+      "description": "End your invocation and return the file manifest + validation outcomes. MUST match the submit contract in loop.txt.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plan_item_id": {"type": "string"},
+          "run_id": {"type": "string"},
+          "files_written": {"type": "array"},
+          "validation": {"type": "object"},
+          "thinking_block_id": {"type": "string"},
+          "acceptance_met": {"type": "array"}
+        },
+        "required": ["plan_item_id", "run_id", "files_written"]
+      }
+    }
   ]
 }
