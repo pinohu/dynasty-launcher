@@ -41,6 +41,26 @@
       "input_schema": {"type": "object", "properties": {"workspace_client_id": {"type": "string"}, "service_name": {"type": "string"}, "run_id": {"type": "string"}}, "required": ["workspace_client_id", "service_name", "run_id"]}
     },
     {
+      "name": "mod_seo_wire",
+      "description": "Wire SEO: run WriterZen keyword research (or AI fallback), generate 3 SEO blog posts, push them to the run's GitHub repo under content/blog/, and optionally run NeuronWriter content optimization on the top 3 posts. ALWAYS push posts to the repo — a successful generate without a repo commit is not progress. For bilingual markets (detected by project.location) also emit translated titles/descriptions for the secondary language. Do not overwrite existing content/blog/*.md unless the plan item explicitly says so.",
+      "input_schema": {"type": "object", "properties": {"repo": {"type": "string"}, "project_name": {"type": "string"}, "project_type": {"type": "string"}, "location": {"type": "string"}, "target_keywords": {"type": "array", "items": {"type": "string"}}, "optimize_with_neuronwriter": {"type": "boolean"}, "run_id": {"type": "string"}}, "required": ["repo", "project_name", "run_id"]}
+    },
+    {
+      "name": "mod_analytics_wire",
+      "description": "Wire analytics: create a PostHog project for this run and return the tracking snippet. Plerdy has no REST provisioning API — for Plerdy, return manual setup instructions only, never mark verified. ALWAYS include the PostHog snippet in the submit so the code-generator can inject it; omit the project-side api_token from any log that is written to event-stream (the snippet is embedded in shipped HTML, but full tokens must not appear in event payloads).",
+      "input_schema": {"type": "object", "properties": {"project_name": {"type": "string"}, "live_url": {"type": "string"}, "providers": {"type": "array", "items": {"type": "string", "enum": ["posthog", "plerdy"]}}, "run_id": {"type": "string"}}, "required": ["project_name", "providers", "run_id"]}
+    },
+    {
+      "name": "mod_leads_wire",
+      "description": "Wire visitor-identification + lead-scoring: register the site with Happierleads and/or Salespanel, retrieve each tracking snippet, and push docs/LEAD-INTELLIGENCE.md to the run's repo with the scoring framework. Salespanel's public API is largely read-only; treat its register call as best-effort and fall back to the tracking-setup doc. A 200 without a returned tracking_code is NOT progress — re-fetch the site/activity by ID before marking verified.",
+      "input_schema": {"type": "object", "properties": {"repo": {"type": "string"}, "project_name": {"type": "string"}, "live_url": {"type": "string"}, "providers": {"type": "array", "items": {"type": "string", "enum": ["happierleads", "salespanel"]}}, "run_id": {"type": "string"}}, "required": ["repo", "project_name", "live_url", "providers", "run_id"]}
+    },
+    {
+      "name": "mod_social_wire",
+      "description": "Wire Vista Social: create a profile-group for the project and register the repo-generated calendar at social-media/calendar.csv for bulk import. Do NOT upload the calendar via API — Vista Social's bulk scheduler is UI-driven; the submit must name the CSV path in the repo and flag verification=unverified until a human confirms the import. If the Vista Social key is missing, push docs/SOCIAL-MEDIA-SETUP.md with manual instructions instead and return verification=skipped.",
+      "input_schema": {"type": "object", "properties": {"repo": {"type": "string"}, "project_name": {"type": "string"}, "calendar_path": {"type": "string"}, "run_id": {"type": "string"}}, "required": ["repo", "project_name", "run_id"]}
+    },
+    {
       "name": "verify_integration",
       "description": "Generic verification fetch — GET or read-only call to confirm a prior wiring took effect. Use whenever a wire tool's 200 response does not by itself prove the integration works.",
       "input_schema": {"type": "object", "properties": {"module": {"type": "string"}, "external_id": {"type": "string"}, "expected_shape": {"type": "object"}, "run_id": {"type": "string"}}, "required": ["module", "external_id", "run_id"]}
