@@ -1,0 +1,6 @@
+{
+  "tools": [
+    {"name":"emit_halt","description":"Halt per halt-conditions or escalation policy.","input_schema":{"type":"object","properties":{"run_id":{"type":"string"},"reason":{"type":"string"},"context":{"type":"string"}},"required":["run_id","reason"]}},
+    {"name":"submit_results","description":"[TODO: match this subagent's submit contract from loop.txt]","input_schema":{"type":"object","properties":{"plan_item_id":{"type":"string"},"run_id":{"type":"string"}},"required":["plan_item_id","run_id"]}}
+  ]
+}
