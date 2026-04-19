@@ -5677,7 +5677,7 @@ Available Dynasty tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TO
     timeoutId = setTimeout(() => ctl.abort(), 45000);
     const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},
       signal: ctl.signal,
-      body:JSON.stringify({model:V2_MODEL,max_tokens:1200,
+      body:JSON.stringify({max_tokens:1200,
         ...getAiAuthPayload(),
         usage_context: isFreeTier() ? 'free_scoring' : 'standard',
         messages:[{role:'user',content:`${PROMPT_ARMOR}Analyze this project description and infer all configuration. Return ONLY valid JSON.

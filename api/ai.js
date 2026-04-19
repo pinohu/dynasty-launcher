@@ -852,36 +852,80 @@ export default async function handler(req, res) {
 
   if (!info) return res.status(400).json({ error: `Unknown model: ${model}`, available: Object.keys(PROVIDERS) });
 
-  const apiKey = getApiKey(info.provider, config);
-  if (!apiKey) return res.status(400).json({ error: `No API key for ${info.provider}. Add to DYNASTY_TOOL_CONFIG or Vercel env vars.`, provider: info.provider });
-
-  const caller = CALLERS[info.provider];
-  if (!caller) return res.status(500).json({ error: `No caller for provider: ${info.provider}` });
-
-  try {
-    const normalizedBody = { ...body, model };
-    const result = await caller(apiKey, normalizedBody);
-    if (result?.error && !result?.content) {
-      const msg = typeof result.error === 'string' ? result.error : (result.error?.message || 'AI provider error');
-      return res.status(502).json({ error: msg, provider: info.provider, model });
-    }
-    // Attach cost estimate to response
-    const inputTokens = result.usage?.input_tokens || result.usage?.prompt_tokens || 0;
-    const outputTokens = result.usage?.output_tokens || result.usage?.completion_tokens || 0;
-    result._cost = {
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      estimated_cost: info.free ? 0 : ((inputTokens / 1000) * info.costPer1kIn + (outputTokens / 1000) * info.costPer1kOut),
-      model,
-      provider: info.provider,
-    };
-    if (routedTask) result._routed_task = routedTask;
-    // Only count quota AFTER successful model call (failed calls shouldn't consume quota)
-    if (_scoringQuotaCtx) {
-      await incrementQuotaUsage(_scoringQuotaCtx.periodKey, _scoringQuotaCtx.quotaActorKey, _scoringQuotaCtx.quotaBucket).catch(() => {});
-    }
-    return res.status(200).json(result);
-  } catch (err) {
-    return res.status(500).json({ error: 'AI call failed', provider: info.provider, model });
+  // ── Build fallback candidate list ──
+  // When the primary model fails with a quota/rate error, we transparently
+  // fall through to other free providers with valid API keys. This protects
+  // against a single provider's quota being zero'd out (common with Gemini
+  // when the underlying Cloud project has billing but no paid Gemini tier).
+  let candidates = [model];
+  if (routedTask) {
+    const taskKey = routedTask.replace(/_fallback$/, '');
+    const extras = (TASK_FALLBACKS[taskKey] || [])
+      .filter(m => m !== model && PROVIDERS[m] && getApiKey(PROVIDERS[m].provider, config));
+    candidates = [model, ...extras];
+  } else {
+    // Client pinned a model — still add free fallbacks for resilience
+    const extras = Object.entries(PROVIDERS)
+      .filter(([id, i]) => id !== model && i.free && getApiKey(i.provider, config))
+      .map(([id]) => id)
+      .slice(0, 8);
+    candidates = [model, ...extras];
   }
+
+  const TRANSIENT_RE = /quota|rate[-_ ]?limit|overload|429|exceeded|limit:\s*0|ECONNRESET|ETIMEDOUT|fetch failed|timeout|unavailable|503|502|upstream/i;
+  let lastError = null;
+  let lastProvider = info.provider;
+  let lastCandidate = model;
+
+  for (const candidate of candidates) {
+    const cInfo = PROVIDERS[candidate];
+    if (!cInfo) continue;
+    const cApiKey = getApiKey(cInfo.provider, config);
+    if (!cApiKey) continue;
+    const cCaller = CALLERS[cInfo.provider];
+    if (!cCaller) continue;
+    lastCandidate = candidate;
+    lastProvider = cInfo.provider;
+
+    try {
+      const result = await cCaller(cApiKey, { ...body, model: candidate });
+      if (result?.error && !result?.content) {
+        const msg = typeof result.error === 'string' ? result.error : (result.error?.message || 'AI provider error');
+        if (TRANSIENT_RE.test(msg)) {
+          lastError = msg;
+          console.warn(`[ai-fallback] ${candidate} (${cInfo.provider}) transient: ${msg.slice(0, 140)}`);
+          continue;
+        }
+        return res.status(502).json({ error: msg, provider: cInfo.provider, model: candidate });
+      }
+      const inputTokens = result.usage?.input_tokens || result.usage?.prompt_tokens || 0;
+      const outputTokens = result.usage?.output_tokens || result.usage?.completion_tokens || 0;
+      result._cost = {
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        estimated_cost: cInfo.free ? 0 : ((inputTokens / 1000) * cInfo.costPer1kIn + (outputTokens / 1000) * cInfo.costPer1kOut),
+        model: candidate,
+        provider: cInfo.provider,
+      };
+      if (routedTask) result._routed_task = routedTask;
+      if (candidate !== model) result._fell_back_from = model;
+      if (_scoringQuotaCtx) {
+        await incrementQuotaUsage(_scoringQuotaCtx.periodKey, _scoringQuotaCtx.quotaActorKey, _scoringQuotaCtx.quotaBucket).catch(() => {});
+      }
+      return res.status(200).json(result);
+    } catch (err) {
+      const msg = err?.message || String(err);
+      lastError = msg;
+      console.warn(`[ai-fallback] ${candidate} (${cInfo.provider}) threw: ${msg.slice(0, 140)}`);
+      if (TRANSIENT_RE.test(msg)) continue;
+      continue;
+    }
+  }
+
+  return res.status(502).json({
+    error: `All free providers exhausted. Last: ${lastError ? lastError.slice(0, 200) : 'unknown'}`,
+    provider: lastProvider,
+    model: lastCandidate,
+    tried: candidates.slice(0, 6),
+  });
 }
