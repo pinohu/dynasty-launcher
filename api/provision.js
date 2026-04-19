@@ -4,6 +4,33 @@ export const maxDuration = 300; // 5 min — AI content generation takes time
 // customer-owned env vars (.env.example, MANUAL-ACTIONS) on their Vercel project.
 // Enforced: we do not POST real third-party secrets to customer Vercel projects (placeholders only).
 
+// ── Phase 5b: modular-agents routing seam (feature-flagged) ────────────────
+// routeMod() is the single seam between the legacy inline mod_* functions
+// (below) and the Phase 1-4 modular integrator subagent (agents/subagents/
+// integrator/). When USE_MODULAR_AGENTS is off (the default) every module
+// runs the legacy path — zero behavior change. When flipped on and the
+// orchestrator has not yet consumed the integrator tool calls, we emit a
+// loud stub so (a) no vendor API fires behind a flipped flag, (b) the
+// normalized result still reaches runModules' accumulator, and (c) the
+// pipeline gracefully degrades to MANUAL-ACTIONS.md via the existing
+// ok=false fallback path. Do NOT call vendor APIs from inside this helper
+// until the orchestrator is wired to receive integrator submits. See
+// docs/PHASE_5_WIRING_PLAN.md.
+export function routeMod(name, fn, config, project, liveUrl) {
+  if (process.env.USE_MODULAR_AGENTS !== 'true') {
+    return fn(config, project, liveUrl);
+  }
+  return Promise.resolve({
+    ok: false,
+    service: name,
+    details: {
+      routed: 'modular',
+      note: 'integrator-subagent wiring pending — unset USE_MODULAR_AGENTS to restore legacy mod_* path',
+    },
+    fallback: `Module ${name} routed to modular integrator subagent (Phase 5). Orchestrator consumption pending; see docs/PHASE_5_WIRING_PLAN.md.`,
+  });
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 async function pushFile(ghToken, org, repo, path, content, message, isBase64 = false) {
   const b64 = isBase64 ? content : Buffer.from(content).toString('base64');
@@ -1950,7 +1977,7 @@ async function runModules(config, project, liveUrl, enabledModules, userTier) {
     }
     try {
       const rawResult = await Promise.race([
-        fn(config, project, liveUrl),
+        routeMod(name, fn, config, project, liveUrl),
         new Promise((_, reject) => setTimeout(() => reject(new Error(`Module ${name} timed out after ${timeout/1000}s`)), timeout))
       ]);
       results[name] = normalizeModuleResult(name, rawResult, { automationOnly, zeroCostMode });
