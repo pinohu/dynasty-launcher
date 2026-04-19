@@ -1442,6 +1442,13 @@ const FU='https://claude-inbox.audreysplace.place/message';
 
 // GitHub token is server-side — all calls go through /api/github proxy
 let ORG=localStorage.getItem('dynasty_gh_org')||ORG_DEFAULT;
+// Detected after repo creation — pushFiles reads this so it works on repos whose
+// default branch is 'master' or anything else. Reset per-build.
+let REPO_DEFAULT_BRANCH = 'main';
+// True when the template /generate call fell all the way through to an empty
+// /user/repos init. Downstream logic uses this to skip steps that assume
+// template files (e.g. 10 template component overrides).
+let REPO_USED_EMPTY_INIT = false;
 
 // ── Clerk Authentication ──────────────────────────────────────────────────────
 let CLERK_INSTANCE = null;
@@ -5839,9 +5846,17 @@ async function pushFiles(repo, fileMap, message){
   if (entries.length === 0) return { ok: true, commit_sha: null, file_count: 0, skipped: 'empty' };
 
   return withRetry(async () => {
-    // 1. Get current HEAD of main
-    const refR = await gh(`/repos/${repo}/git/ref/heads/main`);
-    if (!refR.ok) throw new Error(`pushFiles getRef failed: ${refR.status}`);
+    const branch = REPO_DEFAULT_BRANCH || 'main';
+    // 1. Get current HEAD of the repo's default branch
+    let refR = await gh(`/repos/${repo}/git/ref/heads/${branch}`);
+    if (!refR.ok && branch !== 'main') {
+      // Fallback: some repos report 'main' but ref lookup prefers the literal name from GET /repos
+      refR = await gh(`/repos/${repo}/git/ref/heads/main`);
+    }
+    if (!refR.ok) {
+      const errBody = await refR.text().catch(()=> '');
+      throw new Error(`pushFiles getRef failed: ${refR.status} branch=${branch} ${errBody.slice(0,160)}`);
+    }
     const ref = await refR.json();
     const parentSha = ref.object.sha;
 
@@ -5890,13 +5905,14 @@ async function pushFiles(repo, fileMap, message){
       finalCommitSha = newCommit.sha;
     }
 
-    // 4. Update main to point at the final commit
-    const updR = await gh(`/repos/${repo}/git/refs/heads/main`, 'PATCH', {
+    // 4. Update the default branch to point at the final commit
+    const updBranch = REPO_DEFAULT_BRANCH || 'main';
+    const updR = await gh(`/repos/${repo}/git/refs/heads/${updBranch}`, 'PATCH', {
       sha: finalCommitSha, force: false
     });
     if (!updR.ok) {
       const errBody = await updR.text().catch(()=> '');
-      throw new Error(`pushFiles updateRef failed: ${updR.status} ${errBody.slice(0,200)}`);
+      throw new Error(`pushFiles updateRef failed: ${updR.status} branch=${updBranch} ${errBody.slice(0,200)}`);
     }
 
     return { ok: true, commit_sha: finalCommitSha, file_count: entries.length };
@@ -13165,8 +13181,19 @@ export const Env = createEnv({
 
     addP('dx','Fetching DYNASTY-DESIGN.md from master repo','','⬡ GitHub');setP('dx','run');
     let dy='';
-    try{const r=await gh(`/repos/${ORG}/DYNASTY/contents/DYNASTY-DESIGN.md`);if(r.ok){const d=await r.json();dy=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));}setP('dx','ok');}
-    catch{setP('dx','sk','Skipped');}
+    try{
+      const r=await gh(`/repos/${ORG}/DYNASTY/contents/DYNASTY-DESIGN.md`);
+      if(r.ok){
+        const d=await r.json();
+        dy=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+        setP('dx','ok');
+      } else {
+        const errBody = await r.text().catch(()=>'');
+        console.warn(`[DYNASTY-DESIGN.md] fetch failed ${r.status}: ${errBody.slice(0,160)}`);
+        setP('dx','sk',`Skipped (${r.status})`);
+      }
+    }
+    catch(e){setP('dx','sk','Skipped: '+(e.message||'error'));}
 
     addP('cr',`Creating github.com/${ORG}/${inf.repo}`);setP('cr','run','From dynasty-project-template…');
     // Authority site types push into DYNASTY-SITE-FACTORY instead of creating a standalone repo
@@ -13236,18 +13263,92 @@ export const Env = createEnv({
     // Non-authority types create a standalone repo; authority types skip this
     if(!isAuthority){
       addP('cr-detail', `Using template: ${tmplName}`, '', ''); setP('cr-detail', 'run');
-      let cr=await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
-      if(!cr.ok&&cr.status!==422){
-        // Fallback: try dynasty-project-template
-        cr=await gh(`/repos/${ORG}/dynasty-project-template/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
-        if(!cr.ok&&cr.status!==422){
-          // Fallback: create empty repo
-          cr=await gh('/user/repos','POST',{name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,auto_init:true});
-          if(!cr.ok&&cr.status!==422){const e=await cr.json();if(!e.message?.includes('already exists'))throw new Error(e.message||'Repo creation failed');}
+      REPO_USED_EMPTY_INIT = false;
+
+      // Preflight: verify template exists and is flagged is_template:true.
+      // If not, skip straight to the next fallback with a clear log — don't
+      // pretend a template was used when it wasn't.
+      async function preflightTemplate(templateOwner, templateRepo){
+        const r = await gh(`/repos/${templateOwner}/${templateRepo}`);
+        if (!r.ok) return { ok:false, status:r.status, reason:`template repo ${templateOwner}/${templateRepo} not reachable (${r.status})` };
+        const body = await r.json().catch(()=> null);
+        if (!body) return { ok:false, status:r.status, reason:'could not parse template repo metadata' };
+        if (!body.is_template) return { ok:false, status:200, reason:`${templateOwner}/${templateRepo} exists but is not marked is_template:true on GitHub` };
+        return { ok:true, default_branch: body.default_branch || 'main' };
+      }
+
+      async function describeError(response){
+        const status = response.status;
+        let bodyText = '';
+        try { bodyText = await response.text(); } catch {}
+        let message = '';
+        try { const j = JSON.parse(bodyText); message = j.message || ''; if (j.errors && Array.isArray(j.errors)) message += ' — ' + j.errors.map(e=>e.message||JSON.stringify(e)).join('; '); } catch {}
+        return { status, message: message || bodyText.slice(0,200) || `HTTP ${status}` };
+      }
+
+      const attempts = [];
+      let cr = null;
+      let createdFromTemplate = null;
+
+      // Attempt 1: primary template selected from category/type mapping
+      const pf1 = await preflightTemplate(ORG, tmplName);
+      if (pf1.ok) {
+        cr = await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
+        if (cr.ok || cr.status === 422) { createdFromTemplate = tmplName; }
+        else { attempts.push(`${tmplName}: ` + (await describeError(cr)).message); cr = null; }
+      } else {
+        attempts.push(`${tmplName} preflight: ${pf1.reason}`);
+      }
+
+      // Attempt 2: generic dynasty-project-template fallback
+      if (!cr && tmplName !== 'dynasty-project-template') {
+        const pf2 = await preflightTemplate(ORG, 'dynasty-project-template');
+        if (pf2.ok) {
+          cr = await gh(`/repos/${ORG}/dynasty-project-template/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
+          if (cr.ok || cr.status === 422) { createdFromTemplate = 'dynasty-project-template'; }
+          else { attempts.push(`dynasty-project-template: ` + (await describeError(cr)).message); cr = null; }
+        } else {
+          attempts.push(`dynasty-project-template preflight: ${pf2.reason}`);
         }
       }
-      setP('cr-detail', 'ok', tmplName);
-      await new Promise(r=>setTimeout(r,3500));
+
+      // Attempt 3: empty repo with auto-init README (no template files)
+      if (!cr) {
+        cr = await gh('/user/repos','POST',{name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,auto_init:true});
+        if (cr.ok || cr.status === 422) {
+          REPO_USED_EMPTY_INIT = true;
+          console.warn('[repo-create] Fell back to empty /user/repos init. Template attempts:\n  - ' + attempts.join('\n  - '));
+        } else {
+          const err = await describeError(cr);
+          attempts.push(`/user/repos empty-init: ${err.message}`);
+          throw new Error(`Repo creation failed after ${attempts.length} attempt(s):\n  - ` + attempts.join('\n  - '));
+        }
+      }
+
+      // 422 on any of the three means "name already exists" — re-use it.
+      if (cr && cr.status === 422) {
+        const body = await cr.json().catch(()=> ({}));
+        if (!(body.message || '').toLowerCase().includes('already exists')) {
+          throw new Error(`Unexpected 422 on repo create: ${body.message || 'no message'}`);
+        }
+      }
+
+      // Detect the created repo's default branch so pushFiles targets it correctly.
+      // Poll briefly — /generate returns 202 and the repo may not be immediately readable.
+      let meta = null;
+      for (let i = 0; i < 6; i++) {
+        const metaR = await gh(`/repos/${ORG}/${inf.repo}`);
+        if (metaR.ok) { meta = await metaR.json(); break; }
+        await new Promise(r => setTimeout(r, 1500));
+      }
+      REPO_DEFAULT_BRANCH = (meta && meta.default_branch) || 'main';
+      console.log(`[repo-create] ${ORG}/${inf.repo} ready — template=${createdFromTemplate || 'empty-init'} branch=${REPO_DEFAULT_BRANCH}`);
+
+      const detailLabel = createdFromTemplate
+        ? `${createdFromTemplate} (branch: ${REPO_DEFAULT_BRANCH})`
+        : `empty-init (no template) — branch: ${REPO_DEFAULT_BRANCH}`;
+      setP('cr-detail', createdFromTemplate ? 'ok' : 'sk', detailLabel);
+      await new Promise(r=>setTimeout(r,2500));
     }
     setP('cr','ok');
 
