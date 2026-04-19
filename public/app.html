@@ -834,9 +834,9 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
 
     <!-- Depth Tier Selector -->
     <div style="display:flex;gap:8px;margin-bottom:16px" id="depth-tier-selector">
-      <button class="im-btn" onclick="setDepthTier('quick')" id="tier-quick">⚡ Quick <span style="color:var(--dim);font-size:10px">~15s · $0.01</span></button>
-      <button class="im-btn active" onclick="setDepthTier('standard')" id="tier-standard">📊 Standard <span style="color:var(--dim);font-size:10px">~45s · $0.05</span></button>
-      <button class="im-btn" onclick="setDepthTier('deep')" id="tier-deep">🔬 Deep <span style="color:var(--dim);font-size:10px">~2min · $0.15</span></button>
+      <button class="im-btn" onclick="setDepthTier('quick')" id="tier-quick">⚡ Quick <span style="color:var(--dim);font-size:10px">~15s · FREE</span></button>
+      <button class="im-btn active" onclick="setDepthTier('standard')" id="tier-standard">📊 Standard <span style="color:var(--dim);font-size:10px">~45s · FREE</span></button>
+      <button class="im-btn" onclick="setDepthTier('deep')" id="tier-deep">🔬 Deep <span style="color:var(--dim);font-size:10px">~2min · FREE</span></button>
     </div>
 
     <div class="fw-grid" id="fw-grid">
@@ -915,13 +915,13 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
           <div class="sc-act-icon">🔧</div>
           <h4>Get refinements</h4>
           <p>AI suggests specific improvements to boost your score.</p>
-          <div class="sc-act-cost">~$0.02</div>
+          <div class="sc-act-cost">FREE</div>
         </div>
         <div class="sc-action sc-action-premium" onclick="runPivotReview()">
           <div class="sc-act-icon">🧠</div>
           <h4>Multi-model pivot review</h4>
           <p>Every configured model with a working key analyzes, cross-reviews, and converges on the strongest pivot (minimum three for consensus).</p>
-          <div class="sc-act-cost">~$0.15-0.35</div>
+          <div class="sc-act-cost">FREE</div>
         </div>
       </div>
       <div id="refinement-results" style="display:none"></div>
@@ -939,9 +939,9 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     <!-- Model Selection -->
     <div class="cfg-section">
       <h3 class="cfg-label">AI Model</h3>
-      <p class="cfg-desc">Select the model for all generation phases. Free models cost $0 but may produce lower quality.</p>
+      <p class="cfg-desc">Select the model for all generation phases. All routed models are free tier.</p>
       <div class="model-grid" id="model-grid"></div>
-      <div class="model-cost" id="model-cost">Estimated build cost: <strong>~$0.35</strong></div>
+      <div class="model-cost" id="model-cost">Estimated build cost: <strong>FREE</strong></div>
 
       <details class="cfg-advanced">
         <summary>Advanced: per-phase model assignment</summary>
@@ -2083,7 +2083,7 @@ function renderBuildPlanPreview(plan) {
   ).join('');
   el.innerHTML = `
     <div style="display:flex;gap:16px;margin-bottom:6px;flex-wrap:wrap">
-      <div><span style="font-size:10px;font-weight:600;color:var(--dim)">COST</span><div style="font-size:12px;color:var(--gold);font-weight:600">${plan.estimated_cost || '~$0.15'}</div></div>
+      <div><span style="font-size:10px;font-weight:600;color:var(--dim)">COST</span><div style="font-size:12px;color:var(--gold);font-weight:600">${plan.estimated_cost || 'FREE'}</div></div>
       <div><span style="font-size:10px;font-weight:600;color:var(--dim)">TIME (parallel)</span><div style="font-size:12px;color:var(--grn);font-weight:600">${plan.estimated_time_parallel || '~35s'}</div></div>
       <div><span style="font-size:10px;font-weight:600;color:var(--dim)">TIME (sequential)</span><div style="font-size:12px;color:var(--sec)">${plan.estimated_time_sequential || '~90s'}</div></div>
     </div>
@@ -2235,7 +2235,7 @@ function showPreflightModal(report) {
           </div>
           <div class="pf-section">
             <h4>Estimated Cost & Time</h4>
-            <div class="pf-infra-item"><span class="pf-label">With smart routing</span><span class="pf-value">${report.estimated_cost?.with_smart_routing || '~$0.10'}</span></div>
+            <div class="pf-infra-item"><span class="pf-label">With smart routing</span><span class="pf-value">${report.estimated_cost?.with_smart_routing || 'FREE'}</span></div>
             <div class="pf-infra-item"><span class="pf-label">Estimated time</span><span class="pf-value">${report.estimated_time?.with_parallel || '~30s'}</span></div>
           </div>
           <div class="pf-section">
@@ -3850,7 +3850,7 @@ function selectModel(id, el) {
   V2_MODEL = id;
   document.querySelectorAll('.model-chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  document.getElementById('model-cost').innerHTML = 'Estimated build cost: <strong>' + (el.dataset.cost || '~$0.00') + '</strong>';
+  document.getElementById('model-cost').innerHTML = 'Estimated build cost: <strong>' + (el.dataset.cost || 'FREE') + '</strong>';
 }
 
 function populatePhaseModels(models) {
