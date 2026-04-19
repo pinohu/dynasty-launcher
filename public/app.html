@@ -6159,6 +6159,74 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
   throw new Error('All AI models failed — check API keys and rate limits');
 }
 
+// ── Tier 2 quality patterns ─────────────────────────────────────────────
+// All free; cost is wall-clock time (3× for critic-revise, ~1.5× for SC voting).
+// Producing better-than-Claude-Sonnet outputs by orchestration, not raw model size.
+
+async function aiCriticRevise(prompt, keys, max = 8000, phaseId = null, opts = {}) {
+  const skipThreshold = opts.skipThreshold ?? 8;
+  const criticModel   = opts.criticModel  ?? 'glm-4.6';
+  const projectContext = opts.context     ?? '';
+  const draft = await ai(prompt, keys, max, phaseId);
+  if (!draft || typeof draft !== 'object') return draft;
+
+  const draftText = Object.entries(draft)
+    .filter(([, v]) => typeof v === 'string' && v.length > 0)
+    .map(([k, v]) => `=== ${k} ===\n${v}`).join('\n\n')
+    .slice(0, 30000);
+  const criticPrompt = `You are a senior reviewer evaluating documents generated for a business project.${projectContext ? `\n\nProject context: ${projectContext}` : ''}\n\nEvaluate these documents on:\n1. Specificity (claims/metrics measurable, not generic)\n2. Internal consistency (sections do not contradict)\n3. Completeness (real content, no placeholders, no [TODO])\n4. Actionability (developer/operator can follow)\n5. Reasoning quality (recommendations defended with logic)\n\n[Documents]\n${draftText}\n\nReturn ONLY a JSON object, no markdown, no preamble:\n{\n  "score": <integer 1-10>,\n  "needs_revision": <boolean>,\n  "critical_issues": ["specific issue with section X", "..."],\n  "improvement_directives": ["change Y to be more...", "..."]\n}`;
+  let critique = { score: 7, needs_revision: false, critical_issues: [], improvement_directives: [] };
+  try {
+    const criticResp = await aiRawWithModel(criticPrompt, criticModel, 2500);
+    const match = (criticResp || '').match(/\{[\s\S]*\}/);
+    if (match) critique = { ...critique, ...JSON.parse(match[0]) };
+  } catch (e) { console.warn(`[critic-revise] critic failed for ${phaseId}: ${e.message} — returning draft`); return draft; }
+
+  if (!critique.needs_revision || (critique.score || 0) >= skipThreshold) {
+    console.log(`[critic-revise] ${phaseId} draft passed (score=${critique.score}); skipping revision`);
+    return draft;
+  }
+
+  const issues = (critique.critical_issues || []).map((i, n) => `${n + 1}. ${i}`).join('\n');
+  const directives = (critique.improvement_directives || []).map((i, n) => `${n + 1}. ${i}`).join('\n');
+  const revisionPrompt = `${prompt}\n\n──────────────────────────────────────────────────────────────\nIMPORTANT: A senior reviewer evaluated your previous draft (score ${critique.score}/10) and identified these issues you MUST address in this revision:\n\nCritical issues:\n${issues || '(none specified)'}\n\nImprovement directives:\n${directives || '(none specified)'}\n\nRewrite the documents fixing every issue above. Maintain the EXACT same delimiter format. Do not add commentary about the revision.`;
+  try {
+    const revised = await ai(revisionPrompt, keys, max, phaseId);
+    console.log(`[critic-revise] ${phaseId} revised (was score=${critique.score})`);
+    return revised && typeof revised === 'object' ? revised : draft;
+  } catch (e) { console.warn(`[critic-revise] revise failed for ${phaseId}: ${e.message} — returning draft`); return draft; }
+}
+
+async function aiSelfConsistency(prompt, keys, max = 8000, phaseId = null, opts = {}) {
+  const models = opts.models ?? ['glm-4.6', 'meta-llama/llama-4-scout-17b-16e-instruct', 'gemini-2.5-pro'];
+  const results = await Promise.allSettled(models.map(async (modelOverride) => {
+    const raw = await aiRawWithModel(prompt, modelOverride, max);
+    return await parseDelimited(raw, keys);
+  }));
+  const successful = results.filter(r => r.status === 'fulfilled' && r.value && typeof r.value === 'object').map(r => r.value);
+  if (successful.length === 0) return ai(prompt, keys, max, phaseId);
+  if (successful.length === 1) return successful[0];
+
+  const merged = {};
+  for (const k of keys) {
+    const candidates = successful.map(s => s[k]).filter(v => typeof v === 'string' && v.length > 0);
+    if (candidates.length === 0) { merged[k] = ''; continue; }
+    const counts = {};
+    for (const c of candidates) {
+      const sig = c.length + ':' + c.slice(0, 64);
+      counts[sig] = (counts[sig] || 0) + 1;
+    }
+    const topSig = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+    if (counts[topSig] >= 2) {
+      merged[k] = candidates.find(c => (c.length + ':' + c.slice(0, 64)) === topSig);
+    } else {
+      merged[k] = candidates.sort((a, b) => b.length - a.length)[0];
+    }
+  }
+  console.log(`[self-consistency] ${phaseId} merged from ${successful.length}/${models.length} models`);
+  return merged;
+}
+
 async function aiRaw(prompt, max = 4000, costTier = 'standard') {
   // Cost-optimized model selection
   // 100x Cost Mode: FREE → FREE → cheap fallback
@@ -11134,7 +11202,7 @@ git config user.name "your-username"
     addP('g2','Generating SPEC + ROADMAP + README + MANUAL-ACTIONS + .env','','⬡ Product Docs');setP('g2','run');
     updateGlobalProgress(2, 12, 'Phase 2 of 14 \u00b7 Product Docs');
     let dc;try{
-      dc=await ai(`You are a senior product strategist at a world-class consulting firm. Generate board-ready product documentation. Write with precision and authority. Use numbered sections, professional tables, and specific measurable criteria. No AI clichés. No hedging. Every feature has acceptance criteria. Every metric has a target. Cross-reference other Dynasty documents. Return ONLY in delimiter format. No preamble.
+      dc=await aiCriticRevise(`You are a senior product strategist at a world-class consulting firm. Generate board-ready product documentation. Write with precision and authority. Use numbered sections, professional tables, and specific measurable criteria. No AI clichés. No hedging. Every feature has acceptance criteria. Every metric has a target. Cross-reference other Dynasty documents. Return ONLY in delimiter format. No preamble.
 
 ${cx(desc,inf)}
 
@@ -11486,7 +11554,7 @@ NODE_ENV=development
 # Generate: openssl rand -hex 32
 SECRET_KEY=generate-me
 ---END:env_ex---
-`, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 14000, 'g2');
+`, ['spec_md','roadmap_md','readme_md','manual_md','env_ex'], 14000, 'g2', { context: `${inf.name} (${inf.type_id || ''}) — ${desc.slice(0, 200)}` });
       setP('g2','ok',`${Object.values(dc).filter(v=>v).length} docs ready`);
       await compactPhase('spec', dc);
     }catch(e){setP('g2','er',e.message);throw e;}
@@ -11495,7 +11563,7 @@ SECRET_KEY=generate-me
     addP('g3','Generating DATA-MODEL + API-CONTRACTS + KB-OUTLINES','','⬡ Supporting Docs');setP('g3','run');
     updateGlobalProgress(3, 12, 'Phase 3 of 14 \u00b7 Technical Docs');
     let ds;try{
-      ds=await ai(`You are a senior software architect writing technical documentation for an engineering team. Every table must have real column names and types. Every API endpoint must have request/response schemas. No placeholders. Reference the Architecture Blueprint decisions. Return ONLY in delimiter format. No preamble.
+      ds=await aiSelfConsistency(`You are a senior software architect writing technical documentation for an engineering team. Every table must have real column names and types. Every API endpoint must have request/response schemas. No placeholders. Reference the Architecture Blueprint decisions. Return ONLY in delimiter format. No preamble.
 
 ${cx(desc,inf)}
 
@@ -11715,7 +11783,7 @@ ${Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.r
     addP('g4a','Generating comprehensive business intelligence suite','','⬡ Business Intelligence');setP('g4a','run');
     updateGlobalProgress(4, 12, 'Phase 4 of 14 \u00b7 Business Intelligence Suite');
     let bz1;try{
-      bz1=await ai(`You are a senior partner at McKinsey & Company preparing a board-ready strategic analysis that will be delivered to the CEO and investors. This document must be indistinguishable from a $50,000 consulting engagement.
+      bz1=await aiCriticRevise(`You are a senior partner at McKinsey & Company preparing a board-ready strategic analysis that will be delivered to the CEO and investors. This document must be indistinguishable from a $50,000 consulting engagement.
 
 QUALITY STANDARDS (non-negotiable):
 - Every paragraph must contain at least one specific number, percentage, or dollar figure
@@ -12146,7 +12214,7 @@ Subject: [Subject]
 ### North Star Metric
 **[Metric]** — because [1 sentence explaining why this metric captures the full health of the business]
 ---END:gtm_playbook---
-`, ['biz_system','revenue_model','gtm_playbook'], 16000, 'g4a');
+`, ['biz_system','revenue_model','gtm_playbook'], 16000, 'g4a', { context: `${inf.name} (${inf.type_id || ''}) — ${desc.slice(0, 200)}` });
 
       // Generate INVESTOR-READINESS and M&A documents in parallel (separate AI calls for depth)
       setP('g4a','run','Generating investor + M&A analysis...');
@@ -12286,7 +12354,7 @@ Be extremely detailed and specific. Use real numbers based on the business model
     addP('g4b','Generating AGENT-SYSTEM + FAILURE-MODES','');setP('g4b','run');
     updateGlobalProgress(5, 12, 'Phase 5 of 14 \u00b7 Agent System');
     let bz2;try{
-      bz2=await ai(`You are a systems architect presenting to a CTO. Write with technical authority and operational precision. Every component must have measurable success criteria. No filler. No generic descriptions. Return in delimiter format ONLY. No preamble.
+      bz2=await aiCriticRevise(`You are a systems architect presenting to a CTO. Write with technical authority and operational precision. Every component must have measurable success criteria. No filler. No generic descriptions. Return in delimiter format ONLY. No preamble.
 
 ${cx(desc,inf)}
 
@@ -12422,7 +12490,7 @@ Scenarios to cover: JWT/Auth failure, Database connection loss, Stripe webhook f
 | Code | Git tagged releases | Every deploy | Infinite | <1 minute (rollback) |
 | Secrets | Vercel encrypted env vars | On change | Versioned | Immediate |
 ---END:failure_modes---
-`, ['agent_system','failure_modes'], 12000, 'g4b');
+`, ['agent_system','failure_modes'], 12000, 'g4b', { context: `${inf.name} (${inf.type_id || ''}) — ${desc.slice(0, 200)}` });
       setP('g4b','ok',`Agent system + failure modes ready`);
     }catch(e){setP('g4b','er',e.message);throw e;}
 

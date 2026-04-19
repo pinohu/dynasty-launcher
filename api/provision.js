@@ -94,6 +94,63 @@ async function freeLLM(prompt, maxTokens = 4000) {
   return '';
 }
 
+// Chain of Verification (CoVe) — for high-stakes outputs like legal documents.
+// 1) Take the initial output (already generated)
+// 2) Ask LLM to identify questionable claims, missing clauses, internal
+//    contradictions, jurisdiction mismatches
+// 3) If issues found, regenerate ONLY the affected sections with the
+//    verification report fed back as constraints
+//
+// Returns the (possibly revised) output. Falls back to the original on any failure.
+async function verifyAndReconcile(originalOutput, context, opts = {}) {
+  if (!originalOutput || typeof originalOutput !== 'string' || originalOutput.length < 200) return originalOutput;
+  const docType = opts.docType || 'document';
+  const jurisdiction = opts.jurisdiction || 'United States';
+  const checklist = opts.checklist || 'standard requirements for this document type';
+
+  const verifyPrompt = `You are a legal/compliance reviewer for ${jurisdiction}. Review the following ${docType} for issues:
+
+1. Missing required clauses (per ${checklist})
+2. Internal contradictions (sections that conflict)
+3. Jurisdiction mismatches (clauses inconsistent with ${jurisdiction} law)
+4. Vague or unenforceable language ("as appropriate", "reasonable", without definition)
+5. Missing parties, dates, amounts, or other concrete details
+
+[Document]
+${originalOutput.slice(0, 25000)}
+
+Return ONLY a JSON object, no markdown, no preamble:
+{
+  "needs_revision": <boolean>,
+  "issues": ["specific issue 1", "specific issue 2"],
+  "missing_clauses": ["clause name 1", "clause name 2"]
+}`;
+
+  let report = { needs_revision: false, issues: [], missing_clauses: [] };
+  try {
+    const verifyResp = await freeLLM(verifyPrompt, 1500);
+    const match = (verifyResp || '').match(/\{[\s\S]*\}/);
+    if (match) report = { ...report, ...JSON.parse(match[0]) };
+  } catch (e) { console.warn(`[cove] verify failed: ${e.message} — returning original`); return originalOutput; }
+
+  if (!report.needs_revision || ((report.issues || []).length === 0 && (report.missing_clauses || []).length === 0)) {
+    return originalOutput;
+  }
+
+  const issues = (report.issues || []).map((i, n) => `${n + 1}. ${i}`).join('\n');
+  const missing = (report.missing_clauses || []).map((c, n) => `${n + 1}. ${c}`).join('\n');
+  const revisePrompt = `${context || ''}\n\nA legal/compliance reviewer for ${jurisdiction} identified these issues with the prior version of this ${docType}:\n\nIssues to fix:\n${issues || '(none)'}\n\nMissing required clauses to add:\n${missing || '(none)'}\n\nProduce a corrected ${docType} that addresses every issue and adds every missing clause. Maintain the same delimiter format if any was used. Return ONLY the corrected document.`;
+
+  try {
+    const revised = await freeLLM(revisePrompt, Math.max(originalOutput.length / 3, 6000));
+    if (revised && revised.length > originalOutput.length * 0.5) {
+      console.log(`[cove] revised ${docType} (was ${originalOutput.length} chars, now ${revised.length}; ${report.issues.length} issues + ${report.missing_clauses.length} missing clauses addressed)`);
+      return revised;
+    }
+  } catch (e) { console.warn(`[cove] revise failed: ${e.message} — returning original`); }
+  return originalOutput;
+}
+
 async function pushFile(ghToken, org, repo, path, content, message, isBase64 = false) {
   const b64 = isBase64 ? content : Buffer.from(content).toString('base64');
   const h = { 'Authorization': `token ${ghToken}`, 'Content-Type': 'application/json',
@@ -1337,8 +1394,7 @@ async function mod_docs(config, project) {
         { file: 'docs/PRIVACY-POLICY.md', name: 'Privacy Policy' },
         { file: 'docs/SERVICE-AGREEMENT.md', name: 'Service Agreement' }
       ];
-      const legalRaw = await freeLLM(
-        `Generate 3 legal documents for "${project.name}" (${project.type || 'business'}) at ${domain}. Contact: ${email}. Jurisdiction: United States.
+      const legalGenPrompt = `Generate 3 legal documents for "${project.name}" (${project.type || 'business'}) at ${domain}. Contact: ${email}. Jurisdiction: United States.
 
 Return in this exact format:
 ---BEGIN:tos---
@@ -1349,14 +1405,32 @@ Return in this exact format:
 ---END:privacy---
 ---BEGIN:sla---
 [Complete Service Agreement - 1500+ words, covering: scope of services, deliverables, timeline, compensation, confidentiality, IP assignment, warranties, limitation of liability, termination, force majeure]
----END:sla---`,
-        6000
-      );
+---END:sla---`;
+      const legalRaw = await freeLLM(legalGenPrompt, 6000);
 
       const sections = { tos: '', privacy: '', sla: '' };
       for (const key of Object.keys(sections)) {
         const match = legalRaw.match(new RegExp(`---BEGIN:${key}---([\\s\\S]*?)---END:${key}---`));
         if (match) sections[key] = match[1].trim();
+      }
+
+      // Chain of Verification — reviewer pass per document, revise only if issues.
+      // Skipped for very short docs (likely failed generation).
+      const cove_checklists = {
+        tos:     'ToS standards: clear acceptance, scope, payment, IP, liability cap, indemnification, termination, governing law, dispute resolution, modifications, notice',
+        privacy: 'Privacy standards: GDPR + CCPA + COPPA compliance, info collected, lawful basis, processing purposes, third parties, retention, security, user rights, contact DPO',
+        sla:     'SLA standards: scope of services, deliverables, timeline/milestones, compensation, payment terms, confidentiality, IP assignment, warranties, liability cap, termination, force majeure, governing law',
+      };
+      for (const key of Object.keys(sections)) {
+        if (sections[key] && sections[key].length > 500) {
+          try {
+            sections[key] = await verifyAndReconcile(sections[key], legalGenPrompt, {
+              docType: key === 'tos' ? 'Terms of Service' : key === 'privacy' ? 'Privacy Policy' : 'Service Agreement',
+              jurisdiction: 'United States',
+              checklist: cove_checklists[key],
+            });
+          } catch (e) { console.warn(`[mod_docs] CoVe failed for ${key}: ${e.message}`); }
+        }
       }
 
       results.details.documents = [];
