@@ -5791,7 +5791,12 @@ function renderProg(){
 // GitHub — all calls proxied server-side (token stays secret)
 const sl=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 async function gh(path,method='GET',body=null){
-  return fetch(`/api/github?path=${encodeURIComponent(path)}`,{method,headers:{'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+  const adminToken = localStorage.getItem('dynasty_admin_token') || '';
+  const paidToken = localStorage.getItem('dynasty_paid_token') || '';
+  const headers = { 'Content-Type':'application/json' };
+  if (adminToken) headers['x-dynasty-admin-token'] = adminToken;
+  if (paidToken) headers['x-dynasty-access-token'] = paidToken;
+  return fetch(`/api/github?path=${encodeURIComponent(path)}`,{method,headers,...(body?{body:JSON.stringify(body)}:{})});
 }
 // Retry wrapper with exponential backoff. Used for any GitHub write op that
 // can hit secondary rate limits or transient 5xx. Throws the last error if
