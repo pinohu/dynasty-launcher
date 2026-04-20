@@ -11251,9 +11251,13 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       const vd = await vr.json();
       if (!vd.ok) {
         qualityOk = false;
-        const warn = Object.entries(vd.issues).map(([f,issues]) => `${f}: ${issues.length} issue(s)`).join(' | ');
-        addP('qv', `Quality check: ${vd.total_issues} placeholder(s) found`, warn, '⬡ Quality');
-        setP('qv', 'sk', warn);
+        // Show the actual offending lines per file so it's obvious what the
+        // gate flagged — previous message only said "N issue(s)".
+        const detail = Object.entries(vd.issues || {})
+          .map(([f, list]) => `${f}: ${(Array.isArray(list) ? list : []).join('; ')}`)
+          .join(' | ');
+        addP('qv', `Quality check: ${vd.total_issues} placeholder(s) found`, detail, '⬡ Quality');
+        setP('qv', 'sk', detail);
       }
     } catch {}
 

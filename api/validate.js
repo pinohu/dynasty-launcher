@@ -43,13 +43,35 @@ function validateNicheGrounding({ filename, content, projectName }) {
   if (name.length < 4) return issues;
   const narrativeFiles = new Set(['BUSINESS-SYSTEM.md', 'SPEC.md']);
   if (!narrativeFiles.has(filename)) return issues;
+
+  // Prefer the exact project name, but accept if a majority of its distinctive
+  // words (≥4 chars, non-stopword) appear — AI output often drops suffixes like
+  // "NG" or expands abbreviations ("NG" → "Nigeria") without losing the niche.
   try {
-    const re = new RegExp(escapeRegExp(name), 'i');
-    if (!re.test(content)) {
-      issues.push(`Niche grounding: project name "${name.slice(0, 80)}" not found in this file`);
-    }
+    const exact = new RegExp(escapeRegExp(name), 'i');
+    if (exact.test(content)) return issues;
   } catch {
     issues.push('Niche grounding: could not verify project name (invalid characters)');
+    return issues;
+  }
+
+  const stop = new Set(['the','and','for','with','from','into','your','their','inc','llc','ltd','co']);
+  const words = name
+    .split(/\s+/)
+    .map(w => w.replace(/[^A-Za-z0-9]/g, ''))
+    .filter(w => w.length >= 4 && !stop.has(w.toLowerCase()));
+
+  if (words.length === 0) {
+    // Single short name like "NG" or "X" — fall back to substring match; already failed.
+    issues.push(`Niche grounding: project name "${name.slice(0, 80)}" not found in this file`);
+    return issues;
+  }
+
+  const lower = content.toLowerCase();
+  const hits = words.filter(w => lower.includes(w.toLowerCase())).length;
+  const needed = Math.max(1, Math.ceil(words.length * 0.5));
+  if (hits < needed) {
+    issues.push(`Niche grounding: project name "${name.slice(0, 80)}" (or ${needed}/${words.length} of its key words) not found in this file`);
   }
   return issues;
 }
@@ -99,10 +121,17 @@ export default async function handler(req, res) {
   const issues = {};
   let totalIssues = 0;
 
+  // Files the client declares "always required" even when empty. Everything
+  // else is only validated when content exists — Next.js/TS projects don't
+  // ship backend/main.py, so an empty string there must not fail the gate.
+  const REQUIRED_FILES = new Set(['DESIGN.md', 'SPEC.md', 'BUSINESS-SYSTEM.md']);
+
   for (const [filename, content] of Object.entries(files || {})) {
     if (!content || content.length < 50) {
-      issues[filename] = ['File too short or empty'];
-      totalIssues++;
+      if (REQUIRED_FILES.has(filename)) {
+        issues[filename] = ['File too short or empty'];
+        totalIssues++;
+      }
       continue;
     }
     const fileIssues = [];
