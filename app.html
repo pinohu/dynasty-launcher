@@ -1563,9 +1563,10 @@ function updateHistoryButtonVisibility() {
 }
 
 async function requireAuth() {
+  if (localStorage.getItem('dynasty_admin_token')) return true; // Admin bypass — no Clerk account needed
   if (!CLERK_INSTANCE) return true; // No Clerk = open access
   if (CLERK_USER) return true; // Already signed in
-  
+
   // Show sign-in modal
   return new Promise((resolve) => {
     CLERK_INSTANCE.openSignIn({
