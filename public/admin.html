@@ -218,11 +218,45 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
 const TOKEN = localStorage.getItem('dynasty_admin_token');
 if (!TOKEN) { window.location.href = '/admin'; }
 
+let AUTH_FAILED = false;
+function surfaceAuthError(msg) {
+  if (AUTH_FAILED) return;
+  AUTH_FAILED = true;
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#E5534B;color:#fff;padding:14px 20px;text-align:center;font-size:13px;z-index:1000;font-weight:500';
+  banner.innerHTML = `<strong>Admin token rejected:</strong> ${msg} <button onclick="reauth()" style="margin-left:12px;padding:6px 14px;background:#fff;color:#E5534B;border:none;border-radius:6px;font-weight:600;cursor:pointer">Re-authenticate</button>`;
+  document.body.appendChild(banner);
+}
+function reauth() {
+  localStorage.removeItem('dynasty_admin_token');
+  localStorage.removeItem('dynasty_tier');
+  localStorage.removeItem('dynasty_paid_session');
+  localStorage.removeItem('dynasty_paid_at');
+  window.location.href = '/admin';
+}
+
 function api(action, body, method) {
   const opts = { headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' } };
   if (body) { opts.method = 'POST'; opts.body = JSON.stringify(body); }
-  return fetch(`/api/admin?action=${action}`, opts).then(r => r.json());
+  return fetch(`/api/admin?action=${action}`, opts).then(async r => {
+    if (r.status === 401) {
+      const d = await r.json().catch(() => ({}));
+      surfaceAuthError(d.error || 'Token expired or ADMIN_KEY rotated on the server. Re-authenticate to continue.');
+      return { ok: false, error: d.error || 'unauthorized', unauthorized: true };
+    }
+    return r.json();
+  }).catch(err => ({ ok: false, error: err.message }));
 }
+
+// Proactively validate the token so we don't fire every endpoint with a bad token.
+fetch('/api/auth?action=validate_admin', {
+  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ token: TOKEN })
+}).then(r => r.json()).then(d => {
+  if (!d.ok || !d.valid) {
+    surfaceAuthError(d.error || (d.expired ? 'Token expired.' : 'Token rejected by server. Re-authenticate.'));
+  }
+}).catch(() => {});
 
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));

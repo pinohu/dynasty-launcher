@@ -1282,7 +1282,21 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     try {
       window.history.replaceState({}, '', window.location.pathname + window.location.hash);
     } catch (e) {}
-    if (paidSession && paidAt) return;
+    // Paid / admin users already have a session; returning users without one can still
+    // enter the builder (free scoring + Clerk sign-in from the header) instead of being
+    // stuck on the email-recovery form.
+    if (!(paidSession && paidAt)) {
+      try { localStorage.setItem('dynasty_tier', localStorage.getItem('dynasty_tier') || 'free'); } catch (e) {}
+    }
+    function _returningInitBuilder() {
+      try { if (typeof enterBuilder === 'function') enterBuilder(); } catch (e) {}
+    }
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', _returningInitBuilder);
+    } else {
+      _returningInitBuilder();
+    }
+    return;
     // Show session recovery UI — works with or without Clerk
     document.documentElement.innerHTML = [
       '<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
