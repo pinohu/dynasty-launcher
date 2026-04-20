@@ -26,7 +26,8 @@ function invoke(handlerModule, { method = 'GET', query = {}, body = null, header
       json(b) { this._body = b; resolve({ status: this._status, body: b }); return this; },
       end() { resolve({ status: this._status, body: null }); return this; },
     };
-    const req = { method, query, headers, body };
+    const mergedHeaders = { 'x-admin-key': 'test-admin-key', ...headers };
+    const req = { method, query, headers: mergedHeaders, body };
     Promise.resolve(handlerModule.default(req, res)).catch(reject);
   });
 }

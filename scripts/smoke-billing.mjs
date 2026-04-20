@@ -20,7 +20,7 @@ process.env.TEST_ADMIN_KEY = 'test-admin-key';
 delete process.env.STRIPE_SECRET_KEY;
 delete process.env.STRIPE_WEBHOOK_SECRET;
 
-function invoke(handlerModule, { method = 'POST', query = {}, body = null, headers = {} } = {}) {
+function invoke(handlerModule, { method = 'POST', query = {}, body = null, headers = {}, _noAuth = false } = {}) {
   return new Promise((resolve, reject) => {
     const res = {
       _status: 200, _body: null,
@@ -29,16 +29,17 @@ function invoke(handlerModule, { method = 'POST', query = {}, body = null, heade
       json(b) { this._body = b; resolve({ status: this._status, body: b }); return this; },
       end() { resolve({ status: this._status, body: null }); return this; },
     };
+    const mergedHeaders = _noAuth ? { ...headers } : { 'x-admin-key': 'test-admin-key', ...headers };
     // For webhook tests where body is a raw JSON string, simulate stream
     const req = (typeof body === 'string')
       ? Object.assign({
-          method, query, headers,
+          method, query, headers: mergedHeaders,
           on(event, cb) {
             if (event === 'data') { this._dataCb = cb; setImmediate(() => cb(body)); }
             else if (event === 'end') { this._endCb = cb; setImmediate(() => cb()); }
           },
         }, {})
-      : { method, query, headers, body };
+      : { method, query, headers: mergedHeaders, body };
     Promise.resolve(handlerModule.default(req, res)).catch(reject);
   });
 }
@@ -220,7 +221,7 @@ async function main() {
   // catalog-sync: requires admin key
   // ============================================================
   {
-    const r = await invoke(h.catalogSync, { body: {} });
+    const r = await invoke(h.catalogSync, { body: {}, _noAuth: true });
     fails += log(
       r.status === 401 && r.body.error === 'admin_key_required',
       'catalog-sync rejects request without admin key',

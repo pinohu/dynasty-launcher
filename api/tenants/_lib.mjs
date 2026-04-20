@@ -36,10 +36,20 @@ export async function readBody(req) {
   });
 }
 
+import { timingSafeEqual } from 'node:crypto';
+
+function safeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  try { return timingSafeEqual(ab, bb); } catch { return false; }
+}
+
 export function adminOnly(req, res) {
-  const key = req.headers['x-admin-key'] || req.query?.key;
-  const expected = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY;
-  if (!expected || key !== expected) {
+  const key = req.headers['x-admin-key'] || req.query?.key || '';
+  const expected = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY || '';
+  if (!expected || !safeEqual(String(key), String(expected))) {
     res.status(403).json({ error: 'admin_only' });
     return false;
   }

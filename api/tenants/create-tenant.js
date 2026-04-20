@@ -16,7 +16,7 @@
 // Response: the created tenant record.
 // -----------------------------------------------------------------------------
 
-import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
+import { corsPreflight, methodGuard, readBody, adminOnly } from './_lib.mjs';
 import { createTenant } from './_store.mjs';
 import { getCatalog } from '../catalog/_lib.mjs';
 import { provisionAllAutomations } from './_provision.mjs';
@@ -26,6 +26,7 @@ export const maxDuration = 30;
 export default async function handler(req, res) {
   if (corsPreflight(req, res)) return;
   if (!methodGuard(req, res, ['POST'])) return;
+  if (!adminOnly(req, res)) return;
 
   let body;
   try { body = await readBody(req); } catch (e) {

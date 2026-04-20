@@ -29,7 +29,9 @@ function invoke(handlerModule, { method = 'POST', query = {}, body = null, heade
       json(b) { this._body = b; resolve({ status: this._status, body: b }); return this; },
       end() { resolve({ status: this._status, body: null }); return this; },
     };
-    const req = { method, query, headers, body };
+    // All tenant endpoints are admin-gated; inject the test admin key by default.
+    const mergedHeaders = { 'x-admin-key': 'test-admin-key', ...headers };
+    const req = { method, query, headers: mergedHeaders, body };
     Promise.resolve(handlerModule.default(req, res)).catch(reject);
   });
 }

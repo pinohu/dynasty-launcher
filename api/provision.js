@@ -686,12 +686,17 @@ async function mod_email(config, project, liveUrl) {
         body: JSON.stringify({ from: `${project.name} <${fromEmail}>`, to: ['test@test.invalid'], subject: 'API Test', text: 'test', _validate_only: true })
       });
       results.details.api_status = testResp.status;
-      results.details.templates_created = emailSequence.length;
-      results.details.emailit_configured = true;
-      results.details.send_endpoint = 'https://api.emailit.com/v2/emails';
-      results.ok = true;
-      results.cost_usd = 0;
-      return results;
+      if (testResp.status >= 400 && testResp.status !== 422) {
+        // 4xx/5xx (except 422 which can indicate validation-only accepted) → treat as unconfigured and try Acumbamail
+        results.details.emailit_error = `Emailit API returned ${testResp.status}`;
+      } else {
+        results.details.templates_created = emailSequence.length;
+        results.details.emailit_configured = true;
+        results.details.send_endpoint = 'https://api.emailit.com/v2/emails';
+        results.ok = true;
+        results.cost_usd = 0;
+        return results;
+      }
     } catch (e) {
       results.details.emailit_error = sanitizeError(e.message);
       // Fall through to Acumbamail
@@ -1476,7 +1481,7 @@ async function mod_automation(config, project, liveUrl) {
   const results = { ok: false, service: 'automation', details: {} };
   const n8nKey = process.env.N8N_API_KEY || config.automation?.n8n_api;
   const n8nUrl = config.automation?.n8n_url || process.env.N8N_URL || '';
-  if (!n8nUrl) { results.fallback = 'Configure n8n URL in DYNASTY_TOOL_CONFIG or N8N_URL env var.'; return results; }
+  if (!n8nUrl) { results.error = 'No n8n URL configured'; results.fallback = 'Configure n8n URL in DYNASTY_TOOL_CONFIG or N8N_URL env var.'; return results; }
   if (!n8nKey) { results.error = 'No n8n API key'; results.fallback = 'Add N8N_API_KEY env var or n8n_api to DYNASTY_TOOL_CONFIG.automation'; return results; }
   const nh = { 'X-N8N-API-KEY': n8nKey, 'Content-Type': 'application/json' };
   const webhookBase = liveUrl || `https://${project.slug}.vercel.app`;

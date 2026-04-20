@@ -585,6 +585,11 @@
     $('#no-access').style.display = '';
     return;
   }
+  const AUTH_HEADERS = { 'x-admin-key': TOKEN };
+  const authedFetch = (url, opts = {}) => fetch(url, {
+    ...opts,
+    headers: { ...(opts.headers || {}), ...AUTH_HEADERS },
+  });
   $('#no-access').style.display = 'none';
   $('#admin-picker').style.display = '';
   $('#no-tenant').style.display = '';
@@ -598,7 +603,7 @@
 
   window.createTestTenant = async function() {
     try {
-      const r = await fetch('/api/tenants/create-tenant', {
+      const r = await authedFetch('/api/tenants/create-tenant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ blueprint_code: 'hvac', plan: 'professional' }),
@@ -617,9 +622,9 @@
     $('#tenant-label').textContent = tenant_id;
     try {
       const [tenant, caps, cards] = await Promise.all([
-        fetch('/api/tenants/get-tenant?tenant_id=' + tenant_id).then((r) => r.json()),
-        fetch('/api/tenants/get-tenant-capabilities?tenant_id=' + tenant_id).then((r) => r.json()),
-        fetch('/api/events/opportunity-cards?tenant_id=' + tenant_id + '&all=true').then((r) => r.json()),
+        authedFetch('/api/tenants/get-tenant?tenant_id=' + tenant_id).then((r) => r.json()),
+        authedFetch('/api/tenants/get-tenant-capabilities?tenant_id=' + tenant_id).then((r) => r.json()),
+        authedFetch('/api/events/opportunity-cards?tenant_id=' + tenant_id + '&all=true').then((r) => r.json()),
       ]);
       if (tenant.error) { alert('Tenant not found'); return; }
       $('#no-tenant').style.display = 'none';
@@ -647,7 +652,7 @@
   window.activate = async function(module_code) {
     if (!currentTenant || !module_code) return;
     try {
-      const r = await fetch('/api/tenants/activate-module', {
+      const r = await authedFetch('/api/tenants/activate-module', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tenant_id: currentTenant, module_code }),

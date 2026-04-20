@@ -7,6 +7,7 @@
 import { _reset } from '../api/tenants/_store.mjs';
 
 process.env.TEST_ADMIN_KEY = 'test-admin-key';
+const ADMIN = { 'x-admin-key': 'test-admin-key' };
 
 function invoke(handlerModule, { method = 'GET', query = {}, body = null, headers = {} } = {}) {
   return new Promise((resolve, reject) => {
@@ -46,10 +47,16 @@ async function main() {
   console.log('Smoke test: api/tenants/*');
   console.log('-'.repeat(60));
 
+  // 0. Gated endpoints reject calls without admin key
+  {
+    const r = await invoke(h.create, { method: 'POST', body: { business_name: 'Unauthed' } });
+    fails += log(r.status === 403, 'POST create-tenant without admin key returns 403', `status=${r.status}`);
+  }
+
   // 1. Create without blueprint
   let tenantA;
   {
-    const r = await invoke(h.create, { method: 'POST', body: { business_name: 'Test Biz' } });
+    const r = await invoke(h.create, { method: 'POST', headers: ADMIN, body: { business_name: 'Test Biz' } });
     tenantA = r.body.tenant;
     const ok = r.status === 201 && tenantA && tenantA.tenant_id.startsWith('tnt_');
     fails += log(ok, 'POST create-tenant (no blueprint)', `id=${tenantA?.tenant_id}`);
@@ -58,7 +65,7 @@ async function main() {
   // 2. Create with HVAC blueprint
   let tenantHvac;
   {
-    const r = await invoke(h.create, { method: 'POST', body: { blueprint_code: 'hvac', business_name: 'HVAC Shop' } });
+    const r = await invoke(h.create, { method: 'POST', headers: ADMIN, body: { blueprint_code: 'hvac', business_name: 'HVAC Shop' } });
     tenantHvac = r.body.tenant;
     const ok = r.status === 201
       && tenantHvac && tenantHvac.blueprint_installed === 'hvac'
@@ -68,13 +75,13 @@ async function main() {
 
   // 3. Create with bad blueprint
   {
-    const r = await invoke(h.create, { method: 'POST', body: { blueprint_code: 'xyz-not-real' } });
+    const r = await invoke(h.create, { method: 'POST', headers: ADMIN, body: { blueprint_code: 'xyz-not-real' } });
     fails += log(r.status === 400, 'POST create-tenant with unknown blueprint returns 400', `status=${r.status}`);
   }
 
   // 4. GET tenant
   {
-    const r = await invoke(h.get, { query: { tenant_id: tenantA.tenant_id } });
+    const r = await invoke(h.get, { headers: ADMIN, query: { tenant_id: tenantA.tenant_id } });
     const ok = r.status === 200 && r.body.tenant && r.body.tenant.tenant_id === tenantA.tenant_id
       && Array.isArray(r.body.entitlements) && r.body.entitlements.length === 0;
     fails += log(ok, 'GET get-tenant returns the tenant + empty entitlements');
@@ -82,13 +89,13 @@ async function main() {
 
   // 5. GET nonexistent
   {
-    const r = await invoke(h.get, { query: { tenant_id: 'tnt_nope' } });
+    const r = await invoke(h.get, { headers: ADMIN, query: { tenant_id: 'tnt_nope' } });
     fails += log(r.status === 404, 'GET get-tenant nonexistent returns 404', `status=${r.status}`);
   }
 
   // 6. GET capabilities (none enabled)
   {
-    const r = await invoke(h.caps, { query: { tenant_id: tenantA.tenant_id } });
+    const r = await invoke(h.caps, { headers: ADMIN, query: { tenant_id: tenantA.tenant_id } });
     const ok = r.status === 200
       && Array.isArray(r.body.all_capabilities)
       && r.body.all_capabilities.length === 10
@@ -125,7 +132,7 @@ async function main() {
 
   // 10. GET capabilities after enable
   {
-    const r = await invoke(h.caps, { query: { tenant_id: tenantA.tenant_id } });
+    const r = await invoke(h.caps, { headers: ADMIN, query: { tenant_id: tenantA.tenant_id } });
     const email = r.body.all_capabilities.find((c) => c.capability_code === 'email');
     fails += log(email?.enabled === true && email.required_by.length > 0,
       'GET capabilities shows email enabled + required_by list', `required_by=${email?.required_by.length}`);

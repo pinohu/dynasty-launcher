@@ -3,7 +3,7 @@
 // Returns a single tenant record plus their active entitlements.
 // -----------------------------------------------------------------------------
 
-import { corsPreflight, methodGuard } from './_lib.mjs';
+import { corsPreflight, methodGuard, adminOnly } from './_lib.mjs';
 import { getTenant, listTenantEntitlements } from './_store.mjs';
 
 export const maxDuration = 10;
@@ -11,6 +11,7 @@ export const maxDuration = 10;
 export default async function handler(req, res) {
   if (corsPreflight(req, res)) return;
   if (!methodGuard(req, res, ['GET'])) return;
+  if (!adminOnly(req, res)) return;
 
   const tenant_id = req.query?.tenant_id || req.query?.id;
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });

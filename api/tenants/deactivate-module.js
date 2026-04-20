@@ -6,7 +6,7 @@
 // Body: { tenant_id, module_code }
 // -----------------------------------------------------------------------------
 
-import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
+import { corsPreflight, methodGuard, readBody, adminOnly } from './_lib.mjs';
 import { deactivateModule } from './_activation.mjs';
 
 export const maxDuration = 15;
@@ -14,6 +14,7 @@ export const maxDuration = 15;
 export default async function handler(req, res) {
   if (corsPreflight(req, res)) return;
   if (!methodGuard(req, res, ['POST'])) return;
+  if (!adminOnly(req, res)) return;
 
   let body;
   try { body = await readBody(req); } catch (e) {

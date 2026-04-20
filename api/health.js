@@ -1,5 +1,15 @@
+import { timingSafeEqual } from 'node:crypto';
+
 export const maxDuration = 15;
 const _se = (m) => typeof m === 'string' ? m.replace(/sk_live_\w+/g,'sk_live_***').replace(/ghp_\w+/g,'ghp_***').replace(/postgres(ql)?:\/\/[^\s]+/g,'postgres://***').slice(0,200) : 'Error';
+
+function safeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  try { return timingSafeEqual(ab, bb); } catch { return false; }
+}
 
 export default async function handler(req, res) {
   const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
@@ -10,7 +20,7 @@ export default async function handler(req, res) {
   // Public health returns minimal info; full details require admin
   const adminKey = req.query?.key || req.headers['x-admin-key'] || '';
   const ADMIN = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY || '';
-  if (!ADMIN || adminKey !== ADMIN) {
+  if (!ADMIN || !safeEqual(String(adminKey), ADMIN)) {
     return res.json({ ok: true, status: 'operational', timestamp: new Date().toISOString() });
   }
   if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'GET only' });

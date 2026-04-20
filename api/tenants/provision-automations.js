@@ -13,7 +13,7 @@
 // Emits: tenant.automations_provisioned
 // -----------------------------------------------------------------------------
 
-import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
+import { corsPreflight, methodGuard, readBody, adminOnly } from './_lib.mjs';
 import { getTenant } from './_store.mjs';
 import { getCatalog, indexModules } from '../catalog/_lib.mjs';
 import { emit } from '../events/_bus.mjs';
@@ -91,6 +91,7 @@ export const maxDuration = 60;
 export default async function handler(req, res) {
   if (corsPreflight(req, res)) return;
   if (!methodGuard(req, res, ['POST'])) return;
+  if (!adminOnly(req, res)) return;
 
   let body;
   try { body = await readBody(req); } catch (e) {

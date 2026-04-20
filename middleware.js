@@ -17,6 +17,15 @@ const SEC_HEADERS = {
   'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'self'",
 };
 
+// Constant-time string compare — Edge runtime has no node:crypto timingSafeEqual.
+// Guards against timing attacks on the admin key URL param.
+function safeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 export default function middleware(request) {
   const url = new URL(request.url);
   const host = (request.headers.get('host') || '').split(':')[0].toLowerCase();
@@ -83,7 +92,7 @@ button:hover{opacity:.92}.row{display:flex;gap:10px;align-items:center}.hint{fon
     const adminKey = process.env.ADMIN_KEY || '';
     const testAdminKey = process.env.TEST_ADMIN_KEY || '';
     // Allow with key in URL
-    if (params.get('k') && ((adminKey && params.get('k') === adminKey) || (testAdminKey && params.get('k') === testAdminKey))) return;
+    if (params.get('k') && ((adminKey && safeEqual(params.get('k'), adminKey)) || (testAdminKey && safeEqual(params.get('k'), testAdminKey)))) return;
     // Allow admin page to load after token bootstrap; admin.html still validates token server-side.
     if (params.get('auth') === 'token') return;
     // Block with a minimal auth page
@@ -106,7 +115,7 @@ else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{doc
   // Allow admin access with server-side key (never hardcoded in client)
   const adminKey = process.env.ADMIN_KEY || '';
   const testAdminKey = process.env.TEST_ADMIN_KEY || '';
-  if (params.get('k') && ((adminKey && params.get('k') === adminKey) || (testAdminKey && params.get('k') === testAdminKey))) {
+  if (params.get('k') && ((adminKey && safeEqual(params.get('k'), adminKey)) || (testAdminKey && safeEqual(params.get('k'), testAdminKey)))) {
     return; // Pass through — app.html will verify server-side
   }
 
