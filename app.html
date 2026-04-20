@@ -5843,6 +5843,43 @@ async function pushF(repo,path,content,msg){
   }, `pushF ${path}`, 3, 1500);
 }
 
+// Delete every file under a given path in the repo. Recursively walks the
+// directory via the contents API and issues a DELETE for each blob. Used to
+// purge template-inherited cruft (e.g. root `./app/` when Dynasty wrote
+// `./src/app/`) that would otherwise break `npm run build` with
+// "Module not found" errors from orphaned imports.
+async function deleteRepoPath(repo, path) {
+  const out = { deleted: 0, errors: [] };
+  const listed = await gh(`/repos/${repo}/contents/${path}`);
+  if (!listed.ok) {
+    // 404 means the path doesn't exist — fine, nothing to do.
+    return out;
+  }
+  let entries;
+  try { entries = await listed.json(); } catch { return out; }
+  if (!Array.isArray(entries)) entries = [entries];
+  for (const e of entries) {
+    if (!e || !e.path) continue;
+    if (e.type === 'dir') {
+      const sub = await deleteRepoPath(repo, e.path);
+      out.deleted += sub.deleted;
+      out.errors.push(...sub.errors);
+    } else if (e.type === 'file' || e.type === 'symlink') {
+      try {
+        const r = await gh(`/repos/${repo}/contents/${e.path}`, 'DELETE', {
+          message: `chore: purge template cruft — ${e.path}`,
+          sha: e.sha,
+        });
+        if (r.ok) out.deleted += 1;
+        else out.errors.push(`${e.path} (${r.status})`);
+      } catch (err) {
+        out.errors.push(`${e.path} (${err.message || 'error'})`);
+      }
+    }
+  }
+  return out;
+}
+
 // ── Local folder mirror (File System Access API) ───────────────────────
 // User picks a directory once; every file added to `window._buildFiles`
 // is streamed to disk in real time so they can see files appear as they
@@ -10658,6 +10695,36 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       } catch (batchErr) {
         console.warn(`[pushFiles] batch commit failed, falling back to per-file: ${batchErr.message}`);
         setP('pf', 'run', 'Batch failed, falling back to per-file…');
+      }
+
+      // ── Template cruft purge ──────────────────────────────────────────────
+      // Some forked templates (SaaS boilerplates, admin dashboards) carry a
+      // root-level `./app/` directory whose pages import components that
+      // Dynasty never generates (e.g. @/components/ui/button, date-fns).
+      // When Dynasty writes `./src/app/`, those orphan imports kill
+      // `npm run build` with "Module not found". Purge them after the main
+      // push so the repo compiles cleanly on Vercel.
+      const wroteSrcApp = Object.keys(batchFileMap).some(p => p.startsWith('src/app/'));
+      if (batchOk && wroteSrcApp) {
+        const cruftRoots = ['app', 'components', 'lib', 'hooks', 'styles', 'pages'];
+        let purged = 0; const failures = [];
+        for (const root of cruftRoots) {
+          // Only purge roots Dynasty did NOT write into. If any pushed path
+          // starts with the root + '/', it's legitimately ours — skip it.
+          const dynastyOwned = Object.keys(batchFileMap).some(p => p === root || p.startsWith(root + '/'));
+          if (dynastyOwned) continue;
+          try {
+            const res = await deleteRepoPath(`${ORG}/${inf.repo}`, root);
+            purged += res.deleted;
+            if (res.errors.length) failures.push(...res.errors.slice(0, 3));
+          } catch (e) {
+            failures.push(`${root}: ${e.message || 'error'}`);
+          }
+        }
+        if (purged > 0) {
+          try { addP('cruft', 'Purged template cruft', `${purged} orphan file(s) removed from root`, '⬡ Cleanup'); setP('cruft', 'ok', `${purged} file(s)`); } catch {}
+        }
+        if (failures.length) console.warn('[cruft-purge] some deletes failed:', failures);
       }
 
       if (!batchOk) {
