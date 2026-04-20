@@ -715,8 +715,15 @@ export default async function handler(req, res) {
   if (req.query?.action === 'reset_quota') {
     const adminKey = process.env.ADMIN_KEY || '';
     const testAdminKey = process.env.TEST_ADMIN_KEY || '';
-    const k = req.query?.k || req.body?.k || '';
-    if (!k || (!adminKey && !testAdminKey) || ((() => { try { const { timingSafeEqual } = require("crypto"); const a = Buffer.from(String(k || "")); const b = Buffer.from(String(adminKey || "")); return a.length !== b.length || !timingSafeEqual(a, b); } catch { return true; } })() && k !== testAdminKey)) {
+    const k = String(req.query?.k || req.body?.k || '');
+    const safeEq = (a, b) => {
+      if (!a || !b || a.length !== b.length) return false;
+      try {
+        const { timingSafeEqual } = require('crypto');
+        return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+      } catch { return false; }
+    };
+    if (!k || (!safeEq(k, adminKey) && !safeEq(k, testAdminKey))) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     const monthKey = getMonthKey();
