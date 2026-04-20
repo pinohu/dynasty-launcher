@@ -9546,10 +9546,22 @@ await Promise.allSettled([
 
           // ── 2c. Ensure essential Next.js deps ──
           if (isNextJs) {
-            const reqDeps = { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^4.0.0' };
+            // Dynasty writes Tailwind v4 CSS (@import "tailwindcss") and a v4
+            // postcss config below. Force `tailwindcss` and `@tailwindcss/postcss`
+            // to v4 even if the template pinned v3 — otherwise webpack tries to
+            // resolve the v3 runtime and fails with "Module not found: tailwindcss".
+            const reqDeps = { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^4.0.0', '@tailwindcss/postcss': '^4.0.0' };
             const reqDev = { 'typescript': '^5.3.3', '@types/react': '^18.2.0', '@types/node': '^20.11.0' };
-            for (const [k,v] of Object.entries(reqDeps)) { if (!pkg.dependencies[k]) pkg.dependencies[k] = v; }
+            for (const [k,v] of Object.entries(reqDeps)) {
+              // For tailwind + its postcss plugin, OVERRIDE any version the template set.
+              if (k === 'tailwindcss' || k === '@tailwindcss/postcss') pkg.dependencies[k] = v;
+              else if (!pkg.dependencies[k]) pkg.dependencies[k] = v;
+            }
             for (const [k,v] of Object.entries(reqDev)) { if (!pkg.devDependencies[k]) pkg.devDependencies[k] = v; }
+            // If the template declared tailwind in devDependencies too, purge it so
+            // the resolver doesn't find an old v3 copy via a different path.
+            if (pkg.devDependencies['tailwindcss']) delete pkg.devDependencies['tailwindcss'];
+            if (pkg.devDependencies['@tailwindcss/postcss']) delete pkg.devDependencies['@tailwindcss/postcss'];
             // Ensure build script exists
             if (!pkg.scripts) pkg.scripts = {};
             if (!pkg.scripts.build) pkg.scripts.build = 'next build';
@@ -9569,11 +9581,16 @@ await Promise.allSettled([
       // Push a clean Tailwind v4 compatible globals.css that REPLACES the template's.
       if (isNextJs) files['src/app/globals.css'] = `@import "tailwindcss";\n\n:root {\n  --background: 0 0% 100%;\n  --foreground: 0 0% 3.9%;\n  --card: 0 0% 100%;\n  --card-foreground: 0 0% 3.9%;\n  --popover: 0 0% 100%;\n  --popover-foreground: 0 0% 3.9%;\n  --primary: 0 0% 9%;\n  --primary-foreground: 0 0% 98%;\n  --secondary: 0 0% 96.1%;\n  --secondary-foreground: 0 0% 9%;\n  --muted: 0 0% 96.1%;\n  --muted-foreground: 0 0% 45.1%;\n  --accent: 0 0% 96.1%;\n  --accent-foreground: 0 0% 9%;\n  --destructive: 0 84.2% 60.2%;\n  --destructive-foreground: 0 0% 98%;\n  --border: 0 0% 89.8%;\n  --input: 0 0% 89.8%;\n  --ring: 0 0% 3.9%;\n  --radius: 0.5rem;\n}\n\n.dark {\n  --background: 0 0% 3.9%;\n  --foreground: 0 0% 98%;\n  --card: 0 0% 3.9%;\n  --card-foreground: 0 0% 98%;\n  --popover: 0 0% 3.9%;\n  --popover-foreground: 0 0% 98%;\n  --primary: 0 0% 98%;\n  --primary-foreground: 0 0% 9%;\n  --secondary: 0 0% 14.9%;\n  --secondary-foreground: 0 0% 98%;\n  --muted: 0 0% 14.9%;\n  --muted-foreground: 0 0% 63.9%;\n  --accent: 0 0% 14.9%;\n  --accent-foreground: 0 0% 98%;\n  --destructive: 0 62.8% 30.6%;\n  --destructive-foreground: 0 0% 98%;\n  --border: 0 0% 14.9%;\n  --input: 0 0% 14.9%;\n  --ring: 0 0% 83.1%;\n}\n\nbody {\n  font-family: var(--font-sans, system-ui, sans-serif);\n}\n`;
 
-      // ── 3b. postcss.config.js: Tailwind v4 doesn't use PostCSS plugins ──
-      // Remove any postcss.config that references tailwindcss as a plugin (v3 pattern)
-      // Tailwind v4 uses @import "tailwindcss" in CSS instead
-      if (isNextJs && files['postcss.config.js']?.includes('tailwindcss')) {
-        delete files['postcss.config.js'];
+      // ── 3b. postcss.config: Tailwind v4 needs @tailwindcss/postcss plugin ──
+      // v4 CSS (`@import "tailwindcss"`) is compiled by the @tailwindcss/postcss
+      // PostCSS plugin at build time. We MUST write a valid postcss.config.mjs;
+      // omitting it makes webpack report "Module not found: 'tailwindcss'" when
+      // processing globals.css. Nuke any v3-flavored config first, then write v4.
+      if (isNextJs) {
+        for (const pcf of ['postcss.config.js', 'postcss.config.cjs', 'postcss.config.ts']) {
+          if (files[pcf]) delete files[pcf];
+        }
+        files['postcss.config.mjs'] = `// Tailwind v4 — single PostCSS plugin\nexport default {\n  plugins: {\n    '@tailwindcss/postcss': {},\n  },\n};\n`;
       }
       // Also remove tailwind.config.ts / .js — Tailwind v4 configures via CSS @theme
       if (isNextJs) {
@@ -9662,6 +9679,133 @@ export default nextConfig;
           }
           if (changed) files['tsconfig.json'] = JSON.stringify(tsconfig, null, 2);
         } catch {}
+      }
+
+      // ── 3e. Dependency-resolution scan (L1 import audit) ────────────────
+      // Static-analyze every JS/TS file we're about to push. Any file that
+      // imports a package not in package.json OR a path alias that doesn't
+      // resolve to something we're actually shipping gets DELETED from the
+      // push. Prevents "Module not found" failures on Vercel — the #1 cause
+      // of broken customer deployments. Runs for Next.js builds only.
+      if (isNextJs) {
+        const depScanReport = { scanned: 0, purged: [], reasons: {} };
+        let pkgDeps = {};
+        try {
+          const pkg = JSON.parse(files['package.json'] || '{}');
+          pkgDeps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+        } catch {}
+
+        // Packages always available at runtime (Node built-ins + Next.js)
+        const ALWAYS_OK = new Set([
+          'react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime',
+          'next', 'next/link', 'next/navigation', 'next/image', 'next/server',
+          'next/headers', 'next/cache', 'next/font/google', 'next/font/local',
+          'next/dynamic', 'next/script',
+          'fs', 'fs/promises', 'path', 'crypto', 'os', 'util', 'stream',
+          'http', 'https', 'url', 'querystring', 'buffer', 'events', 'zlib',
+          'child_process', 'readline', 'net', 'dns', 'tls', 'timers',
+        ]);
+
+        const extCandidates = ['', '.ts', '.tsx', '.js', '.jsx', '.mjs',
+                               '/index.ts', '/index.tsx', '/index.js', '/index.jsx',
+                               '/route.ts', '/route.js', '/page.tsx', '/page.js',
+                               '/layout.tsx', '/layout.js'];
+        const hasTargetFile = (base) => extCandidates.some(e => files[base + e] != null);
+
+        const resolveRelOrAlias = (spec, importer) => {
+          if (spec.startsWith('@/')) return 'src/' + spec.slice(2);
+          if (spec.startsWith('./') || spec.startsWith('../')) {
+            const dir = importer.split('/').slice(0, -1).join('/');
+            const joined = (dir ? dir + '/' : '') + spec;
+            const parts = joined.split('/');
+            const out = [];
+            for (const p of parts) {
+              if (p === '' || p === '.') continue;
+              else if (p === '..') out.pop();
+              else out.push(p);
+            }
+            return out.join('/');
+          }
+          return null;
+        };
+
+        const basePackageName = (spec) => {
+          if (spec.startsWith('@')) return spec.split('/').slice(0, 2).join('/');
+          return spec.split('/')[0];
+        };
+        const isPackageAvailable = (spec) => {
+          if (ALWAYS_OK.has(spec)) return true;
+          const base = basePackageName(spec);
+          if (ALWAYS_OK.has(base)) return true;
+          return !!pkgDeps[base];
+        };
+
+        // Regex matches: `import ... from 'x'`, `import 'x'`, `import('x')`,
+        // `require('x')`, `export ... from 'x'`. Good enough for 99% of cases.
+        const IMPORT_RE = /(?:import\s+(?:[^'"`;]+\s+from\s+)?|import\s*\(\s*|require\s*\(\s*|export\s+[^'"`;]+\s+from\s+)['"]([^'"`]+)['"]/g;
+
+        const filePaths = Object.keys(files);
+        for (const path of filePaths) {
+          if (!/\.(ts|tsx|js|jsx|mjs|cjs)$/.test(path)) continue;
+          if (path.endsWith('.d.ts')) continue;
+          const content = files[path];
+          if (typeof content !== 'string' || !content.length) continue;
+          depScanReport.scanned += 1;
+
+          const unresolved = [];
+          let m;
+          IMPORT_RE.lastIndex = 0;
+          while ((m = IMPORT_RE.exec(content)) !== null) {
+            const spec = m[1];
+            if (!spec) continue;
+            const resolved = resolveRelOrAlias(spec, path);
+            if (resolved !== null) {
+              if (!hasTargetFile(resolved)) unresolved.push(spec);
+            } else {
+              if (!isPackageAvailable(spec)) unresolved.push(spec);
+            }
+          }
+          if (unresolved.length) {
+            // Keep src/app/page.tsx and src/app/layout.tsx at all costs —
+            // if they have bad imports, strip the bad import lines instead
+            // of deleting the file. Every Next.js app needs these two.
+            const essential = path === 'src/app/page.tsx' || path === 'src/app/layout.tsx';
+            if (essential) {
+              let stripped = content;
+              for (const spec of unresolved) {
+                const escSpec = spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const stripRe = new RegExp(
+                  "^\\s*(?:import\\s+[^;]*?from\\s+)?['\"]" + escSpec + "['\"]\\s*;?\\s*$\\n?",
+                  'gm'
+                );
+                stripped = stripped.replace(stripRe, '');
+                const stripMulti = new RegExp(
+                  "^\\s*import\\s+[^;]*?from\\s+['\"]" + escSpec + "['\"]\\s*;?\\s*$\\n?",
+                  'gm'
+                );
+                stripped = stripped.replace(stripMulti, '');
+              }
+              files[path] = stripped;
+              depScanReport.reasons[path] = `stripped imports of ${unresolved.join(', ')}`;
+            } else {
+              delete files[path];
+              depScanReport.purged.push(path);
+              depScanReport.reasons[path] = unresolved.slice(0, 3).join(', ');
+            }
+          }
+        }
+
+        if (depScanReport.purged.length) {
+          console.warn(`[dep-scan] purged ${depScanReport.purged.length} orphan file(s) of ${depScanReport.scanned} scanned`);
+          for (const p of depScanReport.purged.slice(0, 20)) {
+            console.warn(`  · ${p} — unresolved: ${depScanReport.reasons[p]}`);
+          }
+          // Surface in UI so the user knows what happened
+          try {
+            addP('depscan', 'Dependency scan', `${depScanReport.purged.length} orphan file(s) purged before push`, '⬡ Quality');
+            setP('depscan', 'ok', `${depScanReport.purged.length} of ${depScanReport.scanned} had unresolvable imports`);
+          } catch {}
+        }
       }
 
       // ── 4. TSX files: replace @heroicons → lucide-react ──
