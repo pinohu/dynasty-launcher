@@ -98,7 +98,7 @@ button:hover{opacity:.9}p{color:#666;font-size:12px}</style></head><body>
 <p id="err"></p>
 <script>function go(){const k=document.getElementById('ak').value;if(!k)return;
 fetch('/api/auth?action=verify_admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k})})
-.then(r=>r.json()).then(d=>{if(d.ok&&d.admin){localStorage.setItem('dynasty_admin_token',d.token);window.location.href='/admin?auth=token';}
+.then(r=>r.json()).then(d=>{if(d.ok&&d.admin){localStorage.setItem('dynasty_admin_token',d.token);localStorage.setItem('dynasty_tier','enterprise');localStorage.setItem('dynasty_paid_session','admin');localStorage.setItem('dynasty_paid_at',new Date().toISOString());window.location.href='/admin?auth=token';}
 else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{document.getElementById('err').textContent='Server error';});}</script>
 </body></html>`, { status: 200, headers: SEC_HEADERS });
   }

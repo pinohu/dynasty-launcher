@@ -1239,6 +1239,13 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
   // Previously authenticated admin (server-signed token)
   var adminToken = localStorage.getItem('dynasty_admin_token');
   if (adminToken) {
+    // Admins who signed in via /admin only have the token — backfill the tier
+    // and paid-session markers the rest of the builder reads directly.
+    try {
+      if (localStorage.getItem('dynasty_tier') !== 'enterprise') localStorage.setItem('dynasty_tier', 'enterprise');
+      if (!localStorage.getItem('dynasty_paid_session')) localStorage.setItem('dynasty_paid_session', 'admin');
+      if (!localStorage.getItem('dynasty_paid_at')) localStorage.setItem('dynasty_paid_at', new Date().toISOString());
+    } catch(e) {}
     // Validate token server-side (async, but let the page load — enterBuilder checks too)
     fetch('/api/auth?action=validate_admin', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1275,7 +1282,21 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     try {
       window.history.replaceState({}, '', window.location.pathname + window.location.hash);
     } catch (e) {}
-    if (paidSession && paidAt) return;
+    // Paid / admin users already have a session; returning users without one can still
+    // enter the builder (free scoring + Clerk sign-in from the header) instead of being
+    // stuck on the email-recovery form.
+    if (!(paidSession && paidAt)) {
+      try { localStorage.setItem('dynasty_tier', localStorage.getItem('dynasty_tier') || 'free'); } catch (e) {}
+    }
+    function _returningInitBuilder() {
+      try { if (typeof enterBuilder === 'function') enterBuilder(); } catch (e) {}
+    }
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', _returningInitBuilder);
+    } else {
+      _returningInitBuilder();
+    }
+    return;
     // Show session recovery UI — works with or without Clerk
     document.documentElement.innerHTML = [
       '<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
@@ -1556,9 +1577,10 @@ function updateHistoryButtonVisibility() {
 }
 
 async function requireAuth() {
+  if (localStorage.getItem('dynasty_admin_token')) return true; // Admin bypass — no Clerk account needed
   if (!CLERK_INSTANCE) return true; // No Clerk = open access
   if (CLERK_USER) return true; // Already signed in
-  
+
   // Show sign-in modal
   return new Promise((resolve) => {
     CLERK_INSTANCE.openSignIn({
@@ -2860,6 +2882,8 @@ const V3_TIERS = {
   custom_volume: { price: null, label: 'Custom Volume (Contact Sales)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] }
 };
 function getUserTier() {
+  // Admin tokens always get the top tier so module/archetype gates don't fire for them.
+  if (localStorage.getItem('dynasty_admin_token')) return 'enterprise';
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
   return localStorage.getItem('dynasty_tier') || 'free';
 }
