@@ -9637,6 +9637,19 @@ await Promise.allSettled([
       const isNextJs = V2_DEPLOY_TARGET === 'fullstack' ||
         (inf.stack||[]).some(s => s.toLowerCase().includes('next'));
 
+      // ── -1. Strip UTF-8 BOM from every text file before push ────────────
+      // A leading U+FEFF BOM breaks JSON parsers (npm install fails with
+      // "Unexpected token '\uFEFF'") and some CSS loaders. PowerShell's
+      // default Set-Content -Encoding UTF8 emits a BOM; if any upstream
+      // path hands Dynasty a BOM'd string, this guarantees it doesn't
+      // survive to GitHub.
+      for (const p of Object.keys(files)) {
+        const v = files[p];
+        if (typeof v === 'string' && v.length && v.charCodeAt(0) === 0xFEFF) {
+          files[p] = v.slice(1);
+        }
+      }
+
       // ── 0. Guarantee a clean package.json exists (replaces template bloat) ──
       if (isNextJs && !files['package.json']) {
         files['package.json'] = JSON.stringify({
