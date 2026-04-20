@@ -3561,6 +3561,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         url: dep.url ? `https://${dep.url}` : null,
         error: dep.state === 'ERROR' ? 'Build failed — check Vercel dashboard' : null,
         created: dep.created,
+        deployment_id: dep.uid || dep.id || null,
       });
     } catch (e) {
       return res.json({ state: 'UNKNOWN', error: sanitizeError(e.message) });

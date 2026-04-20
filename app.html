@@ -5843,6 +5843,166 @@ async function pushF(repo,path,content,msg){
   }, `pushF ${path}`, 3, 1500);
 }
 
+// Delete a single file in the repo. Fetches the blob's current SHA, then
+// issues a DELETE. Returns { ok, error? }. Used by the L2 Vercel auto-
+// remediation loop to prune files the build log flagged as orphans.
+async function deleteRepoFile(repo, path, reason) {
+  try {
+    const r = await gh(`/repos/${repo}/contents/${path}`);
+    if (!r.ok) return { ok: false, error: `not-found(${r.status})` };
+    const data = await r.json();
+    if (data.type !== 'file') return { ok: false, error: 'not-a-file' };
+    const msg = `chore: auto-remediate (${reason || 'vercel build'}) - ${path}`;
+    const del = await gh(`/repos/${repo}/contents/${path}`, 'DELETE', {
+      message: msg,
+      sha: data.sha,
+    });
+    if (!del.ok) {
+      const t = await del.text().catch(()=> '');
+      return { ok: false, error: `delete(${del.status}) ${t.slice(0,80)}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e && e.message || 'error' };
+  }
+}
+
+// Parse a Vercel build-events array and extract file paths that failed with
+// "Module not found". The log shape Vercel returns pairs a file path line
+// with a following "Module not found: Can't resolve 'X'" line. We walk each
+// line, and whenever a relative path `./...` appears within ~3 lines of
+// "Module not found", we record it as an orphan. Returns de-duplicated
+// repo-relative paths (leading `./` stripped).
+function dynastyParseVercelFailLog(events) {
+  if (!Array.isArray(events)) return [];
+  const logText = events.map(e => {
+    if (!e) return '';
+    return e.text || (e.payload && (e.payload.text || e.payload.info && e.payload.info.text)) || '';
+  }).join('\n');
+  if (!/Failed to compile|Module not found/i.test(logText)) return [];
+
+  const lines = logText.split('\n');
+  const hits = new Set();
+  const pathRe = /(\.\/[\w\-/\[\]().@]+\.(?:tsx?|jsx?|mjs|cjs))(?:\s|$)/;
+  for (let i = 0; i < lines.length; i++) {
+    const pm = lines[i].match(pathRe);
+    if (!pm) continue;
+    const ctx = lines.slice(i, Math.min(i + 5, lines.length)).join(' ');
+    if (/Module not found/i.test(ctx)) {
+      hits.add(pm[1].replace(/^\.\//, ''));
+    }
+  }
+  return Array.from(hits);
+}
+
+// L2: Auto-remediate a failed Vercel build. Polls verify_deploy until the
+// deployment reaches a terminal state. On ERROR, fetches the build log,
+// parses it for orphan file paths, deletes them from the repo, and lets
+// Vercel auto-trigger a fresh build on the new commit. Repeats up to
+// `maxAttempts`. Returns { ok, attempts, actions, state, url }.
+//
+// This is L2 of the reliability plan. L1 (the import audit in the
+// validation gate) prevents most orphans from ever being pushed. L2
+// catches anything that slips through by reading Vercel's own verdict
+// and acting on it — never falsely claiming "Live" on a red build.
+async function dynastyAutoRemediateVercelFailure(repo, vercelProjectId, opts) {
+  opts = opts || {};
+  const maxAttempts = opts.maxAttempts || 3;
+  const pollTimeoutMs = opts.pollTimeoutMs || 240000; // 4 min per attempt
+  const pollIntervalMs = opts.pollIntervalMs || 10000;
+  const actions = [];
+  let lastState = 'UNKNOWN';
+  let lastUrl = null;
+
+  const ui = (msg) => { try { setP('l2-remediate', 'run', msg); } catch {} };
+  try { addP('l2-remediate', 'Build verification', 'Polling Vercel — auto-remediate on failure', '⬡ Reliability'); setP('l2-remediate', 'run', 'Polling…'); } catch {}
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    ui(`Attempt ${attempt}/${maxAttempts} — polling Vercel…`);
+    const started = Date.now();
+    let dep = null;
+    while (Date.now() - started < pollTimeoutMs) {
+      try {
+        const vr = await fetch('/api/provision?action=verify_deploy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+          body: JSON.stringify({ project_id: vercelProjectId, ...getProvisionAuthPayload() }),
+        });
+        const vd = await vr.json();
+        lastState = vd.state || 'UNKNOWN';
+        lastUrl = vd.url || lastUrl;
+        if (lastState === 'READY' || lastState === 'ERROR' || lastState === 'CANCELED') {
+          dep = vd;
+          break;
+        }
+        ui(`Attempt ${attempt}/${maxAttempts} — Vercel: ${lastState} (${Math.round((Date.now()-started)/1000)}s)`);
+      } catch {}
+      await new Promise(r => setTimeout(r, pollIntervalMs));
+    }
+
+    if (lastState === 'READY') {
+      try { setP('l2-remediate', 'ok', `Live after ${attempt} attempt${attempt>1?'s':''}`); } catch {}
+      return { ok: true, attempts: attempt, actions, state: lastState, url: lastUrl };
+    }
+    if (lastState !== 'ERROR') {
+      actions.push(`attempt ${attempt}: stuck in ${lastState} after ${pollTimeoutMs/1000}s`);
+      try { setP('l2-remediate', 'sk', `Stuck in ${lastState} — manual check needed`); } catch {}
+      return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl };
+    }
+
+    // ERROR path — fetch logs and try to auto-remediate.
+    const depId = dep && dep.deployment_id;
+    if (!depId) {
+      actions.push(`attempt ${attempt}: error state but no deployment_id to fetch logs`);
+      try { setP('l2-remediate', 'sk', 'Error without log access'); } catch {}
+      return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl };
+    }
+    ui(`Attempt ${attempt}/${maxAttempts} — Vercel ERROR, fetching logs…`);
+    let events = [];
+    try {
+      const lr = await fetch('/api/provision?action=fetch_vercel_logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
+        body: JSON.stringify({ deployment_id: depId, ...getProvisionAuthPayload() }),
+      });
+      const ld = await lr.json();
+      if (ld && ld.ok && Array.isArray(ld.events)) events = ld.events;
+    } catch (e) {
+      actions.push(`attempt ${attempt}: fetch_vercel_logs threw — ${e && e.message}`);
+    }
+
+    const orphans = dynastyParseVercelFailLog(events);
+    if (!orphans.length) {
+      actions.push(`attempt ${attempt}: log has no parseable Module-not-found orphans`);
+      try { setP('l2-remediate', 'sk', 'Build failed for a non-orphan reason — manual check needed'); } catch {}
+      return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl };
+    }
+
+    ui(`Attempt ${attempt}/${maxAttempts} — deleting ${orphans.length} orphan file(s)…`);
+    let deleted = 0;
+    const failures = [];
+    for (const path of orphans) {
+      const r = await deleteRepoFile(repo, path, `vercel-build-attempt-${attempt}`);
+      if (r.ok) deleted += 1;
+      else failures.push(`${path}: ${r.error}`);
+    }
+    actions.push(`attempt ${attempt}: deleted ${deleted}/${orphans.length} orphan(s)`);
+    if (failures.length) console.warn('[l2] some deletes failed:', failures);
+
+    if (deleted === 0) {
+      try { setP('l2-remediate', 'sk', 'Could not delete any flagged file — manual check needed'); } catch {}
+      return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl };
+    }
+
+    // Give Vercel ~20s to detect the new commit(s) and start a fresh build.
+    ui(`Attempt ${attempt}/${maxAttempts} — ${deleted} deletes pushed, waiting for rebuild…`);
+    await new Promise(r => setTimeout(r, 20000));
+  }
+
+  try { setP('l2-remediate', 'sk', `Exhausted ${maxAttempts} attempts`); } catch {}
+  return { ok: false, attempts: maxAttempts, actions, state: lastState, url: lastUrl };
+}
+
 // Delete every file under a given path in the repo. Recursively walks the
 // directory via the contents API and issues a DELETE for each blob. Used to
 // purge template-inherited cruft (e.g. root `./app/` when Dynasty wrote
@@ -11219,13 +11379,23 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
           } else if (pass === 2) {
             // FIX: take corrective action based on failure type
             if (depData.state === 'ERROR') {
-              verifyResults.fixes_applied.push('Vercel deploy ERROR — triggering retry with framework fix');
-              setP(`verify-pass-${pass}`, 'run', 'Deploy failed — retrying...');
-              await fetch('/api/provision?action=retry_deploy', {
-                method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
-                body: JSON.stringify({ project_id: vercelProjectId, repo: inf.repo, org: ORG, ...getProvisionAuthPayload() })
-              });
-              await new Promise(r => setTimeout(r, 20000)); // wait for retry to build
+              // L2 auto-remediation: parse the build log, delete orphan files
+              // that triggered Module-not-found, let Vercel rebuild. Up to 3
+              // attempts. Replaces the old "blind retry" which just re-ran the
+              // same broken code.
+              verifyResults.fixes_applied.push('Vercel ERROR — L2 auto-remediate');
+              setP(`verify-pass-${pass}`, 'run', 'Deploy failed — auto-remediating...');
+              try {
+                const l2 = await dynastyAutoRemediateVercelFailure(`${ORG}/${inf.repo}`, vercelProjectId, { maxAttempts: 3 });
+                if (l2.ok) {
+                  verifyResults.vercel = true;
+                  verifyResults.fixes_applied.push(`L2 success after ${l2.attempts} attempt(s): ${l2.actions.join(' | ')}`);
+                } else {
+                  verifyResults.issues.push(`L2 could not recover (${l2.state}): ${l2.actions.join(' | ')}`);
+                }
+              } catch (e) {
+                verifyResults.issues.push(`L2 threw: ${e && e.message || 'error'}`);
+              }
             } else if (depData.state === 'NOT_FOUND' || !depData.state) {
               verifyResults.fixes_applied.push('No deployment found — triggering fresh deploy');
               setP(`verify-pass-${pass}`, 'run', 'No deployment — triggering...');
