@@ -1239,6 +1239,13 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
   // Previously authenticated admin (server-signed token)
   var adminToken = localStorage.getItem('dynasty_admin_token');
   if (adminToken) {
+    // Admins who signed in via /admin only have the token — backfill the tier
+    // and paid-session markers the rest of the builder reads directly.
+    try {
+      if (localStorage.getItem('dynasty_tier') !== 'enterprise') localStorage.setItem('dynasty_tier', 'enterprise');
+      if (!localStorage.getItem('dynasty_paid_session')) localStorage.setItem('dynasty_paid_session', 'admin');
+      if (!localStorage.getItem('dynasty_paid_at')) localStorage.setItem('dynasty_paid_at', new Date().toISOString());
+    } catch(e) {}
     // Validate token server-side (async, but let the page load — enterBuilder checks too)
     fetch('/api/auth?action=validate_admin', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2860,6 +2867,8 @@ const V3_TIERS = {
   custom_volume: { price: null, label: 'Custom Volume (Contact Sales)', modules: ['hosting', 'billing', 'email', 'phone', 'sms', 'chatbot', 'seo', 'video', 'design', 'analytics', 'leads', 'automation', 'docs', 'crm', 'directory', 'wordpress', 'social', 'verify', 'vertical_tool'] }
 };
 function getUserTier() {
+  // Admin tokens always get the top tier so module/archetype gates don't fire for them.
+  if (localStorage.getItem('dynasty_admin_token')) return 'enterprise';
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
   return localStorage.getItem('dynasty_tier') || 'free';
 }
