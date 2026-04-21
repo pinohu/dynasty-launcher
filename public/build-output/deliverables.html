@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deliverables Build Output Subset | Your Deputy</title>
+  <meta name="description" content="Deliverables subset page listing generated project files, quality focus, and build composition details.">
+  <link rel="canonical" href="https://www.yourdeputy.com/build-output/deliverables">
+  <style>
+  :root { --bg:#0b0d10; --card:#13171c; --card-hover:#1a1f26; --border:#242a31; --fg:#e8eaed; --muted:#9aa3ad; --accent:#4da3ff; --success:#3ecf8e; --warn:#f0b429; --danger:#ff6b6b; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .skip-link{position:absolute;top:-40px;left:0;background:var(--accent);color:var(--bg);padding:8px 16px;z-index:100;border-radius:0 0 6px 0;font-weight:600} .skip-link:focus{top:0}
+  form[role="search"]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  .navbar{position:sticky;top:0;background:rgba(11,13,16,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:16px 24px;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .navbar-brand{font-weight:700;font-size:16px;color:var(--fg);flex-shrink:0}
+  .navbar-links{display:flex;gap:16px;align-items:center;font-size:13px;flex:1;min-width:200px} .navbar-links a{color:var(--muted)}
+  .navbar-cta{flex-shrink:0}
+  .container{max-width:1240px;margin:0 auto;padding:0 24px}
+  .btn{display:inline-block;border-radius:6px;padding:12px 24px;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s ease;text-decoration:none;border:none}
+  .btn-primary{background:var(--accent);color:var(--bg)} .btn-primary:hover{background:#3a90ff;transform:translateY(-2px)}
+  .hero{padding:60px 24px;background:linear-gradient(135deg,rgba(77,163,255,0.08) 0%,rgba(62,207,142,0.04) 100%);border:1px solid var(--border);border-radius:16px;margin:40px 0}
+  .hero h1{margin:0 0 16px;font-size:38px;font-weight:700;letter-spacing:-0.02em;line-height:1.2;max-width:700px}
+  .hero .sub{font-size:18px;color:var(--muted);margin:0 0 24px;max-width:600px;line-height:1.6}
+  .hero-cta{margin:32px 0 16px;display:flex;gap:16px;flex-wrap:wrap}
+  .hero .stats{font-size:13px;color:var(--muted);margin-top:16px} .hero .stats strong{color:var(--fg)}
+  .hero .guarantee{margin-top:12px;font-size:12px;color:var(--success)}
+  section{margin:60px 0}
+  section h2{font-size:28px;font-weight:700;letter-spacing:-0.01em;margin:0 0 8px;color:var(--fg)}
+  .section-lede{color:var(--muted);font-size:14px;margin:0 0 24px;max-width:700px}
+  .features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:24px}
+  .feature-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
+  .feature-card h3{margin:0 0 8px;font-size:16px} .feature-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+  .comparison-table{width:100%;border-collapse:collapse;font-size:14px}
+  .comparison-table th{background:var(--card);color:var(--fg);padding:12px 16px;text-align:left;font-weight:600;border-bottom:2px solid var(--border)}
+  .comparison-table th:not(:first-child){text-align:center}
+  .comparison-table th.featured-col{background:rgba(77,163,255,0.15);color:var(--accent)}
+  .comparison-table td{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--muted)}
+  .comparison-table td:not(:first-child){text-align:center}
+  .comparison-table td.featured-col{background:rgba(77,163,255,0.04)}
+  .comparison-table .check{color:var(--success);font-weight:700}
+  .comparison-table .dash{color:var(--border)}
+  .testimonial-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .testimonial-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
+  .testimonial-quote{font-size:14px;line-height:1.6;font-style:italic;margin:0 0 16px}
+  .testimonial-author{display:flex;align-items:center;gap:12px}
+  .testimonial-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--success));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--bg);flex-shrink:0}
+  .testimonial-name{font-weight:600;font-size:13px} .testimonial-role{font-size:12px;color:var(--muted)}
+  .trust-badges{display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:24px}
+  .trust-badge{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--muted);font-weight:500}
+  .trust-badge strong{color:var(--fg)}
+  .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;max-width:900px;margin:0 auto}
+  .team-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center}
+  .team-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--success));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:var(--bg);margin:0 auto 12px}
+  .team-card h3{margin:0 0 4px;font-size:16px}
+  .team-card .team-title{font-size:13px;color:var(--accent);margin:0 0 8px}
+  .team-card p{font-size:13px;color:var(--muted);line-height:1.5;margin:0}
+  .faq-list{display:flex;flex-direction:column;gap:12px;max-width:800px}
+  .faq-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .faq-question{padding:16px 20px;font-weight:600;font-size:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;user-select:none;transition:background 0.15s ease}
+  .faq-question:hover{background:var(--card-hover)}
+  .faq-question::after{content:'+';font-size:20px;color:var(--accent);flex-shrink:0}
+  .faq-item.open .faq-question::after{content:'\2212'}
+  .faq-answer{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+  .faq-item.open .faq-answer{max-height:300px}
+  .faq-answer-inner{padding:0 20px 16px;font-size:13px;color:var(--muted);line-height:1.6}
+  .final-cta{background:linear-gradient(135deg,rgba(77,163,255,0.1) 0%,rgba(62,207,142,0.05) 100%);border:1px solid var(--border);border-radius:16px;padding:48px 24px;text-align:center;margin:80px 0 40px}
+  .final-cta h2{font-size:32px;margin:0 0 16px;letter-spacing:-0.01em}
+  .final-cta p{color:var(--muted);font-size:16px;margin:0 0 32px;max-width:600px;margin-left:auto;margin-right:auto}
+  .final-cta-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+  footer{border-top:1px solid var(--border);margin-top:80px;padding:40px 24px;color:var(--muted);font-size:12px;text-align:center;line-height:1.8} footer a{color:var(--accent)}
+  .help-links{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+  .offer-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px}
+  .offer-card h3{margin:0 0 8px;font-size:18px}
+  .offer-card .price{font-size:32px;font-weight:700;color:var(--accent);margin:8px 0} .offer-card .price span{font-size:14px;color:var(--muted);font-weight:400}
+  .offer-card .desc{color:var(--muted);font-size:13px;line-height:1.5;margin:8px 0}
+  .offer-card ul{color:var(--muted);font-size:13px;line-height:1.8;padding-left:20px;margin:12px 0}
+  .offer-card li{margin-bottom:4px}
+  @media(max-width:768px){.navbar{flex-direction:column;align-items:flex-start} .hero h1{font-size:28px} .features-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <main class="container" style="padding:40px 24px 80px;">
+    <section class="hero">
+      <h1>Deliverables build output subset landing page</h1>
+      <p class="sub">Generated consulting-style deliverables grouped by business function. This subset includes 160 files out of 1027 total project files.</p>
+      <div class="hero-cta">
+        <a href="/build-output/index.html" class="btn btn-primary">View All Build Subsets</a>
+      </div>
+      <div class="stats">Coverage target: <strong>All generated files</strong> · Subset count: <strong>12</strong> · Current subset: <strong>Deliverables</strong></div>
+    </section>
+
+    <section>
+      <h2>Quality implementation standards used for this subset</h2>
+      <div class="features-grid">
+        <div class="feature-card"><h3>Comprehensive file coverage</h3><p>Every build scans repository outputs and groups files into deterministic subsets so nothing important is omitted.</p></div>
+        <div class="feature-card"><h3>Enterprise-grade structure</h3><p>Each subset gets a dedicated landing page with metadata, explanation text, and navigable file inventory.</p></div>
+        <div class="feature-card"><h3>Prompt-system best practices</h3><p>The generated pages enforce clear hierarchy, explicit quality messaging, and reusable build orchestration principles.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Files in this subset</h2>
+      <ul><li><code>deliverables/backend.html</code></li>
+<li><code>deliverables/backend/api-data.html</code></li>
+<li><code>deliverables/backend/api-v1.html</code></li>
+<li><code>deliverables/backend/app-config.html</code></li>
+<li><code>deliverables/backend/docker-compose.html</code></li>
+<li><code>deliverables/backend/dockerfile.html</code></li>
+<li><code>deliverables/backend/env-example.html</code></li>
+<li><code>deliverables/backend/env-validation.html</code></li>
+<li><code>deliverables/backend/main-py.html</code></li>
+<li><code>deliverables/backend/next-config.html</code></li>
+<li><code>deliverables/backend/package-json.html</code></li>
+<li><code>deliverables/backend/requirements.html</code></li>
+<li><code>deliverables/backend/schema.html</code></li>
+<li><code>deliverables/backend/tailwind-config.html</code></li>
+<li><code>deliverables/backend/tsconfig.html</code></li>
+<li><code>deliverables/backend/vercel-json.html</code></li>
+<li><code>deliverables/financial.html</code></li>
+<li><code>deliverables/financial/board-deck.html</code></li>
+<li><code>deliverables/financial/cap-table.html</code></li>
+<li><code>deliverables/financial/compensation.html</code></li>
+<li><code>deliverables/financial/dilution-model.html</code></li>
+<li><code>deliverables/financial/financial-controls.html</code></li>
+<li><code>deliverables/financial/investor-update.html</code></li>
+<li><code>deliverables/financial/pricing-strategy.html</code></li>
+<li><code>deliverables/financial/revenue-recognition.html</code></li>
+<li><code>deliverables/financial/robs-checklist.html</code></li>
+<li><code>deliverables/financial/runway-calculator.html</code></li>
+<li><code>deliverables/financial/tax-strategy.html</code></li>
+<li><code>deliverables/financial/term-sheets.html</code></li>
+<li><code>deliverables/financial/three-statement.html</code></li>
+<li><code>deliverables/financial/valuation-model.html</code></li>
+<li><code>deliverables/financial/weekly-metrics.html</code></li>
+<li><code>deliverables/frontend.html</code></li>
+<li><code>deliverables/frontend/about-page.html</code></li>
+<li><code>deliverables/frontend/cta.html</code></li>
+<li><code>deliverables/frontend/dashboard.html</code></li>
+<li><code>deliverables/frontend/docs-page.html</code></li>
+<li><code>deliverables/frontend/faq.html</code></li>
+<li><code>deliverables/frontend/features.html</code></li>
+<li><code>deliverables/frontend/footer.html</code></li>
+<li><code>deliverables/frontend/hero.html</code></li>
+<li><code>deliverables/frontend/homepage.html</code></li>
+<li><code>deliverables/frontend/layout.html</code></li>
+<li><code>deliverables/frontend/locales.html</code></li>
+<li><code>deliverables/frontend/navbar.html</code></li>
+<li><code>deliverables/frontend/not-found.html</code></li>
+<li><code>deliverables/frontend/pricing-page.html</code></li>
+<li><code>deliverables/frontend/pricing.html</code></li>
+<li><code>deliverables/launch-kit.html</code></li>
+<li><code>deliverables/launch-kit/ci-pipeline.html</code></li>
+<li><code>deliverables/launch-kit/gitignore.html</code></li>
+<li><code>deliverables/launch-kit/governance.html</code></li>
+<li><code>deliverables/launch-kit/launch-playbook.html</code></li>
+<li><code>deliverables/launch-kit/onboard.html</code></li>
+<li><code>deliverables/launch-kit/plain-business.html</code></li>
+<li><code>deliverables/launch-kit/plain-gtm.html</code></li>
+<li><code>deliverables/launch-kit/plain-revenue.html</code></li>
+<li><code>deliverables/launch-kit/plain-spec.html</code></li>
+<li><code>deliverables/launch-kit/readme.html</code></li>
+<li><code>deliverables/launch-kit/seed-content.html</code></li>
+<li><code>deliverables/launch-kit/seed-script.html</code></li>
+<li><code>deliverables/launch-kit/seed-transactions.html</code></li>
+<li><code>deliverables/launch-kit/seed-users.html</code></li>
+<li><code>deliverables/launch-kit/start-here.html</code></li>
+<li><code>deliverables/legal.html</code></li>
+<li><code>deliverables/legal/board-resolutions.html</code></li>
+<li><code>deliverables/legal/capabilities-statement.html</code></li>
+<li><code>deliverables/legal/contractor-agreement.html</code></li>
+<li><code>deliverables/legal/dpa.html</code></li>
+<li><code>deliverables/legal/founder-agreement.html</code></li>
+<li><code>deliverables/legal/gdpr.html</code></li>
+<li><code>deliverables/legal/gov-readiness.html</code></li>
+<li><code>deliverables/legal/ip-assignment.html</code></li>
+<li><code>deliverables/legal/legal-templates.html</code></li>
+<li><code>deliverables/legal/naics.html</code></li>
+<li><code>deliverables/legal/nda.html</code></li>
+<li><code>deliverables/legal/offer-letter.html</code></li>
+<li><code>deliverables/legal/operating-agreement.html</code></li>
+<li><code>deliverables/legal/remote-work-policy.html</code></li>
+<li><code>deliverables/legal/rfp-response.html</code></li></ul>
+      <p class="section-lede">+ 80 more files in this subset (trimmed in this view for readability).</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -778,4 +778,187 @@ function mkdirp(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
-console.log('\nDone. Generated all landing pages.');
+// ── GENERATE BUILD OUTPUT SUBSET PAGES (ALL PROJECT FILES) ─────────
+
+const BUILD_SUBSET_ROOT = 'public/build-output';
+const BUILD_SUBSET_INDEX = `${BUILD_SUBSET_ROOT}/index.html`;
+const EXCLUDED_DIRS = new Set(['.git', 'node_modules', '.vercel', '.next', 'coverage']);
+const EXCLUDED_PREFIXES = ['public/build-output/'];
+
+const allProjectFiles = collectProjectFiles('.');
+const subsets = groupByTopLevelSubset(allProjectFiles);
+mkdirp(BUILD_SUBSET_ROOT);
+
+for (const subset of subsets) {
+  const outPath = `${BUILD_SUBSET_ROOT}/${subset.slug}.html`;
+  const page = buildSubsetPage(subset, subsets.length, allProjectFiles.length);
+  fs.writeFileSync(outPath, page);
+  console.log(`  build-output/${subset.slug}.html`);
+}
+
+fs.writeFileSync(BUILD_SUBSET_INDEX, buildSubsetIndexPage(subsets, allProjectFiles.length));
+console.log('  build-output/index.html');
+
+console.log('\nDone. Generated all landing pages including build-output subsets.');
+
+function collectProjectFiles(rootDir) {
+  const results = [];
+  walk(rootDir);
+  return results
+    .map(p => p.replace(/^\.\//, '').replace(/\\/g, '/'))
+    .sort((a, b) => a.localeCompare(b));
+
+  function walk(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      const rel = full.replace(/^\.\//, '').replace(/\\/g, '/');
+      if (entry.isDirectory()) {
+        if (!EXCLUDED_DIRS.has(entry.name) && !rel.startsWith('public/build-output')) {
+          walk(full);
+        }
+        continue;
+      }
+      if (entry.isFile() && !isExcludedFile(rel)) {
+        results.push(rel);
+      }
+    }
+  }
+}
+
+function isExcludedFile(relPath) {
+  return EXCLUDED_PREFIXES.some(prefix => relPath.startsWith(prefix));
+}
+
+function groupByTopLevelSubset(files) {
+  const map = new Map();
+
+  for (const file of files) {
+    const parts = file.split('/');
+    const subsetKey = parts.length > 1 ? parts[0] : 'root-files';
+    const subsetLabel = subsetKey === 'root-files' ? 'Root Files' : toTitle(subsetKey);
+    const description = subsetDescription(subsetKey);
+    const slug = subsetKey === 'root-files' ? 'root-files' : toSlug(subsetKey);
+
+    if (!map.has(subsetKey)) {
+      map.set(subsetKey, {
+        key: subsetKey,
+        label: subsetLabel,
+        description,
+        slug,
+        files: [],
+      });
+    }
+
+    map.get(subsetKey).files.push(file);
+  }
+
+  return [...map.values()]
+    .map(s => ({ ...s, files: s.files.sort((a, b) => a.localeCompare(b)) }))
+    .sort((a, b) => b.files.length - a.files.length || a.label.localeCompare(b.label));
+}
+
+function subsetDescription(subsetKey) {
+  const descriptions = {
+    api: 'Serverless backend endpoints and runtime integration logic.',
+    automations: 'Automation catalog sources, platform modules, and deployment assets.',
+    deliverables: 'Generated consulting-style deliverables grouped by business function.',
+    docs: 'Operational, product, architecture, and strategy documentation.',
+    for: 'Offer and segment-specific landing pages.',
+    product: 'Structured product catalog data including modules, bundles, and pricing.',
+    public: 'Published static web assets, marketplace content, and app pages.',
+    scripts: 'Build, migration, and smoke-test scripts.',
+    templates: 'Reusable templates and workflow blueprints.',
+    'root-files': 'Core top-level files that drive app behavior, deployment, and governance.',
+  };
+  return descriptions[subsetKey] || `Project files grouped under the "${subsetKey}" subset.`;
+}
+
+function toTitle(s) {
+  return (s || '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function buildSubsetPage(subset, subsetCount, totalFiles) {
+  const topFiles = subset.files.slice(0, 80)
+    .map(f => `<li><code>${esc(f)}</code></li>`)
+    .join('\n');
+  const remaining = subset.files.length - Math.min(subset.files.length, 80);
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${esc(subset.label)} Build Output Subset | Your Deputy</title>
+  <meta name="description" content="${esc(`${subset.label} subset page listing generated project files, quality focus, and build composition details.`)}">
+  <link rel="canonical" href="https://www.yourdeputy.com/build-output/${subset.slug}">
+  ${CSS}
+</head>
+<body>
+  <main class="container" style="padding:40px 24px 80px;">
+    <section class="hero">
+      <h1>${esc(subset.label)} build output subset landing page</h1>
+      <p class="sub">${esc(subset.description)} This subset includes ${subset.files.length} files out of ${totalFiles} total project files.</p>
+      <div class="hero-cta">
+        <a href="/build-output/index.html" class="btn btn-primary">View All Build Subsets</a>
+      </div>
+      <div class="stats">Coverage target: <strong>All generated files</strong> · Subset count: <strong>${subsetCount}</strong> · Current subset: <strong>${esc(subset.label)}</strong></div>
+    </section>
+
+    <section>
+      <h2>Quality implementation standards used for this subset</h2>
+      <div class="features-grid">
+        <div class="feature-card"><h3>Comprehensive file coverage</h3><p>Every build scans repository outputs and groups files into deterministic subsets so nothing important is omitted.</p></div>
+        <div class="feature-card"><h3>Enterprise-grade structure</h3><p>Each subset gets a dedicated landing page with metadata, explanation text, and navigable file inventory.</p></div>
+        <div class="feature-card"><h3>Prompt-system best practices</h3><p>The generated pages enforce clear hierarchy, explicit quality messaging, and reusable build orchestration principles.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Files in this subset</h2>
+      <ul>${topFiles}</ul>
+      ${remaining > 0 ? `<p class="section-lede">+ ${remaining} more files in this subset (trimmed in this view for readability).</p>` : ''}
+    </section>
+  </main>
+</body>
+</html>`;
+}
+
+function buildSubsetIndexPage(subsets, totalFiles) {
+  const cards = subsets.map(s => `
+      <article class="feature-card">
+        <h3>${esc(s.label)}</h3>
+        <p>${esc(s.description)}</p>
+        <p><strong>${s.files.length}</strong> files</p>
+        <a href="/build-output/${s.slug}.html" class="btn btn-primary">Open Subset</a>
+      </article>`).join('\n');
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Build Output Coverage | Your Deputy</title>
+  <meta name="description" content="Master landing page for all generated project file subsets and build-output coverage.">
+  <link rel="canonical" href="https://www.yourdeputy.com/build-output/index">
+  ${CSS}
+</head>
+<body>
+  <main class="container" style="padding:40px 24px 80px;">
+    <section class="hero">
+      <h1>Complete build output coverage for every generated file subset</h1>
+      <p class="sub">This index links to dedicated landing pages for each project subset so final output review stays comprehensive and organized.</p>
+      <div class="stats">Total project files scanned: <strong>${totalFiles}</strong> · Subsets generated: <strong>${subsets.length}</strong></div>
+    </section>
+
+    <section>
+      <h2>Subset landing pages</h2>
+      <div class="features-grid">${cards}
+      </div>
+    </section>
+  </main>
+</body>
+</html>`;
+}
