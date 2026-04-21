@@ -57,6 +57,7 @@ into concrete work agents can execute without needing to ask questions.
 | [QA_MATRIX.md](./QA_MATRIX.md) | 6 canonical test paths per module |
 | [SALES_VALIDATION_PLAN.md](./SALES_VALIDATION_PLAN.md) | HVAC call script + objection log + 7 decision rules |
 | [MODULE_RELEASE_SCOREBOARD.md](./MODULE_RELEASE_SCOREBOARD.md) | Running status of every module / pack / suite / edition |
+| [MARKETPLACE_CARD_LANDING_PAGE_ROLLOUT.md](./MARKETPLACE_CARD_LANDING_PAGE_ROLLOUT.md) | Rollout plan for per-card marketplace landing pages |
 
 ## The single rule
 
