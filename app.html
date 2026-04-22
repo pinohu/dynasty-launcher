@@ -898,6 +898,78 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
       </div>
     </div>
 
+    <details id="fw-more" style="margin-top:10px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--gold);padding:8px;border:1px solid var(--bdr);border-radius:var(--r);background:rgba(201,168,76,0.04)">
+        + More strategy frameworks (30 additional) — click to expand
+      </summary>
+
+      <div style="margin-top:10px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em">Environment &amp; context</div>
+      <div class="fw-grid">
+        <div class="fw-card" data-fw="swot" onclick="toggleFramework(this,'swot')"><div class="fw-check">✓</div><h4>📊 SWOT Analysis</h4><p>Strengths, Weaknesses, Opportunities, Threats — with evidence per quadrant.</p></div>
+        <div class="fw-card" data-fw="pestle" onclick="toggleFramework(this,'pestle')"><div class="fw-check">✓</div><h4>🌐 PESTLE</h4><p>Political, Economic, Social, Technological, Legal, Environmental macro scan.</p></div>
+        <div class="fw-card" data-fw="porter-diamond" onclick="toggleFramework(this,'porter-diamond')"><div class="fw-check">✓</div><h4>💎 Porter's Diamond</h4><p>National competitive advantage — whether home geography helps or hurts.</p></div>
+      </div>
+
+      <div style="margin-top:10px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em">Positioning &amp; generic strategy</div>
+      <div class="fw-grid">
+        <div class="fw-card" data-fw="generic-strategies" onclick="toggleFramework(this,'generic-strategies')"><div class="fw-check">✓</div><h4>🏁 Generic Strategies</h4><p>Cost leadership / differentiation / focus — pick one, commit to sacrifices.</p></div>
+        <div class="fw-card" data-fw="bowmans-clock" onclick="toggleFramework(this,'bowmans-clock')"><div class="fw-check">✓</div><h4>🕐 Bowman's Strategy Clock</h4><p>Eight positions by price × perceived value — where do you stand?</p></div>
+        <div class="fw-card" data-fw="strategy-canvas" onclick="toggleFramework(this,'strategy-canvas')"><div class="fw-check">✓</div><h4>🎨 Strategy Canvas</h4><p>Score industry factors, plot where you differ — Blue Ocean's planning tool.</p></div>
+        <div class="fw-card" data-fw="four-actions" onclick="toggleFramework(this,'four-actions')"><div class="fw-check">✓</div><h4>✂️ Four Actions</h4><p>Eliminate / Reduce / Raise / Create vs. industry norms (Blue Ocean).</p></div>
+        <div class="fw-card" data-fw="erc-grid" onclick="toggleFramework(this,'erc-grid')"><div class="fw-check">✓</div><h4>🗂 ERRC Grid</h4><p>Four Actions as an execution-ready 4-column table.</p></div>
+      </div>
+
+      <div style="margin-top:10px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em">Resource-based &amp; capability</div>
+      <div class="fw-grid">
+        <div class="fw-card" data-fw="vrio" onclick="toggleFramework(this,'vrio')"><div class="fw-check">✓</div><h4>🔐 VRIO</h4><p>Valuable, Rare, Inimitable, Organized — sustainable advantage test.</p></div>
+        <div class="fw-card" data-fw="rbv" onclick="toggleFramework(this,'rbv')"><div class="fw-check">✓</div><h4>🧱 Resource-Based View</h4><p>Strategic vs. commodity resources — what actually differentiates.</p></div>
+        <div class="fw-card" data-fw="core-competencies" onclick="toggleFramework(this,'core-competencies')"><div class="fw-check">✓</div><h4>🧬 Core Competencies</h4><p>Prahalad &amp; Hamel — cross-market, customer-valued, hard to imitate.</p></div>
+        <div class="fw-card" data-fw="value-chain" onclick="toggleFramework(this,'value-chain')"><div class="fw-check">✓</div><h4>⛓ Value Chain</h4><p>Primary and support activities — where margin and leverage live.</p></div>
+        <div class="fw-card" data-fw="mckinsey-7s" onclick="toggleFramework(this,'mckinsey-7s')"><div class="fw-check">✓</div><h4>🏛 McKinsey 7S</h4><p>Strategy/Structure/Systems/Values/Style/Staff/Skills alignment.</p></div>
+      </div>
+
+      <div style="margin-top:10px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em">Product &amp; customer</div>
+      <div class="fw-grid">
+        <div class="fw-card" data-fw="business-model-canvas" onclick="toggleFramework(this,'business-model-canvas')"><div class="fw-check">✓</div><h4>🖼 Business Model Canvas</h4><p>Osterwalder's 9 blocks — for established or scaling businesses.</p></div>
+        <div class="fw-card" data-fw="value-proposition-canvas" onclick="toggleFramework(this,'value-proposition-canvas')"><div class="fw-check">✓</div><h4>🎁 Value Proposition Canvas</h4><p>Jobs/pains/gains ↔ products/pain relievers/gain creators fit scoring.</p></div>
+        <div class="fw-card" data-fw="kano" onclick="toggleFramework(this,'kano')"><div class="fw-check">✓</div><h4>⭐ Kano Model</h4><p>Must-have / Performance / Attractive feature classification.</p></div>
+        <div class="fw-card" data-fw="crossing-the-chasm" onclick="toggleFramework(this,'crossing-the-chasm')"><div class="fw-check">✓</div><h4>🌉 Crossing the Chasm</h4><p>Beachhead segment, whole-product gaps, pragmatist acquisition.</p></div>
+        <div class="fw-card" data-fw="disruption-theory" onclick="toggleFramework(this,'disruption-theory')"><div class="fw-check">✓</div><h4>💥 Disruption Theory</h4><p>Sustaining vs. low-end vs. new-market disruption — incumbent analysis.</p></div>
+        <div class="fw-card" data-fw="s-curve" onclick="toggleFramework(this,'s-curve')"><div class="fw-check">✓</div><h4>📈 S-Curve / Adoption</h4><p>Where on the technology adoption lifecycle — and where next.</p></div>
+        <div class="fw-card" data-fw="hook-model" onclick="toggleFramework(this,'hook-model')"><div class="fw-check">✓</div><h4>🪝 Hook Model</h4><p>Trigger → Action → Variable Reward → Investment engagement loop.</p></div>
+      </div>
+
+      <div style="margin-top:10px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em">Growth, metrics, prioritization</div>
+      <div class="fw-grid">
+        <div class="fw-card" data-fw="north-star" onclick="toggleFramework(this,'north-star')"><div class="fw-check">✓</div><h4>⭐ North Star Metric</h4><p>One metric that captures value AND predicts revenue, plus inputs.</p></div>
+        <div class="fw-card" data-fw="aarrr" onclick="toggleFramework(this,'aarrr')"><div class="fw-check">✓</div><h4>🏴‍☠️ AARRR Pirate Metrics</h4><p>Acquisition / Activation / Retention / Referral / Revenue targets.</p></div>
+        <div class="fw-card" data-fw="okrs" onclick="toggleFramework(this,'okrs')"><div class="fw-check">✓</div><h4>🎯 OKRs</h4><p>One Objective, three measurable, outcome-based Key Results.</p></div>
+        <div class="fw-card" data-fw="balanced-scorecard" onclick="toggleFramework(this,'balanced-scorecard')"><div class="fw-check">✓</div><h4>⚖ Balanced Scorecard</h4><p>Financial / Customer / Process / Learning perspectives, connected.</p></div>
+        <div class="fw-card" data-fw="ice-prioritization" onclick="toggleFramework(this,'ice-prioritization')"><div class="fw-check">✓</div><h4>🧊 ICE Prioritization</h4><p>Impact × Confidence × Ease ranking for initiatives.</p></div>
+        <div class="fw-card" data-fw="rice-prioritization" onclick="toggleFramework(this,'rice-prioritization')"><div class="fw-check">✓</div><h4>🍚 RICE Prioritization</h4><p>Reach × Impact × Confidence ÷ Effort with concrete numbers.</p></div>
+        <div class="fw-card" data-fw="flywheel" onclick="toggleFramework(this,'flywheel')"><div class="fw-check">✓</div><h4>🎡 Flywheel / Growth Loop</h4><p>Self-reinforcing loop — where it stalls, how to accelerate it.</p></div>
+        <div class="fw-card" data-fw="lean-startup" onclick="toggleFramework(this,'lean-startup')"><div class="fw-check">✓</div><h4>🔬 Lean Startup BML</h4><p>Riskiest assumption + 14-day falsification experiment.</p></div>
+      </div>
+
+      <div style="margin-top:10px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em">Portfolio &amp; growth direction</div>
+      <div class="fw-grid">
+        <div class="fw-card" data-fw="ansoff" onclick="toggleFramework(this,'ansoff')"><div class="fw-check">✓</div><h4>🗺 Ansoff Matrix</h4><p>Penetration / development / new product / diversification risk.</p></div>
+        <div class="fw-card" data-fw="bcg" onclick="toggleFramework(this,'bcg')"><div class="fw-check">✓</div><h4>🐄 BCG Matrix</h4><p>Stars / Cash Cows / Question Marks / Dogs invest decisions.</p></div>
+        <div class="fw-card" data-fw="ge-mckinsey" onclick="toggleFramework(this,'ge-mckinsey')"><div class="fw-check">✓</div><h4>🔢 GE-McKinsey 9-Box</h4><p>Industry attractiveness × unit strength — grow / hold / harvest.</p></div>
+        <div class="fw-card" data-fw="three-horizons" onclick="toggleFramework(this,'three-horizons')"><div class="fw-check">✓</div><h4>🌅 Three Horizons</h4><p>H1 defend / H2 build / H3 seed — resource allocation across time.</p></div>
+      </div>
+
+      <div style="margin-top:10px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em">Organizational &amp; operating</div>
+      <div class="fw-grid">
+        <div class="fw-card" data-fw="eos" onclick="toggleFramework(this,'eos')"><div class="fw-check">✓</div><h4>🧲 EOS / Traction</h4><p>Vision/People/Data/Issues/Process/Traction + 90-day rocks.</p></div>
+        <div class="fw-card" data-fw="scaling-up" onclick="toggleFramework(this,'scaling-up')"><div class="fw-check">✓</div><h4>📐 Scaling Up</h4><p>Rockefeller Habits — 4 decisions × 7 strata of strategy.</p></div>
+        <div class="fw-card" data-fw="working-backwards" onclick="toggleFramework(this,'working-backwards')"><div class="fw-check">✓</div><h4>📰 Working Backwards</h4><p>Amazon-style press release + FAQ before you build anything.</p></div>
+        <div class="fw-card" data-fw="raci" onclick="toggleFramework(this,'raci')"><div class="fw-check">✓</div><h4>📋 RACI Matrix</h4><p>Responsible / Accountable / Consulted / Informed for key activities.</p></div>
+        <div class="fw-card" data-fw="wardley" onclick="toggleFramework(this,'wardley')"><div class="fw-check">✓</div><h4>🗺 Wardley Mapping</h4><p>Genesis → Custom → Product → Commodity evolution of components.</p></div>
+        <div class="fw-card" data-fw="strategic-intent" onclick="toggleFramework(this,'strategic-intent')"><div class="fw-check">✓</div><h4>🚀 Strategic Intent</h4><p>10-year stretch ambition, layered milestones, bent resources.</p></div>
+      </div>
+    </details>
+
     <button class="launch" id="score-btn" onclick="scoreIdea()">Score this idea →</button>
     <div id="webllm-badge" style="display:none;text-align:center;margin-top:6px;font-size:11px;color:var(--dim)"></div>
 
@@ -2418,7 +2490,8 @@ document.getElementById('settings-btn').onclick=()=>{
   const webhookUrl = localStorage.getItem('dynasty_webhook_url') || '';
   const whiteLabel = localStorage.getItem('dynasty_white_label') === 'true';
   const byoKeysRequired = localStorage.getItem('dynasty_byo_keys') !== 'false';
-  const automationMode = localStorage.getItem('dynasty_automation_mode') || 'zero_cost';
+  // Default to 'full' so new builds provision the full module set. Open-weight models removed the reason zero-cost was the default (scoring/generation is free either way); customers who still want to avoid paid vendor integrations can pick zero-cost explicitly.
+  const automationMode = localStorage.getItem('dynasty_automation_mode') || 'full';
   const customDomain = localStorage.getItem('dynasty_custom_domain') || '';
   const savedLocation = localStorage.getItem('dynasty_location') || '';
   const pricePro = localStorage.getItem('dynasty_price_pro') || '49';
@@ -2512,8 +2585,8 @@ document.getElementById('settings-btn').onclick=()=>{
       <div style="margin-bottom:14px">
         <label style="font-size:11px;color:var(--dim);font-weight:600;display:block;margin-bottom:4px">Automation Mode</label>
         <select id="set-automation-mode" class="ti" style="width:100%">
-          <option value="zero_cost" ${automationMode === 'zero_cost' ? 'selected' : ''}>Zero-cost autopilot (auto-skip paid integrations)</option>
-          <option value="balanced" ${automationMode === 'balanced' ? 'selected' : ''}>Balanced (run integrations when keys exist)</option>
+          <option value="full" ${automationMode === 'full' || automationMode === 'balanced' ? 'selected' : ''}>Full automation (open-weight models + run every integration with a working key)</option>
+          <option value="zero_cost" ${automationMode === 'zero_cost' ? 'selected' : ''}>Zero-cost autopilot (opt-in: skip paid integrations to minimize marginal cost)</option>
         </select>
       </div>
 
@@ -2573,7 +2646,7 @@ function saveSettings() {
   const domain = document.getElementById('set-domain')?.value?.trim();
   const whiteLabel = document.getElementById('set-whitelabel')?.checked;
   const byoKeys = document.getElementById('set-byo-keys')?.checked;
-  const automationMode = document.getElementById('set-automation-mode')?.value || 'zero_cost';
+  const automationMode = document.getElementById('set-automation-mode')?.value || 'full';
   const deepMode = document.getElementById('set-deep-mode')?.checked;
   const location = document.getElementById('set-location')?.value?.trim();
   const pricePro = document.getElementById('set-price-pro')?.value?.trim();
@@ -2663,7 +2736,7 @@ function getV3Project(inf) {
     vercel_project_id: provRes?.results?.vercel?.project_id || null,
     vertical_tool_spec: bp.verticalToolSpec || '',
     byo_keys_required: localStorage.getItem('dynasty_byo_keys') !== 'false',
-    automation_mode: localStorage.getItem('dynasty_automation_mode') || 'zero_cost'
+    automation_mode: localStorage.getItem('dynasty_automation_mode') || 'full'
   };
 }
 
@@ -2873,9 +2946,9 @@ const V3_TIERS = {
   blueprint: { price: 297, label: 'Diagnostic + Execution Blueprint ($297)', modules: [] },
   scoring_pro: { price: 19, label: 'Scoring Pro ($19/mo)', modules: [] },
   strategy_pack: { price: 697, label: 'Strategy Pack ($697)', modules: [] },
-  /* Foundation: must match api/provision.js TIER_MODULES.foundation — docs + deploy, no mod_* auto-provision */
-  foundation: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
-  starter: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: [] },
+  /* Foundation: must match api/provision.js TIER_MODULES.foundation — now provisions the full 11-module set (open-weight models remove the cost barrier). */
+  foundation: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'social', 'vertical_tool'] },
+  starter: { price: 1997, label: 'Foundation Automation Capacity ($1,997)', modules: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'social', 'vertical_tool'] },
   professional: { price: 4997, label: 'Professional Automation Capacity ($4,997)', modules: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'social', 'vertical_tool'] },
   enterprise: { price: 9997, label: 'Enterprise Automation Capacity ($9,997)', modules: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'wordpress', 'social', 'verify', 'vertical_tool'] },
   managed: { price: 497, label: 'Managed Automation Runtime ($497/mo)', modules: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'wordpress', 'social', 'verify', 'vertical_tool'] },
@@ -3322,8 +3395,11 @@ function applySmartMatching(typeId) {
   });
 }
 
-// ── All framework prompt definitions (including new quantitative ones) ────────
+// ── All framework prompt definitions ──────────────────────────────────────────
+// 30+ strategy frameworks — the user picks which ones to apply per analysis.
+// Grouped below by domain; the list is append-only to keep existing toggles.
 const FW_PROMPTS = {
+  // ── Core Dynasty frameworks ──────────────────────────────────────────────
   'blue-ocean': 'Blue Ocean Hungry Market Framework (Dynasty original): Score market hunger 1-10, blue ocean index 1-10, competitive void analysis, demand signal validation',
   'porters': "Porter's 5 Forces: Score each force 1-5 (supplier power, buyer power, competitive rivalry, threat of substitution, threat of new entry). Compute industry attractiveness composite.",
   'seven-powers': '7 Powers (Hamilton Helmer): Evaluate which of the 7 powers this business can realistically achieve. For each, state achievable/unlikely + timeline.',
@@ -3332,6 +3408,58 @@ const FW_PROMPTS = {
   'tam-sam-som': 'TAM/SAM/SOM Market Sizing: Calculate Total Addressable Market, Serviceable Addressable Market, and Serviceable Obtainable Market with SPECIFIC DOLLAR FIGURES. Use real market data if provided. Show methodology: top-down from industry reports AND bottom-up from unit economics.',
   'unit-economics': 'Unit Economics: Calculate Customer Acquisition Cost (CAC), Lifetime Value (LTV), LTV:CAC ratio, payback period in months, gross margin percentage. FLAG if LTV:CAC < 3:1 as unsustainable. Use the pricing model and acquisition channel to derive realistic numbers.',
   'competitive-matrix': 'Competitive Positioning Matrix: Identify 3-4 real competitors by name. Choose the 2 most differentiating axes for this market (e.g., price vs feature depth, automation vs customization). Plot each competitor and the new project on these axes. Describe the positioning gap being exploited.',
+
+  // ── Environment & context ────────────────────────────────────────────────
+  'swot': 'SWOT Analysis: Internal Strengths and Weaknesses, external Opportunities and Threats. List 3-5 items per quadrant with specific evidence — no generic filler. End with the single-biggest leverage point.',
+  'pestle': 'PESTLE: Political, Economic, Social, Technological, Legal, Environmental factors. For each, identify 1-2 concrete tailwinds OR headwinds for THIS business in its target geography. Score the aggregate macro backdrop -3 (hostile) to +3 (tailwind).',
+  'porter-diamond': "Porter's Diamond (National Competitive Advantage): Factor conditions, Demand conditions, Related & supporting industries, Firm strategy/structure/rivalry. Assess whether the home geography gives this venture an advantage or drag.",
+
+  // ── Positioning & generic strategy ───────────────────────────────────────
+  'generic-strategies': "Porter's Generic Strategies: Pick ONE — cost leadership, differentiation, or focus (cost-focus or differentiation-focus). Justify why a hybrid will fail (\"stuck in the middle\"). State the sacrifices required.",
+  'bowmans-clock': "Bowman's Strategy Clock: Place this business on one of the 8 positions (low-price/no-frills → focused differentiation → failure zones). Explain why adjacent positions are worse.",
+  'strategy-canvas': 'Strategy Canvas (Blue Ocean tool): List 6-10 competitive factors the industry competes on. Score incumbents 1-10 per factor. Plot where THIS venture will differ — which factors get raised, reduced, eliminated, or created.',
+  'four-actions': 'Four Actions Framework (Blue Ocean): For each of the industry-standard factors, specify exactly what will be Eliminated, Reduced, Raised, and Created. Be concrete — no abstractions.',
+  'erc-grid': 'ERRC Grid: Mirror of Four Actions with a table of 4 columns — Eliminate / Reduce / Raise / Create — and the SPECIFIC factors in each. Used for execution planning.',
+
+  // ── Resource-based & capability ──────────────────────────────────────────
+  'vrio': 'VRIO Framework: For each proposed competitive resource, score Valuable / Rare / Inimitable / Organized. Resources hitting all 4 = sustainable advantage. List which resources pass, fail, and why.',
+  'rbv': "Resource-Based View: Catalogue tangible assets, intangible assets, and organizational capabilities. Identify which are truly strategic (scarce + valuable + hard to imitate). Distinguish from commodity resources any competitor can buy.",
+  'core-competencies': 'Core Competencies (Prahalad & Hamel): Identify 2-3 candidate core competencies. For each: (1) does it give access to multiple markets? (2) is it perceived as value by customers? (3) is it hard for competitors to imitate? Score each criterion.',
+  'value-chain': "Porter's Value Chain: Break the business into primary activities (inbound logistics → marketing & sales → service) and support activities (infrastructure, HR, technology, procurement). Identify which links generate the most margin and which are points of leverage.",
+  'mckinsey-7s': "McKinsey 7S: Describe Strategy, Structure, Systems, Shared Values, Style, Staff, Skills — and whether they're aligned for the strategy to execute. Call out any misalignment that will block the plan.",
+
+  // ── Product / customer ───────────────────────────────────────────────────
+  'business-model-canvas': "Business Model Canvas (Osterwalder): Fill all 9 blocks — Customer Segments, Value Propositions, Channels, Customer Relationships, Revenue Streams, Key Resources, Key Activities, Key Partnerships, Cost Structure. BMC is for existing businesses; for early-stage use Lean Canvas instead.",
+  'value-proposition-canvas': 'Value Proposition Canvas: Customer jobs, pains, gains on the right; products & services, pain relievers, gain creators on the left. Score each pain-relief and gain-creator pairing for fit (low/medium/high). Identify the 1-2 strongest and weakest fits.',
+  'kano': "Kano Model: Classify each proposed feature as Must-have, Performance, Attractive, Indifferent, or Reverse. Prioritize the Attractive features that delight without increasing cost linearly.",
+  'crossing-the-chasm': 'Crossing the Chasm (Moore): Identify the beachhead early-majority segment. Why this one? What must be true to win them? What adjacent segments follow? Name the "whole product" gaps vs. competitors.',
+  'disruption-theory': "Christensen's Disruption Theory: Is this a sustaining innovation in an existing market, a low-end disruption (overshot incumbents), or a new-market disruption (non-consumption)? Name the incumbent most at risk and why they won't respond in time.",
+  's-curve': "S-Curve / Technology Adoption Lifecycle: Where is THIS category on the curve today (innovators → laggards)? Where does this venture's tech/business model sit (early/late on its own S-curve)? Expected inflection triggers.",
+  'hook-model': 'Hook Model (Nir Eyal): Trigger → Action → Variable Reward → Investment loop. Identify each element concretely — what triggers engagement, what action is minimum viable, what reward varies, what investment locks in the next hook.',
+
+  // ── Growth, metrics, prioritization ──────────────────────────────────────
+  'north-star': 'North Star Metric: Propose ONE North Star Metric and 3-5 input metrics that move it. Explain why this metric captures value delivery AND predicts revenue. Reject vanity metrics.',
+  'aarrr': 'AARRR / Pirate Metrics: Acquisition, Activation, Retention, Referral, Revenue. For each, propose a measurable definition and a target range for Month 1, Month 6, Month 12. Flag which stage is the likely bottleneck.',
+  'okrs': 'OKRs: One strategic Objective + 3 measurable Key Results for the next 90 days. KRs must be numeric, outcome-based (not output-based), and ambitious enough that 70% attainment is a success.',
+  'balanced-scorecard': 'Balanced Scorecard: Financial, Customer, Internal Process, Learning & Growth perspectives. 1-2 objectives + 1 measure + 1 target per perspective. Show how measures connect causally (learning → process → customer → financial).',
+  'ice-prioritization': 'ICE Prioritization: For each proposed initiative, score Impact (1-10), Confidence (1-10), Ease (1-10). Multiply to rank. Reject anything below a threshold — list the bottom 2 to cut.',
+  'rice-prioritization': 'RICE Prioritization: Reach × Impact × Confidence ÷ Effort for each initiative. Use concrete numbers (reach = users/quarter; effort = person-weeks). Rank initiatives and show the top 3.',
+  'flywheel': 'Flywheel / Growth Loop: Define the self-reinforcing loop — action A → outcome B → outcome C → more of A. Identify where the loop can stall and what increases loop velocity.',
+  'lean-startup': 'Lean Startup Build-Measure-Learn: What is the single riskiest assumption? Design the cheapest experiment that can falsify it within 14 days. Define the success/failure metric BEFORE running.',
+
+  // ── Portfolio & growth direction ─────────────────────────────────────────
+  'ansoff': 'Ansoff Matrix: Place the proposed move in one of 4 quadrants — Market Penetration, Market Development, Product Development, Diversification. Rank risk. Propose a lower-risk adjacent move as a fallback.',
+  'bcg': 'BCG Growth-Share Matrix: For each product/segment, classify as Star, Cash Cow, Question Mark, or Dog based on market growth and relative market share. Recommend invest / harvest / divest actions.',
+  'ge-mckinsey': 'GE-McKinsey 9-Box: Industry Attractiveness × Business Unit Strength. Place each line of business on the 3×3 grid. Recommend Grow / Hold / Harvest for each.',
+  'three-horizons': 'Three Horizons (McKinsey): H1 defends the core, H2 builds emerging businesses, H3 seeds options. Allocate where resources should go now (%) and what milestones would trigger reallocation.',
+
+  // ── Organizational / operating ───────────────────────────────────────────
+  'eos': 'EOS / Traction (Gino Wickman): Vision, People, Data, Issues, Process, Traction. Name the 3 biggest issues blocking traction and propose 90-day "rocks" to solve them.',
+  'scaling-up': 'Scaling Up / Rockefeller Habits (Harnish): 4 decisions (People, Strategy, Execution, Cash) + 7 strata (Words-you-own, Sandbox, Brand Promises, BHAG, Core Customers, 3 Brand Promises, Profit/X). Fill the ones most relevant to this venture.',
+  'working-backwards': 'Amazon Working Backwards: Draft the press release that announces the finished product — with customer quote, problem, solution, and differentiators. Then draft the FAQ. Then the internal one-pager. Only then is the build justified.',
+  'raci': 'RACI Matrix: For the 5-7 highest-stakes decisions/activities in year 1, assign Responsible, Accountable, Consulted, Informed. Flag any activity with >1 Accountable (broken) or 0 Accountable (broken).',
+  'wardley': 'Wardley Mapping: Place the value chain on a Genesis → Custom → Product → Commodity axis. Identify which components are about to shift right (commoditization risk) and which are candidates to own as Genesis/Custom.',
+  'strategic-intent': 'Strategic Intent (Hamel & Prahalad): Set a 10-year stretch ambition that looks implausible today. Identify the layered milestones, the "competitive innovation" required, and the resources that must be bent, not just allocated.',
 };
 
 // ── Depth-aware prompt modifiers ─────────────────────────────────────────────
@@ -3564,13 +3692,7 @@ Return ONLY valid JSON:
   "opportunity_summary": "1-2 sentences",
   "framework_analyses": {
     "blue_ocean": "analysis..."
-    ${V2_FRAMEWORKS.includes('porters') ? ',"porters": "analysis with scored table..."' : ''}
-    ${V2_FRAMEWORKS.includes('seven-powers') ? ',"seven_powers": "analysis per power..."' : ''}
-    ${V2_FRAMEWORKS.includes('jtbd') ? ',"jtbd": "JTBD analysis..."' : ''}
-    ${V2_FRAMEWORKS.includes('lean-canvas') ? ',"lean_canvas": "Complete 9-block lean canvas..."' : ''}
-    ${V2_FRAMEWORKS.includes('tam-sam-som') ? ',"tam_sam_som": "TAM: $X, SAM: $X, SOM: $X with methodology and sources..."' : ''}
-    ${V2_FRAMEWORKS.includes('unit-economics') ? ',"unit_economics": "CAC: $X, LTV: $X, LTV:CAC ratio: X:1, Payback: X months, Gross margin: X%. FLAG if unsustainable..."' : ''}
-    ${V2_FRAMEWORKS.includes('competitive-matrix') ? ',"competitive_matrix": "Competitors: [name1, name2, name3]. Axes: [axis1 vs axis2]. Positioning: [where each plots]. Gap exploited: ..."' : ''}
+${V2_FRAMEWORKS.filter(f => f !== 'blue-ocean' && FW_PROMPTS[f]).map(f => `    ,"${f.replace(/-/g, '_')}": "Thorough analysis per the ${f} framework — specific, quantified, no generic filler."`).join('\n')}
   }
 }
 
@@ -4205,8 +4327,27 @@ function showPipelineUI() {
       </div>
       <div class="pipe-cost" id="pipe-cost" style="display:none"></div>
     </div>
+    <div class="pipe-livelog" id="pipe-livelog" style="margin-top:12px;border:1px solid var(--bdr);border-radius:var(--r);padding:8px 10px;background:rgba(201,168,76,0.02);max-height:240px;overflow-y:auto;font-size:11px;color:var(--dim)">
+      <div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Live review stream</div>
+      <div id="pipe-livelog-items" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5"></div>
+    </div>
     <div id="consensus-result"></div>
   `;
+}
+
+// Append a line to the live log panel shown during the pivot review.
+// Visible while the pipeline runs, gives the user per-model insights as they
+// arrive instead of only showing a blob at the end.
+function pipeLog(msg, tone) {
+  const host = document.getElementById('pipe-livelog-items');
+  if (!host) return;
+  const color = tone === 'ok' ? 'var(--grn)' : tone === 'err' ? '#F87171' : tone === 'phase' ? 'var(--gold)' : 'var(--sec)';
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const row = document.createElement('div');
+  row.style.cssText = `color:${color};padding:2px 0;white-space:pre-wrap;word-break:break-word`;
+  row.textContent = `${time}  ${msg}`;
+  host.appendChild(row);
+  host.parentElement.scrollTop = host.parentElement.scrollHeight;
 }
 
 function updateModelStatus(modelId, status, score, confidence) {
@@ -4259,10 +4400,12 @@ Be bold. Be specific. No generic advice.`;
   // ── PHASE 1: Independent proposals (parallel) ─────────────────────────
   document.getElementById('p1-status').className = 'pipe-phase-status running';
   document.getElementById('p1-status').textContent = 'Running...';
+  pipeLog(`Phase 1 starting — ${REVIEW_MODELS.length} models in parallel`, 'phase');
 
   REVIEW_MODELS.forEach(m => updateModelStatus(m.id, 'running'));
 
   const phase1Results = [];
+  let p1Done = 0;
   const phase1Promises = REVIEW_MODELS.map(async (m, i) => {
     try {
       const raw = await aiRawWithModel(pivotPrompt(m.label), m.id, 3000);
@@ -4275,10 +4418,17 @@ Be bold. Be specific. No generic advice.`;
       proposal.confidence = parseFloat(proposal.confidence) || 0.7;
       phase1Results[i] = proposal;
       updateModelStatus(m.id, 'done', proposal.predicted_composite_score?.toFixed(1), proposal.confidence);
+      p1Done += 1;
+      // Stream a short preview of the proposal so the user sees each model's
+      // angle as it arrives, not only when the whole phase finishes.
+      const preview = (proposal.pivot_description || '').slice(0, 160).replace(/\s+/g, ' ');
+      pipeLog(`[${p1Done}/${REVIEW_MODELS.length}] ${m.label}: ${proposal.predicted_composite_score || '?'}/10 · ${preview}${preview.length >= 160 ? '…' : ''}`, 'ok');
       return proposal;
     } catch (e) {
       phase1Results[i] = { _model: m.label, _modelId: m.id, _index: i, _failed: true, error: e.message };
       updateModelStatus(m.id, 'failed');
+      p1Done += 1;
+      pipeLog(`[${p1Done}/${REVIEW_MODELS.length}] ${m.label}: failed — ${e.message}`, 'err');
       return null;
     }
   });
@@ -4322,6 +4472,8 @@ Return ONLY valid JSON:
 
   const phase2Results = [];
   REVIEW_MODELS.forEach(m => updateModelStatus(m.id, 'running'));
+  pipeLog(`Phase 2 starting — cross-review across ${REVIEW_MODELS.length} models`, 'phase');
+  let p2Done = 0;
 
   const phase2Promises = REVIEW_MODELS.map(async (m, i) => {
     try {
@@ -4332,10 +4484,14 @@ Return ONLY valid JSON:
       review._model = m.label;
       phase2Results[i] = review;
       updateModelStatus(m.id, 'done');
+      p2Done += 1;
+      pipeLog(`[${p2Done}/${REVIEW_MODELS.length}] ${m.label} votes for: ${review.vote || '(abstain)'}`, 'ok');
       return review;
     } catch (e) {
       phase2Results[i] = { _model: m.label, _failed: true };
       updateModelStatus(m.id, 'failed');
+      p2Done += 1;
+      pipeLog(`[${p2Done}/${REVIEW_MODELS.length}] ${m.label}: cross-review failed`, 'err');
       return null;
     }
   });
@@ -4454,14 +4610,15 @@ Return ONLY valid JSON:
   document.getElementById('p3-status').className = 'pipe-phase-status done';
   document.getElementById('p3-status').textContent = 'Done';
 
-  // ── PHASE 4: Devil's Advocate ───────────────────────────────────────
+  // ── PHASE 4: Devil's Advocate — ALL models attack in parallel ──────────
+  // Previously this phase ran only DeepSeek-R1. Running every model gives a
+  // broader surface of fatal-flaw detection — the flaws any single model misses
+  // tend to be caught by at least one of the others.
   document.getElementById('p4-status').className = 'pipe-phase-status running';
-  document.getElementById('p4-status').textContent = 'Attacking...';
+  document.getElementById('p4-status').textContent = `Attacking with ${REVIEW_MODELS.length} model(s)...`;
+  pipeLog(`Phase 4 starting — Devil's Advocate across ${REVIEW_MODELS.length} models`, 'phase');
 
-  let devilsCritique = '';
-  try {
-    devilsCritique = await aiRawWithModel(
-      `You are a ruthless venture capital partner who has watched 10,000 startups fail. You have ZERO tolerance for optimism bias. Your job: DESTROY this business idea. Find every fatal flaw.
+  const devilsPrompt = (modelLabel) => `You are ${modelLabel}, acting as a ruthless venture capital partner who has watched 10,000 startups fail. You have ZERO tolerance for optimism bias. Your job: DESTROY this business idea. Find every fatal flaw.
 
 THE PROPOSED BUSINESS:
 ${winner?.pivot_description || desc}
@@ -4478,15 +4635,51 @@ Your task: Write a devastating critique. Cover:
 
 Be specific. Use numbers. Reference real market dynamics. No encouragement. Pure destruction.
 
-Return 4-5 paragraphs of brutal, specific critique.`,
-      'DeepSeek-R1', 2000
-    );
-  } catch {
-    devilsCritique = 'Devil\'s advocate analysis unavailable.';
+Return 4-5 paragraphs of brutal, specific critique.`;
+
+  let p4Done = 0;
+  const devilPromises = REVIEW_MODELS.map(async (m) => {
+    try {
+      const raw = await aiRawWithModel(devilsPrompt(m.label), m.id, 2000);
+      p4Done += 1;
+      const preview = (raw || '').slice(0, 160).replace(/\s+/g, ' ');
+      pipeLog(`[${p4Done}/${REVIEW_MODELS.length}] ${m.label} critique received — ${preview}${preview.length >= 160 ? '…' : ''}`, 'ok');
+      return { model: m.label, weight: m.weight || 1, text: raw };
+    } catch (e) {
+      p4Done += 1;
+      pipeLog(`[${p4Done}/${REVIEW_MODELS.length}] ${m.label}: critique failed`, 'err');
+      return null;
+    }
+  });
+  const devilSettled = await Promise.allSettled(devilPromises);
+  const devilCritiques = devilSettled.map(r => r.status === 'fulfilled' ? r.value : null).filter(Boolean);
+
+  let devilsCritique = '';
+  if (devilCritiques.length === 0) {
+    devilsCritique = "Devil's advocate analysis unavailable — every model failed to produce a critique.";
+  } else if (devilCritiques.length === 1) {
+    devilsCritique = devilCritiques[0].text;
+  } else {
+    // Synthesize the strongest points across all critiques. Use the highest-
+    // weight model that succeeded as the synthesizer so the final blurb reads
+    // coherently rather than as a copy-paste salad.
+    const synthesizer = [...REVIEW_MODELS].sort((a, b) => (b.weight || 0) - (a.weight || 0))
+      .find(m => devilCritiques.some(d => d.model === m.label)) || REVIEW_MODELS[0];
+    const joined = devilCritiques.map((d, i) => `## CRITIQUE ${i + 1} (${d.model})\n${d.text}`).join('\n\n---\n\n');
+    try {
+      const synth = await aiRawWithModel(
+        `You received ${devilCritiques.length} independent VC-style critiques of a business. Your job: merge them into ONE devastating synthesis — keep every unique fatal flaw, drop duplicates, preserve specific numbers. Structure: (1) Market reality, (2) Moat weakness, (3) Revenue fantasy, (4) Founder blind spot, (5) The single killer. 4-5 tight paragraphs, no bullet lists, no hedging.\n\n${joined}`,
+        synthesizer.id, 2500
+      );
+      devilsCritique = synth || devilCritiques[0].text;
+    } catch {
+      devilsCritique = devilCritiques[0].text;
+    }
   }
 
   document.getElementById('p4-status').className = 'pipe-phase-status done';
-  document.getElementById('p4-status').textContent = 'Done';
+  document.getElementById('p4-status').textContent = `Done (${devilCritiques.length}/${REVIEW_MODELS.length} critiques synthesized)`;
+  pipeLog(`Phase 4 done — ${devilCritiques.length} critiques synthesized into final verdict`, 'phase');
 
   // ── Render consensus result ───────────────────────────────────────────
   const bestSynthesis = syntheses[0] || winner?.pivot_description || '';
@@ -5891,32 +6084,168 @@ async function deleteRepoFile(repo, path, reason) {
   }
 }
 
+// Add missing packages to the repo's package.json and commit. Used by L2 to
+// recover from "Cannot find module 'X'" errors that indicate the dependency
+// was never declared. Returns true if the commit succeeded. Only touches
+// `dependencies` — not `devDependencies` — since Vercel runs production builds.
+async function addRepoPackageDeps(repo, packages, reason) {
+  if (!Array.isArray(packages) || !packages.length) return false;
+  try {
+    const r = await gh(`/repos/${repo}/contents/package.json`);
+    if (!r.ok) return false;
+    const data = await r.json();
+    if (data.type !== 'file' || !data.content) return false;
+    const currentRaw = (typeof atob === 'function') ? atob(data.content) : Buffer.from(data.content, 'base64').toString('utf8');
+    let pkg;
+    try { pkg = JSON.parse(currentRaw); } catch { return false; }
+    pkg.dependencies = pkg.dependencies || {};
+    let added = 0;
+    for (const p of packages) {
+      if (pkg.dependencies[p] || (pkg.devDependencies && pkg.devDependencies[p])) continue;
+      pkg.dependencies[p] = 'latest';
+      added += 1;
+    }
+    if (!added) return false;
+    const nextRaw = JSON.stringify(pkg, null, 2) + '\n';
+    const encoded = (typeof btoa === 'function') ? btoa(unescape(encodeURIComponent(nextRaw))) : Buffer.from(nextRaw, 'utf8').toString('base64');
+    const put = await gh(`/repos/${repo}/contents/package.json`, 'PUT', {
+      message: `chore: ${reason || 'add missing deps'} — ${packages.join(', ')}`,
+      content: encoded,
+      sha: data.sha,
+    });
+    return put.ok;
+  } catch {
+    return false;
+  }
+}
+
 // Parse a Vercel build-events array and extract file paths that failed with
 // "Module not found". The log shape Vercel returns pairs a file path line
 // with a following "Module not found: Can't resolve 'X'" line. We walk each
 // line, and whenever a relative path `./...` appears within ~3 lines of
 // "Module not found", we record it as an orphan. Returns de-duplicated
 // repo-relative paths (leading `./` stripped).
+// Parse a Vercel build log into a structured diagnostic. Returns:
+//   { class, orphans, missingPackages, tsErrors, syntaxErrors, envVars, rawSnippet, summary }
+// where `class` is one of:
+//   'module_not_found' | 'missing_dependency' | 'ts_error' |
+//   'syntax_error' | 'env_var_missing' | 'eslint_error' | 'unknown'
+// Caller inspects `class` to decide which auto-fix to attempt, and uses
+// `summary` for a human-readable error line when no auto-fix is possible.
 function dynastyParseVercelFailLog(events) {
-  if (!Array.isArray(events)) return [];
+  const diag = {
+    class: 'unknown',
+    orphans: [],
+    missingPackages: [],
+    tsErrors: [],
+    syntaxErrors: [],
+    envVars: [],
+    eslintIssues: [],
+    rawSnippet: '',
+    summary: '',
+  };
+  if (!Array.isArray(events)) return diag;
   const logText = events.map(e => {
     if (!e) return '';
     return e.text || (e.payload && (e.payload.text || e.payload.info && e.payload.info.text)) || '';
   }).join('\n');
-  if (!/Failed to compile|Module not found/i.test(logText)) return [];
+  if (!logText) return diag;
 
   const lines = logText.split('\n');
-  const hits = new Set();
+  // Orphan file paths referenced in "Module not found" errors — auto-fixable by deletion.
+  const orphans = new Set();
   const pathRe = /(\.\/[\w\-/\[\]().@]+\.(?:tsx?|jsx?|mjs|cjs))(?:\s|$)/;
+  const modulePkgRe = /Can(?:not|'t) find module ['"`]([^'"`]+)['"`]/i;
+  const npmMissingRe = /npm (?:ERR!|error) 404.*not found:\s*([^\s]+)/i;
+  const tsErrorRe = /(\S+\.tsx?)\s*\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)/;
+  const nextTsErrRe = /Type error:\s*(.+)/i;
+  const syntaxRe = /(?:Unexpected token|SyntaxError|Unexpected end of JSON input).*?(\S+\.(?:json|jsx?|tsx?|mjs|cjs))?/i;
+  const envVarRe = /process\.env\.([A-Z_][A-Z0-9_]+).*(?:is (?:not defined|undefined|missing)|required)/i;
+  const eslintRe = /(\S+\.tsx?):(\d+):(\d+)\s+error\s+(.+)/;
+
+  const pkgSet = new Set();
+
   for (let i = 0; i < lines.length; i++) {
-    const pm = lines[i].match(pathRe);
-    if (!pm) continue;
+    const line = lines[i];
     const ctx = lines.slice(i, Math.min(i + 5, lines.length)).join(' ');
+
+    // Module-not-found → orphan deletion path
     if (/Module not found/i.test(ctx)) {
-      hits.add(pm[1].replace(/^\.\//, ''));
+      const pm = line.match(pathRe);
+      if (pm) orphans.add(pm[1].replace(/^\.\//, ''));
+      const mm = ctx.match(modulePkgRe);
+      if (mm && !/^[.@/]/.test(mm[1])) pkgSet.add(mm[1].split('/')[0].replace(/^@[^/]+$/, (s) => s));
+    }
+    // npm install failure → missing dependency
+    const npmMatch = line.match(npmMissingRe);
+    if (npmMatch) pkgSet.add(npmMatch[1]);
+
+    // TypeScript compilation errors
+    const tsMatch = line.match(tsErrorRe);
+    if (tsMatch) diag.tsErrors.push({ file: tsMatch[1], line: +tsMatch[2], col: +tsMatch[3], code: tsMatch[4], message: tsMatch[5].trim() });
+
+    // Next.js collapsed "Type error:" output
+    if (/Type error:/i.test(line)) {
+      const m = line.match(nextTsErrRe);
+      if (m) diag.tsErrors.push({ file: '(next-ts)', line: 0, col: 0, code: 'TS', message: m[1].trim() });
+    }
+
+    // Syntax / JSON parse errors
+    if (/SyntaxError|Unexpected token|Unexpected end of JSON input/i.test(line)) {
+      const m = line.match(syntaxRe);
+      diag.syntaxErrors.push({ file: m && m[1] ? m[1] : '(unknown)', snippet: line.trim().slice(0, 200) });
+    }
+
+    // Environment variable missing
+    const envMatch = line.match(envVarRe);
+    if (envMatch) diag.envVars.push(envMatch[1]);
+
+    // ESLint build-blocking errors
+    const eslintMatch = line.match(eslintRe);
+    if (eslintMatch && /eslint|lint/i.test(ctx)) {
+      diag.eslintIssues.push({ file: eslintMatch[1], line: +eslintMatch[2], col: +eslintMatch[3], message: eslintMatch[4].trim() });
     }
   }
-  return Array.from(hits);
+
+  diag.orphans = Array.from(orphans);
+  diag.missingPackages = Array.from(pkgSet);
+
+  // Classify — priority order matters. Orphans are most specific and auto-fixable.
+  if (diag.orphans.length) {
+    diag.class = 'module_not_found';
+    diag.summary = `${diag.orphans.length} orphan import(s): ${diag.orphans.slice(0, 3).join(', ')}${diag.orphans.length > 3 ? '…' : ''}`;
+  } else if (diag.missingPackages.length) {
+    diag.class = 'missing_dependency';
+    diag.summary = `Missing npm package(s): ${diag.missingPackages.slice(0, 4).join(', ')}${diag.missingPackages.length > 4 ? '…' : ''}`;
+  } else if (diag.tsErrors.length) {
+    diag.class = 'ts_error';
+    const first = diag.tsErrors[0];
+    diag.summary = `${diag.tsErrors.length} TypeScript error(s) — e.g. ${first.file}${first.line ? `:${first.line}` : ''} ${first.code}: ${first.message}`.slice(0, 300);
+  } else if (diag.syntaxErrors.length) {
+    diag.class = 'syntax_error';
+    diag.summary = `Syntax error in ${diag.syntaxErrors[0].file}: ${diag.syntaxErrors[0].snippet}`.slice(0, 300);
+  } else if (diag.envVars.length) {
+    diag.class = 'env_var_missing';
+    diag.summary = `Missing env var(s) at build time: ${Array.from(new Set(diag.envVars)).join(', ')}`;
+  } else if (diag.eslintIssues.length) {
+    diag.class = 'eslint_error';
+    const first = diag.eslintIssues[0];
+    diag.summary = `ESLint blocking build — ${diag.eslintIssues.length} issue(s), e.g. ${first.file}:${first.line} ${first.message}`.slice(0, 300);
+  } else if (/Failed to compile|Build failed|exited with/i.test(logText)) {
+    diag.class = 'unknown';
+    // Pull the most useful tail — the 8 lines around the final error/failure marker.
+    const failIdx = lines.findIndex(l => /Failed to compile|Build failed|Error:/i.test(l));
+    const start = Math.max(0, (failIdx < 0 ? lines.length - 8 : failIdx - 2));
+    diag.rawSnippet = lines.slice(start, start + 10).filter(Boolean).join(' | ').slice(0, 400);
+    diag.summary = diag.rawSnippet || 'Build failed — no recognized error pattern in log';
+  }
+  return diag;
+}
+
+// Back-compat: the old parser returned a flat string[] of orphan paths.
+// Some call sites may still expect that, so keep a thin wrapper.
+function dynastyParseVercelFailOrphans(events) {
+  return dynastyParseVercelFailLog(events).orphans || [];
 }
 
 // L2: Auto-remediate a failed Vercel build. Polls verify_deploy until the
@@ -5995,32 +6324,61 @@ async function dynastyAutoRemediateVercelFailure(repo, vercelProjectId, opts) {
       actions.push(`attempt ${attempt}: fetch_vercel_logs threw — ${e && e.message}`);
     }
 
-    const orphans = dynastyParseVercelFailLog(events);
-    if (!orphans.length) {
-      actions.push(`attempt ${attempt}: log has no parseable Module-not-found orphans`);
-      try { setP('l2-remediate', 'sk', 'Build failed for a non-orphan reason — manual check needed'); } catch {}
-      return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl };
+    const diag = dynastyParseVercelFailLog(events);
+
+    // Always surface the diagnostic so the user sees WHY the build failed,
+    // not just that it failed. This replaces the old opaque "log has no
+    // parseable Module-not-found orphans" message.
+    ui(`Attempt ${attempt}/${maxAttempts} — ${diag.class} → ${diag.summary || '(no summary)'}`);
+
+    if (diag.class === 'module_not_found' && diag.orphans.length) {
+      ui(`Attempt ${attempt}/${maxAttempts} — deleting ${diag.orphans.length} orphan file(s)…`);
+      let deleted = 0;
+      const failures = [];
+      for (const path of diag.orphans) {
+        const r = await deleteRepoFile(repo, path, `vercel-build-attempt-${attempt}`);
+        if (r.ok) deleted += 1;
+        else failures.push(`${path}: ${r.error}`);
+      }
+      actions.push(`attempt ${attempt}: deleted ${deleted}/${diag.orphans.length} orphan(s) — ${diag.summary}`);
+      if (failures.length) console.warn('[l2] some deletes failed:', failures);
+      if (deleted === 0) {
+        try { setP('l2-remediate', 'sk', `Could not delete any flagged file — ${diag.summary}`); } catch {}
+        return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl, diagnostic: diag };
+      }
+      ui(`Attempt ${attempt}/${maxAttempts} — ${deleted} deletes pushed, waiting for rebuild…`);
+      await new Promise(r => setTimeout(r, 20000));
+      continue;
     }
 
-    ui(`Attempt ${attempt}/${maxAttempts} — deleting ${orphans.length} orphan file(s)…`);
-    let deleted = 0;
-    const failures = [];
-    for (const path of orphans) {
-      const r = await deleteRepoFile(repo, path, `vercel-build-attempt-${attempt}`);
-      if (r.ok) deleted += 1;
-      else failures.push(`${path}: ${r.error}`);
+    if (diag.class === 'missing_dependency' && diag.missingPackages.length) {
+      // Auto-fix: patch package.json to add the missing deps with "latest",
+      // commit, and let Vercel rebuild. Only attempt well-known-looking
+      // package names (no relative paths, no internal @scope/internal).
+      const safePkgs = diag.missingPackages.filter(p => /^(@[a-z0-9-]+\/)?[a-z0-9][a-z0-9._-]*$/i.test(p));
+      if (!safePkgs.length) {
+        actions.push(`attempt ${attempt}: ${diag.summary} (no safe packages to patch)`);
+        try { setP('l2-remediate', 'sk', diag.summary); } catch {}
+        return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl, diagnostic: diag };
+      }
+      ui(`Attempt ${attempt}/${maxAttempts} — patching package.json with ${safePkgs.join(', ')}…`);
+      const patchOk = await addRepoPackageDeps(repo, safePkgs, `fix: add missing deps — attempt ${attempt}`);
+      actions.push(`attempt ${attempt}: package.json patched with ${safePkgs.length} dep(s) — ${diag.summary}`);
+      if (!patchOk) {
+        try { setP('l2-remediate', 'sk', `Could not patch package.json — ${diag.summary}`); } catch {}
+        return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl, diagnostic: diag };
+      }
+      await new Promise(r => setTimeout(r, 20000));
+      continue;
     }
-    actions.push(`attempt ${attempt}: deleted ${deleted}/${orphans.length} orphan(s)`);
-    if (failures.length) console.warn('[l2] some deletes failed:', failures);
 
-    if (deleted === 0) {
-      try { setP('l2-remediate', 'sk', 'Could not delete any flagged file — manual check needed'); } catch {}
-      return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl };
-    }
-
-    // Give Vercel ~20s to detect the new commit(s) and start a fresh build.
-    ui(`Attempt ${attempt}/${maxAttempts} — ${deleted} deletes pushed, waiting for rebuild…`);
-    await new Promise(r => setTimeout(r, 20000));
+    // Everything else (ts_error, syntax_error, env_var_missing, eslint_error,
+    // unknown) isn't safely auto-fixable from the client — but we still
+    // surface the real error so the user can act on it.
+    const humanMsg = diag.summary || 'Build failed for a non-auto-fixable reason';
+    actions.push(`attempt ${attempt}: ${diag.class} — ${humanMsg}`);
+    try { setP('l2-remediate', 'sk', humanMsg); } catch {}
+    return { ok: false, attempts: attempt, actions, state: lastState, url: lastUrl, diagnostic: diag };
   }
 
   try { setP('l2-remediate', 'sk', `Exhausted ${maxAttempts} attempts`); } catch {}
@@ -11271,7 +11629,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     const tierAllowed = V3_TIERS[userTier]?.modules || [];
     const v3Modules = {};
     for (const [mod, on] of Object.entries(v3ModulesRaw)) {
-      // Free/Foundation tiers (empty modules array) = NO modules. Only Professional+ get modules.
+      // Gate on tier allow-list — Foundation and above can now provision modules;
+      // free/blueprint/scoring_pro/strategy_pack have empty allow-lists by design.
       v3Modules[mod] = on && tierAllowed.length > 0 && tierAllowed.includes(mod);
     }
     const anyModulesEnabled = Object.values(v3Modules).some(v => v);
@@ -11283,7 +11642,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       const enabledList = Object.entries(v3Modules).filter(([,v]) => v).map(([k]) => moduleNames[k] || k);
       addP('v3-start', `V3 Modules — ${enabledList.length} integrations`, enabledList.join(', '));
       setP('v3-start', 'run', 'Provisioning external services...');
-      if ((localStorage.getItem('dynasty_automation_mode') || 'zero_cost') === 'zero_cost') {
+      if ((localStorage.getItem('dynasty_automation_mode') || 'full') === 'zero_cost') {
         addP('v3-mode', 'Zero-cost autopilot');
         setP('v3-mode', 'sk', 'Paid integrations auto-skip in this mode to keep marginal cost near zero.');
       }
@@ -11432,7 +11791,16 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
                   verifyResults.vercel = true;
                   verifyResults.fixes_applied.push(`L2 success after ${l2.attempts} attempt(s): ${l2.actions.join(' | ')}`);
                 } else {
-                  verifyResults.issues.push(`L2 could not recover (${l2.state}): ${l2.actions.join(' | ')}`);
+                  // Surface the diagnostic class + the actual error line so the user
+                  // knows WHY the build failed, not just that L2 gave up.
+                  const d = l2.diagnostic || {};
+                  const diagTag = d.class && d.class !== 'unknown' ? ` [${d.class}]` : '';
+                  const diagMsg = d.summary ? ` — ${d.summary}` : '';
+                  verifyResults.issues.push(`Vercel build failed${diagTag}${diagMsg}`);
+                  // Record actions separately so the user can see the retry trail.
+                  if (l2.actions && l2.actions.length) {
+                    verifyResults.issues.push(`L2 trail: ${l2.actions.join(' | ')}`);
+                  }
                 }
               } catch (e) {
                 verifyResults.issues.push(`L2 threw: ${e && e.message || 'error'}`);
@@ -11679,20 +12047,50 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     showDone(inf,repo,isAuthority ? 0 : Object.keys(files).length,inf.manual_svcs||[]);
 
     if (doneCount < doneTotal) {
-      const nextSteps = [];
-      if (!doneChecks.github) nextSteps.push('Missing critical files in GitHub repo — inspect Vercel build logs or re-run the build.');
-      if (!doneChecks.vercel) nextSteps.push(`Vercel deployment did not reach READY. Check https://vercel.com/~/projects/${inf.repo}/deployments for the build error.`);
-      if (!doneChecks.live) nextSteps.push(`Live URL ${vercelUrl || ''} did not return project-specific content. Common causes: build error, template branding leak, or DNS still propagating.`);
-      if (!doneChecks.routes) nextSteps.push('Required routes failed content checks (e.g., /docs or /pricing or package routes).');
-      if (!doneChecks.quality) nextSteps.push('Quality gate flagged placeholders or invalid patterns in critical docs/code — expand the Quality step in the build log, fix in-repo, then redeploy if needed.');
-      if (verifyResults.issues?.length) nextSteps.push('Issues detected: ' + verifyResults.issues.join(' · '));
+      // Build a structured list of failures. For each failed check, include
+      // the generic next-step and any specific diagnostics we captured.
+      // This replaces the previous flat "Issues detected: a · b · c" tail
+      // which buried the actual cause in a wall of duplicate text.
+      const seen = new Set();
+      const dedupe = (arr) => (arr || []).filter(x => x && !seen.has(x) && seen.add(x));
+      const issuesByCheck = {
+        github: dedupe((verifyResults.issues || []).filter(m => /^GitHub/i.test(m))),
+        vercel: dedupe((verifyResults.issues || []).filter(m => /^(Vercel|L2)/i.test(m))),
+        live: dedupe((verifyResults.issues || []).filter(m => /^Live/i.test(m))),
+      };
+      const remaining = dedupe((verifyResults.issues || []).filter(m =>
+        !/^GitHub|^Vercel|^L2|^Live/i.test(m)
+      ));
+
+      const sections = [];
+      if (!doneChecks.github) sections.push({ title: 'GitHub — missing critical files',
+        hint: 'Re-run the build, or inspect the repo for missing src/app/page.tsx, layout.tsx, or package.json.',
+        diag: issuesByCheck.github });
+      if (!doneChecks.vercel) sections.push({ title: 'Vercel — deployment did not reach READY',
+        hint: `Dashboard: https://vercel.com/~/projects/${inf.repo}/deployments`,
+        diag: issuesByCheck.vercel });
+      if (!doneChecks.live) sections.push({ title: 'Live URL — not serving project-specific content',
+        hint: `Check ${vercelUrl || ''} directly — common causes: build error, template branding leak, DNS still propagating.`,
+        diag: issuesByCheck.live });
+      if (!doneChecks.routes) sections.push({ title: 'Routes — /docs, /pricing, or package routes failed',
+        hint: 'These routes must return 200 with project-specific content (no template branding).',
+        diag: [] });
+      if (!doneChecks.quality) sections.push({ title: 'Quality gate — placeholders or invalid patterns in critical docs',
+        hint: 'Expand the Quality step in the build log above to see the exact pattern and file.',
+        diag: [] });
+      if (remaining.length) sections.push({ title: 'Other issues', hint: '', diag: remaining });
 
       const banner = document.createElement('div');
       banner.style.cssText = 'background:rgba(229,83,75,0.08);border:1px solid #E5534B;border-radius:var(--rl,8px);padding:1rem 1.25rem;margin-bottom:1.25rem;color:#EEEDE8';
-      banner.innerHTML = `<div style="font-size:13px;font-weight:700;color:#F87171;margin-bottom:.5rem">&#9888;&#65039; Build did not complete successfully (${failed.join(', ')} failed)</div>` +
-        '<ul style="font-size:12px;color:var(--sec);line-height:1.6;margin:0;padding-left:1rem">' +
-        nextSteps.map(s => `<li>${s}</li>`).join('') +
-        '</ul>';
+      const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      banner.innerHTML = `<div style="font-size:13px;font-weight:700;color:#F87171;margin-bottom:.75rem">&#9888;&#65039; Build did not complete successfully (${failed.join(', ')} failed)</div>` +
+        sections.map(s => `
+          <div style="margin-bottom:.6rem;padding-left:0">
+            <div style="font-size:12px;font-weight:600;color:#FCA5A5">${esc(s.title)}</div>
+            ${s.hint ? `<div style="font-size:11px;color:var(--sec);margin-top:2px">${esc(s.hint)}</div>` : ''}
+            ${s.diag && s.diag.length ? `<ul style="font-size:11px;color:var(--dim);line-height:1.55;margin:.25rem 0 0 .25rem;padding-left:.8rem">${s.diag.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
+          </div>
+        `).join('');
       const doneScreen = document.getElementById('done-screen');
       if (doneScreen) doneScreen.insertBefore(banner, doneScreen.firstChild);
     }

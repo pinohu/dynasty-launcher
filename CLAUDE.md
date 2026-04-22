@@ -1,7 +1,7 @@
 # CLAUDE.md — Your Deputy V3
 
 ## What This Is
-Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is a business provisioning engine. A user describes a business idea in one prompt, and the system generates documents, code, and deployment; **Foundation** does **not** auto-provision integration modules on the server (`TIER_MODULES.foundation: []`). **Professional** ($4,997) runs 11 live integration modules; **Enterprise** ($9,997) runs up to 17 modules; **custom_volume** unlocks all 19 `mod_*` functions. All `mod_*` functions are implemented; some vendor API keys are still empty — see "Keys still needed" below.
+Your Deputy (`dynasty-launcher.vercel.app`, product domain `yourdeputy.com`) is a business provisioning engine. A user describes a business idea in one prompt, and the system generates documents, code, and deployment. **Foundation** ($1,997) now provisions the full 11-module integration set (matching Professional) — open-weight models (WebLLM + Gemma 4 free tier) removed the cost barrier that previously justified skipping paid integrations on Foundation. **Professional** ($4,997) runs the same 11 modules with higher throughput; **Enterprise** ($9,997) runs up to 13 modules; **custom_volume** unlocks all 19 `mod_*` functions. All `mod_*` functions are implemented; some vendor API keys are still empty — see "Keys still needed" below.
 
 ## Repo Structure
 ```
@@ -115,7 +115,7 @@ async function mod_example(config, project) {
 }
 ```
 
-Modules implemented (run for Professional+ when credentials allow; Foundation defers to MANUAL-ACTIONS.md):
+Modules implemented (Foundation+ runs the 11-module set when credentials allow; Enterprise/custom_volume extend to the remaining integrations):
 1. mod_hosting (20i: domain, email, SPF/DKIM/DMARC, SSL)
 2. mod_billing (Stripe: real products, price tiers, webhooks, dunning)
 3. mod_email (Acumbamail: list, welcome sequence, automation)
@@ -203,4 +203,7 @@ See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:
 - **`maturity.html`** — “What ships today” truth deck (live vs partial vs spec); linked from landing nav as **What ships**.
 - **`PAIN_POINT_MASTER_MAP.md`** + **`PAIN_POINT_MASTER_MAP.csv`** — exhaustive pain taxonomy + traceability matrix for sales/RevOps.
 - **Builder:** `app.html` includes **Expected scope (honest preview)** under build package (V4 R/D/S matrix + tier caveat).
-- **Tier truth:** **`index.html`** states that **Foundation** does **not** auto-provision integration modules, matching **`api/provision.js`** `TIER_MODULES.foundation: []` and **`app.html`** `V3_TIERS.foundation.modules: []`.
+- **Tier truth:** **Foundation now provisions the full 11-module integration set**, matching `api/provision.js` `TIER_MODULES.foundation` and `app.html` `V3_TIERS.foundation.modules`. The previous "zero-cost autopilot" default that skipped paid integrations is now an explicit opt-in mode (`automation_mode='zero_cost'`); the default is `'full'` so every build provisions everything the user's tier allows.
+- **Strategy frameworks:** 38 strategy frameworks are now available in `FW_PROMPTS` (core 8 surfaced by default + 30 in the "More strategy frameworks" expandable section of the builder). Scoring uses only the frameworks the user toggled; cross-framework synthesis runs on whatever set was selected.
+- **L2 Vercel recovery:** `dynastyParseVercelFailLog` in `app.html` classifies build failures into 6 diagnostic classes (`module_not_found`, `missing_dependency`, `ts_error`, `syntax_error`, `env_var_missing`, `eslint_error`, `unknown`). `module_not_found` auto-deletes orphan imports; `missing_dependency` patches `package.json`. Other classes surface the real error line to the user instead of "log has no parseable Module-not-found orphans".
+- **Multi-model pivot review:** All 4 phases (Independent Analysis → Cross-Review → Consensus → Devil's Advocate) now fan out across every available model in parallel (Phase 4 previously ran only DeepSeek-R1). A live stream panel under the pipeline visual shows each model's output as it lands — users see per-model insights in real time instead of waiting for a single end-of-run blob.

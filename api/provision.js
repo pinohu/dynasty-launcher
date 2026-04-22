@@ -3384,8 +3384,9 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       blueprint: [], // Paid diagnostic and execution map only — no generation/provision modules
       scoring_pro: [], // Scoring subscription only — no generation/provision modules
       strategy_pack: [], // Documents only, no code/deploy/modules
-      foundation: [], // Strategy docs + deployment only, no integration modules
-      starter: [], // Legacy alias for foundation
+      // Foundation now provisions the full 11-module set — open-weight models (WebLLM + Gemma 4 free tier) remove the cost barrier that previously justified gating paid integrations.
+      foundation: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'social', 'vertical_tool'],
+      starter: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'social', 'vertical_tool'], // Legacy alias for foundation
       professional: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'social', 'vertical_tool'],
       enterprise: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'wordpress', 'social', 'verify', 'vertical_tool'],
       managed: ['hosting', 'billing', 'email', 'chatbot', 'seo', 'design', 'analytics', 'automation', 'docs', 'wordpress', 'social', 'verify', 'vertical_tool'],
