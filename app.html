@@ -14040,6 +14040,84 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         }
         // Fix 5: Do NOT modify layout.tsx globals.css import — template handles it
         // (Tailwind v4 templates import CSS differently)
+
+        // Fix 6: Seed shadcn/ui components.json so `npx shadcn add <component>`
+        // works out of the box in the generated repo. The customer can then
+        // add polished accessible components without our having to template
+        // them by hand. This file alone doesn't pull components — it just
+        // wires the registry so shadcn's CLI knows where to drop them.
+        if (!feFiles['components.json']) {
+          feFiles['components.json'] = JSON.stringify({
+            $schema: 'https://ui.shadcn.com/schema.json',
+            style: 'new-york',
+            rsc: true,
+            tsx: true,
+            tailwind: {
+              config: 'tailwind.config.ts',
+              css: 'src/app/globals.css',
+              baseColor: 'slate',
+              cssVariables: true,
+              prefix: '',
+            },
+            aliases: {
+              components: '@/components',
+              utils: '@/lib/utils',
+              ui: '@/components/ui',
+              lib: '@/lib',
+              hooks: '@/hooks',
+            },
+            iconLibrary: 'lucide',
+          }, null, 2);
+        }
+
+        // Fix 7: Seed biome.json for the generated app. Biome is the Rust-based
+        // linter/formatter (30s → <1s vs. ESLint+Prettier). The customer's
+        // Vercel build runs faster and catches the same issue classes the L2
+        // recovery logic used to only see at build time.
+        if (!feFiles['biome.json']) {
+          feFiles['biome.json'] = JSON.stringify({
+            $schema: 'https://biomejs.dev/schemas/1.9.4/schema.json',
+            files: { ignore: ['node_modules', '.next', 'public', 'dist'] },
+            formatter: { enabled: true, indentStyle: 'space', indentWidth: 2, lineWidth: 100 },
+            linter: {
+              enabled: true,
+              rules: {
+                recommended: true,
+                style: { noNonNullAssertion: 'off', useImportType: 'off' },
+                suspicious: { noExplicitAny: 'warn' },
+              },
+            },
+            javascript: { formatter: { quoteStyle: 'single', trailingCommas: 'all', semicolons: 'always' } },
+          }, null, 2);
+        }
+
+        // Fix 8: `lib/utils.ts` — the cn() helper shadcn components expect.
+        // Copied here so `shadcn add <component>` doesn't fail on missing
+        // @/lib/utils import.
+        if (!feFiles['src/lib/utils.ts']) {
+          feFiles['src/lib/utils.ts'] = `import { type ClassValue, clsx } from 'clsx';\nimport { twMerge } from 'tailwind-merge';\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n`;
+        }
+
+        // Ensure shadcn's peer deps are declared in package.json so the
+        // customer's first `npm install` succeeds. These are idempotent —
+        // if the template already declared them, we leave the higher version.
+        if (feFiles['package.json']) {
+          try {
+            const pkg = JSON.parse(feFiles['package.json']);
+            pkg.dependencies = pkg.dependencies || {};
+            pkg.devDependencies = pkg.devDependencies || {};
+            if (!pkg.dependencies['class-variance-authority']) pkg.dependencies['class-variance-authority'] = '^0.7.0';
+            if (!pkg.dependencies['clsx']) pkg.dependencies['clsx'] = '^2.1.1';
+            if (!pkg.dependencies['tailwind-merge']) pkg.dependencies['tailwind-merge'] = '^2.5.4';
+            if (!pkg.dependencies['tailwindcss-animate']) pkg.dependencies['tailwindcss-animate'] = '^1.0.7';
+            if (!pkg.devDependencies['@biomejs/biome']) pkg.devDependencies['@biomejs/biome'] = '^1.9.4';
+            pkg.scripts = pkg.scripts || {};
+            if (!pkg.scripts['lint:biome']) pkg.scripts['lint:biome'] = 'biome check .';
+            if (!pkg.scripts['format']) pkg.scripts['format'] = 'biome format --write .';
+            feFiles['package.json'] = JSON.stringify(pkg, null, 2);
+          } catch {}
+        }
+
         setP('g7', 'ok', `${Object.keys(fe).filter(k => fe[k]).length} frontend files ready`);
       } catch (e) { setP('g7', 'er', e.message); }
 
@@ -14359,7 +14437,22 @@ export const Env = createEnv({
     };
 
     let tmplName;
-    if (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority') {
+    // Opt-in T3 stack: when the user sets ?tmpl=t3 (or localStorage flag),
+    // fork the Dynasty-mirrored T3 starter instead of the SaaS boilerplate.
+    // T3 = Next.js + TS + Tailwind + tRPC + Prisma + NextAuth, zero template
+    // branding to strip — eliminates the template-leak class of build failures.
+    // Falls back to the existing template family if the T3 mirror isn't
+    // reachable (preflightTemplate below handles that).
+    const wantT3 = (() => {
+      try {
+        if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('tmpl') === 't3') return true;
+      } catch {}
+      try { if (localStorage.getItem('dynasty_template_t3') === 'true') return true; } catch {}
+      return false;
+    })();
+    if (wantT3 && (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority')) {
+      tmplName = 'dynasty-t3-template';
+    } else if (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority') {
       tmplName = TYPE_TEMPLATE[inf.type_id] || CATEGORY_TEMPLATE[V2_CATEGORY] || 'dynasty-nextjs-template';
     } else {
       tmplName = 'dynasty-project-template';

@@ -12,15 +12,31 @@
     "test:events": "node scripts/smoke-events.mjs",
     "test:workflows": "node scripts/smoke-workflows.mjs",
     "test:billing": "node scripts/smoke-billing.mjs",
+    "test:prompts": "promptfoo eval -c promptfooconfig.yaml",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
     "test": "npm run test:validate && npm run test:catalog && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing"
   },
   "engines": {
     "node": "20.x"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^1.1.13",
+    "@ai-sdk/google": "^1.1.11",
+    "@ai-sdk/groq": "^1.1.11",
+    "@ai-sdk/openai": "^1.1.13",
+    "@mendable/firecrawl-js": "^1.15.0",
+    "ai": "^4.1.25",
     "docx": "^9.6.1",
     "exceljs": "^4.4.0",
+    "langfuse": "^3.33.0",
     "pdfkit": "^0.18.0",
-    "pg": "^8.13.0"
+    "pg": "^8.13.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "promptfoo": "^0.103.0"
   }
 }

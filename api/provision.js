@@ -985,18 +985,29 @@ function dcSend(){
 }
 </script></body></html>`;
 
-    // Push chatbot widget to the project repo
+    // Push chatbot widget to the project repo. We ship TWO files:
+    //   1. public/chatbot.html — static FAQ widget, works with zero config.
+    //   2. src/app/api/chat/route.ts — optional streaming chat route modeled
+    //      on the Vercel AI Chatbot template. Dormant until the customer sets
+    //      GOOGLE_API_KEY (or OPENAI_API_KEY) in their Vercel env; then the
+    //      widget automatically switches to live-model responses with the
+    //      FAQ as system-prompt grounding. Customer keeps their own vendor
+    //      bill — no Chatbase or Dynasty-held secrets in customer runtime.
+    const chatRouteTs = `import { streamText } from 'ai';\nimport { createGoogleGenerativeAI } from '@ai-sdk/google';\nimport { createOpenAI } from '@ai-sdk/openai';\n\nexport const runtime = 'edge';\nexport const maxDuration = 60;\n\n// FAQ pre-generated at build time, used as system-prompt grounding.\nconst FAQ = ${JSON.stringify(faqItems)};\n\nfunction systemPrompt() {\n  const ctx = FAQ.map((f) => \`Q: \${f.q}\\nA: \${f.a}\`).join('\\n\\n');\n  return \`You are the ${project.name.replace(/"/g, '\\\\"')} assistant. Answer customer questions using ONLY the business context below. If the user asks something not covered, offer to have the business contact them. Keep replies friendly and concise (2-4 sentences).\\n\\nBUSINESS CONTEXT:\\n\${ctx}\`;\n}\n\nexport async function POST(req: Request) {\n  const { messages } = await req.json();\n  let model;\n  if (process.env.GOOGLE_API_KEY) {\n    const google = createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_API_KEY });\n    model = google('gemini-2.0-flash');\n  } else if (process.env.OPENAI_API_KEY) {\n    const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });\n    model = openai('gpt-4o-mini');\n  } else {\n    return new Response(JSON.stringify({ error: 'No AI key configured. Set GOOGLE_API_KEY or OPENAI_API_KEY in Vercel env vars to enable live chat. The static FAQ widget at /chatbot.html continues to work.' }), { status: 503, headers: { 'Content-Type': 'application/json' } });\n  }\n  const result = await streamText({\n    model,\n    system: systemPrompt(),\n    messages,\n    maxTokens: 500,\n    temperature: 0.4,\n  });\n  return result.toDataStreamResponse();\n}\n`;
+
     if (GH_TOKEN && project.slug) {
       try {
         await pushFile(GH_TOKEN, 'pinohu', project.slug, 'public/chatbot.html', embedWidget, 'feat: dynasty chatbot widget (FAQ-powered, no API key needed)');
-        results.details.files_pushed = ['public/chatbot.html'];
+        await pushFile(GH_TOKEN, 'pinohu', project.slug, 'src/app/api/chat/route.ts', chatRouteTs, 'feat: optional streaming chat route (Vercel AI SDK, dormant until GOOGLE_API_KEY/OPENAI_API_KEY is set)');
+        results.details.files_pushed = ['public/chatbot.html', 'src/app/api/chat/route.ts'];
       } catch {}
     }
 
-    results.details.type = 'static-faq-chatbot';
+    results.details.type = 'static-faq-chatbot + optional-streaming-route';
     results.details.faq_count = faqItems.length;
     results.details.embed_instruction = 'Add to your site: <iframe src="/chatbot.html" style="position:fixed;bottom:0;right:0;width:420px;height:580px;border:none;z-index:9999"></iframe>';
-    results.details.note = 'Static FAQ chatbot — runs entirely client-side. No API key needed on the deployed site. FAQ was generated at build time.';
+    results.details.upgrade_path = 'Set GOOGLE_API_KEY or OPENAI_API_KEY in your Vercel env to activate streaming chat at /api/chat (route already scaffolded, uses FAQ as system context).';
+    results.details.note = 'Static FAQ chatbot runs client-side with zero runtime API calls. Optional streaming chat route ships dormant; activates when a free Gemini or OpenAI key is added.';
     results.ok = faqItems.length > 0;
     if (!results.ok) { results.error = 'FAQ generation failed'; results.fallback = 'Create FAQ manually and update public/chatbot.html'; }
     results.cost_usd = 0.02; // One-time AI FAQ generation cost at build time

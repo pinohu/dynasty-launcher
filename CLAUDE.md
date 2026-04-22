@@ -17,7 +17,10 @@ dynasty-launcher/
 │   ├── checkout.js         # Stripe checkout + session recovery (~290 lines)
 │   ├── auth.js             # Clerk auth + admin key verification (~130 lines)
 │   ├── waitlist.js         # Waitlist capture (Acumbamail + Telegram + Neon)
-│   ├── ai.js               # AI router (multi-provider, quota, rate limiting)
+│   ├── ai.js               # AI router (legacy hand-rolled multi-provider + quota + rate limiting)
+│   ├── ai-sdk.js           # Vercel AI SDK wrapper — typed structured output (Zod), streaming, Langfuse tracing
+│   ├── _schemas.js         # Zod schemas for scoring / pivot / synthesis / build diagnostics
+│   ├── _langfuse.js        # Langfuse tracing wrapper (no-op when keys absent)
 │   ├── neon.js             # Neon DB provisioner (~130 lines)
 │   ├── admin.js            # Admin dashboard backend
 │   ├── claude.js           # Anthropic Claude API proxy (auth-gated)

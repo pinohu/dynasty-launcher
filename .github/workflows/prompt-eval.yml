@@ -1,0 +1,48 @@
+name: Prompt regression eval
+
+on:
+  pull_request:
+    paths:
+      - "promptfooconfig.yaml"
+      - "app.html"
+      - "api/ai.js"
+      - "api/ai-sdk.js"
+      - "api/_schemas.js"
+      - ".github/workflows/prompt-eval.yml"
+  workflow_dispatch:
+
+jobs:
+  promptfoo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        run: npm ci
+      - name: Run promptfoo eval
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          PROMPTFOO_DISABLE_TELEMETRY: "1"
+        run: |
+          # Skip gracefully if no provider keys exist in secrets — the eval
+          # isn't useful without a real model, and missing-keys should not
+          # block the PR.
+          if [ -z "$OPENAI_API_KEY" ] && [ -z "$ANTHROPIC_API_KEY" ] && [ -z "$GOOGLE_API_KEY" ]; then
+            echo "::warning::No provider keys configured — skipping prompt eval."
+            exit 0
+          fi
+          npx promptfoo@latest eval -c promptfooconfig.yaml --output promptfoo-results.json
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: promptfoo-results
+          path: promptfoo-results.json
+          if-no-files-found: ignore

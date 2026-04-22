@@ -1,7 +1,56 @@
 // ── Your Deputy — Pre-Build Research Engine ─────────────────────────────
 // Pulls REAL market data before framework analysis runs.
-// Sources: Exa.ai (competitors/market), NeuronWriter (SEO), Outscraper (local)
+// Sources: Firecrawl (deep page content), Exa.ai (semantic competitors/market),
+//          NeuronWriter (SEO), Outscraper (local)
 export const maxDuration = 60;
+
+// ── Firecrawl: deep page content + search-and-scrape in one call ─────────────
+// Used for TAM/SAM/SOM + competitive-matrix frameworks where snippets aren't
+// enough — we need actual page contents (pricing tables, feature matrices,
+// etc.). Falls back gracefully if FIRECRAWL_API_KEY is absent.
+async function firecrawlSearch(query, { limit = 5, scrape = true } = {}) {
+  const key = process.env.FIRECRAWL_API_KEY;
+  if (!key) return null;
+  try {
+    const body = { query, limit };
+    if (scrape) body.scrapeOptions = { formats: ['markdown'], onlyMainContent: true };
+    const r = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const data = d.data || d.results || [];
+    return data.map((item) => ({
+      title: item.title || item.metadata?.title || '',
+      url: item.url || item.metadata?.url || '',
+      snippet: (item.description || item.metadata?.description || '').slice(0, 300),
+      markdown: (item.markdown || '').slice(0, 4000),
+    }));
+  } catch {
+    return null;
+  }
+}
+
+async function firecrawlScrape(url) {
+  const key = process.env.FIRECRAWL_API_KEY;
+  if (!key || !url) return null;
+  try {
+    const r = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, formats: ['markdown'], onlyMainContent: true }),
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const md = d?.data?.markdown || d?.markdown || '';
+    if (!md) return null;
+    return { url, markdown: md.slice(0, 4000), title: d?.data?.metadata?.title || d?.metadata?.title || '' };
+  } catch {
+    return null;
+  }
+}
 
 // ── Exa.ai: Semantic search for competitors, pricing, market data ────────────
 async function searchExa(query, numResults = 5) {
@@ -159,8 +208,12 @@ export default async function handler(req, res) {
 
     const results = { sources: [], timestamp: new Date().toISOString() };
 
-    // Run all research calls in parallel
-    const [competitors, marketData, pricingData, seoData, localData] = await Promise.allSettled([
+    // Run all research calls in parallel. Firecrawl runs alongside Exa — it
+    // returns full-page markdown (pricing tables, feature matrices) that
+    // semantic snippets alone can't provide for TAM/SAM/SOM + competitive-
+    // matrix grounding. If the Firecrawl key is absent, the call returns null
+    // and the pipeline falls back to Exa snippets only.
+    const [competitors, marketData, pricingData, seoData, localData, firecrawlDeep] = await Promise.allSettled([
       // 1. Find competitors
       searchExa(`${niche} competitors companies startups`, 5),
       // 2. Market size / reports
@@ -171,6 +224,8 @@ export default async function handler(req, res) {
       getNeuronWriterData(niche),
       // 5. Local business count (if applicable)
       location ? countLocalBusinesses(niche, location) : Promise.resolve(null),
+      // 6. Firecrawl deep content (page markdown for real pricing/competitor data)
+      firecrawlSearch(`${niche} pricing competitor comparison`, { limit: 4, scrape: true }),
     ]);
 
     // Compile competitors
@@ -205,6 +260,14 @@ export default async function handler(req, res) {
     if (localData.status === 'fulfilled' && localData.value) {
       results.local_market = localData.value;
       results.sources.push('outscraper');
+    }
+
+    // Compile Firecrawl deep content — attach full-page markdown to whichever
+    // bucket is most useful (competitor_details if we have matching URLs,
+    // else as its own deep_content array).
+    if (firecrawlDeep.status === 'fulfilled' && Array.isArray(firecrawlDeep.value) && firecrawlDeep.value.length) {
+      results.deep_content = firecrawlDeep.value;
+      results.sources.push('firecrawl');
     }
 
     // Build a compressed research summary for injection into AI prompts
@@ -263,6 +326,27 @@ export default async function handler(req, res) {
     const keyword = keywords?.[0] || niche;
     const results = await getNeuronWriterData(keyword);
     return res.json({ seo: results });
+  }
+
+  // ── FIRECRAWL: deep page scrape ───────────────────────────────────────
+  // Used by framework generators that need full-page content (pricing tables,
+  // competitor feature matrices, regulatory docs) instead of semantic snippets.
+  if (action === 'scrape_url') {
+    const url = (req.body?.url || '').toString();
+    if (!url || !/^https:\/\//.test(url)) return res.status(400).json({ error: 'https url required' });
+    const out = await firecrawlScrape(url);
+    if (!out) return res.json({ ok: false, error: 'firecrawl unavailable or scrape failed' });
+    return res.json({ ok: true, ...out });
+  }
+
+  if (action === 'firecrawl_search') {
+    const query = (req.body?.query || niche || '').toString();
+    if (!query) return res.status(400).json({ error: 'query or niche required' });
+    const scrape = req.body?.scrape !== false;
+    const limit = Math.min(parseInt(req.body?.limit, 10) || 5, 10);
+    const out = await firecrawlSearch(query, { limit, scrape });
+    if (!out) return res.json({ ok: false, error: 'firecrawl unavailable' });
+    return res.json({ ok: true, results: out });
   }
 
   return res.status(400).json({ error: `Unknown action: ${action}` });

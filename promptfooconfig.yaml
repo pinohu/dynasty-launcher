@@ -1,0 +1,143 @@
+# Promptfoo regression tests for Your Deputy's core AI pipelines.
+# Run with: npm run test:prompts (or `npx promptfoo eval`)
+#
+# Covers the two prompt surfaces where quality regressions cause the most
+# customer pain: viability scoring and pivot-review proposal generation.
+# New prompts should be added here before they're shipped.
+
+description: "Your Deputy regression evals — scoring + pivot review golden sets"
+
+prompts:
+  - id: viability_scoring
+    # Matches the scoring prompt shape used in app.html's scoreIdea().
+    # Keep this in sync when the scoring prompt is edited.
+    raw: |
+      You are a strategy analyst. Score this business idea on 5 dimensions (each 0-10):
+      1. market_hunger — genuine demand + urgency
+      2. blue_ocean_index — avoids head-on competition
+      3. competitive_moat — durable defensibility
+      4. revenue_confidence — clear path to first $10K MRR
+      5. mvp_feasibility — can a 2-person team build v1 in 8 weeks
+
+      Return strict JSON:
+      {
+        "market_hunger": {"score": <0-10>, "rationale": "..."},
+        "blue_ocean_index": {"score": <0-10>, "rationale": "..."},
+        "competitive_moat": {"score": <0-10>, "rationale": "..."},
+        "revenue_confidence": {"score": <0-10>, "rationale": "..."},
+        "mvp_feasibility": {"score": <0-10>, "rationale": "..."},
+        "composite": <weighted mean>,
+        "verdict": "<one of: STRONG BUILD CANDIDATE, VIABLE WITH CAVEATS, NEEDS REFINEMENT>",
+        "risk_summary": "...",
+        "opportunity_summary": "...",
+        "framework_analyses": {}
+      }
+
+      IDEA: {{idea}}
+
+  - id: pivot_proposal
+    raw: |
+      You are {{model_label}}. A business idea scored {{original_score}}/10.
+      Propose ONE specific, actionable pivot that would score significantly higher.
+
+      ORIGINAL IDEA: {{idea}}
+
+      Return strict JSON:
+      {
+        "pivot_description": "...",
+        "predicted_composite_score": <number>,
+        "key_advantages": ["..."],
+        "risks": ["..."],
+        "reasoning": "...",
+        "confidence": <0-1>
+      }
+
+providers:
+  # Only providers whose keys are present in CI will actually run. Missing keys
+  # are skipped, not failed — local dev can eval against one provider at a time.
+  - id: openai:gpt-4o-mini
+    config:
+      temperature: 0.6
+      response_format: { type: json_object }
+  - id: anthropic:messages:claude-3-5-haiku-latest
+    config:
+      max_tokens: 2000
+      temperature: 0.6
+  - id: google:gemini-2.0-flash
+    config:
+      temperature: 0.6
+
+defaultTest:
+  assert:
+    # Every scoring response must be parseable JSON and match the schema shape.
+    - type: is-json
+    - type: javascript
+      value: |
+        output && typeof output === 'object' && typeof output.composite === 'number'
+          && output.composite >= 0 && output.composite <= 10
+          ? { pass: true, score: 1, reason: 'composite within 0-10' }
+          : { pass: false, score: 0, reason: 'composite out of range or missing' }
+
+tests:
+  # ── Viability scoring golden set ───────────────────────────────────────
+  - vars:
+      idea: "AI tool that audits podcast RSS feeds for SEO issues and suggests show-note improvements. $29/mo per show."
+    assert:
+      - type: is-json
+      - type: javascript
+        value: |
+          const s = output?.composite ?? 0;
+          // 5.5-9 range — tight, crowded vertical with real SEO pain.
+          s >= 5.5 && s <= 9
+            ? { pass: true, score: 1, reason: `composite=${s}` }
+            : { pass: false, score: 0, reason: `expected 5.5-9, got ${s}` }
+
+  - vars:
+      idea: "Generic social media scheduler for small businesses. $10/mo."
+    assert:
+      - type: is-json
+      - type: javascript
+        value: |
+          // Commodity SaaS should score LOW. If the model hands out 8+ we've
+          // regressed into optimism bias.
+          const s = output?.composite ?? 0;
+          s <= 6.5
+            ? { pass: true, score: 1, reason: `commodity market scored ${s} as expected` }
+            : { pass: false, score: 0, reason: `model too optimistic: commodity SaaS got ${s}` }
+
+  - vars:
+      idea: "B2B procurement AI for mid-market manufacturers ($50M-$500M revenue) that auto-sources parts from 200+ suppliers using RFQ patterns. $2k/mo."
+    assert:
+      - type: is-json
+      - type: javascript
+        value: |
+          // Specific, high-ACV, narrow ICP — should score well.
+          const s = output?.composite ?? 0;
+          s >= 6.5
+            ? { pass: true, score: 1, reason: `specific B2B scored ${s}` }
+            : { pass: false, score: 0, reason: `model underrated specific B2B: ${s}` }
+
+  # ── Pivot proposal sanity ──────────────────────────────────────────────
+  - vars:
+      model_label: "GPT"
+      original_score: "4.5"
+      idea: "Generic social media scheduler for small businesses."
+    assert:
+      - type: is-json
+      - type: javascript
+        value: |
+          // A pivot from a low-scoring generic SaaS must meaningfully improve.
+          const p = output?.predicted_composite_score ?? 0;
+          p > 6
+            ? { pass: true, score: 1, reason: `pivot predicted ${p}` }
+            : { pass: false, score: 0, reason: `pivot did not improve meaningfully: ${p}` }
+      - type: javascript
+        value: |
+          Array.isArray(output?.key_advantages) && output.key_advantages.length >= 2
+            ? { pass: true, score: 1, reason: 'advantages listed' }
+            : { pass: false, score: 0, reason: 'key_advantages missing/short' }
+
+# Rate-limit settings so CI doesn't thrash providers.
+evaluateOptions:
+  maxConcurrency: 2
+  repeat: 1
