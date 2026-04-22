@@ -3493,6 +3493,17 @@ Return ONLY valid JSON:
 }`;
 
   try {
+    // Typed path first — returns a validated FrameworkSynthesis object.
+    // Skips the entire raw-string + regex-match + safeJsonParse pipeline
+    // when the server-side Zod validation succeeds.
+    if (typeof aiTyped === 'function') {
+      const typed = await aiTyped('synthesis', synthPrompt, { maxTokens: 2000 });
+      if (typed && typeof typed.synthesis_summary === 'string') {
+        FRAMEWORK_SYNTHESIS = typed;
+        return FRAMEWORK_SYNTHESIS;
+      }
+    }
+
     let raw = '';
     const webllmReady = webllmSupported() && window.__webllm?.ready;
     if (webllmReady) {
@@ -3700,6 +3711,7 @@ All scores 0.0-10.0. Be honest — do not inflate. Weighted average: market_hung
 
   let raw = '';
   let scoredLocally = false;
+  let scoredTyped = false;
 
   try {
     // Hybrid path: try WebLLM first (zero cost), fall back to server
@@ -3716,17 +3728,35 @@ All scores 0.0-10.0. Be honest — do not inflate. Weighted average: market_hung
       }
     }
 
-    if (!raw) {
+    // Typed server path — Vercel AI SDK + Zod. Replaces the regex-JSON-parse
+    // pattern that silently dropped malformed responses. If the typed call
+    // succeeds, we bypass the raw-string code path entirely.
+    if (!raw && !scoredLocally) {
+      showLoadingOverlay('Scoring viability...', `Analyzing with ${V2_FRAMEWORKS.length} frameworks (typed)`);
+      btn.textContent = 'Analyzing (typed)…';
+      const typed = await aiTyped('viability', `${PROMPT_ARMOR}${scoringPrompt}`, {
+        maxTokens: FW_DEPTH === 'deep' ? 8000 : FW_DEPTH === 'quick' ? 3000 : 6000,
+        sessionId: window._dynastySessionId || undefined,
+      });
+      if (typed && typeof typed.composite === 'number') {
+        V2_SCORECARD = typed;
+        scoredTyped = true;
+      }
+    }
+
+    if (!raw && !scoredTyped) {
       showLoadingOverlay('Scoring viability...', `Analyzing with ${V2_FRAMEWORKS.length} frameworks (cloud)`);
       btn.textContent = 'Analyzing (cloud)…';
       raw = await aiRaw(`${PROMPT_ARMOR}${scoringPrompt}`, FW_DEPTH === 'deep' ? 8000 : FW_DEPTH === 'quick' ? 3000 : 6000);
     }
 
-    let cleaned = (raw || '').replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    const m = cleaned.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error('No JSON in scorecard response (raw length: ' + (raw||'').length + ', first 100: ' + (raw||'').slice(0,100) + ')');
-    V2_SCORECARD = safeJsonParse(m[0]);
-    if (!V2_SCORECARD) throw new Error('JSON parse failed');
+    if (!scoredTyped) {
+      let cleaned = (raw || '').replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const m = cleaned.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error('No JSON in scorecard response (raw length: ' + (raw||'').length + ', first 100: ' + (raw||'').slice(0,100) + ')');
+      V2_SCORECARD = safeJsonParse(m[0]);
+      if (!V2_SCORECARD) throw new Error('JSON parse failed');
+    }
 
     if (!V2_SCORECARD.composite && V2_SCORECARD.composite_score) V2_SCORECARD.composite = V2_SCORECARD.composite_score;
     if (!V2_SCORECARD.composite && V2_SCORECARD.overall_score) V2_SCORECARD.composite = V2_SCORECARD.overall_score;
@@ -4240,6 +4270,25 @@ async function initReviewModels() {
   return REVIEW_MODELS;
 }
 
+// Typed AI call — goes through /api/ai-sdk (Vercel AI SDK + Zod + Langfuse).
+// Returns the validated object directly, or null on total failure. Caller can
+// fall back to the legacy raw-string path if this returns null.
+async function aiTyped(schemaName, prompt, { model, maxTokens = 3000, temperature = 0.7, sessionId, userId } = {}) {
+  try {
+    const r = await fetch('/api/ai-sdk', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'generate_typed',
+        schemaName, prompt, model, maxTokens, temperature, sessionId, userId,
+        ...getAiAuthPayload(),
+      }),
+    });
+    const d = await r.json().catch(() => null);
+    if (!d || !d.ok) return null;
+    return d.object;
+  } catch { return null; }
+}
+
 async function aiRawWithModel(prompt, modelId, max = 4000) {
   const freeTier = isFreeTier();
   const fallbackModels = freeTier
@@ -4293,10 +4342,58 @@ async function aiRawWithModel(prompt, modelId, max = 4000) {
   return '';
 }
 
-function showPipelineUI() {
+// Opt-in Preact renderer flag. When `?ui=react` or the localStorage flag is
+// set, showPipelineUI delegates rendering + status updates to the React
+// pilot in /react-pivot-panel.mjs. Everything else (scoring, AI calls,
+// pivot flow) is identical — only the view layer differs.
+const REACT_PIVOT_UI = (() => {
+  try {
+    if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('ui') === 'react') return true;
+    return localStorage.getItem('dynasty_ui_react') === 'true';
+  } catch { return false; }
+})();
+let _reactPivotMod = null;
+
+async function showPipelineUI() {
   const div = document.getElementById('pipeline-screen');
   div.style.display = 'block';
   document.getElementById('sc-actions').style.display = 'none';
+
+  if (REACT_PIVOT_UI) {
+    try {
+      _reactPivotMod = _reactPivotMod || await import('/react-pivot-panel.mjs');
+      // Hidden stubs keep the existing vanilla-DOM mutations in the pivot
+      // flow from throwing. The React shim above handles visible updates;
+      // these stubs catch property writes like `.className =` so we don't
+      // have to audit all 17 direct-access sites.
+      div.innerHTML = `
+        <div id="pipeline-react-root"></div>
+        <div id="pipe-cost" style="display:none"></div>
+        <div id="phase1" style="display:none"><span id="p1-status"></span><div id="phase1-cards"></div></div>
+        <div id="phase2" style="display:none"><span id="p2-status"></span></div>
+        <div id="phase3" style="display:none"><span id="p3-status"></span></div>
+        <div id="phase4" style="display:none"><span id="p4-status"></span></div>
+        <div id="pipe-livelog-items" style="display:none"></div>
+        <div id="consensus-result"></div>
+      `;
+      _reactPivotMod.mountPivotPanel(document.getElementById('pipeline-react-root'), REVIEW_MODELS);
+      // Bridge phase status: observe the stub status spans and forward to Preact.
+      for (const [phase, elId] of [['p1', 'p1-status'], ['p2', 'p2-status'], ['p3', 'p3-status'], ['p4', 'p4-status']]) {
+        const el = document.getElementById(elId);
+        if (!el) continue;
+        const observer = new MutationObserver(() => {
+          const cls = el.className || '';
+          const status = cls.includes('done') ? 'done' : cls.includes('running') ? 'running' : cls.includes('failed') ? 'failed' : 'waiting';
+          _reactPivotMod.setPhase(phase, status);
+        });
+        observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+      }
+      return;
+    } catch (e) {
+      console.warn('[pivot] React pilot failed to load, falling back to vanilla DOM:', e);
+    }
+  }
+
   div.innerHTML = `
     <div class="pipeline-vis">
       <div class="pipe-title">🧠 ${REVIEW_MODELS.length}-model pivot review pipeline</div>
@@ -4339,6 +4436,7 @@ function showPipelineUI() {
 // Visible while the pipeline runs, gives the user per-model insights as they
 // arrive instead of only showing a blob at the end.
 function pipeLog(msg, tone) {
+  if (REACT_PIVOT_UI && _reactPivotMod) { _reactPivotMod.appendLog(msg, tone); return; }
   const host = document.getElementById('pipe-livelog-items');
   if (!host) return;
   const color = tone === 'ok' ? 'var(--grn)' : tone === 'err' ? '#F87171' : tone === 'phase' ? 'var(--gold)' : 'var(--sec)';
@@ -4351,6 +4449,11 @@ function pipeLog(msg, tone) {
 }
 
 function updateModelStatus(modelId, status, score, confidence) {
+  // React pilot: forward to Preact state. No-op on DOM.
+  if (REACT_PIVOT_UI && _reactPivotMod) {
+    _reactPivotMod.setModel(modelId, { status, score, confidence });
+    return;
+  }
   const key = modelId.replace(/[^a-z0-9]/g, '');
   const card = document.getElementById('mc-' + key);
   const statusEl = document.getElementById('mcs-' + key);
@@ -4363,12 +4466,13 @@ function updateModelStatus(modelId, status, score, confidence) {
   if (score !== undefined && scoreEl) scoreEl.textContent = score;
   if (confidence !== undefined && confEl) { confEl.textContent = 'conf: ' + (confidence * 100).toFixed(0) + '%'; }
   if (confidence !== undefined && confBar) { confBar.style.width = (confidence * 100) + '%'; }
-  document.getElementById('pipe-cost').textContent = 'Running cost: $' + V2_BUILD_COST.toFixed(4);
+  const costEl = document.getElementById('pipe-cost');
+  if (costEl) costEl.textContent = 'Running cost: $' + V2_BUILD_COST.toFixed(4);
 }
 
 async function runPivotReview() {
   await initReviewModels(); // Resolve which models have keys — must run before UI so card count matches
-  showPipelineUI();
+  await showPipelineUI();
   const desc = document.getElementById('project-desc').value.trim();
   const scorecardJSON = JSON.stringify(V2_SCORECARD, null, 2);
   const frameworkAnalyses = Object.entries(V2_SCORECARD.framework_analyses || {}).map(([k,v]) => `## ${k.replace(/_/g,' ').toUpperCase()}\n${v}`).join('\n\n');
@@ -4408,10 +4512,15 @@ Be bold. Be specific. No generic advice.`;
   let p1Done = 0;
   const phase1Promises = REVIEW_MODELS.map(async (m, i) => {
     try {
-      const raw = await aiRawWithModel(pivotPrompt(m.label), m.id, 3000);
-      const match = raw.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error('No JSON');
-      const proposal = JSON.parse(match[0]);
+      // Typed path first — returns a validated PivotProposal object.
+      let proposal = await aiTyped('pivot', pivotPrompt(m.label), { model: m.id, maxTokens: 3000 });
+      if (!proposal) {
+        // Legacy raw-string fallback with regex extraction.
+        const raw = await aiRawWithModel(pivotPrompt(m.label), m.id, 3000);
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('No JSON');
+        proposal = JSON.parse(match[0]);
+      }
       proposal._model = m.label;
       proposal._modelId = m.id;
       proposal._index = i;
@@ -14041,6 +14150,28 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         // Fix 5: Do NOT modify layout.tsx globals.css import — template handles it
         // (Tailwind v4 templates import CSS differently)
 
+        // Fix 5.5: T3 stack overlay. When ?tmpl=t3 is set, pull the bundled
+        // T3 scaffold from /api/template and lay it down as the new "base"
+        // — overwriting anything the empty-init template came with. Dynasty-
+        // generated pages and component overrides from the earlier phases
+        // still override these T3 defaults because they're applied before
+        // this block? No — actually we apply AFTER the T3 scaffold so that
+        // customer-specific content wins. T3 only fills gaps (tsconfig,
+        // tailwind.config, prisma schema, layout.tsx boilerplate).
+        if ((function(){ try {
+          if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('tmpl') === 't3') return true;
+          return localStorage.getItem('dynasty_template_t3') === 'true';
+        } catch { return false; } })()) {
+          try {
+            const manifest = await fetch('/api/template?tmpl=t3').then(r => r.ok ? r.json() : null).catch(() => null);
+            if (manifest && manifest.ok && manifest.files) {
+              for (const [path, content] of Object.entries(manifest.files)) {
+                if (!feFiles[path]) feFiles[path] = content;
+              }
+            }
+          } catch {}
+        }
+
         // Fix 6: Seed shadcn/ui components.json so `npx shadcn add <component>`
         // works out of the box in the generated repo. The customer can then
         // add polished accessible components without our having to template
@@ -14098,6 +14229,30 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
           feFiles['src/lib/utils.ts'] = `import { type ClassValue, clsx } from 'clsx';\nimport { twMerge } from 'tailwind-merge';\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n`;
         }
 
+        // Fix 9: Pre-seed the six shadcn/ui components every generated app
+        // tends to need on day one. These are verbatim from the shadcn
+        // registry (new-york style) — customer can overwrite or extend,
+        // but they won't hit the "components.json references missing files"
+        // class of build errors if they import before running `shadcn add`.
+        if (!feFiles['src/components/ui/button.tsx']) {
+          feFiles['src/components/ui/button.tsx'] = `import * as React from 'react';\nimport { Slot } from '@radix-ui/react-slot';\nimport { cva, type VariantProps } from 'class-variance-authority';\nimport { cn } from '@/lib/utils';\n\nconst buttonVariants = cva(\n  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',\n  {\n    variants: {\n      variant: {\n        default: 'bg-primary text-primary-foreground hover:bg-primary/90',\n        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',\n        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',\n        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',\n        ghost: 'hover:bg-accent hover:text-accent-foreground',\n        link: 'text-primary underline-offset-4 hover:underline',\n      },\n      size: {\n        default: 'h-10 px-4 py-2',\n        sm: 'h-9 rounded-md px-3',\n        lg: 'h-11 rounded-md px-8',\n        icon: 'h-10 w-10',\n      },\n    },\n    defaultVariants: { variant: 'default', size: 'default' },\n  },\n);\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {\n  asChild?: boolean;\n}\n\nconst Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, variant, size, asChild = false, ...props }, ref) => {\n  const Comp = asChild ? Slot : 'button';\n  return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;\n});\nButton.displayName = 'Button';\n\nexport { Button, buttonVariants };\n`;
+        }
+        if (!feFiles['src/components/ui/card.tsx']) {
+          feFiles['src/components/ui/card.tsx'] = `import * as React from 'react';\nimport { cn } from '@/lib/utils';\n\nconst Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (\n  <div ref={ref} className={cn('rounded-lg border bg-card text-card-foreground shadow-sm', className)} {...props} />\n));\nCard.displayName = 'Card';\n\nconst CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (\n  <div ref={ref} className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />\n));\nCardHeader.displayName = 'CardHeader';\n\nconst CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(({ className, ...props }, ref) => (\n  <h3 ref={ref} className={cn('text-2xl font-semibold leading-none tracking-tight', className)} {...props} />\n));\nCardTitle.displayName = 'CardTitle';\n\nconst CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(({ className, ...props }, ref) => (\n  <p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />\n));\nCardDescription.displayName = 'CardDescription';\n\nconst CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (\n  <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />\n));\nCardContent.displayName = 'CardContent';\n\nconst CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (\n  <div ref={ref} className={cn('flex items-center p-6 pt-0', className)} {...props} />\n));\nCardFooter.displayName = 'CardFooter';\n\nexport { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };\n`;
+        }
+        if (!feFiles['src/components/ui/input.tsx']) {
+          feFiles['src/components/ui/input.tsx'] = `import * as React from 'react';\nimport { cn } from '@/lib/utils';\n\nconst Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, type, ...props }, ref) => (\n  <input\n    type={type}\n    className={cn(\n      'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',\n      className,\n    )}\n    ref={ref}\n    {...props}\n  />\n));\nInput.displayName = 'Input';\n\nexport { Input };\n`;
+        }
+        if (!feFiles['src/components/ui/label.tsx']) {
+          feFiles['src/components/ui/label.tsx'] = `'use client';\nimport * as React from 'react';\nimport * as LabelPrimitive from '@radix-ui/react-label';\nimport { cva, type VariantProps } from 'class-variance-authority';\nimport { cn } from '@/lib/utils';\n\nconst labelVariants = cva('text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70');\n\nconst Label = React.forwardRef<React.ElementRef<typeof LabelPrimitive.Root>, React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & VariantProps<typeof labelVariants>>(({ className, ...props }, ref) => (\n  <LabelPrimitive.Root ref={ref} className={cn(labelVariants(), className)} {...props} />\n));\nLabel.displayName = LabelPrimitive.Root.displayName;\n\nexport { Label };\n`;
+        }
+        if (!feFiles['src/components/ui/badge.tsx']) {
+          feFiles['src/components/ui/badge.tsx'] = `import * as React from 'react';\nimport { cva, type VariantProps } from 'class-variance-authority';\nimport { cn } from '@/lib/utils';\n\nconst badgeVariants = cva(\n  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',\n  {\n    variants: {\n      variant: {\n        default: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',\n        secondary: 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',\n        destructive: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',\n        outline: 'text-foreground',\n      },\n    },\n    defaultVariants: { variant: 'default' },\n  },\n);\n\nexport interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}\n\nfunction Badge({ className, variant, ...props }: BadgeProps) {\n  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;\n}\n\nexport { Badge, badgeVariants };\n`;
+        }
+        if (!feFiles['src/components/ui/dialog.tsx']) {
+          feFiles['src/components/ui/dialog.tsx'] = `'use client';\nimport * as React from 'react';\nimport * as DialogPrimitive from '@radix-ui/react-dialog';\nimport { X } from 'lucide-react';\nimport { cn } from '@/lib/utils';\n\nconst Dialog = DialogPrimitive.Root;\nconst DialogTrigger = DialogPrimitive.Trigger;\nconst DialogPortal = DialogPrimitive.Portal;\nconst DialogClose = DialogPrimitive.Close;\n\nconst DialogOverlay = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Overlay>, React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>>(({ className, ...props }, ref) => (\n  <DialogPrimitive.Overlay ref={ref} className={cn('fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0', className)} {...props} />\n));\nDialogOverlay.displayName = DialogPrimitive.Overlay.displayName;\n\nconst DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>>(({ className, children, ...props }, ref) => (\n  <DialogPortal>\n    <DialogOverlay />\n    <DialogPrimitive.Content ref={ref} className={cn('fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out sm:rounded-lg', className)} {...props}>\n      {children}\n      <DialogPrimitive.Close className='absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none'>\n        <X className='h-4 w-4' />\n        <span className='sr-only'>Close</span>\n      </DialogPrimitive.Close>\n    </DialogPrimitive.Content>\n  </DialogPortal>\n));\nDialogContent.displayName = DialogPrimitive.Content.displayName;\n\nconst DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (\n  <div className={cn('flex flex-col space-y-1.5 text-center sm:text-left', className)} {...props} />\n);\nDialogHeader.displayName = 'DialogHeader';\n\nconst DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (\n  <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)} {...props} />\n);\nDialogFooter.displayName = 'DialogFooter';\n\nconst DialogTitle = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Title>, React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>>(({ className, ...props }, ref) => (\n  <DialogPrimitive.Title ref={ref} className={cn('text-lg font-semibold leading-none tracking-tight', className)} {...props} />\n));\nDialogTitle.displayName = DialogPrimitive.Title.displayName;\n\nconst DialogDescription = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Description>, React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>>(({ className, ...props }, ref) => (\n  <DialogPrimitive.Description ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />\n));\nDialogDescription.displayName = DialogPrimitive.Description.displayName;\n\nexport { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription };\n`;
+        }
+
         // Ensure shadcn's peer deps are declared in package.json so the
         // customer's first `npm install` succeeds. These are idempotent —
         // if the template already declared them, we leave the higher version.
@@ -14110,6 +14265,10 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
             if (!pkg.dependencies['clsx']) pkg.dependencies['clsx'] = '^2.1.1';
             if (!pkg.dependencies['tailwind-merge']) pkg.dependencies['tailwind-merge'] = '^2.5.4';
             if (!pkg.dependencies['tailwindcss-animate']) pkg.dependencies['tailwindcss-animate'] = '^1.0.7';
+            // Radix primitives that the pre-seeded shadcn components import.
+            if (!pkg.dependencies['@radix-ui/react-slot']) pkg.dependencies['@radix-ui/react-slot'] = '^1.1.1';
+            if (!pkg.dependencies['@radix-ui/react-label']) pkg.dependencies['@radix-ui/react-label'] = '^2.1.0';
+            if (!pkg.dependencies['@radix-ui/react-dialog']) pkg.dependencies['@radix-ui/react-dialog'] = '^1.1.4';
             if (!pkg.devDependencies['@biomejs/biome']) pkg.devDependencies['@biomejs/biome'] = '^1.9.4';
             pkg.scripts = pkg.scripts || {};
             if (!pkg.scripts['lint:biome']) pkg.scripts['lint:biome'] = 'biome check .';
@@ -14451,7 +14610,12 @@ export const Env = createEnv({
       return false;
     })();
     if (wantT3 && (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority')) {
-      tmplName = 'dynasty-t3-template';
+      // T3 path: use the empty-init template (dynasty-project-template) and
+      // overlay the bundled T3 scaffold from /api/template?tmpl=t3 during
+      // the frontend-file generation phase. No external GitHub template repo
+      // is needed — the scaffold is shipped in this codebase under
+      // api/template.js and hydrated into feFiles[...] below.
+      tmplName = 'dynasty-project-template';
     } else if (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority') {
       tmplName = TYPE_TEMPLATE[inf.type_id] || CATEGORY_TEMPLATE[V2_CATEGORY] || 'dynasty-nextjs-template';
     } else {

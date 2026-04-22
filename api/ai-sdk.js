@@ -30,8 +30,24 @@ const sanitize = (s) => String(s || '').replace(/[\r\n]/g, ' ').slice(0, 500);
 // Map a model id (as used today in the client) to an AI SDK provider+model.
 // Free/paid, open-weight/closed mix — same pool the legacy router already
 // routes across. New entries can be added without touching call sites.
+//
+// If LITELLM_BASE_URL is set, every model id gets routed through the LiteLLM
+// gateway instead of the vendor-specific SDK. LiteLLM exposes an OpenAI-
+// compatible /v1 endpoint that proxies 100+ providers with unified auth,
+// cost tracking, and rate-limit-aware fallback — centralizing the routing
+// concerns that are currently scattered across api/ai.js + resolveProvider.
 function resolveProvider(modelId) {
   const id = String(modelId || '').toLowerCase();
+
+  // LiteLLM gateway override — takes precedence over per-vendor SDKs when
+  // LITELLM_BASE_URL is configured. The gateway handles model-to-provider
+  // mapping, cost caps, and per-project rate-limiting server-side.
+  const liteLLMBase = process.env.LITELLM_BASE_URL;
+  if (liteLLMBase) {
+    const apiKey = process.env.LITELLM_API_KEY || 'sk-dummy';
+    const lite = createOpenAI({ apiKey, baseURL: liteLLMBase, compatibility: 'compatible' });
+    return { provider: 'litellm', model: lite(modelId) };
+  }
 
   // Groq (free-tier workhorses)
   if (id.startsWith('llama-') || id.includes('mixtral') || id.startsWith('gemma2') || id.includes('llama-4-scout') || id.includes('deepseek-r1')) {

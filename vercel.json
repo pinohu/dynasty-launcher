@@ -131,6 +131,12 @@
     "api/ai-sdk.js": {
       "maxDuration": 300
     },
+    "api/pivot-graph.js": {
+      "maxDuration": 300
+    },
+    "api/template.js": {
+      "maxDuration": 30
+    },
     "api/orchestrate.js": {
       "maxDuration": 300
     },
