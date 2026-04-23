@@ -4470,7 +4470,162 @@ function updateModelStatus(modelId, status, score, confidence) {
   if (costEl) costEl.textContent = 'Running cost: $' + V2_BUILD_COST.toFixed(4);
 }
 
+// Server-graph path: /api/pivot-graph runs a LangGraph.js state machine with
+// propose → cross_review → consensus → devils nodes and streams SSE progress
+// back to the client. We prefer this path because it gives us:
+//   (a) stateful checkpoints (one failed model doesn't kill the whole phase)
+//   (b) Langfuse tracing at every node boundary
+//   (c) Zod-typed outputs at every step
+// Falls back to the legacy in-browser flow if SSE fails, which preserves
+// functionality in environments where the server graph is unavailable.
+async function runPivotReviewServerGraph() {
+  await initReviewModels();
+  await showPipelineUI();
+  const desc = document.getElementById('project-desc').value.trim();
+  const frameworkAnalyses = Object.entries(V2_SCORECARD.framework_analyses || {})
+    .map(([k, v]) => `## ${k.replace(/_/g, ' ').toUpperCase()}\n${v}`)
+    .join('\n\n');
+
+  pipeLog(`Starting server-graph pivot review (${REVIEW_MODELS.length} models)`, 'phase');
+  document.getElementById('p1-status').className = 'pipe-phase-status running';
+  document.getElementById('p1-status').textContent = 'Running...';
+  REVIEW_MODELS.forEach(m => updateModelStatus(m.id, 'running'));
+
+  const modelState = new Map(REVIEW_MODELS.map(m => [m.label, m]));
+  let winner = null, runnerUp = null, consensusStrength = 0, devilsCritique = '';
+  let graphDone = false, graphError = null;
+
+  try {
+    const res = await fetch('/api/pivot-graph', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idea: desc,
+        scorecard: V2_SCORECARD,
+        frameworkAnalyses,
+        models: REVIEW_MODELS.map(m => ({ id: m.id, label: m.label, icon: m.icon, weight: m.weight || 1 })),
+        sessionId: window._dynastySessionId || undefined,
+        stream: true,
+      }),
+    });
+    if (!res.ok || !res.body) throw new Error(`graph http ${res.status}`);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const chunks = buffer.split('\n\n');
+      buffer = chunks.pop() || '';
+      for (const chunk of chunks) {
+        const line = chunk.trim();
+        if (!line.startsWith('data:')) continue;
+        let evt;
+        try { evt = JSON.parse(line.slice(5).trim()); } catch { continue; }
+        if (evt.type === 'phase1_result') {
+          const m = modelState.get(evt.model);
+          if (m) updateModelStatus(m.id, 'done', (evt.score ?? 0).toFixed(1), 0.7);
+          pipeLog(`[phase1] ${evt.model}: ${evt.score || '?'}/10 · ${(evt.preview || '').slice(0, 140)}`, 'ok');
+        } else if (evt.type === 'phase1_fail') {
+          const m = modelState.get(evt.model);
+          if (m) updateModelStatus(m.id, 'failed');
+          pipeLog(`[phase1] ${evt.model}: failed — ${evt.error || 'unknown'}`, 'err');
+        } else if (evt.type === 'phase2_result') {
+          pipeLog(`[phase2] ${evt.model} votes for: ${evt.vote || '(abstain)'}`, 'ok');
+          const statusEl = document.getElementById('p1-status');
+          if (statusEl && !statusEl.className.includes('done')) { statusEl.className = 'pipe-phase-status done'; statusEl.textContent = 'Done'; }
+          const p2 = document.getElementById('p2-status');
+          if (p2) { p2.className = 'pipe-phase-status running'; p2.textContent = 'Running...'; }
+        } else if (evt.type === 'phase2_fail') {
+          pipeLog(`[phase2] ${evt.model}: failed`, 'err');
+        } else if (evt.type === 'phase4_result') {
+          pipeLog(`[phase4] ${evt.model}: ${evt.killer || ''}`.slice(0, 200), 'ok');
+          const p3 = document.getElementById('p3-status');
+          if (p3 && !p3.className.includes('done')) { p3.className = 'pipe-phase-status done'; p3.textContent = 'Done'; }
+          const p4 = document.getElementById('p4-status');
+          if (p4 && !p4.className.includes('done')) { p4.className = 'pipe-phase-status running'; p4.textContent = 'Attacking...'; }
+        } else if (evt.type === 'phase4_fail') {
+          pipeLog(`[phase4] ${evt.model}: critique failed`, 'err');
+        } else if (evt.type === 'done') {
+          winner = evt.winner;
+          runnerUp = evt.runnerUp;
+          consensusStrength = evt.consensusStrength || 0;
+          devilsCritique = typeof evt.devilsCritique === 'string'
+            ? evt.devilsCritique
+            : (evt.devilsCritique ? [evt.devilsCritique.market_reality, evt.devilsCritique.moat_weakness, evt.devilsCritique.revenue_fantasy, evt.devilsCritique.founder_blind_spot, evt.devilsCritique.the_killer].filter(Boolean).join('\n\n') : '');
+          graphDone = true;
+        } else if (evt.type === 'error') {
+          throw new Error(evt.error || 'graph error');
+        }
+      }
+    }
+  } catch (e) {
+    graphError = e.message || String(e);
+  }
+
+  if (!graphDone) {
+    pipeLog(`Server graph failed (${graphError || 'unknown'}) — falling back to client pivot flow`, 'err');
+    return { ok: false, reason: graphError };
+  }
+
+  // Complete remaining phase markers.
+  for (const p of ['p1-status', 'p2-status', 'p3-status', 'p4-status']) {
+    const el = document.getElementById(p);
+    if (el && !el.className.includes('done')) { el.className = 'pipe-phase-status done'; el.textContent = 'Done'; }
+  }
+
+  pipeLog(`Graph complete — winner: ${winner?._model || '(none)'}, consensus ${(consensusStrength * 100).toFixed(0)}%`, 'phase');
+
+  // Render consensus result using the same DOM structure the legacy path uses.
+  window._refineState = {
+    currentIdea: winner?.pivot_description || desc,
+    currentCritique: devilsCritique,
+    originalIdea: desc,
+    scorecard: V2_SCORECARD,
+    rounds: [],
+  };
+
+  const consensusHost = document.getElementById('consensus-result');
+  if (consensusHost && winner) {
+    consensusHost.innerHTML = `
+      <div class="consensus-card" style="margin-top:16px;padding:16px;border:1px solid var(--gold);border-radius:var(--r);background:rgba(201,168,76,0.05)">
+        <div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Consensus winner · ${(consensusStrength * 100).toFixed(0)}% consensus</div>
+        <div style="font-size:14px;color:var(--tx);line-height:1.6;margin-bottom:8px"><strong>${escapeHtml(winner._model || '')}</strong>: ${escapeHtml(winner.pivot_description || '')}</div>
+        <div style="font-size:11px;color:var(--sec);margin-bottom:8px">Predicted score: ${winner.predicted_composite_score}/10 · ${winner.votes?.toFixed(1) || 0} pts · ${winner.avgScore?.toFixed(1) || 0} avg rating</div>
+        ${devilsCritique ? `<details style="margin-top:10px"><summary style="cursor:pointer;font-size:11px;color:var(--gold)">Devil's Advocate critique</summary><div style="font-size:11px;color:var(--dim);line-height:1.55;margin-top:6px;white-space:pre-wrap">${escapeHtml(devilsCritique)}</div></details>` : ''}
+        <div class="sc-actions" style="display:flex;gap:8px;margin-top:12px">
+          <button class="launch" style="flex:1" onclick="acceptPivot()">Accept this pivot</button>
+          <button class="launch" style="flex:1;background:transparent;border:1px solid var(--gb);color:var(--gold)" onclick="refinePivot()">Modify</button>
+          <button class="launch" style="flex:1;background:transparent;border:1px solid var(--gb);color:var(--gold)" onclick="buildAsIs()">Build original</button>
+        </div>
+      </div>
+    `;
+  }
+  return { ok: true, winner, runnerUp, consensusStrength, devilsCritique };
+}
+
 async function runPivotReview() {
+  // Prefer the server-graph path (LangGraph.js, SSE streaming, Zod-typed).
+  // Legacy client flow runs as fallback when the graph endpoint fails.
+  const preferServerGraph = (() => {
+    try {
+      if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('pivot') === 'legacy') return false;
+      if (localStorage.getItem('dynasty_pivot_legacy') === 'true') return false;
+    } catch {}
+    return true;
+  })();
+
+  if (preferServerGraph) {
+    try {
+      const r = await runPivotReviewServerGraph();
+      if (r.ok) return;
+    } catch (e) {
+      console.warn('[pivot] server graph threw, falling back:', e);
+    }
+  }
+
   await initReviewModels(); // Resolve which models have keys — must run before UI so card count matches
   await showPipelineUI();
   const desc = document.getElementById('project-desc').value.trim();
@@ -14048,13 +14203,24 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         // SaaS boilerplate templates use i18n routing: /[locale]/(marketing)/page.tsx
         // If we only write to src/app/page.tsx, the middleware redirects to the
         // locale path and serves the template's default content instead.
-        // Writing to BOTH paths ensures Dynasty content appears regardless of routing.
-        if (fe.page_tsx) {
-          // Strip i18n-incompatible imports (getTranslations etc.) — Dynasty pages are self-contained
-          const cleanPage = fe.page_tsx;
-          feFiles['src/app/[locale]/(marketing)/page.tsx'] = cleanPage;
+        // T3 template doesn't use i18n routing — writing locale paths there
+        // creates dead files that Next won't route. Guard on template choice.
+        const _needsLocaleOverlay = (() => {
+          try {
+            if (typeof location !== 'undefined') {
+              const q = new URLSearchParams(location.search).get('tmpl');
+              if (q === 'saas') return true;
+              if (q === 't3' || q === 'nextjs') return false;
+            }
+            if (localStorage.getItem('dynasty_template') === 'saas') return true;
+            if (localStorage.getItem('dynasty_template_saas') === 'true') return true;
+          } catch {}
+          return false; // T3 default — no locale overlay needed.
+        })();
+        if (_needsLocaleOverlay && fe.page_tsx) {
+          feFiles['src/app/[locale]/(marketing)/page.tsx'] = fe.page_tsx;
         }
-        if (fe.dashboard_tsx) {
+        if (_needsLocaleOverlay && fe.dashboard_tsx) {
           feFiles['src/app/[locale]/(auth)/dashboard/page.tsx'] = fe.dashboard_tsx;
         }
 
@@ -14150,18 +14316,27 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
         // Fix 5: Do NOT modify layout.tsx globals.css import — template handles it
         // (Tailwind v4 templates import CSS differently)
 
-        // Fix 5.5: T3 stack overlay. When ?tmpl=t3 is set, pull the bundled
-        // T3 scaffold from /api/template and lay it down as the new "base"
-        // — overwriting anything the empty-init template came with. Dynasty-
-        // generated pages and component overrides from the earlier phases
-        // still override these T3 defaults because they're applied before
-        // this block? No — actually we apply AFTER the T3 scaffold so that
-        // customer-specific content wins. T3 only fills gaps (tsconfig,
-        // tailwind.config, prisma schema, layout.tsx boilerplate).
-        if ((function(){ try {
-          if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('tmpl') === 't3') return true;
-          return localStorage.getItem('dynasty_template_t3') === 'true';
-        } catch { return false; } })()) {
+        // Fix 5.5: T3 scaffold overlay is now the default.
+        // Pulls the bundled T3 scaffold from /api/template and fills any
+        // path that wasn't already written by the earlier Dynasty-generation
+        // phases. T3 only fills gaps (tsconfig, tailwind.config, prisma
+        // schema, layout.tsx boilerplate, dormant chat route) — customer-
+        // specific content (page.tsx, SPEC, etc.) still wins because we
+        // guard with `!feFiles[path]`.
+        // Skipped when the user explicitly opted back to the SaaS boilerplate.
+        const _tmplChoice = (() => {
+          try {
+            if (typeof location !== 'undefined') {
+              const q = new URLSearchParams(location.search).get('tmpl');
+              if (q === 'saas' || q === 't3' || q === 'nextjs') return q;
+            }
+            const ls = localStorage.getItem('dynasty_template');
+            if (ls) return ls;
+            if (localStorage.getItem('dynasty_template_saas') === 'true') return 'saas';
+          } catch {}
+          return 't3';
+        })();
+        if (_tmplChoice !== 'saas') {
           try {
             const manifest = await fetch('/api/template?tmpl=t3').then(r => r.ok ? r.json() : null).catch(() => null);
             if (manifest && manifest.ok && manifest.files) {
@@ -14596,28 +14771,33 @@ export const Env = createEnv({
     };
 
     let tmplName;
-    // Opt-in T3 stack: when the user sets ?tmpl=t3 (or localStorage flag),
-    // fork the Dynasty-mirrored T3 starter instead of the SaaS boilerplate.
-    // T3 = Next.js + TS + Tailwind + tRPC + Prisma + NextAuth, zero template
-    // branding to strip — eliminates the template-leak class of build failures.
-    // Falls back to the existing template family if the T3 mirror isn't
-    // reachable (preflightTemplate below handles that).
-    const wantT3 = (() => {
+    // T3 is now the default customer template. It ships with zero vendor
+    // branding to strip — eliminating the "template branding leaked" class
+    // of build failures entirely. Users can opt back to the SaaS boilerplate
+    // via ?tmpl=saas (e.g. for existing projects that depend on its layout).
+    const tmplOverride = (() => {
       try {
-        if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('tmpl') === 't3') return true;
+        if (typeof location !== 'undefined') {
+          const q = new URLSearchParams(location.search).get('tmpl');
+          if (q === 'saas' || q === 't3' || q === 'nextjs') return q;
+        }
       } catch {}
-      try { if (localStorage.getItem('dynasty_template_t3') === 'true') return true; } catch {}
-      return false;
+      try {
+        const ls = localStorage.getItem('dynasty_template');
+        if (ls === 'saas' || ls === 't3' || ls === 'nextjs') return ls;
+        // Legacy boolean-style flags — map to the new string values.
+        if (localStorage.getItem('dynasty_template_t3') === 'true') return 't3';
+        if (localStorage.getItem('dynasty_template_saas') === 'true') return 'saas';
+      } catch {}
+      return null;
     })();
-    if (wantT3 && (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority')) {
-      // T3 path: use the empty-init template (dynasty-project-template) and
-      // overlay the bundled T3 scaffold from /api/template?tmpl=t3 during
-      // the frontend-file generation phase. No external GitHub template repo
-      // is needed — the scaffold is shipped in this codebase under
-      // api/template.js and hydrated into feFiles[...] below.
-      tmplName = 'dynasty-project-template';
-    } else if (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority') {
+
+    if (tmplOverride === 'saas' && (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority')) {
+      // Opt-back to legacy SaaS boilerplate path.
       tmplName = TYPE_TEMPLATE[inf.type_id] || CATEGORY_TEMPLATE[V2_CATEGORY] || 'dynasty-nextjs-template';
+    } else if (V2_DEPLOY_TARGET === 'fullstack' || V2_DEPLOY_TARGET === 'authority') {
+      // T3 path (default): empty-init template, scaffold overlaid from /api/template.
+      tmplName = 'dynasty-project-template';
     } else {
       tmplName = 'dynasty-project-template';
     }
