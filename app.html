@@ -625,6 +625,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     <div class="lm">⚡</div>
     <div><div class="lt">Your Deputy</div><div class="ls">Describe your project — we stress-test the plan, implement what you scoped, and report status so you can hold the build accountable</div></div>
     <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:70px;background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600" onclick="handleSignIn()">Sign In</button>
+    <button class="lset" id="oie-btn" title="Offer Intelligence Engine (admin)" onclick="openOieDrawer()" style="margin-right:4px;display:none">🧮 OIE</button>
     <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">📊</button>
     <button class="lset" id="settings-btn" title="Settings">⚙</button>
   </div>
@@ -15999,6 +16000,231 @@ window.addEventListener('scroll', () => {
 });
 
 window.addEventListener('load', () => { dynastyRefreshCkptBanner(); });
+
+// ══════════════════════════════════════════════════════════════════════════
+// OFFER INTELLIGENCE ENGINE — admin-only operator drawer inside the builder
+// ══════════════════════════════════════════════════════════════════════════
+// Surface: Adds a 🧮 OIE button to the builder header, visible only when an
+// admin HMAC token is stored locally. Opens a right-side drawer with the
+// submit-topic → report → approve → generate-outline workflow the strategic
+// spec calls for. All actions hit /api/offer-intelligence (admin-gated).
+// The full OIE dashboard with decision history lives at /admin#oie.
+(function wireOieDrawer() {
+  var oieBtn = document.getElementById('oie-btn');
+  if (!oieBtn) return;
+
+  function hasAdminToken() { return !!localStorage.getItem('dynasty_admin_token'); }
+  function showBtnIfAdmin() { oieBtn.style.display = hasAdminToken() ? '' : 'none'; }
+  showBtnIfAdmin();
+  window.addEventListener('storage', showBtnIfAdmin);
+
+  function tokenHeaders() {
+    var t = localStorage.getItem('dynasty_admin_token') || '';
+    return { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' };
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+  function splitLines(s) { return String(s || '').split('\n').map(function(x){return x.trim();}).filter(Boolean); }
+
+  function ensureDrawer() {
+    if (document.getElementById('oie-drawer')) return;
+    var css = '' +
+      '#oie-drawer{position:fixed;top:0;right:0;width:min(640px,100vw);height:100vh;background:#0F0F0F;border-left:1px solid #2A2A2A;z-index:1000;overflow-y:auto;box-shadow:-10px 0 40px rgba(0,0,0,0.6);transform:translateX(100%);transition:transform .25s}' +
+      '#oie-drawer.open{transform:translateX(0)}' +
+      '#oie-drawer h2{color:#C9A84C;font-size:14px;margin:0 0 2px;font-weight:600}' +
+      '#oie-drawer h3{color:#C9A84C;font-size:12px;margin:14px 0 6px;font-weight:600}' +
+      '#oie-drawer .od-hdr{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid #222;background:#141414;position:sticky;top:0;z-index:2}' +
+      '#oie-drawer .od-close{margin-left:auto;background:transparent;border:none;color:#888;font-size:18px;cursor:pointer;padding:4px 8px}' +
+      '#oie-drawer .od-body{padding:16px 20px;color:#E8E8E8;font-size:12px}' +
+      '#oie-drawer label{display:block;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:.5px;margin:8px 0 3px}' +
+      '#oie-drawer input,#oie-drawer textarea,#oie-drawer select{width:100%;padding:7px 9px;background:#181818;border:1px solid #262626;border-radius:6px;color:#EAEAEA;font-size:12px;font-family:inherit;box-sizing:border-box}' +
+      '#oie-drawer textarea{resize:vertical;min-height:56px}' +
+      '#oie-drawer .od-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}' +
+      '#oie-drawer .od-btn{padding:8px 14px;background:#1A1A1A;border:1px solid #2C2C2C;color:#E8E8E8;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500}' +
+      '#oie-drawer .od-btn.primary{background:#C9A84C;color:#000;border-color:#C9A84C}' +
+      '#oie-drawer .od-btn.danger{background:rgba(229,83,75,0.1);color:#E5534B;border-color:rgba(229,83,75,0.3)}' +
+      '#oie-drawer .od-pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600}' +
+      '#oie-drawer .od-pill.ok{background:rgba(62,207,142,0.12);color:#3ECF8E}' +
+      '#oie-drawer .od-pill.err{background:rgba(229,83,75,0.12);color:#E5534B}' +
+      '#oie-drawer .od-pill.warn{background:rgba(201,168,76,0.12);color:#C9A84C}' +
+      '#oie-drawer .od-chip{display:inline-block;padding:2px 6px;background:rgba(229,83,75,0.12);color:#E5534B;border-radius:4px;font-size:10px;margin-right:4px;font-family:monospace}' +
+      '#oie-drawer .od-card{background:#181818;border:1px solid #242424;border-radius:6px;padding:10px;margin:8px 0}' +
+      '#oie-drawer .od-tiny{font-size:11px;color:#999}' +
+      '#oie-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;display:none}' +
+      '#oie-backdrop.open{display:block}';
+    var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+
+    var backdrop = document.createElement('div'); backdrop.id = 'oie-backdrop'; backdrop.onclick = closeOieDrawer;
+    var d = document.createElement('aside');
+    d.id = 'oie-drawer';
+    d.innerHTML = '' +
+      '<div class="od-hdr"><h2>🧮 Offer Intelligence Engine</h2>' +
+        '<span class="od-pill warn" id="oie-dr-version" style="font-size:9px">…</span>' +
+        '<a href="/admin#oie" target="_blank" rel="noopener noreferrer" style="margin-left:auto;color:#C9A84C;font-size:11px;text-decoration:none">Full dashboard ↗</a>' +
+        '<button class="od-close" aria-label="Close" onclick="closeOieDrawer()">×</button>' +
+      '</div>' +
+      '<div class="od-body">' +
+        '<p style="color:#999;font-size:11px;margin-bottom:10px">Governor system — default stance is <strong style="color:#E5534B">reject</strong>. Outline generation is blocked until a BUILD verdict is approved.</p>' +
+        '<label for="oie-dr-topic">Topic</label><input id="oie-dr-topic" placeholder="e.g. SuiteDash implementers stuck on client portal bugs">' +
+        '<label for="oie-dr-signals">Pain signals (one per line)</label><textarea id="oie-dr-signals" rows="3" placeholder="refund thread URL&#10;recurring support ticket pattern&#10;unanswered Stack Overflow post"></textarea>' +
+        '<label for="oie-dr-constraints">Constraints (one per line)</label><textarea id="oie-dr-constraints" rows="2" placeholder="avoid legal risk&#10;prefer fast-shipping"></textarea>' +
+        '<div class="od-row">' +
+          '<div><label for="oie-dr-market">Market</label><input id="oie-dr-market" placeholder="specific operator niche"></div>' +
+          '<div><label for="oie-dr-delivery">Delivery preference</label><input id="oie-dr-delivery" placeholder="(blank = let OIE choose)"></div>' +
+        '</div>' +
+        '<div class="od-row">' +
+          '<div><label for="oie-dr-risk">Risk tolerance</label><select id="oie-dr-risk"><option value="low" selected>Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>' +
+          '<div><label for="oie-dr-portfolio">Portfolio role</label><select id="oie-dr-portfolio">' +
+            '<option value="unassigned" selected>Unassigned</option>' +
+            '<option value="flagship_authority">Flagship authority</option>' +
+            '<option value="low_ticket_tripwire">Low-ticket tripwire</option>' +
+            '<option value="backend_ascension">Backend ascension</option>' +
+            '<option value="diagnostic_lead_magnet">Diagnostic lead magnet</option>' +
+            '<option value="recurring_retainer_feeder">Retainer feeder</option>' +
+          '</select></div>' +
+        '</div>' +
+        '<div class="od-row">' +
+          '<div><label for="oie-dr-price-floor">Price floor (USD)</label><input id="oie-dr-price-floor" placeholder="optional"></div>' +
+          '<div><label for="oie-dr-ship-days">Time-to-ship limit (days)</label><input id="oie-dr-ship-days" value="14"></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:16px;margin-top:6px;font-size:11px;color:#999">' +
+          '<label style="text-transform:none;font-size:11px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="oie-dr-allow-liab" style="width:auto"> Allow liability categories</label>' +
+          '<label style="text-transform:none;font-size:11px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="oie-dr-allow-ident" style="width:auto"> Allow identity risk</label>' +
+        '</div>' +
+        '<div style="margin-top:12px;display:flex;gap:8px">' +
+          '<button class="od-btn primary" id="oie-dr-run" onclick="runOieFromDrawer()">Run OIE Analysis</button>' +
+          '<button class="od-btn" onclick="closeOieDrawer()">Cancel</button>' +
+        '</div>' +
+        '<div id="oie-dr-status" class="od-tiny" style="margin-top:8px"></div>' +
+        '<div id="oie-dr-report" style="margin-top:12px"></div>' +
+      '</div>';
+    document.body.appendChild(backdrop);
+    document.body.appendChild(d);
+
+    // Fetch model version once
+    fetch('/api/offer-intelligence?action=version', { headers: tokenHeaders() })
+      .then(function(r){return r.json();}).then(function(v){
+        if (v && v.ok) document.getElementById('oie-dr-version').textContent = v.model_version;
+      }).catch(function(){});
+  }
+
+  window.openOieDrawer = function() {
+    if (!hasAdminToken()) { alert('Admin access required for the Offer Intelligence Engine.'); return; }
+    ensureDrawer();
+    document.getElementById('oie-drawer').classList.add('open');
+    document.getElementById('oie-backdrop').classList.add('open');
+  };
+  window.closeOieDrawer = function() {
+    var d = document.getElementById('oie-drawer'); if (d) d.classList.remove('open');
+    var b = document.getElementById('oie-backdrop'); if (b) b.classList.remove('open');
+  };
+
+  window.runOieFromDrawer = async function() {
+    var topic = document.getElementById('oie-dr-topic').value.trim();
+    if (topic.length < 3) { document.getElementById('oie-dr-status').textContent = 'Topic must be at least 3 characters.'; return; }
+    var input = {
+      topic: topic,
+      pain_signals: splitLines(document.getElementById('oie-dr-signals').value),
+      constraints: splitLines(document.getElementById('oie-dr-constraints').value),
+      market_type: document.getElementById('oie-dr-market').value.trim(),
+      delivery_preference: document.getElementById('oie-dr-delivery').value.trim(),
+      risk_tolerance: document.getElementById('oie-dr-risk').value,
+      price_floor: document.getElementById('oie-dr-price-floor').value.trim(),
+      time_to_ship_limit_days: parseInt(document.getElementById('oie-dr-ship-days').value) || 14,
+      allow_liability_categories: document.getElementById('oie-dr-allow-liab').checked,
+      allow_identity_risk: document.getElementById('oie-dr-allow-ident').checked,
+      portfolio_role: document.getElementById('oie-dr-portfolio').value,
+    };
+    var btn = document.getElementById('oie-dr-run');
+    btn.disabled = true; btn.textContent = 'Running...';
+    document.getElementById('oie-dr-status').textContent = 'Evaluating. Low-temperature deterministic run — typically 30–90s.';
+    try {
+      var r = await fetch('/api/offer-intelligence?action=run', { method: 'POST', headers: tokenHeaders(), body: JSON.stringify({ input: input }) });
+      var out = await r.json();
+      btn.disabled = false; btn.textContent = 'Run OIE Analysis';
+      if (!out.ok) { document.getElementById('oie-dr-status').innerHTML = '<span style="color:#E5534B">Failed: ' + esc(out.error || 'unknown') + '</span>'; return; }
+      document.getElementById('oie-dr-status').innerHTML = '<span style="color:#3ECF8E">Saved decision #' + out.id + ' — ' + esc(out.build_decision) + ' — score ' + out.opportunity_score + (out.warning ? ' — ' + esc(out.warning) : '') + '</span>';
+      renderDrawerReport(out.id, out.report);
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Run OIE Analysis';
+      document.getElementById('oie-dr-status').innerHTML = '<span style="color:#E5534B">Network error: ' + esc(e.message) + '</span>';
+    }
+  };
+
+  function renderDrawerReport(id, report) {
+    var d = report.decision || {}, j = report.judgment || {}, s = report.scoring || {};
+    var flags = d.kill_flags_triggered || [];
+    var wtw = j.why_this_wins || {};
+    var buildIsOk = d.build_decision === 'BUILD';
+    var html = '' +
+      '<div class="od-card" style="border-left:3px solid ' + (buildIsOk ? '#3ECF8E' : '#E5534B') + '">' +
+        '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
+          '<span class="od-pill ' + (buildIsOk ? 'ok' : 'err') + '" style="font-size:12px">' + esc(d.build_decision || '?') + '</span>' +
+          '<strong style="color:' + (buildIsOk ? '#3ECF8E' : '#E5534B') + '">score ' + (s.opportunity_score ?? '?') + '/100</strong>' +
+          '<span class="od-tiny">id #' + id + ' · ' + esc(report.model_version || '?') + '</span>' +
+        '</div>' +
+        '<p class="od-tiny" style="margin-top:6px">' + esc(d.build_decision_reason || '') + '</p>' +
+        (flags.length ? '<div style="margin-top:6px"><strong style="font-size:10px;color:#E5534B">Kill flags:</strong> ' + flags.map(function(f){return '<span class="od-chip">' + esc(f) + '</span>';}).join('') + '</div>' : '') +
+      '</div>' +
+      '<div class="od-card"><strong style="font-size:11px;color:#C9A84C">Why this wins</strong><br>' +
+        '<span class="od-pill ' + (wtw.strength === 'strong' ? 'ok' : wtw.strength === 'moderate' ? 'warn' : 'err') + '">' + esc(wtw.strength || '?') + '</span> ' + esc(wtw.claim || '') +
+        '<div class="od-tiny" style="margin-top:4px">' + esc(wtw.unfair_advantage || '') + '</div>' +
+      '</div>' +
+      '<div class="od-row">' +
+        '<div class="od-card"><strong style="font-size:11px;color:#C9A84C">Format</strong><br><span style="font-size:13px">' + esc(d.best_delivery_format && d.best_delivery_format.format || '') + '</span><div class="od-tiny">' + esc(d.best_delivery_format && d.best_delivery_format.rationale || '') + '</div></div>' +
+        '<div class="od-card"><strong style="font-size:11px;color:#C9A84C">Lead magnet</strong><br><span style="font-size:12px">' + esc(d.best_lead_magnet && d.best_lead_magnet.title || '') + '</span><div class="od-tiny">' + esc(d.best_lead_magnet && d.best_lead_magnet.type || '') + '</div></div>' +
+        '<div class="od-card"><strong style="font-size:11px;color:#C9A84C">Price</strong><br><span style="font-size:16px;font-weight:700">$' + (d.best_price && d.best_price.amount_usd || 0) + '</span><div class="od-tiny">anchor: $' + (d.best_price && d.best_price.cost_of_staying_broken_monthly_usd || 0) + '/mo staying broken</div></div>' +
+        '<div class="od-card"><strong style="font-size:11px;color:#C9A84C">Ascension</strong><div class="od-tiny">Magnet → Core → Audit → DFY → Retainer</div></div>' +
+      '</div>' +
+      '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">' +
+        (buildIsOk
+          ? '<button class="od-btn primary" onclick="approveOieFromDrawer(' + id + ')">Approve → unlock outline</button><button class="od-btn danger" onclick="rejectOieFromDrawer(' + id + ')">Reject</button>'
+          : '<button class="od-btn danger" onclick="overrideOieFromDrawer(' + id + ')">Operator override (50+ chars)</button><button class="od-btn" onclick="rejectOieFromDrawer(' + id + ')">Archive</button>') +
+        '<button class="od-btn" onclick="outlineOieFromDrawer(' + id + ')">Generate outline</button>' +
+      '</div>' +
+      '<div id="oie-dr-outline" style="margin-top:10px"></div>';
+    document.getElementById('oie-dr-report').innerHTML = html;
+  }
+
+  window.approveOieFromDrawer = async function(id) {
+    if (!confirm('Approve decision #' + id + '? This unlocks outline generation.')) return;
+    var r = await fetch('/api/offer-intelligence?action=approve', { method: 'POST', headers: tokenHeaders(), body: JSON.stringify({ id: id }) });
+    var out = await r.json();
+    document.getElementById('oie-dr-status').innerHTML = out.ok ? '<span style="color:#3ECF8E">Approved</span>' : '<span style="color:#E5534B">' + esc(out.error || '') + '</span>';
+  };
+  window.rejectOieFromDrawer = async function(id) {
+    var reason = prompt('Reason for rejecting (optional):') || '';
+    var r = await fetch('/api/offer-intelligence?action=reject', { method: 'POST', headers: tokenHeaders(), body: JSON.stringify({ id: id, reason: reason }) });
+    var out = await r.json();
+    document.getElementById('oie-dr-status').innerHTML = out.ok ? '<span style="color:#999">Archived</span>' : '<span style="color:#E5534B">' + esc(out.error || '') + '</span>';
+  };
+  window.overrideOieFromDrawer = async function(id) {
+    var reason = prompt('Override a DO_NOT_BUILD verdict?\n\nHumans love their own bad ideas.\n\nExplain specifically why OIE is wrong (min 50 chars). This override is logged.');
+    if (!reason || reason.trim().length < 50) { alert('Override reason must be at least 50 characters.'); return; }
+    var r = await fetch('/api/offer-intelligence?action=override', { method: 'POST', headers: tokenHeaders(), body: JSON.stringify({ id: id, override_reason: reason.trim() }) });
+    var out = await r.json();
+    document.getElementById('oie-dr-status').innerHTML = out.ok ? '<span style="color:#C9A84C">Override logged — status: approved_override</span>' : '<span style="color:#E5534B">' + esc(out.error || '') + '</span>';
+  };
+  window.outlineOieFromDrawer = async function(id) {
+    document.getElementById('oie-dr-status').textContent = 'Checking outline gate…';
+    var g = await fetch('/api/outline-generator?action=gate_check', { method: 'POST', headers: tokenHeaders(), body: JSON.stringify({ decision_id: id }) });
+    var gate = await g.json();
+    if (!gate.allowed) { document.getElementById('oie-dr-status').innerHTML = '<span style="color:#E5534B">Blocked: ' + esc(gate.reason || '') + '</span>'; return; }
+    if (gate.warn_override && !confirm('⚠️ Operator override active on this decision.\nOriginal verdict: DO_NOT_BUILD.\nOverride reason: "' + (gate.override_reason || '(none)') + '"\n\nGenerate outline anyway?')) return;
+    document.getElementById('oie-dr-status').textContent = 'Generating outline…';
+    var r = await fetch('/api/outline-generator?action=generate', { method: 'POST', headers: tokenHeaders(), body: JSON.stringify({ decision_id: id }) });
+    var out = await r.json();
+    if (!out.ok) { document.getElementById('oie-dr-status').innerHTML = '<span style="color:#E5534B">' + esc(out.error || out.reason || '') + '</span>'; return; }
+    document.getElementById('oie-dr-status').innerHTML = '<span style="color:#3ECF8E">Outline generated (' + out.outline.sections.length + ' sections, ~' + out.outline.estimated_total_words + ' words' + (out.override_active ? ' — OVERRIDE' : '') + ')</span>';
+    var o = out.outline;
+    document.getElementById('oie-dr-outline').innerHTML =
+      '<div class="od-card" style="border-left:3px solid #C9A84C">' +
+        '<strong style="color:#C9A84C">' + esc(o.title) + '</strong><br>' +
+        (o.override_warning ? '<div style="background:rgba(229,83,75,0.1);padding:6px 8px;border-radius:4px;color:#E5534B;font-size:11px;margin:6px 0">' + esc(o.override_warning) + '</div>' : '') +
+        '<div class="od-tiny">' + esc(o.subtitle) + '</div>' +
+        '<ol style="font-size:11px;color:#DDD;padding-left:18px;margin-top:6px">' + o.sections.map(function(sec){ return '<li><strong>' + esc(sec.heading) + '</strong> <span class="od-tiny">(~' + sec.estimated_words + 'w)</span> — ' + esc(sec.purpose) + '</li>'; }).join('') + '</ol>' +
+      '</div>';
+  };
+})();
 </script>
 </body>
 </html>

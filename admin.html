@@ -88,6 +88,8 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
     <a href="#customers" onclick="showPage('customers')">Customers</a>
     <a href="#payments" onclick="showPage('payments')">Payments</a>
     <a href="#licenses" onclick="showPage('licenses')">Licenses</a>
+    <div class="section">Strategy</div>
+    <a href="#oie" onclick="showPage('oie')">Offer Intelligence</a>
     <div class="section">Infrastructure</div>
     <a href="#projects" onclick="showPage('projects')">Vercel Projects</a>
     <a href="#modules" onclick="showPage('modules')">Module Testing</a>
@@ -177,6 +179,81 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
     <div class="page" id="page-projects">
       <div class="page-title">Vercel Projects <button class="btn" onclick="loadProjects()" style="margin-left:8px">Refresh</button></div>
       <div id="projects-table"><div class="loading">Loading projects...</div></div>
+    </div>
+
+    <!-- OFFER INTELLIGENCE ENGINE -->
+    <div class="page" id="page-oie">
+      <div class="page-title">
+        Offer Intelligence Engine
+        <span class="badge" id="oie-version" style="font-size:10px;background:rgba(201,168,76,0.15);color:var(--gold);padding:2px 8px;border-radius:99px;margin-left:8px">loading...</span>
+        <button class="btn" onclick="oieRefresh()" style="margin-left:8px">Refresh</button>
+      </div>
+      <p style="color:var(--dim);margin-bottom:16px;max-width:760px;font-size:12px">
+        Strategic decision engine. Default stance is <strong style="color:var(--red)">reject</strong>.
+        Most ideas should die. Output separates evidence from judgment from decision. Every run is logged
+        to Neon + <code style="background:var(--panel);padding:2px 5px;border-radius:4px">gumroad-output/_intelligence/</code>.
+        Outline generation is blocked until a BUILD verdict is approved by an operator.
+      </p>
+
+      <!-- SUBMIT NEW TOPIC -->
+      <div class="card">
+        <h3>Submit Topic</h3>
+        <div class="form-row"><label for="oie-topic">Topic *</label><input type="text" id="oie-topic" placeholder="e.g. SuiteDash implementers burning 6hrs on client portal bugs"></div>
+        <div class="form-row"><label for="oie-signals">Pain Signals</label><textarea id="oie-signals" rows="3" placeholder="One per line — forum thread URLs, refund complaint patterns, recurring support tickets, unanswered Stack Overflow questions, etc."></textarea></div>
+        <div class="form-row"><label for="oie-constraints">Constraints</label><textarea id="oie-constraints" rows="2" placeholder="One per line — e.g. avoid legal risk, prefer fast-shipping, avoid identity collision"></textarea></div>
+        <div class="form-row"><label for="oie-market">Market Type</label><input type="text" id="oie-market" placeholder="e.g. B2B SaaS operators, lifetime-deal buyers, Brilliant Directories owners"></div>
+        <div class="form-row"><label for="oie-delivery">Delivery Preference</label><input type="text" id="oie-delivery" placeholder="Leave blank to let OIE choose (it can reject PDF in favor of calculator/audit/service)"></div>
+        <div class="form-row"><label for="oie-risk">Risk Tolerance</label>
+          <select id="oie-risk"><option value="low" selected>Low (default)</option><option value="medium">Medium</option><option value="high">High</option></select>
+        </div>
+        <div class="form-row"><label for="oie-price-floor">Price Floor (USD)</label><input type="text" id="oie-price-floor" placeholder="Optional — minimum acceptable price"></div>
+        <div class="form-row"><label for="oie-ship-days">Time-to-Ship Limit</label><input type="text" id="oie-ship-days" value="14" placeholder="Days"></div>
+        <div class="form-row"><label for="oie-portfolio">Portfolio Role</label>
+          <select id="oie-portfolio">
+            <option value="unassigned" selected>Unassigned (let OIE classify)</option>
+            <option value="flagship_authority">Flagship authority product</option>
+            <option value="low_ticket_tripwire">Low-ticket tripwire</option>
+            <option value="backend_ascension">Backend ascension offer</option>
+            <option value="diagnostic_lead_magnet">Diagnostic lead magnet</option>
+            <option value="recurring_retainer_feeder">Recurring retainer feeder</option>
+          </select>
+        </div>
+        <div class="form-row" style="align-items:center">
+          <label>Risk Gates</label>
+          <label style="font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px;margin-right:16px"><input type="checkbox" id="oie-allow-liability" style="width:auto"> Allow liability-exposed categories</label>
+          <label style="font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px"><input type="checkbox" id="oie-allow-identity" style="width:auto"> Allow identity-collision risk</label>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn primary" onclick="oieRun()" id="oie-run-btn">Run OIE Analysis</button>
+          <button class="btn" onclick="oieClearForm()">Clear</button>
+        </div>
+        <p id="oie-run-status" style="color:var(--dim);font-size:11px;margin-top:8px"></p>
+      </div>
+
+      <!-- LATEST REPORT -->
+      <div class="card" id="oie-report-card" style="display:none">
+        <h3>Latest Report <span id="oie-report-header" style="color:var(--dim);font-weight:400;font-size:11px"></span></h3>
+        <div id="oie-report-body"></div>
+      </div>
+
+      <!-- DECISION HISTORY -->
+      <div class="card">
+        <h3>
+          Decision History
+          <span style="font-weight:400;font-size:11px;margin-left:10px">
+            Filter:
+            <select id="oie-filter" onchange="oieLoadHistory()" style="padding:3px 6px;font-size:11px;display:inline-block;width:auto">
+              <option value="all">All</option>
+              <option value="build">BUILD only</option>
+              <option value="do_not_build">DO_NOT_BUILD only</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending review</option>
+              <option value="override">Operator overrides</option>
+            </select>
+          </span>
+        </h3>
+        <div id="oie-history-table"><div class="loading">Loading history...</div></div>
+      </div>
     </div>
 
     <!-- MODULE TESTING -->
@@ -270,6 +347,7 @@ function showPage(id) {
   if (id === 'payments') loadPayments();
   if (id === 'projects') loadProjects();
   if (id === 'licenses') loadLicenses();
+  if (id === 'oie') oieInit();
 }
 
 function toast(msg) {
@@ -456,6 +534,290 @@ async function testModule() {
   pre.textContent = `Testing ${mod}...`;
   const d = await api('test_module', { module_name: mod });
   pre.textContent = JSON.stringify(d, null, 2);
+}
+
+// ── OFFER INTELLIGENCE ENGINE ─────────────────────────────────────
+// All OIE actions hit /api/offer-intelligence, not /api/admin. Uses the
+// same admin Bearer token — endpoint is admin-gated via HMAC.
+function oieApi(action, body, method) {
+  const opts = { headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' } };
+  if (body || method === 'POST') { opts.method = 'POST'; opts.body = body ? JSON.stringify(body) : '{}'; }
+  return fetch(`/api/offer-intelligence?action=${action}`, opts).then(async r => {
+    if (r.status === 401) { surfaceAuthError('OIE rejected admin token'); return { ok: false, error: 'unauthorized' }; }
+    return r.json();
+  }).catch(err => ({ ok: false, error: err.message }));
+}
+function outlineApi(action, body) {
+  return fetch(`/api/outline-generator?action=${action}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  }).then(r => r.json()).catch(err => ({ ok: false, error: err.message }));
+}
+
+let OIE_LOADED = false;
+async function oieInit() {
+  if (OIE_LOADED) return oieLoadHistory();
+  OIE_LOADED = true;
+  const v = await oieApi('version');
+  if (v.ok) document.getElementById('oie-version').textContent = v.model_version;
+  oieLoadHistory();
+}
+
+function oieRefresh() { oieLoadHistory(); }
+
+function oieClearForm() {
+  ['oie-topic','oie-signals','oie-constraints','oie-market','oie-delivery','oie-price-floor'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('oie-ship-days').value = '14';
+  document.getElementById('oie-risk').value = 'low';
+  document.getElementById('oie-portfolio').value = 'unassigned';
+  document.getElementById('oie-allow-liability').checked = false;
+  document.getElementById('oie-allow-identity').checked = false;
+  document.getElementById('oie-report-card').style.display = 'none';
+  document.getElementById('oie-run-status').textContent = '';
+}
+
+function splitLines(s) { return (s || '').split('\n').map(x => x.trim()).filter(Boolean); }
+
+async function oieRun() {
+  const topic = document.getElementById('oie-topic').value.trim();
+  if (!topic || topic.length < 3) { toast('Topic required (min 3 chars)'); return; }
+  const input = {
+    topic,
+    pain_signals: splitLines(document.getElementById('oie-signals').value),
+    constraints: splitLines(document.getElementById('oie-constraints').value),
+    market_type: document.getElementById('oie-market').value.trim(),
+    delivery_preference: document.getElementById('oie-delivery').value.trim(),
+    risk_tolerance: document.getElementById('oie-risk').value,
+    price_floor: document.getElementById('oie-price-floor').value.trim(),
+    time_to_ship_limit_days: parseInt(document.getElementById('oie-ship-days').value) || 14,
+    allow_liability_categories: document.getElementById('oie-allow-liability').checked,
+    allow_identity_risk: document.getElementById('oie-allow-identity').checked,
+    portfolio_role: document.getElementById('oie-portfolio').value,
+  };
+  const btn = document.getElementById('oie-run-btn');
+  btn.disabled = true; btn.textContent = 'Running...';
+  document.getElementById('oie-run-status').textContent = 'Evaluating opportunity. This can take 30–90s (deterministic low-temp generation).';
+  const out = await oieApi('run', { input });
+  btn.disabled = false; btn.textContent = 'Run OIE Analysis';
+  if (!out.ok) {
+    document.getElementById('oie-run-status').innerHTML = `<span style="color:var(--red)">Failed: ${out.error || 'unknown'}</span>`;
+    return;
+  }
+  document.getElementById('oie-run-status').innerHTML = `<span style="color:var(--grn)">Saved decision #${out.id} — ${out.build_decision} — score ${out.opportunity_score}${out.warning ? ' — ' + out.warning : ''}</span>`;
+  renderOieReport(out.id, out.report);
+  oieLoadHistory();
+}
+
+function pill(text, cls) { return `<span class="pill ${cls || ''}">${text}</span>`; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+
+function renderOieReport(id, report, extra) {
+  const d = report.decision || {};
+  const j = report.judgment || {};
+  const s = report.scoring || {};
+  const buildCls = d.build_decision === 'BUILD' ? 'ok' : 'err';
+  const flags = d.kill_flags_triggered || [];
+  const vanity = j.vanity_market_check || {};
+  const ident = j.identity_safety || {};
+  const wtw = j.why_this_wins || {};
+  const headerBits = [`ID #${id}`, `model ${esc(report.model_version || '?')}`, extra?.note || ''].filter(Boolean).join(' · ');
+  document.getElementById('oie-report-header').textContent = headerBits;
+
+  const opps = (j.top_pain_opportunities || []).map(p => `
+    <tr>
+      <td>${p.rank}</td>
+      <td><strong>${esc(p.name)}</strong></td>
+      <td>${p.opportunity_score}</td>
+      <td>${pill(p.refund_risk, p.refund_risk === 'high' ? 'err' : p.refund_risk === 'medium' ? 'warn' : 'ok')}</td>
+      <td>${pill(p.liability_risk, p.liability_risk === 'high' ? 'err' : p.liability_risk === 'medium' ? 'warn' : 'ok')}</td>
+      <td>${pill(p.identity_risk, p.identity_risk === 'high' ? 'err' : p.identity_risk === 'medium' ? 'warn' : 'ok')}</td>
+      <td>${p.time_to_ship_days}d</td>
+      <td>${pill(p.authority_fit, p.authority_fit === 'high' ? 'ok' : p.authority_fit === 'medium' ? 'warn' : 'err')}</td>
+    </tr>`).join('');
+
+  const evRows = (report.evidence || []).map((e, i) => `
+    <tr>
+      <td style="color:var(--dim)">#${i}</td>
+      <td>${pill(e.trust_weight, e.trust_weight === 'high' ? 'ok' : e.trust_weight === 'medium' ? 'warn' : 'err')}</td>
+      <td><code style="font-size:10px">${esc(e.source_type)}</code></td>
+      <td>${esc(e.summary)}</td>
+      <td style="font-size:10px;color:var(--dim)">${esc(e.url_or_reference)}</td>
+    </tr>`).join('');
+
+  const lowEnd = (j.low_end_competitors || []).map(c => `
+    <tr>
+      <td><code style="font-size:10px">${esc(c.platform)}</code></td>
+      <td>${esc(c.example_title)}</td>
+      <td>$${c.estimated_price_usd}</td>
+      <td style="font-size:11px">${esc(c.pricing_power_impact)}</td>
+    </tr>`).join('');
+
+  const body = `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <span class="pill ${buildCls}" style="font-size:12px;padding:4px 12px">${d.build_decision || '?'}</span>
+      <span style="font-size:14px;color:${buildCls === 'ok' ? 'var(--grn)' : 'var(--red)'};font-weight:600">score ${s.opportunity_score ?? '?'}/100</span>
+      <span style="color:var(--dim);font-size:11px">${esc(d.build_decision_reason || '')}</span>
+    </div>
+
+    ${flags.length ? `<div style="background:rgba(229,83,75,0.08);border:1px solid rgba(229,83,75,0.3);padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:11px"><strong style="color:var(--red)">Kill flags triggered:</strong> ${flags.map(f => `<code style="background:rgba(229,83,75,0.15);padding:2px 6px;border-radius:4px;margin-right:4px">${esc(f)}</code>`).join('')}</div>` : ''}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="background:var(--panel);padding:10px;border-radius:6px">
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Why this wins</div>
+        <div style="font-size:12px;margin-bottom:4px">${pill(wtw.strength || 'unknown', wtw.strength === 'strong' ? 'ok' : wtw.strength === 'moderate' ? 'warn' : 'err')} ${esc(wtw.claim || '')}</div>
+        <div style="font-size:11px;color:var(--dim)">${esc(wtw.unfair_advantage || '')}</div>
+      </div>
+      <div style="background:var(--panel);padding:10px;border-radius:6px">
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Identity safety / vanity-market</div>
+        <div style="font-size:12px;margin-bottom:4px">Identity: ${pill(ident.score + '/10', ident.score >= 7 ? 'ok' : ident.score >= 4 ? 'warn' : 'err')} · Market: ${pill(vanity.specificity_of_operator || '?', vanity.specificity_of_operator === 'highly_specific' || vanity.specificity_of_operator === 'specific' ? 'ok' : 'err')}</div>
+        <div style="font-size:11px;color:var(--dim)">${esc(vanity.analysis || '')}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px;font-size:11px">
+      ${Object.entries(s).filter(([k]) => k !== 'opportunity_score').map(([k, v]) => `<div style="background:var(--panel);padding:6px 8px;border-radius:4px"><div style="color:var(--dim);font-size:9px;text-transform:uppercase">${k.replace(/_/g,' ')}</div><div style="font-weight:600">${v}</div></div>`).join('')}
+    </div>
+
+    <h4 style="font-size:12px;color:var(--gold);margin:12px 0 6px">Top Pain Opportunities</h4>
+    <table style="font-size:11px"><tr><th>#</th><th>Pain</th><th>Score</th><th>Refund</th><th>Liability</th><th>Identity</th><th>Ship</th><th>Fit</th></tr>${opps}</table>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+      <div style="background:var(--panel);padding:10px;border-radius:6px;font-size:11px">
+        <strong style="color:var(--gold);font-size:11px">Best delivery format</strong><br>
+        <span style="font-size:13px">${esc(d.best_delivery_format?.format || '')}</span><br>
+        <span style="color:var(--dim)">${esc(d.best_delivery_format?.rationale || '')}</span>
+        ${d.best_delivery_format?.rejected_formats?.length ? `<br><span style="color:var(--dim);font-size:10px">Rejected: ${d.best_delivery_format.rejected_formats.map(esc).join(', ')}</span>` : ''}
+      </div>
+      <div style="background:var(--panel);padding:10px;border-radius:6px;font-size:11px">
+        <strong style="color:var(--gold);font-size:11px">Best lead magnet</strong><br>
+        <span style="font-size:13px">${esc(d.best_lead_magnet?.title || '')}</span><br>
+        <span style="font-size:10px;color:var(--dim)"><code>${esc(d.best_lead_magnet?.type || '')}</code></span><br>
+        <span style="color:var(--dim)">${esc(d.best_lead_magnet?.why_it_converts || '')}</span>
+      </div>
+      <div style="background:var(--panel);padding:10px;border-radius:6px;font-size:11px">
+        <strong style="color:var(--gold);font-size:11px">Best price</strong><br>
+        <span style="font-size:18px;font-weight:700">$${d.best_price?.amount_usd ?? 0}</span>
+        <span style="color:var(--dim)"> · cost of staying broken: $${d.best_price?.cost_of_staying_broken_monthly_usd ?? 0}/mo</span><br>
+        <span style="color:var(--dim)">${esc(d.best_price?.rationale || '')}</span>
+      </div>
+      <div style="background:var(--panel);padding:10px;border-radius:6px;font-size:11px">
+        <strong style="color:var(--gold);font-size:11px">Ascension path</strong><br>
+        <span style="font-size:11px;color:var(--dim)">
+          Magnet → ${esc(d.ascension_path?.lead_magnet || '')}<br>
+          Core → ${esc(d.ascension_path?.core_paid_product || '')}<br>
+          Audit → ${esc(d.ascension_path?.audit || '')}<br>
+          DFY → ${esc(d.ascension_path?.dfy_service || '')}<br>
+          Retainer → ${esc(d.ascension_path?.retainer || '')}
+        </span>
+      </div>
+    </div>
+
+    ${(report.evidence || []).length ? `
+      <h4 style="font-size:12px;color:var(--gold);margin:14px 0 6px">Evidence (${report.evidence.length})</h4>
+      <table style="font-size:11px"><tr><th>#</th><th>Trust</th><th>Type</th><th>Summary</th><th>Ref</th></tr>${evRows}</table>
+    ` : ''}
+
+    ${lowEnd ? `
+      <h4 style="font-size:12px;color:var(--gold);margin:14px 0 6px">Low-End Competitor Traps</h4>
+      <table style="font-size:11px"><tr><th>Platform</th><th>Example</th><th>Price</th><th>Pricing Power Impact</th></tr>${lowEnd}</table>
+    ` : ''}
+
+    <h4 style="font-size:12px;color:var(--gold);margin:14px 0 6px">DO NOT BUILD IF</h4>
+    <ul style="font-size:11px;color:var(--dim);padding-left:18px">${(d.do_not_build_if || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--bdr);display:flex;gap:8px;flex-wrap:wrap">
+      ${d.build_decision === 'BUILD'
+        ? `<button class="btn primary" onclick="oieApprove(${id})">Approve → unlock outline</button>
+           <button class="btn danger" onclick="oieReject(${id})">Reject</button>`
+        : `<button class="btn" onclick="oieOverride(${id})" style="background:rgba(229,83,75,0.1);border-color:rgba(229,83,75,0.3);color:var(--red)">Operator override (requires 50+ char reason)</button>
+           <button class="btn" onclick="oieReject(${id})">Archive rejection</button>`}
+      <button class="btn" onclick="oieGenerateOutline(${id})">Generate outline (if approved)</button>
+    </div>
+  `;
+  document.getElementById('oie-report-body').innerHTML = body;
+  document.getElementById('oie-report-card').style.display = 'block';
+  document.getElementById('oie-report-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function oieApprove(id) {
+  if (!confirm(`Approve decision #${id}? This unlocks outline generation.`)) return;
+  const out = await oieApi('approve', { id });
+  if (out.ok) { toast(`Decision #${id} approved`); oieLoadHistory(); oieLoadAndRender(id); }
+  else toast('Approve failed: ' + (out.error || ''));
+}
+
+async function oieReject(id) {
+  const reason = prompt('Reason for rejecting (optional but recommended):') || '';
+  const out = await oieApi('reject', { id, reason });
+  if (out.ok) { toast(`Decision #${id} rejected`); oieLoadHistory(); }
+  else toast('Reject failed: ' + (out.error || ''));
+}
+
+async function oieOverride(id) {
+  const reason = prompt('Override a DO_NOT_BUILD verdict?\n\nHumans love their own bad ideas.\n\nExplain specifically why OIE is wrong (min 50 chars). This override is logged.');
+  if (!reason) return;
+  if (reason.trim().length < 50) { toast('Override reason must be at least 50 characters'); return; }
+  const out = await oieApi('override', { id, override_reason: reason.trim() });
+  if (out.ok) { toast(`Decision #${id} overridden — logged as approved_override`); oieLoadHistory(); oieLoadAndRender(id); }
+  else toast('Override failed: ' + (out.error || ''));
+}
+
+async function oieGenerateOutline(id) {
+  document.getElementById('oie-run-status').textContent = `Checking outline gate for decision #${id}...`;
+  const gate = await outlineApi('gate_check', { decision_id: id });
+  if (!gate.allowed) {
+    document.getElementById('oie-run-status').innerHTML = `<span style="color:var(--red)">Outline blocked: ${esc(gate.reason || '')}</span>`;
+    return;
+  }
+  if (gate.warn_override && !confirm(`⚠️ Operator override is active on this decision.\n\nOriginal verdict was DO_NOT_BUILD.\nReason: "${gate.override_reason || '(none)'}"\n\nGenerate outline anyway?`)) return;
+  document.getElementById('oie-run-status').textContent = `Generating outline for decision #${id}...`;
+  const out = await outlineApi('generate', { decision_id: id });
+  if (!out.ok) {
+    document.getElementById('oie-run-status').innerHTML = `<span style="color:var(--red)">Outline failed: ${esc(out.error || out.reason || '')}</span>`;
+    return;
+  }
+  document.getElementById('oie-run-status').innerHTML = `<span style="color:var(--grn)">Outline generated (${out.outline.sections.length} sections, ~${out.outline.estimated_total_words} words${out.override_active ? ' — OVERRIDE ACTIVE' : ''})</span>`;
+  // Append outline summary under report card
+  const outDiv = document.createElement('div');
+  outDiv.style.cssText = 'margin-top:12px;padding:12px;background:var(--panel);border-radius:6px;border-left:3px solid var(--gold)';
+  outDiv.innerHTML = `<h4 style="color:var(--gold);font-size:12px;margin-bottom:6px">Outline: ${esc(out.outline.title)}</h4>
+    ${out.outline.override_warning ? `<div style="background:rgba(229,83,75,0.1);padding:6px 10px;border-radius:4px;color:var(--red);font-size:11px;margin-bottom:8px">${esc(out.outline.override_warning)}</div>` : ''}
+    <p style="color:var(--dim);font-size:11px;margin-bottom:6px">${esc(out.outline.subtitle)}</p>
+    <ol style="font-size:11px;color:var(--tx);padding-left:20px">${out.outline.sections.map(sec => `<li><strong>${esc(sec.heading)}</strong> — ${esc(sec.purpose)} <span style="color:var(--dim)">(~${sec.estimated_words}w)</span></li>`).join('')}</ol>`;
+  document.getElementById('oie-report-body').appendChild(outDiv);
+}
+
+async function oieLoadAndRender(id) {
+  const r = await fetch(`/api/offer-intelligence?action=get&id=${id}`, {
+    headers: { 'Authorization': `Bearer ${TOKEN}` }
+  }).then(x => x.json()).catch(() => ({ ok: false }));
+  if (r.ok) renderOieReport(r.decision.id, r.decision.report, { note: `status ${r.decision.status}` });
+  else toast('Failed to load decision #' + id);
+}
+
+async function oieLoadHistory() {
+  const filter = document.getElementById('oie-filter')?.value || 'all';
+  const r = await fetch(`/api/offer-intelligence?action=list&filter=${filter}&limit=50`, { headers: { 'Authorization': `Bearer ${TOKEN}` } }).then(x => x.json());
+  const target = document.getElementById('oie-history-table');
+  if (!r.ok) { target.innerHTML = `<div class="empty" style="color:var(--red)">${esc(r.error || 'failed')}</div>`; return; }
+  if (!r.decisions?.length) { target.innerHTML = `<div class="empty">No decisions yet${r.note ? ' — ' + esc(r.note) : ''}</div>`; return; }
+  target.innerHTML = `<table style="font-size:11px"><tr><th>ID</th><th>Date</th><th>Topic</th><th>Verdict</th><th>Score</th><th>Status</th><th>Model</th><th>Actions</th></tr>` +
+    r.decisions.map(d => {
+      const status = d.operator_override ? 'override' : (d.status || 'pending');
+      const verdict = pill(d.build_decision || '?', d.build_decision === 'BUILD' ? 'ok' : 'err');
+      const statusCls = status === 'approved' ? 'ok' : status === 'rejected' ? 'err' : status === 'override' ? 'warn' : 'info';
+      return `<tr>
+        <td>#${d.id}</td>
+        <td style="color:var(--dim)">${new Date(d.created_at).toLocaleDateString()}</td>
+        <td>${esc((d.topic || '').slice(0, 80))}</td>
+        <td>${verdict}</td>
+        <td>${d.opportunity_score}</td>
+        <td>${pill(status, statusCls)}</td>
+        <td style="color:var(--dim);font-size:10px">${esc(d.model_version || '?')}</td>
+        <td><button class="btn" onclick="oieLoadAndRender(${d.id})" style="padding:3px 8px;font-size:10px">Open</button></td>
+      </tr>`;
+    }).join('') + `</table>`;
 }
 
 // ── INIT ──────────────────────────────────────────────────────────

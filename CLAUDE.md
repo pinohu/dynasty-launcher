@@ -22,6 +22,9 @@ dynasty-launcher/
 │   ├── _schemas.js         # Zod schemas for scoring / pivot / synthesis / build diagnostics
 │   ├── _langfuse.js        # Langfuse tracing wrapper (no-op when keys absent)
 │   ├── neon.js             # Neon DB provisioner (~130 lines)
+│   ├── offer-intelligence.js # Offer Intelligence Engine — admin-gated BUILD/DO_NOT_BUILD decision engine
+│   ├── outline-generator.js  # Outline generator — refuses to run without OIE approval
+│   ├── _intelligence-store.js # OIE persistence (Neon + local gumroad-output/_intelligence/ archive)
 │   ├── admin.js            # Admin dashboard backend
 │   ├── claude.js           # Anthropic Claude API proxy (auth-gated)
 │   ├── docgen.js           # Document generation helper (library, not an HTTP endpoint)
@@ -210,3 +213,30 @@ See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:
 - **Strategy frameworks:** 38 strategy frameworks are now available in `FW_PROMPTS` (core 8 surfaced by default + 30 in the "More strategy frameworks" expandable section of the builder). Scoring uses only the frameworks the user toggled; cross-framework synthesis runs on whatever set was selected.
 - **L2 Vercel recovery:** `dynastyParseVercelFailLog` in `app.html` classifies build failures into 6 diagnostic classes (`module_not_found`, `missing_dependency`, `ts_error`, `syntax_error`, `env_var_missing`, `eslint_error`, `unknown`). `module_not_found` auto-deletes orphan imports; `missing_dependency` patches `package.json`. Other classes surface the real error line to the user instead of "log has no parseable Module-not-found orphans".
 - **Multi-model pivot review:** All 4 phases (Independent Analysis → Cross-Review → Consensus → Devil's Advocate) now fan out across every available model in parallel (Phase 4 previously ran only DeepSeek-R1). A live stream panel under the pipeline visual shows each model's output as it lands — users see per-model insights in real time instead of waiting for a single end-of-run blob.
+
+## Offer Intelligence Engine (OIE)
+Strategic governor for the product portfolio. This is not a generator — it is a ruthless decision engine that returns `BUILD` or `DO_NOT_BUILD` on every topic. Default stance is reject; most ideas should die.
+
+**Surfaces:**
+- **Admin dashboard:** `/admin#oie` — full submit/history/approval/override/outline UI with decision history filter (all / build / do_not_build / approved / pending / override).
+- **Builder drawer:** header `🧮 OIE` button in `app.html` (visible only when `dynasty_admin_token` is set) opens a slide-over panel with the same workflow.
+
+**Endpoints (all admin-gated via HMAC Bearer token, same scheme as `/api/admin`):**
+- `POST /api/offer-intelligence?action=run` — evaluate a topic against the OIE rubric and persist the report.
+- `POST /api/offer-intelligence?action={list,get,approve,override,reject,record_metrics,get_metrics,version}` — decision lifecycle + post-launch feedback loop.
+- `POST /api/outline-generator?action=gate_check|generate` — refuses to run unless decision is `status='approved'` (normal) or `status='approved_override'` (friction override).
+
+**Schema:** `api/_schemas.js` exports `OfferIntelligenceInput`, `OfferIntelligenceReport`, `OfferOutline`, and `OFFER_INTELLIGENCE_MODEL_VERSION = 'oie-1.0.0'` (bump this when thresholds/weights/system-prompt change). Reports separate **evidence** (verifiable proof with source-trust ranking) from **judgment** (reasoning with evidence IDs) from **decision** (verdict + ship recs).
+
+**Key rules baked in (non-negotiable):**
+- Hard negative bias — default stance is reject. Weak `why_this_wins.strength` forces `DO_NOT_BUILD`.
+- Pricing anchors to `cost_of_staying_broken_monthly_usd`, never to competitor comps.
+- Delivery format free to reject PDF (calculator/audit/service/workflow_pack available).
+- Vanity markets auto-rejected (`specificity_of_operator` must be `specific` or `highly_specific`).
+- Identity safety is a first-class score, not a hidden field.
+- Low-end competitor scan (Gumroad / Etsy / Kindle / templates) — 3+ low-end traps at <20% of recommended price triggers `pricing_power_destroyed`.
+- Overriding a `DO_NOT_BUILD` requires a substantive `override_reason` (min 50 chars, logged to `dynasty_offer_intelligence.override_reason`).
+
+**Persistence:** Neon table `dynasty_offer_intelligence` is source of truth (carries `model_version`, `status`, `operator_override`). Secondary best-effort local FS writes to `gumroad-output/_intelligence/<slug>/<timestamp>.json` + `decision-history.md` (works in local dev; silent no-op on Vercel's read-only FS). `DO_NOT_BUILD` verdicts are also mirrored to `gumroad-output/_intelligence/_do_not_build_archive/` so operators don't re-evaluate the same killed idea every three months. A sibling `dynasty_offer_intelligence_metrics` table wires the post-launch feedback loop (pageviews / conversion / refunds / review quality) so OIE can eventually compare predicted vs. actual outcomes.
+
+**Do not auto-trigger downstream work.** OIE is a governor, not an autopilot. Never generate outlines, PDFs, checkout assets, or pricing publications from a BUILD verdict without going through the human approval action. The outline generator enforces this explicitly — it returns HTTP 409 `outline_blocked` if the decision isn't approved.
