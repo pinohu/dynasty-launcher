@@ -81,6 +81,68 @@ export const DevilsCritique = z.object({
   the_killer: z.string(),
 });
 
+// ── Offer Intelligence Engine (OIE) I/O contracts ──────────────────────────
+export const OfferIntelligenceInput = z.object({
+  topic: z.string().min(1),
+  pain_signals: z.array(z.string()).default([]),
+  constraints: z.array(z.string()).default([]),
+  market_type: z.string().default(''),
+  delivery_preference: z.string().default(''),
+  risk_tolerance: z.string().default(''),
+  price_floor: z.string().default(''),
+  time_to_ship_limit_days: z.number().int().positive().max(90).default(14),
+  allow_liability_categories: z.boolean().default(false),
+  allow_identity_risk: z.boolean().default(false),
+  portfolio_role: z.string().default(''),
+  upsell_role: z.string().default(''),
+  authority_role: z.string().default(''),
+  operator_override: z.boolean().optional().default(false),
+  override_reason: z.string().optional().default(''),
+});
+
+export const OfferIntelligenceOutput = z.object({
+  model_version: z.literal('v1.0'),
+  topic: z.string(),
+  opportunity_score: z.number().min(0).max(100),
+  pain_score: z.number().min(0).max(100),
+  saturation_score: z.number().min(0).max(100),
+  refund_risk: z.enum(['low', 'medium', 'high']),
+  liability_risk: z.enum(['low', 'medium', 'high']),
+  identity_risk: z.enum(['low', 'medium', 'high']),
+  time_to_ship_score: z.number().min(0).max(100),
+  authority_fit: z.enum(['low', 'medium', 'high']),
+  buyer_analysis: z.object({
+    primary_buyer: z.string(),
+    economic_buyer: z.string(),
+    technical_user: z.string(),
+    emotional_buyer: z.string(),
+  }),
+  best_delivery_format: z.string(),
+  best_lead_magnet: z.object({
+    type: z.string(),
+    title: z.string(),
+    why_it_converts: z.string(),
+  }),
+  recommended_price: z.string(),
+  price_reasoning: z.string(),
+  category: z.string(),
+  ascension_path: z.array(z.string()),
+  competitive_advantage: z.string(),
+  why_our_version_wins: z.string(),
+  do_not_build_if: z.array(z.string()),
+  build_decision: z.enum(['BUILD', 'DO_NOT_BUILD']),
+  operator_override: z.boolean(),
+  override_reason: z.string(),
+  evidence: z.array(z.record(z.any())),
+  judgment: z.record(z.any()),
+  decision: z.record(z.any()),
+});
+
+export const OfferIntelligenceSchema = {
+  input: OfferIntelligenceInput,
+  output: OfferIntelligenceOutput,
+};
+
 export const SCHEMAS = {
   viability: ViabilityScorecard,
   pivot: PivotProposal,
@@ -88,4 +150,5 @@ export const SCHEMAS = {
   synthesis: FrameworkSynthesis,
   build_diagnostic: VercelBuildDiagnostic,
   devils_critique: DevilsCritique,
+  offer_intelligence: OfferIntelligenceOutput,
 };

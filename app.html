@@ -668,6 +668,33 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
       <label for="project-desc" class="sr-only">Describe your business idea</label>
       <textarea class="big-input" id="project-desc" aria-label="Describe your business idea" placeholder="e.g. A Pennsylvania government compliance platform that files annual reports and UCC documents for LLC owners across all 67 counties. Targeting small business owners who don't have time to deal with the state."></textarea>
 
+      <div id="oie-panel" style="margin-top:12px;padding:12px;border:1px solid var(--bdr);border-radius:10px;background:var(--panel);display:none">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+          <strong style="color:var(--gold);font-size:12px">Offer Intelligence Engine (Admin)</strong>
+          <span id="oie-step" class="pill info">Step 1 · Submit Topic</span>
+        </div>
+        <div style="font-size:11px;color:var(--dim);margin-top:6px">Investment-committee gate: reject-by-default. BUILD only when score ≥ 80 with no hard kills.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          <textarea id="oie-pain-signals" placeholder="Pain signals (one per line)" style="min-height:92px"></textarea>
+          <textarea id="oie-constraints" placeholder="Constraints (one per line)" style="min-height:92px"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:8px">
+          <input type="text" id="oie-market-type" placeholder="Market type" />
+          <input type="text" id="oie-delivery-pref" placeholder="Delivery preference" />
+          <input type="text" id="oie-price-floor" placeholder="Price floor (e.g. 79)" />
+          <input type="text" id="oie-authority" placeholder="Authority role" />
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <button class="im-btn" onclick="runOIE()">Run OIE</button>
+          <button class="im-btn" onclick="approveOIE()">Approve</button>
+          <button class="im-btn" onclick="rejectOIE()">Reject</button>
+          <button class="im-btn" onclick="triggerOIEOutline()">Trigger Outline</button>
+          <button class="im-btn" onclick="triggerOIEShipWorkflow()">Trigger Ship Workflow</button>
+        </div>
+        <pre id="oie-output" style="margin-top:8px;max-height:240px;overflow:auto;background:#0b0b0b;padding:10px;border-radius:8px;border:1px solid #222;color:#9ad1ff;display:none"></pre>
+      </div>
+
+
       <!-- ── Input Methods ─────────────────────────────────────────────────── -->
       <div class="input-methods">
         <button class="im-btn" id="im-voice" onclick="toggleVoiceInput()"><span class="im-icon">🎤</span> Voice</button>
@@ -2971,6 +2998,118 @@ function getProvisionAuthPayload() {
 function getProvisionAuthHeaders() {
   const adminToken = localStorage.getItem('dynasty_admin_token') || '';
   return adminToken ? { 'x-dynasty-admin-token': adminToken } : {};
+}
+
+
+let OIE_LAST_REPORT = null;
+let OIE_HUMAN_APPROVED = false;
+
+function setOieStep(text, cls) {
+  const badge = document.getElementById('oie-step');
+  if (!badge) return;
+  badge.className = `pill ${cls || 'info'}`;
+  badge.textContent = text;
+}
+
+function updateOieOutput(payload) {
+  const el = document.getElementById('oie-output');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = JSON.stringify(payload, null, 2);
+}
+
+function getOieHeaders() {
+  const adminToken = localStorage.getItem('dynasty_admin_token') || '';
+  const headers = { 'Content-Type': 'application/json' };
+  if (adminToken) headers['x-dynasty-admin-token'] = adminToken;
+  return headers;
+}
+
+async function runOIE() {
+  const topic = (document.getElementById('project-desc')?.value || '').trim();
+  if (!topic) return alert('Enter a topic first.');
+  setOieStep('Step 2 · Evaluating', 'info');
+  const body = {
+    topic,
+    pain_signals: (document.getElementById('oie-pain-signals')?.value || '').split('\n').map(s => s.trim()).filter(Boolean),
+    constraints: (document.getElementById('oie-constraints')?.value || '').split('\n').map(s => s.trim()).filter(Boolean),
+    market_type: (document.getElementById('oie-market-type')?.value || '').trim(),
+    delivery_preference: (document.getElementById('oie-delivery-pref')?.value || '').trim(),
+    risk_tolerance: 'medium',
+    price_floor: (document.getElementById('oie-price-floor')?.value || '').trim(),
+    time_to_ship_limit_days: 14,
+    allow_liability_categories: false,
+    allow_identity_risk: false,
+    portfolio_role: 'operator',
+    upsell_role: 'dfy_service',
+    authority_role: (document.getElementById('oie-authority')?.value || '').trim(),
+  };
+
+  try {
+    const r = await fetch('/api/offer-intelligence', { method: 'POST', headers: getOieHeaders(), body: JSON.stringify(body) });
+    const d = await r.json();
+    if (!r.ok || !d.ok) {
+      setOieStep('Step 2 · Failed', 'err');
+      updateOieOutput(d);
+      return;
+    }
+    OIE_LAST_REPORT = d.report;
+    OIE_HUMAN_APPROVED = false;
+    setOieStep(`Step 3 · ${d.report.build_decision}`, d.report.build_decision === 'BUILD' ? 'ok' : 'warn');
+    updateOieOutput(d);
+  } catch (e) {
+    setOieStep('Step 2 · Failed', 'err');
+    updateOieOutput({ ok: false, error: e?.message || 'oie_failed' });
+  }
+}
+
+function approveOIE() {
+  if (!OIE_LAST_REPORT) return alert('Run OIE first.');
+  OIE_HUMAN_APPROVED = true;
+  setOieStep('Step 4 · Human Approved', 'ok');
+}
+
+function rejectOIE() {
+  if (!OIE_LAST_REPORT) return alert('Run OIE first.');
+  OIE_HUMAN_APPROVED = false;
+  setOieStep('Step 4 · Human Rejected', 'warn');
+}
+
+async function triggerOIEOutline() {
+  if (!OIE_LAST_REPORT) return alert('Run OIE first.');
+  if (!OIE_HUMAN_APPROVED) return alert('Approve the OIE report first.');
+  setOieStep('Step 5 · Generating Outline', 'info');
+  try {
+    const r = await fetch('/api/outline-generator', {
+      method: 'POST',
+      headers: getOieHeaders(),
+      body: JSON.stringify({ operator_approved: true, oie_report: OIE_LAST_REPORT }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) {
+      setOieStep('Step 5 · Outline Blocked', 'warn');
+      updateOieOutput(d);
+      return;
+    }
+    setOieStep('Step 6 · Outline Ready', 'ok');
+    updateOieOutput(d);
+  } catch (e) {
+    setOieStep('Step 5 · Outline Failed', 'err');
+    updateOieOutput({ ok: false, error: e?.message || 'outline_failed' });
+  }
+}
+
+function triggerOIEShipWorkflow() {
+  if (!OIE_LAST_REPORT) return alert('Run OIE first.');
+  if (!OIE_HUMAN_APPROVED) return alert('Approve OIE report first.');
+  alert('Ship workflow remains human-triggered by design. OIE cannot auto-publish.');
+}
+
+function mountOiePanel() {
+  const panel = document.getElementById('oie-panel');
+  if (!panel) return;
+  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  panel.style.display = isAdmin ? 'block' : 'none';
 }
 function getAiAuthPayload() {
   return {
@@ -15999,6 +16138,7 @@ window.addEventListener('scroll', () => {
 });
 
 window.addEventListener('load', () => { dynastyRefreshCkptBanner(); });
+try { mountOiePanel(); } catch {}
 </script>
 </body>
 </html>
