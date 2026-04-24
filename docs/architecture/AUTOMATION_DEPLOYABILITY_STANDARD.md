@@ -32,7 +32,7 @@ values, in promotion order:
 
 | Status | Definition | Visible in marketplace? | Sellable? |
 |---|---|---|---|
-| `draft` | Idea exists in `docs/strategy/SERVICE_BUSINESS_AUTOMATION_CATALOG.md`. No JSON yet. | No | No |
+| `draft` | Idea exists in `docs/SERVICE_BUSINESS_AUTOMATION_CATALOG.md`. No JSON yet. | No | No |
 | `spec` | Module JSON exists in `product/modules/`. Contract is declared but implementation is incomplete. | No | No |
 | `implemented` | Workflow logic, templates, settings, triggers all exist. No tests yet. | No | No |
 | `validated` | Tests pass, preflight and postflight checks pass against a test tenant. | No | No |

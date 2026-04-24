@@ -4,7 +4,7 @@
 
 **Scope boundary — “full designed output”:** This map follows **`DYNASTY_LAUNCHER_V3_FINAL.md`**, **`CLAUDE.md`**, **`V4_INVESTOR_FEEDBACK.md`**, and **`index.html`** / FAQ positioning. It describes **intent and specified artifacts**, not a guarantee that every row is **fully automated in production today** (see `CLAUDE.md`: Phases 9–20 and several `mod_*` integrations remain **to build or partial**). Use **`BUILD-MANIFEST.json`**, **`OPERATIONS.md`**, and tier/archetype **run / defer / skip** defaults to see what a **given session** actually shipped.
 
-**Commercial / server alignment:** **`Foundation`** (and **`starter`**) match **`api/provision.js`** — **`TIER_MODULES.foundation` is `[]`**: no automatic integration module provisioning; **Professional+** unlocks the `allowedModules` list. Marketing on **`index.html`** is aligned to that gate. **Non-US** buyers and **enterprise procurement** (MSA/SSO) are **out of scope** for self-serve unless added explicitly. **Traceability:** same scope is row **`Z0`** in **`PAIN_POINT_MASTER_MAP.csv`** and Part 2 below.
+**Commercial / server alignment:** **`api/provision.js` → `TIER_MODULES`** is the gate. **Foundation** and **Professional** share the **same 11-slot** `allowedModules` list; **Enterprise** extends to **13**; **Custom Volume** to **19** `mod_*` keys. Marketing, checkout, and **`index.html`** are kept aligned to that matrix (see **`doc/START-HERE.md`** and **`/maturity`**). **Non-US** defaults and **enterprise procurement** (MSA/SSO) limits are unchanged. **Traceability:** row **`Z0`** in **`PAIN_POINT_MASTER_MAP.csv`** records this contract.
 
 **Reading the delivery-mode column:**
 
@@ -298,7 +298,7 @@ Below, **Arche** shows **defaults** (R/D/S). **Tier** shows **minimum tier where
 | S1–S4 | P10 | Demo/Express archetype; `BUILD-MANIFEST.json`; `V4-DEMO-SLA.md` telemetry | All | A | G |
 | T1–T3 | P12 | Managed Operations subscription (positioning) | Add-on | All | Service |
 | U1 | P4 | Community module (Heartbeat) — config toggle | Key-gated | Optional | L/M |
-| Z0 | P1,P2,P4,P12 | Tier truth: `TIER_MODULES.foundation` []; no auto `mod_*`; non-US US-default; enterprise MSA/SSO not self-serve | F–E | All | G |
+| Z0 | P1,P2,P4,P12 | Tier truth: `TIER_MODULES` F=11 P=11 E=13 CV=19; non-US US-default; enterprise MSA/SSO not self-serve | F–E | All | G |
 | W1–W2 | P2,P3,P4,P7 | Gov pack (opt-in): `docs/GOV-READINESS.md`, `docs/NAICS-CANDIDATES.md`, `docs/CAPABILITIES-STATEMENT.template.md`, `docs/RFP-RESPONSE-OUTLINE.md`; `MANUAL-ACTIONS.md` pointer when pack runs; disclaimers on every file | F–E | All | G (toggle) |
 
 ---

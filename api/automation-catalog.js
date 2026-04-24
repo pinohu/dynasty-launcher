@@ -1,4 +1,4 @@
-// api/automation-catalog.js — 347-Automation Catalog + n8n Workflow Generator
+// api/automation-catalog.js — 353 n8n workflow catalog + generator (45 categories); 347 is the separate strategy micro-task layer in docs — not the same count.
 // Dynasty Empire LLC — Service Business Automation Platform
 // Each automation: { id, cat, name, trigger, cron?, steps[] }
 // Steps shorthand: { t: type, ...params } expanded by buildN8nWorkflow()

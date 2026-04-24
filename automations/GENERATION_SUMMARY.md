@@ -3,7 +3,7 @@
 **Generated:** April 16, 2026
 **Platform:** Your Deputy (Service Business Automation)
 **Tech Stack:** Vercel API + n8n Workflows + Neon PostgreSQL + Stripe Billing
-**Output Location:** `/dynasty-automations/platform-modules/`
+**Output Location:** `automations/platform-modules/` (relative to repo root)
 
 ---
 

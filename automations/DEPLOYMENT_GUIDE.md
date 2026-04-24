@@ -5,7 +5,7 @@
 All 14 files (7 categories × 2 files) are production-ready and located in:
 
 ```
-dynasty-automations/
+automations/
 ├── catalog/
 │   ├── n8n-workflows/
 │   │   ├── cat16_payment_processing.json

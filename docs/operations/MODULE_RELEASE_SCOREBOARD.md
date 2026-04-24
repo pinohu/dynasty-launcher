@@ -2,7 +2,7 @@
 
 **Purpose:** single source of truth for which automations are actually ready
 to sell, activate, and support. Internal ambition lives in
-`docs/strategy/SERVICE_BUSINESS_AUTOMATION_CATALOG.md`. **Commercial truth
+`docs/SERVICE_BUSINESS_AUTOMATION_CATALOG.md`. **Commercial truth
 lives here.**
 
 **Authority:** every status below is evaluated against

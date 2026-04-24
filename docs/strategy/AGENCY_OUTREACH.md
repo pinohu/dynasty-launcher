@@ -91,7 +91,7 @@ side:
 - Scope per engagement: domain + email + SSL + Stripe products & webhooks
   + Acumbamail sequence + SMS-iT campaigns + CallScaler AI phone + Trafft
   booking + SEO content + legal docs (GDPR/CCPA) + 260-post social
-  calendar + SuiteDash CRM + 7 n8n workflows + 353-automation importable
+  calendar + SuiteDash CRM + 7 n8n workflows + 353-workflow n8n export library (45 categories; 347 strategy micro-tasks in docs)
   catalog
 - Your cost: $4,997 if we operate the console for you; $0 if you want
   white-label console access and run it yourself

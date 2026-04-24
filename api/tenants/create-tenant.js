@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
   const tenant = await createTenant(input);
 
-  // Zero-touch: pre-load ALL automations as dormant so they're ready to activate
+  // Pre-seed catalog: load all automations as dormant so they're ready to activate
   // on button-click. This is fire-and-forget — tenant creation succeeds even if
   // provisioning hits an edge case. The provision endpoint is idempotent and can
   // be re-called later.

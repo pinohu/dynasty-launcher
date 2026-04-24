@@ -251,7 +251,7 @@ FILE LOCATIONS
 ═══════════════════════════════════════════════════════════════════════════════
 
 All files are located in:
-/sessions/gallant-kind-mccarthy/mnt/outputs/dynasty-automations/catalog/
+automations/catalog/   (relative to dynasty-launcher repo root)
 
 n8n Workflows:
 ├── n8n-workflows/cat23_reporting.json

@@ -1,7 +1,8 @@
 # `docs/operations/` — Production execution
 
 These documents are how the platform gets built. They translate the
-architecture in `docs/architecture/` and the strategy in `docs/strategy/`
+architecture in `docs/architecture/`, strategy in `docs/strategy/`, and
+companion narrative files under `docs/` (catalog, personas, JTBD)
 into concrete work agents can execute without needing to ask questions.
 
 ## Read order by role

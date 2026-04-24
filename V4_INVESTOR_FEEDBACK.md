@@ -9,7 +9,7 @@
 
 ## 0. RELATIONSHIP TO V3
 
-V3 remains the **reference architecture** (20 phases, 17 modules, `app.html` + `api/provision.js`, `DYNASTY_TOOL_CONFIG`). V4 **adds**:
+V3 remains the **reference architecture** (20 phases, 19 `mod_*` integration types tier-gated to 11 / 11 / 13 / 19 slots, `app.html` + `api/provision.js`, `DYNASTY_TOOL_CONFIG`). V4 **adds**:
 
 1. A **plain-language layer** (toggle; dual outputs).
 2. **Build archetypes** (site shape + module depth), orthogonal to but **mapped to** commercial tiers.
@@ -87,7 +87,7 @@ No V3 capabilities are removed; V4 introduces **narrower paths** and **optional 
   - **Price tier** (Foundation / Professional / Enterprise): **caps which integrations and API calls** you may run (Stripe connected account, SuiteDash, etc. per V3).
   - **Build archetype**: **caps pages, doc count, and which `mod_*` blocks run** by default.
 - **Compatibility matrix (enforcement):**
-  - Foundation **cannot** select Enterprise Full + all 17 modules; UI grays out invalid combos.
+  - Foundation **cannot** select Custom Volume + all 19 modules; UI grays out invalid combos.
   - Enterprise **can** select Demo Express (e.g. for a fast customer proof) — still bills as Enterprise but **runs a short pipeline**.
 
 ### 3.4 Module gating by archetype (recommended defaults)

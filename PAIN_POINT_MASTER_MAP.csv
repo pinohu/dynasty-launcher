@@ -20,4 +20,4 @@ R1-R4,"P6,P7","docs/plain START-HERE QA-NOTES",F-E,Toggle,G
 S1-S4,"P10","BUILD-MANIFEST V4-DEMO-SLA demo path",All,A,G
 T1-T3,"P12","Managed Operations subscription",Add-on,All,Service
 U1,"P4","Heartbeat community toggle",Key-gated,Optional,"L,M"
-Z0,"P1,P2,P4,P12","Tier truth: TIER_MODULES.foundation []; no auto mod_*; non-US US-default; enterprise MSA/SSO not self-serve",F-E,All,G
+Z0,"P1,P2,P4,P12","Tier truth: TIER_MODULES F=11 P=11 E=13 CV=19 mod slots (see api/provision.js); non-US US-default; enterprise MSA/SSO not self-serve",F-E,All,G

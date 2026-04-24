@@ -723,9 +723,9 @@ Before Sprint 3 starts, collect these API keys:
 | Tier | Price | What it includes (summary) |
 |------|-------|------------------------------|
 | **Free scoring** | $0 | Viability analysis only — no full build |
-| **Foundation** | $1,997/build | Phases 1–8: documents + generated app + deploy; **no** server auto `mod_*` (`TIER_MODULES.foundation: []`) |
-| **Professional** | $4,997/build | Foundation + core live integration **attempts** where APIs/keys succeed (domain/email, payments, CRM, marketing, chatbot, analytics, automation — subject to deferrals) |
-| **Enterprise** | $9,997/build | Broadest module attempts (up to **17 module types** when package does not skip them) — not a guarantee every vendor call succeeds |
+| **Foundation** | $1,997/build | Phases 1–8 + **11-slot** `provision_modules` allowlist (same as Professional) when keys/archetype allow — see `BUILD-MANIFEST.json` |
+| **Professional** | $4,997/build | **Same 11-slot** allowlist as Foundation; higher build-tier SKU — outcomes still key- and archetype-gated |
+| **Enterprise** | $9,997/build | **13-slot** orchestrator allowlist (adds WordPress + post-deploy verification vs Foundation/Professional). **Custom Volume** unlocks up to **19** module types — not a guarantee every vendor call succeeds |
 | **Managed Operations** | $497/mo | Post-build subscription (monitoring, support, content cadence — see marketing) |
 
 *Legacy rows in older drafts that showed $297 / $997 / $2,497 or $49/mo SaaS diagrams are **superseded** by the table above.*

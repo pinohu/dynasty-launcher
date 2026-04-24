@@ -1,4 +1,4 @@
-// api/tenants/_provision.mjs — shared zero-touch provisioning logic
+// api/tenants/_provision.mjs — shared dormant-catalog provisioning (idempotent)
 // -----------------------------------------------------------------------------
 // Pre-loads ALL automations as dormant entries for a tenant. Called by both
 // create-tenant.js (automatically on signup) and provision-automations.js

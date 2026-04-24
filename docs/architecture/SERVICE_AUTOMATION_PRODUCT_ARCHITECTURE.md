@@ -1,6 +1,7 @@
 # Service Automation Product Architecture
 
-> The bridge document between business doctrine in `docs/strategy/` and execution
+> The bridge document between business doctrine in `docs/` (strategy in
+> `docs/strategy/`, catalog / personas / JTBD at repo `docs/` root) and execution
 > logic in `api/`.
 
 ## Why this document exists
@@ -8,10 +9,10 @@
 Dynasty Launcher already has:
 
 - a raw opportunity catalog of ~347 automatable micro-tasks (see
-  `docs/strategy/SERVICE_BUSINESS_AUTOMATION_CATALOG.md`),
-- persona and buyer framing (`docs/strategy/PERSONA_GROUPS_MASTER.md`),
+  `docs/SERVICE_BUSINESS_AUTOMATION_CATALOG.md`),
+- persona and buyer framing (`docs/PERSONA_GROUPS_MASTER.md`),
 - jobs-to-be-done and service-blueprint logic
-  (`docs/strategy/JTBD_JOURNEYS_AND_SERVICE_BLUEPRINTS.md`),
+  (`docs/JTBD_JOURNEYS_AND_SERVICE_BLUEPRINTS.md`),
 - a shipped-state ledger (`docs/operations/MARCH_2026_AUTOMATIONS_INVENTORY.md`),
 - a runtime in `api/provision.js` / `api/ai.js` / `app.html`.
 
@@ -83,7 +84,7 @@ executes against it.
 | `api/orchestrate.js`                 | Runs event → rule → action pipelines defined by modules. |
 | `api/flags.js`                       | Feature-flag implementation; used as fallback for per-tenant entitlement state. |
 | `app.html`                           | Current UI surface. Over time, marketplace/onboarding/dashboard should read from `product/`. |
-| `docs/strategy/*`                    | Authoritative narrative. Must stay in sync when modules/bundles/blueprints change. |
+| `docs/strategy/*`, `docs/SERVICE_BUSINESS_AUTOMATION_CATALOG.md`, `docs/PERSONA_GROUPS_MASTER.md`, `docs/JTBD_JOURNEYS_AND_SERVICE_BLUEPRINTS.md` | Authoritative narrative. Must stay in sync when modules/bundles/blueprints change. |
 | `docs/operations/*`                  | Shipped-state ledger. Updated when a module's `status` flips to `live`. |
 
 ## Handing out customer workspaces
@@ -101,7 +102,7 @@ Profile — not on the launcher's shared key pool.
 ## Next steps
 
 - Normalize the highest-value additional modules from
-  `docs/strategy/SERVICE_BUSINESS_AUTOMATION_CATALOG.md` into `product/modules/`.
+  `docs/SERVICE_BUSINESS_AUTOMATION_CATALOG.md` into `product/modules/`.
 - Wire `api/catalog/*.js` handlers that serve `product/` objects to the UI.
 - Move tier/module/bundle definitions out of `app.html` and load from
   `product/` at runtime.

@@ -155,7 +155,7 @@
 ## File Structure
 
 ```
-dynasty-automations/
+automations/
 ├── MASTER_INDEX.md (this file)
 ├── platform-modules/
 │   ├── json-specs/          (20 module specifications)

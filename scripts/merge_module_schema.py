@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path("product/modules")
 
 # Launcher-tier availability per module. Foundation = simple modules a DIY user
-# can set up on their own account; Professional+ = require integrations
+# can set up on their own account; Professional and Enterprise = integrations
 # typically provisioned via api/provision.js mod_* functions.
 TIER_AVAILABILITY: dict[str, list[str]] = {
     # Foundation-available

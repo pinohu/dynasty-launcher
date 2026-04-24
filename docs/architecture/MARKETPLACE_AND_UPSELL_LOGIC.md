@@ -117,7 +117,7 @@ Both are valid. Rough defaults:
   dashboard's primary job is to show business outcomes; opportunity cards
   ride alongside outcomes, not over them.
 - **Do not sell "automation."** Sell the business result
-  (see `docs/strategy/GTM_FUNNEL_STRATEGY.md`). Automation is the mechanism,
+  (see `GTM_FUNNEL_STRATEGY.md` at repo root). Automation is the mechanism,
   not the headline.
 
 ## Implementation surface
@@ -125,8 +125,8 @@ Both are valid. Rough defaults:
 | Concern                         | File(s)                                        |
 |---------------------------------|------------------------------------------------|
 | Event ingest                    | `api/events/ingest-event.js`                   |
-| Rule evaluation                 | `api/events/evaluate-triggers.js`              |
-| Opportunity card delivery       | `api/events/opportunity-cards.js`              |
+| Module trigger dispatch         | `api/events/_dispatcher.mjs`                   |
+| Dashboard opportunity cards   | `api/events/opportunity-cards.js`, `api/events/_aggregates.mjs` |
 | Marketplace rendering           | `api/catalog/modules.js`, `api/catalog/bundles.js` |
 | Blueprint next-best             | `api/catalog/blueprints.js`                    |
 | Activation                      | `api/tenants/activate-module.js`               |

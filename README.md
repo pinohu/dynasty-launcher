@@ -1,6 +1,10 @@
 # Your Deputy V3
 
-> One prompt generates consulting-grade documents, application code, and deployment (**Phases 1–8**). **Foundation** matches the server: **no automatic `mod_*` integration provisioning** (`TIER_MODULES.foundation` is empty). **Professional** and **Enterprise** unlock live integration attempts where APIs, keys, and your **site package** allow; see `maturity.html` and `BUILD-MANIFEST.json` for what a given build actually shipped.
+**First-time operator?** Open [`doc/START-HERE.md`](doc/START-HERE.md) — tier matrix, 347 vs 353, and where receipts live.
+
+**Product accuracy (warranted claims):** [`docs/PRODUCT_ACCURACY_SCOPE.md`](docs/PRODUCT_ACCURACY_SCOPE.md) — run `npm run verify:product` before release; it asserts `TIER_MODULES`, catalog counts, `maturity.html` parity, and banned absolute-automation phrasing on customer HTML.
+
+> One prompt generates consulting-grade documents, application code, and deployment (**Phases 1–8**). **Foundation** and **Professional** share the **same 11-slot** server integration allowlist in `api/provision.js` (`TIER_MODULES`). **Enterprise** adds **two** more slots (**13** total: WordPress + post-deploy verification). **Custom Volume** is the **19-slot** allowlist (voice, SMS, CRM, directory, leads, video, etc.). Success still depends on keys, archetype rules, and vendor APIs — see `maturity.html` and each build’s `BUILD-MANIFEST.json`.
 
 ## What It Does
 
@@ -14,7 +18,7 @@ Your Deputy takes a plain-English business description and generates:
 **When tier + package + provisioning succeed (Phases 9–20, not all automatic today)**
 - Optional: database, domain/email patterns, and third-party integrations per module
 
-**17 Integration Modules** (target design — **Enterprise tier** attempts the broadest set; **Foundation** does **not** auto-run these on the server)
+**19 `mod_*` integration types** exist in `api/provision.js`; each **paid build tier** only runs the subset in `TIER_MODULES` for that tier (11 / 11 / 13 / 19 — see `CLAUDE.md`)
 
 | Module | Service | What It Provisions |
 |--------|---------|-------------------|
@@ -35,6 +39,8 @@ Your Deputy takes a plain-English business description and generates:
 | mod_directory | Brilliant Directories | Directory instance, tiers, categories (directory projects) |
 | mod_wordpress | 20i | WordPress package, theme, plugins (WordPress projects) |
 | mod_social | Vista Social | 260-post social calendar import |
+| mod_verify | Orchestrator | Post-deploy smoke checks on live URL (Enterprise + Managed allowlist) |
+| mod_vertical_tool | Repo + APIs | Vertical niche scaffold (Blob/Postgres when configured; tier-gated) |
 
 **Plus:** 8-framework viability analysis, large strategy + technical document set (counts vary by archetype), `OPERATIONS.md`, and `CREDENTIALS.md` when integrations are actually provisioned.
 
@@ -42,8 +48,8 @@ Your Deputy takes a plain-English business description and generates:
 
 ```
 index.html              <- Landing page (V3 pricing + features)
-app.html                <- Builder app (~8300 lines, monolith frontend)
-api/provision.js        <- Backend orchestrator (~2450 lines, 17 modules)
+app.html                <- Builder app (monolith frontend; large single file)
+api/provision.js        <- Backend orchestrator (19 mod_* types; tier allowlists gate which run)
 api/ai.js               <- Multi-provider AI router (7 providers)
 api/orchestrate.js      <- Compaction engine + smart routing
 api/memory.js           <- Project history (Neon)
@@ -55,9 +61,9 @@ vercel.json             <- Vercel config (300s timeout for modules)
 
 ## Pricing Tiers (see `index.html` / checkout for live SKUs)
 
-- **Foundation** ($1,997/build): Strategy docs + code + deployment; **no** server-side auto `mod_*` provisioning
-- **Professional** ($4,997/build): Foundation + core live integrations **where APIs succeed** (domain/email, payments, CRM, marketing, chatbot, analytics, automation — subject to keys and deferrals)
-- **Enterprise** ($9,997/build): Broadest integration set (up to **17 module types** when not skipped by package); **not** a guarantee every vendor API succeeds — see `maturity.html`
+- **Foundation** ($1,997/build): Strategy docs + code + deployment + **11-slot** integration attempts (same allowlist as Professional)
+- **Professional** ($4,997/build): Same **11-slot** server allowlist as Foundation; higher build-tier positioning — still key- and archetype-gated
+- **Enterprise** ($9,997/build): **13-slot** allowlist (adds WordPress + post-deploy verification). Voice/SMS/CRM/directory/leads/video require **Custom Volume** or manual work — see `maturity.html`
 - **Managed Operations** ($497/mo): Add-on subscription after a build ships
 
 ## Deploy

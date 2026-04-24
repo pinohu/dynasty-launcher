@@ -1,7 +1,8 @@
 # `docs/architecture/` — Bridge between strategy and execution
 
-These documents translate the business doctrine in `docs/strategy/` into the
-machine-readable product model in `product/` and the execution logic in `api/`.
+These documents translate business doctrine in `docs/strategy/` and companion
+narrative files at the `docs/` root into the machine-readable product model in
+`product/` and the execution logic in `api/`.
 
 ## Read order
 
@@ -37,15 +38,15 @@ machine-readable product model in `product/` and the execution logic in `api/`.
 
 ## Source documents this builds on
 
-- `docs/strategy/SERVICE_BUSINESS_AUTOMATION_CATALOG.md` — the raw universe of
+- `docs/SERVICE_BUSINESS_AUTOMATION_CATALOG.md` — the raw universe of
   ~347 automatable micro-tasks.
-- `docs/strategy/PERSONA_GROUPS_MASTER.md` — the buyer segmentation that drives
+- `docs/PERSONA_GROUPS_MASTER.md` — the buyer segmentation that drives
   messaging and recommendations.
-- `docs/strategy/JTBD_JOURNEYS_AND_SERVICE_BLUEPRINTS.md` — the service-design
+- `docs/JTBD_JOURNEYS_AND_SERVICE_BLUEPRINTS.md` — the service-design
   doctrine behind onboarding, activation, and handoff.
-- `docs/strategy/COMMERCIAL_DECISIONS.md` — three open commercial decisions
-  that must be resolved before launch (FSM positioning, launcher-build
-  handoff, commercial essentials).
+- `docs/strategy/COMMERCIAL_DECISIONS.md` — resolved commercial decisions
+  (FSM positioning, launcher-build handoff, commercial essentials), with homepage
+  copy in `docs/strategy/HOMEPAGE_COPY.md`.
 - `docs/operations/MARCH_2026_AUTOMATIONS_INVENTORY.md` — the shipped-state
   ledger.
 

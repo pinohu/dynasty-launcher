@@ -3,8 +3,9 @@
   "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "Business provisioning engine — one prompt deploys a complete operating company",
+  "description": "Business provisioning engine — tier-scoped docs, code, deploy, and integration attempts (see /maturity and TIER_MODULES in api/provision.js)",
   "scripts": {
+    "verify:product": "node scripts/verify-product-alignment.mjs",
     "test:validate": "node scripts/validate-smoke.mjs",
     "test:catalog": "node scripts/smoke-catalog.mjs",
     "test:tenants": "node scripts/smoke-tenants.mjs",
@@ -16,7 +17,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "npm run test:validate && npm run test:catalog && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing"
+    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing"
   },
   "engines": {
     "node": "20.x"

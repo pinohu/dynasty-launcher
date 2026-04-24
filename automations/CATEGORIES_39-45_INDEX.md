@@ -169,7 +169,7 @@
 ## File Structure
 
 ```
-dynasty-automations/catalog/
+automations/catalog/
 ├── n8n-workflows/
 │   ├── cat39_client_portal.json
 │   ├── cat40_data_enrichment.json

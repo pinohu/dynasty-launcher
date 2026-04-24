@@ -42,7 +42,7 @@ product/
 
 | Folder              | Role                                          |
 |---------------------|-----------------------------------------------|
-| `docs/strategy/`    | Narrative source documents (catalog, personas, JTBD) |
+| `docs/strategy/`, `docs/*.md` (catalog, personas, JTBD at `docs/` root) | Narrative source documents |
 | `docs/architecture/`| Bridge docs explaining the product model      |
 | `docs/operations/`  | Shipped-state ledger and sprint records       |
 | `product/`          | **Normalized objects** used at runtime        |
@@ -87,7 +87,7 @@ end-to-end:
 
 Additional modules should be added incrementally as they prove out in market,
 always driven back to the raw inventory in
-`docs/strategy/SERVICE_BUSINESS_AUTOMATION_CATALOG.md`.
+`docs/SERVICE_BUSINESS_AUTOMATION_CATALOG.md`.
 
 ## Schema versioning
 

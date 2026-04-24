@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://yourdeputy.com/product/schema/persona.schema.json",
   "title": "Persona",
-  "description": "A normalized persona record used for onboarding, messaging, and recommendation logic. The full narrative persona definitions live in docs/strategy/PERSONA_GROUPS_MASTER.md.",
+  "description": "A normalized persona record used for onboarding, messaging, and recommendation logic. The full narrative persona definitions live in docs/PERSONA_GROUPS_MASTER.md.",
   "type": "object",
   "required": ["persona_code", "name", "role", "pains", "goals"],
   "properties": {

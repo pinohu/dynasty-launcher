@@ -36,9 +36,11 @@ the pricing page:
 > already use. Missed calls don't get followed up. Estimates go cold.
 > Happy customers forget to leave reviews. Overdue invoices sit unsent.
 >
-> Your Deputy runs the automations that close those gaps — while keeping
-> the tools you already pay for. Pick the outcome you want, turn it on,
-> and let the platform do the work.
+> Your Deputy closes those gaps with tier-scoped outcome packs and a
+> 353-workflow n8n export library (45 categories; 347 strategy micro-tasks
+> live in docs as a separate layer) — alongside the tools you already pay for.
+> Pick outcomes, connect the vendor keys your tier allows, then activate;
+> see `/maturity` for what runs live vs. import-only today.
 
 ### Homepage third section (how it works)
 

@@ -1494,7 +1494,7 @@ async function mod_automation(config, project, liveUrl) {
 
   if (!automationCatalog || !automationCatalog.ALL_AUTOMATIONS) {
     results.error = 'Automation catalog not loaded';
-    results.fallback = 'The 353-automation catalog module could not be loaded. Deploy n8n workflows manually.';
+    results.fallback = 'The 353-workflow n8n catalog module (automation-catalog.js) could not be loaded. Deploy n8n workflows manually.';
     return results;
   }
 

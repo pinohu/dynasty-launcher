@@ -3167,7 +3167,7 @@ function updateBuildScopePreview() {
   const tier = getUserTier();
   const tierLabel = (V3_TIERS[tier] && V3_TIERS[tier].label) || tier;
   const lines = [];
-  const tierBlocksMods = tier === 'free' || tier === 'foundation' || tier === 'starter';
+  const tierBlocksMods = tier === 'free' || tier === 'blueprint' || tier === 'scoring_pro' || tier === 'strategy_pack';
   lines.push('<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);margin-bottom:8px">Expected scope</div>');
   var _seg = localStorage.getItem('dynasty_funnel_segment') || '';
   var _segLabels = { viability:'Proof before spend', capital:'Funding readiness', foundation_diy:'Plans + product (self-activate)', revenue_ops:'Revenue operations', full_launch:'Full launch', authority_seo:'Authority / SEO growth', trades_vertical:'Vertical workflow assist', directory:'Directory / community', managed_ops:'Post-launch runtime', viability_buy:'Viability → Foundation', capital_prescore:'Capital (pre-score)' };
@@ -3176,8 +3176,10 @@ function updateBuildScopePreview() {
   }
   lines.push('<p style="font-size:11px;color:var(--dim);margin:0 0 10px;line-height:1.5">We combine your <strong>site package</strong> and <strong>tier</strong> to set what runs now versus later. Current tier: <strong style="color:var(--tx)">' + tierLabel + '</strong>.</p>');
   lines.push('<div style="font-size:11px;color:var(--sec);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.22);border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5"><strong>Vendor keys:</strong> Keys on our side are for <em>building</em> and <em>one-time provisioning</em> where we wire services. Your <strong>live</strong> product should run on <strong>your</strong> accounts — follow <code style="font-size:10px">.env.example</code> and <code style="font-size:10px">MANUAL-ACTIONS.md</code> on the repo we ship, not a permanent tie to our shared pool.</div>');
-  if (tierBlocksMods) {
-    lines.push('<div style="font-size:11px;color:#FDE68A;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5"><strong>Foundation / free:</strong> you still get documents + code + deployment. Live third-party integrations can be connected using the activation guides in your repo, or will be available in future operational tiers.</div>');
+  if (tier === 'free') {
+    lines.push('<div style="font-size:11px;color:#FDE68A;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5"><strong>Free scoring:</strong> viability analysis only — no repo generation and no <code style="font-size:10px">provision_modules</code> run.</div>');
+  } else if (tier === 'blueprint' || tier === 'scoring_pro' || tier === 'strategy_pack') {
+    lines.push('<div style="font-size:11px;color:#FDE68A;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5"><strong>' + tierLabel + ':</strong> this path does not execute paid-build <code style="font-size:10px">provision_modules</code>. Upgrade to Foundation+ for the 11-slot integration allowlist (see <a href="/maturity" style="color:var(--gold)">/maturity</a>).</div>');
   }
   lines.push('<div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px"><span style="font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(34,197,94,.14);color:#22C55E;border:1px solid rgba(34,197,94,.35)">Run now: ' + run.length + '</span><span style="font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(251,191,36,.14);color:#FBBF24;border:1px solid rgba(251,191,36,.35)">Defer: ' + defer.length + '</span><span style="font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(161,161,170,.2);color:var(--sub);border:1px solid rgba(255,255,255,.12)">Skip: ' + skip.length + '</span></div>');
   function ul(title, color, items) {
@@ -3187,7 +3189,7 @@ function updateBuildScopePreview() {
     h += '</ul></div>';
     return h;
   }
-  const runTitle = tierBlocksMods ? 'Run list after upgrade' : 'Run list (when tier + keys allow)';
+  const runTitle = tierBlocksMods ? 'Integration run list after paid build upgrade' : 'Run list (when tier + keys allow)';
   const details = [
     ul(runTitle, '#22C55E', run),
     ul('Defer list (finish after deploy)', '#FBBF24', defer),
@@ -12041,7 +12043,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     if (anyModulesEnabled) {
       const liveUrl = LAUNCH_URL || provRes?.results?.vercel?.url || `https://${inf.repo}.vercel.app`;
       const v3Project = getV3Project(inf);
-      const moduleNames = { hosting: 'Domain + Email', billing: 'Stripe Billing', email: 'Email Marketing', phone: 'Phone + Voice', sms: 'SMS Campaigns', chatbot: 'Website Chatbot', seo: 'SEO Content', video: 'Explainer Video', design: 'Design Assets', analytics: 'Analytics', leads: 'Lead Intelligence', automation: 'Automation Workflows', docs: 'Legal PDFs', crm: 'CRM Portal', directory: 'Directory', wordpress: 'WordPress', social: 'Social Scheduling', vertical_tool: 'Niche vertical tool scaffold' };
+      const moduleNames = { hosting: 'Domain + Email', billing: 'Stripe Billing', email: 'Email Marketing', phone: 'Phone + Voice', sms: 'SMS Campaigns', chatbot: 'Website Chatbot', seo: 'SEO Content', video: 'Explainer Video', design: 'Design Assets', analytics: 'Analytics', leads: 'Lead Intelligence', automation: 'Automation Workflows', docs: 'Legal PDFs', crm: 'CRM Portal', directory: 'Directory', wordpress: 'WordPress', social: 'Social Scheduling', verify: 'Post-deploy verification', vertical_tool: 'Niche vertical tool scaffold' };
       const enabledList = Object.entries(v3Modules).filter(([,v]) => v).map(([k]) => moduleNames[k] || k);
       addP('v3-start', `V3 Modules — ${enabledList.length} integrations`, enabledList.join(', '));
       setP('v3-start', 'run', 'Provisioning external services...');

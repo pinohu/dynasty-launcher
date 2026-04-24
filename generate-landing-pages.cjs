@@ -366,7 +366,7 @@ ${CSS}
       <a href="https://docs.yourdeputy.com" target="_blank" rel="noopener">Documentation</a>
     </div>
     <div style="font-size:11px;color:var(--muted);margin-top:12px;">
-      Your Deputy is a zero-touch automation platform for service businesses. Integrates with Jobber, Housecall Pro, ServiceTitan, and 100+ other tools.
+      Your Deputy: 353 n8n workflow imports (45 categories) plus tier-scoped provisioning; the strategy layer catalogs 347 micro-tasks separately. Live connections require your vendor keys and tier allowlist — see /maturity. Works alongside Jobber, Housecall Pro, ServiceTitan when you connect accounts.
       <br>Questions? Email us at <a href="mailto:support@yourdeputy.com">support@yourdeputy.com</a>
     </div>
   </footer>

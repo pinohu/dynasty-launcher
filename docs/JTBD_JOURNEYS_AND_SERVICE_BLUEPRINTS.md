@@ -126,7 +126,7 @@ Episodes are **SB00–SB08**. Each row is one **line of visibility** in classic 
 | Frontstage | Clear tier boundaries; honest limits |
 | Backstage | Content updates; inventory truth in `provision.js` |
 | Support systems | Vercel, DNS, static/API routes |
-| Policies | Tier truth: Foundation ≠ auto module provision (`TIER_MODULES.foundation: []`) |
+| Policies | Tier truth: **`TIER_MODULES`** matrix in `api/provision.js` (F=11 P=11 E=13 CV=19 slots); checkout + `/maturity` must match |
 
 **JTBD primary:** J01,J04,J22,J24,J25.
 
@@ -225,7 +225,7 @@ Episodes are **SB00–SB08**. Each row is one **line of visibility** in classic 
 
 ---
 
-### SB07 — Post-deploy integration modules (Professional+)
+### SB07 — Post-deploy integration modules (Foundation+ paid builds; widest surface on Custom Volume)
 
 | Line | Content |
 |------|---------|

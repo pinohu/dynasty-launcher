@@ -32,7 +32,7 @@
 | `/for/revenue-ops` | CRM / payments / automation chaos | `revenue_ops` | `growth` | Professional |
 | `/for/full-launch` | Broad go-live stack | `full_launch` | `enterprise_full` | Enterprise |
 | `/for/authority-seo` | SEO / authority site shape | `authority_seo` | `authority_site` | Enterprise |
-| `/for/trades-vertical` | Plan / takeoff **assist** (disclaimed) | `trades_vertical` | `growth` + `vertical=1` | Professional+ |
+| `/for/trades-vertical` | Plan / takeoff **assist** (disclaimed) | `trades_vertical` | `growth` + `vertical=1` | Professional |
 | `/for/directory` | Directory / membership product | `directory` | `enterprise_full` | Enterprise |
 | `/for/managed` | Post-launch operations | `managed_ops` | (any) | Managed $497/mo |
 
