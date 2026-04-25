@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Testing & Quality Assurance — Your Deputy Deliverables</title>
+<meta name="description" content="Automated tests, research frameworks, and quality playbooks. 15 deliverables generated from your business description.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://yourdeputy.com/deliverables/testing">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--ink:#09090B;--card:#1E1E2A;--bdr:rgba(255,255,255,.12);--tx:#FAFAF9;--sub:#A1A1AA;--dim:#8A8A8A;--grn:#22C55E}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0C0C14;color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
+.skip:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important}
+.wrap{max-width:900px;margin:0 auto;padding:0 24px}
+.topnav{padding:20px 24px;max-width:900px;margin:0 auto;font-size:14px;color:var(--dim)}
+.topnav a{margin-right:12px}
+.hero{text-align:center;padding:48px 24px 32px;max-width:720px;margin:0 auto}
+.hero .icon{font-size:48px;margin-bottom:12px}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,40px);font-weight:400;letter-spacing:-.02em;margin-bottom:10px}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero .lead{color:var(--sub);font-size:16px;max-width:600px;margin:0 auto 20px;line-height:1.65}
+.hero .count{display:inline-flex;align-items:center;gap:8px;font-size:13px;padding:6px 16px;border:1px solid var(--bdr);border-radius:999px;color:var(--sub);background:rgba(255,255,255,.03)}
+.hero .count strong{color:var(--gold);font-size:18px}
+.context{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0 32px}
+.context-box{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:18px 20px}
+.context-box h3{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
+.context-box p{font-size:13px;color:var(--sub);line-height:1.55}
+.grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:32px}
+.item{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;transition:all .2s}
+.item:hover{border-color:rgba(201,168,76,.25);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.item .file{font-size:12px;font-family:'SF Mono','Fira Code',monospace,system-ui;color:var(--gold);margin-bottom:4px;word-break:break-all;font-weight:500}
+.item .desc{font-size:13px;color:var(--sub);line-height:1.5}
+.cta-section{text-align:center;padding:40px 24px;border-top:1px solid rgba(255,255,255,.06);margin-top:16px}
+.cta-section h2{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,30px);font-weight:400;margin-bottom:8px}
+.cta-section p{color:var(--sub);font-size:14px;margin-bottom:20px;max-width:500px;margin-left:auto;margin-right:auto}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.btn{display:inline-block;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;transition:all .2s;font-family:inherit}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3);text-decoration:none}
+.cats{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:20px 0 0;padding:0 24px}
+.cats a{font-size:11px;padding:5px 10px;border:1px solid var(--bdr);border-radius:999px;color:var(--sub);transition:all .2s;white-space:nowrap}
+.cats a:hover{color:var(--gold);border-color:rgba(201,168,76,.3);text-decoration:none;background:rgba(201,168,76,.05)}
+.cats a.active{color:var(--gold);border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.08)}
+footer{border-top:1px solid rgba(255,255,255,.06);padding:24px;text-align:center;font-size:12px;color:var(--dim);max-width:900px;margin:0 auto}
+@media(max-width:768px){
+  .context{grid-template-columns:1fr}
+  .hero{padding:32px 16px 24px}
+  .wrap{padding:0 16px}
+  .cta-section{padding:28px 16px}
+}
+</style>
+</head>
+<body>
+<a href="#items" class="skip" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999;font-size:14px;padding:8px 16px;background:var(--gold);color:var(--ink);border-radius:8px;font-weight:600">Skip to items</a>
+<div class="topnav"><a href="/">&larr; Home</a> <a href="/deliverables">&larr; All deliverables</a> <a href="/#pricing">Pricing</a></div>
+<main id="items" role="main">
+<div class="hero">
+<div class="icon" aria-hidden="true">🧪</div>
+<h1><em>Testing & Quality Assurance</em></h1>
+<p class="lead">Automated tests, research frameworks, and quality playbooks.</p>
+<span class="count"><strong>15</strong> deliverables in this category</span>
+</div>
+
+<div class="wrap">
+<p style="font-size:14px;color:var(--sub);line-height:1.65;margin-bottom:24px;max-width:700px">The product works on day one because it ships with automated tests. The business learns from real users because it ships with research frameworks. Unit tests, end-to-end tests, experiment frameworks, and customer discovery guides — all derived from your generated code and business model.</p>
+
+<div class="context">
+<div class="context-box">
+<h3>Equivalent value</h3>
+<p>Replaces the first sprint of QA setup and the first cycle of user research planning. Your team starts testing and learning immediately.</p>
+</div>
+<div class="context-box">
+<h3>Who needs this</h3>
+<p>Development teams who need CI-integrated testing from day one, and product teams who need structured research and experimentation frameworks.</p>
+</div>
+</div>
+
+<h2 style="font-size:16px;font-weight:600;margin-bottom:14px;color:var(--sub)">All 15 deliverables</h2>
+<div class="grid">
+<a href="/deliverables/testing/api-tests" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">src/__tests__/api.test.ts</div><div class="desc">API route unit tests — mocked database, authenticated and unauthenticated paths, error cases, and edge conditions</div></a>
+<a href="/deliverables/testing/page-tests" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">src/__tests__/pages.test.tsx</div><div class="desc">React Testing Library component tests — rendering, user interactions, accessibility assertions for all page routes</div></a>
+<a href="/deliverables/testing/schema-tests" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">src/__tests__/schema.test.ts</div><div class="desc">Database schema validation — required fields, constraint enforcement, relationship integrity, and migration safety</div></a>
+<a href="/deliverables/testing/smoke-tests" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">e2e/smoke.spec.ts</div><div class="desc">Playwright end-to-end smoke tests — navigation flows, form submissions, authentication, and critical path verification</div></a>
+<a href="/deliverables/testing/vitest-config" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">vitest.config.ts</div><div class="desc">Vitest configuration — coverage thresholds, test environment, setup files, and reporting options</div></a>
+<a href="/deliverables/testing/playwright-config" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">playwright.config.ts</div><div class="desc">Playwright configuration — browser targets, base URL, screenshot settings, and retry policies</div></a>
+<a href="/deliverables/testing/experiment-framework" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">EXPERIMENT-FRAMEWORK.md</div><div class="desc">A/B testing framework — hypothesis templates, metric definitions, sample size calculators, and duration guidelines</div></a>
+<a href="/deliverables/testing/ab-testing" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">AB-TESTING-FRAMEWORK.md</div><div class="desc">Technical A/B implementation guide — feature flags, statistical rigor requirements, and result interpretation</div></a>
+<a href="/deliverables/testing/cohort-analysis" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">COHORT-ANALYSIS.md</div><div class="desc">Cohort analysis templates — retention curves, revenue by cohort, and behavioral segmentation frameworks</div></a>
+<a href="/deliverables/testing/growth-experiments" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">GROWTH-EXPERIMENTS.md</div><div class="desc">Growth experiment backlog — ICE-scored ideas, experiment templates, and structured learnings tracker</div></a>
+<a href="/deliverables/testing/customer-discovery" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">docs/CUSTOMER-DISCOVERY.md</div><div class="desc">Customer discovery interview script — open-ended questions, recording guidelines, and synthesis framework</div></a>
+<a href="/deliverables/testing/user-research" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">USER-RESEARCH-PLAN.md</div><div class="desc">User research plan — persona definitions, research methods, recruitment strategy, and synthesis templates</div></a>
+<a href="/deliverables/testing/jtbd-guide" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">JTBD-INTERVIEW-GUIDE.md</div><div class="desc">Jobs-to-be-Done interview guide — timeline mapping, forces diagram, switch triggers, and hiring criteria</div></a>
+<a href="/deliverables/testing/community-strategy" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">COMMUNITY-STRATEGY.md</div><div class="desc">Community building plan — platform selection, activation strategies, moderation guidelines, and growth metrics</div></a>
+<a href="/deliverables/testing/qa-notes" class="item" style="text-decoration:none;color:inherit;display:block"><div class="file">docs/plain/QA-NOTES.md</div><div class="desc">Plain-language QA heuristic notes from automated content scan — flagged issues and suggested fixes</div></a>
+</div>
+</div>
+
+<div class="cta-section">
+<h2>Get these 15 deliverables — and 135+ more.</h2>
+<p>This category is part of every Strategy Pack and Foundation build. Every file is generated from your specific business description.</p>
+<div class="cta-row">
+<a href="/app?plan=free&source=deliverable_testing" class="btn" style="border:1px solid var(--bdr);color:var(--sub)">Score free first</a>
+<a href="/app?plan=strategy_pack&source=deliverable_testing" class="btn" style="background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);color:var(--gold)">Strategy Pack &mdash; $697</a>
+<a href="/app?plan=foundation&source=deliverable_testing" class="btn" style="background:var(--gold);color:#09090B">Foundation &mdash; $1,997</a>
+</div>
+<p style="font-size:11px;color:var(--dim);margin-top:8px">$697 credited toward Foundation if you upgrade within 30 days.</p>
+</div>
+
+<div class="cats" aria-label="Other deliverable categories">
+<span style="font-size:11px;color:var(--dim);margin-right:4px">Other categories:</span>
+<a href="/deliverables/strategy">📊 Strategy & Business Planning</a>
+<a href="/deliverables/legal">⚖️ Legal & Compliance Templates</a>
+<a href="/deliverables/frontend">🖥️ Frontend</a>
+<a href="/deliverables/backend">⚙️ Backend, Infrastructure & Configuration</a>
+<a href="/deliverables/financial">💰 Financial Planning & Modeling</a>
+<a href="/deliverables/marketing">📣 Marketing & Growth</a>
+<a href="/deliverables/operations">🏢 Operations & Team Building</a>
+<a href="/deliverables/technical">📖 Technical Documentation</a>
+<a href="/deliverables/launch-kit">🚀 Day-1 Launch Kit & Onboarding</a>
+</div>
+</main>
+
+<footer>
+<p>&copy; 2026 PA Registered Office Services, LLC &middot; <a href="/privacy">Privacy</a> &middot; <a href="/terms">Terms</a> &middot; <a href="/">Home</a></p>
+<p style="margin-top:6px;font-size:11px;color:#444">All documents are AI-generated starting points. Legal, financial, and tax documents require qualified professional review.</p>
+</footer>
+</body>
+</html>
