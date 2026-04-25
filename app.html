@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Your Deputy - Autonomous business-unit builder</title>
-<meta name="description" content="Describe a niche business and generate a validated autonomous business unit: website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, AI/MCP tools, workflows, and infrastructure.">
+<meta name="description" content="Describe a niche business and generate a validated autonomous business unit: website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, video assets, AI/MCP tools, workflows, and infrastructure.">
 <meta name="theme-color" content="#0A0A0A">
 <link rel="manifest" href="/manifest.json">
 <meta name="keywords" content="business viability, implementation, deployment, founder operating system, SaaS launch, strategic analysis">
@@ -15,14 +15,14 @@
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Your Deputy - Launch the business, not just the website">
-<meta property="og:description" content="Generate the operating layer around a niche business: revenue, RevOps, CRM, onboarding, support, analytics, AI agents, MCP tools, workflows, and self-hostable infrastructure.">
+<meta property="og:description" content="Generate the operating layer around a niche business: revenue, RevOps, CRM, onboarding, support, analytics, video assets, AI agents, MCP tools, workflows, and self-hostable infrastructure.">
 <meta property="og:url" content="https://yourdeputy.com">
 <meta property="og:site_name" content="Your Deputy">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Your Deputy - Autonomous business-unit builder">
-<meta name="twitter:description" content="From niche idea to validated business-unit repo: website, funnel, revenue engine, RevOps, CRM, AI/MCP, workflows, and infrastructure.">
+<meta name="twitter:description" content="From niche idea to validated business-unit repo: website, funnel, revenue engine, RevOps, CRM, video assets, AI/MCP, workflows, and infrastructure.">
 
 <!-- Favicon -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
@@ -646,7 +646,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
   <div id="mode-screen">
     <div class="hero">
       <h1>Your Deputy <span>Business-Unit Builder</span></h1>
-      <p>Describe the niche, customer, location, business model, and offers. Dynasty scores viability, then generates the website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, AI/MCP tools, workflows, and infrastructure needed for launch.</p>
+      <p>Describe the niche, customer, location, business model, and offers. Dynasty scores viability, then generates the website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, video assets, AI/MCP tools, workflows, and infrastructure needed for launch.</p>
     </div>
 
     <div class="mode-cards">
@@ -1837,7 +1837,7 @@ function buildFallbackExecutionPlan(inf, planning) {
       { phase_number: 1, name: 'Business contract and central configuration', files_to_generate: ['config/master.config.yaml', 'config/config.schema.json', 'SPEC.md', 'CLAUDE.md'], model_recommendation: 'deterministic fallback', estimated_tokens: 4000, depends_on: [], can_parallelize_with: [], critical_context_from_planning: 'Lock business identity, niche, features, secrets, providers, and build contract before code generation.' },
       { phase_number: 2, name: 'Core runtime and data model', files_to_generate: ['src/api/*', 'src/services/*', 'src/auth/*', 'infra/migrations/*'], model_recommendation: 'deterministic fallback', estimated_tokens: 9000, depends_on: [1], can_parallelize_with: [3, 4], critical_context_from_planning: 'Implement ' + entityCount + ' core entities, RBAC, audit logs, provider abstractions, and tenant-safe APIs.' },
       { phase_number: 3, name: 'Website, funnel, and customer portal', files_to_generate: ['src/frontend/*', 'content/*', 'products/*'], model_recommendation: 'deterministic fallback', estimated_tokens: 9000, depends_on: [1], can_parallelize_with: [2, 4], critical_context_from_planning: 'Generate ' + pageCount + ' accessible, mobile-safe, on-niche pages with checkout and delivery paths.' },
-      { phase_number: 4, name: 'RevOps, workflows, MCP tools, and analytics', files_to_generate: ['revops/*', 'workflows/*', 'agents/tool-registry.json', 'analytics/*'], model_recommendation: 'deterministic fallback', estimated_tokens: 10000, depends_on: [1], can_parallelize_with: [2, 3], critical_context_from_planning: 'Ship quotes, proposals, contracts, invoices, events, workflows, MCP-compatible tools, and revenue telemetry.' },
+      { phase_number: 4, name: 'RevOps, workflows, MCP tools, and analytics', files_to_generate: ['revops/*', 'workflows/*', 'agents/tool-registry.json', 'analytics/*', 'content/video/*'], model_recommendation: 'deterministic fallback', estimated_tokens: 10000, depends_on: [1], can_parallelize_with: [2, 3], critical_context_from_planning: 'Ship quotes, proposals, contracts, invoices, events, workflows, MCP-compatible tools, video source assets, and revenue telemetry.' },
       { phase_number: 5, name: 'Self-hosted infrastructure and validation', files_to_generate: ['infra/docker-compose.yml', 'infra/Dockerfile.api', 'infra/Dockerfile.worker', 'tests/*'], model_recommendation: 'deterministic fallback', estimated_tokens: 7000, depends_on: [2, 3, 4], can_parallelize_with: [], critical_context_from_planning: 'Verify build completeness, no direct third-party core imports, central config, security, routes, live content, and quality gates.' }
     ],
     file_dependency_graph: { 'config/master.config.yaml': ['SPEC.md'], 'src/api/*': ['config/master.config.yaml', 'schemas/*.json'], 'workflows/*.yaml': ['events/event-schema.json', 'agents/tool-registry.json'], 'tests/*': ['config/master.config.yaml', 'schemas/*.json', 'workflows/*.yaml'] },
@@ -1847,7 +1847,7 @@ function buildFallbackExecutionPlan(inf, planning) {
     estimated_time_parallel: '35 seconds',
     parallel_groups: [{ group: 1, phases: [1], reason: 'Business contract must run first.' }, { group: 2, phases: [2, 3, 4], reason: 'Runtime, UI, and operations can run in parallel after the contract.' }, { group: 3, phases: [5], reason: 'Validation depends on generated artifacts.' }],
     risk_factors: ['Provider credentials may be absent; use verified scaffold fallbacks.', 'Generated content must remain on-niche.', 'Deployment must pass route, live-content, and quality checks.'],
-    quality_gates: [{ after_phase: 1, check: 'Master config and schema exist; no scattered secret config.' }, { after_phase: 2, check: 'Core APIs, auth, audit logs, and provider abstractions compile.' }, { after_phase: 3, check: 'All required pages and CTAs exist and are mobile-safe.' }, { after_phase: 4, check: 'RevOps, workflows, events, MCP tools, products, and analytics are complete.' }, { after_phase: 5, check: 'Tests, generated-repo contract, route checks, and live-content checks pass.' }]
+    quality_gates: [{ after_phase: 1, check: 'Master config and schema exist; no scattered secret config.' }, { after_phase: 2, check: 'Core APIs, auth, audit logs, and provider abstractions compile.' }, { after_phase: 3, check: 'All required pages and CTAs exist and are mobile-safe.' }, { after_phase: 4, check: 'RevOps, workflows, events, MCP tools, products, video assets, and analytics are complete.' }, { after_phase: 5, check: 'Tests, generated-repo contract, route checks, and live-content checks pass.' }]
   };
 }
 

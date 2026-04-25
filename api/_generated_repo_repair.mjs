@@ -60,6 +60,7 @@ const BUSINESS_UNIT_REQUIRED_PATHS = [
   'src/providers/signature.ts',
   'src/providers/analytics.ts',
   'src/providers/ai.ts',
+  'src/providers/video.ts',
   'src/workflows/engine.ts',
   'src/events/bus.ts',
   'src/auth/rbac.ts',
@@ -106,6 +107,7 @@ const BUSINESS_UNIT_REQUIRED_PATHS = [
   'tests/mcp-tools.test.ts',
   'tests/revops.test.ts',
   'tests/niche-validation.test.ts',
+  'tests/video-assets.test.ts',
 ];
 
 const FULL_SDLC_REQUIRED_PATHS = [
@@ -167,6 +169,21 @@ const FULL_SDLC_REQUIRED_PATHS = [
   'tests/revenue-loop.test.ts',
 ];
 
+const REQUIRED_VIDEO_ASSET_PATHS = [
+  'content/video/launch-video-script.md',
+  'content/video/product-demo-script.md',
+  'content/video/onboarding-video-script.md',
+  'content/video/faq-video-scripts.md',
+  'content/video/short-form-clips.yaml',
+  'content/video/thumbnail-prompts.md',
+  'content/video/video-seo-metadata.yaml',
+  'content/video/storyboards/launch-video.md',
+  'content/video/storyboards/product-demo.md',
+  'content/video/captions/launch-video.srt',
+  'content/video/captions/product-demo.srt',
+  'media/videos/README.md',
+];
+
 const SEMANTIC_PROMISE_GROUPS = [
   { code: 'discovery_validation', label: 'problem discovery and opportunity validation', terms: ['market research', 'competitor analysis', 'customer interviews', 'TAM', 'SAM', 'SOM', 'ICP', 'buyer journey', 'pricing sensitivity'] },
   { code: 'product_strategy', label: 'strategic product definition', terms: ['value proposition', 'USP', 'positioning', 'subscription model', 'upsell', 'churn prevention', 'retention loop', 'expansion revenue', 'PRD', 'BRD'] },
@@ -186,6 +203,7 @@ const SEMANTIC_PROMISE_GROUPS = [
   { code: 'observability', label: 'OpenTelemetry observability', terms: ['OpenTelemetry', 'traces', 'metrics', 'logs', 'span', 'trace_id', 'collector', 'business event'] },
   { code: 'deployment_protection', label: 'GitHub deployment protection', terms: ['GitHub Actions', 'environments', 'required status checks', 'concurrency', 'deployment protection', 'branch protection'] },
   { code: 'tenancy_decision', label: 'multi-tenancy architecture decision', terms: ['shared table', 'schema-per-tenant', 'database-per-tenant', 'tenant isolation', 'migration', 'backup', 'disaster recovery'] },
+  { code: 'autonomous_video_assets', label: 'autonomous video asset pipeline', terms: ['video asset pipeline', 'launch video', 'product demo', 'onboarding video', 'short-form clips', 'captions', 'storyboard', 'thumbnail prompts', 'video SEO', 'video-use', 'ffmpeg', 'scaffold fallback'] },
 ];
 
 const REQUIRED_SCHEMA_FILES = [
@@ -500,6 +518,15 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
     if (contentCounts.articles < 20 || contentCounts.landingPages < 5 || contentCounts.nurtureEmails < 10 || contentCounts.socialPosts < 20) {
       issues.push(issue('authority_content_engine_missing', `Authority/content engine is incomplete: ${JSON.stringify(contentCounts)}.`, ['content/'], 'critical'));
     }
+
+    const missingVideoAssets = REQUIRED_VIDEO_ASSET_PATHS.filter((path) => !hasPath(files, path));
+    const videoText = REQUIRED_VIDEO_ASSET_PATHS.map((path) => text(files, path)).join('\n');
+    const missingVideoMarkers = ['launch video', 'product demo', 'onboarding video', 'short-form', 'captions', 'storyboard', 'thumbnail', 'video SEO', 'scaffold fallback']
+      .filter((marker) => !new RegExp(marker, 'i').test(videoText));
+    if (missingVideoAssets.length || missingVideoMarkers.length) {
+      issues.push(issue('video_asset_pipeline_missing', `Autonomous video asset pipeline is incomplete. Missing files: ${missingVideoAssets.length}; missing markers: ${missingVideoMarkers.join(', ') || 'none'}.`, ['content/video/', 'media/videos/'], 'high'));
+    }
+
     const revenueLoopText = ['pre-saas/auto-listing-adapters.yaml', 'pre-saas/revenue-reinvestment-loop.yaml', 'pre-saas/data-feedback-loop.yaml', 'pre-saas/saas-transition-triggers.yaml']
       .map((path) => text(files, path)).join('\n');
     for (const marker of ['auto-listing', 'revenue reinvestment', 'winner detection', 'variant generation', 'SaaS transition', 'conversion rate', 'refund rate']) {
@@ -586,6 +613,7 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
       'architecture/tenancy-decision.md',
       'evals/semantic-niche-rubric.yaml',
       'evals/promise-equivalence-fixtures.yaml',
+      ...REQUIRED_VIDEO_ASSET_PATHS,
     ].map((path) => text(files, path)).join('\n').toLowerCase();
     const missingPromiseGroups = SEMANTIC_PROMISE_GROUPS.filter((group) => {
       const hits = group.terms.filter((term) => semanticCorpus.includes(term.toLowerCase())).length;
@@ -1199,6 +1227,7 @@ function buildBusinessUnitFiles(contract = {}) {
   files['src/providers/signature.ts'] = buildProvider('SignatureProvider', ['createSignatureRequest', 'verifySignature'], 'DocuSignSignatureProvider');
   files['src/providers/analytics.ts'] = buildProvider('AnalyticsProvider', ['trackEvent', 'getMetrics'], 'ExternalAnalyticsProvider');
   files['src/providers/ai.ts'] = buildProvider('AIProvider', ['complete', 'embed', 'moderate'], 'ExternalAIProvider');
+  files['src/providers/video.ts'] = buildVideoProvider();
 
   files['src/api/index.ts'] = buildApiIndex();
   files['src/services/business-lifecycle.ts'] = buildLifecycleService();
@@ -1243,6 +1272,7 @@ function buildBusinessUnitFiles(contract = {}) {
   files['tests/mcp-tools.test.ts'] = buildGeneratedTest('mcp-tools', ['agents/tool-registry.json']);
   files['tests/revops.test.ts'] = buildGeneratedTest('revops', ['revops/pricing.yaml', 'revops/proposal-templates/default.md', 'revops/contract-templates/msa.md', 'revops/invoice-templates/default.md']);
   files['tests/niche-validation.test.ts'] = buildGeneratedTest('niche-validation', ['content/seo-plan.yaml', 'products/product-catalog.yaml', 'prompts/niche-research.md']);
+  files['tests/video-assets.test.ts'] = buildGeneratedTest('video-assets', REQUIRED_VIDEO_ASSET_PATHS);
   files['tests/accessibility.test.ts'] = buildGeneratedTest('accessibility', ['ux/accessibility-checklist.md', 'ux/design-system.md']);
   files['tests/security-standards.test.ts'] = buildGeneratedTest('security-standards', ['security/owasp-asvs-checklist.yaml', 'security/owasp-samm-maturity.yaml', 'governance/nist-ai-rmf-risk-register.yaml']);
   files['tests/mcp-conformance.test.ts'] = buildGeneratedTest('mcp-conformance', ['mcp/mcp-conformance.yaml', 'agents/tool-registry.json']);
@@ -1290,6 +1320,7 @@ features:
   customer_portal: true
   support_portal: true
   analytics: true
+  video_assets: true
 providers:
   billing:
     provider: internal
@@ -1306,6 +1337,11 @@ providers:
     provider: internal
   automation:
     provider: internal_workflow_engine
+  video:
+    provider: internal_scaffold
+    optional_external: video_use
+    rendering_dependency: ffmpeg
+    rule: "Generate scripts, storyboards, captions, thumbnails, and metadata on every build; render MP4 only when optional dependencies and credentials are available."
 secrets:
   jwt_secret:
     value: "ENC_PLACEHOLDER_REQUIRED"
@@ -1349,6 +1385,16 @@ storage:
 analytics:
   provider: internal
   event_bus: postgres_event_table
+video:
+  provider: internal_scaffold
+  required_assets_path: "/content/video"
+  optional_render_output_path: "/media/videos"
+  optional_tools:
+    - video-use
+    - ffmpeg
+  degradation:
+    status: scaffold_ready
+    reason: "Rendered video files require optional runtime dependencies; source assets are mandatory."
 workflow:
   provider: internal_workflow_engine
   registry_path: "/workflows"
@@ -1378,6 +1424,44 @@ export class StripePaymentProvider implements PaymentProvider {
   async createSubscription(input) { return this.adapterClient.createSubscription(input); }
   async issueRefund(input) { return this.adapterClient.refund(input); }
   async verifyWebhook(input) { return this.adapterClient.verifyWebhook(input); }
+}
+`;
+}
+
+function buildVideoProvider() {
+  return `export type VideoAssetResult<T = unknown> = { ok: true; data: T } | { ok: false; error: string; degraded?: true };
+
+export interface VideoProvider {
+  generateSourceAssets(input: { niche: string; targetCustomer: string; primaryOffer: string }): Promise<VideoAssetResult<{ assetsPath: string; status: 'source_ready' }>>;
+  renderLaunchVideo(input: { assetsPath: string; outputPath: string }): Promise<VideoAssetResult<{ videoPath: string; status: 'rendered' | 'scaffold_ready' }>>;
+  renderShortClips(input: { assetsPath: string; outputPath: string; count: number }): Promise<VideoAssetResult<{ clipPaths: string[]; status: 'rendered' | 'scaffold_ready' }>>;
+}
+
+export class InternalVideoScaffoldProvider implements VideoProvider {
+  async generateSourceAssets() {
+    return { ok: true, data: { assetsPath: '/content/video', status: 'source_ready' } };
+  }
+  async renderLaunchVideo() {
+    return { ok: true, data: { videoPath: '/media/videos/README.md', status: 'scaffold_ready' } };
+  }
+  async renderShortClips() {
+    return { ok: true, data: { clipPaths: [], status: 'scaffold_ready' } };
+  }
+}
+
+export class VideoUseProvider implements VideoProvider {
+  constructor(private readonly enabled: boolean) {}
+  async generateSourceAssets(input) {
+    return { ok: true, data: { assetsPath: '/content/video', status: 'source_ready' } };
+  }
+  async renderLaunchVideo() {
+    if (!this.enabled) return { ok: false, degraded: true, error: 'video-use/ffmpeg dependencies unavailable; scaffold assets remain production-ready.' };
+    return { ok: true, data: { videoPath: '/media/videos/launch-video.mp4', status: 'rendered' } };
+  }
+  async renderShortClips(input) {
+    if (!this.enabled) return { ok: false, degraded: true, error: 'video-use/ffmpeg dependencies unavailable; short-form clip scaffolds remain ready.' };
+    return { ok: true, data: { clipPaths: Array.from({ length: input.count }, (_, i) => \`/media/videos/clips/clip-\${i + 1}.mp4\`), status: 'rendered' } };
+  }
 }
 `;
 }
@@ -1603,6 +1687,18 @@ function buildRevopsFiles({ businessName, niche, targetCustomer, primaryOffer })
 function buildContentFiles({ businessName, niche, targetCustomer, primaryOffer }) {
   const files = {
     'content/seo-plan.yaml': `niche: ${niche}\naudience: ${targetCustomer}\nclusters:\n  - ${primaryOffer}\n  - implementation guides\n  - buyer education\n`,
+    'content/video/launch-video-script.md': `# ${businessName} Launch Video Script\n\nNiche: ${niche}\nAudience: ${targetCustomer}\nOffer: ${primaryOffer}\n\nPurpose: a 60-90 second launch video that explains the pain, shows the autonomous business unit, and drives viewers to the primary CTA.\n\n## Structure\n1. Hook: name the ${niche} pain in the language of ${targetCustomer}.\n2. Consequence: show the revenue, time, trust, or compliance loss of leaving it unsolved.\n3. Solution: introduce ${primaryOffer} as the operational system, not a generic website.\n4. Proof: show lead capture, checkout, RevOps, onboarding, support, analytics, and AI/MCP operation.\n5. CTA: start with the lead magnet, product catalog, or checkout path.\n\nThis source asset is mandatory. Rendered MP4 output is optional and may be produced through video-use + ffmpeg when available; otherwise BUILD STATUS can pass with scaffold fallback.\n`,
+    'content/video/product-demo-script.md': `# ${businessName} Product Demo Video Script\n\nDemo the niche-specific buyer journey for ${targetCustomer}: landing page -> lead magnet -> product catalog -> quote/proposal/contract/invoice -> payment -> onboarding -> support.\n\nCall to action: ${primaryOffer}.\n\nInclude explicit screen beats, narration, accessibility-friendly visual descriptions, and proof that the offer solves a concrete ${niche} pain point.\n`,
+    'content/video/onboarding-video-script.md': `# ${businessName} Customer Onboarding Video Script\n\nWelcome ${targetCustomer}, explain first-value milestone, intake steps, portal access, support path, resource delivery, and what happens after payment.\n\nCTA: complete the intake form and open the customer portal.\n`,
+    'content/video/faq-video-scripts.md': `# ${businessName} FAQ Video Scripts\n\nEach FAQ answer must stay on-niche for ${niche} and drive to ${primaryOffer}.\n\n## FAQ 1: What problem does this solve?\nAnswer the exact ${targetCustomer} pain and show the operational workflow.\n\n## FAQ 2: How fast can I start?\nExplain scaffold-ready launch, optional provider credentials, and verified fallback behavior.\n\n## FAQ 3: What happens after purchase?\nExplain delivery, onboarding, support, analytics, and renewal workflow.\n`,
+    'content/video/short-form-clips.yaml': `niche: "${niche}"\naudience: "${targetCustomer}"\nvideo asset pipeline: required\nclips:\n  - title: "The ${niche} bottleneck nobody fixes"\n    format: "15-30s vertical short-form"\n    hook: "Your ${niche} operation is leaking revenue before the first conversation."\n    cta: "${primaryOffer}"\n  - title: "From lead to paid customer"\n    format: "30s product walkthrough"\n    hook: "Watch one ${targetCustomer} move from lead capture to payment."\n    cta: "See the product catalog"\n  - title: "Why this is not just a website"\n    format: "30s trust-builder"\n    hook: "A website cannot quote, invoice, onboard, and retain customers by itself."\n    cta: "Launch the operating unit"\n  - title: "AI-operable business workflow"\n    format: "30s AI/MCP demo"\n    hook: "Every major business action exposes a safe agent tool."\n    cta: "Review the tool registry"\n  - title: "Revenue loop explained"\n    format: "30s pre-SaaS revenue clip"\n    hook: "Info products create revenue and signal before the SaaS matures."\n    cta: "Start with the lead magnet"\nrendering:\n  optional_adapter: video-use\n  optional_dependency: ffmpeg\n  fallback_status: scaffold_ready\n`,
+    'content/video/thumbnail-prompts.md': `# ${businessName} Thumbnail Prompts\n\nGenerate high-contrast, on-brand thumbnails for ${niche}; no generic stock imagery.\n\n1. Launch video thumbnail: ${targetCustomer} outcome, ${primaryOffer}, clear CTA text.\n2. Product demo thumbnail: workflow from lead to paid customer.\n3. Onboarding thumbnail: first-value milestone and portal access.\n4. Short-form clips: pain-point headline plus specific ${niche} visual cue.\n`,
+    'content/video/video-seo-metadata.yaml': `niche: "${niche}"\naudience: "${targetCustomer}"\nvideo SEO: required\nassets:\n  launch_video:\n    title: "${businessName}: ${primaryOffer} for ${targetCustomer}"\n    description: "A niche-specific launch video showing how ${businessName} captures leads, sells products, generates RevOps assets, accepts payments, onboards customers, and runs AI-operable workflows for ${niche}."\n    keywords: ["${niche}", "${primaryOffer}", "${targetCustomer}", "autonomous business unit", "AI workflow"]\n  product_demo:\n    title: "${primaryOffer} demo for ${niche}"\n    description: "Product demo, checkout, onboarding, support, analytics, and revenue workflow for ${targetCustomer}."\n  onboarding:\n    title: "${businessName} onboarding for ${targetCustomer}"\n    description: "First-value onboarding path, support handoff, and customer portal walkthrough."\n`,
+    'content/video/storyboards/launch-video.md': `# Launch Video Storyboard\n\n## Scene 1 - Pain\nVisual: ${targetCustomer} facing the core ${niche} bottleneck.\nNarration: name the pain precisely.\n\n## Scene 2 - Operating Unit\nVisual: website, funnel, CRM, RevOps, payment, onboarding, analytics, AI/MCP tools.\nNarration: ${businessName} launches more than a website.\n\n## Scene 3 - CTA\nVisual: checkout or lead magnet path.\nNarration: start with ${primaryOffer}.\n`,
+    'content/video/storyboards/product-demo.md': `# Product Demo Storyboard\n\nShow one customer moving through lead capture, qualification, quote, proposal, contract, invoice, payment, onboarding, support, and analytics for ${niche}.\n`,
+    'content/video/captions/launch-video.srt': `NOTE: Captions for the ${businessName} launch video.\n\n1\n00:00:00,000 --> 00:00:04,000\n${businessName} helps ${targetCustomer} solve a real ${niche} revenue bottleneck.\n\n2\n00:00:04,000 --> 00:00:09,000\nIt ships the website, funnel, products, RevOps, payments, onboarding, analytics, and AI tools around ${primaryOffer}.\n`,
+    'content/video/captions/product-demo.srt': `NOTE: Captions for the ${businessName} product demo video.\n\n1\n00:00:00,000 --> 00:00:04,000\nThis demo follows one ${targetCustomer} from first click to paid customer.\n\n2\n00:00:04,000 --> 00:00:09,000\nThe system captures the lead, sells the offer, formalizes the agreement, and starts onboarding.\n`,
+    'media/videos/README.md': `# Optional Rendered Video Outputs\n\nThis build always includes production-ready video source assets under /content/video.\n\nRendered MP4 files are optional outputs produced only when video-use, ffmpeg, and any required transcription or voice credentials are available.\n\nExpected optional outputs:\n- launch-video.mp4\n- product-demo.mp4\n- onboarding.mp4\n- clips/clip-1.mp4 through clips/clip-5.mp4\n\nIf rendering dependencies are unavailable, the verified degradation is scaffold_ready and the business build may still pass.\n`,
   };
   for (let i = 1; i <= 20; i += 1) files[`content/articles/article-${String(i).padStart(2, '0')}.md`] = `# ${niche} article brief ${i}\n\nAudience: ${targetCustomer}\nCTA: ${primaryOffer}\n`;
   for (let i = 1; i <= 5; i += 1) files[`content/landing-pages/landing-${i}.md`] = `# ${businessName} ${niche} landing page ${i}\n\nNiche-specific headline, trust indicators, CTA, SEO metadata, schema markup, and conversion path.\n`;

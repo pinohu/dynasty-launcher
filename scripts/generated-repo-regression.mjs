@@ -71,7 +71,7 @@ function codes(result) {
 const beforeFiles = syntheticBrokenFixture();
 const before = detectGeneratedRepoIssues(beforeFiles, contract);
 assert.equal(before.ok, false, 'AI Collision fixture must be detected as broken');
-for (const code of ['duplicate_next_trees', 'template_residue', 'domain_drift', 'backend_schema_drift', 'api_contract_drift', 'env_contract_drift', 'missing_byoc_infra', 'central_config_missing', 'business_unit_structure_missing', 'full_sdlc_coverage_missing', 'mcp_tools_missing', 'pre_saas_revenue_missing', 'authority_content_engine_missing', 'standards_alignment_missing', 'semantic_promise_coverage_missing']) {
+for (const code of ['duplicate_next_trees', 'template_residue', 'domain_drift', 'backend_schema_drift', 'api_contract_drift', 'env_contract_drift', 'missing_byoc_infra', 'central_config_missing', 'business_unit_structure_missing', 'full_sdlc_coverage_missing', 'mcp_tools_missing', 'pre_saas_revenue_missing', 'authority_content_engine_missing', 'video_asset_pipeline_missing', 'standards_alignment_missing', 'semantic_promise_coverage_missing']) {
   assert.ok(codes(before).has(code), `fixture should expose ${code}`);
 }
 
@@ -79,7 +79,7 @@ const repaired = repairGeneratedRepoIssues(beforeFiles, contract);
 assert.ok(repaired.telemetry.length > 0, 'repair should emit telemetry');
 const after = verifyGeneratedRepo(repaired.files, contract);
 assert.equal(after.ok, true, `repair should verify cleanly: ${JSON.stringify(after.issues, null, 2)}`);
-for (const requiredPath of ['config/master.config.yaml', 'agents/tool-registry.json', 'products/product-catalog.yaml', 'revops/contract-templates/msa.md', 'workflows/lead-to-sale.yaml', 'src/providers/payment.ts', 'sdlc/problem-discovery.md', 'sdlc/continuous-improvement-loop.md', 'pre-saas/revenue-reinvestment-loop.yaml', 'security/owasp-asvs-checklist.yaml', 'governance/nist-ai-rmf-risk-register.yaml', 'mcp/mcp-conformance.yaml', 'observability/otel-config.yaml', 'deployment/github-actions-protection.yaml', 'architecture/tenancy-decision.md', 'evals/semantic-niche-rubric.yaml', 'operations/unit-economics.yaml', 'tests/security-standards.test.ts', 'tests/mcp-conformance.test.ts', 'tests/observability.test.ts', 'tests/semantic-equivalence.test.ts', 'tests/revenue-loop.test.ts', 'tests/build-completeness.test.ts']) {
+for (const requiredPath of ['config/master.config.yaml', 'agents/tool-registry.json', 'products/product-catalog.yaml', 'revops/contract-templates/msa.md', 'workflows/lead-to-sale.yaml', 'src/providers/payment.ts', 'src/providers/video.ts', 'content/video/launch-video-script.md', 'content/video/short-form-clips.yaml', 'content/video/video-seo-metadata.yaml', 'media/videos/README.md', 'sdlc/problem-discovery.md', 'sdlc/continuous-improvement-loop.md', 'pre-saas/revenue-reinvestment-loop.yaml', 'security/owasp-asvs-checklist.yaml', 'governance/nist-ai-rmf-risk-register.yaml', 'mcp/mcp-conformance.yaml', 'observability/otel-config.yaml', 'deployment/github-actions-protection.yaml', 'architecture/tenancy-decision.md', 'evals/semantic-niche-rubric.yaml', 'operations/unit-economics.yaml', 'tests/security-standards.test.ts', 'tests/mcp-conformance.test.ts', 'tests/observability.test.ts', 'tests/semantic-equivalence.test.ts', 'tests/revenue-loop.test.ts', 'tests/video-assets.test.ts', 'tests/build-completeness.test.ts']) {
   assert.ok(repaired.files[requiredPath], `repair should generate ${requiredPath}`);
 }
 const repairedPaths = Object.keys(repaired.files);
@@ -87,17 +87,20 @@ assert.equal(repairedPaths.filter((p) => /^content\/articles\/.+\.md$/.test(p)).
 assert.equal(repairedPaths.filter((p) => /^content\/landing-pages\/.+\.md$/.test(p)).length, 5, 'funnel should generate 5 landing pages');
 assert.equal(repairedPaths.filter((p) => /^content\/email-sequences\/.+\.md$/.test(p)).length, 10, 'nurture system should generate 10 emails');
 assert.equal(repairedPaths.filter((p) => /^content\/social-posts\/.+\.md$/.test(p)).length, 20, 'distribution engine should generate 20 social posts');
+assert.equal(repairedPaths.filter((p) => /^content\/video\/.+/.test(p)).length >= 10, true, 'video asset pipeline should generate source scripts, storyboards, captions, thumbnails, and metadata');
 const semanticCorpus = Object.entries(repaired.files)
-  .filter(([file]) => /^(sdlc|pre-saas|gtm|customer-success|operations|experiments|memory|ux|security|governance|mcp|observability|deployment|architecture|evals)\//.test(file))
+  .filter(([file]) => /^(sdlc|pre-saas|gtm|customer-success|operations|experiments|memory|ux|security|governance|mcp|observability|deployment|architecture|evals|content\/video)\//.test(file))
   .map(([, body]) => body)
   .join('\n')
   .toLowerCase();
-for (const marker of ['tam', 'sam', 'som', 'prd', 'brd', 'rice', 'kano', 'uat', 'cac', 'ltv', 'a/b testing', 'revenue reinvestment', 'winner detection', 'saas transition', 'owasp asvs', 'owasp samm', 'nist ai rmf', 'model context protocol', 'opentelemetry', 'github actions', 'tenant isolation']) {
+for (const marker of ['tam', 'sam', 'som', 'prd', 'brd', 'rice', 'kano', 'uat', 'cac', 'ltv', 'a/b testing', 'revenue reinvestment', 'winner detection', 'saas transition', 'owasp asvs', 'owasp samm', 'nist ai rmf', 'model context protocol', 'opentelemetry', 'github actions', 'tenant isolation', 'video asset pipeline', 'launch video', 'video-use', 'ffmpeg', 'scaffold fallback']) {
   assert.ok(semanticCorpus.includes(marker), `semantic promise corpus should include ${marker}`);
 }
 const toolRegistry = JSON.parse(repaired.files['agents/tool-registry.json']);
 assert.ok(toolRegistry.tools.some((tool) => tool.name === 'create_payment_link'), 'MCP registry should expose payment tools');
 assert.ok(repaired.files['src/providers/payment.ts'].includes('interface PaymentProvider'), 'payment abstraction should be generated');
+assert.ok(repaired.files['src/providers/video.ts'].includes('interface VideoProvider'), 'video abstraction should be generated');
+assert.ok(repaired.files['content/video/short-form-clips.yaml'].includes('fallback_status: scaffold_ready'), 'video pipeline should define verified scaffold fallback');
 assert.ok(!/from ['"]stripe['"]|require\(['"]stripe['"]/.test(repaired.files['src/billing/payments.ts']), 'core billing must not import Stripe directly');
 const telemetry = buildRepairTelemetry(before, after, repaired.telemetry);
 assert.equal(telemetry.verification_ok, true, 'repair telemetry should record success');
