@@ -111,6 +111,11 @@ const BUSINESS_UNIT_REQUIRED_PATHS = [
   'agent-runtime/hermes-agent.yaml',
   'media/voice/vibevoice.yaml',
   'media/voice/responsible-ai-voice-policy.md',
+  'codex-operator/oh-my-codex.yaml',
+  'codex-operator/clarify-plan-execute-verify.md',
+  'codex-operator/doctor-checks.yaml',
+  'ai/open-weight-models.yaml',
+  'ai/model-routing-policy.yaml',
   'tests/build-completeness.test.ts',
   'tests/config.test.ts',
   'tests/schemas.test.ts',
@@ -120,6 +125,7 @@ const BUSINESS_UNIT_REQUIRED_PATHS = [
   'tests/niche-validation.test.ts',
   'tests/video-assets.test.ts',
   'tests/intelligence-capabilities.test.ts',
+  'tests/open-weight-models.test.ts',
 ];
 
 const FULL_SDLC_REQUIRED_PATHS = [
@@ -213,6 +219,8 @@ const SEMANTIC_PROMISE_GROUPS = [
   { code: 'agent_runtime_hermes', label: 'optional Hermes autonomous agent runtime', terms: ['Hermes Agent', 'persistent memory', 'skill creation', 'scheduled automations', 'cross-session recall', 'messaging gateway', 'subagents', 'resume from failure'] },
   { code: 'voice_assets_vibevoice', label: 'optional VibeVoice audio asset adapter', terms: ['VibeVoice', 'voiceover', 'transcription', 'ASR', 'TTS', 'speaker disclosure', 'deepfake prevention', 'audio asset'] },
   { code: 'context_optimization_rtk', label: 'RTK context optimization', terms: ['RTK', 'token compression', 'command output', 'build logs', 'context efficiency', 'long debugging', 'repair sessions', 'CLI proxy'] },
+  { code: 'codex_operator_workflow', label: 'oh-my-codex operator workflow layer', terms: ['oh-my-codex', 'OMX', 'clarify', 'plan', 'execute', 'verify', 'doctor', 'HUD', 'team status', 'resume', '.omx'] },
+  { code: 'open_weight_model_catalog', label: 'current open-weight model catalog', terms: ['open-weight', 'gpt-oss', 'Gemma 3', 'Gemma 3n', 'Qwen3', 'Qwen3-Coder', 'Devstral', 'Magistral', 'Phi-4', 'DeepSeek R1', 'self-hosted'] },
   { code: 'pre_saas_revenue_loop', label: 'pre-SaaS revenue engine', terms: ['authority engine', 'information product factory', 'auto-listing', 'lead magnet', 'checkout', 'digital delivery', 'revenue reinvestment', 'winner detection', 'SaaS transition'] },
   { code: 'ai_mcp_memory', label: 'AI-native MCP and memory system', terms: ['MCP', 'tool registry', 'agent permissions', 'pgvector', 'document ingestion', 'retrieval API', 'customer-specific retrieval', 'prompt injection'] },
   { code: 'security_standards', label: 'OWASP security assurance', terms: ['OWASP ASVS', 'OWASP SAMM', 'authentication', 'session', 'access control', 'input validation', 'secrets', 'logging', 'verification'] },
@@ -670,6 +678,11 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
       'agent-runtime/hermes-agent.yaml',
       'media/voice/vibevoice.yaml',
       'media/voice/responsible-ai-voice-policy.md',
+      'codex-operator/oh-my-codex.yaml',
+      'codex-operator/clarify-plan-execute-verify.md',
+      'codex-operator/doctor-checks.yaml',
+      'ai/open-weight-models.yaml',
+      'ai/model-routing-policy.yaml',
       ...REQUIRED_VIDEO_ASSET_PATHS,
     ].map((path) => text(files, path)).join('\n').toLowerCase();
     const missingPromiseGroups = SEMANTIC_PROMISE_GROUPS.filter((group) => {
@@ -1319,6 +1332,8 @@ function buildBusinessUnitFiles(contract = {}) {
   Object.assign(files, buildPreSaasLoopFiles({ niche, targetCustomer, primaryOffer }));
   Object.assign(files, buildStandardsFiles({ businessName, niche, targetCustomer, primaryOffer }));
   Object.assign(files, buildIntelligenceCapabilityFiles({ businessName, niche, targetCustomer, primaryOffer }));
+  Object.assign(files, buildCodexOperatorFiles({ businessName, niche, targetCustomer, primaryOffer }));
+  Object.assign(files, buildOpenWeightModelFiles({ businessName, niche, targetCustomer, primaryOffer }));
   files['products/product-catalog.yaml'] = buildProductCatalog({ niche, targetCustomer, primaryOffer });
   files['analytics/funnel-metrics.yaml'] = buildMetricYaml('funnel', ['visitors', 'leads', 'conversion_rate', 'checkout_conversion', 'article_performance']);
   files['analytics/revenue-metrics.yaml'] = buildMetricYaml('revenue', ['product_revenue', 'recurring_revenue', 'failed_payments', 'revenue_by_product', 'revenue_by_offer', 'revenue_by_niche']);
@@ -1334,7 +1349,8 @@ function buildBusinessUnitFiles(contract = {}) {
   files['tests/niche-validation.test.ts'] = buildGeneratedTest('niche-validation', ['content/seo-plan.yaml', 'products/product-catalog.yaml', 'prompts/niche-research.md']);
   files['tests/video-assets.test.ts'] = buildGeneratedTest('video-assets', REQUIRED_VIDEO_ASSET_PATHS);
   files['tests/analytics-provider.test.ts'] = buildGeneratedTest('analytics-provider', ['src/providers/analytics.ts', 'analytics/posthog-events.yaml', 'analytics/posthog-dashboards.yaml', 'analytics/posthog-feature-flags.yaml']);
-  files['tests/intelligence-capabilities.test.ts'] = buildGeneratedTest('intelligence-capabilities', ['builder-governance/karpathy-principles.yaml', 'builder-governance/repair-success-criteria.md', 'code-context/claude-context.yaml', 'code-context/semantic-repair-queries.yaml', 'context-optimization/rtk.yaml', 'agent-runtime/hermes-agent.yaml', 'media/voice/vibevoice.yaml', 'media/voice/responsible-ai-voice-policy.md']);
+  files['tests/intelligence-capabilities.test.ts'] = buildGeneratedTest('intelligence-capabilities', ['builder-governance/karpathy-principles.yaml', 'builder-governance/repair-success-criteria.md', 'code-context/claude-context.yaml', 'code-context/semantic-repair-queries.yaml', 'context-optimization/rtk.yaml', 'agent-runtime/hermes-agent.yaml', 'media/voice/vibevoice.yaml', 'media/voice/responsible-ai-voice-policy.md', 'codex-operator/oh-my-codex.yaml', 'codex-operator/clarify-plan-execute-verify.md', 'codex-operator/doctor-checks.yaml']);
+  files['tests/open-weight-models.test.ts'] = buildGeneratedTest('open-weight-models', ['ai/open-weight-models.yaml', 'ai/model-routing-policy.yaml']);
   files['tests/accessibility.test.ts'] = buildGeneratedTest('accessibility', ['ux/accessibility-checklist.md', 'ux/design-system.md']);
   files['tests/security-standards.test.ts'] = buildGeneratedTest('security-standards', ['security/owasp-asvs-checklist.yaml', 'security/owasp-samm-maturity.yaml', 'governance/nist-ai-rmf-risk-register.yaml']);
   files['tests/mcp-conformance.test.ts'] = buildGeneratedTest('mcp-conformance', ['mcp/mcp-conformance.yaml', 'agents/tool-registry.json']);
@@ -1388,6 +1404,8 @@ features:
   context_optimization: true
   optional_agent_runtime: true
   optional_voice_assets: true
+  codex_operator_layer: true
+  open_weight_model_catalog: true
 providers:
   billing:
     provider: internal
@@ -1428,6 +1446,15 @@ providers:
     provider: launcher_internal
     optional_external: rtk
     rule: "RTK-style command-output compression is builder-side only; it is never required for customer runtime operation."
+  codex_operator:
+    provider: dynasty_internal
+    optional_external: oh_my_codex
+    rule: "oh-my-codex/OMX is an optional operator workflow layer for clarify-plan-execute-verify, doctor checks, HUD, team status, and resume support. Customer runtime must not depend on it."
+  open_weight_models:
+    provider: configurable
+    registry_path: "/ai/open-weight-models.yaml"
+    routing_policy_path: "/ai/model-routing-policy.yaml"
+    rule: "Prefer provider abstraction and self-hosted/open-weight fallbacks when credentials, data residency, or cost require launcher-owned control."
 secrets:
   jwt_secret:
     value: "ENC_PLACEHOLDER_REQUIRED"
@@ -1451,6 +1478,8 @@ ai:
   model_provider: configurable
   prompt_registry_path: "/prompts"
   tool_registry_path: "/agents/tool-registry.json"
+  open_weight_model_registry_path: "/ai/open-weight-models.yaml"
+  model_routing_policy_path: "/ai/model-routing-policy.yaml"
   memory:
     vector_store: pgvector
     embeddings_provider: configurable
@@ -1534,6 +1563,20 @@ context_optimization:
       enabled: false
       scope: "launcher build and repair sessions only"
       purpose: "Compress command output and build logs during long debugging sessions."
+codex_operator:
+  enabled_for_builder: true
+  runtime_dependency: false
+  state_path: ".omx"
+  optional_external:
+    oh_my_codex:
+      enabled: false
+      capabilities: [clarify, plan, execute, verify, doctor, HUD, team_status, resume]
+      purpose: "Optional Codex workflow layer for durable build continuation and operator discipline."
+open_weight_models:
+  registry_path: "/ai/open-weight-models.yaml"
+  routing_policy_path: "/ai/model-routing-policy.yaml"
+  priority_order: [self_hosted, free_hosted, paid_hosted]
+  required_policy: "Every model is optional behind AIProvider; no generated core module may hardcode a provider SDK or require one model to launch."
 workflow:
   provider: internal_workflow_engine
   registry_path: "/workflows"
@@ -2332,6 +2375,199 @@ Required safeguards:
 - Generated audio for ${niche} must stay aligned with ${primaryOffer}, ${targetCustomer}, and the approved brand voice.
 
 Fallback: every build still ships source scripts, captions, transcripts, and metadata when rendered audio is unavailable.
+`,
+  };
+}
+
+function buildCodexOperatorFiles({ businessName, niche, targetCustomer, primaryOffer }) {
+  return {
+    'codex-operator/oh-my-codex.yaml': `provider: optional_oh_my_codex
+alias: OMX
+business: "${businessName}"
+niche: "${niche}"
+runtime_dependency: false
+purpose: "Optional Codex operator workflow layer for disciplined build sessions, durable state, HUD status, doctor checks, team status, and resume from failure."
+state:
+  path: ".omx"
+  stores: [plans, logs, memory, mode_tracking, repair_checkpoints]
+canonical_flow:
+  - clarify
+  - plan
+  - execute
+  - verify
+operator_surfaces:
+  - name: deep_interview
+    maps_to: clarify
+    rule: "Use when ${targetCustomer}, ${niche}, ${primaryOffer}, or non-goals are unclear."
+  - name: ralplan
+    maps_to: plan
+    rule: "Approve architecture, tradeoffs, staged execution, and verification gates before edits."
+  - name: ralph
+    maps_to: execute_verify
+    rule: "Persistent completion loop for one owner."
+  - name: team
+    maps_to: parallel_execution
+    rule: "Coordinated parallel work only after a verified plan and disjoint ownership."
+  - name: doctor
+    maps_to: readiness_check
+    rule: "Check install shape, auth boundary, hooks, state, and model reachability before long builds."
+  - name: hud
+    maps_to: live_status
+    rule: "Show phase, repair, checkpoint, retry, and degraded scaffold status without hiding failures."
+rules:
+  - "oh-my-codex is optional. The generated business unit must launch without OMX."
+  - "Launcher builds may use OMX concepts to resume from the last verified checkpoint instead of restarting."
+  - "No build can report PASS until clarify-plan-execute-verify evidence is recorded in BUILD-REPORT.json."
+`,
+    'codex-operator/clarify-plan-execute-verify.md': `# Clarify Plan Execute Verify
+
+${businessName} uses the oh-my-codex / OMX discipline as an optional operator layer around Codex, not as a customer runtime dependency.
+
+Every build or repair must preserve this loop:
+
+1. Clarify: confirm the ${niche} promise, ${targetCustomer}, ${primaryOffer}, data boundaries, provider choices, and failure class.
+2. Plan: write the smallest staged plan with file ownership, checkpoints, risk, fallback, and tests.
+3. Execute: patch only the files tied to the plan, keep prior generated artifacts, and continue from the latest verified stage.
+4. Verify: run detectors, tests, route checks, live-content checks, quality gates, and semantic promise coverage.
+
+Resume rule: if a three-hour build fails, Dynasty must resume from the last checkpoint using .omx-style state, BUILD-REPORT telemetry, generated file manifests, and repair logs. It must not force the user to start over.
+
+Client value: the operator layer turns long ${niche} builds into recoverable, inspectable business-unit production runs instead of disposable attempts.
+`,
+    'codex-operator/doctor-checks.yaml': `doctor_checks:
+  - id: auth_boundary
+    label: "Codex/auth provider visible to the active runtime"
+    verifies: [model_reachability, provider_base_url, token_scope]
+  - id: checkpoint_resume
+    label: "Resume state exists before retry"
+    verifies: [.omx_state, build_report, generated_manifest, last_verified_stage]
+  - id: click_runtime
+    label: "Builder UI core actions bind"
+    verifies: [sign_in_click, mode_select_click, launch_click, no_inline_script_syntax_error]
+  - id: repair_loop
+    label: "Detector, root cause, patch, verify evidence"
+    verifies: [issue_class, root_cause, files_changed, verification_result, retry_count]
+  - id: quality_contract
+    label: "Business promise coverage"
+    verifies: [website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, AI, MCP, infrastructure]
+failure_policy: "If a doctor check fails, repair it and rerun. Report degraded-but-working scaffold only for missing optional credentials or optional external tools."
+`,
+  };
+}
+
+function buildOpenWeightModelFiles({ businessName, niche, targetCustomer, primaryOffer }) {
+  return {
+    'ai/open-weight-models.yaml': `catalog: current_open_weight_models
+business: "${businessName}"
+niche: "${niche}"
+runtime_dependency: false
+rule: "All models are selected through AIProvider abstraction. No core module may import or hardcode a hosted model SDK."
+models:
+  - id: gpt-oss-120b
+    family: OpenAI gpt-oss
+    class: open-weight reasoning
+    license: Apache-2.0 plus usage policy
+    best_for: [sovereign_reasoning, tool_use, complex_repair, private_cloud]
+    self_hosted: true
+  - id: gpt-oss-20b
+    family: OpenAI gpt-oss
+    class: edge open-weight reasoning
+    license: Apache-2.0 plus usage policy
+    best_for: [local_iteration, low_cost_reasoning, edge_agents]
+    self_hosted: true
+  - id: gemma-3-27b-it
+    family: Google Gemma 3
+    class: open multimodal instruction model
+    license: Gemma terms
+    best_for: [single_gpu, multilingual, vision_language, function_calling]
+    self_hosted: true
+  - id: gemma-3n
+    family: Google Gemma 3n
+    class: mobile-first open multimodal model
+    license: Gemma terms
+    best_for: [on_device, private_mobile, lightweight_multimodal]
+    self_hosted: true
+  - id: qwen3-235b-a22b
+    family: Qwen3
+    class: Apache-2.0 open-weight MoE
+    license: Apache-2.0
+    best_for: [reasoning, coding, math, long_context]
+    self_hosted: true
+  - id: qwen3-coder-480b-a35b
+    family: Qwen3-Coder
+    class: open-weight agentic coding MoE
+    license: open-weight
+    best_for: [agentic_coding, browser_use, tool_use, repository_repair]
+    self_hosted: true
+  - id: devstral-small
+    family: Mistral Devstral
+    class: Apache-2.0 agentic coding model
+    license: Apache-2.0
+    best_for: [software_engineering_agents, github_issue_repair, codebase_tasks]
+    self_hosted: true
+  - id: devstral-2
+    family: Mistral Devstral 2
+    class: open-source coding model
+    license: permissive_or_modified_mit_by_variant
+    best_for: [frontier_open_coding_agents, SWE_bench_style_repairs]
+    self_hosted: true
+  - id: magistral-small
+    family: Mistral Magistral
+    class: open reasoning model
+    license: open-source
+    best_for: [transparent_reasoning, multilingual_reasoning, domain_logic]
+    self_hosted: true
+  - id: leanstral
+    family: Mistral Leanstral
+    class: open-source Lean 4 code agent
+    license: open-source
+    best_for: [formal_methods, proof_assistant_workflows, high_assurance_code]
+    self_hosted: true
+  - id: phi-4
+    family: Microsoft Phi
+    class: open small language model
+    license: MIT
+    best_for: [small_model_reasoning, edge, cost_sensitive_tasks]
+    self_hosted: true
+  - id: phi-4-mini-flash-reasoning
+    family: Microsoft Phi
+    class: open edge reasoning model
+    license: MIT
+    best_for: [mobile_reasoning, low_latency, constrained_compute]
+    self_hosted: true
+  - id: deepseek-r1
+    family: DeepSeek
+    class: MIT open reasoning model
+    license: MIT
+    best_for: [math, code, reasoning, distillation]
+    self_hosted: true
+selection_policy:
+  default_for_${slugify(niche)}:
+    architect: gpt-oss-120b
+    code: qwen3-coder-480b-a35b
+    local_code: devstral-small
+    reasoning: deepseek-r1
+    multilingual_reasoning: magistral-small
+    mobile: gemma-3n
+    edge_reasoning: phi-4-mini-flash-reasoning
+    formal_verification: leanstral
+  fallback: "Use provider availability, data residency, cost, latency, and task fit. Never block ${primaryOffer} launch on a single model."
+`,
+    'ai/model-routing-policy.yaml': `routing_policy: open_weight_first_when_possible
+business: "${businessName}"
+niche: "${niche}"
+principles:
+  - "Prefer self-hosted or open-weight models when customer data, compliance, or margin requires control."
+  - "Use hosted adapters only through AIProvider."
+  - "Route coding repairs to Qwen3-Coder, Devstral, or gpt-oss depending on availability."
+  - "Route reasoning-heavy business logic to gpt-oss, DeepSeek R1, Magistral Small, or Qwen3."
+  - "Route mobile/private flows to Gemma 3n or Phi-4 edge variants."
+  - "Route formal verification and high-assurance code checks to Leanstral when Lean 4 proof assets exist."
+validation:
+  no_direct_sdk_imports: true
+  central_config_required: true
+  degraded_scaffold_allowed_when: "model weights or provider credentials are unavailable"
+  degraded_scaffold_must_include: [selected_task_class, recommended_model, provider_adapter, verification_status]
 `,
   };
 }

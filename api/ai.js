@@ -41,9 +41,19 @@ const PROVIDERS = {
 
   // ── Ollama (self-hosted — any model you run locally) ──────────────────
   'ollama/gemma4':                { provider: 'ollama', label: 'Gemma 4 (Ollama)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/gemma3':                { provider: 'ollama', label: 'Gemma 3 (Ollama)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/gemma3n':               { provider: 'ollama', label: 'Gemma 3n (Ollama)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
   'ollama/llama3.3':              { provider: 'ollama', label: 'Llama 3.3 (Ollama)',   costPer1kIn: 0, costPer1kOut: 0, free: true },
   'ollama/deepseek-r1':           { provider: 'ollama', label: 'DeepSeek R1 (Ollama)', costPer1kIn: 0, costPer1kOut: 0, free: true },
   'ollama/qwen3':                 { provider: 'ollama', label: 'Qwen 3 (Ollama)',      costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/qwen3-coder':           { provider: 'ollama', label: 'Qwen3 Coder (Ollama)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/gpt-oss:120b':          { provider: 'ollama', label: 'GPT-OSS 120B (Ollama)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/gpt-oss:20b':           { provider: 'ollama', label: 'GPT-OSS 20B (Ollama)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/devstral':              { provider: 'ollama', label: 'Devstral (Ollama)',    costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/devstral-small':        { provider: 'ollama', label: 'Devstral Small (Ollama)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/magistral':             { provider: 'ollama', label: 'Magistral Small (Ollama)', costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/phi4':                  { provider: 'ollama', label: 'Phi-4 (Ollama)',       costPer1kIn: 0, costPer1kOut: 0, free: true },
+  'ollama/phi4-mini':             { provider: 'ollama', label: 'Phi-4 Mini (Ollama)',  costPer1kIn: 0, costPer1kOut: 0, free: true },
   'ollama/mistral':               { provider: 'ollama', label: 'Mistral (Ollama)',     costPer1kIn: 0, costPer1kOut: 0, free: true },
 
   // ── Cerebras (free tier — fast inference) ────────────────────────────
@@ -297,6 +307,7 @@ function resolveFreeModel(config) {
   const preferred = [
     // Frontier tier — GPT-OSS, Llama 4, GLM-4.6, DeepSeek R1, Qwen 3
     'openai/gpt-oss-120b',                         // Groq GPT-OSS 120B (OpenAI open-weight)
+    'ollama/gpt-oss:120b',                         // Self-hosted GPT-OSS 120B
     'gpt-oss-120b',                                // Cerebras GPT-OSS 120B
     'meta-llama/llama-4-scout-17b-16e-instruct',   // Groq Llama 4 Scout
     'llama-4-scout-17b-16e-instruct',              // Cerebras Llama 4 Scout
@@ -328,10 +339,18 @@ function resolveFreeModel(config) {
     // Specialists
     'qwen3-coder-plus',
     'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8',
+    'ollama/qwen3-coder',
+    'ollama/devstral',
+    'ollama/magistral',
     '@cf/qwen/qwen2.5-coder-32b-instruct',
     'MiniMax-M1',
     'mercury',                                     // Inception diffusion LLM
     'openai/gpt-oss-20b',                          // Groq smaller GPT-OSS
+    'ollama/gpt-oss:20b',                          // Self-hosted smaller GPT-OSS
+    'ollama/gemma3',
+    'ollama/gemma3n',
+    'ollama/phi4',
+    'ollama/phi4-mini',
     'microsoft/Phi-4',                             // GitHub Phi-4
     'nousresearch/hermes-3-llama-3.1-405b:free',                // via OpenRouter
     'nvidia/llama-3.1-nemotron-70b-instruct:free', // via OpenRouter
@@ -392,12 +411,12 @@ const TASK_PRIMARY = {
 };
 
 const TASK_FALLBACKS = {
-  general:      ['openai/gpt-oss-120b', 'gemini-2.5-pro', 'glm-4.6', 'meta-llama/llama-4-scout-17b-16e-instruct', 'gpt-oss-120b', 'deepseek-ai/DeepSeek-V3-0324@chutes', 'gemini-2.0-flash'],
-  code:         ['qwen3-coder-plus', 'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8', 'qwen/qwen3-coder:free', 'deepseek-ai/DeepSeek-V3.2-Exp', '@cf/qwen/qwen2.5-coder-32b-instruct', 'mercury-coder', 'qwen/qwen-2.5-coder-32b-instruct:free'],
-  reasoning:    ['deepseek-r1-distill-llama-70b', 'DeepSeek-R1', 'glm-4.6', 'openai/gpt-oss-120b', 'deepseek/DeepSeek-R1', 'gemini-2.5-pro', 'qwen-qwq-32b', '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b'],
+  general:      ['openai/gpt-oss-120b', 'ollama/gpt-oss:120b', 'gemini-2.5-pro', 'glm-4.6', 'meta-llama/llama-4-scout-17b-16e-instruct', 'gpt-oss-120b', 'ollama/gemma3', 'deepseek-ai/DeepSeek-V3-0324@chutes', 'gemini-2.0-flash'],
+  code:         ['qwen3-coder-plus', 'Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8', 'ollama/qwen3-coder', 'ollama/devstral', 'qwen/qwen3-coder:free', 'deepseek-ai/DeepSeek-V3.2-Exp', '@cf/qwen/qwen2.5-coder-32b-instruct', 'mercury-coder', 'qwen/qwen-2.5-coder-32b-instruct:free'],
+  reasoning:    ['deepseek-r1-distill-llama-70b', 'DeepSeek-R1', 'ollama/deepseek-r1', 'ollama/magistral', 'glm-4.6', 'openai/gpt-oss-120b', 'ollama/gpt-oss:120b', 'deepseek/DeepSeek-R1', 'gemini-2.5-pro', 'qwen-qwq-32b', '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b'],
   long_context: ['kimi-k2-0905-preview', 'MiniMax-M1', 'gemini-2.5-pro', 'moonshotai/kimi-k2-instruct'],
   web_current:  ['sonar', 'gemini-2.5-pro'],
-  vision:       ['gemini-2.5-pro', 'gemini-2.0-flash', 'qwen3-vl-plus'],
+  vision:       ['gemini-2.5-pro', 'gemini-2.0-flash', 'qwen3-vl-plus', 'ollama/gemma3n'],
   structured:   ['llama-3.3-70b', 'openai/gpt-oss-120b', 'llama-3.3-70b-versatile', '@cf/meta/llama-3.3-70b-instruct-fp8-fast', 'gemini-2.0-flash', 'Meta-Llama-3.3-70B-Instruct'],
   creative:     ['kimi-k2-0905-preview', 'moonshotai/kimi-k2-instruct', 'glm-4.6', 'nousresearch/hermes-3-llama-3.1-405b:free', 'gemini-2.5-pro'],
 };

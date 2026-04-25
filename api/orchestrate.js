@@ -22,6 +22,7 @@ const ROUTING_TIERS = {
     nvidia: 'meta/llama-4-maverick-17b-128e-instruct',
     dashscope: 'qwen3-max',
     fireworks: 'accounts/fireworks/models/qwen2p5-72b-instruct',
+    ollama: 'ollama/gpt-oss:120b',
     fallback: 'gemini-2.5-pro',
   },
   // Standard: most generation tasks
@@ -34,6 +35,7 @@ const ROUTING_TIERS = {
     minimax: 'MiniMax-M1',
     together: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
     fireworks: 'accounts/fireworks/models/llama-v3p3-70b-instruct',
+    ollama: 'ollama/gemma3',
     fallback: 'gemini-2.0-flash',
   },
   // Fast: boilerplate, templates, simple generation
@@ -51,6 +53,7 @@ const ROUTING_TIERS = {
     openrouter: 'qwen/qwen3-coder:free',
     nvidia: 'qwen/qwen3-coder-480b-a35b-instruct',
     fireworks: 'accounts/fireworks/models/deepseek-v3',
+    ollama: 'ollama/qwen3-coder',
     fallback: 'gemini-2.0-flash',
   },
   // Reasoning: math, proofs, complex multi-step logic
@@ -59,6 +62,7 @@ const ROUTING_TIERS = {
     zai: 'glm-4.6',
     groq: 'qwen-qwq-32b',
     google: 'gemini-2.5-pro',
+    ollama: 'ollama/magistral',
     fallback: 'gemini-2.5-pro',
   },
   // Web/current: grounded search via Perplexity Sonar (free tier)
