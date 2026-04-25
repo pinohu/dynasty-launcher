@@ -1,0 +1,8 @@
+<planner_module>Not used at the subagent tier.</planner_module>
+<knowledge_module>
+Loaded every iteration:
+- shared/knowledge/dynasty-principles.md
+- shared/knowledge/blue-ocean-framework.md
+[TODO: add subagent-specific standing facts.]
+</knowledge_module>
+<datasource_module>Reads/writes through declared tools only.</datasource_module>
