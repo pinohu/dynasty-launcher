@@ -98,7 +98,7 @@ assert.ok(JSON.parse(depRepair.files['frontend/package.json']).dependencies.zod,
 const vercelDiag = classifyVercelFailure([{ text: 'Error: No Next.js version detected. Make sure your package.json has "next" in either "dependencies" or "devDependencies". Also check your Root Directory setting matches the directory of your package.json file.' }]);
 assert.equal(vercelDiag.class, 'vercel_root_mismatch', 'Vercel parser should classify root/frontend mismatch');
 const vercelRepair = repairDeploymentFailure({ 'package.json': '{"scripts":{},"engines":{"node":"20.x"}}' }, vercelDiag);
-assert.equal(JSON.parse(vercelRepair.files['package.json']).scripts['vercel-build'], 'npm install --prefix frontend --no-package-lock --engine-strict=false && npm --prefix frontend run build', 'Vercel repair should write root vercel-build');
+assert.equal(JSON.parse(vercelRepair.files['package.json']).scripts['vercel-build'], 'npm --prefix frontend run build', 'Vercel repair should write root vercel-build');
 assert.equal(JSON.parse(vercelRepair.files['package.json']).devDependencies.next, '^15.2.4', 'Vercel repair should expose root Next version');
 assert.equal(JSON.parse(vercelRepair.files['vercel.json']).outputDirectory, 'frontend/.next', 'Vercel repair should target frontend output');
 

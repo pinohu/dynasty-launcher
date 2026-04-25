@@ -104,14 +104,14 @@ export function repairDeploymentFailure(files, diagnostic) {
   if (diagnostic.class === 'vercel_root_mismatch') {
     const rootPkg = parseJson(out['package.json']) || { private: true, scripts: {}, engines: { node: '20.x' } };
     rootPkg.scripts = rootPkg.scripts || {};
-    rootPkg.scripts['vercel-build'] = 'npm install --prefix frontend --no-package-lock --engine-strict=false && npm --prefix frontend run build';
+    rootPkg.scripts['vercel-build'] = 'npm --prefix frontend run build';
     rootPkg.scripts['frontend:build'] = rootPkg.scripts['frontend:build'] || 'npm --prefix frontend run build';
     rootPkg.engines = rootPkg.engines || { node: '20.x' };
     rootPkg.devDependencies = { ...(rootPkg.devDependencies || {}), next: '^15.2.4', react: '^18.3.1', 'react-dom': '^18.3.1' };
     out['package.json'] = JSON.stringify(rootPkg, null, 2) + '\n';
     out['vercel.json'] = JSON.stringify({
       framework: 'nextjs',
-      installCommand: 'npm install --prefix frontend --no-package-lock --engine-strict=false',
+      installCommand: 'npm install --engine-strict=false && npm install --prefix frontend --no-package-lock --engine-strict=false',
       buildCommand: 'npm run vercel-build',
       outputDirectory: 'frontend/.next',
       headers: [

@@ -99,8 +99,8 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
   if (revo && hasFrontendApp) {
     const rootPackage = parseJson(text(files, 'package.json')) || {};
     const vercel = parseJson(text(files, 'vercel.json')) || {};
-    const hasFrontendAwareBuild = rootPackage.scripts?.['vercel-build'] === 'npm install --prefix frontend --no-package-lock --engine-strict=false && npm --prefix frontend run build'
-      && vercel.installCommand === 'npm install --prefix frontend --no-package-lock --engine-strict=false'
+    const hasFrontendAwareBuild = rootPackage.scripts?.['vercel-build'] === 'npm --prefix frontend run build'
+      && vercel.installCommand === 'npm install --engine-strict=false && npm install --prefix frontend --no-package-lock --engine-strict=false'
       && vercel.buildCommand === 'npm run vercel-build'
       && vercel.outputDirectory === 'frontend/.next';
     const exposesNextVersion = rootPackage.devDependencies?.next || rootPackage.dependencies?.next;
@@ -702,7 +702,7 @@ function buildRootPackageJson() {
     scripts: {
       'verify:contract': 'node scripts/verify-generated-contract.mjs',
       'frontend:build': 'npm --prefix frontend run build',
-      'vercel-build': 'npm install --prefix frontend --no-package-lock --engine-strict=false && npm --prefix frontend run build',
+      'vercel-build': 'npm --prefix frontend run build',
       'backend:test': 'pytest backend/tests',
       test: 'npm run verify:contract',
     },
@@ -720,7 +720,7 @@ function buildRootPackageJson() {
 function buildVercelJson() {
   return JSON.stringify({
     framework: 'nextjs',
-    installCommand: 'npm install --prefix frontend --no-package-lock --engine-strict=false',
+    installCommand: 'npm install --engine-strict=false && npm install --prefix frontend --no-package-lock --engine-strict=false',
     buildCommand: 'npm run vercel-build',
     outputDirectory: 'frontend/.next',
     headers: [
