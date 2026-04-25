@@ -6,10 +6,12 @@
   "description": "Business provisioning engine — tier-scoped docs, code, deploy, and integration attempts (see /maturity and TIER_MODULES in api/provision.js)",
   "scripts": {
     "build:marketplace-pages": "node scripts/build-marketplace-pages.mjs",
+    "build:demo-assets": "node scripts/build-demo-assets.mjs",
     "verify:product": "node scripts/verify-product-alignment.mjs",
     "test:validate": "node scripts/validate-smoke.mjs",
     "test:catalog": "node scripts/smoke-catalog.mjs",
     "test:marketplace-readiness": "node scripts/check-marketplace-readiness.mjs",
+    "test:demo-coverage": "node scripts/check-demo-coverage.mjs",
     "test:tenants": "node scripts/smoke-tenants.mjs",
     "test:activation": "node scripts/smoke-activation.mjs",
     "test:events": "node scripts/smoke-events.mjs",
@@ -28,7 +30,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:marketplace-readiness && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:planning-fallbacks && npm run test:html-script-safety && npm run test:button-containment && npm run test:public-branding && npm run test:deployment-repair-guards && npm run test:resumable-builds"
+    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:marketplace-readiness && npm run test:demo-coverage && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:planning-fallbacks && npm run test:html-script-safety && npm run test:button-containment && npm run test:public-branding && npm run test:deployment-repair-guards && npm run test:resumable-builds"
   },
   "engines": {
     "node": "20.x"

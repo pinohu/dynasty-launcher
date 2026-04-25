@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "module",
+  "unit_code": "instant_lead_ack",
+  "title": "Instant Lead Acknowledgment (multi-source)",
+  "route": "/demo/modules/instant-lead-ack",
+  "demo_trigger": "lead.created",
+  "sample_input": {
+    "unit_type": "module",
+    "unit_code": "instant_lead_ack"
+  },
+  "module_codes": [
+    "instant_lead_ack"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "lead.created"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Instant Lead Acknowledgment (multi-source)",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

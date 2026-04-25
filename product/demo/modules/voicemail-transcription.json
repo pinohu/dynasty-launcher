@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "module",
+  "unit_code": "voicemail_transcription",
+  "title": "Voicemail Transcription to CRM",
+  "route": "/demo/modules/voicemail-transcription",
+  "demo_trigger": "voicemail.received",
+  "sample_input": {
+    "unit_type": "module",
+    "unit_code": "voicemail_transcription"
+  },
+  "module_codes": [
+    "voicemail_transcription"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "voicemail.received"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Voicemail Transcription to CRM",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

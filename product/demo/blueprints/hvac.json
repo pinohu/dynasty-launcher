@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "blueprint",
+  "unit_code": "hvac",
+  "title": "HVAC Service Business Demo",
+  "route": "/demo/blueprints/hvac",
+  "demo_trigger": "blueprint.demo",
+  "sample_input": {
+    "unit_type": "blueprint",
+    "unit_code": "hvac"
+  },
+  "module_codes": [
+    "missed_call_textback",
+    "webform_autoreply",
+    "speed_to_lead_response",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "estimate_followup",
+    "proposal_view_tracker",
+    "post_job_review_request",
+    "service_due_reminder",
+    "dormant_customer_reactivation",
+    "overdue_invoice_reminder",
+    "instant_lead_ack",
+    "no_show_recovery"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "call.missed",
+    "form.submitted",
+    "lead.created",
+    "appointment.created",
+    "appointment.upcoming",
+    "estimate.sent",
+    "estimate.viewed",
+    "job.completed",
+    "service.due",
+    "customer.dormant",
+    "invoice.overdue",
+    "lead.created",
+    "appointment.no_show"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Launch HVAC Service Business",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

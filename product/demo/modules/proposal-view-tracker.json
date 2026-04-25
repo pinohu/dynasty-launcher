@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "module",
+  "unit_code": "proposal_view_tracker",
+  "title": "Proposal View Tracker",
+  "route": "/demo/modules/proposal-view-tracker",
+  "demo_trigger": "estimate.viewed",
+  "sample_input": {
+    "unit_type": "module",
+    "unit_code": "proposal_view_tracker"
+  },
+  "module_codes": [
+    "proposal_view_tracker"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "estimate.viewed"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Proposal View Tracker",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

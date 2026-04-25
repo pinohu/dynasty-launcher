@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "plan",
+  "unit_code": "core",
+  "title": "Your Deputy Core Demo",
+  "route": "/demo/plans/core",
+  "demo_trigger": "plan.demo",
+  "sample_input": {
+    "unit_type": "plan",
+    "unit_code": "core"
+  },
+  "module_codes": [],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Start Your Deputy Core",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

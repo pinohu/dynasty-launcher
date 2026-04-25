@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "category",
+  "unit_code": "lead-response",
+  "title": "Lead Response Demo",
+  "route": "/demo/categories/lead-response",
+  "demo_trigger": "category.demo",
+  "sample_input": {
+    "unit_type": "category",
+    "unit_code": "lead-response"
+  },
+  "module_codes": [
+    "after_hours_autoresponder",
+    "instant_lead_ack",
+    "speed_to_lead_response",
+    "voicemail_transcription"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "lead.created",
+    "lead.created",
+    "lead.created",
+    "voicemail.received"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Lead Response workflows",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "module",
+  "unit_code": "estimate_followup",
+  "title": "Estimate Follow-Up Sequence",
+  "route": "/demo/modules/estimate-followup",
+  "demo_trigger": "estimate.sent",
+  "sample_input": {
+    "unit_type": "module",
+    "unit_code": "estimate_followup"
+  },
+  "module_codes": [
+    "estimate_followup"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "estimate.sent"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Estimate Follow-Up Sequence",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

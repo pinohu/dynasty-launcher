@@ -143,14 +143,26 @@ ${platformStandard}
 function moduleRoute(m) {
   return `/automations/modules/${slug(m.name)}`;
 }
+function moduleDemoRoute(m) {
+  return `/demo/modules/${slug(m.module_code || m.name)}`;
+}
 function bundleRoute(b) {
   return `/automations/packs/${slug(b.name)}`;
+}
+function bundleDemoRoute(b) {
+  return `/demo/packs/${slug(b.bundle_code || b.name)}`;
 }
 function suiteRoute(s) {
   return `/suites/${slug(s.name)}`;
 }
+function suiteDemoRoute(s) {
+  return `/demo/suites/${slug(s.suite_code || s.name)}`;
+}
 function editionRoute(e) {
   return `/editions/${slug(e.name)}`;
+}
+function editionDemoRoute(e) {
+  return `/demo/editions/${slug(e.edition_code || e.name)}`;
 }
 
 for (const m of modules) {
@@ -168,6 +180,8 @@ for (const m of modules) {
     price: money(m.price_monthly),
     primaryHref: `/dashboard?activate=${encodeURIComponent(m.module_code)}`,
     primaryLabel: 'Activate this workflow',
+    secondaryHref: moduleDemoRoute(m),
+    secondaryLabel: 'View working demo',
     body,
   }));
 }
@@ -187,6 +201,8 @@ for (const b of bundles) {
     price: money(b.price_monthly),
     primaryHref: `/dashboard?pack=${encodeURIComponent(b.bundle_code)}`,
     primaryLabel: 'Activate this pack',
+    secondaryHref: bundleDemoRoute(b),
+    secondaryLabel: 'View working demo',
     body,
   }));
 }
@@ -199,7 +215,7 @@ for (const s of tiers.suites || []) {
 <section class="section"><h2>Outcome stack</h2><p>${esc(s.positioning)} This suite combines multiple packs and reporting so the business can manage a whole operational outcome, not just one task.</p><div class="grid">${suiteBundles.map((b) => `<a class="card" href="${bundleRoute(b)}"><h3>${esc(b.name)}</h3><p>${esc(b.description || b.tagline)}</p></a>`).join('')}</div></section>
 <section class="section"><h2>Included workflows</h2><ul class="checklist">${list(suiteModules.map((m) => m.name))}</ul></section>
 <section class="section"><h2>Traceability</h2><table><tbody><tr><th>Catalog code</th><td class="trace">${esc(s.suite_code)}</td></tr><tr><th>Packs</th><td>${esc((s.packs || []).join(', '))}</td></tr><tr><th>Discount</th><td>${esc(s.effective_discount_pct || 0)}% vs component packs</td></tr><tr><th>Status</th><td>${esc(s.status || 'available as configured')}</td></tr></tbody></table></section>`;
-  write(route, page({ title: s.name, description: s.positioning, eyebrow: 'Outcome suite', canonical: route, price: money(s.price_monthly), primaryHref: `/dashboard?suite=${encodeURIComponent(s.suite_code)}`, primaryLabel: 'Activate this suite', body }));
+  write(route, page({ title: s.name, description: s.positioning, eyebrow: 'Outcome suite', canonical: route, price: money(s.price_monthly), primaryHref: `/dashboard?suite=${encodeURIComponent(s.suite_code)}`, primaryLabel: 'Activate this suite', secondaryHref: suiteDemoRoute(s), secondaryLabel: 'View working demo', body }));
 }
 
 for (const e of tiers.editions || []) {
@@ -209,7 +225,7 @@ for (const e of tiers.editions || []) {
   const body = `
 <section class="section"><h2>Who this edition is for</h2><p>${esc(e.for)}. ${esc(e.positioning)} It bundles the core workspace, recommended suites, and relevant packs into one clearer buying path.</p><div class="grid two"><article class="card"><h3>Suites included</h3><p>${esc(suiteCodes.join(', ') || 'Configured by sales')}</p></article><article class="card"><h3>Packs included</h3><p>${esc(packCodes.join(', ') || 'No extra packs beyond suites')}</p></article></div></section>
 <section class="section"><h2>Traceability</h2><table><tbody><tr><th>Catalog code</th><td class="trace">${esc(e.edition_code)}</td></tr><tr><th>Base tier</th><td>${esc(e.includes?.tier || 'core')}</td></tr><tr><th>Extra seats</th><td>${esc(e.includes?.extra_seats ?? 0)}</td></tr><tr><th>Discount</th><td>${esc(e.effective_discount_pct || 0)}% effective discount</td></tr></tbody></table></section>`;
-  write(route, page({ title: e.name, description: `${e.positioning} Built for ${e.for}.`, eyebrow: 'Industry edition', canonical: route, price: money(e.price_monthly, e.price_label || 'Talk to sales'), primaryHref: `/dashboard?edition=${encodeURIComponent(e.edition_code)}`, primaryLabel: 'Choose this edition', body }));
+  write(route, page({ title: e.name, description: `${e.positioning} Built for ${e.for}.`, eyebrow: 'Industry edition', canonical: route, price: money(e.price_monthly, e.price_label || 'Talk to sales'), primaryHref: `/dashboard?edition=${encodeURIComponent(e.edition_code)}`, primaryLabel: 'Choose this edition', secondaryHref: editionDemoRoute(e), secondaryLabel: 'View working demo', body }));
 }
 
 for (const t of tiers.tiers || []) {
@@ -217,7 +233,7 @@ for (const t of tiers.tiers || []) {
   const body = `
 <section class="section"><h2>What Core makes functional</h2><p>${esc(t.description)} It is the control surface for contact records, entitlements, capabilities, activation state, and marketplace expansion.</p><ul class="checklist">${list(['CRM workspace', `${t.max_contacts?.toLocaleString?.() || t.max_contacts} contact records`, `${t.max_users} included seats`, 'Automation marketplace access', 'Dashboard and templates'])}</ul></section>
 <section class="section"><h2>Traceability</h2><table><tbody><tr><th>Catalog code</th><td class="trace">${esc(t.tier_code)}</td></tr><tr><th>API record</th><td><a href="/api/catalog/tiers">/api/catalog/tiers</a></td></tr><tr><th>Included modules</th><td>${esc((t.included_modules || []).join(', ') || 'A la carte activation')}</td></tr></tbody></table></section>`;
-  write(route, page({ title: t.name, description: t.description, eyebrow: 'Core plan', canonical: route, price: money(t.price_monthly), primaryHref: '/dashboard?plan=core', primaryLabel: 'Start with Core', body }));
+  write(route, page({ title: t.name, description: t.description, eyebrow: 'Core plan', canonical: route, price: money(t.price_monthly), primaryHref: '/dashboard?plan=core', primaryLabel: 'Start with Core', secondaryHref: `/demo/plans/${slug(t.tier_code || t.name)}`, secondaryLabel: 'View working demo', body }));
 }
 
 for (const [code, c] of Object.entries(tiers.concierge_setup || {})) {
@@ -238,7 +254,7 @@ for (const bp of blueprints) {
 <section class="section"><h2>Recommended modules</h2><div class="grid">${bpModules.map((m) => `<a class="card" href="${moduleRoute(m)}"><h3>${esc(m.name)}</h3><p>${esc(m.outcome || m.description_short)}</p></a>`).join('')}</div></section>
 <section class="section"><h2>Recommended packs</h2><div class="grid">${bpBundles.map((b) => `<a class="card" href="${bundleRoute(b)}"><h3>${esc(b.name)}</h3><p>${esc(b.description || b.tagline)}</p></a>`).join('')}</div></section>
 <section class="section"><h2>Traceability</h2><table><tbody><tr><th>Blueprint code</th><td class="trace">${esc(bp.blueprint_code)}</td></tr><tr><th>Vertical</th><td>${esc(bp.vertical)}</td></tr><tr><th>Dashboard KPIs</th><td>${esc((bp.dashboard_kpis || []).join(', '))}</td></tr></tbody></table></section>`;
-  write(route, page({ title: bp.name, description: bp.description, eyebrow: 'Industry blueprint', canonical: route, price: 'Included', primaryHref: `/marketplace?blueprint=${encodeURIComponent(bp.blueprint_code)}#modules-section`, primaryLabel: 'Filter marketplace', body }));
+  write(route, page({ title: bp.name, description: bp.description, eyebrow: 'Industry blueprint', canonical: route, price: 'Included', primaryHref: `/marketplace?blueprint=${encodeURIComponent(bp.blueprint_code)}#modules-section`, primaryLabel: 'Filter marketplace', secondaryHref: `/demo/blueprints/${slug(bp.blueprint_code || bp.name)}`, secondaryLabel: 'View working demo', body }));
 }
 
 function cardGrid(items, getRoute, getTitle, getDesc) {

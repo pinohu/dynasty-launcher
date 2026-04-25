@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "category",
+  "unit_code": "sales",
+  "title": "Sales Demo",
+  "route": "/demo/categories/sales",
+  "demo_trigger": "category.demo",
+  "sample_input": {
+    "unit_type": "category",
+    "unit_code": "sales"
+  },
+  "module_codes": [
+    "estimate_followup",
+    "lost_deal_reactivation",
+    "proposal_view_tracker"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "estimate.sent",
+    "pipeline.deal_cold",
+    "estimate.viewed"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Sales workflows",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

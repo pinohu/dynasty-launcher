@@ -1659,6 +1659,30 @@
     return `/plans/${toSlug(t?.name || 'your-deputy-core')}`;
   }
 
+  function moduleDemoRoute(m) {
+    return `/demo/modules/${toSlug(m?.module_code || m?.name || 'module')}`;
+  }
+
+  function packDemoRoute(b) {
+    return `/demo/packs/${toSlug(b?.bundle_code || b?.name || 'pack')}`;
+  }
+
+  function suiteDemoRoute(s) {
+    return `/demo/suites/${toSlug(s?.suite_code || s?.name || 'suite')}`;
+  }
+
+  function editionDemoRoute(e) {
+    return `/demo/editions/${toSlug(e?.edition_code || e?.name || 'edition')}`;
+  }
+
+  function blueprintDemoRoute(bp) {
+    return `/demo/blueprints/${toSlug(bp?.blueprint_code || bp?.name || 'blueprint')}`;
+  }
+
+  function planDemoRoute(t) {
+    return `/demo/plans/${toSlug(t?.tier_code || t?.name || 'core')}`;
+  }
+
   async function fetchJSON(url) {
     const r = await fetch(url);
     if (!r.ok) throw new Error(`${r.status} ${r.statusText} on ${url}`);
@@ -1702,6 +1726,7 @@
             <a href="${planRoute(t)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;">
               Start with ${t?.name || 'Plan'} →
             </a>
+            <a href="${planDemoRoute(t)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;margin-top:8px;">View working demo →</a>
           </div>
         </div>
       `).join('');
@@ -1732,6 +1757,7 @@
             </div>
             <div class="card-cta">
               <a href="${editionRoute(e)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;">Learn More →</a>
+              <a href="${editionDemoRoute(e)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;margin-top:8px;">View working demo →</a>
             </div>
           </div>
         `;
@@ -1760,6 +1786,7 @@
             </div>
             <div class="card-cta">
               <a href="${suiteRoute(s)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;">Activate →</a>
+              <a href="${suiteDemoRoute(s)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;margin-top:8px;">View working demo →</a>
             </div>
           </div>
         `;
@@ -1797,6 +1824,7 @@
               </div>
               <div class="card-cta">
                 <a href="${packRoute(b)}" class="btn-secondary" style="width:100%;text-align:center;">View Pack →</a>
+                <a href="${packDemoRoute(b)}" class="btn-secondary" style="width:100%;text-align:center;margin-top:8px;">View working demo →</a>
               </div>
             </div>
           `;
@@ -1841,6 +1869,7 @@
             </div>
             <div class="card-cta">
               <a href="${moduleRoute(m)}" class="btn-secondary" style="width:100%;text-align:center;">View Workflow →</a>
+              <a href="${moduleDemoRoute(m)}" class="btn-secondary" style="width:100%;text-align:center;margin-top:8px;">View working demo →</a>
             </div>
           </div>
         `).join('');
@@ -1872,6 +1901,7 @@
             </div>
             <div class="card-cta">
               <a href="${blueprintRoute(bp)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;">View Blueprint →</a>
+              <a href="${blueprintDemoRoute(bp)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;margin-top:8px;">View working demo →</a>
             </div>
           </div>
         `;

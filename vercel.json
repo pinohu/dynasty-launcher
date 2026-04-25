@@ -187,6 +187,22 @@
     "api/storefront/catalog.js": {
       "maxDuration": 30,
       "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+    },
+    "api/demo/create-session.js": {
+      "maxDuration": 30,
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
+    },
+    "api/demo/run-module.js": {
+      "maxDuration": 60,
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
+    },
+    "api/demo/session.js": {
+      "maxDuration": 10,
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+    },
+    "api/demo/trace.js": {
+      "maxDuration": 10,
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     }
   },
   "headers": [

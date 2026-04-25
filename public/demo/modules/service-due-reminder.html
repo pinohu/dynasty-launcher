@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Service-Due Reminder Demo Working Demo - Your Deputy</title>
+<meta name="description" content="For recurring services (HVAC tune-up, pest treatment, cleaning), remind customers when they're due. This working demo runs the trigger, activates the module in ">
+<link rel="canonical" href="https://www.yourdeputy.com/demo/modules/service-due-reminder">
+<link rel="stylesheet" href="/site-shell.css">
+<style>
+:root{--gold:#C9A84C;--ink:#09090B;--panel:#17171C;--panel2:#202028;--line:rgba(255,255,255,.12);--text:#FAFAF9;--muted:#A1A1AA;--ok:#22C55E;--danger:#FB7185}
+*{box-sizing:border-box}body{margin:0;background:#0B0B10;color:var(--text);font-family:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}a{color:var(--gold);text-decoration:none}.wrap{max-width:1180px;margin:0 auto;padding:36px 22px 70px}.crumbs{font-size:13px;color:var(--muted);margin-bottom:30px}.hero{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:stretch}.eyebrow{color:var(--gold);font-size:12px;text-transform:uppercase;font-weight:900;letter-spacing:.14em;margin-bottom:12px}h1{font-family:'Playfair Display',serif;font-weight:500;letter-spacing:-.03em;line-height:1;font-size:clamp(42px,6vw,78px);margin:0 0 18px}.lead{font-size:19px;color:var(--muted);max-width:830px}.panel,.demo-card,.trace-panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px}.panel strong{color:var(--gold)}.buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;max-width:100%;min-width:0}.btn{display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:center;border-radius:11px;padding:13px 18px;font-weight:900;border:1px solid var(--line);cursor:pointer}.primary{background:var(--gold);color:#09090B;border-color:var(--gold)}.ghost{background:transparent;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}.section{margin-top:34px}.section h2{font-size:24px;margin:0 0 10px}.section p{color:var(--muted)}.demo-card h3{margin:0 0 8px;font-size:16px}.demo-card p{font-size:13px;margin:0 0 10px}.demo-card span{font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:var(--gold);word-break:break-all}.trace-panel{margin-top:18px;background:#101014}.trace-status{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:14px}.dot{width:10px;height:10px;border-radius:999px;background:var(--muted)}.dot.ok{background:var(--ok)}.dot.err{background:var(--danger)}pre{white-space:pre-wrap;word-break:break-word;max-height:520px;overflow:auto;background:#08080B;border:1px solid var(--line);border-radius:12px;padding:14px;color:#D4D4D8;font-size:12px}.output-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}.output{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}.output b{display:block;color:var(--gold);margin-bottom:6px}@media(max-width:900px){.hero,.grid,.output-list{grid-template-columns:1fr}}@media(max-width:560px){.wrap{padding:24px 16px 56px}h1{font-size:38px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<nav class="crumbs"><a href="/">Home</a> / <a href="/demo">Working demos</a> / Service-Due Reminder Demo</nav>
+<section class="hero">
+<div>
+<div class="eyebrow">Live sandbox demo Â· module</div>
+<h1>Service-Due Reminder Demo</h1>
+<p class="lead">For recurring services (HVAC tune-up, pest treatment, cleaning), remind customers when they're due. This working demo runs the trigger, activates the module in a sandbox tenant, executes the workflow template, and returns output previews.</p>
+<div class="buttons">
+<button class="btn primary" id="run-demo" type="button">Run working demo</button>
+<a class="btn ghost" href="/marketplace">Back to marketplace</a>
+<a class="btn ghost" href="/app?demo=service_due_reminder">Activate Service-Due Reminder</a>
+</div>
+</div>
+<aside class="panel">
+<p><strong>What this proves:</strong> entitlement, capability, activation, trigger, workflow dispatch, event log, output preview, and customer-visible trace.</p>
+<p><strong>No real vendor keys required:</strong> email, SMS, payment, CRM, analytics, and document actions use sandbox providers for the demo.</p>
+</aside>
+</section>
+<section class="section"><h2>Included working pieces</h2><div class="grid"><article class="demo-card"><h3>Service-Due Reminder</h3><p>Lock in recurring revenue that used to depend on customer memory.</p><span>service.due</span></article></div></section>
+<section class="section"><h2>Execution trace</h2><p>Run the demo to see the exact activation path and workflow outputs. This is deliberately visible so clients can inspect what they are buying.</p><div class="trace-panel"><div class="trace-status"><span class="dot" id="demo-dot"></span><span id="demo-status">Ready to run.</span></div><div id="demo-output" class="output-list"></div><pre id="demo-trace" aria-live="polite">Click "Run working demo" to execute this unit in a sandbox tenant.</pre></div></section>
+<section class="section"><h2>Client CTA</h2><p>If this demo solves the pain point, activate the module, pack, suite, edition, plan, or blueprint from the marketplace. The checkout path grants entitlements and activates the same workflow machinery shown here.</p><div class="buttons"><a class="btn primary" href="/app?activate=service_due_reminder">Activate Service-Due Reminder</a><a class="btn ghost" href="/deliverables">Review deliverables</a></div></section>
+</main>
+<script>
+const demoPayload = {"unit_type":"module","unit_code":"service_due_reminder"};
+const statusEl = document.getElementById('demo-status');
+const traceEl = document.getElementById('demo-trace');
+const dotEl = document.getElementById('demo-dot');
+const outputEl = document.getElementById('demo-output');
+function setStatus(text, ok) {
+  statusEl.textContent = text;
+  dotEl.className = 'dot ' + (ok === true ? 'ok' : ok === false ? 'err' : '');
+}
+function renderOutputs(trace) {
+  const previews = (trace.runs || []).flatMap((run) => run.output_preview || []);
+  outputEl.innerHTML = previews.map((item) => '<div class="output"><b>' + item.title + '</b><span>' + item.body + '</span></div>').join('');
+}
+document.getElementById('run-demo').addEventListener('click', async () => {
+  setStatus('Running sandbox demo...', null);
+  traceEl.textContent = 'Creating demo tenant, granting entitlement, activating modules, emitting trigger, and dispatching workflow...';
+  outputEl.innerHTML = '';
+  try {
+    const res = await fetch('/api/demo/run-module', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(demoPayload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.details || data.error || 'demo failed');
+    renderOutputs(data.trace);
+    traceEl.textContent = JSON.stringify(data.trace, null, 2);
+    setStatus('Demo completed. Trace and output previews are visible.', true);
+  } catch (err) {
+    traceEl.textContent = String(err.message || err);
+    setStatus('Demo failed. The trace shows the reason.', false);
+  }
+});
+</script>
+<script src="/site-shell.js" defer></script>
+</body>
+</html>

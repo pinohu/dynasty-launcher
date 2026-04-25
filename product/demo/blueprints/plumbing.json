@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "blueprint",
+  "unit_code": "plumbing",
+  "title": "Plumbing Service Business Demo",
+  "route": "/demo/blueprints/plumbing",
+  "demo_trigger": "blueprint.demo",
+  "sample_input": {
+    "unit_type": "blueprint",
+    "unit_code": "plumbing"
+  },
+  "module_codes": [
+    "missed_call_textback",
+    "after_hours_autoresponder",
+    "webform_autoreply",
+    "speed_to_lead_response",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "estimate_followup",
+    "post_job_review_request",
+    "overdue_invoice_reminder",
+    "instant_lead_ack",
+    "unhappy_customer_interception"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "call.missed",
+    "lead.created",
+    "form.submitted",
+    "lead.created",
+    "appointment.created",
+    "appointment.upcoming",
+    "estimate.sent",
+    "job.completed",
+    "invoice.overdue",
+    "lead.created",
+    "review_request.reply"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Launch Plumbing Service Business",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "blueprint",
+  "unit_code": "home-remodeling",
+  "title": "Home Remodeling / Design-Build Demo",
+  "route": "/demo/blueprints/home-remodeling",
+  "demo_trigger": "blueprint.demo",
+  "sample_input": {
+    "unit_type": "blueprint",
+    "unit_code": "home-remodeling"
+  },
+  "module_codes": [
+    "webform_autoreply",
+    "instant_lead_ack",
+    "speed_to_lead_response",
+    "appointment_confirmation",
+    "estimate_followup",
+    "proposal_view_tracker",
+    "lost_deal_reactivation",
+    "post_job_review_request",
+    "overdue_invoice_reminder",
+    "missed_call_textback",
+    "unhappy_customer_interception",
+    "invoice_sent_notification",
+    "payment_recovery"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "form.submitted",
+    "lead.created",
+    "lead.created",
+    "appointment.created",
+    "estimate.sent",
+    "estimate.viewed",
+    "pipeline.deal_cold",
+    "job.completed",
+    "invoice.overdue",
+    "call.missed",
+    "review_request.reply",
+    "invoice.sent",
+    "payment.failed"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Launch Home Remodeling / Design-Build",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "module",
+  "unit_code": "webform_autoreply",
+  "title": "Web Form Auto-Reply",
+  "route": "/demo/modules/webform-autoreply",
+  "demo_trigger": "form.submitted",
+  "sample_input": {
+    "unit_type": "module",
+    "unit_code": "webform_autoreply"
+  },
+  "module_codes": [
+    "webform_autoreply"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "form.submitted"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Web Form Auto-Reply",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

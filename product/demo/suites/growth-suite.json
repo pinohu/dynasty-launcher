@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "suite",
+  "unit_code": "growth_suite",
+  "title": "Growth Suite Demo",
+  "route": "/demo/suites/growth-suite",
+  "demo_trigger": "suite.demo",
+  "sample_input": {
+    "unit_type": "suite",
+    "unit_code": "growth_suite"
+  },
+  "module_codes": [
+    "missed_call_textback",
+    "webform_autoreply",
+    "instant_lead_ack",
+    "post_job_review_request",
+    "unhappy_customer_interception",
+    "advanced_reporting"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "call.missed",
+    "form.submitted",
+    "lead.created",
+    "job.completed",
+    "review_request.reply",
+    "report.requested"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Growth Suite",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

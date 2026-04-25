@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "blueprint",
+  "unit_code": "auto-detail",
+  "title": "Auto Detailing & Mobile Detail Demo",
+  "route": "/demo/blueprints/auto-detail",
+  "demo_trigger": "blueprint.demo",
+  "sample_input": {
+    "unit_type": "blueprint",
+    "unit_code": "auto-detail"
+  },
+  "module_codes": [
+    "webform_autoreply",
+    "instant_lead_ack",
+    "appointment_confirmation",
+    "appointment_reminder",
+    "reschedule_workflow",
+    "no_show_recovery",
+    "post_job_review_request",
+    "dormant_customer_reactivation",
+    "unhappy_customer_interception",
+    "service_due_reminder"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "form.submitted",
+    "lead.created",
+    "appointment.created",
+    "appointment.upcoming",
+    "reschedule.requested",
+    "appointment.no_show",
+    "job.completed",
+    "customer.dormant",
+    "review_request.reply",
+    "service.due"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Launch Auto Detailing & Mobile Detail",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

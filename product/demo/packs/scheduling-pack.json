@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "pack",
+  "unit_code": "scheduling_pack",
+  "title": "Scheduling Pack Demo",
+  "route": "/demo/packs/scheduling-pack",
+  "demo_trigger": "pack.demo",
+  "sample_input": {
+    "unit_type": "pack",
+    "unit_code": "scheduling_pack"
+  },
+  "module_codes": [
+    "appointment_confirmation",
+    "appointment_reminder",
+    "no_show_recovery"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "appointment.created",
+    "appointment.upcoming",
+    "appointment.no_show"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Scheduling Pack",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}

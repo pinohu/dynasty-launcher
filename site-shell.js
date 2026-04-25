@@ -8,6 +8,7 @@
     { href: "/app?returning=1", label: "Builder" },
     { href: "/quiz", label: "Diagnostic" },
     { href: "/marketplace", label: "Marketplace" },
+    { href: "/demo", label: "Demos" },
     { href: "/deliverables", label: "Deliverables" },
     { href: "/maturity", label: "Maturity" },
     { href: "/observability", label: "Observability" },
@@ -42,6 +43,8 @@
       title: "Marketplace",
       links: [
         { href: "/marketplace", label: "Business-unit marketplace" },
+        { href: "/demo", label: "Working demo directory" },
+        { href: "/demo/modules/webform-autoreply", label: "Module demo example" },
         { href: "/automations/modules/", label: "Automation modules" },
         { href: "/automations/packs/", label: "Outcome packs" },
         { href: "/automations/categories/", label: "Categories" },

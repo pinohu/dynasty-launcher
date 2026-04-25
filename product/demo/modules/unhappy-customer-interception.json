@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "unit_type": "module",
+  "unit_code": "unhappy_customer_interception",
+  "title": "Unhappy Customer Interception",
+  "route": "/demo/modules/unhappy-customer-interception",
+  "demo_trigger": "review_request.reply",
+  "sample_input": {
+    "unit_type": "module",
+    "unit_code": "unhappy_customer_interception"
+  },
+  "module_codes": [
+    "unhappy_customer_interception"
+  ],
+  "expected_events": [
+    "demo.session_created",
+    "demo.unit_ran",
+    "review_request.reply"
+  ],
+  "expected_outputs": [
+    "visible_execution_trace",
+    "sandbox_output_preview",
+    "activation_proof",
+    "cta_to_activate",
+    "catalog_traceability"
+  ],
+  "cta": "Activate Unhappy Customer Interception",
+  "api": {
+    "create_session": "POST /api/demo/create-session",
+    "run": "POST /api/demo/run-module",
+    "trace": "GET /api/demo/trace?run_id={run_id}"
+  },
+  "validation": {
+    "must_execute": true,
+    "must_return_trace": true,
+    "must_not_require_real_vendor_credentials": true
+  }
+}
