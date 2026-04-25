@@ -83,6 +83,7 @@ input:focus{outline:2px solid var(--gold);outline-offset:2px}
         recoverEmail = email;
         step1.classList.add('hidden');
         step2.classList.remove('hidden');
+        setMsg(step2Msg, 'Code sent. Check your inbox and spam folder.', 'ok');
         codeInput.focus();
       } else {
         setMsg(step1Msg, d.error || 'No purchase was found for that email.', 'err');

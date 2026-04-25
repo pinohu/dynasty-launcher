@@ -58,6 +58,75 @@ async function stripeGet(endpoint) {
   return data;
 }
 
+async function sendRecoveryEmail({ email, code }) {
+  const subject = 'Your Deputy - Sign-in code';
+  const text = `Your sign-in code is: ${code}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\nhttps://yourdeputy.com`;
+  const from = process.env.RECOVERY_EMAIL_FROM || 'Your Deputy <hello@yourdeputy.com>';
+  const realKey = (value) => {
+    const key = (value || '').trim();
+    return key && !key.startsWith('STUB_') ? key : '';
+  };
+  const emailitKey = realKey(process.env.EMAILIT_API_KEY);
+  const resendKey = realKey(process.env.RESEND_API_KEY || process.env.RESEND_KEY);
+  const sendgridKey = realKey(process.env.SENDGRID_API_KEY);
+
+  if (emailitKey) {
+    const resp = await fetch('https://api.emailit.com/v2/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${emailitKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from, to: email, subject, text })
+    });
+    const body = await resp.text().catch(() => '');
+    if (resp.ok) return { ok: true, provider: 'emailit' };
+    return { ok: false, provider: 'emailit', status: resp.status, body: body.slice(0, 300) };
+  }
+
+  if (resendKey) {
+    const resp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from, to: [email], subject, text })
+    });
+    const body = await resp.text().catch(() => '');
+    if (resp.ok) return { ok: true, provider: 'resend' };
+    return { ok: false, provider: 'resend', status: resp.status, body: body.slice(0, 300) };
+  }
+
+  if (sendgridKey) {
+    const fromEmail = process.env.RECOVERY_EMAIL_FROM_ADDRESS || 'hello@yourdeputy.com';
+    const fromName = process.env.RECOVERY_EMAIL_FROM_NAME || 'Your Deputy';
+    const resp = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${sendgridKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email }] }],
+        from: { email: fromEmail, name: fromName },
+        subject,
+        content: [{ type: 'text/plain', value: text }]
+      })
+    });
+    const body = await resp.text().catch(() => '');
+    if (resp.ok) return { ok: true, provider: 'sendgrid' };
+    return { ok: false, provider: 'sendgrid', status: resp.status, body: body.slice(0, 300) };
+  }
+
+  return { ok: false, provider: 'none', error: 'No recovery email provider configured' };
+}
+
+async function findPaidSessionByEmail(email) {
+  const normalized = email.toLowerCase();
+  const sessions = await stripeGet('checkout/sessions?limit=100');
+  if (sessions.error || sessions._http_error) {
+    return { ok: false, error: sessions.error?.message || 'Stripe lookup failed' };
+  }
+  const paid = (sessions.data || []).find(s => {
+    const sessionEmail = (s.customer_email || s.customer_details?.email || '').toLowerCase();
+    const paidSession = s.payment_status === 'paid' || (s.mode === 'subscription' && s.status === 'complete');
+    return paidSession && sessionEmail === normalized;
+  });
+  return { ok: true, paid };
+}
+
 
 const SESSION_ATTEMPTS = new Map();
 const SESSION_MAX = 10;
@@ -225,28 +294,26 @@ export default async function handler(req, res) {
     if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ ok: false, error: 'Valid email required' });
     }
+    const normalizedEmail = email.trim().toLowerCase();
     try {
+      const lookup = await findPaidSessionByEmail(normalizedEmail);
+      if (!lookup.ok) return res.json({ ok: false, error: 'Could not verify purchase email. Please try again.' });
+      if (!lookup.paid) return res.json({ ok: false, error: 'No paid build session was found for that email.' });
+
       const { createHmac } = await import('crypto');
       const window5m = Math.floor(Date.now() / 300000);
       const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET;
-      const code = createHmac('sha256', secret).update(`recover:${email.toLowerCase()}:${window5m}`).digest('hex').slice(-6).toUpperCase();
+      const code = createHmac('sha256', secret).update(`recover:${normalizedEmail}:${window5m}`).digest('hex').slice(-6).toUpperCase();
 
-      const emailitKey = process.env.EMAILIT_API_KEY;
-      if (emailitKey) {
-        await fetch('https://api.emailit.com/v2/emails', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${emailitKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            from: 'Your Deputy <hello@yourdeputy.com>',
-            to: email,
-            subject: 'Your Deputy — Sign-in code',
-            text: `Your sign-in code is: ${code}\n\nThis code expires in 5 minutes.\n\nIf you didn't request this, you can safely ignore this email.\n\nhttps://yourdeputy.com`
-          })
-        });
-        return res.json({ ok: true, sent: true });
+      const delivery = await sendRecoveryEmail({ email: normalizedEmail, code });
+      if (delivery.ok) {
+        return res.json({ ok: true, sent: true, provider: delivery.provider });
       }
-      return res.json({ ok: false, error: 'Email service not configured. Contact support.' });
+      console.error('[recover_start] email delivery failed', { provider: delivery.provider, status: delivery.status, body: delivery.body, error: delivery.error });
+      return res.status(502).json({ ok: false, error: 'The sign-in email could not be sent. Please try again or contact support.' });
+
     } catch (e) {
+      console.error('[recover_start] failed', e);
       return res.json({ ok: false, error: 'Could not send code. Try again.' });
     }
   }
@@ -270,9 +337,9 @@ export default async function handler(req, res) {
       }
       if (!valid) return res.json({ ok: false, error: 'Invalid or expired code' });
 
-      const enc = (s) => encodeURIComponent(s);
-      const sessions = await stripeGet(`checkout/sessions?limit=10&customer_details%5Bemail%5D=${enc(email.toLowerCase())}`);
-      const paid = (sessions.data || []).find(s => s.payment_status === 'paid' || (s.mode === 'subscription' && s.status === 'complete'));
+      const lookup = await findPaidSessionByEmail(email.toLowerCase());
+      if (!lookup.ok) return res.json({ ok: false, error: 'Could not verify. Check your email and try again.' });
+      const paid = lookup.paid;
       if (!paid) return res.json({ ok: false, error: 'Could not verify. Check your email and try again.' });
 
       const accessToken = await signPaidAccessToken({
