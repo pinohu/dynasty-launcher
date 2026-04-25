@@ -108,6 +108,65 @@ const BUSINESS_UNIT_REQUIRED_PATHS = [
   'tests/niche-validation.test.ts',
 ];
 
+const FULL_SDLC_REQUIRED_PATHS = [
+  'sdlc/problem-discovery.md',
+  'sdlc/strategic-product-definition.md',
+  'sdlc/solution-architecture.md',
+  'sdlc/ux-ui-workflow-design.md',
+  'sdlc/mvp-scope.md',
+  'sdlc/development-plan.md',
+  'sdlc/product-development-map.md',
+  'sdlc/testing-quality-assurance.md',
+  'sdlc/deployment-launch.md',
+  'sdlc/go-to-market-system.md',
+  'sdlc/customer-success-retention.md',
+  'sdlc/operations-scale-optimization.md',
+  'sdlc/continuous-improvement-loop.md',
+  'gtm/lead-generation-system.md',
+  'gtm/launch-campaign.md',
+  'gtm/affiliate-referral-loop.md',
+  'gtm/review-acquisition.md',
+  'gtm/partnerships-pr.md',
+  'customer-success/onboarding-playbook.md',
+  'customer-success/education-library.md',
+  'customer-success/nps-feedback-loop.md',
+  'customer-success/renewal-expansion-playbook.md',
+  'operations/sop-library.md',
+  'operations/incident-management.md',
+  'operations/vendor-management.md',
+  'operations/unit-economics.yaml',
+  'operations/compliance-audit-schedule.md',
+  'experiments/ab-testing-plan.yaml',
+  'experiments/pricing-experiments.yaml',
+  'experiments/feature-telemetry.yaml',
+  'experiments/market-expansion.yaml',
+  'pre-saas/auto-listing-adapters.yaml',
+  'pre-saas/revenue-reinvestment-loop.yaml',
+  'pre-saas/data-feedback-loop.yaml',
+  'pre-saas/saas-transition-triggers.yaml',
+  'memory/knowledge-system.md',
+  'ux/accessibility-checklist.md',
+  'ux/design-system.md',
+  'tests/accessibility.test.ts',
+  'tests/semantic-equivalence.test.ts',
+  'tests/revenue-loop.test.ts',
+];
+
+const SEMANTIC_PROMISE_GROUPS = [
+  { code: 'discovery_validation', label: 'problem discovery and opportunity validation', terms: ['market research', 'competitor analysis', 'customer interviews', 'TAM', 'SAM', 'SOM', 'ICP', 'buyer journey', 'pricing sensitivity'] },
+  { code: 'product_strategy', label: 'strategic product definition', terms: ['value proposition', 'USP', 'positioning', 'subscription model', 'upsell', 'churn prevention', 'retention loop', 'expansion revenue', 'PRD', 'BRD'] },
+  { code: 'architecture', label: 'solution architecture', terms: ['technical architecture', 'infrastructure architecture', 'database architecture', 'API architecture', 'security architecture', 'multi-tenant', 'RBAC', 'observability', 'backup', 'disaster recovery'] },
+  { code: 'ux_accessibility', label: 'UX/UI/accessibility', terms: ['user journey', 'workflow design', 'information architecture', 'accessibility', 'error state', 'empty state', 'design system', 'component library', 'cognitive load'] },
+  { code: 'mvp_planning', label: 'MVP scoping and development planning', terms: ['RICE', 'ICE', 'Kano', 'dependency mapping', 'branching strategy', 'CI/CD', 'QA strategy', 'release strategy', 'technical debt'] },
+  { code: 'qa_launch', label: 'testing, QA, deployment, and launch', terms: ['unit testing', 'integration testing', 'E2E', 'regression testing', 'performance testing', 'security testing', 'UAT', 'DNS', 'SSL', 'monitoring', 'backup validation'] },
+  { code: 'gtm_distribution', label: 'go-to-market and distribution', terms: ['lead generation', 'SEO', 'sales funnel', 'demo', 'trial conversion', 'affiliate', 'referral', 'community', 'launch campaign', 'PR', 'review acquisition'] },
+  { code: 'customer_success', label: 'customer success and retention', terms: ['onboarding', 'customer education', 'help center', 'success metrics', 'churn detection', 'renewal workflow', 'NPS', 'feature request', 'account management'] },
+  { code: 'operations_company', label: 'operations, scale, and company controls', terms: ['KPI dashboard', 'financial controls', 'hiring', 'SOP', 'incident management', 'SRE', 'security governance', 'vendor management', 'CAC', 'LTV', 'profitability'] },
+  { code: 'continuous_improvement', label: 'continuous improvement loop', terms: ['usage analytics', 'conversion analysis', 'product telemetry', 'pricing optimization', 'A/B testing', 'feature rollout', 'market expansion', 'ecosystem'] },
+  { code: 'pre_saas_revenue_loop', label: 'pre-SaaS revenue engine', terms: ['authority engine', 'information product factory', 'auto-listing', 'lead magnet', 'checkout', 'digital delivery', 'revenue reinvestment', 'winner detection', 'SaaS transition'] },
+  { code: 'ai_mcp_memory', label: 'AI-native MCP and memory system', terms: ['MCP', 'tool registry', 'agent permissions', 'pgvector', 'document ingestion', 'retrieval API', 'customer-specific retrieval', 'prompt injection'] },
+];
+
 const REQUIRED_SCHEMA_FILES = [
   'lead',
   'customer',
@@ -355,6 +414,11 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
       issues.push(issue('business_unit_structure_missing', `Autonomous business unit structure is missing ${missingBusinessPaths.length} required files.`, missingBusinessPaths.slice(0, 30), 'critical'));
     }
 
+    const missingSdlcPaths = FULL_SDLC_REQUIRED_PATHS.filter((path) => !hasPath(files, path));
+    if (missingSdlcPaths.length) {
+      issues.push(issue('full_sdlc_coverage_missing', `Full SaaS SDLC/company lifecycle coverage is missing ${missingSdlcPaths.length} required artifacts.`, missingSdlcPaths.slice(0, 30), 'critical'));
+    }
+
     const missingSchemas = REQUIRED_SCHEMA_FILES.filter((path) => !hasPath(files, path));
     if (missingSchemas.length) {
       issues.push(issue('business_schemas_missing', `Business schemas are missing: ${missingSchemas.join(', ')}.`, missingSchemas, 'critical'));
@@ -398,10 +462,30 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
     }
 
     const productCatalog = text(files, 'products/product-catalog.yaml');
-    const productCount = (productCatalog.match(/^\s*-\s+title:/gm) || []).length;
+    const paidProductCount = (productCatalog.match(/type:\s*info_product/g) || []).length;
     const leadMagnetCount = (productCatalog.match(/type:\s*lead_magnet/g) || []).length;
-    if (productCount < 8 || leadMagnetCount < 3) {
+    const bundleCount = (productCatalog.match(/^\s*-\s+title:\s*".*Bundle"/gm) || []).length;
+    const hasPremiumToolkit = /premium_toolkit:\s*\n\s*title:/i.test(productCatalog);
+    const upsellCount = (productCatalog.match(/upsell_path:/g) || []).length + (text(files, 'revops/pricing.yaml').match(/^\s*-\s+name:/gm) || []).length;
+    if (paidProductCount < 5 || leadMagnetCount < 3 || bundleCount < 2 || !hasPremiumToolkit || upsellCount < 3) {
       issues.push(issue('pre_saas_revenue_missing', 'Pre-SaaS revenue engine must include at least 5 paid info products and 3 lead magnets.', ['products/product-catalog.yaml'], 'critical'));
+    }
+    const contentCounts = {
+      articles: paths.filter((p) => /^content\/articles\/.+\.md$/.test(p)).length,
+      landingPages: paths.filter((p) => /^content\/landing-pages\/.+\.md$/.test(p)).length,
+      nurtureEmails: paths.filter((p) => /^content\/email-sequences\/.+\.md$/.test(p)).length,
+      socialPosts: paths.filter((p) => /^content\/social-posts\/.+\.md$/.test(p)).length,
+    };
+    if (contentCounts.articles < 20 || contentCounts.landingPages < 5 || contentCounts.nurtureEmails < 10 || contentCounts.socialPosts < 20) {
+      issues.push(issue('authority_content_engine_missing', `Authority/content engine is incomplete: ${JSON.stringify(contentCounts)}.`, ['content/'], 'critical'));
+    }
+    const revenueLoopText = ['pre-saas/auto-listing-adapters.yaml', 'pre-saas/revenue-reinvestment-loop.yaml', 'pre-saas/data-feedback-loop.yaml', 'pre-saas/saas-transition-triggers.yaml']
+      .map((path) => text(files, path)).join('\n');
+    for (const marker of ['auto-listing', 'revenue reinvestment', 'winner detection', 'variant generation', 'SaaS transition', 'conversion rate', 'refund rate']) {
+      if (!new RegExp(marker, 'i').test(revenueLoopText)) {
+        issues.push(issue('pre_saas_feedback_loop_missing', `Pre-SaaS feedback/reinvestment loop is missing ${marker}.`, ['pre-saas/'], 'critical'));
+        break;
+      }
     }
 
     const revopsText = ['revops/pricing.yaml', 'revops/quote-templates/default.md', 'revops/proposal-templates/default.md', 'revops/contract-templates/msa.md', 'revops/invoice-templates/default.md']
@@ -440,6 +524,25 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
       .map((path) => text(files, path)).join('\n');
     if (/\{\{NICHE\}\}|generic business|your niche|lorem ipsum/i.test(nicheText)) {
       issues.push(issue('niche_validation_failed', 'Generated content is generic or still contains unresolved niche placeholders.', [], 'critical'));
+    }
+
+    const semanticCorpus = [
+      ...FULL_SDLC_REQUIRED_PATHS,
+      'config/master.config.yaml',
+      'products/product-catalog.yaml',
+      'content/seo-plan.yaml',
+      'agents/tool-registry.json',
+      'operations/unit-economics.yaml',
+      'analytics/revenue-metrics.yaml',
+      'src/auth/rbac.ts',
+      'src/events/bus.ts',
+    ].map((path) => text(files, path)).join('\n').toLowerCase();
+    const missingPromiseGroups = SEMANTIC_PROMISE_GROUPS.filter((group) => {
+      const hits = group.terms.filter((term) => semanticCorpus.includes(term.toLowerCase())).length;
+      return hits < Math.ceil(group.terms.length * 0.7);
+    });
+    if (missingPromiseGroups.length) {
+      issues.push(issue('semantic_promise_coverage_missing', `Generated artifacts do not semantically cover: ${missingPromiseGroups.map((g) => g.label).join(', ')}.`, ['sdlc/', 'pre-saas/', 'gtm/', 'operations/'], 'critical'));
     }
   }
 
@@ -1075,6 +1178,8 @@ function buildBusinessUnitFiles(contract = {}) {
 
   Object.assign(files, buildRevopsFiles({ businessName, niche, targetCustomer, primaryOffer }));
   Object.assign(files, buildContentFiles({ businessName, niche, targetCustomer, primaryOffer }));
+  Object.assign(files, buildFullSdlcFiles({ businessName, niche, targetCustomer, primaryOffer, domain }));
+  Object.assign(files, buildPreSaasLoopFiles({ niche, targetCustomer, primaryOffer }));
   files['products/product-catalog.yaml'] = buildProductCatalog({ niche, targetCustomer, primaryOffer });
   files['analytics/funnel-metrics.yaml'] = buildMetricYaml('funnel', ['visitors', 'leads', 'conversion_rate', 'checkout_conversion', 'article_performance']);
   files['analytics/revenue-metrics.yaml'] = buildMetricYaml('revenue', ['product_revenue', 'recurring_revenue', 'failed_payments', 'revenue_by_product', 'revenue_by_offer', 'revenue_by_niche']);
@@ -1087,7 +1192,10 @@ function buildBusinessUnitFiles(contract = {}) {
   files['tests/mcp-tools.test.ts'] = buildGeneratedTest('mcp-tools', ['agents/tool-registry.json']);
   files['tests/revops.test.ts'] = buildGeneratedTest('revops', ['revops/pricing.yaml', 'revops/proposal-templates/default.md', 'revops/contract-templates/msa.md', 'revops/invoice-templates/default.md']);
   files['tests/niche-validation.test.ts'] = buildGeneratedTest('niche-validation', ['content/seo-plan.yaml', 'products/product-catalog.yaml', 'prompts/niche-research.md']);
-  files['tests/build-completeness.test.ts'] = buildGeneratedTest('build-completeness', [...BUSINESS_UNIT_REQUIRED_PATHS, ...REQUIRED_SCHEMA_FILES]);
+  files['tests/accessibility.test.ts'] = buildGeneratedTest('accessibility', ['ux/accessibility-checklist.md', 'ux/design-system.md']);
+  files['tests/semantic-equivalence.test.ts'] = buildGeneratedTest('semantic-equivalence', FULL_SDLC_REQUIRED_PATHS);
+  files['tests/revenue-loop.test.ts'] = buildGeneratedTest('revenue-loop', ['pre-saas/auto-listing-adapters.yaml', 'pre-saas/revenue-reinvestment-loop.yaml', 'pre-saas/data-feedback-loop.yaml', 'pre-saas/saas-transition-triggers.yaml']);
+  files['tests/build-completeness.test.ts'] = buildGeneratedTest('build-completeness', [...BUSINESS_UNIT_REQUIRED_PATHS, ...FULL_SDLC_REQUIRED_PATHS, ...REQUIRED_SCHEMA_FILES]);
 
   for (const route of ['about', 'contact', 'pricing', 'products', 'services', 'lead-magnet', 'checkout', 'thank-you', 'portal', 'support', 'privacy', 'terms', 'refund']) {
     files[`frontend/app/${route}/page.tsx`] = buildBusinessPage(route, { businessName, niche, targetCustomer, primaryOffer });
@@ -1444,8 +1552,81 @@ function buildContentFiles({ businessName, niche, targetCustomer, primaryOffer }
   for (let i = 1; i <= 20; i += 1) files[`content/articles/article-${String(i).padStart(2, '0')}.md`] = `# ${niche} article brief ${i}\n\nAudience: ${targetCustomer}\nCTA: ${primaryOffer}\n`;
   for (let i = 1; i <= 5; i += 1) files[`content/landing-pages/landing-${i}.md`] = `# ${businessName} ${niche} landing page ${i}\n\nNiche-specific headline, trust indicators, CTA, SEO metadata, schema markup, and conversion path.\n`;
   for (let i = 1; i <= 10; i += 1) files[`content/email-sequences/nurture-${i}.md`] = `Subject: ${niche} revenue improvement step ${i}\n\nEmail for ${targetCustomer}; CTA: ${primaryOffer}.\n`;
-  for (let i = 1; i <= 10; i += 1) files[`content/social-posts/post-${i}.md`] = `${niche} insight for ${targetCustomer}: connect the pain point to ${primaryOffer}.\n`;
+  for (let i = 1; i <= 20; i += 1) files[`content/social-posts/post-${i}.md`] = `${niche} insight for ${targetCustomer}: connect the pain point to ${primaryOffer}.\n`;
   return files;
+}
+
+function buildFullSdlcFiles({ businessName, niche, targetCustomer, primaryOffer, domain }) {
+  const base = {
+    businessName,
+    niche,
+    targetCustomer,
+    primaryOffer,
+    domain,
+    promise: `This artifact is mandatory for ${businessName}: it keeps ${niche} on-niche for ${targetCustomer}, tied to ${primaryOffer}, and blocks generic SaaS output.`,
+  };
+  return {
+    'sdlc/problem-discovery.md': sdlcDoc('Problem Discovery & Opportunity Validation', base, ['market research', 'competitor analysis', 'customer interviews', 'pain-point validation', 'demand verification', 'revenue potential analysis', 'TAM', 'SAM', 'SOM', 'ICP', 'user personas', 'buyer journey', 'pricing sensitivity', 'urgency scoring', 'existing solution failure analysis']),
+    'sdlc/strategic-product-definition.md': sdlcDoc('Strategic Product Definition', base, ['value proposition', 'offer design', 'USP', 'product positioning', 'messaging architecture', 'subscription model', 'trial strategy', 'upsell', 'downsell', 'churn prevention', 'retention loop', 'expansion revenue', 'PRD', 'BRD', 'roadmap', 'investor narrative']),
+    'sdlc/solution-architecture.md': sdlcDoc('Solution Architecture', base, ['technical architecture', 'infrastructure architecture', 'database architecture', 'API architecture', 'security architecture', 'compliance architecture', 'multi-tenant', 'billing architecture', 'RBAC', 'integration architecture', 'event architecture', 'observability', 'backup', 'disaster recovery', 'AI architecture', 'agent architecture']),
+    'sdlc/ux-ui-workflow-design.md': sdlcDoc('UX / UI / Workflow Design', base, ['user journey', 'workflow design', 'wireframes', 'information architecture', 'conversion path', 'onboarding flows', 'dashboard design', 'admin portal', 'customer portal', 'mobile responsiveness', 'accessibility', 'error state', 'empty state', 'design system', 'component library', 'cognitive load', 'trust architecture']),
+    'sdlc/mvp-scope.md': sdlcDoc('MVP Scoping', base, ['must-have', 'revenue-generating', 'retention-driving', 'validation-worthy', 'RICE', 'ICE', 'Kano', 'dependency mapping', 'technical feasibility', 'launch sequencing']),
+    'sdlc/development-plan.md': sdlcDoc('Development Planning', base, ['sprint planning', 'Agile workflow', 'DevOps planning', 'repository structure', 'branching strategy', 'environment setup', 'coding standards', 'CI/CD', 'QA strategy', 'release strategy', 'documentation strategy', 'security standards', 'technical debt', 'ownership matrix']),
+    'sdlc/product-development-map.md': sdlcDoc('Product Development Map', base, ['frontend development', 'backend development', 'API development', 'database development', 'authentication', 'billing systems', 'subscription management', 'webhooks', 'integrations', 'notifications', 'CRM', 'automation', 'admin tools', 'analytics instrumentation', 'audit logs', 'security hardening', 'AI implementation', 'agent orchestration']),
+    'sdlc/testing-quality-assurance.md': sdlcDoc('Testing & Quality Assurance', base, ['unit testing', 'integration testing', 'E2E', 'regression testing', 'performance testing', 'load testing', 'stress testing', 'security testing', 'penetration testing', 'UAT', 'cross-browser testing', 'accessibility testing', 'billing validation', 'failure simulation', 'chaos engineering', 'incident drills']),
+    'sdlc/deployment-launch.md': sdlcDoc('Deployment & Launch', base, ['production deployment', 'infrastructure provisioning', 'DNS', 'domain management', 'SSL', 'monitoring', 'error tracking', 'alerting', 'logging', 'backup validation', 'billing activation', 'payment processor', 'legal pages', 'support systems', 'CRM deployment', 'analytics deployment']),
+    'sdlc/go-to-market-system.md': sdlcDoc('Go-To-Market System', base, ['lead generation', 'content engine', 'paid ads', 'SEO', 'sales funnel', 'demo', 'trial conversion', 'sales scripts', 'affiliate', 'referral', 'community', 'launch campaign', 'partnerships', 'authority building', 'PR', 'review acquisition']),
+    'sdlc/customer-success-retention.md': sdlcDoc('Customer Success & Retention', base, ['onboarding', 'customer education', 'help center', 'SOP library', 'success metrics', 'churn detection', 'renewal workflow', 'upsell', 'expansion revenue', 'NPS', 'feedback loop', 'feature request', 'community support', 'white-glove onboarding', 'account management']),
+    'sdlc/operations-scale-optimization.md': sdlcDoc('Operations, Scale & Optimization', base, ['KPI dashboard', 'financial controls', 'hiring', 'SOP', 'automation architecture', 'support scaling', 'incident management', 'SRE', 'security governance', 'compliance audit', 'vendor management', 'unit economics', 'CAC', 'LTV', 'profitability', 'M&A readiness']),
+    'sdlc/continuous-improvement-loop.md': sdlcDoc('Continuous Improvement Loop', base, ['usage analytics', 'conversion analysis', 'product telemetry', 'feature optimization', 'pricing optimization', 'experimentation', 'A/B testing', 'feature rollout', 'product expansion', 'market expansion', 'platform strategy', 'ecosystem']),
+    'gtm/lead-generation-system.md': sdlcDoc('Lead Generation System', base, ['SEO', 'authority engine', 'lead magnet', 'email capture', 'sales funnel', 'trial conversion', 'demo', 'conversion rate']),
+    'gtm/launch-campaign.md': sdlcDoc('Launch Campaign', base, ['launch campaign', 'content calendar', 'offer deadline', 'review acquisition', 'PR', 'partnerships', 'community']),
+    'gtm/affiliate-referral-loop.md': sdlcDoc('Affiliate & Referral Loop', base, ['affiliate', 'referral', 'commission', 'partner tracking', 'expansion revenue']),
+    'gtm/review-acquisition.md': sdlcDoc('Review Acquisition', base, ['review acquisition', 'NPS', 'satisfaction tracking', 'case study', 'social proof']),
+    'gtm/partnerships-pr.md': sdlcDoc('Partnerships & PR', base, ['partnerships', 'PR', 'authority building', 'category narrative', 'distribution']),
+    'customer-success/onboarding-playbook.md': sdlcDoc('Onboarding Playbook', base, ['welcome email', 'intake form', 'onboarding checklist', 'customer portal', 'first-value milestone', 'support handoff']),
+    'customer-success/education-library.md': sdlcDoc('Education Library', base, ['customer education', 'help center', 'SOP library', 'knowledge base', 'training resource']),
+    'customer-success/nps-feedback-loop.md': sdlcDoc('NPS & Feedback Loop', base, ['NPS', 'feedback loop', 'feature request', 'churn detection', 'product telemetry']),
+    'customer-success/renewal-expansion-playbook.md': sdlcDoc('Renewal & Expansion Playbook', base, ['renewal workflow', 'upsell', 'expansion revenue', 'account management', 'customer health']),
+    'operations/sop-library.md': sdlcDoc('SOP Library', base, ['SOP', 'ownership matrix', 'support scaling', 'financial controls', 'governance']),
+    'operations/incident-management.md': sdlcDoc('Incident Management', base, ['incident management', 'SRE', 'alerting', 'logging', 'failure simulation', 'incident drills']),
+    'operations/vendor-management.md': sdlcDoc('Vendor Management', base, ['vendor management', 'provider abstraction', 'optional adapter', 'credential boundary', 'least privilege']),
+    'operations/compliance-audit-schedule.md': sdlcDoc('Compliance Audit Schedule', base, ['security governance', 'compliance audit', 'data protection', 'tenant isolation', 'audit logs']),
+    'operations/unit-economics.yaml': `business: "${businessName}"\nniche: "${niche}"\nmetrics:\n  CAC: required\n  LTV: required\n  gross_margin: required\n  payback_period: required\n  churn: required\n  expansion_revenue: required\n  profitability: required\ncadence: weekly\n`,
+    'experiments/ab-testing-plan.yaml': `niche: "${niche}"\nexperiments:\n  - name: homepage CTA A/B testing\n    metric: conversion rate\n  - name: checkout offer framing A/B testing\n    metric: checkout conversion\n`,
+    'experiments/pricing-experiments.yaml': `niche: "${niche}"\npricing_optimization:\n  tests: [anchor_price, bundle_discount, annual_prepay]\n  guardrails: [refund_rate, conversion_rate, support_load]\n`,
+    'experiments/feature-telemetry.yaml': `product_telemetry:\n  usage analytics: required\n  feature optimization: required\n  feature rollout: controlled\n  decision_logs: required\n`,
+    'experiments/market-expansion.yaml': `market expansion:\n  adjacent_segments: []\n  platform strategy: required\n  ecosystem: required\n`,
+    'memory/knowledge-system.md': sdlcDoc('Memory & Knowledge System', base, ['MCP', 'tool registry', 'agent permissions', 'pgvector', 'document ingestion', 'knowledge base ingestion', 'customer interaction memory', 'product documentation memory', 'proposal memory', 'contract memory', 'support memory', 'retrieval API', 'customer-specific retrieval', 'product-specific retrieval', 'event history retrieval', 'decision logs', 'prompt injection']),
+    'ux/accessibility-checklist.md': sdlcDoc('Accessibility Checklist', base, ['WCAG', 'keyboard navigation', 'focus state', 'contrast', 'semantic HTML', 'screen reader', 'error state', 'empty state']),
+    'ux/design-system.md': sdlcDoc('Design System', base, ['design system', 'component library', 'interaction patterns', 'mobile responsiveness', 'accessibility', 'trust architecture']),
+  };
+}
+
+function buildPreSaasLoopFiles({ niche, targetCustomer, primaryOffer }) {
+  return {
+    'pre-saas/auto-listing-adapters.yaml': `auto-listing:\n  primary: owned_site\n  optional_adapters: [gumroad, etsy, amazon_kdp]\n  rule: core checkout and digital delivery must work without optional marketplaces\n  niche: "${niche}"\n`,
+    'pre-saas/revenue-reinvestment-loop.yaml': `revenue reinvestment:\n  winner detection:\n    inputs: [product_revenue, conversion_rate, refund_rate, engagement_time]\n  actions:\n    - expand winning products\n    - create product variant generation tasks\n    - increase pricing within guardrails\n    - promote more heavily through SEO and email\n  target_customer: "${targetCustomer}"\n`,
+    'pre-saas/data-feedback-loop.yaml': `data feedback loop:\n  listens_to: [click-through rate, conversion rate, refund rate, engagement time, search queries]\n  improves: [products, landing pages, checkout, email nurture, support content]\n  analytics: internal\n`,
+    'pre-saas/saas-transition-triggers.yaml': `SaaS transition:\n  repeated_problem_patterns: required\n  high_demand_topics: required\n  high_converting_products: required\n  trigger_action: convert signal into SaaS feature, service, or subscription\n  primary_offer: "${primaryOffer}"\n`,
+  };
+}
+
+function sdlcDoc(title, { businessName, niche, targetCustomer, primaryOffer, promise }, terms) {
+  return `# ${title}
+
+${promise}
+
+Business: ${businessName}
+Niche: ${niche}
+Target customer: ${targetCustomer}
+Primary offer: ${primaryOffer}
+
+Required coverage:
+${terms.map((term) => `- ${term}`).join('\n')}
+
+Validation rule: every item above must be represented in generated copy, configuration, workflows, tests, or operating playbooks before BUILD STATUS: PASS.
+`;
 }
 
 function buildProductCatalog({ niche, targetCustomer, primaryOffer }) {
