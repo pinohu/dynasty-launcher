@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Your Deputy — Judgment, implementation &amp; deploy</title>
-<meta name="description" content="Stress-test the plan, then ship: consulting-grade documents, production code, and deployment with clear scope — not a toy list of AI tasks. Optional live connections by tier.">
+<title>Your Deputy - Autonomous business-unit builder</title>
+<meta name="description" content="Describe a niche business and generate a validated autonomous business unit: website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, AI/MCP tools, workflows, and infrastructure.">
 <meta name="theme-color" content="#0A0A0A">
 <link rel="manifest" href="/manifest.json">
 <meta name="keywords" content="business viability, implementation, deployment, founder operating system, SaaS launch, strategic analysis">
@@ -14,15 +14,15 @@
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Your Deputy — Judgment, then shipped product">
-<meta property="og:description" content="Clear verdict on the business, then implementation you own: documents, code, deploy. Live connections scale with tier (Foundation = docs + app + deploy).">
+<meta property="og:title" content="Your Deputy - Launch the business, not just the website">
+<meta property="og:description" content="Generate the operating layer around a niche business: revenue, RevOps, CRM, onboarding, support, analytics, AI agents, MCP tools, workflows, and self-hostable infrastructure.">
 <meta property="og:url" content="https://yourdeputy.com">
 <meta property="og:site_name" content="Your Deputy">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Your Deputy — Judgment, implementation, results">
-<meta name="twitter:description" content="From idea to a defended plan and shipped product. Add live operating connections when you need them — with explicit scope.">
+<meta name="twitter:title" content="Your Deputy - Autonomous business-unit builder">
+<meta name="twitter:description" content="From niche idea to validated business-unit repo: website, funnel, revenue engine, RevOps, CRM, AI/MCP, workflows, and infrastructure.">
 
 <!-- Favicon -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
@@ -623,7 +623,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
 <div class="page">
   <div class="logo" id="builder-header">
     <div class="lm">⚡</div>
-    <div><div class="lt">Your Deputy</div><div class="ls">Describe your project — we stress-test the plan, implement what you scoped, and report status so you can hold the build accountable</div></div>
+    <div><div class="lt">Your Deputy</div><div class="ls">Describe the business unit - we validate the niche, generate the operating layer, repair build issues, and report whether revenue, RevOps, CRM, AI/MCP, infrastructure, routes, live content, and quality gates passed</div></div>
     <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:70px;background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600" onclick="handleSignIn()">Sign In</button>
     <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">📊</button>
     <button class="lset" id="settings-btn" title="Settings">⚙</button>
@@ -632,8 +632,8 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
 
   <div id="mode-screen">
     <div class="hero">
-      <h1>Your Deputy <span>Platform</span></h1>
-      <p>Describe your business idea and get a clear viability read plus a launch-ready build path. Add deeper operational connections only when needed.</p>
+      <h1>Your Deputy <span>Business-Unit Builder</span></h1>
+      <p>Describe the niche, customer, location, business model, and offers. Dynasty scores viability, then generates the website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, AI/MCP tools, workflows, and infrastructure needed for launch.</p>
     </div>
 
     <div class="mode-cards">
@@ -661,7 +661,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     <div id="input-screen" style="display:none">
     <div class="hero">
       <h1>What are you <span>building?</span></h1>
-      <p>Describe your project in plain English. We infer the type, stack, model, channel, and pricing — then implement the scoped bundle (30+ artifacts) and infrastructure with a live run log and explicit skips or deferrals you can see.</p>
+      <p>Describe the business in plain English. We infer the niche, target customer, location, model, offer, stack, pricing, and operating requirements, then build the scoped autonomous business unit with validation, repair telemetry, live checks, and explicit credential-limited fallbacks.</p>
     </div>
 
     <div class="input-area">
@@ -796,7 +796,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
           <span class="ex" data-ex="Freight load board and carrier directory for independent truckers in the Northeast. Carriers pay to list, shippers browse free.">Freight directory</span>
           <span class="ex" data-ex="Autonomous AI agent that monitors government contract portals and texts qualified vendors when matching opportunities are posted. B2B SaaS for federal contractors.">Gov contract alerts</span>
           <span class="ex" data-ex="Immigration lawyer directory for potential immigrants researching US visa options. Members pay monthly for profile and lead routing.">Immigration directory</span>
-          <span class="ex" data-ex="Done-for-you HVAC company website and lead generation system. One-time setup fee plus monthly retainer for ongoing SEO and lead routing.">HVAC authority site</span>
+          <span class="ex" data-ex="Done-for-you HVAC operating unit with niche website, lead capture, pricing, quote/proposal workflow, contracts, invoices, payment links, onboarding, support, analytics, and AI/MCP tools.">HVAC authority site</span>
         </div>
       </div>
     </div>
@@ -806,7 +806,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
       <div class="inf-grid" id="inf-grid"></div>
     </div>
 
-    <button class="launch" id="launch-btn" disabled>Describe your project above to begin</button>
+    <button class="launch" id="launch-btn" disabled>Describe the business unit above to begin</button>
     <div id="analyze-err" style="display:none;max-width:760px;margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(229,83,75,0.35);background:rgba(229,83,75,0.08);font-size:12px;line-height:1.45;color:#FCA5A5"></div>
     <div id="tier-access-notice" style="display:none;max-width:760px;margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.08);font-size:11px;line-height:1.5;color:#FDE68A"></div>
 
@@ -2633,7 +2633,7 @@ function autoSelectModules() {
   const target = (typeof V2_DEPLOY_TARGET !== 'undefined') ? V2_DEPLOY_TARGET : '';
   // Base modules every project gets
   const mods = { hosting: true, billing: true, email: true, analytics: true, docs: true, automation: true, seo: true };
-  // Service businesses: add phone, SMS, booking, CRM
+  // Niche business builds: add phone, SMS, booking, CRM when the blueprint calls for it
   if (['client-portal','real-estate','job-board','booking-service','signing-service','crm','lead-gen','custom'].includes(type)) {
     mods.phone = true; mods.sms = true; mods.crm = true; mods.chatbot = true; mods.leads = true;
   }
@@ -5651,7 +5651,7 @@ function onDescInput(){
   clearTimeout(inferTimer);
   if(desc.length<10){
     document.getElementById('preview').style.display='none';
-    btn.disabled=true;btn.textContent='Describe your project above to begin';
+    btn.disabled=true;btn.textContent='Describe the business unit above to begin';
     INFERRED=null;
     return;
   }
@@ -5668,7 +5668,7 @@ function updateLaunchBtn(){
     btn.textContent=INFERRED?`Build "${INFERRED.name}" →`:'Build this project →';
   } else {
     btn.disabled=true;
-    btn.textContent='Describe your project above to begin';
+    btn.textContent='Describe the business unit above to begin';
   }
 }
 
@@ -15155,7 +15155,7 @@ function reset(){
   document.getElementById('preview').style.display='none';
   document.getElementById('err-box').style.display='none';
   document.getElementById('launch-btn').disabled=true;
-  document.getElementById('launch-btn').textContent='Describe your project above to begin';
+  document.getElementById('launch-btn').textContent='Describe the business unit above to begin';
   document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
 }
 
