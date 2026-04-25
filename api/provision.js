@@ -451,6 +451,13 @@ function normalizeModuleResult(name, raw, { automationOnly, zeroCostMode }) {
   return result;
 }
 
+function isExplicitZeroCostMode(project = {}) {
+  // Old app bundles persisted `dynasty_automation_mode=zero_cost` in localStorage and
+  // kept poisoning paid/admin builds. Zero-cost is now honored only when the current
+  // client also sends a confirmation flag from the settings UI.
+  return project?.automation_mode === 'zero_cost' && project?.automation_mode_confirmed === true;
+}
+
 async function fetchStripeCheckoutSession(sessionId, secretKey) {
   if (!sessionId || !secretKey) return null;
   const auth = Buffer.from(`${secretKey}:`).toString('base64');
@@ -2165,7 +2172,7 @@ async function runModules(config, project, liveUrl, enabledModules, userTier) {
   const MODULE_TIMEOUT_AI = 120000;     // 120s for AI-generating modules (SEO generates 5 blog posts)
   const startTime = Date.now();
   const MAX_TOTAL_MS = 240000;
-  const zeroCostMode = project?.automation_mode === 'zero_cost';
+  const zeroCostMode = isExplicitZeroCostMode(project);
   const automationOnly = AUTOMATION_ONLY_MODE || zeroCostMode;
   const tierName = (userTier || 'foundation').toLowerCase();
   const quotaPool = await getPool();
@@ -3432,6 +3439,10 @@ Return ONLY a valid JSON array (no markdown, no backticks):
           settings: { executionOrder: 'v1' },
         };
         const n8nBaseUrl = config.automation?.n8n_url || process.env.N8N_URL || '';
+        if (!n8nBaseUrl) {
+          results.n8n = { manual: true, error: 'Configure n8n URL in DYNASTY_TOOL_CONFIG or N8N_URL env var.' };
+          continue;
+        }
         const wr = await fetch(`${n8nBaseUrl}/api/v1/workflows`, {
           method: 'POST',
           headers: { 'X-N8N-API-KEY': N8N_KEY, 'Content-Type': 'application/json' },
@@ -3440,7 +3451,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         const wd = await wr.json();
         if (wd.id) {
           // Activate the workflow
-          await fetch(`${n8nUrl}/api/v1/workflows/${wd.id}/activate`, {
+          await fetch(`${n8nBaseUrl}/api/v1/workflows/${wd.id}/activate`, {
             method: 'POST', headers: { 'X-N8N-API-KEY': N8N_KEY },
           });
           results.n8n = { ok: true, workflow_id: wd.id, name: wfBody.name, webhook_path: `/${slug}` };

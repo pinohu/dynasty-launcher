@@ -2986,7 +2986,8 @@ function getV3Project(inf) {
     vercel_project_id: provRes?.results?.vercel?.project_id || null,
     vertical_tool_spec: bp.verticalToolSpec || '',
     byo_keys_required: localStorage.getItem('dynasty_byo_keys') !== 'false',
-    automation_mode: window.DYNASTY_AUTOMATION_MODE || 'full'
+    automation_mode: window.DYNASTY_AUTOMATION_MODE || 'full',
+    automation_mode_confirmed: (window.DYNASTY_AUTOMATION_MODE || 'full') === 'zero_cost'
   };
 }
 
@@ -12495,7 +12496,16 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
                 setP(`verify-pass-${pass}`, 'run', `Recheck: Vercel ${rd.state} (${(poll+1)*15}s)`);
                 if (rd.state === 'READY') { verifyResults.vercel = true; break; }
                 if (rd.state === 'ERROR') {
-                  verifyResults.issues.push('Vercel build failed after retry — check build logs');
+                  verifyResults.fixes_applied.push('Retry deployment failed — invoking L2 Vercel repair');
+                  setP(`verify-pass-${pass}`, 'run', 'Retry deploy failed — reading logs and repairing...');
+                  const l2 = await dynastyAutoRemediateVercelFailure(`${ORG}/${inf.repo}`, vercelProjectId, { maxAttempts: 2, pollTimeoutMs: 120000 });
+                  if (l2.ok) {
+                    verifyResults.vercel = true;
+                    verifyResults.fixes_applied.push(`L2 repair recovered Vercel after retry: ${l2.actions.join(' | ')}`);
+                  } else {
+                    const summary = l2?.diagnostic?.summary || l2?.actions?.join(' | ') || 'unclassified deployment failure';
+                    verifyResults.issues.push(`Vercel build failed after automated repair: ${summary}`);
+                  }
                   break;
                 }
               } catch {}
