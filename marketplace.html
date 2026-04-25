@@ -1326,6 +1326,15 @@
         </div>
       </section>
 
+      <section id="blueprints-section">
+        <h2>Industry Blueprints</h2>
+        <p class="section-lede">Niche-specific operating maps that connect buyer pain points, recommended packs, workflow modules, dashboard KPIs, seasonal patterns, and activation paths.</p>
+        <div id="blueprints-grid" class="grid">
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+          <div class="skeleton-card" aria-hidden="true"><div class="skeleton-line" style="width:60%;height:18px;"></div><div class="skeleton-line" style="width:40%;height:14px;margin-top:8px;"></div><div class="skeleton-line" style="width:90%;height:12px;margin-top:12px;"></div></div>
+        </div>
+      </section>
+
       <section id="suites-section">
         <h2>Outcome Suites</h2>
         <p class="section-lede">Bundle multiple workflows with advanced reporting. Save money vs. buying them separately.</p>
@@ -1536,7 +1545,8 @@
       <a href="/contact">Contact Support</a> ·
       <a href="/maturity">Platform Status</a> ·
       <a href="/automations/modules/">Browse All Modules</a> ·
-      <a href="/automations/categories/">Browse By Category</a>
+      <a href="/automations/categories/">Browse By Category</a> ·
+      <a href="/automations/blueprints/">Browse Industry Blueprints</a>
     </div>
     <div style="font-size:11px;color:var(--muted);margin-top:12px;">
       Your Deputy: autonomous business-unit generation with central config, revenue products, CRM, RevOps, provider abstractions, AI/MCP tools, event workflows, and self-hostable infrastructure. Live external connections require your vendor keys and tier allowlist.
@@ -1590,7 +1600,35 @@
   }
 
   function toSlug(s) {
-    return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  function moduleRoute(m) {
+    return `/automations/modules/${toSlug(m?.name || m?.module_code || 'module')}`;
+  }
+
+  function packRoute(b) {
+    return `/automations/packs/${toSlug(b?.name || b?.bundle_code || 'pack')}`;
+  }
+
+  function suiteRoute(s) {
+    return `/suites/${toSlug(s?.name || s?.suite_code || 'suite')}`;
+  }
+
+  function editionRoute(e) {
+    return `/editions/${toSlug(e?.name || e?.edition_code || 'edition')}`;
+  }
+
+  function blueprintRoute(bp) {
+    return `/automations/blueprints/${toSlug(bp?.name || bp?.blueprint_code || 'blueprint')}`;
+  }
+
+  function setupRoute(code) {
+    return `/setup/${toSlug(code || 'guided')}`;
+  }
+
+  function planRoute(t) {
+    return `/plans/${toSlug(t?.name || 'your-deputy-core')}`;
   }
 
   async function fetchJSON(url) {
@@ -1633,7 +1671,7 @@
             <span>${Array.isArray(t?.included_modules) ? t.included_modules.length : 0} included modules</span>
           </div>
           <div class="card-cta">
-            <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
+            <a href="${planRoute(t)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
               Start with ${t?.name || 'Plan'} →
             </a>
           </div>
@@ -1665,7 +1703,7 @@
               ${packsHtml}
             </div>
             <div class="card-cta">
-              <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
+              <a href="${editionRoute(e)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
             </div>
           </div>
         `;
@@ -1693,7 +1731,7 @@
               ${savings ? `<span>${savings}</span>` : ''}
             </div>
             <div class="card-cta">
-              <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Activate →</a>
+              <a href="${suiteRoute(s)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Activate →</a>
             </div>
           </div>
         `;
@@ -1730,7 +1768,7 @@
                 ${b?.implied_savings_monthly ? `<span>Saves $${b.implied_savings_monthly}/mo</span>` : ''}
               </div>
               <div class="card-cta">
-                <a href="/automations/packs/${toSlug(b?.name || 'pack')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Pack →</a>
+                <a href="${packRoute(b)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Pack →</a>
               </div>
             </div>
           `;
@@ -1774,13 +1812,44 @@
               ${Array.isArray(m?.capabilities_required) ? m.capabilities_required.slice(0, 2).map((c) => `<span>${c}</span>`).join('') : ''}
             </div>
             <div class="card-cta">
-              <a href="/automations/modules/${toSlug(m?.name || 'module')}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Workflow →</a>
+              <a href="${moduleRoute(m)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Workflow →</a>
             </div>
           </div>
         `).join('');
       }
     } catch (err) {
       $('#modules-grid').innerHTML = `<p class="section-error">Could not load workflows. <a href="" onclick="location.reload();return false">Retry</a></p>`;
+    }
+
+    // BLUEPRINTS
+    try {
+      if (!Array.isArray(blueprints?.blueprints)) {
+        throw new Error('blueprints.blueprints is not an array');
+      }
+      $('#blueprints-grid').innerHTML = blueprints.blueprints.map((bp) => {
+        const required = Array.isArray(bp?.recommended_modules) ? bp.recommended_modules.length : 0;
+        const kpis = Array.isArray(bp?.dashboard_widgets) ? bp.dashboard_widgets.slice(0, 2).join(', ') : 'KPI dashboard';
+        const seasonality = Array.isArray(bp?.seasonality) ? bp.seasonality.slice(0, 2).join(', ') : 'Always on';
+        return `
+          <div class="card">
+            <div class="card-header">
+              <h3>${bp?.name || 'Industry Blueprint'}</h3>
+              <span style="font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;">${bp?.archetype || 'operating map'}</span>
+            </div>
+            ${bp?.ideal_customer_profile ? `<p class="card-description">${bp.ideal_customer_profile}</p>` : ''}
+            <div class="card-meta">
+              <span>${required} recommended workflows</span>
+              <span>${kpis}</span>
+              <span>${seasonality}</span>
+            </div>
+            <div class="card-cta">
+              <a href="${blueprintRoute(bp)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">View Blueprint →</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      $('#blueprints-grid').innerHTML = `<p class="section-error">Could not load blueprints. <a href="" onclick="location.reload();return false">Retry</a></p>`;
     }
 
     // CONCIERGE
@@ -1800,7 +1869,7 @@
               <span>${c?.delivery_mode || 'Expert setup'}</span>
             </div>
             <div class="card-cta">
-              <a href="/dashboard" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Book Now →</a>
+              <a href="${setupRoute(code)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Book Now →</a>
             </div>
           </div>
         `;

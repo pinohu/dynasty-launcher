@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Business provisioning engine — tier-scoped docs, code, deploy, and integration attempts (see /maturity and TIER_MODULES in api/provision.js)",
   "scripts": {
+    "build:marketplace-pages": "node scripts/build-marketplace-pages.mjs",
     "verify:product": "node scripts/verify-product-alignment.mjs",
     "test:validate": "node scripts/validate-smoke.mjs",
     "test:catalog": "node scripts/smoke-catalog.mjs",
