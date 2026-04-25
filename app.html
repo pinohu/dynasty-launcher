@@ -1818,6 +1818,26 @@ function safeJsonParse(str) {
   return null;
 }
 
+function extractFirstJsonObject(text) {
+  const str = stripFences(text || '');
+  const start = str.indexOf('{');
+  if (start === -1) return null;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < str.length; i++) {
+    const ch = str[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\') { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') depth++;
+    if (ch === '}') depth--;
+    if (depth === 0) return str.slice(start, i + 1);
+  }
+  return str.slice(start);
+}
+
 function withTimeout(promise, ms, label) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(label + ' timed out after ' + Math.round(ms / 1000) + 's; continuing with fallback.')), ms);
@@ -1826,6 +1846,117 @@ function withTimeout(promise, ms, label) {
       (error) => { clearTimeout(timer); reject(error); }
     );
   });
+}
+
+function buildFallbackArchitectureBlueprint(inf, desc) {
+  const appName = sanitizePromptInput(inf?.name || 'Autonomous Business Unit');
+  const niche = sanitizePromptInput(desc || inf?.type_label || 'business operations');
+  const routePrefix = '/api/v1';
+  return {
+    fallback_reason: 'AI architecture blueprint generation timed out or returned invalid JSON; deterministic architecture contract generated locally.',
+    data_model: {
+      entities: [
+        { name: 'Tenant', table: 'tenants', fields: [{ name: 'tenant_id', type: 'uuid', required: true, description: 'Tenant workspace identifier' }, { name: 'business_name', type: 'string', required: true, description: 'Customer business name' }, { name: 'niche', type: 'string', required: true, description: niche }], relationships: ['Tenant has_many Customers', 'Tenant has_many WorkflowRuns'] },
+        { name: 'Lead', table: 'leads', fields: [{ name: 'lead_id', type: 'uuid', required: true, description: 'Lead identifier' }, { name: 'source', type: 'string', required: true, description: 'Acquisition source' }, { name: 'status', type: 'enum', required: true, description: 'Lifecycle state' }], relationships: ['Lead belongs_to Tenant', 'Lead converts_to Customer'] },
+        { name: 'Customer', table: 'customers', fields: [{ name: 'customer_id', type: 'uuid', required: true, description: 'Customer identifier' }, { name: 'email', type: 'string', required: true, description: 'Primary email' }, { name: 'lifecycle_stage', type: 'enum', required: true, description: 'Customer lifecycle stage' }], relationships: ['Customer belongs_to Tenant', 'Customer has_many Deals'] },
+        { name: 'Product', table: 'products', fields: [{ name: 'product_id', type: 'uuid', required: true, description: 'Product identifier' }, { name: 'title', type: 'string', required: true, description: 'Offer title' }, { name: 'price_cents', type: 'int', required: true, description: 'Price in cents' }], relationships: ['Product belongs_to Tenant'] },
+        { name: 'Quote', table: 'quotes', fields: [{ name: 'quote_id', type: 'uuid', required: true, description: 'Quote identifier' }, { name: 'line_items', type: 'jsonb', required: true, description: 'Quoted items' }, { name: 'expires_at', type: 'datetime', required: true, description: 'Expiration time' }], relationships: ['Quote belongs_to Customer', 'Quote converts_to Proposal'] },
+        { name: 'Proposal', table: 'proposals', fields: [{ name: 'proposal_id', type: 'uuid', required: true, description: 'Proposal identifier' }, { name: 'status', type: 'enum', required: true, description: 'Proposal state' }, { name: 'accepted_at', type: 'datetime', required: false, description: 'Acceptance timestamp' }], relationships: ['Proposal belongs_to Customer', 'Proposal converts_to Contract'] },
+        { name: 'Invoice', table: 'invoices', fields: [{ name: 'invoice_id', type: 'uuid', required: true, description: 'Invoice identifier' }, { name: 'total_cents', type: 'int', required: true, description: 'Invoice total' }, { name: 'payment_status', type: 'enum', required: true, description: 'Payment state' }], relationships: ['Invoice belongs_to Customer', 'Invoice has_many Payments'] },
+        { name: 'WorkflowRun', table: 'workflow_runs', fields: [{ name: 'run_id', type: 'uuid', required: true, description: 'Workflow run identifier' }, { name: 'event_type', type: 'string', required: true, description: 'Trigger event' }, { name: 'status', type: 'enum', required: true, description: 'Run status' }], relationships: ['WorkflowRun belongs_to Tenant'] }
+      ]
+    },
+    api_contracts: [
+      { method: 'POST', path: `${routePrefix}/leads`, auth: 'required', response: 'Create lead and emit lead.created' },
+      { method: 'POST', path: `${routePrefix}/leads/qualify`, auth: 'required', response: 'Qualify lead and update CRM stage' },
+      { method: 'POST', path: `${routePrefix}/customers`, auth: 'required', response: 'Create customer record' },
+      { method: 'POST', path: `${routePrefix}/quotes`, auth: 'required', response: 'Generate quote' },
+      { method: 'POST', path: `${routePrefix}/proposals`, auth: 'required', response: 'Generate proposal' },
+      { method: 'POST', path: `${routePrefix}/contracts`, auth: 'required', response: 'Create contract from proposal' },
+      { method: 'POST', path: `${routePrefix}/invoices`, auth: 'required', response: 'Issue invoice' },
+      { method: 'POST', path: `${routePrefix}/payments/link`, auth: 'required', response: 'Create payment link through provider abstraction' },
+      { method: 'POST', path: `${routePrefix}/onboarding/start`, auth: 'required', response: 'Start onboarding workflow' },
+      { method: 'POST', path: `${routePrefix}/support/tickets`, auth: 'required', response: 'Create support ticket' },
+      { method: 'POST', path: `${routePrefix}/workflows/run`, auth: 'required', response: 'Run event-triggered workflow' },
+      { method: 'GET', path: `${routePrefix}/analytics/revenue`, auth: 'required', response: 'Return revenue metrics' }
+    ],
+    auth_pattern: { strategy: 'JWT + API Key', roles: ['admin', 'sales_agent', 'revops_agent', 'support_agent', 'finance_agent', 'viewer'], token_location: 'header' },
+    naming_conventions: { files: 'kebab-case', variables: 'camelCase', db_tables: 'snake_case plural', api_routes: '/api/v1/kebab-case', env_vars: 'SCREAMING_SNAKE_CASE' },
+    integrations: [
+      { service: 'InternalPaymentProvider', purpose: 'Default payment abstraction', env_var: 'PAYMENT_PROVIDER' },
+      { service: 'InternalEmailProvider', purpose: 'Default transactional email abstraction', env_var: 'EMAIL_PROVIDER' },
+      { service: 'PostHogAdapter', purpose: 'Optional analytics adapter', env_var: 'POSTHOG_PROJECT_KEY' },
+      { service: 'AIProviderRouter', purpose: 'Configurable model routing', env_var: 'AI_MODEL_PROVIDER' },
+      { service: 'MCPToolRegistry', purpose: 'Agent-operable business tools', env_var: 'MCP_REGISTRY_PATH' }
+    ],
+    infrastructure: { hosting: 'Docker + Vercel-compatible frontend', database: 'PostgreSQL with pgvector', cache: 'Redis or PostgreSQL event table', monitoring: 'OpenTelemetry + PostHog-ready events' },
+    security: { input_validation: 'Zod', rate_limiting: 'per-tenant and per-IP throttles on state-changing routes', cors_policy: 'explicit allowed origin from master config' },
+    key_decisions: [
+      `Use a business-complete autonomous unit architecture for ${appName}.`,
+      'Keep provider SDKs behind adapters; core logic imports only interfaces.',
+      'Use a central master config and generated schema for runtime settings.',
+      'Make workflows event-triggered, testable, and MCP-operable.',
+      'Ship sandbox/degraded fallbacks when external credentials are absent.',
+      'Validate niche alignment, security baseline, routes, and revenue readiness before PASS.'
+    ]
+  };
+}
+
+function buildFallbackDesignContract(inf, planning) {
+  const accent = inf?.accent || '#C9A84C';
+  const pages = [
+    ['Home', '/', 'Hero, trust proof, offer path, marketplace proof, CTA'],
+    ['Pricing', '/pricing', 'Plan comparison, module packs, checkout CTA'],
+    ['Products', '/products', 'Information product catalog and delivery proof'],
+    ['Lead Magnet', '/lead-magnet', 'Niche-specific capture page'],
+    ['Checkout', '/checkout', 'Checkout and payment confirmation'],
+    ['Thank You', '/thank-you', 'Purchase confirmation and next steps'],
+    ['Customer Portal', '/portal', 'Orders, onboarding, support, invoices'],
+    ['Support', '/support', 'Knowledge base, ticket creation, AI support'],
+    ['Blog', '/blog', 'Authority content hub'],
+    ['Privacy', '/privacy', 'Privacy policy'],
+    ['Terms', '/terms', 'Terms of service'],
+    ['Refund Policy', '/refund-policy', 'Refund rules'],
+    ['Admin Console', '/admin', 'Revenue, workflows, CRM, and audit dashboards']
+  ].map(([name, route, layout]) => ({ name, route, layout, key_components: ['Header', 'CTA', 'ResponsiveSection', 'Footer'] }));
+  return {
+    fallback_reason: 'AI design contract generation timed out or returned invalid JSON; deterministic design system contract generated locally.',
+    color_tokens: {
+      background: '#0B0B10', surface: '#17171C', surface_elevated: '#202028',
+      text_primary: '#FAFAF9', text_secondary: '#C7C7D1', text_muted: '#8F8F9B',
+      accent, accent_hover: '#E3C767', accent_light: '#F5E6B3',
+      border: '#30303A', border_focus: accent,
+      shadow_color: 'rgba(201,168,76,0.18)',
+      success: '#22C55E', warning: '#F59E0B', error: '#EF4444', info: '#38BDF8',
+      status_verified_bg: '#052E16', status_verified_text: '#86EFAC',
+      status_pending_bg: '#422006', status_pending_text: '#FCD34D',
+      status_error_bg: '#450A0A', status_error_text: '#FCA5A5'
+    },
+    typography: {
+      font_display: 'Playfair Display',
+      font_body: 'Inter',
+      font_mono: 'Fira Code',
+      scale: [
+        { role: 'display-xl', size: '64px', weight: 500, line_height: 1.02, letter_spacing: '0', use: 'Hero headings' },
+        { role: 'h1', size: '40px', weight: 700, line_height: 1.15, letter_spacing: '0', use: 'Page titles' },
+        { role: 'h2', size: '28px', weight: 700, line_height: 1.25, letter_spacing: '0', use: 'Section headings' },
+        { role: 'h3', size: '18px', weight: 700, line_height: 1.35, letter_spacing: '0', use: 'Card titles' },
+        { role: 'body', size: '16px', weight: 400, line_height: 1.65, letter_spacing: '0', use: 'Body text' },
+        { role: 'small', size: '13px', weight: 400, line_height: 1.5, letter_spacing: '0', use: 'Captions and meta' },
+        { role: 'label', size: '12px', weight: 800, line_height: 1.3, letter_spacing: '0.06em', use: 'Labels and badges' }
+      ]
+    },
+    spacing: { base: 8, scale: [0, 4, 8, 12, 16, 24, 32, 48, 64, 96], page_max_width: '1200px', content_padding: '24px', card_padding: '20px', section_gap: '56px' },
+    components: {
+      border_radius: { small: '6px', medium: '10px', large: '16px', pill: '9999px' },
+      shadows: [{ level: 'sm', value: '0 1px 2px rgba(0,0,0,0.25)', use: 'Cards, inputs' }, { level: 'md', value: '0 8px 24px rgba(0,0,0,0.32)', use: 'Dropdowns, popovers' }, { level: 'lg', value: '0 20px 70px rgba(0,0,0,0.42)', use: 'Modals, dialogs' }],
+      button_styles: { primary: { bg: accent, text: '#09090B', hover_bg: '#E3C767', border_radius: '10px', padding: '12px 18px', font_weight: 800 }, secondary: { bg: 'transparent', text: '#C7C7D1', border: '1px solid #30303A' }, destructive: { bg: '#EF4444', text: '#FFFFFF' } },
+      input_styles: { bg: '#101014', border: '1px solid #30303A', border_focus: `1px solid ${accent}`, border_radius: '10px', padding: '12px 14px', font_size: '15px' }
+    },
+    pages,
+    responsive: { breakpoints: { sm: '640px', md: '768px', lg: '1024px', xl: '1280px' }, mobile_strategy: 'Single-column layout, wrapped buttons, no fixed-width content, accessible tap targets, and non-overlapping CTAs.' },
+    dark_mode: true
+  };
 }
 
 function buildFallbackExecutionPlan(inf, planning) {
@@ -1959,12 +2090,26 @@ Be specific. Real table names. Real field names. Real API paths. This is the con
       'llama-3.3-70b-versatile', 8000
     ), 45000, 'Architecture blueprint');
 
-    const match = bp.match(/\{[\s\S]*\}/);
+    const match = extractFirstJsonObject(bp);
     if (match) {
-      PLANNING_OUTPUT.blueprint = safeJsonParse(match[0]);
+      PLANNING_OUTPUT.blueprint = safeJsonParse(match);
       if (!PLANNING_OUTPUT.blueprint) {
-        updatePlanPhase(1, 'error', 'Blueprint JSON parse failed — skipping, will build without blueprint');
+        updatePlanPhase(1, 'running', 'Blueprint JSON parse failed; preparing deterministic fallback');
         console.error('Blueprint parse failed, raw length:', bp?.length);
+        PLANNING_OUTPUT.blueprint = buildFallbackArchitectureBlueprint(inf, desc);
+        updatePlanPhase(1, 'done', `Fallback blueprint ready: ${PLANNING_OUTPUT.blueprint.data_model.entities.length} entities, ${PLANNING_OUTPUT.blueprint.api_contracts.length} endpoints`);
+        renderBlueprintPreview(PLANNING_OUTPUT.blueprint);
+        BUILD_COMPACTIONS.push({
+          phase: 'blueprint',
+          timestamp: new Date().toISOString(),
+          signals: {
+            entities: PLANNING_OUTPUT.blueprint.data_model.entities.map(e => e.name),
+            api_routes: PLANNING_OUTPUT.blueprint.api_contracts.map(e => `${e.method} ${e.path}`).slice(0, 15),
+            auth: PLANNING_OUTPUT.blueprint.auth_pattern.strategy,
+            fallback_reason: PLANNING_OUTPUT.blueprint.fallback_reason,
+          }
+        });
+        console.error('Blueprint parse failed; deterministic fallback blueprint used. Raw length:', bp?.length);
       } else {
         updatePlanPhase(1, 'done', `${PLANNING_OUTPUT.blueprint.data_model?.entities?.length || 0} entities, ${PLANNING_OUTPUT.blueprint.api_contracts?.length || 0} endpoints`);
       renderBlueprintPreview(PLANNING_OUTPUT.blueprint);
@@ -1983,10 +2128,39 @@ Be specific. Real table names. Real field names. Real API paths. This is the con
         }
       });
       } // close else
+    } else {
+      PLANNING_OUTPUT.blueprint = buildFallbackArchitectureBlueprint(inf, desc);
+      updatePlanPhase(1, 'done', `Fallback blueprint ready: ${PLANNING_OUTPUT.blueprint.data_model.entities.length} entities, ${PLANNING_OUTPUT.blueprint.api_contracts.length} endpoints`);
+      renderBlueprintPreview(PLANNING_OUTPUT.blueprint);
+      BUILD_COMPACTIONS.push({
+        phase: 'blueprint',
+        timestamp: new Date().toISOString(),
+        signals: {
+          entities: PLANNING_OUTPUT.blueprint.data_model.entities.map(e => e.name),
+          api_routes: PLANNING_OUTPUT.blueprint.api_contracts.map(e => `${e.method} ${e.path}`).slice(0, 15),
+          auth: PLANNING_OUTPUT.blueprint.auth_pattern.strategy,
+          fallback_reason: PLANNING_OUTPUT.blueprint.fallback_reason,
+        }
+      });
+      console.error('Blueprint response had no JSON object; deterministic fallback blueprint used. Raw length:', bp?.length);
     }
   } catch (e) {
-    updatePlanPhase(1, 'error', 'Blueprint generation failed — will build without it');
+    updatePlanPhase(1, 'running', 'Blueprint planner failed; preparing deterministic fallback');
     console.error('Blueprint failed:', e);
+    PLANNING_OUTPUT.blueprint = buildFallbackArchitectureBlueprint(inf, desc);
+    updatePlanPhase(1, 'done', `Fallback blueprint ready after planner issue: ${PLANNING_OUTPUT.blueprint.data_model.entities.length} entities`);
+    renderBlueprintPreview(PLANNING_OUTPUT.blueprint);
+    BUILD_COMPACTIONS.push({
+      phase: 'blueprint',
+      timestamp: new Date().toISOString(),
+      signals: {
+        entities: PLANNING_OUTPUT.blueprint.data_model.entities.map(e => e.name),
+        api_routes: PLANNING_OUTPUT.blueprint.api_contracts.map(e => `${e.method} ${e.path}`).slice(0, 15),
+        auth: PLANNING_OUTPUT.blueprint.auth_pattern.strategy,
+        fallback_reason: e.message || PLANNING_OUTPUT.blueprint.fallback_reason,
+      }
+    });
+    console.error('Blueprint failed; deterministic fallback blueprint used:', e);
   }
 
   // ── CYCLE 2: Design Contract (Opus) ────────────────────────────────────
@@ -2070,11 +2244,14 @@ Be pixel-precise. Real hex values. Real font names (from Google Fonts). This con
       'gemini-2.0-flash', 5000
     ), 45000, 'Design contract');
 
-    const dcCleaned = (dc || '').replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    const match = dcCleaned.match(/\{[\s\S]*\}/);
+    const match = extractFirstJsonObject(dc);
     if (match) {
-      PLANNING_OUTPUT.design_contract = safeJsonParse(match[0]);
-      if (!PLANNING_OUTPUT.design_contract) { updatePlanPhase(2, 'error', 'Design contract parse failed — will use defaults'); }
+      PLANNING_OUTPUT.design_contract = safeJsonParse(match);
+      if (!PLANNING_OUTPUT.design_contract) { updatePlanPhase(2, 'running', 'Design contract JSON parse failed; preparing deterministic fallback'); }
+      if (!PLANNING_OUTPUT.design_contract) {
+        PLANNING_OUTPUT.design_contract = buildFallbackDesignContract(inf, PLANNING_OUTPUT);
+        console.error('Design contract parse failed; deterministic fallback design used. Raw length:', dc?.length);
+      }
       const pageCount = PLANNING_OUTPUT.design_contract.pages?.length || 0;
       updatePlanPhase(2, 'done', `${Object.keys(PLANNING_OUTPUT.design_contract.color_tokens || {}).length} tokens, ${pageCount} pages`);
       renderDesignPreview(PLANNING_OUTPUT.design_contract);
@@ -2089,10 +2266,41 @@ Be pixel-precise. Real hex values. Real font names (from Google Fonts). This con
           has_dark_mode: !!PLANNING_OUTPUT.design_contract.dark_mode,
         }
       });
+    } else {
+      PLANNING_OUTPUT.design_contract = buildFallbackDesignContract(inf, PLANNING_OUTPUT);
+      updatePlanPhase(2, 'done', `Fallback design ready: ${Object.keys(PLANNING_OUTPUT.design_contract.color_tokens || {}).length} tokens, ${PLANNING_OUTPUT.design_contract.pages.length} pages`);
+      renderDesignPreview(PLANNING_OUTPUT.design_contract);
+      BUILD_COMPACTIONS.push({
+        phase: 'design_contract',
+        timestamp: new Date().toISOString(),
+        signals: {
+          colors: Object.entries(PLANNING_OUTPUT.design_contract.color_tokens || {}).slice(0, 8).map(([k,v]) => `${k}:${v}`),
+          fonts: [PLANNING_OUTPUT.design_contract.typography?.font_display, PLANNING_OUTPUT.design_contract.typography?.font_body].filter(Boolean),
+          pages: PLANNING_OUTPUT.design_contract.pages?.map(p => `${p.name} (${p.route})`).slice(0, 10) || [],
+          has_dark_mode: !!PLANNING_OUTPUT.design_contract.dark_mode,
+          fallback_reason: PLANNING_OUTPUT.design_contract.fallback_reason,
+        }
+      });
+      console.error('Design contract response had no JSON object; deterministic fallback design used. Raw length:', dc?.length);
     }
   } catch (e) {
-    updatePlanPhase(2, 'error', e.message);
+    updatePlanPhase(2, 'running', e.message + '; preparing deterministic fallback');
     console.error('Design contract failed:', e);
+    PLANNING_OUTPUT.design_contract = buildFallbackDesignContract(inf, PLANNING_OUTPUT);
+    updatePlanPhase(2, 'done', `Fallback design ready after planner issue: ${PLANNING_OUTPUT.design_contract.pages.length} pages`);
+    renderDesignPreview(PLANNING_OUTPUT.design_contract);
+    BUILD_COMPACTIONS.push({
+      phase: 'design_contract',
+      timestamp: new Date().toISOString(),
+      signals: {
+        colors: Object.entries(PLANNING_OUTPUT.design_contract.color_tokens || {}).slice(0, 8).map(([k,v]) => `${k}:${v}`),
+        fonts: [PLANNING_OUTPUT.design_contract.typography.font_display, PLANNING_OUTPUT.design_contract.typography.font_body],
+        pages: PLANNING_OUTPUT.design_contract.pages.map(p => `${p.name} (${p.route})`).slice(0, 10),
+        has_dark_mode: true,
+        fallback_reason: e.message || PLANNING_OUTPUT.design_contract.fallback_reason,
+      }
+    });
+    console.error('Design contract failed; deterministic fallback design used:', e);
   }
 
   // ── CYCLE 3: Build Plan (Sonnet) ───────────────────────────────────────

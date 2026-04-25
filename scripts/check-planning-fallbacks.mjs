@@ -5,11 +5,20 @@ const failures = [];
 
 const required = [
   ['timeout helper', 'function withTimeout(promise, ms, label)'],
+  ['json object extractor', 'function extractFirstJsonObject(text)'],
+  ['fallback blueprint builder', 'function buildFallbackArchitectureBlueprint(inf, desc)'],
+  ['fallback design builder', 'function buildFallbackDesignContract(inf, planning)'],
   ['fallback planner', 'function buildFallbackExecutionPlan(inf, planning)'],
   ['blueprint timeout', 'const bp = await withTimeout(aiRawWithModel('],
   ['design timeout', 'const dc = await withTimeout(aiRawWithModel('],
   ['build plan timeout', 'const plan = await withTimeout(aiRawWithModel('],
   ['build plan timeout duration', "), 30000, 'Build execution plan');"],
+  ['blueprint fallback catch', 'Blueprint failed; deterministic fallback blueprint used:'],
+  ['design fallback catch', 'Design contract failed; deterministic fallback design used:'],
+  ['blueprint missing-json fallback', 'Blueprint response had no JSON object; deterministic fallback blueprint used.'],
+  ['design missing-json fallback', 'Design contract response had no JSON object; deterministic fallback design used.'],
+  ['blueprint fallback preview render', 'renderBlueprintPreview(PLANNING_OUTPUT.blueprint);'],
+  ['design fallback preview render', 'renderDesignPreview(PLANNING_OUTPUT.design_contract);'],
   ['fallback plan catch', 'Build plan failed; deterministic fallback plan used:'],
   ['fallback preview render', 'renderBuildPlanPreview(PLANNING_OUTPUT.build_plan);'],
 ];
