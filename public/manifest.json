@@ -1,0 +1,11 @@
+{
+  "name": "Your Deputy",
+  "short_name": "Your Deputy",
+  "description": "Autonomous business-unit launcher for niche businesses.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#C9A84C",
+  "icons": []
+}

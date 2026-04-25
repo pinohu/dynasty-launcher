@@ -30,6 +30,18 @@
 <!-- Preconnect for performance -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script>
+(function () {
+  try {
+    var url = new URL(window.location.href);
+    if (url.pathname.replace(/\/+$/, "") === "/app" && url.searchParams.get("source") === "nav") {
+      url.searchParams.delete("source");
+      url.searchParams.set("returning", "1");
+      window.location.replace(url.pathname + "?" + url.searchParams.toString());
+    }
+  } catch (_) {}
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--gold:#C9A84C;--gdim:rgba(201,168,76,0.08);--gb:rgba(201,168,76,0.2);--ink:#0A0A0A;--panel:#181818;--card:#1E1E1E;--card2:#252525;--bdr:rgba(255,255,255,0.07);--bmd:rgba(255,255,255,0.13);--tx:#EEEDE8;--sec:#908D86;--dim:#8A8780;--grn:#3ECF8E;--pur:#635BFF;--red:#E5534B;--r:8px;--rl:12px}

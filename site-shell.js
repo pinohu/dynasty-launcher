@@ -5,7 +5,7 @@
 
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/app?source=nav", label: "Builder" },
+    { href: "/app?returning=1", label: "Builder" },
     { href: "/quiz", label: "Diagnostic" },
     { href: "/marketplace", label: "Marketplace" },
     { href: "/deliverables", label: "Deliverables" },
@@ -24,6 +24,7 @@
         { href: "/app?plan=free&source=footer", label: "Score an idea free" },
         { href: "/app?plan=foundation&source=footer", label: "Start Foundation build" },
         { href: "/dashboard", label: "Customer dashboard" },
+        { href: "/docs", label: "Documentation" },
       ],
     },
     {

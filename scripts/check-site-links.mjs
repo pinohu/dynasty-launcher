@@ -50,14 +50,19 @@ function routeExists(href) {
   if (!withoutQuery || withoutQuery === '/') return true
 
   const rel = withoutQuery.replace(/^\/+/, '')
-  const candidates = [
+  const publicCandidates = [
     path.join('public', rel),
     path.join('public', `${rel}.html`),
     path.join('public', rel, 'index.html'),
-    rel,
-    `${rel}.html`,
-    path.join(rel, 'index.html'),
   ]
+  const candidates = href.startsWith('/')
+    ? publicCandidates
+    : [
+        ...publicCandidates,
+        rel,
+        `${rel}.html`,
+        path.join(rel, 'index.html'),
+      ]
   return candidates.some((candidate) => fs.existsSync(candidate))
 }
 

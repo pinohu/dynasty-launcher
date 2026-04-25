@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Documentation - Your Deputy</title>
+<meta name="description" content="Your Deputy launch standard documentation: what the builder creates, how validation works, and what every autonomous business unit must contain.">
+<link rel="canonical" href="https://yourdeputy.com/docs">
+<link rel="stylesheet" href="/site-shell.css">
+<style>
+:root{--yd-gold:#d8b64b;--yd-bg:#08090d;--yd-panel:#11131a;--yd-card:#171a22;--yd-border:rgba(255,255,255,.12);--yd-text:#f5f2e8;--yd-muted:#b4ad9d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--yd-bg);color:var(--yd-text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.65}
+main{max-width:1180px;margin:0 auto;padding:96px 24px 72px}
+.hero{max-width:820px;margin-bottom:40px}
+.eyebrow{color:var(--yd-gold);font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+h1{font-size:clamp(40px,7vw,76px);line-height:.98;margin:16px 0 20px;letter-spacing:-.04em}
+.lead{font-size:clamp(18px,2vw,24px);color:var(--yd-muted);max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:34px}
+.card{border:1px solid var(--yd-border);background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border-radius:8px;padding:22px}
+.card h2{font-size:19px;margin:0 0 10px}
+.card p,.card li{color:var(--yd-muted)}
+.card ul{padding-left:20px;margin:0}
+.band{margin-top:18px;border:1px solid rgba(216,182,75,.28);background:rgba(216,182,75,.08);border-radius:8px;padding:22px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:8px;text-decoration:none;font-weight:800}
+.button.primary{background:var(--yd-gold);color:#111}
+.button.secondary{border:1px solid var(--yd-border);color:var(--yd-text)}
+@media(max-width:860px){main{padding-top:64px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <p class="eyebrow">Launch Standard Documentation</p>
+    <h1>The operating manual for business-complete builds.</h1>
+    <p class="lead">Your Deputy is designed to produce more than a website. Every validated build is checked for business identity, funnel pages, products, CRM, RevOps, contracts, invoices, payments, onboarding, support, analytics, AI agents, MCP tools, workflows, security, and self-hostable infrastructure.</p>
+    <div class="actions">
+      <a class="button primary" href="/deliverables">Review deliverables</a>
+      <a class="button secondary" href="/maturity">See launch maturity</a>
+    </div>
+  </section>
+
+  <section class="grid" aria-label="Documentation sections">
+    <article class="card">
+      <h2>Build Contract</h2>
+      <p>Each project is validated against the autonomous business-unit standard before it can report BUILD STATUS: PASS.</p>
+    </article>
+    <article class="card">
+      <h2>Required Modules</h2>
+      <p>Lead capture, info products, quotes, proposals, contracts, invoices, payment abstraction, CRM, onboarding, support, analytics, workflow engine, and MCP-compatible tools are mandatory for full launches.</p>
+    </article>
+    <article class="card">
+      <h2>Central Config</h2>
+      <p>Generated builds use a single master configuration contract for business identity, provider choices, secrets placeholders, feature flags, AI, billing, email, storage, analytics, and workflows.</p>
+    </article>
+    <article class="card">
+      <h2>Provider Boundaries</h2>
+      <p>External services are optional adapters. Core business logic must route through internal interfaces for payments, email, storage, analytics, AI, documents, signatures, and notifications.</p>
+    </article>
+    <article class="card">
+      <h2>Validation Gates</h2>
+      <ul>
+        <li>Route and live-content checks</li>
+        <li>Schema and workflow checks</li>
+        <li>MCP registry and permissions checks</li>
+        <li>Revenue, RevOps, CRM, support, and analytics checks</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>Deployment Model</h2>
+      <p>Every full build targets Docker-first, self-hostable infrastructure with explicit degraded-but-working scaffolds when credentials are unavailable.</p>
+    </article>
+  </section>
+
+  <section class="band">
+    <strong>Accountability rule:</strong> Vercel green is not enough. A build is ready only when code, routes, live content, quality contract, required modules, and generated business artifacts all verify together.
+  </section>
+</main>
+<script src="/site-shell.js" defer></script>
+</body>
+</html>
