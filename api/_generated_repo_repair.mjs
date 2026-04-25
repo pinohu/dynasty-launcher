@@ -100,6 +100,9 @@ const BUSINESS_UNIT_REQUIRED_PATHS = [
   'analytics/revenue-metrics.yaml',
   'analytics/product-metrics.yaml',
   'analytics/customer-health.yaml',
+  'analytics/posthog-events.yaml',
+  'analytics/posthog-dashboards.yaml',
+  'analytics/posthog-feature-flags.yaml',
   'tests/build-completeness.test.ts',
   'tests/config.test.ts',
   'tests/schemas.test.ts',
@@ -195,6 +198,7 @@ const SEMANTIC_PROMISE_GROUPS = [
   { code: 'customer_success', label: 'customer success and retention', terms: ['onboarding', 'customer education', 'help center', 'success metrics', 'churn detection', 'renewal workflow', 'NPS', 'feature request', 'account management'] },
   { code: 'operations_company', label: 'operations, scale, and company controls', terms: ['KPI dashboard', 'financial controls', 'hiring', 'SOP', 'incident management', 'SRE', 'security governance', 'vendor management', 'CAC', 'LTV', 'profitability'] },
   { code: 'continuous_improvement', label: 'continuous improvement loop', terms: ['usage analytics', 'conversion analysis', 'product telemetry', 'pricing optimization', 'A/B testing', 'feature rollout', 'market expansion', 'ecosystem'] },
+  { code: 'posthog_optional_adapter', label: 'optional PostHog analytics adapter', terms: ['PostHog', 'session replay', 'feature flags', 'experiments', 'surveys', 'event capture', 'product analytics', 'web analytics', 'adapter'] },
   { code: 'pre_saas_revenue_loop', label: 'pre-SaaS revenue engine', terms: ['authority engine', 'information product factory', 'auto-listing', 'lead magnet', 'checkout', 'digital delivery', 'revenue reinvestment', 'winner detection', 'SaaS transition'] },
   { code: 'ai_mcp_memory', label: 'AI-native MCP and memory system', terms: ['MCP', 'tool registry', 'agent permissions', 'pgvector', 'document ingestion', 'retrieval API', 'customer-specific retrieval', 'prompt injection'] },
   { code: 'security_standards', label: 'OWASP security assurance', terms: ['OWASP ASVS', 'OWASP SAMM', 'authentication', 'session', 'access control', 'input validation', 'secrets', 'logging', 'verification'] },
@@ -311,6 +315,9 @@ const THIRD_PARTY_SDK_IMPORTS = [
   'zapier',
   'make.com',
   'pabbly',
+  'posthog-js',
+  'posthog-node',
+  '@posthog/',
 ];
 
 const STALE_REVO_PATHS = [
@@ -1254,7 +1261,7 @@ function buildBusinessUnitFiles(contract = {}) {
   files['src/providers/storage.ts'] = buildProvider('StorageProvider', ['putObject', 'getObject', 'deleteObject'], 'S3StorageProvider');
   files['src/providers/document.ts'] = buildProvider('DocumentProvider', ['renderProposal', 'renderContract', 'renderInvoice'], 'ExternalDocumentProvider');
   files['src/providers/signature.ts'] = buildProvider('SignatureProvider', ['createSignatureRequest', 'verifySignature'], 'DocuSignSignatureProvider');
-  files['src/providers/analytics.ts'] = buildProvider('AnalyticsProvider', ['trackEvent', 'getMetrics'], 'ExternalAnalyticsProvider');
+  files['src/providers/analytics.ts'] = buildAnalyticsProvider();
   files['src/providers/ai.ts'] = buildProvider('AIProvider', ['complete', 'embed', 'moderate'], 'ExternalAIProvider');
   files['src/providers/video.ts'] = buildVideoProvider();
 
@@ -1294,6 +1301,7 @@ function buildBusinessUnitFiles(contract = {}) {
   files['analytics/revenue-metrics.yaml'] = buildMetricYaml('revenue', ['product_revenue', 'recurring_revenue', 'failed_payments', 'revenue_by_product', 'revenue_by_offer', 'revenue_by_niche']);
   files['analytics/product-metrics.yaml'] = buildMetricYaml('product', ['purchases', 'refunds', 'delivery_completion', 'upsell_take_rate']);
   files['analytics/customer-health.yaml'] = buildMetricYaml('customer_health', ['onboarding_completion', 'support_tickets', 'churn', 'customer_health', 'renewal_due']);
+  Object.assign(files, buildPostHogAnalyticsFiles({ businessName, niche, targetCustomer, primaryOffer }));
 
   files['tests/config.test.ts'] = buildGeneratedTest('config', ['config/master.config.yaml', 'config/config.schema.json']);
   files['tests/schemas.test.ts'] = buildGeneratedTest('schemas', REQUIRED_SCHEMA_FILES);
@@ -1302,6 +1310,7 @@ function buildBusinessUnitFiles(contract = {}) {
   files['tests/revops.test.ts'] = buildGeneratedTest('revops', ['revops/pricing.yaml', 'revops/proposal-templates/default.md', 'revops/contract-templates/msa.md', 'revops/invoice-templates/default.md']);
   files['tests/niche-validation.test.ts'] = buildGeneratedTest('niche-validation', ['content/seo-plan.yaml', 'products/product-catalog.yaml', 'prompts/niche-research.md']);
   files['tests/video-assets.test.ts'] = buildGeneratedTest('video-assets', REQUIRED_VIDEO_ASSET_PATHS);
+  files['tests/analytics-provider.test.ts'] = buildGeneratedTest('analytics-provider', ['src/providers/analytics.ts', 'analytics/posthog-events.yaml', 'analytics/posthog-dashboards.yaml', 'analytics/posthog-feature-flags.yaml']);
   files['tests/accessibility.test.ts'] = buildGeneratedTest('accessibility', ['ux/accessibility-checklist.md', 'ux/design-system.md']);
   files['tests/security-standards.test.ts'] = buildGeneratedTest('security-standards', ['security/owasp-asvs-checklist.yaml', 'security/owasp-samm-maturity.yaml', 'governance/nist-ai-rmf-risk-register.yaml']);
   files['tests/mcp-conformance.test.ts'] = buildGeneratedTest('mcp-conformance', ['mcp/mcp-conformance.yaml', 'agents/tool-registry.json']);
@@ -1364,6 +1373,8 @@ providers:
     provider: internal
   analytics:
     provider: internal
+    optional_external: posthog
+    rule: "Core events are captured internally first. PostHog is an optional adapter for product analytics, web analytics, funnels, session replay, feature flags, experiments, surveys, and error context."
   automation:
     provider: internal_workflow_engine
   video:
@@ -1414,6 +1425,26 @@ storage:
 analytics:
   provider: internal
   event_bus: postgres_event_table
+  optional_external:
+    posthog:
+      enabled: false
+      api_host: "https://us.i.posthog.com"
+      project_api_key:
+        value: "ENC_PLACEHOLDER_OPTIONAL"
+        expected_format: "phc_..."
+        required_before_deployment: false
+      personal_api_key:
+        value: "ENC_PLACEHOLDER_OPTIONAL"
+        expected_format: "PostHog personal API key for project automation"
+        required_before_deployment: false
+      capabilities:
+        - product_analytics
+        - web_analytics
+        - session_replay
+        - feature_flags
+        - experiments
+        - surveys
+        - error_tracking_context
 video:
   provider: internal_scaffold
   required_assets_path: "/content/video"
@@ -1491,6 +1522,67 @@ export class VideoUseProvider implements VideoProvider {
     if (!this.enabled) return { ok: false, degraded: true, error: 'video-use/ffmpeg dependencies unavailable; short-form clip scaffolds remain ready.' };
     return { ok: true, data: { clipPaths: Array.from({ length: input.count }, (_, i) => \`/media/videos/clips/clip-\${i + 1}.mp4\`), status: 'rendered' } };
   }
+}
+`;
+}
+
+function buildAnalyticsProvider() {
+  return `export type AnalyticsResult<T = unknown> = { ok: true; data: T } | { ok: false; error: string; degraded?: true };
+
+export interface AnalyticsProvider {
+  trackEvent(input: { tenantId: string; userId?: string; event: string; properties?: Record<string, unknown> }): Promise<AnalyticsResult<{ eventId: string }>>;
+  identifyUser(input: { tenantId: string; userId: string; properties?: Record<string, unknown> }): Promise<AnalyticsResult<{ identified: true }>>;
+  getMetrics(input: { tenantId: string; metricGroup: string; range: string }): Promise<AnalyticsResult<{ metrics: Record<string, unknown> }>>;
+  evaluateFeatureFlag(input: { tenantId: string; userId: string; flag: string }): Promise<AnalyticsResult<{ enabled: boolean; variant?: string }>>;
+  recordSurveyResponse(input: { tenantId: string; surveyId: string; userId?: string; response: Record<string, unknown> }): Promise<AnalyticsResult<{ recorded: true }>>;
+}
+
+export class InternalAnalyticsProvider implements AnalyticsProvider {
+  async trackEvent(input) { return { ok: true, data: { eventId: \`evt_\${input.tenantId}_\${Date.now()}\` } }; }
+  async identifyUser() { return { ok: true, data: { identified: true } }; }
+  async getMetrics(input) { return { ok: true, data: { metrics: { provider: 'internal', group: input.metricGroup, range: input.range } } }; }
+  async evaluateFeatureFlag() { return { ok: true, data: { enabled: true, variant: 'control' } }; }
+  async recordSurveyResponse() { return { ok: true, data: { recorded: true } }; }
+}
+
+export class PostHogAnalyticsProvider implements AnalyticsProvider {
+  constructor(private readonly adapterClient: {
+    capture: Function;
+    identify: Function;
+    queryMetrics?: Function;
+    isFeatureEnabled?: Function;
+    captureSurvey?: Function;
+  }) {}
+  async trackEvent(input) {
+    await this.adapterClient.capture({
+      distinctId: input.userId || input.tenantId,
+      event: input.event,
+      properties: { tenant_id: input.tenantId, ...(input.properties || {}) },
+    });
+    return { ok: true, data: { eventId: \`posthog_\${input.event}_\${Date.now()}\` } };
+  }
+  async identifyUser(input) {
+    await this.adapterClient.identify(input.userId, { tenant_id: input.tenantId, ...(input.properties || {}) });
+    return { ok: true, data: { identified: true } };
+  }
+  async getMetrics(input) {
+    if (!this.adapterClient.queryMetrics) return { ok: false, degraded: true, error: 'PostHog metrics query adapter not configured; internal metrics remain authoritative.' };
+    return this.adapterClient.queryMetrics(input);
+  }
+  async evaluateFeatureFlag(input) {
+    if (!this.adapterClient.isFeatureEnabled) return { ok: true, data: { enabled: true, variant: 'control' } };
+    const enabled = await this.adapterClient.isFeatureEnabled(input.flag, input.userId, { tenant_id: input.tenantId });
+    return { ok: true, data: { enabled: Boolean(enabled), variant: enabled ? 'enabled' : 'control' } };
+  }
+  async recordSurveyResponse(input) {
+    if (!this.adapterClient.captureSurvey) return this.trackEvent({ tenantId: input.tenantId, userId: input.userId, event: 'survey.response_submitted', properties: { survey_id: input.surveyId, response: input.response } }).then(() => ({ ok: true, data: { recorded: true } }));
+    return this.adapterClient.captureSurvey(input);
+  }
+}
+
+export function createAnalyticsProvider(config: { provider: 'internal' | 'posthog'; posthogClient?: unknown }): AnalyticsProvider {
+  if (config.provider === 'posthog' && config.posthogClient) return new PostHogAnalyticsProvider(config.posthogClient as ConstructorParameters<typeof PostHogAnalyticsProvider>[0]);
+  return new InternalAnalyticsProvider();
 }
 `;
 }
@@ -1603,7 +1695,9 @@ export function contractToInvoice(contract) { return { line_items: contract.scop
 
 function buildAnalyticsTs() {
   return `export const analyticsDefinitions = ['visitors','leads','conversion_rate','checkout_conversion','product_revenue','recurring_revenue','churn','failed_payments','customer_health','support_tickets','onboarding_completion','article_performance','funnel_performance','revenue_by_product','revenue_by_offer','revenue_by_niche'];
-export function trackAnalyticsEvent(name: string, payload: unknown) { return { ok: true, name, payload }; }
+export const optionalPostHogCapabilities = ['product_analytics','web_analytics','session_replay','feature_flags','experiments','surveys','error_tracking_context'];
+export function trackAnalyticsEvent(name: string, payload: unknown) { return { ok: true, provider: 'internal', optional_forward_to: 'posthog', name, payload }; }
+export function buildPostHogContext(event: string, tenantId: string, properties: Record<string, unknown>) { return { event, distinctId: tenantId, properties: { tenant_id: tenantId, ...properties } }; }
 `;
 }
 
@@ -2010,7 +2104,91 @@ premium_toolkit:
 }
 
 function buildMetricYaml(name, metrics) {
-  return `metric_group: ${name}\nmetrics:\n${metrics.map((metric) => `  - name: ${metric}\n    source: internal_analytics\n    cadence: daily`).join('\n')}\n`;
+  return `metric_group: ${name}\nprimary_source: internal_analytics\noptional_external_adapter: posthog\nrule: "Internal analytics is authoritative; PostHog enriches product analytics, funnels, session replay, feature flags, experiments, and surveys when configured."\nmetrics:\n${metrics.map((metric) => `  - name: ${metric}\n    source: internal_analytics\n    optional_forward_to: posthog\n    cadence: daily`).join('\n')}\n`;
+}
+
+function buildPostHogAnalyticsFiles({ businessName, niche, targetCustomer, primaryOffer }) {
+  return {
+    'analytics/posthog-events.yaml': `provider: posthog_optional_adapter
+business: "${businessName}"
+niche: "${niche}"
+rule: "Emit every event to internal analytics first. Forward to PostHog only when analytics.optional_external.posthog.enabled is true."
+events:
+  - name: page.viewed
+    purpose: "Web analytics and SEO page performance for ${targetCustomer}"
+    properties: [tenant_id, path, referrer, utm_source, utm_campaign]
+  - name: lead.created
+    purpose: "Lead funnel conversion tracking"
+    properties: [tenant_id, lead_id, source, offer, niche]
+  - name: checkout.started
+    purpose: "Checkout conversion funnel"
+    properties: [tenant_id, product_id, price_cents, funnel_step]
+  - name: product.purchased
+    purpose: "Pre-SaaS revenue attribution"
+    properties: [tenant_id, product_id, revenue_cents, upsell_path]
+  - name: invoice.paid
+    purpose: "Revenue recognition and customer lifecycle"
+    properties: [tenant_id, invoice_id, customer_id, revenue_cents]
+  - name: onboarding.completed
+    purpose: "Activation and first-value milestone"
+    properties: [tenant_id, customer_id, days_to_value]
+  - name: support.ticket_created
+    purpose: "Support friction and knowledge-base improvement"
+    properties: [tenant_id, ticket_id, category, severity]
+  - name: workflow.completed
+    purpose: "Automation reliability and agent workflow observability"
+    properties: [tenant_id, workflow_id, duration_ms, status]
+  - name: feature.used
+    purpose: "Product analytics, retention, and feature flag learning"
+    properties: [tenant_id, feature_key, role, plan]
+`,
+    'analytics/posthog-dashboards.yaml': `provider: posthog_optional_adapter
+dashboards:
+  - name: "${businessName} Revenue Funnel"
+    widgets:
+      - visitors_to_leads_funnel
+      - checkout_started_to_product_purchased
+      - product_revenue_by_offer
+      - refund_rate_by_product
+  - name: "${businessName} Customer Lifecycle"
+    widgets:
+      - lead_to_customer_conversion
+      - onboarding_completion
+      - support_ticket_volume
+      - churn_risk_detected
+  - name: "${businessName} Content and Product Learning"
+    widgets:
+      - article_performance
+      - lead_magnet_conversion
+      - product_engagement
+      - session_replay_friction_queue
+client_value: "Shows ${targetCustomer} exactly which ${niche} offers, funnels, pages, and workflows create revenue from ${primaryOffer}."
+`,
+    'analytics/posthog-feature-flags.yaml': `provider: posthog_optional_adapter
+rule: "Feature flags control rollout, not core availability. Internal config remains authoritative."
+flags:
+  - key: checkout_v2
+    owner: revops_agent
+    purpose: "Safely test checkout copy, bundle framing, and upsell sequencing."
+  - key: onboarding_portal_variant
+    owner: support_agent
+    purpose: "Compare onboarding flows and first-value completion."
+  - key: pricing_test_anchor
+    owner: finance_agent
+    approval_required: true
+    purpose: "Run pricing experiments within configured guardrails."
+surveys:
+  - id: onboarding_friction
+    trigger: onboarding.started
+    purpose: "Find where ${targetCustomer} gets stuck before first value."
+  - id: purchase_intent
+    trigger: checkout.abandoned
+    purpose: "Understand why ${primaryOffer} did not convert."
+session_replay:
+  enabled_when_configured: true
+  privacy: "Mask inputs by default; never record secrets, payment fields, or protected customer data."
+`,
+  };
 }
 
 function buildBusinessMigration() {
