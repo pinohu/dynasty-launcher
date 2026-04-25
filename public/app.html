@@ -2245,6 +2245,39 @@ function showPreflightModal(report) {
     const closeModal = (val) => { document.getElementById('preflight-modal')?.remove(); resolve(val); };
     window._pfResolve = closeModal;
     document.addEventListener('keydown', function _pfEsc(e) { if (e.key === 'Escape') { document.removeEventListener('keydown', _pfEsc); closeModal(false); } });
+    const cleanPreflightValue = (value, fallback = '') => {
+      const text = Array.isArray(value) ? value.join(', ') : String(value ?? '');
+      return /(\$\{|escapeHtml\(|fileItems|infraItems|flagsList|report\.|project\.|\+ )/.test(text) ? fallback : escapeHtml(text);
+    };
+    const safeProject = report.project || {};
+    const safeFiles = Array.isArray(report.files_to_generate) ? report.files_to_generate : [];
+    const safeInfra = Object.entries(report.infrastructure || {})
+      .filter(([, value]) => value)
+      .map(([key, value]) => '<div class="pf-infra-item"><span class="pf-label">' + cleanPreflightValue(key) + '</span><span class="pf-value">' + cleanPreflightValue(value) + '</span></div>')
+      .join('');
+    const safeFlags = (Array.isArray(report.flags_active) ? report.flags_active : [])
+      .slice(0, 8)
+      .map((flag) => '<span class="pf-flag">' + cleanPreflightValue(String(flag).replace(/_/g, ' ')) + '</span>')
+      .join('');
+    modal.innerHTML = [
+      '<div class="pf-overlay" onclick="window._pfResolve && window._pfResolve(false)">',
+      '<div class="pf-card" onclick="event.stopPropagation()">',
+      '<div class="pf-header"><span class="pf-icon">🛫</span><h3>Preflight Review</h3><p>Review what will be created before launching</p></div>',
+      '<div class="pf-section"><h4>Project</h4>',
+      '<div class="pf-infra-item"><span class="pf-label">Name</span><span class="pf-value">' + cleanPreflightValue(safeProject.name, 'Untitled build') + '</span></div>',
+      '<div class="pf-infra-item"><span class="pf-label">Type</span><span class="pf-value">' + cleanPreflightValue(safeProject.type, 'Business unit') + '</span></div>',
+      '<div class="pf-infra-item"><span class="pf-label">Stack</span><span class="pf-value">' + cleanPreflightValue(safeProject.stack, 'Validated launch stack') + '</span></div>',
+      '</div>',
+      '<div class="pf-section"><h4>' + safeFiles.length + ' Files to Generate</h4><div class="pf-files">' + safeFiles.slice(0, 36).map((file) => '<code>' + cleanPreflightValue(file, 'generated artifact') + '</code>').join(' ') + '</div></div>',
+      '<div class="pf-section"><h4>Infrastructure</h4>' + (safeInfra || '<div class="pf-muted">No infrastructure provisioning</div>') + '</div>',
+      '<div class="pf-section"><h4>Estimated Time</h4><div class="pf-infra-item"><span class="pf-label">With parallel execution</span><span class="pf-value">' + cleanPreflightValue(report.estimated_time?.with_parallel, '~30s') + '</span></div></div>',
+      '<div class="pf-section"><h4>Active Flags</h4><div class="pf-flags">' + (safeFlags || '<span class="pf-muted">defaults</span>') + '</div></div>',
+      '<div class="pf-actions"><button class="pf-btn pf-btn-cancel" onclick="window._pfResolve && window._pfResolve(false)">Cancel</button><button class="pf-btn pf-btn-launch" onclick="window._pfResolve && window._pfResolve(true)">🚀 Launch Build</button></div>',
+      '</div></div>'
+    ].join('');
+    document.body.appendChild(modal);
+    modal.querySelector('.pf-btn-launch')?.focus();
+    return;
     modal.innerHTML = `
       <div class="pf-overlay" onclick="window._pfResolve && window._pfResolve(false)">
         <div class="pf-card" onclick="event.stopPropagation()">
