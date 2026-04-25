@@ -3,59 +3,164 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Full launch path — Your Deputy</title>
-<meta name="description" content="For teams ready to go to market with the widest accountable implementation across product, operations, and growth.">
+<title>Full Launch Path - Your Deputy</title>
+<meta name="description" content="Launch a complete autonomous business unit with strategy, website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, AI/MCP tools, model routing, media scaffolds, repair checkpoints, and self-hostable infrastructure.">
 <link rel="canonical" href="https://yourdeputy.com/for/full-launch">
+<link rel="stylesheet" href="/site-shell.css">
 <style>
-:root{--gold:#C9A84C;--tx:#FAFAF9;--sub:#A1A1AA;--dim:#8A8A8A;--card:#1E1E2A;--bdr:rgba(255,255,255,.12)}
+:root{--gold:#C9A84C;--ink:#09090B;--bg:#0C0C14;--panel:#15151C;--card:#1E1E2A;--bdr:rgba(255,255,255,.12);--tx:#FAFAF9;--sub:#A1A1AA;--dim:#8A8A8A;--green:#22C55E;--blue:#60A5FA}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0C0C14;color:var(--tx);font-family:system-ui,sans-serif;font-size:15px;line-height:1.65;padding:28px 20px 48px;max-width:640px;margin:0 auto}
-a{color:var(--gold);font-weight:600}
-h1{font-size:1.72rem;font-weight:600;margin:16px 0 12px;line-height:1.25}
-.lead{color:var(--sub);margin-bottom:20px}
-.box{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:18px 20px;margin:20px 0;font-size:14px;color:var(--sub)}
-.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
-.btn{display:inline-block;padding:12px 20px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600}
-.btn-p{background:var(--gold);color:#09090B}
-.back{font-size:14px;font-weight:500}
-small{display:block;margin-top:16px;font-size:12px;color:var(--sub)}
-.trust-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:12px 14px;margin:16px 0;font-size:12px;color:var(--sub);line-height:1.55}
-.trust-box strong{color:var(--tx)}
-.faq{margin-top:20px;border-top:1px solid var(--bdr);padding-top:16px}
-.faq h2{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
-.fq{border-bottom:1px solid rgba(255,255,255,.06);padding:10px 0}
-.fq summary{cursor:pointer;font-size:13px;font-weight:500;color:var(--tx);list-style:none}
-.fq summary::-webkit-details-marker{display:none}
-.fq summary::before{content:'+ ';color:var(--gold)}
-.fq[open] summary::before{content:'− '}
-.fq p{font-size:12px;color:var(--sub);margin:6px 0 2px;line-height:1.55}
-.promise{font-size:12px;color:var(--dim);border-top:1px solid var(--bdr);margin-top:18px;padding-top:12px;line-height:1.55}
-.promise a{font-weight:500}
+body{background:var(--bg);color:var(--tx);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.65}
+a{color:var(--gold);font-weight:700;text-decoration:none}
+a:hover{text-decoration:underline}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
-.skip:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important}
+.skip:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important;z-index:9999}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.crumb{padding:32px 0 8px;font-size:13px;color:var(--dim)}
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(300px,.95fr);gap:28px;align-items:center;padding:44px 0 34px}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--gold);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px}
+.dot{width:9px;height:9px;border-radius:999px;background:var(--green);box-shadow:0 0 18px rgba(34,197,94,.45)}
+h1{font-size:clamp(40px,7vw,78px);line-height:.94;letter-spacing:-.045em;margin-bottom:20px;font-weight:800}
+.lead{font-size:clamp(18px,2.2vw,24px);color:var(--sub);max-width:760px}
+.hero-card{background:linear-gradient(145deg,rgba(201,168,76,.12),rgba(255,255,255,.035));border:1px solid rgba(201,168,76,.28);border-radius:18px;padding:24px;box-shadow:0 28px 90px rgba(0,0,0,.38)}
+.hero-card h2{font-size:18px;margin-bottom:10px}
+.hero-card p{color:var(--sub);font-size:14px;margin-bottom:16px}
+.price{font-size:34px;color:var(--gold);font-weight:900;margin-bottom:4px}
+.small{font-size:12px;color:var(--dim);line-height:1.55}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;max-width:100%;min-width:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;max-width:100%;min-width:0;padding:13px 18px;border-radius:10px;border:1px solid var(--bdr);font-size:14px;font-weight:900;line-height:1.2;text-align:center;white-space:normal;overflow-wrap:anywhere;text-decoration:none}
+.btn:hover{text-decoration:none;transform:translateY(-1px)}
+.btn-p{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.btn-g{background:rgba(255,255,255,.035);color:var(--tx)}
+.section{padding:34px 0;border-top:1px solid rgba(255,255,255,.075)}
+.section h2{font-size:clamp(26px,4vw,42px);line-height:1.05;letter-spacing:-.03em;margin-bottom:12px}
+.section>p{color:var(--sub);max-width:860px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:18px}
+.card h3{font-size:16px;margin-bottom:8px}
+.card p,.card li{color:var(--sub);font-size:13.5px}
+.card ul{padding-left:18px}
+.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.pill{display:inline-flex;border:1px solid var(--bdr);background:rgba(255,255,255,.035);border-radius:999px;padding:7px 10px;color:var(--sub);font-size:12px;font-weight:700}
+.checklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.checklist li{list-style:none;background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;color:var(--sub);font-size:13.5px}
+.checklist li:before{content:"✓";color:var(--gold);font-weight:900;margin-right:8px}
+.band{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.28);border-radius:16px;padding:22px;margin:22px 0;color:var(--sub)}
+.band strong{color:var(--tx)}
+.timeline{counter-reset:step;display:grid;gap:12px;margin-top:18px}
+.step{counter-increment:step;display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:start;background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:16px}
+.step:before{content:counter(step);width:34px;height:34px;border-radius:999px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.28);color:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:900}
+.step h3{font-size:15px;margin-bottom:4px}.step p{color:var(--sub);font-size:13.5px}
+details{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;margin-top:10px}
+summary{cursor:pointer;color:var(--tx);font-weight:800}
+details p{color:var(--sub);font-size:13.5px;margin-top:8px}
+.final{padding:42px 0 62px;text-align:center}
+.final p{margin-left:auto;margin-right:auto}
+@media(max-width:900px){.hero,.grid,.grid.two,.checklist{grid-template-columns:1fr}.hero{padding-top:28px}.wrap{padding:0 18px}}
 </style>
 </head>
 <body>
-<a href="#content" class="skip" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999;font-size:14px;padding:8px 16px;background:var(--gold);color:#09090B;border-radius:8px;font-weight:600">Skip to content</a>
-<main id="content" role="main">
-<a class="back" href="/for/">← All situations</a>
-<h1>Launch end-to-end in one motion</h1>
-<p class="lead">Choose this path when you want the deepest accountable implementation across market entry, operations, and delivery — with visible scope.</p>
-<div class="box"><strong style="color:var(--tx)">Foundation</strong> delivers the deepest document + product bundle available today — 120+ files spanning strategy, legal, financial, code, marketing, operations, and technical documentation, deployed to your domain, plus the <strong>same 11-slot orchestrator allowlist</strong> as Professional. <span style="color:var(--gold)"><strong>Professional ($4,997)</strong> is the higher build tier with that same allowlist. <strong>Enterprise ($9,997)</strong> expands to <strong>13 slots</strong> (WordPress + post-deploy verification). Voice/SMS/CRM/directory need <strong>Custom Volume</strong>.</span></div>
-<div class="trust-box"><strong>Credential boundary:</strong> No third-party secrets are auto-injected from our pool into your Vercel project. Your shipped repo documents every key you need in <code>.env.example</code> — your live product runs on your own accounts. This is enforced in code, not just policy.</div>
-<small style="margin-top:0">Start with Foundation for the deepest available bundle, then connect operational tools at your own pace.</small>
-<div class="box" style="border-color:rgba(34,197,94,.25);background:rgba(34,197,94,.04)"><strong style="color:#22C55E">Day-1 Success Kit included:</strong> Every paid build ships with an interactive onboarding dashboard, automated test suite, seed data for instant demos, API testing collection, and a 90-day launch playbook — all in your repo, no extra setup.</div>
+<a href="#content" class="skip" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;font-size:14px;padding:8px 16px;background:var(--gold);color:var(--ink);border-radius:8px;font-weight:700">Skip to content</a>
+<main id="content">
+<div class="wrap">
+<nav class="crumb" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/for/">Situation guides</a> / Full launch</nav>
+
+<section class="hero">
+<div>
+<div class="eyebrow"><span class="dot" aria-hidden="true"></span> Full launch path</div>
+<h1>Launch the business, not just the app.</h1>
+<p class="lead">Use this path when you are ready to turn a niche, offer, or operating concept into a complete autonomous business unit: revenue engine, product surface, CRM, RevOps, AI/MCP tools, analytics, support, and infrastructure included.</p>
 <div class="cta">
-<a class="btn btn-p" href="/app?plan=foundation&archetype=enterprise_full&segment=full_launch&source=spoke">Start Foundation — $1,997</a>
+<a class="btn btn-p" href="/app?plan=foundation&archetype=enterprise_full&segment=full_launch&source=full_launch_hero">Start Foundation build</a>
+<a class="btn btn-g" href="/deliverables">Review deliverables</a>
+<a class="btn btn-g" href="/maturity">See what ships</a>
 </div>
-<div class="faq">
+</div>
+<aside class="hero-card" aria-label="Recommended path">
+<div class="price">$1,997</div>
+<h2>Recommended starting point: Foundation</h2>
+<p>Foundation is the full-launch baseline: strategy pack, production code path, deployment, Day-1 Success Kit, marketplace-ready operating layer, and the same 11-slot server integration allowlist as Professional when keys and API health allow.</p>
+<p class="small">Professional and Enterprise are higher-touch commercial scopes. Custom Volume is the path for wider voice, SMS, CRM, directory, lead-intel, and rendered video integrations.</p>
+</aside>
+</section>
+
+<section class="section">
+<h2>Who should choose full launch?</h2>
+<p>This page is for founders, operators, agencies, and teams that need a serious launch package instead of a single landing page. It is the right path when the business needs to acquire leads, sell, fulfill, retain, measure, and improve from day one.</p>
+<div class="grid">
+<article class="card"><h3>You need revenue quickly</h3><p>The build includes pre-SaaS products, pricing, checkout metadata, lead magnets, email nurture, upsells, bundles, and delivery workflows so the business has a cash engine before every SaaS feature is mature.</p></article>
+<article class="card"><h3>You need operating structure</h3><p>The build includes CRM entities, customer lifecycle stages, quotes, proposals, contracts, invoices, onboarding, support, workflows, and analytics so the company can operate, not merely present itself.</p></article>
+<article class="card"><h3>You need a handoff-ready repo</h3><p>The output is structured for owners, developers, advisors, and operators: code, docs, tests, launch playbooks, provider boundaries, repair telemetry, and manual actions are all visible.</p></article>
+</div>
+</section>
+
+<section class="section">
+<h2>What the full launch build includes</h2>
+<p>The full-launch path is validated against the autonomous business-unit standard. The exact files vary by niche and tier, but the required surface is broad by design.</p>
+<ul class="checklist">
+<li>Niche-specific website with homepage, pricing, product catalog, lead magnet, checkout, customer portal, support, legal pages, SEO metadata, and conversion paths.</li>
+<li>Pre-SaaS revenue engine with 5+ information products, 3 lead magnets, email nurture, upsells, bundles, pricing, delivery workflows, and refund policy references.</li>
+<li>CRM and lifecycle logic for leads, contacts, customers, deals, quotes, proposals, contracts, invoices, payments, subscriptions, tickets, tasks, notes, and activities.</li>
+<li>RevOps system with quote templates, proposal templates, MSA/SOW/NDA/DPA-style legal drafts, invoice templates, renewal rules, discount rules, and failed-payment recovery.</li>
+<li>Payment, email, storage, analytics, AI, document, signature, and notification provider abstractions with internal defaults and optional vendor adapters.</li>
+<li>AI-native operating surface: MCP-compatible tool registry, agent permissions, prompts, workflows, memory/retrieval scaffolds, approval gates, and model-routing notes.</li>
+<li>Analytics and observability: funnel metrics, revenue metrics, product metrics, customer health, PostHog-ready event plans, OpenTelemetry scaffolds, logs, and route checks.</li>
+<li>Self-hostable infrastructure: Docker-first architecture, API/worker/frontend surfaces, database, pgvector memory path, Redis/NATS-style events, reverse proxy, migrations, and health checks.</li>
+<li>Security and governance: JWT/RBAC, tenant isolation, audit logs, secure headers, input validation, rate limiting, webhook verification, OWASP/NIST/ISO AI readiness evidence, and prompt-injection precautions.</li>
+<li>Build repair evidence: detector/remediator classes, BUILD-REPORT telemetry, checkpoint manifests, deployment failure classification, and resume-from-last-stage guidance.</li>
+</ul>
+</section>
+
+<section class="section">
+<h2>How launch unfolds</h2>
+<div class="timeline">
+<div class="step"><div><h3>1. Diagnose the opportunity</h3><p>The builder captures niche, target customer, location, business model, primary offer, secondary offers, urgency, differentiation, monetization, and delivery risk.</p></div></div>
+<div class="step"><div><h3>2. Generate the business contract</h3><p>The system creates the planning contract that governs copy, products, pages, workflows, schemas, integrations, security, analytics, and validation gates.</p></div></div>
+<div class="step"><div><h3>3. Build the operating layer</h3><p>The generated repo includes product, funnel, CRM, RevOps, payments, onboarding, support, AI/MCP tools, workflows, analytics, and infrastructure scaffolds.</p></div></div>
+<div class="step"><div><h3>4. Verify code, routes, and content</h3><p>Checks cover links, scripts, buttons, marketplace readiness, generated-repo repair guards, builder clickability, required routes, live content, and quality gates.</p></div></div>
+<div class="step"><div><h3>5. Continue if something fails</h3><p>Failures become repair inputs. The build records issue class, root cause, changed files, verification result, retries, degraded scaffolds, and next checkpoint.</p></div></div>
+</div>
+</section>
+
+<section class="section">
+<h2>What remains customer-owned?</h2>
+<p>Full launch does not mean your production accounts are secretly operated from a shared vendor pool. The generated business unit is built for ownership and clean handoff.</p>
+<div class="band"><strong>Credential boundary:</strong> production secrets, payment accounts, domain accounts, email sending accounts, analytics accounts, provider approvals, legal review, tax review, and regulated operating approvals remain customer-owned. The repo documents required placeholders and validation rules rather than hiding them.</div>
+<div class="grid two">
+<article class="card"><h3>Configured when credentials exist</h3><p>Stripe, email, storage, analytics, PostHog, video/voice rendering, CRM, managed CMS, directory, lead intelligence, and other vendor adapters can activate when the selected tier, keys, account approvals, and API health allow.</p></article>
+<article class="card"><h3>Scaffolded when credentials are absent</h3><p>If a vendor cannot run, the builder should still ship a verified scaffold, typed degradation, clear manual action, and repair/resume evidence instead of pretending the integration is live.</p></article>
+</div>
+</section>
+
+<section class="section">
+<h2>Proof points to inspect before buying</h2>
+<div class="grid">
+<article class="card"><h3>Deliverables inventory</h3><p>Review the file-by-file inventory and individual landing pages for strategy, legal, frontend, backend, financial, marketing, operations, technical, testing, and launch-kit artifacts.</p><p><a href="/deliverables">Open deliverables</a></p></article>
+<article class="card"><h3>Maturity matrix</h3><p>See what is live, code-generated, partial, planned, credential-gated, or tier-gated before assuming a feature ships in your plan.</p><p><a href="/maturity">Open maturity matrix</a></p></article>
+<article class="card"><h3>Marketplace</h3><p>Browse modules, packs, categories, blueprints, editions, suites, and setup paths. Each page maps the promise to activation and traceability evidence.</p><p><a href="/marketplace">Open marketplace</a></p></article>
+</div>
+</section>
+
+<section class="section">
 <h2>Common questions</h2>
-<details class="fq"><summary>What does Foundation include for a full launch?</summary><p>120+ files: strategy documents, legal templates, financial models, production application, marketing plans, operations playbooks, technical documentation, test suites, and a Day-1 Success Kit — all tailored to your business description and deployed to your domain.</p></details>
-<details class="fq"><summary>Are there steps that still need my sign-off?</summary><p>Yes — identity verification (Stripe, domain registrar), campaign review, and certain provider approvals always require your action. <code>MANUAL-ACTIONS.md</code> in your repo lists them explicitly.</p></details>
-<details class="fq"><summary>How does procurement or audit review work?</summary><p>All deliverables are versioned in your private GitHub repo. The maturity page and inventory API provide a real-time view of what's live vs. roadmap. No production secrets are auto-injected — your IT team controls the keys. See <a href="/maturity">what's included</a>.</p></details>
+<details><summary>Is this a website builder?</summary><p>No. The full-launch path includes a website, but the website is only one surface. The real output is the operating system around the business: products, funnel, CRM, RevOps, payments, onboarding, support, analytics, AI tools, workflows, and infrastructure.</p></details>
+<details><summary>Does this guarantee revenue?</summary><p>No build can guarantee revenue. The system improves launch readiness by shipping a pre-SaaS revenue engine, niche-specific offers, conversion paths, analytics, and iteration loops. Real results still depend on market demand, traffic, offer quality, execution, and customer trust.</p></details>
+<details><summary>Can I hand the repo to a developer?</summary><p>Yes. The launch package is designed to be inspectable: code, docs, schemas, API contracts, tests, launch playbooks, env/config placeholders, provider boundaries, and repair telemetry are in the repo.</p></details>
+<details><summary>What if a build fails?</summary><p>The desired behavior is repair and resume, not start-over waste. The launcher now encodes resumable checkpoints and repair evidence so future runs can continue from the last verified stage when possible.</p></details>
+</section>
+
+<section class="final">
+<h2>Ready to launch the whole business unit?</h2>
+<p class="lead">Start with the diagnostic if you want one more go/no-go check, or begin the Foundation full-launch path when the business direction is clear.</p>
+<div class="cta" style="justify-content:center">
+<a class="btn btn-p" href="/app?plan=foundation&archetype=enterprise_full&segment=full_launch&source=full_launch_bottom">Start Foundation build</a>
+<a class="btn btn-g" href="/quiz?source=full_launch_bottom">Run diagnostic first</a>
+<a class="btn btn-g" href="/contact">Ask about enterprise scope</a>
 </div>
-<p class="promise">Every path runs through the same product: judgment on the plan, implementation you own, and accountable scope. <a href="/deliverables">See every file you get</a> · <a href="/maturity">See what ships today</a>.</p>
-<small><a href="/">Home</a> · <a href="/deliverables">Deliverables</a> · <a href="/maturity">What ships</a> · <a href="/#pricing">Pricing</a> · <a href="/quiz">Diagnostic</a></small>
+</section>
+</div>
 </main>
+<script src="/site-shell.js" defer></script>
 </body>
 </html>
