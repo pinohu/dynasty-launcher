@@ -1719,6 +1719,39 @@ function safeJsonParse(str) {
   return null;
 }
 
+function withTimeout(promise, ms, label) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(label + ' timed out after ' + Math.round(ms / 1000) + 's; continuing with fallback.')), ms);
+    Promise.resolve(promise).then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); }
+    );
+  });
+}
+
+function buildFallbackExecutionPlan(inf, planning) {
+  const pageCount = planning?.design_contract?.pages?.length || 12;
+  const entityCount = planning?.blueprint?.data_model?.entities?.length || 8;
+  return {
+    fallback_reason: 'AI build-plan generation timed out or returned invalid JSON; deterministic execution plan generated locally.',
+    phases: [
+      { phase_number: 1, name: 'Business contract and central configuration', files_to_generate: ['config/master.config.yaml', 'config/config.schema.json', 'SPEC.md', 'CLAUDE.md'], model_recommendation: 'deterministic fallback', estimated_tokens: 4000, depends_on: [], can_parallelize_with: [], critical_context_from_planning: 'Lock business identity, niche, features, secrets, providers, and build contract before code generation.' },
+      { phase_number: 2, name: 'Core runtime and data model', files_to_generate: ['src/api/*', 'src/services/*', 'src/auth/*', 'infra/migrations/*'], model_recommendation: 'deterministic fallback', estimated_tokens: 9000, depends_on: [1], can_parallelize_with: [3, 4], critical_context_from_planning: 'Implement ' + entityCount + ' core entities, RBAC, audit logs, provider abstractions, and tenant-safe APIs.' },
+      { phase_number: 3, name: 'Website, funnel, and customer portal', files_to_generate: ['src/frontend/*', 'content/*', 'products/*'], model_recommendation: 'deterministic fallback', estimated_tokens: 9000, depends_on: [1], can_parallelize_with: [2, 4], critical_context_from_planning: 'Generate ' + pageCount + ' accessible, mobile-safe, on-niche pages with checkout and delivery paths.' },
+      { phase_number: 4, name: 'RevOps, workflows, MCP tools, and analytics', files_to_generate: ['revops/*', 'workflows/*', 'agents/tool-registry.json', 'analytics/*'], model_recommendation: 'deterministic fallback', estimated_tokens: 10000, depends_on: [1], can_parallelize_with: [2, 3], critical_context_from_planning: 'Ship quotes, proposals, contracts, invoices, events, workflows, MCP-compatible tools, and revenue telemetry.' },
+      { phase_number: 5, name: 'Self-hosted infrastructure and validation', files_to_generate: ['infra/docker-compose.yml', 'infra/Dockerfile.api', 'infra/Dockerfile.worker', 'tests/*'], model_recommendation: 'deterministic fallback', estimated_tokens: 7000, depends_on: [2, 3, 4], can_parallelize_with: [], critical_context_from_planning: 'Verify build completeness, no direct third-party core imports, central config, security, routes, live content, and quality gates.' }
+    ],
+    file_dependency_graph: { 'config/master.config.yaml': ['SPEC.md'], 'src/api/*': ['config/master.config.yaml', 'schemas/*.json'], 'workflows/*.yaml': ['events/event-schema.json', 'agents/tool-registry.json'], 'tests/*': ['config/master.config.yaml', 'schemas/*.json', 'workflows/*.yaml'] },
+    estimated_total_tokens: 39000,
+    estimated_cost: '$0.00 fallback',
+    estimated_time_sequential: '90 seconds',
+    estimated_time_parallel: '35 seconds',
+    parallel_groups: [{ group: 1, phases: [1], reason: 'Business contract must run first.' }, { group: 2, phases: [2, 3, 4], reason: 'Runtime, UI, and operations can run in parallel after the contract.' }, { group: 3, phases: [5], reason: 'Validation depends on generated artifacts.' }],
+    risk_factors: ['Provider credentials may be absent; use verified scaffold fallbacks.', 'Generated content must remain on-niche.', 'Deployment must pass route, live-content, and quality checks.'],
+    quality_gates: [{ after_phase: 1, check: 'Master config and schema exist; no scattered secret config.' }, { after_phase: 2, check: 'Core APIs, auth, audit logs, and provider abstractions compile.' }, { after_phase: 3, check: 'All required pages and CTAs exist and are mobile-safe.' }, { after_phase: 4, check: 'RevOps, workflows, events, MCP tools, products, and analytics are complete.' }, { after_phase: 5, check: 'Tests, generated-repo contract, route checks, and live-content checks pass.' }]
+  };
+}
+
 let INFERRED=null;
 let PRGS=[];
 let isAuthority=false;
@@ -1782,7 +1815,7 @@ REPO: ${ORG}/${inf.repo}${refinementContext}${existingContext}`;
   // ── CYCLE 1: Architecture Blueprint (Opus) ─────────────────────────────
   updatePlanPhase(1, 'running', 'Generating architecture blueprint...');
   try {
-    const bp = await aiRawWithModel(
+    const bp = await withTimeout(aiRawWithModel(
       `${PROMPT_ARMOR}You are a principal software architect creating the BINDING TECHNICAL CONTRACT for a project. Every file generated after this must conform to these decisions. Be extremely specific — no ambiguity.
 
 ${baseContext}
@@ -1825,7 +1858,7 @@ Generate a complete architecture blueprint. Return ONLY valid JSON (no markdown,
 
 Be specific. Real table names. Real field names. Real API paths. This is the contract.`,
       'llama-3.3-70b-versatile', 8000
-    );
+    ), 45000, 'Architecture blueprint');
 
     const match = bp.match(/\{[\s\S]*\}/);
     if (match) {
@@ -1861,7 +1894,7 @@ Be specific. Real table names. Real field names. Real API paths. This is the con
   updatePlanPhase(2, 'running', 'Generating design contract...');
   try {
     const entityNames = PLANNING_OUTPUT.blueprint?.data_model?.entities?.map(e => e.name).join(', ') || 'entities TBD';
-    const dc = await aiRawWithModel(
+    const dc = await withTimeout(aiRawWithModel(
       `You are a senior design systems architect. Create the BINDING DESIGN CONTRACT for this project. Every UI component must conform to these tokens. Be pixel-precise.
 
 ${baseContext}
@@ -1936,7 +1969,7 @@ Generate the design contract. Return ONLY valid JSON:
 
 Be pixel-precise. Real hex values. Real font names (from Google Fonts). This contract is law.`,
       'gemini-2.0-flash', 5000
-    );
+    ), 45000, 'Design contract');
 
     const dcCleaned = (dc || '').replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
     const match = dcCleaned.match(/\{[\s\S]*\}/);
@@ -1970,7 +2003,7 @@ Be pixel-precise. Real hex values. Real font names (from Google Fonts). This con
     const endpointCount = PLANNING_OUTPUT.blueprint?.api_contracts?.length || 0;
     const pageCount = PLANNING_OUTPUT.design_contract?.pages?.length || 0;
 
-    const plan = await aiRawWithModel(
+    const plan = await withTimeout(aiRawWithModel(
       `You are a technical project manager creating a BUILD EXECUTION PLAN. Given the architecture blueprint and design contract, produce an ordered build plan.
 
 ${baseContext}
@@ -2021,29 +2054,39 @@ Return ONLY valid JSON:
   ]
 }`,
       'gemini-2.0-flash', 4000
-    );
+    ), 30000, 'Build execution plan');
 
     const match = plan.match(/\{[\s\S]*\}/);
-    if (match) {
-      PLANNING_OUTPUT.build_plan = safeJsonParse(match[0]);
-      if (!PLANNING_OUTPUT.build_plan) { updatePlanPhase(3, 'error', 'Build plan parse failed — will build with defaults'); }
+    if (match) PLANNING_OUTPUT.build_plan = safeJsonParse(match[0]);
+    if (!PLANNING_OUTPUT.build_plan) {
+      PLANNING_OUTPUT.build_plan = buildFallbackExecutionPlan(inf, PLANNING_OUTPUT);
+      updatePlanPhase(3, 'done', `Fallback plan ready: ${PLANNING_OUTPUT.build_plan.phases.length} phases, ${PLANNING_OUTPUT.build_plan.estimated_time_parallel}`);
+    } else {
       const phaseCount = PLANNING_OUTPUT.build_plan.phases?.length || 0;
       updatePlanPhase(3, 'done', `${phaseCount} phases, ${PLANNING_OUTPUT.build_plan.estimated_time_parallel || '~35s'} estimated`);
-      renderBuildPlanPreview(PLANNING_OUTPUT.build_plan);
-
-      BUILD_COMPACTIONS.push({
-        phase: 'build_plan',
-        timestamp: new Date().toISOString(),
-        signals: {
-          total_phases: phaseCount,
-          parallel_groups: PLANNING_OUTPUT.build_plan.parallel_groups?.length || 0,
-          estimated_cost: PLANNING_OUTPUT.build_plan.estimated_cost || 'unknown',
-        }
-      });
     }
+    renderBuildPlanPreview(PLANNING_OUTPUT.build_plan);
+
+    BUILD_COMPACTIONS.push({
+      phase: 'build_plan',
+      timestamp: new Date().toISOString(),
+      signals: {
+        total_phases: PLANNING_OUTPUT.build_plan.phases?.length || 0,
+        parallel_groups: PLANNING_OUTPUT.build_plan.parallel_groups?.length || 0,
+        estimated_cost: PLANNING_OUTPUT.build_plan.estimated_cost || 'unknown',
+        fallback_reason: PLANNING_OUTPUT.build_plan.fallback_reason || '',
+      }
+    });
   } catch (e) {
-    updatePlanPhase(3, 'error', e.message);
-    console.error('Build plan failed:', e);
+    PLANNING_OUTPUT.build_plan = buildFallbackExecutionPlan(inf, PLANNING_OUTPUT);
+    updatePlanPhase(3, 'done', `Fallback plan ready after planner issue: ${PLANNING_OUTPUT.build_plan.phases.length} phases`);
+    renderBuildPlanPreview(PLANNING_OUTPUT.build_plan);
+    BUILD_COMPACTIONS.push({
+      phase: 'build_plan',
+      timestamp: new Date().toISOString(),
+      signals: { total_phases: PLANNING_OUTPUT.build_plan.phases.length, parallel_groups: PLANNING_OUTPUT.build_plan.parallel_groups.length, estimated_cost: PLANNING_OUTPUT.build_plan.estimated_cost, fallback_reason: e.message || PLANNING_OUTPUT.build_plan.fallback_reason }
+    });
+    console.error('Build plan failed; deterministic fallback plan used:', e);
   }
 
   // Show the "Execute Build" button
