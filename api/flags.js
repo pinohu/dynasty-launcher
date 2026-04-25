@@ -1,3 +1,8 @@
+// Phase 1: modular agents feature flag (file-backed prompt assembly).
+// When true, api/orchestrate.js loads system prompts from agents/ instead
+// of inline strings. Default false — zero behavior change when off.
+export const USE_MODULAR_AGENTS = process.env.USE_MODULAR_AGENTS === 'true';
+
 // ── Your Deputy — Feature Flags ─────────────────────────────────────────
 // Inspired by Claude Code's compile-time feature flag system (KAIROS, BUDDY, etc.)
 // Enables safe iteration, A/B testing, and gated rollouts.
@@ -20,6 +25,7 @@ const DEFAULT_FLAGS = {
   social_calendar:       { enabled: true,  label: '1-Year Social Calendar',     description: 'Generate 260-post social media calendar across 5 platforms' },
   outscraper_directory:  { enabled: true,  label: 'Real Business Listings',     description: 'Pull real Google Maps data via Outscraper instead of AI-generated listings' },
   pivot_review:          { enabled: true,  label: 'Strategic Pivot Review',     description: 'Multi-agent strategic review before build' },
+  use_modular_agents:    { enabled: false, label: 'Modular Agent Prompts',     description: 'Load orchestrator+subagent prompts from agents/ directory instead of inline (Phase 1)' },
 
   // ── Project Types (gated) ──────────────────────────────────────────────────
   leados_gov_template:   { enabled: false, label: 'LeadOS-Gov Template',        description: 'Government SaaS project template (experimental)' },

@@ -1,0 +1,91 @@
+{
+  "tools": [
+    {
+      "name": "emit_plan",
+      "description": "Write the run's plan to the event stream. Called exactly once per run at the start, and again only if a halt event requires replanning. ALWAYS tag each plan item with the operating LLC per the entity routing principle. NEVER emit a plan whose items span multiple subagent types — split them.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {"type": "string"},
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "string"},
+                "subagent": {"enum": ["provisioner", "code-generator", "integrator", "deployer", "auditor"]},
+                "task": {"type": "string"},
+                "depends_on": {"type": "array", "items": {"type": "string"}},
+                "acceptance": {"type": "string"},
+                "estimated_iterations": {"type": "integer"}
+              },
+              "required": ["id", "subagent", "task", "acceptance"]
+            }
+          },
+          "operating_llc": {"enum": ["CXI", "Obuke", "Kwode", "ToriMedia", "NeatCircle"]}
+        },
+        "required": ["run_id", "items", "operating_llc"]
+      }
+    },
+    {
+      "name": "delegate_to_subagent",
+      "description": "Invoke one subagent on one plan item. The subagent runs its own 6-step loop and emits a submit_results event when done. You may call this tool multiple times in a single iteration ONLY when the target plan items have no mutual dependencies (parallel fan-out). ALWAYS pass the plan item id and the run_id — do not paraphrase the task from memory.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {"type": "string"},
+          "plan_item_id": {"type": "string"},
+          "subagent": {"enum": ["provisioner", "code-generator", "integrator", "deployer", "auditor"]},
+          "inputs": {"type": "object"}
+        },
+        "required": ["run_id", "plan_item_id", "subagent"]
+      }
+    },
+    {
+      "name": "query_events",
+      "description": "Read a filtered slice of the event stream for the current run_id. Use this to check subagent submissions, halt events, and plan item state. NEVER query other tenants' events — the run_id filter is enforced but a mismatched query wastes iterations.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {"type": "string"},
+          "event_types": {"type": "array", "items": {"type": "string"}},
+          "since_event_id": {"type": "string"}
+        },
+        "required": ["run_id"]
+      }
+    },
+    {
+      "name": "emit_halt",
+      "description": "Halt the run and escalate to Ike. Use ONLY when the halt-conditions policy applies (iteration_cap, no_progress, tool_retry_exhausted, time_cap) OR the escalation policy triggers (financial > $100 unauthorized, legal action, missing credential, destructive action outside scope). Never use to ask Ike to pick between equally good options.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {"type": "string"},
+          "reason": {"enum": ["iteration_cap", "no_progress", "tool_retry_exhausted", "time_cap", "escalation"]},
+          "category": {"enum": ["financial", "legal", "missing_credential", "destructive", "operational"]},
+          "question": {"type": "string"},
+          "context": {"type": "string"}
+        },
+        "required": ["run_id", "reason", "context"]
+      }
+    },
+    {
+      "name": "submit_run_results",
+      "description": "Emit the final run summary. Call ONLY when every plan item is marked verified or the run is halting. Must include primary live URL(s), GitHub repo URL, Vercel project ID, Neon references by ID (never credentials inline), operating LLC assignment, and the verified acceptance checklist.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {"type": "string"},
+          "live_urls": {"type": "array", "items": {"type": "string"}},
+          "github_repo": {"type": "string"},
+          "vercel_project_id": {"type": "string"},
+          "neon_refs": {"type": "object"},
+          "operating_llc": {"type": "string"},
+          "acceptance_checklist": {"type": "array"},
+          "halts_or_escalations": {"type": "array"}
+        },
+        "required": ["run_id", "live_urls", "operating_llc", "acceptance_checklist"]
+      }
+    }
+  ]
+}

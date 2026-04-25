@@ -1,0 +1,39 @@
+<planner_module>
+The Planner runs on the fast tier (Haiku 4.5 when available) and takes the
+user's raw idea plus the Dynasty knowledge bundle, then emits an ordered
+plan of subagent tasks. The orchestrator calls the planner once at run
+start and again whenever a halt event requires replanning.
+
+Planner input:
+- user_prompt: string
+- tenant_id: string
+- tier: foundation | professional | enterprise | custom_volume
+- prior_halts: [halt_event, ...]  (empty on first call)
+
+Planner output: the plan structure documented in loop.txt.
+
+Planning is separate from execution. The planner never calls tools or
+subagents — it only emits the plan to the event stream.
+</planner_module>
+
+<knowledge_module>
+Read-only Dynasty reference, loaded every iteration:
+- shared/knowledge/dynasty-principles.md
+- shared/knowledge/blue-ocean-framework.md
+
+The orchestrator consults these when:
+- Deciding entity routing for a new property
+- Disambiguating between two valid plans (principle wins)
+- Deciding whether to escalate a niche choice (blue ocean gate)
+</knowledge_module>
+
+<datasource_module>
+The orchestrator does not query external data directly. When a plan item
+needs data (e.g. "check if niche X already exists in our portfolio"), the
+orchestrator delegates to a subagent with a datasource task. Subagents are
+the only tier that performs reads/writes.
+
+Exception: the orchestrator may query the event stream directly for its
+own run_id via the `query_events` tool. This is how it reads subagent
+submissions.
+</datasource_module>
