@@ -112,7 +112,7 @@ function buildItemPage({ category, slug, title, file, short, detail, inside, pre
   const insideHtml = inside.map((item) => `<li>${esc(item)}</li>`).join('\n');
   const proofCards = [
     ['Generated from your business', `The page is not a generic description of ${esc(file)}. Dynasty uses your niche, target customer, location, business model, primary offer, and secondary offers to shape the content and keep the artifact relevant.`],
-    ['Connected to the operating system', `This deliverable is designed to work with the rest of the autonomous business unit: website, funnel, CRM, RevOps, analytics, AI/MCP tools, workflows, and self-hostable infrastructure.`],
+    ['Connected to the operating system', `This deliverable is designed to work with the rest of the autonomous business unit: website, funnel, CRM, RevOps, payments, onboarding, support, PostHog-ready analytics, AI/MCP tools, open-weight model routing, optional video assets, provider abstractions, workflows, repair telemetry, and self-hostable infrastructure.`],
     ['Built for review and action', `The output is written so an owner, operator, developer, advisor, lender, or implementation partner can understand what to do next without decoding raw generator output.`],
   ].map(([h, p]) => `<article class="proof-card"><h2>${h}</h2><p>${p}</p></article>`).join('\n');
 
@@ -195,7 +195,7 @@ h1{font-family:'Playfair Display',serif;font-size:clamp(36px,6vw,68px);line-heig
 <div>
 <div class="eyebrow"><span class="mark">${esc(meta.icon)}</span>${esc(meta.label)}</div>
 <h1 id="deliverable-title">${esc(title)}</h1>
-<p class="lead">${esc(short)}. This page explains what the deliverable is, why it matters, what it contains, and how it helps turn a business idea into an operating unit.</p>
+<p class="lead">${esc(short)}. This page explains what the deliverable is, why it matters, what it contains, and how it helps turn a business idea into a revenue-ready, AI-operable, self-hostable operating unit.</p>
 <span class="file-pill">${esc(file)}</span>
 </div>
 <aside class="hero-card" aria-label="Get this deliverable">
@@ -211,7 +211,7 @@ h1{font-family:'Playfair Display',serif;font-size:clamp(36px,6vw,68px);line-heig
 
 <section class="section">
 <h2>What this deliverable is</h2>
-<p>${esc(detail)} It is written as an implementation-ready asset: specific enough for action, structured enough for review, and connected enough to support the other deliverables in the build.</p>
+<p>${esc(detail)} It is written as an implementation-ready asset: specific enough for action, structured enough for review, and connected enough to support the other deliverables, validation gates, workflow events, analytics signals, and customer lifecycle systems in the build.</p>
 <div class="grid">${proofCards}</div>
 </section>
 
@@ -228,8 +228,8 @@ ${insideHtml}
 <div class="process">
 <div class="step"><strong>1. Interpret</strong><p>The builder extracts the niche, buyer, offer, constraints, and operational assumptions from your brief.</p></div>
 <div class="step"><strong>2. Generate</strong><p>The deliverable is produced with business-specific language, concrete sections, and implementation-oriented structure.</p></div>
-<div class="step"><strong>3. Validate</strong><p>Quality gates check for placeholder residue, generic copy, missing modules, broken routes, and promise-to-artifact drift.</p></div>
-<div class="step"><strong>4. Activate</strong><p>The artifact becomes part of your launch package, supporting sales, operations, engineering, governance, or customer delivery.</p></div>
+<div class="step"><strong>3. Validate</strong><p>Quality gates check for placeholder residue, generic copy, missing modules, broken routes, accessibility issues, button containment, and promise-to-artifact drift.</p></div>
+<div class="step"><strong>4. Activate</strong><p>The artifact becomes part of your launch package, supporting sales, operations, engineering, governance, customer delivery, analytics, and AI/MCP tooling.</p></div>
 </div>
 </section>
 
@@ -245,7 +245,7 @@ ${insideHtml}
 
 <section class="section" style="text-align:center">
 <h2>Get ${esc(title)} with the rest of the launch system.</h2>
-<p style="margin-left:auto;margin-right:auto">A single deliverable is useful. The full value comes when this file is generated alongside the website, funnel, CRM, RevOps, payments, analytics, AI/MCP tools, workflow engine, self-hosted infrastructure, and validation gates.</p>
+<p style="margin-left:auto;margin-right:auto">A single deliverable is useful. The full value comes when this file is generated alongside the website, funnel, CRM, RevOps, payments, onboarding, support, PostHog-ready analytics, AI/MCP tools, model routing, optional media assets, workflow engine, provider abstractions, self-hosted infrastructure, resumable repair telemetry, and validation gates.</p>
 <div class="cta-row" style="justify-content:center;margin-top:18px">
 <a href="/app?plan=foundation&source=${source}_bottom" class="btn btn-primary">Launch the full business unit</a>
 <a href="/deliverables" class="btn btn-ghost">See all deliverables</a>

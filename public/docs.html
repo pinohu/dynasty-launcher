@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Documentation - Your Deputy</title>
-<meta name="description" content="Your Deputy launch standard documentation: what the builder creates, how validation works, and what every autonomous business unit must contain.">
+<meta name="description" content="Your Deputy launch standard documentation: what the builder creates, how validation works, how failed builds resume, and what every autonomous business unit must contain.">
 <link rel="canonical" href="https://yourdeputy.com/docs">
 <link rel="stylesheet" href="/site-shell.css">
 <style>
@@ -34,7 +34,7 @@ h1{font-size:clamp(40px,7vw,76px);line-height:.98;margin:16px 0 20px;letter-spac
   <section class="hero">
     <p class="eyebrow">Launch Standard Documentation</p>
     <h1>The operating manual for business-complete builds.</h1>
-    <p class="lead">Your Deputy is designed to produce more than a website. Every validated build is checked for business identity, funnel pages, products, CRM, RevOps, contracts, invoices, payments, onboarding, support, analytics, AI agents, MCP tools, workflows, security, and self-hostable infrastructure.</p>
+    <p class="lead">Your Deputy is designed to produce more than a website. Every validated build is checked for business identity, funnel pages, products, CRM, RevOps, contracts, invoices, payments, onboarding, support, PostHog-ready analytics, AI agents, MCP tools, open-weight model routing, optional media assets, workflows, security, resumable repair evidence, and self-hostable infrastructure.</p>
     <div class="actions">
       <a class="button primary" href="/deliverables">Review deliverables</a>
       <a class="button secondary" href="/maturity">See launch maturity</a>
@@ -71,10 +71,22 @@ h1{font-size:clamp(40px,7vw,76px);line-height:.98;margin:16px 0 20px;letter-spac
       <h2>Deployment Model</h2>
       <p>Every full build targets Docker-first, self-hostable infrastructure with explicit degraded-but-working scaffolds when credentials are unavailable.</p>
     </article>
+    <article class="card">
+      <h2>Repair & Resume</h2>
+      <p>Build failures are treated as structured inputs: detectors classify repo, route, deployment, quality, and live-content issues; remediators repair what they can; checkpoints let future runs continue from the last verified stage.</p>
+    </article>
+    <article class="card">
+      <h2>Model Routing</h2>
+      <p>Generated evidence includes an open-weight model catalog and routing notes for GPT-OSS, Gemma, Qwen, DeepSeek, Phi, Devstral, Magistral, and hosted fallbacks where configured.</p>
+    </article>
+    <article class="card">
+      <h2>Media & Analytics</h2>
+      <p>Optional video-use and VibeVoice-compatible planning create niche video and voice asset scaffolds, while PostHog-ready events connect acquisition, product usage, revenue, and customer lifecycle analytics.</p>
+    </article>
   </section>
 
   <section class="band">
-    <strong>Accountability rule:</strong> Vercel green is not enough. A build is ready only when code, routes, live content, quality contract, required modules, and generated business artifacts all verify together.
+    <strong>Accountability rule:</strong> Vercel green is not enough. A build is ready only when code, routes, live content, quality contract, required modules, model/tool evidence, analytics, repair telemetry, and generated business artifacts all verify together.
   </section>
 </main>
 <script src="/site-shell.js" defer></script>

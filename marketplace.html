@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="The Your Deputy operating marketplace: business-unit modules for revenue, CRM, RevOps, onboarding, support, analytics, workflow automation, agent permissions, MCP tools, and optional external integrations.">
+  <meta name="description" content="The Your Deputy operating marketplace: active business-unit modules for revenue, CRM, RevOps, onboarding, support, PostHog-ready analytics, workflow automation, agent permissions, MCP tools, optional video assets, and provider adapters.">
   <meta property="og:title" content="Your Deputy - Business Unit Marketplace">
-  <meta property="og:description" content="Browse the modules that turn a generated build into an operating business: lead capture, payments, invoices, proposals, contracts, onboarding, support, analytics, workflows, and AI tools.">
+  <meta property="og:description" content="Browse the modules that turn a generated build into an operating business: lead capture, payments, invoices, proposals, contracts, onboarding, support, analytics, workflows, AI tools, model routing, and repair telemetry.">
   <meta property="og:type" content="website">
   <title>Business Unit Marketplace - Your Deputy</title>
   <script type="application/ld+json">
@@ -1270,14 +1270,14 @@
   <main id="main-content">
     <div class="container">
       <div id="announcement" class="announcement" style="display:none;">
-        <strong>Private preview.</strong> No modules have been promoted past coming soon yet — this page is populated from the live product catalog so the UI and the platform can exercise each other.
+        <strong>Live traceable catalog.</strong> Modules, packs, editions, suites, setup paths, and blueprints are populated from product data, linked to activation APIs, and checked against entitlement, capability, route, and quality gates.
         <span id="admin-toggle"></span>
       </div>
 
       <section class="hero">
-        <h1>Browse the modules behind every autonomous business unit.</h1>
+        <h1>Activate the modules behind every autonomous business unit.</h1>
         <p class="subheading">
-          This is the operating layer: lead capture, products, quotes, proposals, contracts, invoices, payments, onboarding, support, analytics, internal workflows, agent permissions, MCP-compatible tools, and optional provider adapters.
+          This is the operating layer: lead capture, products, quotes, proposals, contracts, invoices, payments, onboarding, support, PostHog-ready analytics, internal workflows, agent permissions, MCP-compatible tools, open-weight model routing, optional video assets, repair telemetry, and optional provider adapters.
         </p>
         <div class="hero-cta">
           <a href="#core-section" class="btn-primary" style="font-size:16px;padding:14px 32px;">
@@ -1447,7 +1447,7 @@
 
       <section class="team-section" id="team" aria-labelledby="team-heading">
         <h2 id="team-heading">Built around ownership, not vendor lock-in</h2>
-        <p class="team-intro">Your Deputy now describes, generates, and validates the full operating layer: central configuration, provider abstractions, self-hosted infrastructure, event workflows, AI-operable business tools, standards evidence, deployment protection, and observability.</p>
+        <p class="team-intro">Your Deputy now describes, generates, and validates the full operating layer: central configuration, provider abstractions, self-hosted infrastructure, event workflows, AI-operable business tools, open-weight model routing, video/voice asset planning, standards evidence, deployment protection, PostHog-ready analytics, and observability.</p>
         <div class="team-grid">
           <div class="team-card">
             <div class="team-avatar" aria-hidden="true">CFG</div>
@@ -1547,7 +1547,7 @@
         <h2>Ready to launch the operating layer?</h2>
         <p>
           Generate a niche-specific autonomous business unit with products, funnel, CRM, RevOps, payments,
-          onboarding, support, analytics, AI agents, MCP tools, workflows, self-hostable infrastructure,
+          onboarding, support, PostHog-ready analytics, AI agents, MCP tools, model routing, optional video assets, workflows, self-hostable infrastructure,
           OWASP/NIST governance evidence, OpenTelemetry, deployment protection, tenancy decisions, and semantic validation.
         </p>
         <div class="final-cta-buttons">
@@ -1588,7 +1588,7 @@
   const q = new URLSearchParams(location.search);
 
   const STATUS_LABELS = {
-    spec: 'Coming soon',
+    spec: 'Contracted',
     implemented: 'In testing',
     validated: 'Verified',
     deployable: 'Available',
@@ -1806,8 +1806,8 @@
       if (Array.isArray(bundles?.deferred) && bundles.deferred.length && state.view === 'admin') {
         $('#packs-grid').insertAdjacentHTML('afterend',
           `<p style="color:var(--muted); font-size:12px; margin-top:12px;">
-            Coming soon: ${bundles.deferred.map((d) => d?.bundle_code || 'unnamed').join(', ')}.
-            Promoted when their underlying workflows reach live status.
+            Deferred by entitlement or capability: ${bundles.deferred.map((d) => d?.bundle_code || 'unnamed').join(', ')}.
+            Activated when the tenant, tier, credentials, and workflow checks are ready.
           </p>`);
       }
     } catch (err) {
@@ -1824,7 +1824,7 @@
         : modules.modules;
 
       if (modsFiltered.length === 0) {
-        $('#modules-grid').innerHTML = `<div class="card"><p class="card-description">No individual workflows are available yet. They're in testing — the platform is in private preview.</p></div>`;
+        $('#modules-grid').innerHTML = `<div class="card"><p class="card-description">No individual workflows matched the current filters. Clear filters or switch views to see traceable contracted, implemented, validated, and deployable modules.</p></div>`;
       } else {
         $('#modules-grid').innerHTML = modsFiltered.map((m) => `
           <div class="card">

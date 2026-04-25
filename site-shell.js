@@ -32,6 +32,7 @@
       links: [
         { href: "/deliverables", label: "Full deliverables inventory" },
         { href: "/maturity", label: "What ships today" },
+        { href: "/docs", label: "Build contract docs" },
         { href: "/observability", label: "Observability" },
         { href: "/for/", label: "Path guides" },
         { href: "/for/full-launch", label: "Full-launch guide" },
@@ -44,7 +45,18 @@
         { href: "/automations/modules/", label: "Automation modules" },
         { href: "/automations/packs/", label: "Outcome packs" },
         { href: "/automations/categories/", label: "Categories" },
+        { href: "/automations/blueprints/", label: "Industry blueprints" },
         { href: "/plans/your-deputy-core", label: "Core plan" },
+      ],
+    },
+    {
+      title: "Capabilities",
+      links: [
+        { href: "/maturity", label: "Resumable repair pipeline" },
+        { href: "/docs", label: "Open-weight model routing" },
+        { href: "/deliverables/marketing/video-script", label: "Video asset planning" },
+        { href: "/deliverables/technical/analytics", label: "PostHog-ready analytics" },
+        { href: "/deliverables/technical/openapi", label: "API and MCP evidence" },
       ],
     },
     {
@@ -163,7 +175,7 @@
         <div class="yd-footer-grid">
           <section class="yd-footer-col" aria-labelledby="yd-footer-brand">
             <div class="yd-footer-brand" id="yd-footer-brand">Your Deputy</div>
-            <p class="yd-footer-copy">Autonomous business-unit launcher: validation, niche website, revenue engine, CRM, RevOps, payments, onboarding, support, analytics, AI/MCP tools, workflows, and self-hostable infrastructure.</p>
+            <p class="yd-footer-copy">Autonomous business-unit launcher: validation, niche website, lead capture, products, CRM, RevOps, payments, onboarding, support, PostHog-ready analytics, AI/MCP tools, open-weight model routing, optional video assets, resumable repair telemetry, workflows, provider abstractions, and self-hostable infrastructure.</p>
           </section>
           ${sitemapGroups.map((group) => `
             <section class="yd-footer-col" aria-labelledby="yd-footer-${group.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}">
@@ -190,7 +202,7 @@
     section.setAttribute("aria-labelledby", "yd-site-map-title");
     section.innerHTML = `
       <h2 id="yd-site-map-title">Every major page is reachable from here.</h2>
-      <p>Use this directory when you want the full product surface: builder, diagnostic, deliverables, marketplace, setup paths, automation modules, legal pages, and status pages.</p>
+      <p>Use this directory when you want the full product surface: builder, diagnostic, deliverables, marketplace, setup paths, automation modules, analytics, video planning, AI/MCP tooling, model-routing evidence, repair/resume status, legal pages, and status pages.</p>
       <div class="yd-site-map-grid">
         ${sitemapGroups.map((group) => `
           <div class="yd-site-map-card">
