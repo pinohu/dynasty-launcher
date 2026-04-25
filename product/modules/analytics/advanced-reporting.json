@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "advanced_reporting",
+  "name": "Advanced Reporting",
+  "description_short": "Roll up funnel, revenue, service, review, and activation data into owner-ready operating dashboards.",
+  "outcome": "Know which channels, workflows, and customer segments are creating revenue instead of guessing from disconnected reports.",
+  "category": "analytics",
+  "price_monthly": 19,
+  "tier_availability": [
+    "foundation",
+    "professional",
+    "enterprise"
+  ],
+  "capabilities_required": [
+    "crm"
+  ],
+  "prerequisite_modules": [],
+  "compliance_flags": [
+    "pii_minimization"
+  ],
+  "activation_type": "instant",
+  "trigger": {
+    "event": "report.requested"
+  },
+  "inputs": [
+    "tenant_metrics",
+    "event_history",
+    "module_usage"
+  ],
+  "actions": [
+    "log_outcome",
+    "notify_owner"
+  ],
+  "configurable_settings": [
+    {
+      "key": "report_frequency",
+      "label": "Report frequency",
+      "type": "enum",
+      "options": [
+        "weekly",
+        "monthly"
+      ],
+      "default": "weekly"
+    },
+    {
+      "key": "include_recommendations",
+      "label": "Include recommended next actions",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "templates_used": [
+    "tmpl_owner_reporting_digest"
+  ],
+  "recommended_for_personas": [
+    "owner-operator",
+    "office-manager",
+    "sales-coordinator"
+  ],
+  "recommended_for_blueprints": [
+    "plumbing",
+    "hvac",
+    "electrical",
+    "pest-control",
+    "cleaning",
+    "med-spa",
+    "auto-detail",
+    "home-remodeling"
+  ],
+  "upsell_from": [
+    "lead_capture_pack",
+    "reviews_pack",
+    "billing_pack"
+  ],
+  "upsell_to": [],
+  "kpis": [
+    "revenue_by_module",
+    "workflow_conversion_rate",
+    "customer_health_score",
+    "funnel_velocity"
+  ],
+  "downgrade_behavior": {
+    "on_cancel": "disable_new_runs_keep_data",
+    "data_retention_days": 365
+  },
+  "source_refs": [
+    "analytics.customer-health",
+    "analytics.funnel-metrics",
+    "analytics.revenue-metrics"
+  ],
+  "status": "live",
+  "deployment_state": "active",
+  "marketplace_ready": true,
+  "ready_for_use": true,
+  "production_ready_on": "2026-04-25"
+}

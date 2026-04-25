@@ -31,9 +31,11 @@ function assertReady(kind, code, obj) {
 }
 
 const moduleFiles = walkJson(path.join(root, 'product', 'modules'));
+const modulesByCode = new Map();
 for (const file of moduleFiles) {
   const module = readJson(file);
   const code = module.module_code || path.basename(file, '.json');
+  modulesByCode.set(code, module);
   assertReady('module', code, module);
 
   const workflowFile = path.join(root, 'templates', 'workflow-templates', code, 'workflow.json');
@@ -57,17 +59,56 @@ for (const file of moduleFiles) {
 }
 
 const bundleFiles = walkJson(path.join(root, 'product', 'bundles'));
+const bundlesByCode = new Map();
 for (const file of bundleFiles) {
   const bundle = readJson(file);
-  assertReady('bundle', bundle.bundle_code || path.basename(file, '.json'), bundle);
+  const code = bundle.bundle_code || path.basename(file, '.json');
+  bundlesByCode.set(code, bundle);
+  assertReady('bundle', code, bundle);
+  for (const moduleCode of bundle.modules || []) {
+    if (!modulesByCode.has(moduleCode)) failures.push(`bundle ${code} references missing module ${moduleCode}`);
+  }
 }
 
 const tiers = readJson(path.join(root, 'product', 'pricing', 'tiers.json'));
 for (const edition of tiers.editions || []) {
-  assertReady('edition', edition.edition_code || edition.name, edition);
+  const code = edition.edition_code || edition.name;
+  assertReady('edition', code, edition);
+  const includes = edition.includes || {};
+  const suiteCodes = includes.suites === 'all' ? (tiers.suites || []).map((s) => s.suite_code) : (includes.suites || []);
+  const packCodes = includes.packs === 'all' ? [...bundlesByCode.keys()] : (includes.packs || []);
+  for (const suiteCode of suiteCodes) {
+    if (!(tiers.suites || []).some((s) => s.suite_code === suiteCode)) failures.push(`edition ${code} references missing suite ${suiteCode}`);
+  }
+  for (const packCode of packCodes) {
+    if (!bundlesByCode.has(packCode)) failures.push(`edition ${code} references missing pack ${packCode}`);
+  }
 }
 for (const suite of tiers.suites || []) {
-  assertReady('suite', suite.suite_code || suite.name, suite);
+  const code = suite.suite_code || suite.name;
+  assertReady('suite', code, suite);
+  for (const packCode of suite.packs || []) {
+    if (!bundlesByCode.has(packCode)) failures.push(`suite ${code} references missing pack ${packCode}`);
+  }
+  for (const extraCode of suite.extras || []) {
+    if (!modulesByCode.has(extraCode)) failures.push(`suite ${code} extra ${extraCode} is not an activatable module`);
+  }
+}
+
+const blueprintFiles = walkJson(path.join(root, 'product', 'blueprints'));
+for (const file of blueprintFiles) {
+  const blueprint = readJson(file);
+  const code = blueprint.blueprint_code || path.basename(file, '.json');
+  for (const moduleCode of blueprint.recommended_modules || []) {
+    const module = modulesByCode.get(moduleCode);
+    if (!module) failures.push(`blueprint ${code} recommends missing module ${moduleCode}`);
+    else if (module.status !== 'live' || module.ready_for_use !== true) {
+      failures.push(`blueprint ${code} recommends non-ready module ${moduleCode}`);
+    }
+  }
+  for (const packCode of blueprint.recommended_bundles || []) {
+    if (!bundlesByCode.has(packCode)) failures.push(`blueprint ${code} recommends missing pack ${packCode}`);
+  }
 }
 
 if (failures.length) {

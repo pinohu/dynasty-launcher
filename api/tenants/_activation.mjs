@@ -45,6 +45,7 @@ const VALID_REASONS = new Set([
   'postflight_failed',
   'workflow_clone_failed',
   'template_missing',
+  'not_purchased',
   // Extensions required by practical need:
   'tenant_not_found',
   'module_not_found',
@@ -159,6 +160,9 @@ export async function activateModule({ tenant_id, module_code, user_input = {} }
   const ent = await getEntitlement(tenant_id, module_code);
   if (!ent) return failure(tenant_id, module_code, 'no_entitlement');
   if (ent.state === 'revoked') return failure(tenant_id, module_code, 'revoked');
+  if (ent.state === 'dormant') {
+    return failure(tenant_id, module_code, 'not_purchased');
+  }
   if (ent.state === 'active') {
     return { status: 'idempotent_ok', entitlement: ent };
   }

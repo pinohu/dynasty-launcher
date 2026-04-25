@@ -67,12 +67,12 @@ async function main() {
   });
 
   // ============================================================
-  // Path: activation without entitlement
+  // Path: activation before checkout
   // ============================================================
   {
     const r = await invoke(h.activate, { body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
-    fails += log(r.status === 400 && r.body.reason === 'no_entitlement',
-      'activate without entitlement returns no_entitlement', `status=${r.status} reason=${r.body.reason}`);
+    fails += log(r.status === 400 && r.body.reason === 'not_purchased',
+      'activate dormant pre-provisioned module before checkout returns not_purchased', `status=${r.status} reason=${r.body.reason}`);
   }
 
   // ============================================================

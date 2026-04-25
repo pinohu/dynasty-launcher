@@ -54,15 +54,15 @@ async function main() {
   // --- modules ---
   {
     const r = await invoke(h.modules);
-    const ok = r.status === 200 && Array.isArray(r.body.modules) && r.body.count === 20;
-    log(ok, 'GET /api/catalog/modules returns 20 modules', `count=${r.body.count}`);
+    const ok = r.status === 200 && Array.isArray(r.body.modules) && r.body.count === 21;
+    log(ok, 'GET /api/catalog/modules returns 21 modules', `count=${r.body.count}`);
     if (!ok) fails++;
   }
   {
     const r = await invoke(h.modules, { query: { marketplace: 'true' } });
-    const ok = r.status === 200 && r.body.count === 20 && r.body.total === 20
+    const ok = r.status === 200 && r.body.count === 21 && r.body.total === 21
       && r.body.modules.every((m) => m.status === 'live' && m.marketplace_ready === true && m.ready_for_use === true);
-    log(ok, 'modules?marketplace=true returns all 20 live ready-to-use modules', `count=${r.body.count}, total=${r.body.total}`);
+    log(ok, 'modules?marketplace=true returns all 21 live ready-to-use modules', `count=${r.body.count}, total=${r.body.total}`);
     if (!ok) fails++;
   }
   {

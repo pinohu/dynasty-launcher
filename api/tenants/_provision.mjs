@@ -15,7 +15,7 @@
 import pg from 'pg';
 const { Pool } = pg;
 import { getCatalog } from '../catalog/_lib.mjs';
-import { getTenant } from './_store.mjs';
+import { backend, getTenant, upsertEntitlement } from './_store.mjs';
 import { emit } from '../events/_bus.mjs';
 
 let _pool;
@@ -72,9 +72,6 @@ export async function provisionAllAutomations({ tenant_id, blueprint_code }) {
   const tenant = await getTenant(tenant_id);
   if (!tenant) throw new Error(`tenant '${tenant_id}' not found`);
 
-  // Ensure automation tables exist before inserting
-  await ensureAutomationTables();
-
   // Load full module catalog
   const catalog = getCatalog();
   const allModules = catalog.modules || [];
@@ -92,20 +89,9 @@ export async function provisionAllAutomations({ tenant_id, blueprint_code }) {
   const recommendedModules = new Set(blueprint?.recommended_modules || []);
   const recommendedPacks = blueprint?.recommended_bundles || [];
 
-  // Build category index
   const byCategory = {};
-
-  // Batch-insert entitlements
-  const entValues = [];
-  const entParams = [];
-  let entIdx = 1;
-
-  // Batch-insert automations_config
-  const configValues = [];
-  const configParams = [];
-  let cfgIdx = 1;
-
   const now = new Date().toISOString();
+  const configRows = [];
 
   for (const mod of allModules) {
     const code = mod.module_code;
@@ -113,49 +99,42 @@ export async function provisionAllAutomations({ tenant_id, blueprint_code }) {
 
     byCategory[category] = (byCategory[category] || 0) + 1;
 
-    const entId = genId('ent');
     const configId = genId('acfg');
     const isRecommended = recommendedModules.has(code);
 
-    // Entitlement row
-    entValues.push(
-      `($${entIdx++}, $${entIdx++}, $${entIdx++}, 'dormant', $${entIdx++}::jsonb, $${entIdx++}::jsonb)`
-    );
-    entParams.push(
-      entId,
-      tenant_id,
-      code,
-      JSON.stringify({ source_type: 'provision', provisioned_at: now }),
-      isRecommended ? JSON.stringify({ recommended: true, blueprint: blueprint_code }) : null,
-    );
+    await upsertEntitlement(tenant_id, code, {
+      state: 'dormant',
+      billing_source: { source_type: 'registration_provision', provisioned_at: now },
+      config_state: isRecommended ? { recommended: true, blueprint: blueprint_code } : null,
+    });
 
-    // Config row
-    configValues.push(
-      `($${cfgIdx++}, $${cfgIdx++}, $${cfgIdx++}, false, $${cfgIdx++}::jsonb, $${cfgIdx++})`
-    );
-    configParams.push(
+    configRows.push({
       configId,
       tenant_id,
       code,
-      JSON.stringify(isRecommended ? { recommended: true } : {}),
-      tenant.timezone || 'America/New_York',
-    );
+      settings: isRecommended ? { recommended: true } : {},
+      timezone: tenant.timezone || 'America/New_York',
+    });
   }
 
-  const db = pool();
-
-  // Batch insert entitlements (ON CONFLICT skip duplicates)
-  if (entValues.length > 0) {
-    await db.query(
-      `INSERT INTO entitlements (entitlement_id, tenant_id, module_code, state, billing_source, config_state)
-       VALUES ${entValues.join(', ')}
-       ON CONFLICT (tenant_id, module_code) DO NOTHING`,
-      entParams,
-    );
-  }
-
-  // Batch insert automations_config (ON CONFLICT skip duplicates)
-  if (configValues.length > 0) {
+  if (backend === 'postgres' && configRows.length > 0) {
+    await ensureAutomationTables();
+    const db = pool();
+    const configValues = [];
+    const configParams = [];
+    let cfgIdx = 1;
+    for (const row of configRows) {
+      configValues.push(
+        `($${cfgIdx++}, $${cfgIdx++}, $${cfgIdx++}, false, $${cfgIdx++}::jsonb, $${cfgIdx++})`
+      );
+      configParams.push(
+        row.configId,
+        row.tenant_id,
+        row.code,
+        JSON.stringify(row.settings),
+        row.timezone,
+      );
+    }
     await db.query(
       `INSERT INTO automations_config (config_id, tenant_id, module_code, is_enabled, settings, timezone)
        VALUES ${configValues.join(', ')}

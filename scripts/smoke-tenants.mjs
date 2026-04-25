@@ -76,8 +76,11 @@ async function main() {
   {
     const r = await invoke(h.get, { query: { tenant_id: tenantA.tenant_id } });
     const ok = r.status === 200 && r.body.tenant && r.body.tenant.tenant_id === tenantA.tenant_id
-      && Array.isArray(r.body.entitlements) && r.body.entitlements.length === 0;
-    fails += log(ok, 'GET get-tenant returns the tenant + empty entitlements');
+      && Array.isArray(r.body.entitlements)
+      && r.body.entitlements.length >= 15
+      && r.body.entitlements.every((e) => e.state === 'dormant');
+    fails += log(ok, 'GET get-tenant returns pre-provisioned dormant entitlements',
+      `entitlements=${r.body.entitlements?.length}`);
   }
 
   // 5. GET nonexistent

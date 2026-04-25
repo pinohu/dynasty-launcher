@@ -3,7 +3,7 @@
 // Proves:
 //   - create-checkout-session returns a session (stub URL without Stripe keys)
 //   - unknown sku_code returns 400
-//   - webhook accepts checkout.session.completed and grants entitlements
+//   - webhook accepts checkout.session.completed, grants entitlements, and activates modules
 //   - invoice.payment_failed pauses active entitlements
 //   - invoice.paid resumes paused entitlements
 //   - customer.subscription.deleted deactivates entitlements
@@ -123,7 +123,7 @@ async function main() {
   }
 
   // ============================================================
-  // Webhook: checkout.session.completed grants entitlement
+  // Webhook: checkout.session.completed grants + activates module entitlements
   // ============================================================
   {
     const payload = JSON.stringify({
@@ -145,23 +145,62 @@ async function main() {
       headers: { 'content-type': 'application/json' },
       body: payload,
     });
-    const granted = r.body.actions?.[0]?.results?.filter((x) => x.status === 'granted').length || 0;
+    const activated = r.body.actions?.[0]?.results?.filter((x) => x.status === 'activated').length || 0;
     fails += log(
-      r.status === 200 && granted === 2,
-      'checkout.session.completed grants entitlements for all module skus',
-      `granted=${granted}`,
+      r.status === 200 && activated === 2,
+      'checkout.session.completed grants and activates all module skus',
+      `activated=${activated}`,
     );
   }
 
   // Verify entitlements landed
   {
     const r = await invoke(h.getTenant, { method: 'GET', query: { tenant_id: tenant.tenant_id } });
-    const codes = (r.body.entitlements || []).map((e) => e.module_code).sort();
+    const activeCodes = (r.body.entitlements || []).filter((e) => e.state === 'active').map((e) => e.module_code).sort();
     fails += log(
-      codes.includes('webform_autoreply') && codes.includes('appointment_reminder'),
-      'tenant now has the granted entitlements in state=entitled',
-      `entitlements=${codes.join(',')}`,
+      activeCodes.includes('webform_autoreply') && activeCodes.includes('appointment_reminder'),
+      'tenant now has purchased entitlements in state=active',
+      `active=${activeCodes.join(',')}`,
     );
+  }
+
+  // ============================================================
+  // Webhook: pack / suite / edition SKUs expand to constituent modules
+  // ============================================================
+  {
+    const { body: { tenant: tenantSku } } = await invoke(h.createTenant, {
+      body: { blueprint_code: 'hvac', plan: 'enterprise' },
+    });
+    const payload = JSON.stringify({
+      id: 'evt_stub_sku_expand',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          subscription: 'sub_stub_sku_expand',
+          metadata: {
+            tenant_id: tenantSku.tenant_id,
+            sku_codes: 'lead_capture_pack,growth_suite,field_service',
+            sku_types: 'pack,suite,edition',
+          },
+        },
+      },
+    });
+    const r = await invoke(h.webhook, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: payload,
+    });
+    const results = r.body.actions?.[0]?.results || [];
+    const activated = new Set(results.filter((x) => x.status === 'activated').map((x) => x.sku_code));
+    const ok = r.status === 200
+      && activated.has('webform_autoreply')
+      && activated.has('instant_lead_ack')
+      && activated.has('post_job_review_request')
+      && activated.has('invoice_sent_notification')
+      && activated.has('payment_recovery');
+    fails += log(ok,
+      'checkout expands pack, suite, and edition SKUs into active modules',
+      `activated=${activated.size}`);
   }
 
   // ============================================================

@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "advanced_reporting",
+  "name": "Advanced Reporting Workflow",
+  "description": "On report.requested, roll up tenant event history and module performance into an owner-ready digest.",
+  "trigger": {
+    "event": "report.requested"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "log_outcome",
+      "params": {
+        "job_id": "advanced_reporting"
+      }
+    },
+    {
+      "step": 2,
+      "action": "notify_owner",
+      "params": {
+        "channel": "email"
+      }
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}
