@@ -38,6 +38,7 @@ small{display:block;margin-top:12px;color:var(--dim);font-size:12px}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
 .skip:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important}
 </style>
+<link rel="stylesheet" href="/site-shell.css">
 </head>
 <body>
 <a href="#quiz-form" class="skip" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999;font-size:14px;padding:8px 16px;background:var(--gold);color:#09090B;border-radius:8px;font-weight:600">Skip to quiz</a>
@@ -304,5 +305,6 @@ document.getElementById('run-quiz').addEventListener('click', () => {
   res.scrollIntoView({ behavior: 'smooth', block: 'start' })
 })
 </script>
+<script src="/site-shell.js" defer></script>
 </body>
 </html>

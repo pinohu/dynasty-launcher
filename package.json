@@ -14,11 +14,12 @@
     "test:workflows": "node scripts/smoke-workflows.mjs",
     "test:billing": "node scripts/smoke-billing.mjs",
     "test:generated-repair": "node scripts/generated-repo-regression.mjs",
+    "test:site-links": "node scripts/check-site-links.mjs",
     "test:prompts": "npx --yes promptfoo@0.120.19 eval -c promptfooconfig.yaml",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:generated-repair"
+    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:generated-repair && npm run test:site-links"
   },
   "engines": {
     "node": "20.x"
