@@ -2323,8 +2323,123 @@ async function runPreflight(inf, svcs) {
   } catch { return true; }
 }
 
+function renderCleanPreflightModal(report, resolve) {
+  document.getElementById('preflight-modal')?.remove();
+  const clean = (value, fallback = '') => {
+    const text = Array.isArray(value) ? value.join(', ') : String(value ?? '');
+    return /(\$\{|escapeHtml\(|fileItems|infraItems|flagsList|report\.|project\.|\+ )/.test(text) ? fallback : text;
+  };
+  const project = report?.project || {};
+  const files = Array.isArray(report?.files_to_generate) ? report.files_to_generate : [];
+  const infra = Object.entries(report?.infrastructure || {}).filter(([, value]) => value);
+  const flags = Array.isArray(report?.flags_active) ? report.flags_active.slice(0, 8) : [];
+  const modal = document.createElement('div');
+  modal.id = 'preflight-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-label', 'Preflight review');
+  const closeModal = (val) => { modal.remove(); resolve(val); };
+  window._pfResolve = closeModal;
+  const overlay = document.createElement('div');
+  overlay.className = 'pf-overlay';
+  overlay.addEventListener('click', () => closeModal(false));
+  const card = document.createElement('div');
+  card.className = 'pf-card';
+  card.addEventListener('click', (event) => event.stopPropagation());
+  const header = document.createElement('div');
+  header.className = 'pf-header';
+  header.innerHTML = '<span class="pf-icon" aria-hidden="true">ðŸ›«</span><h3>Preflight Review</h3><p>Review what will be created before launching</p>';
+  const section = (title) => {
+    const el = document.createElement('div');
+    el.className = 'pf-section';
+    const h = document.createElement('h4');
+    h.textContent = title;
+    el.appendChild(h);
+    return el;
+  };
+  const row = (label, value) => {
+    const el = document.createElement('div');
+    el.className = 'pf-infra-item';
+    const left = document.createElement('span');
+    left.className = 'pf-label';
+    left.textContent = label;
+    const right = document.createElement('span');
+    right.className = 'pf-value';
+    right.textContent = value;
+    el.append(left, right);
+    return el;
+  };
+  const projectSection = section('Project');
+  projectSection.append(
+    row('Name', clean(project.name, 'Untitled build')),
+    row('Type', clean(project.type, 'Business unit')),
+    row('Stack', clean(project.stack, 'Validated launch stack')),
+  );
+  const filesSection = section(files.length + ' Files to Generate');
+  const filesWrap = document.createElement('div');
+  filesWrap.className = 'pf-files';
+  files.slice(0, 36).forEach((file) => {
+    const code = document.createElement('code');
+    code.textContent = clean(file, 'generated artifact');
+    filesWrap.appendChild(code);
+  });
+  filesSection.appendChild(filesWrap);
+  const infraSection = section('Infrastructure');
+  if (infra.length) infra.forEach(([key, value]) => infraSection.appendChild(row(clean(key), clean(value))));
+  else {
+    const muted = document.createElement('div');
+    muted.className = 'pf-muted';
+    muted.textContent = 'No infrastructure provisioning';
+    infraSection.appendChild(muted);
+  }
+  const timeSection = section('Estimated Time');
+  timeSection.appendChild(row('With parallel execution', clean(report?.estimated_time?.with_parallel, '~30s')));
+  const flagsSection = section('Active Flags');
+  const flagsWrap = document.createElement('div');
+  flagsWrap.className = 'pf-flags';
+  if (flags.length) flags.forEach((flag) => {
+    const span = document.createElement('span');
+    span.className = 'pf-flag';
+    span.textContent = clean(String(flag).replace(/_/g, ' '));
+    flagsWrap.appendChild(span);
+  });
+  else {
+    const span = document.createElement('span');
+    span.className = 'pf-muted';
+    span.textContent = 'defaults';
+    flagsWrap.appendChild(span);
+  }
+  flagsSection.appendChild(flagsWrap);
+  const actions = document.createElement('div');
+  actions.className = 'pf-actions';
+  const cancel = document.createElement('button');
+  cancel.className = 'pf-btn pf-btn-cancel';
+  cancel.type = 'button';
+  cancel.textContent = 'Cancel';
+  cancel.addEventListener('click', () => closeModal(false));
+  const launch = document.createElement('button');
+  launch.className = 'pf-btn pf-btn-launch';
+  launch.type = 'button';
+  launch.textContent = 'Launch Build';
+  launch.addEventListener('click', () => closeModal(true));
+  actions.append(cancel, launch);
+  card.append(header, projectSection, filesSection, infraSection, timeSection, flagsSection, actions);
+  overlay.appendChild(card);
+  modal.appendChild(overlay);
+  document.body.appendChild(modal);
+  const esc = (event) => {
+    if (event.key === 'Escape') {
+      document.removeEventListener('keydown', esc);
+      closeModal(false);
+    }
+  };
+  document.addEventListener('keydown', esc);
+  launch.focus();
+}
+
 function showPreflightModal(report) {
   return new Promise((resolve) => {
+    return renderCleanPreflightModal(report, resolve);
     document.getElementById('preflight-modal')?.remove();
 
     const infraItems = Object.entries(report.infrastructure || {})
