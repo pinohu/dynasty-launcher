@@ -1,0 +1,104 @@
+{
+  "tools": [
+    {
+      "name": "github_repo_create_or_get",
+      "description": "Create a new repo under pinohu, or return the existing one if the name is taken. ALWAYS set git config user.email=polycarpohu@gmail.com and user.name=pinohu — Vercel rejects other commit authors on pa-crop-services, so we keep the discipline uniform. When forking from an authority-site template, pass template_owner=pinohu and template_repo=dynasty-developer. NEVER make a repo public by default — visibility comes from the plan.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "visibility": {"enum": ["private", "public"]},
+          "template_owner": {"type": "string"},
+          "template_repo": {"type": "string"},
+          "operating_llc": {"type": "string"}
+        },
+        "required": ["name", "visibility", "operating_llc"]
+      }
+    },
+    {
+      "name": "neon_project_create_or_get",
+      "description": "Create a Neon project under the Vercel-managed org (org-small-credit-59990711) or return an existing one. ALWAYS provision via the Vercel integration path — direct Neon API creates orphaned projects that don't bill correctly. Returns a connection_ref (the env var name) not the connection string; retrieve the string from Vercel env at deploy time.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "project_name": {"type": "string"},
+          "database_name": {"type": "string"},
+          "region": {"enum": ["aws-us-east-2", "aws-us-east-1", "aws-us-west-2"]},
+          "operating_llc": {"type": "string"}
+        },
+        "required": ["project_name", "database_name", "operating_llc"]
+      }
+    },
+    {
+      "name": "vercel_project_create_or_get",
+      "description": "Create a Vercel project bound to a GitHub repo, or return existing. ALWAYS team=team_fuTLGjBMk3NAD32Bm5hA7wkr. NEVER trigger a deploy from this tool — deployment belongs to the deployer subagent. Set framework auto-detect unless the plan specifies otherwise.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "github_repo": {"type": "string"},
+          "framework": {"type": "string"},
+          "operating_llc": {"type": "string"}
+        },
+        "required": ["name", "github_repo", "operating_llc"]
+      }
+    },
+    {
+      "name": "stripe_product_create_or_get",
+      "description": "Create a Stripe product and default price, or return existing. ALWAYS use the Dynasty live account (prefix 51TF63A5). Product metadata must include operating_llc, run_id, and dynasty_component. NEVER create in test mode from this tool — test mode is a separate tool reserved for the auditor.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "product_name": {"type": "string"},
+          "price_amount_cents": {"type": "integer"},
+          "price_currency": {"type": "string"},
+          "price_interval": {"enum": ["one_time", "month", "year"]},
+          "operating_llc": {"type": "string"}
+        },
+        "required": ["product_name", "price_amount_cents", "operating_llc"]
+      }
+    },
+    {
+      "name": "twentyi_package_create_or_get",
+      "description": "Provision a 20i hosting package. typeRef 88291 = WordPress Pinnacle, typeRef 80359 = Linux Pinnacle / static. ResellerId 10455. ONLY use this for WordPress or static-Linux workloads; Vercel-hosted projects do NOT need a 20i package. Returns a package_id the integrator uses for later module wiring.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "type_ref": {"enum": [88291, 80359]},
+          "domain_or_subdomain": {"type": "string"},
+          "operating_llc": {"type": "string"}
+        },
+        "required": ["type_ref", "domain_or_subdomain", "operating_llc"]
+      }
+    },
+    {
+      "name": "emit_halt",
+      "description": "Halt your subagent loop. Use per halt-conditions (iteration_cap, no_progress, tool_retry_exhausted, time_cap) or escalation-policy triggers. NEVER halt just because a plan item is large.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {"type": "string"},
+          "reason": {"type": "string"},
+          "context": {"type": "string"}
+        },
+        "required": ["run_id", "reason"]
+      }
+    },
+    {
+      "name": "submit_results",
+      "description": "End your invocation and return structured references to the orchestrator. MUST match the submit contract in loop.txt. Include only resources you actually created or confirmed.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plan_item_id": {"type": "string"},
+          "run_id": {"type": "string"},
+          "resources": {"type": "object"},
+          "operating_llc": {"type": "string"},
+          "acceptance_met": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["plan_item_id", "run_id", "resources", "operating_llc"]
+      }
+    }
+  ]
+}
