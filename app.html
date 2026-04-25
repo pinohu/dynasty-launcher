@@ -15339,7 +15339,7 @@ export const Env = createEnv({
       // Attempt 1: primary template selected from category/type mapping
       const pf1 = await preflightTemplate(ORG, tmplName);
       if (pf1.ok) {
-        cr = await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
+        cr = await gh(`/repos/${tmpl}/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Your Deputy business system`,private:true,include_all_branches:false});
         if (cr.ok || cr.status === 422) { createdFromTemplate = tmplName; }
         else { attempts.push(`${tmplName}: ` + (await describeError(cr)).message); cr = null; }
       } else {
@@ -15350,7 +15350,7 @@ export const Env = createEnv({
       if (!cr && tmplName !== 'dynasty-project-template') {
         const pf2 = await preflightTemplate(ORG, 'dynasty-project-template');
         if (pf2.ok) {
-          cr = await gh(`/repos/${ORG}/dynasty-project-template/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,include_all_branches:false});
+          cr = await gh(`/repos/${ORG}/dynasty-project-template/generate`,'POST',{owner:ORG,name:inf.repo,description:`${inf.name} — Your Deputy business system`,private:true,include_all_branches:false});
           if (cr.ok || cr.status === 422) { createdFromTemplate = 'dynasty-project-template'; }
           else { attempts.push(`dynasty-project-template: ` + (await describeError(cr)).message); cr = null; }
         } else {
@@ -15360,7 +15360,7 @@ export const Env = createEnv({
 
       // Attempt 3: empty repo with auto-init README (no template files)
       if (!cr) {
-        cr = await gh('/user/repos','POST',{name:inf.repo,description:`${inf.name} — Dynasty Empire business system`,private:true,auto_init:true});
+        cr = await gh('/user/repos','POST',{name:inf.repo,description:`${inf.name} — Your Deputy business system`,private:true,auto_init:true});
         if (cr.ok || cr.status === 422) {
           REPO_USED_EMPTY_INIT = true;
           console.warn('[repo-create] Fell back to empty /user/repos init. Template attempts:\n  - ' + attempts.join('\n  - '));
@@ -15453,7 +15453,7 @@ export const nicheConfig = {
       "[10+ primary and secondary keywords for this niche]"
     ],
     author: {
-      name: "Dynasty Empire",
+      name: "Your Deputy",
       bio: "[2-3 sentence author bio establishing authority in this niche]",
       credentials: ["[credential 1]", "[credential 2]", "[credential 3]"],
       email: "info@${inf.domain}",
@@ -15609,7 +15609,7 @@ See MANUAL-ACTIONS.md for service-specific setup (auth, payments, database).
 - Run tests before pushing
 
 ## Skills (Pi Agent)
-This project includes a \`.pi/\` directory with Dynasty-specific skills.
+This project includes a \`.pi/\` directory with Your Deputy-specific skills.
 Pi will auto-load project instructions from this AGENTS.md on startup.
 `,
       // Pi Agent project config — makes Pi read the same context as Claude Code
@@ -15640,7 +15640,7 @@ Then read DESIGN.md for visual design rules.
 - Docker: \`docker-compose up -d\` for backend
 - Vercel: \`vercel --prod\` for frontend deploys
 
-## Dynasty Conventions
+## Your Deputy Conventions
 - All colors from DESIGN.md (never hardcode)
 - TypeScript strict mode
 - Server components by default
@@ -16206,7 +16206,7 @@ function generateBuildReport() {
     </table>`;
 
   const reportHtml = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>${escapeHtml(inf.name)} — Dynasty Strategic Report</title>
+<html><head><meta charset="UTF-8"><title>${escapeHtml(inf.name)} — Your Deputy Strategic Report</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -16278,7 +16278,7 @@ table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
     <div style="font-size:36px;margin-bottom:16px">⚡</div>
     <h1>${escapeHtml(inf.name)}</h1>
     <div class="subtitle">${escapeHtml(inf.type_label)} · ${escapeHtml(inf.revenue_model)} · ${escapeHtml(inf.price)}</div>
-    <div class="badge">Dynasty Empire Strategic Report</div>
+    <div class="badge">Your Deputy Strategic Report</div>
     <div class="date">${now} · Confidential</div>
   </div>
 
@@ -16386,7 +16386,7 @@ table th{background:#f0f0f0}td{color:#555}p{color:#555}li{color:#555}
   <div id="meta">${metaSection}</div>
 
   <div class="footer">
-    <div class="dynasty">${isWhiteLabel() ? ORG.toUpperCase() : 'DYNASTY EMPIRE'}</div>
+    <div class="dynasty">${isWhiteLabel() ? ORG.toUpperCase() : 'YOUR DEPUTY'}</div>
     <div class="sub">Strategic Business System Report · Generated ${now}</div>
     <div class="sub" style="margin-top:4px">${isWhiteLabel() ? '' : 'yourdeputy.com · '}Confidential</div>
   </div>
@@ -16466,7 +16466,7 @@ async function downloadAllFiles() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = (inf?.repo || 'dynasty-build') + '-dynasty-build.zip';
+  a.download = (inf?.repo || 'your-deputy-build') + '-your-deputy-build.zip';
   a.click();
   URL.revokeObjectURL(url);
 }

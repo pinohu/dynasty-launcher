@@ -257,7 +257,7 @@ function page({ title, description, canonical, breadcrumbs, body, jsonLd }) {
 <meta name="theme-color" content="#4da3ff">
 <script type="application/ld+json">${JSON.stringify(finalJsonLd)}</script>
 <script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Dynasty Empire LLC","url":"https://www.yourdeputy.com","brand":{"@type":"Brand","name":"Your Deputy"},"contactPoint":{"@type":"ContactPoint","contactType":"sales","url":"https://www.yourdeputy.com/contact"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Your Deputy","url":"https://www.yourdeputy.com","brand":{"@type":"Brand","name":"Your Deputy"},"contactPoint":{"@type":"ContactPoint","contactType":"sales","url":"https://www.yourdeputy.com/contact"}}</script>
 <style>${CSS}</style>
 </head>
 <body>

@@ -111,7 +111,7 @@ function buildItemPage({ category, slug, title, file, short, detail, inside, pre
   const source = `item_${category}_${slug}`;
   const insideHtml = inside.map((item) => `<li>${esc(item)}</li>`).join('\n');
   const proofCards = [
-    ['Generated from your business', `The page is not a generic description of ${esc(file)}. Dynasty uses your niche, target customer, location, business model, primary offer, and secondary offers to shape the content and keep the artifact relevant.`],
+    ['Generated from your business', `The page is not a generic description of ${esc(file)}. Your Deputy uses your niche, target customer, location, business model, primary offer, and secondary offers to shape the content and keep the artifact relevant.`],
     ['Connected to the operating system', `This deliverable is designed to work with the rest of the autonomous business unit: website, funnel, CRM, RevOps, payments, onboarding, support, PostHog-ready analytics, AI/MCP tools, open-weight model routing, optional video assets, provider abstractions, workflows, repair telemetry, and self-hostable infrastructure.`],
     ['Built for review and action', `The output is written so an owner, operator, developer, advisor, lender, or implementation partner can understand what to do next without decoding raw generator output.`],
   ].map(([h, p]) => `<article class="proof-card"><h2>${h}</h2><p>${p}</p></article>`).join('\n');

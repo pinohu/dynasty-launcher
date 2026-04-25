@@ -85,7 +85,7 @@
         { href: "/privacy", label: "Privacy" },
         { href: "/terms", label: "Terms" },
         { href: "mailto:ikeohu@dynastyempire.com", label: "Contact" },
-        { href: "https://dynastyempire.com", label: "Dynasty Empire" },
+        { href: "https://dynastyempire.com", label: "Company" },
         { href: "https://github.com/pinohu/dynasty-launcher", label: "GitHub" },
       ],
     },
