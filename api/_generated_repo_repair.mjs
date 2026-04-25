@@ -103,6 +103,14 @@ const BUSINESS_UNIT_REQUIRED_PATHS = [
   'analytics/posthog-events.yaml',
   'analytics/posthog-dashboards.yaml',
   'analytics/posthog-feature-flags.yaml',
+  'builder-governance/karpathy-principles.yaml',
+  'builder-governance/repair-success-criteria.md',
+  'code-context/claude-context.yaml',
+  'code-context/semantic-repair-queries.yaml',
+  'context-optimization/rtk.yaml',
+  'agent-runtime/hermes-agent.yaml',
+  'media/voice/vibevoice.yaml',
+  'media/voice/responsible-ai-voice-policy.md',
   'tests/build-completeness.test.ts',
   'tests/config.test.ts',
   'tests/schemas.test.ts',
@@ -111,6 +119,7 @@ const BUSINESS_UNIT_REQUIRED_PATHS = [
   'tests/revops.test.ts',
   'tests/niche-validation.test.ts',
   'tests/video-assets.test.ts',
+  'tests/intelligence-capabilities.test.ts',
 ];
 
 const FULL_SDLC_REQUIRED_PATHS = [
@@ -199,6 +208,11 @@ const SEMANTIC_PROMISE_GROUPS = [
   { code: 'operations_company', label: 'operations, scale, and company controls', terms: ['KPI dashboard', 'financial controls', 'hiring', 'SOP', 'incident management', 'SRE', 'security governance', 'vendor management', 'CAC', 'LTV', 'profitability'] },
   { code: 'continuous_improvement', label: 'continuous improvement loop', terms: ['usage analytics', 'conversion analysis', 'product telemetry', 'pricing optimization', 'A/B testing', 'feature rollout', 'market expansion', 'ecosystem'] },
   { code: 'posthog_optional_adapter', label: 'optional PostHog analytics adapter', terms: ['PostHog', 'session replay', 'feature flags', 'experiments', 'surveys', 'event capture', 'product analytics', 'web analytics', 'adapter'] },
+  { code: 'builder_governance', label: 'Karpathy-style builder governance', terms: ['wrong assumptions', 'simplicity first', 'surgical changes', 'goal-driven execution', 'success criteria', 'verification loop', 'no speculative abstraction', 'minimal diff'] },
+  { code: 'code_context_memory', label: 'codebase semantic context memory', terms: ['claude-context', 'semantic code search', 'MCP code search', 'incremental indexing', 'AST-aware chunking', 'repair queries', 'codebase memory', 'vector backend'] },
+  { code: 'agent_runtime_hermes', label: 'optional Hermes autonomous agent runtime', terms: ['Hermes Agent', 'persistent memory', 'skill creation', 'scheduled automations', 'cross-session recall', 'messaging gateway', 'subagents', 'resume from failure'] },
+  { code: 'voice_assets_vibevoice', label: 'optional VibeVoice audio asset adapter', terms: ['VibeVoice', 'voiceover', 'transcription', 'ASR', 'TTS', 'speaker disclosure', 'deepfake prevention', 'audio asset'] },
+  { code: 'context_optimization_rtk', label: 'RTK context optimization', terms: ['RTK', 'token compression', 'command output', 'build logs', 'context efficiency', 'long debugging', 'repair sessions', 'CLI proxy'] },
   { code: 'pre_saas_revenue_loop', label: 'pre-SaaS revenue engine', terms: ['authority engine', 'information product factory', 'auto-listing', 'lead magnet', 'checkout', 'digital delivery', 'revenue reinvestment', 'winner detection', 'SaaS transition'] },
   { code: 'ai_mcp_memory', label: 'AI-native MCP and memory system', terms: ['MCP', 'tool registry', 'agent permissions', 'pgvector', 'document ingestion', 'retrieval API', 'customer-specific retrieval', 'prompt injection'] },
   { code: 'security_standards', label: 'OWASP security assurance', terms: ['OWASP ASVS', 'OWASP SAMM', 'authentication', 'session', 'access control', 'input validation', 'secrets', 'logging', 'verification'] },
@@ -648,6 +662,14 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
       'architecture/tenancy-decision.md',
       'evals/semantic-niche-rubric.yaml',
       'evals/promise-equivalence-fixtures.yaml',
+      'builder-governance/karpathy-principles.yaml',
+      'builder-governance/repair-success-criteria.md',
+      'code-context/claude-context.yaml',
+      'code-context/semantic-repair-queries.yaml',
+      'context-optimization/rtk.yaml',
+      'agent-runtime/hermes-agent.yaml',
+      'media/voice/vibevoice.yaml',
+      'media/voice/responsible-ai-voice-policy.md',
       ...REQUIRED_VIDEO_ASSET_PATHS,
     ].map((path) => text(files, path)).join('\n').toLowerCase();
     const missingPromiseGroups = SEMANTIC_PROMISE_GROUPS.filter((group) => {
@@ -1296,6 +1318,7 @@ function buildBusinessUnitFiles(contract = {}) {
   Object.assign(files, buildFullSdlcFiles({ businessName, niche, targetCustomer, primaryOffer, domain }));
   Object.assign(files, buildPreSaasLoopFiles({ niche, targetCustomer, primaryOffer }));
   Object.assign(files, buildStandardsFiles({ businessName, niche, targetCustomer, primaryOffer }));
+  Object.assign(files, buildIntelligenceCapabilityFiles({ businessName, niche, targetCustomer, primaryOffer }));
   files['products/product-catalog.yaml'] = buildProductCatalog({ niche, targetCustomer, primaryOffer });
   files['analytics/funnel-metrics.yaml'] = buildMetricYaml('funnel', ['visitors', 'leads', 'conversion_rate', 'checkout_conversion', 'article_performance']);
   files['analytics/revenue-metrics.yaml'] = buildMetricYaml('revenue', ['product_revenue', 'recurring_revenue', 'failed_payments', 'revenue_by_product', 'revenue_by_offer', 'revenue_by_niche']);
@@ -1311,6 +1334,7 @@ function buildBusinessUnitFiles(contract = {}) {
   files['tests/niche-validation.test.ts'] = buildGeneratedTest('niche-validation', ['content/seo-plan.yaml', 'products/product-catalog.yaml', 'prompts/niche-research.md']);
   files['tests/video-assets.test.ts'] = buildGeneratedTest('video-assets', REQUIRED_VIDEO_ASSET_PATHS);
   files['tests/analytics-provider.test.ts'] = buildGeneratedTest('analytics-provider', ['src/providers/analytics.ts', 'analytics/posthog-events.yaml', 'analytics/posthog-dashboards.yaml', 'analytics/posthog-feature-flags.yaml']);
+  files['tests/intelligence-capabilities.test.ts'] = buildGeneratedTest('intelligence-capabilities', ['builder-governance/karpathy-principles.yaml', 'builder-governance/repair-success-criteria.md', 'code-context/claude-context.yaml', 'code-context/semantic-repair-queries.yaml', 'context-optimization/rtk.yaml', 'agent-runtime/hermes-agent.yaml', 'media/voice/vibevoice.yaml', 'media/voice/responsible-ai-voice-policy.md']);
   files['tests/accessibility.test.ts'] = buildGeneratedTest('accessibility', ['ux/accessibility-checklist.md', 'ux/design-system.md']);
   files['tests/security-standards.test.ts'] = buildGeneratedTest('security-standards', ['security/owasp-asvs-checklist.yaml', 'security/owasp-samm-maturity.yaml', 'governance/nist-ai-rmf-risk-register.yaml']);
   files['tests/mcp-conformance.test.ts'] = buildGeneratedTest('mcp-conformance', ['mcp/mcp-conformance.yaml', 'agents/tool-registry.json']);
@@ -1359,6 +1383,11 @@ features:
   support_portal: true
   analytics: true
   video_assets: true
+  builder_governance: true
+  code_context: true
+  context_optimization: true
+  optional_agent_runtime: true
+  optional_voice_assets: true
 providers:
   billing:
     provider: internal
@@ -1382,6 +1411,23 @@ providers:
     optional_external: video_use
     rendering_dependency: ffmpeg
     rule: "Generate scripts, storyboards, captions, thumbnails, and metadata on every build; render MP4 only when optional dependencies and credentials are available."
+  code_context:
+    provider: internal_index
+    optional_external: claude_context
+    vector_backend: pgvector
+    rule: "Semantic code search and MCP code-context tools are optional build intelligence. Runtime business logic must not depend on them."
+  agent_runtime:
+    provider: internal_workflow_engine
+    optional_external: hermes_agent
+    rule: "Hermes Agent is an optional long-running operator runtime for persistent memory, skills, scheduled automations, messaging gateways, and resume-from-failure support."
+  voice:
+    provider: internal_script_assets
+    optional_external: vibevoice
+    rule: "VibeVoice is optional and guarded by disclosure, consent, anti-impersonation, and commercial-readiness checks."
+  context_optimization:
+    provider: launcher_internal
+    optional_external: rtk
+    rule: "RTK-style command-output compression is builder-side only; it is never required for customer runtime operation."
 secrets:
   jwt_secret:
     value: "ENC_PLACEHOLDER_REQUIRED"
@@ -1455,6 +1501,39 @@ video:
   degradation:
     status: scaffold_ready
     reason: "Rendered video files require optional runtime dependencies; source assets are mandatory."
+code_context:
+  enabled: true
+  provider: internal_index
+  optional_external:
+    claude_context:
+      enabled: false
+      mcp_server: optional
+      vector_backend_options: [pgvector, milvus, zilliz]
+      embedding_provider_options: [openai, ollama, gemini, voyage]
+      purpose: "Semantic codebase memory for repair, onboarding, customization, and MCP code search."
+agent_runtime:
+  enabled: false
+  optional_external:
+    hermes_agent:
+      enabled: false
+      capabilities: [persistent_memory, skill_creation, scheduled_automations, messaging_gateway, subagents, cross_session_recall]
+      purpose: "Optional autonomous operator for long-running business tasks and build-resume workflows."
+voice:
+  enabled: true
+  provider: internal_script_assets
+  optional_external:
+    vibevoice:
+      enabled: false
+      capabilities: [TTS, ASR, voiceover, transcription, long_form_audio]
+      disclosure_required: true
+      prohibited: [impersonation, undisclosed_synthetic_voice, misleading_deepfake]
+context_optimization:
+  enabled_for_builder: true
+  optional_external:
+    rtk:
+      enabled: false
+      scope: "launcher build and repair sessions only"
+      purpose: "Compress command output and build logs during long debugging sessions."
 workflow:
   provider: internal_workflow_engine
   registry_path: "/workflows"
@@ -2105,6 +2184,156 @@ premium_toolkit:
 
 function buildMetricYaml(name, metrics) {
   return `metric_group: ${name}\nprimary_source: internal_analytics\noptional_external_adapter: posthog\nrule: "Internal analytics is authoritative; PostHog enriches product analytics, funnels, session replay, feature flags, experiments, and surveys when configured."\nmetrics:\n${metrics.map((metric) => `  - name: ${metric}\n    source: internal_analytics\n    optional_forward_to: posthog\n    cadence: daily`).join('\n')}\n`;
+}
+
+function buildIntelligenceCapabilityFiles({ businessName, niche, targetCustomer, primaryOffer }) {
+  return {
+    'builder-governance/karpathy-principles.yaml': `standard: karpathy_inspired_builder_governance
+business: "${businessName}"
+niche: "${niche}"
+mandatory_for_launcher: true
+principles:
+  - name: think_before_coding
+    rule: "Surface wrong assumptions, ambiguity, and tradeoffs before editing generated artifacts."
+  - name: simplicity_first
+    rule: "Prefer the smallest verified repair; no speculative abstraction and no over-engineered scaffolds."
+  - name: surgical_changes
+    rule: "Touch only files tied to the failed detector or promised capability; every changed line must trace to a build contract item."
+    phrase: "surgical changes"
+  - name: goal_driven_execution
+    rule: "Every repair must define success criteria, run a verification loop, and record evidence in BUILD-REPORT.json."
+failure_policy: "A build cannot report PASS when a repair lacks detector, root cause, files changed, and verification result."
+`,
+    'builder-governance/repair-success-criteria.md': `# Repair Success Criteria
+
+${businessName} builds for ${niche} must never rely on "Vercel green" alone. A repair is complete only when it has:
+
+- A named issue class and root cause.
+- A minimal diff that avoids unrelated changes.
+- A detector that reproduces the issue.
+- A repair strategy that is deterministic first and AI-assisted only as fallback.
+- A verification loop proving the issue is gone.
+- BUILD-REPORT.json telemetry with changed files, retries, degraded-but-working scaffold status, and remaining credential-only setup.
+
+These Karpathy-style rules prevent wrong assumptions, reduce overcomplication, keep repairs surgical, and force goal-driven execution for ${targetCustomer}.
+`,
+    'code-context/claude-context.yaml': `provider: optional_claude_context
+business: "${businessName}"
+niche: "${niche}"
+purpose: "Semantic code search, MCP code search, and codebase memory for build repair, onboarding, customization, and deep semantic equivalence checks."
+default_provider: internal_index
+optional_external_provider: claude-context
+indexing:
+  incremental_indexing: true
+  incremental indexing: true
+  AST-aware_chunking: true
+  AST-aware chunking: true
+  semantic_code_search: true
+  semantic code search: true
+  MCP code search: true
+  codebase memory: true
+  vector backend: configurable
+  vector_backend_options: [pgvector, milvus, zilliz]
+  embedding_provider_options: [openai, ollama, gemini, voyage]
+mcp:
+  exposes_tools: [search_code_context, retrieve_related_files, explain_contract_coverage]
+  runtime_dependency: false
+rules:
+  - "Business runtime must work without claude-context."
+  - "Repair agents may use repair queries and query codebase memory before patching route, schema, config, auth, or quality failures."
+  - "Generated repos may expose MCP code search for maintainers when explicitly enabled."
+`,
+    'code-context/semantic-repair-queries.yaml': `semantic_repair_queries:
+  - name: route_failure
+    query: "Find app routes, route manifests, required pages, and content promises for ${niche}."
+  - name: schema_mismatch
+    query: "Find models, migrations, API contracts, and master config entities related to ${primaryOffer}."
+  - name: template_residue
+    query: "Find generic SaaS, demo credentials, placeholder brands, and off-niche copy."
+  - name: semantic_equivalence
+    query: "Find all artifacts proving website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, AI agents, MCP tools, and infrastructure are present."
+resume_from_failure:
+  phrase: "resume from failure"
+  use_indexed_context: true
+  preserve_prior_artifacts: true
+  continue_from_last_verified_stage: true
+`,
+    'context-optimization/rtk.yaml': `provider: optional_rtk
+scope: launcher_build_and_repair_only
+business_runtime_dependency: false
+purpose: "RTK-style token compression for command output, build logs, git diffs, test output, and long debugging sessions."
+context efficiency: required
+uses:
+  - compress build logs before AI remediation
+  - summarize npm, pytest, docker, git, and Vercel output
+  - reduce context loss during multi-hour repair sessions
+  - preserve critical error lines and affected file paths
+rules:
+  - "Never hide failing assertions, stack traces, or security findings."
+  - "Compression is an optimization; verification must still inspect raw artifacts when needed."
+`,
+    'agent-runtime/hermes-agent.yaml': `provider: optional_hermes_agent
+business: "${businessName}"
+niche: "${niche}"
+runtime_dependency: false
+purpose: "Optional autonomous operator runtime for persistent memory, skill creation, scheduled automations, messaging gateway, cross-session recall, subagents, and resume-from-failure workflows."
+capabilities:
+  - persistent_memory
+  - skill_creation
+  - scheduled_automations
+  - cross_session_recall
+  - messaging_gateway
+  - subagents
+  - long_running_operator_tasks
+use_cases:
+  - nightly audit of ${niche} funnel and product metrics
+  - weekly content and SEO backlog review
+  - build failure continuation from last verified checkpoint
+  - support knowledge-base improvement suggestions
+rules:
+  - "Hermes Agent may operate the business unit only through MCP tools and RBAC permissions."
+  - "Sensitive actions follow agent-permissions approval thresholds."
+`,
+    'media/voice/vibevoice.yaml': `provider: optional_vibevoice
+business: "${businessName}"
+niche: "${niche}"
+runtime_dependency: false
+purpose: "Optional voiceover, transcription, ASR, TTS, and long-form audio asset generation for ${targetCustomer}."
+assets:
+  - launch_video_voiceover
+  - product_demo_voiceover
+  - onboarding_audio
+  - support_article_audio
+  - podcast_style_authority_content
+  - customer_upload_transcription
+required_without_provider:
+  - voiceover_scripts
+  - captions
+  - transcript_placeholders
+  - audio_seo_metadata
+safety:
+  disclosure_required: true
+  speaker_consent_required: true
+  deepfake_prevention: true
+  deepfake prevention: true
+  impersonation_prohibited: true
+  commercial_readiness_review: required_before_rendering
+`,
+    'media/voice/responsible-ai-voice-policy.md': `# Responsible AI Voice Policy
+
+${businessName} may use VibeVoice or another optional voice adapter only after consent, disclosure, and commercial-readiness checks pass.
+
+Required safeguards:
+
+- Synthetic voice must be disclosed where customers can hear it.
+- No impersonation, misleading deepfake, or undisclosed cloned voice is allowed.
+- Payment, legal, health, financial, and identity workflows must not rely on voice output alone.
+- Transcription and ASR output must be treated as assistive until reviewed or confidence-scored.
+- Generated audio for ${niche} must stay aligned with ${primaryOffer}, ${targetCustomer}, and the approved brand voice.
+
+Fallback: every build still ships source scripts, captions, transcripts, and metadata when rendered audio is unavailable.
+`,
+  };
 }
 
 function buildPostHogAnalyticsFiles({ businessName, niche, targetCustomer, primaryOffer }) {
