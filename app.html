@@ -1607,7 +1607,7 @@ function handleSignIn() {
         });
       } else {
         if (btn) btn.textContent = 'Sign In';
-        alert('Sign-in is temporarily unavailable. Please refresh and try again.');
+        window.location.href = '/sign-in';
       }
     });
   }

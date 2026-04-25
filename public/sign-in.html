@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign In - Your Deputy</title>
+<meta name="description" content="Sign in to recover your Your Deputy build session, resume paid access, or return to the autonomous business-unit builder.">
+<link rel="canonical" href="https://yourdeputy.com/sign-in">
+<link rel="stylesheet" href="/site-shell.css">
+<style>
+:root{--bg:#08090d;--panel:#14161d;--card:#1a1d25;--border:rgba(255,255,255,.13);--text:#f7f3ea;--muted:#aaa39a;--gold:#d8b64b;--danger:#ff6b6b;--ok:#3ecf8e}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 30% 0%,rgba(216,182,75,.08),transparent 34rem),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{min-height:calc(100vh - 72px);display:grid;place-items:center;padding:72px 20px}
+.panel{width:min(520px,100%);border:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border-radius:10px;padding:30px;box-shadow:0 24px 80px rgba(0,0,0,.34)}
+.mark{width:44px;height:44px;border-radius:10px;background:var(--gold);color:#111;display:grid;place-items:center;font-weight:900;margin-bottom:18px}
+h1{font-size:32px;line-height:1.05;margin:0 0 10px;letter-spacing:-.03em}
+p{color:var(--muted);line-height:1.6;margin:0 0 20px}
+label{display:block;font-size:13px;font-weight:800;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin:18px 0 8px}
+input{width:100%;min-height:48px;border:1px solid var(--border);background:#0f1117;color:var(--text);border-radius:8px;padding:0 14px;font:600 16px/1 system-ui}
+input:focus{outline:2px solid var(--gold);outline-offset:2px}
+.button{width:100%;min-height:50px;border:0;border-radius:8px;background:var(--gold);color:#111;font-weight:900;font-size:15px;margin-top:16px;cursor:pointer}
+.button:disabled{opacity:.58;cursor:wait}
+.secondary{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:46px;margin-top:12px;border:1px solid var(--border);border-radius:8px;color:var(--text);text-decoration:none;font-weight:800}
+.msg{min-height:22px;margin-top:12px;font-size:14px;color:var(--muted)}
+.msg.err{color:var(--danger)}.msg.ok{color:var(--ok)}
+.hidden{display:none}
+.note{font-size:13px;margin-top:18px;margin-bottom:0}
+</style>
+</head>
+<body>
+<main id="main-content">
+  <section class="panel" aria-labelledby="signin-title">
+    <div class="mark" aria-hidden="true">YD</div>
+    <h1 id="signin-title">Welcome back</h1>
+    <p>Recover your build session with the email you purchased with. We will send a short verification code and restore access in this browser.</p>
+    <div id="step1">
+      <label for="recover-email">Purchase Email</label>
+      <input id="recover-email" type="email" placeholder="you@example.com" autocomplete="email">
+      <button class="button" id="send-code-btn" type="button">Send sign-in code</button>
+      <div class="msg" id="step1-msg" role="status" aria-live="polite"></div>
+    </div>
+    <div id="step2" class="hidden">
+      <label for="recover-code">Verification Code</label>
+      <input id="recover-code" type="text" placeholder="ABC123" maxlength="6" autocomplete="one-time-code" style="text-align:center;letter-spacing:4px;font-size:20px;font-weight:900">
+      <button class="button" id="verify-code-btn" type="button">Verify and sign in</button>
+      <div class="msg" id="step2-msg" role="status" aria-live="polite"></div>
+      <button class="secondary" type="button" id="use-different-email">Use a different email</button>
+    </div>
+    <a class="secondary" href="/app?returning=1">Continue to builder</a>
+    <p class="note">New here? <a href="/pricing" style="color:var(--gold)">Compare plans</a> or <a href="/quiz" style="color:var(--gold)">start with the diagnostic</a>.</p>
+  </section>
+</main>
+<script>
+(function(){
+  var recoverEmail = '';
+  var step1 = document.getElementById('step1');
+  var step2 = document.getElementById('step2');
+  var emailInput = document.getElementById('recover-email');
+  var codeInput = document.getElementById('recover-code');
+  var step1Msg = document.getElementById('step1-msg');
+  var step2Msg = document.getElementById('step2-msg');
+  var sendBtn = document.getElementById('send-code-btn');
+  var verifyBtn = document.getElementById('verify-code-btn');
+
+  function setMsg(el, text, cls) {
+    el.className = 'msg' + (cls ? ' ' + cls : '');
+    el.textContent = text || '';
+  }
+
+  sendBtn.addEventListener('click', async function(){
+    var email = emailInput.value.trim();
+    if (!email || !email.includes('@')) { setMsg(step1Msg, 'Enter a valid email.', 'err'); return; }
+    sendBtn.disabled = true; sendBtn.textContent = 'Sending...'; setMsg(step1Msg, '');
+    try {
+      var r = await fetch('/api/checkout?action=recover_start', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email: email })
+      });
+      var d = await r.json();
+      if (d.ok) {
+        recoverEmail = email;
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        codeInput.focus();
+      } else {
+        setMsg(step1Msg, d.error || 'No purchase was found for that email.', 'err');
+      }
+    } catch(e) {
+      setMsg(step1Msg, 'Network error. Please try again.', 'err');
+    }
+    sendBtn.disabled = false; sendBtn.textContent = 'Send sign-in code';
+  });
+
+  verifyBtn.addEventListener('click', async function(){
+    var code = codeInput.value.trim();
+    if (!code || code.length < 6) { setMsg(step2Msg, 'Enter the 6-character code.', 'err'); return; }
+    verifyBtn.disabled = true; verifyBtn.textContent = 'Verifying...'; setMsg(step2Msg, '');
+    try {
+      var r = await fetch('/api/checkout?action=recover_verify', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email: recoverEmail, code: code })
+      });
+      var d = await r.json();
+      if (d.ok && d.paid) {
+        localStorage.setItem('dynasty_paid_session', d.session_id);
+        if (d.access_token) localStorage.setItem('dynasty_paid_token', d.access_token);
+        localStorage.setItem('dynasty_paid_at', new Date().toISOString());
+        localStorage.setItem('dynasty_tier', d.plan || 'foundation');
+        setMsg(step2Msg, 'Session restored. Redirecting...', 'ok');
+        setTimeout(function(){ window.location.href = '/app?returning=1'; }, 600);
+      } else {
+        setMsg(step2Msg, d.error || 'Invalid code or no paid session found.', 'err');
+      }
+    } catch(e) {
+      setMsg(step2Msg, 'Network error. Please try again.', 'err');
+    }
+    verifyBtn.disabled = false; verifyBtn.textContent = 'Verify and sign in';
+  });
+
+  document.getElementById('use-different-email').addEventListener('click', function(){
+    recoverEmail = '';
+    codeInput.value = '';
+    step2.classList.add('hidden');
+    step1.classList.remove('hidden');
+    emailInput.focus();
+  });
+})();
+</script>
+<script src="/site-shell.js" defer></script>
+</body>
+</html>

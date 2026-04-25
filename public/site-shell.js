@@ -129,7 +129,7 @@
           ${navLinks.map((link) => linkMarkup(link)).join("")}
         </nav>
         <div class="yd-shell-actions">
-          <a class="yd-link-muted" href="/app?returning=1">Sign in</a>
+          <a class="yd-link-muted" href="/sign-in">Sign in</a>
           <a class="yd-cta" href="/quiz">Find my path</a>
         </div>
         <button class="yd-menu-button" type="button" aria-label="Open menu" aria-controls="yd-mobile-menu" aria-expanded="false">Menu</button>
