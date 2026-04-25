@@ -4,7 +4,7 @@ import path from 'node:path';
 const root = process.cwd();
 const publicDir = path.join(root, 'public');
 const productDir = path.join(root, 'product');
-const outDirs = ['automations/modules', 'automations/packs', 'automations/categories', 'automations/blueprints', 'plans', 'editions', 'suites', 'setup'];
+const outDirs = ['automations/modules', 'automations/packs', 'automations/categories', 'automations/blueprints', 'plans', 'editions', 'suites', 'setup', 'launch'];
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -27,6 +27,12 @@ function slug(value) {
     .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+function titleCase(value) {
+  return String(value || '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function esc(value) {
@@ -236,14 +242,162 @@ function cardGrid(items, getRoute, getTitle, getDesc) {
   return `<div class="grid">${items.map((item) => `<a class="card" href="${getRoute(item)}"><h3>${esc(getTitle(item))}</h3><p>${esc(getDesc(item))}</p></a>`).join('')}</div>`;
 }
 
+function featureCards(items) {
+  return `<div class="grid">${items.map((item) => `<article class="card"><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></article>`).join('')}</div>`;
+}
+
+function landingBody({ problem, outcomes, proof, related }) {
+  return `
+<section class="section"><h2>The business pain this page solves</h2><p>${esc(problem)}</p>${featureCards(outcomes)}</section>
+<section class="section"><h2>What you get</h2><ul class="checklist">${list(proof)}</ul></section>
+${related?.length ? `<section class="section"><h2>Related paths</h2>${cardGrid(related, (item) => item.href, (item) => item.title, (item) => item.text)}</section>` : ''}
+<section class="section"><h2>Link back to the main site</h2><p>Use the main Your Deputy site to compare the launch standard, browse marketplace elements, and choose the right autonomous business-unit path.</p><div class="cta-row" style="margin-top:18px"><a class="btn btn-primary" href="/">Return to Your Deputy</a><a class="btn btn-ghost" href="/marketplace">Explore marketplace</a></div></section>`;
+}
+
+const footerLandingPages = [
+  {
+    route: '/launch/score-an-idea-free',
+    title: 'Free Business Idea Score',
+    description: 'Score a SaaS, service, marketplace, or autonomous business-unit idea before spending money on a build.',
+    eyebrow: 'Free diagnostic landing page',
+    price: '$0',
+    primaryHref: '/app?plan=free&source=score-idea-landing',
+    primaryLabel: 'Score an idea free',
+    problem: 'Founders often start building before they know whether the market pain, buyer urgency, pricing power, operational model, and launch path make sense. This free score page routes you into a structured diagnostic instead of another vague idea form.',
+    outcomes: [
+      { title: 'Viability signal', text: 'Score problem intensity, customer profile, buying urgency, monetization, and delivery risk before committing to a paid build.' },
+      { title: 'Niche grounding', text: 'Capture the niche, target customer, location, business model, primary offer, and secondary offers so the builder can stay specific.' },
+      { title: 'Next-step routing', text: 'Get pointed toward the right path: free scoring, blueprint, strategy pack, foundation build, or full launch.' },
+    ],
+    proof: ['Structured business prompt', 'Founder-safe first step', 'No purchase required', 'Routes into the same build standard as paid tiers', 'Links back to pricing, marketplace, and deliverables'],
+  },
+  {
+    route: '/launch/start-foundation-build',
+    title: 'Foundation Build Launch Path',
+    description: 'Start a Foundation build that produces strategy, documents, production code, deployment scaffolding, and the Day-1 Success Kit.',
+    eyebrow: 'Foundation build landing page',
+    price: '$1,997',
+    primaryHref: '/app?plan=foundation&source=foundation-landing',
+    primaryLabel: 'Start Foundation build',
+    problem: 'A founder who already knows the business direction needs more than documents. They need a deployable product, visible routes, operating artifacts, quality checks, and a day-one handoff that makes the build usable.',
+    outcomes: [
+      { title: 'Production build path', text: 'Generate the site, app surface, API routes, deployment files, tests, and launch documentation expected from the Foundation tier.' },
+      { title: 'Business-complete scope', text: 'Validate deliverables against revenue, CRM, RevOps, onboarding, support, analytics, AI/MCP, and infrastructure requirements.' },
+      { title: 'Verification receipt', text: 'Produce a build report that records generated files, deployment status, route checks, live content checks, and quality gates.' },
+    ],
+    proof: ['Strategy Pack outcomes included', 'Production code path', 'Deployment and route checks', 'Day-1 Success Kit', 'Explicit credential and vendor handoff boundaries'],
+  },
+  {
+    route: '/launch/customer-dashboard',
+    title: 'Customer Dashboard Access',
+    description: 'Use the Your Deputy customer dashboard to inspect tenants, capabilities, module entitlements, activation state, events, and opportunity cards.',
+    eyebrow: 'Customer dashboard landing page',
+    price: 'Included',
+    primaryHref: '/dashboard',
+    primaryLabel: 'Open dashboard',
+    problem: 'Buyers need a clear control surface after launch. The dashboard page explains what the dashboard is for before sending users into the operational tool.',
+    outcomes: [
+      { title: 'Tenant visibility', text: 'Inspect tenant identity, active modules, entitlements, capabilities, and subscription state.' },
+      { title: 'Activation accountability', text: 'See whether a workflow is active, deferred, missing capabilities, gated by tier, or waiting for configuration.' },
+      { title: 'Operational prompts', text: 'Review opportunity cards generated from business events and activate recommended modules when ready.' },
+    ],
+    proof: ['Tenant lookup', 'Capability status', 'Module activation states', 'Opportunity-card recommendations', 'Marketplace handoff'],
+  },
+  {
+    route: '/launch/documentation',
+    title: 'Your Deputy Documentation Hub',
+    description: 'Read the launch standard behind Your Deputy: build contract, required modules, central config, provider boundaries, validation gates, and deployment model.',
+    eyebrow: 'Documentation landing page',
+    price: 'Included',
+    primaryHref: '/docs',
+    primaryLabel: 'Read documentation',
+    problem: 'A business-unit launcher has to be legible. This page routes buyers and operators to the documentation that explains what the builder creates, how validation works, and where operational boundaries live.',
+    outcomes: [
+      { title: 'Launch contract clarity', text: 'Understand the difference between a website, a strategy pack, a deployable build, and an autonomous business-unit standard.' },
+      { title: 'Validation visibility', text: 'Review the gates for routes, live content, required modules, security, analytics, workflows, and generated artifacts.' },
+      { title: 'Operating boundaries', text: 'See how customer-owned vendor credentials, optional adapters, and degraded-but-working scaffolds are represented.' },
+    ],
+    proof: ['Build contract overview', 'Required module list', 'Central config rules', 'Provider abstraction rules', 'Deployment and quality checks'],
+  },
+];
+
+for (const item of footerLandingPages) {
+  write(item.route, page({
+    title: item.title,
+    description: item.description,
+    eyebrow: item.eyebrow,
+    canonical: item.route,
+    price: item.price,
+    primaryHref: item.primaryHref,
+    primaryLabel: item.primaryLabel,
+    secondaryHref: '/',
+    secondaryLabel: 'Back to main website',
+    body: landingBody({
+      problem: item.problem,
+      outcomes: item.outcomes,
+      proof: item.proof,
+      related: [
+        { href: '/marketplace', title: 'Marketplace', text: 'Browse modules, packs, categories, blueprints, suites, editions, and setup paths.' },
+        { href: '/deliverables', title: 'Deliverables', text: 'Review the full artifact inventory generated by the launch standard.' },
+        { href: '/maturity', title: 'Maturity', text: 'See what ships today and what is credential-gated or tier-gated.' },
+      ],
+    }),
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: item.title,
+      description: item.description,
+      url: `https://www.yourdeputy.com${item.route}`,
+    },
+  }));
+}
+
 write('/automations/modules/index', page({ title: 'All Workflow Modules', description: 'Every individual Your Deputy workflow module with traceable trigger, action, capability, API, and activation contracts.', eyebrow: 'Module directory', canonical: '/automations/modules', price: 'From $19', primaryHref: '/marketplace#modules-section', primaryLabel: 'Browse modules', body: `<section class="section"><h2>Modules</h2>${cardGrid(modules, moduleRoute, (m) => m.name, (m) => m.outcome || m.description_short)}</section>` }));
 write('/automations/packs/index', page({ title: 'All Outcome Packs', description: 'Outcome packs group related modules around a specific business problem such as lead capture, reviews, scheduling, retention, or billing.', eyebrow: 'Pack directory', canonical: '/automations/packs', price: 'From $35', primaryHref: '/marketplace#packs-section', primaryLabel: 'Browse packs', body: `<section class="section"><h2>Packs</h2>${cardGrid(bundles, bundleRoute, (b) => b.name, (b) => b.description || b.tagline)}</section>` }));
 write('/automations/blueprints/index', page({ title: 'Industry Blueprints', description: 'Blueprints make marketplace recommendations discoverable by niche, job type, service pattern, seasonality, and operating pain point.', eyebrow: 'Blueprint directory', canonical: '/automations/blueprints', price: 'Included', primaryHref: '/marketplace#blueprints-section', primaryLabel: 'Browse blueprints', body: `<section class="section"><h2>Blueprints</h2>${cardGrid(blueprints, (b) => `/automations/blueprints/${slug(b.name)}`, (b) => b.name, (b) => b.description)}</section>` }));
 write('/automations/categories/index', page({ title: 'Workflow Categories', description: 'Browse workflow modules by operational category so every marketplace promise maps to a specific pain point and activation path.', eyebrow: 'Category directory', canonical: '/automations/categories', price: 'Included', primaryHref: '/marketplace#modules-section', primaryLabel: 'Browse marketplace', body: `<section class="section"><h2>Categories</h2>${cardGrid([...new Set(modules.map((m) => m.category || 'uncategorized'))].sort().map((category) => ({ category, modules: modules.filter((m) => (m.category || 'uncategorized') === category) })), (c) => `/automations/categories/${slug(c.category)}`, (c) => c.category.replace(/-/g, ' '), (c) => `${c.modules.length} workflows`)}</section>` }));
 
+function categorySeoCopy(category, categoryModules) {
+  const label = titleCase(category);
+  const keywordLabel = category.replace(/-/g, ' ');
+  const painByCategory = {
+    billing: 'Stop losing cash flow to forgotten invoices, weak payment follow-up, and manual billing reminders.',
+    'lead-capture': 'Turn missed calls, forms, and inbound buyer intent into fast, trackable follow-up instead of lost opportunities.',
+    'lead-response': 'Respond to new leads fast enough to win the job before competitors call back.',
+    retention: 'Bring back dormant customers, trigger service reminders, and keep revenue from quietly leaking away.',
+    reviews: 'Generate more public proof while intercepting unhappy customers before they become damaging reviews.',
+    sales: 'Follow up estimates, proposals, and lost opportunities without relying on memory or sticky notes.',
+    scheduling: 'Reduce no-shows, appointment confusion, and manual calendar back-and-forth.',
+  };
+  const moduleNames = categoryModules.map((m) => m.name).join(', ');
+  return {
+    label,
+    pain: painByCategory[category] || `Make ${label} workflows measurable, repeatable, and easier to activate.`,
+    keywords: `${keywordLabel} automation, ${keywordLabel} workflow software, small business ${keywordLabel} automation, AI ${keywordLabel} assistant, service business ${keywordLabel} tools`,
+    modules: moduleNames,
+  };
+}
+
 for (const category of [...new Set(modules.map((m) => m.category || 'uncategorized'))]) {
   const categoryModules = modules.filter((m) => (m.category || 'uncategorized') === category);
-  write(`/automations/categories/${slug(category)}`, page({ title: `${category.replace(/-/g, ' ')} Workflows`, description: `Workflow modules for ${category.replace(/-/g, ' ')} with traceable activation paths and specific operating outcomes.`, eyebrow: 'Workflow category', canonical: `/automations/categories/${slug(category)}`, price: 'From $19', primaryHref: '/marketplace#modules-section', primaryLabel: 'Browse marketplace', body: `<section class="section"><h2>${esc(category.replace(/-/g, ' '))} modules</h2>${cardGrid(categoryModules, moduleRoute, (m) => m.name, (m) => m.outcome || m.description_short)}</section>` }));
+  const copy = categorySeoCopy(category, categoryModules);
+  write(`/automations/categories/${slug(category)}`, page({
+    title: `${copy.label} Automation Workflows`,
+    description: `${copy.pain} Compare ${copy.label} workflow modules, trace their activation paths, and choose the automation that solves the operational leak.`,
+    eyebrow: 'Workflow category',
+    canonical: `/automations/categories/${slug(category)}`,
+    price: 'From $19',
+    primaryHref: `/marketplace#modules-section`,
+    primaryLabel: `Browse ${copy.label} modules`,
+    body: `
+<section class="section"><h2>${esc(copy.label)} pain point</h2><p>${esc(copy.pain)} This category page is built for searchers comparing ${esc(copy.keywords)} and for operators who need each promise tied to a real module, trigger, capability, and activation route.</p>${featureCards([
+  { title: 'Keyword focus', text: copy.keywords },
+  { title: 'Included module family', text: copy.modules },
+  { title: 'Activation model', text: 'Each module page links to its catalog API record, required capabilities, compliance guards, and dashboard activation route.' },
+])}</section>
+<section class="section"><h2>${esc(copy.label)} modules</h2>${cardGrid(categoryModules, moduleRoute, (m) => m.name, (m) => m.outcome || m.description_short)}</section>
+<section class="section"><h2>Conversion path</h2><p>Start with the module that solves the most expensive leak first. You can activate one workflow, choose an outcome pack, or filter the marketplace by industry blueprint.</p><div class="cta-row" style="margin-top:18px"><a class="btn btn-primary" href="/marketplace#packs-section">Compare outcome packs</a><a class="btn btn-ghost" href="/automations/blueprints/">Browse industry blueprints</a></div></section>`,
+  }));
 }
 
 console.log(`build-marketplace-pages: ok (${modules.length} modules, ${bundles.length} packs, ${(tiers.suites || []).length} suites, ${(tiers.editions || []).length} editions, ${blueprints.length} blueprints)`);

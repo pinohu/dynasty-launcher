@@ -21,10 +21,10 @@
       links: [
         { href: "/", label: "Homepage" },
         { href: "/quiz", label: "2-minute diagnostic" },
-        { href: "/app?plan=free&source=footer", label: "Score an idea free" },
-        { href: "/app?plan=foundation&source=footer", label: "Start Foundation build" },
-        { href: "/dashboard", label: "Customer dashboard" },
-        { href: "/docs", label: "Documentation" },
+        { href: "/launch/score-an-idea-free", label: "Score an idea free" },
+        { href: "/launch/start-foundation-build", label: "Start Foundation build" },
+        { href: "/launch/customer-dashboard", label: "Customer dashboard" },
+        { href: "/launch/documentation", label: "Documentation" },
       ],
     },
     {
@@ -165,7 +165,7 @@
             <div class="yd-footer-brand" id="yd-footer-brand">Your Deputy</div>
             <p class="yd-footer-copy">Autonomous business-unit launcher: validation, niche website, revenue engine, CRM, RevOps, payments, onboarding, support, analytics, AI/MCP tools, workflows, and self-hostable infrastructure.</p>
           </section>
-          ${sitemapGroups.slice(0, 4).map((group) => `
+          ${sitemapGroups.map((group) => `
             <section class="yd-footer-col" aria-labelledby="yd-footer-${group.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}">
               <h2 id="yd-footer-${group.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}">${group.title}</h2>
               ${group.links.map((link) => linkMarkup(link)).join("")}
