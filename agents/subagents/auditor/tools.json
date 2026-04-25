@@ -1,0 +1,39 @@
+{
+  "tools": [
+    {
+      "name": "wcag_audit",
+      "description": "Run a full axe-core audit against one or more URLs. Returns violation counts by severity (minor, moderate, serious, critical) per URL. Serious or critical > 0 means fail per Dynasty quality floor.",
+      "input_schema": {"type": "object", "properties": {"urls": {"type": "array", "items": {"type": "string"}}}, "required": ["urls"]}
+    },
+    {
+      "name": "lighthouse_run",
+      "description": "Run Lighthouse mobile against a URL. Returns scores for performance, accessibility, best-practices, SEO (each 0-100). Use the mobile profile — Dynasty floors are calibrated on mobile. Desktop mode is for debugging only.",
+      "input_schema": {"type": "object", "properties": {"url": {"type": "string"}, "profile": {"enum": ["mobile", "desktop"]}}, "required": ["url"]}
+    },
+    {
+      "name": "schema_validate",
+      "description": "Fetch a URL and validate schema.org JSON-LD or microdata. Returns which schema types are present, missing, and invalid. Dynasty floor: home page must have Organization + LocalBusiness.",
+      "input_schema": {"type": "object", "properties": {"url": {"type": "string"}, "required_types": {"type": "array", "items": {"type": "string"}}}, "required": ["url"]}
+    },
+    {
+      "name": "functional_test",
+      "description": "Hit a list of routes and assert status + (optional) response shape. Routes come from the plan's acceptance checklist. Response-shape check is a JSON schema or a simple key-exists check.",
+      "input_schema": {"type": "object", "properties": {"routes": {"type": "array", "items": {"type": "object", "properties": {"url": {"type": "string"}, "method": {"type": "string"}, "expect_status": {"type": "integer"}, "expect_shape": {"type": "object"}}}}}, "required": ["routes"]}
+    },
+    {
+      "name": "security_headers_check",
+      "description": "Check for CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy on a URL. Missing headers are warnings, NOT failures — Dynasty floor is quality, not enterprise compliance (that comes in Phase 4 hardening).",
+      "input_schema": {"type": "object", "properties": {"url": {"type": "string"}}, "required": ["url"]}
+    },
+    {
+      "name": "emit_halt",
+      "description": "Halt per halt-conditions or escalation policy. An audit returning 'fail' is NOT a halt — it's a normal submit with verdict=fail and a remediation recommendation.",
+      "input_schema": {"type": "object", "properties": {"run_id": {"type": "string"}, "reason": {"type": "string"}, "context": {"type": "string"}}, "required": ["run_id", "reason"]}
+    },
+    {
+      "name": "submit_results",
+      "description": "Return audit verdicts per the submit contract in loop.txt. Overall verdict is fail if any category is fail; warn if any is warn and none is fail; else pass.",
+      "input_schema": {"type": "object", "properties": {"plan_item_id": {"type": "string"}, "run_id": {"type": "string"}, "verdicts": {"type": "object"}, "overall": {"type": "string"}, "remediation": {"type": "string"}, "acceptance_met": {"type": "array"}}, "required": ["plan_item_id", "run_id", "verdicts", "overall"]}
+    }
+  ]
+}

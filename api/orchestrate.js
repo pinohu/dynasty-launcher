@@ -379,3 +379,20 @@ export default async function handler(req, res) {
 
   return res.status(400).json({ error: `Unknown action: ${action}` });
 }
+
+// -----------------------------------------------------------------------------
+// Phase 1 modular-agents hook (feature-flagged). When USE_MODULAR_AGENTS is
+// true, callers resolve system prompts from agents/ instead of inline strings.
+// Default is false — flip per-environment via Vercel env var.
+// -----------------------------------------------------------------------------
+export async function loadOrchestratorPrompt() {
+  if (process.env.USE_MODULAR_AGENTS !== 'true') return null;
+  const { loadAgent } = await import('../agents/_lib/prompt-loader.mjs');
+  return loadAgent('orchestrator');
+}
+
+export async function loadSubagentPrompt(name) {
+  if (process.env.USE_MODULAR_AGENTS !== 'true') return null;
+  const { loadAgent } = await import('../agents/_lib/prompt-loader.mjs');
+  return loadAgent(`subagents/${name}`);
+}
