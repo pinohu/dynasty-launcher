@@ -14,5 +14,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Verify warranted surfaces vs code (no npm install)
-        run: npm run verify:product
+      - name: Install dependencies
+        run: npm ci
+      - name: Run product and smoke regression suite
+        run: npm test

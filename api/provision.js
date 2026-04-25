@@ -1,4 +1,6 @@
 export const maxDuration = 300; // 5 min — AI content generation takes time
+import { classifyVercelFailure } from './_deployment_repair.mjs';
+
 // Credential boundary: DYNASTY_TOOL_CONFIG keys serve build-time / one-time provisioning (derivative
 // creation and setup). Customer deploys must not rely on this pool for ongoing operation — use
 // customer-owned env vars (.env.example, MANUAL-ACTIONS) on their Vercel project.
@@ -306,7 +308,7 @@ function sanitizeError(msg) {
 }
 
 const PROVISION_TIER_VALID = ['free', 'blueprint', 'scoring_pro', 'strategy_pack', 'foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'];
-const AUTOMATION_ONLY_MODE = (process.env.AUTOMATION_ONLY_MODE || 'true') !== 'false';
+const AUTOMATION_ONLY_MODE = process.env.AUTOMATION_ONLY_MODE === 'true';
 const CONTACT_ONLY_MODULES = new Set(['phone', 'sms', 'video', 'leads', 'crm', 'directory']);
 const TIER_MODULE_DAILY_LIMITS = {
   professional: { hosting: 2, wordpress: 0 },

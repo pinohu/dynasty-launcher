@@ -2517,8 +2517,9 @@ document.getElementById('settings-btn').onclick=()=>{
   const webhookUrl = localStorage.getItem('dynasty_webhook_url') || '';
   const whiteLabel = localStorage.getItem('dynasty_white_label') === 'true';
   const byoKeysRequired = localStorage.getItem('dynasty_byo_keys') !== 'false';
-  // Default to 'full' so new builds provision the full module set. Open-weight models removed the reason zero-cost was the default (scoring/generation is free either way); customers who still want to avoid paid vendor integrations can pick zero-cost explicitly.
-  const automationMode = localStorage.getItem('dynasty_automation_mode') || 'full';
+  // Automation mode is intentionally session-scoped. Old localStorage values caused
+  // paid/admin builds to inherit zero-cost mode silently across build sessions.
+  const automationMode = window.DYNASTY_AUTOMATION_MODE || 'full';
   const customDomain = localStorage.getItem('dynasty_custom_domain') || '';
   const savedLocation = localStorage.getItem('dynasty_location') || '';
   const pricePro = localStorage.getItem('dynasty_price_pro') || '49';
@@ -2684,7 +2685,7 @@ function saveSettings() {
   if (domain !== undefined) localStorage.setItem('dynasty_custom_domain', domain);
   localStorage.setItem('dynasty_white_label', whiteLabel ? 'true' : 'false');
   localStorage.setItem('dynasty_byo_keys', byoKeys ? 'true' : 'false');
-  localStorage.setItem('dynasty_automation_mode', automationMode);
+  window.DYNASTY_AUTOMATION_MODE = automationMode;
   localStorage.setItem('dynasty_deep_mode', deepMode ? 'true' : 'false');
   if (location !== undefined) localStorage.setItem('dynasty_location', location);
   if (pricePro) localStorage.setItem('dynasty_price_pro', pricePro);
@@ -2763,7 +2764,7 @@ function getV3Project(inf) {
     vercel_project_id: provRes?.results?.vercel?.project_id || null,
     vertical_tool_spec: bp.verticalToolSpec || '',
     byo_keys_required: localStorage.getItem('dynasty_byo_keys') !== 'false',
-    automation_mode: localStorage.getItem('dynasty_automation_mode') || 'full'
+    automation_mode: window.DYNASTY_AUTOMATION_MODE || 'full'
   };
 }
 
@@ -10573,8 +10574,6 @@ await Promise.allSettled([
 // passes strict lint/type checks locally.
 const nextConfig = {
   reactStrictMode: true,
-  typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
   images: { remotePatterns: [{ protocol: 'https', hostname: '**' }] },
 };
 
@@ -10590,24 +10589,24 @@ export default nextConfig;
             if (!/ignoreBuildErrors\s*:/.test(out)) {
               // Add a typescript block if none exists
               if (!/typescript\s*:/.test(out)) {
-                out = out.replace(/(const\s+nextConfig\s*=\s*\{)/, "$1\n  typescript: { ignoreBuildErrors: true },");
+                out = out.replace(/(const\s+nextConfig\s*=\s*\{)/, "$1");
                 // Fallback: object-literal exported directly
                 if (!/ignoreBuildErrors\s*:/.test(out)) {
-                  out = out.replace(/(export\s+default\s*\{)/, "$1\n  typescript: { ignoreBuildErrors: true },");
+                  out = out.replace(/(export\s+default\s*\{)/, "$1");
                 }
                 if (!/ignoreBuildErrors\s*:/.test(out)) {
-                  out = out.replace(/(module\.exports\s*=\s*\{)/, "$1\n  typescript: { ignoreBuildErrors: true },");
+                  out = out.replace(/(module\.exports\s*=\s*\{)/, "$1");
                 }
               }
             }
             if (!/ignoreDuringBuilds\s*:/.test(out)) {
               if (!/eslint\s*:/.test(out)) {
-                out = out.replace(/(const\s+nextConfig\s*=\s*\{)/, "$1\n  eslint: { ignoreDuringBuilds: true },");
+                out = out.replace(/(const\s+nextConfig\s*=\s*\{)/, "$1");
                 if (!/ignoreDuringBuilds\s*:/.test(out)) {
-                  out = out.replace(/(export\s+default\s*\{)/, "$1\n  eslint: { ignoreDuringBuilds: true },");
+                  out = out.replace(/(export\s+default\s*\{)/, "$1");
                 }
                 if (!/ignoreDuringBuilds\s*:/.test(out)) {
-                  out = out.replace(/(module\.exports\s*=\s*\{)/, "$1\n  eslint: { ignoreDuringBuilds: true },");
+                  out = out.replace(/(module\.exports\s*=\s*\{)/, "$1");
                 }
               }
             }
@@ -10617,7 +10616,7 @@ export default nextConfig;
           else if (files['next.config.js']) files['next.config.js'] = injectFlags(files['next.config.js']);
           // If neither flag made it in despite our best effort, replace wholesale with hardened config.
           const final = files['next.config.mjs'] || files['next.config.js'] || '';
-          if (!/ignoreBuildErrors\s*:\s*true/.test(final) || !/ignoreDuringBuilds\s*:\s*true/.test(final)) {
+          if (/ignoreBuildErrors\s*:\s*true/.test(final) || /ignoreDuringBuilds\s*:\s*true/.test(final)) {
             files['next.config.mjs'] = hardenedConfig;
             delete files['next.config.js'];
           }
@@ -12047,7 +12046,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       const enabledList = Object.entries(v3Modules).filter(([,v]) => v).map(([k]) => moduleNames[k] || k);
       addP('v3-start', `V3 Modules — ${enabledList.length} integrations`, enabledList.join(', '));
       setP('v3-start', 'run', 'Provisioning external services...');
-      if ((localStorage.getItem('dynasty_automation_mode') || 'full') === 'zero_cost') {
+      if ((window.DYNASTY_AUTOMATION_MODE || 'full') === 'zero_cost') {
         addP('v3-mode', 'Zero-cost autopilot');
         setP('v3-mode', 'sk', 'Paid integrations auto-skip in this mode to keep marginal cost near zero.');
       }
