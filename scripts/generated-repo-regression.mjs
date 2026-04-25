@@ -102,6 +102,9 @@ assert.equal(JSON.parse(vercelRepair.files['package.json']).scripts['vercel-buil
 assert.equal(JSON.parse(vercelRepair.files['package.json']).devDependencies.next, '^15.2.4', 'Vercel repair should expose root Next version');
 assert.equal(JSON.parse(vercelRepair.files['vercel.json']).outputDirectory, 'frontend/.next', 'Vercel repair should target frontend output');
 
+const protectionDiag = classifyVercelFailure([{ text: '401 Unauthorized\nAuthentication Required\nVercel Deployment Protection' }]);
+assert.equal(protectionDiag.class, 'deployment_protection', 'Vercel parser should classify deployment protection blocks');
+
 if (fs.existsSync(localFixture)) {
   const localResult = detectGeneratedRepoIssues(loadFilesFromDir(localFixture), contract);
   if (!localResult.ok) {

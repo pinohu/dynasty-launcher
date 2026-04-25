@@ -163,6 +163,120 @@ async function pushFile(ghToken, org, repo, path, content, message, isBase64 = f
   return r.ok;
 }
 
+const GENERATED_VERCEL_SETTINGS = {
+  framework: 'nextjs',
+  installCommand: 'npm install --engine-strict=false && npm install --prefix frontend --no-package-lock --engine-strict=false',
+  buildCommand: 'npm run vercel-build',
+  outputDirectory: 'frontend/.next',
+};
+
+function vercelTeamQuery(team) {
+  return team ? `teamId=${encodeURIComponent(team)}` : '';
+}
+
+async function patchVercelProjectSettings({ token, team, projectId }) {
+  if (!token || !projectId) return { ok: false, skipped: true, reason: 'missing_token_or_project' };
+  const query = vercelTeamQuery(team);
+  const url = `https://api.vercel.com/v10/projects/${encodeURIComponent(projectId)}${query ? `?${query}` : ''}`;
+  const body = {
+    ...GENERATED_VERCEL_SETTINGS,
+    ssoProtection: null,
+  };
+  try {
+    const resp = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const text = await resp.text();
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { data = { text: text.slice(0, 200) }; }
+    return {
+      ok: resp.ok,
+      status: resp.status,
+      settings: GENERATED_VERCEL_SETTINGS,
+      deployment_protection_disabled: resp.ok,
+      error: resp.ok ? null : sanitizeError(data?.error?.message || data?.message || text || `HTTP ${resp.status}`),
+    };
+  } catch (e) {
+    return { ok: false, error: sanitizeError(e.message) };
+  }
+}
+
+async function verifyLiveUrlWithRepair({ url, projectName, projectId, token, team }) {
+  const result = {
+    ok: false,
+    status: 0,
+    has_content: false,
+    has_project_name: false,
+    has_template_branding: false,
+    deployment_protection_repaired: false,
+    body_length: 0,
+    url,
+  };
+  const fetchOnce = async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    try {
+      const resp = await fetch(url, {
+        method: 'GET',
+        headers: { 'User-Agent': 'YourDeputy-VerifyBot/1.0' },
+        signal: controller.signal,
+        redirect: 'follow',
+      });
+      const text = await resp.text();
+      return { resp, text };
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+
+  let first;
+  try {
+    first = await fetchOnce();
+  } catch (e) {
+    result.error = sanitizeError(e.message);
+    return result;
+  }
+
+  let { resp, text } = first;
+  const protectionDiag = classifyVercelFailure([{ text: `${resp.status} ${resp.statusText}\n${text.slice(0, 1000)}` }]);
+  if ((resp.status === 401 || resp.status === 403 || protectionDiag.class === 'deployment_protection') && token && projectId) {
+    const patched = await patchVercelProjectSettings({ token, team, projectId });
+    result.deployment_protection_repaired = !!patched.ok;
+    result.project_settings_repair = patched;
+    if (patched.ok) {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      try {
+        const second = await fetchOnce();
+        resp = second.resp;
+        text = second.text;
+      } catch (e) {
+        result.error = sanitizeError(e.message);
+        return result;
+      }
+    }
+  }
+
+  result.status = resp.status;
+  result.url = resp.url || url;
+  result.body_length = text.length;
+  if (resp.status === 200) {
+    const lower = text.toLowerCase();
+    const isErrorPage = /Application error|500 Internal Server Error|NEXT_NOT_FOUND|This page could not be found/i.test(text);
+    const templateMarkers = [/SaaS ?Boilerplate/i, /SaaS ?Template/i, /@?Ixartz/i, /nextjs-boilerplate\.com/i, /Demo of SaaS/i];
+    result.has_content = text.length > 500 && !isErrorPage;
+    result.has_project_name = projectName ? lower.includes(String(projectName).toLowerCase()) : false;
+    result.has_template_branding = templateMarkers.some((rx) => rx.test(text));
+    result.ok = result.has_content && !result.has_template_branding;
+  } else {
+    const diag = classifyVercelFailure([{ text: `${resp.status} ${resp.statusText}\n${text.slice(0, 1000)}` }]);
+    result.diagnostic = diag;
+    result.error = diag.summary || `HTTP ${resp.status}`;
+  }
+  return result;
+}
+
 function hexToHsl(hex) {
   hex = hex.replace('#', '');
   const r = parseInt(hex.slice(0,2),16)/255, g = parseInt(hex.slice(2,4),16)/255, b = parseInt(hex.slice(4,6),16)/255;
@@ -3531,6 +3645,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         },
         events: events.slice(-300), // tail
         event_count: events.length,
+        diagnostic: classifyVercelFailure(events),
       });
     } catch (e) {
       return res.json({ ok: false, error: sanitizeError(e.message) });
@@ -3560,9 +3675,10 @@ Return ONLY a valid JSON array (no markdown, no backticks):
 
   // ── VERIFY DEPLOYMENT STATUS ──────────────────────────────────────────────
   if (action === 'verify_deploy') {
-    const { project_id } = req.body || {};
+    const { project_id, project_name } = req.body || {};
     if (!project_id) return res.status(400).json({ error: 'project_id required' });
     try {
+      const settingsRepair = await patchVercelProjectSettings({ token: VERCEL_TOKEN, team: VERCEL_TEAM, projectId: project_id });
       const dr = await fetch(
         `https://api.vercel.com/v6/deployments?projectId=${project_id}&teamId=${VERCEL_TEAM}&limit=1&target=production`,
         { headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` } }
@@ -3570,12 +3686,36 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       const dd = await dr.json();
       const dep = dd.deployments?.[0];
       if (!dep) return res.json({ state: 'NOT_FOUND', error: 'No deployments found' });
+      const state = dep.state || dep.readyState;
+      const liveUrl = dep.url ? `https://${dep.url}` : null;
+      let diagnostic = null;
+      let live = null;
+      if (state === 'ERROR' && (dep.uid || dep.id)) {
+        try {
+          const evResp = await fetch(`https://api.vercel.com/v3/deployments/${dep.uid || dep.id}/events?teamId=${VERCEL_TEAM}&direction=forward&follow=0&limit=500`, {
+            headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` }
+          });
+          if (evResp.ok) {
+            const raw = await evResp.text();
+            let events = [];
+            try { events = JSON.parse(raw); }
+            catch { events = raw.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return { text: l }; } }); }
+            diagnostic = classifyVercelFailure(events);
+          }
+        } catch {}
+      }
+      if (state === 'READY' && liveUrl) {
+        live = await verifyLiveUrlWithRepair({ url: liveUrl, projectName: project_name, projectId: project_id, token: VERCEL_TOKEN, team: VERCEL_TEAM });
+      }
       return res.json({
-        state: dep.state || dep.readyState,
-        url: dep.url ? `https://${dep.url}` : null,
-        error: dep.state === 'ERROR' ? 'Build failed — check Vercel dashboard' : null,
+        state,
+        url: liveUrl,
+        error: state === 'ERROR' ? (diagnostic?.summary || 'Build failed - check Vercel dashboard') : null,
         created: dep.created,
         deployment_id: dep.uid || dep.id || null,
+        diagnostic,
+        live,
+        project_settings_repair: settingsRepair,
       });
     } catch (e) {
       return res.json({ state: 'UNKNOWN', error: sanitizeError(e.message) });
@@ -3595,6 +3735,17 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       if (!allowed.some(d => parsed.hostname.endsWith(d))) return res.status(400).json({ error: 'URL domain not allowed' });
     } catch { return res.status(400).json({ error: 'Invalid URL' }); }
     try {
+      const projectIdForRepair = req.body?.project_id || req.body?.vercel_project_id || null;
+      if (projectIdForRepair) {
+        const live = await verifyLiveUrlWithRepair({
+          url,
+          projectName: project_name,
+          projectId: projectIdForRepair,
+          token: VERCEL_TOKEN,
+          team: VERCEL_TEAM,
+        });
+        return res.json(live);
+      }
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
       const resp = await fetch(url, {
@@ -3647,26 +3798,21 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       // to build. Otherwise we're just re-triggering the same guaranteed
       // failure. Fail fast with a structured error so the client can show
       // an actionable message.
-      const criticalPaths = ['package.json', 'src/app/page.tsx', 'src/app/layout.tsx', 'src/app/globals.css'];
-      const missing = [];
-      for (const p of criticalPaths) {
+      const exists = async (p) => {
         try {
           const r = await fetch(`https://api.github.com/repos/${repoOrg}/${safeRepo}/contents/${p}`, {
             headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
           });
-          if (!r.ok) missing.push(p);
-        } catch { missing.push(p); }
+          return r.ok;
+        } catch { return false; }
+      };
+      const missing = [];
+      for (const p of ['package.json', 'vercel.json']) {
+        if (!(await exists(p))) missing.push(p);
       }
-      let hasConfig = false;
-      for (const cfg of ['next.config.js', 'next.config.ts', 'next.config.mjs']) {
-        try {
-          const r = await fetch(`https://api.github.com/repos/${repoOrg}/${safeRepo}/contents/${cfg}`, {
-            headers: { 'Authorization': `token ${process.env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
-          });
-          if (r.ok) { hasConfig = true; break; }
-        } catch {}
-      }
-      if (!hasConfig) missing.push('next.config.{js,ts,mjs}');
+      const hasFrontendApp = (await Promise.all(['frontend/package.json', 'frontend/app/page.tsx', 'frontend/app/layout.tsx', 'frontend/app/globals.css'].map(exists))).every(Boolean);
+      const hasRootNextApp = (await Promise.all(['src/app/page.tsx', 'src/app/layout.tsx', 'src/app/globals.css'].map(exists))).every(Boolean);
+      if (!hasFrontendApp && !hasRootNextApp) missing.push('frontend/app/* or src/app/*');
 
       if (missing.length > 0) {
         return res.json({
@@ -3678,10 +3824,8 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       }
 
       // Check current framework — don't override if already set correctly
-      const projResp = await fetch(`https://api.vercel.com/v9/projects/${project_id}?teamId=${VERCEL_TEAM}`, {
-        headers: { 'Authorization': `Bearer ${VERCEL_TOKEN}` }
-      });
-      const projData = await projResp.json();
+      const settingsRepair = await patchVercelProjectSettings({ token: VERCEL_TOKEN, team: VERCEL_TEAM, projectId: project_id });
+      const projData = { framework: 'nextjs' };
       // Only clear framework if it's causing build issues on non-Next.js projects
       // NEVER set framework:null on Next.js projects — it breaks routing
       if (projData.framework && projData.framework !== 'nextjs') {
@@ -3707,6 +3851,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         ok: true,
         state: dd.readyState,
         url: dd.url ? `https://${dd.url}` : null,
+        project_settings_repair: settingsRepair,
       });
     } catch (e) {
       return res.json({ ok: false, error: sanitizeError(e.message) });

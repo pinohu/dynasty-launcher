@@ -11486,7 +11486,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
           if (pass > 1) await new Promise(r => setTimeout(r, 8000)); // DNS propagation
           const liveCheck = await fetch(`/api/provision?action=verify_live`, {
             method: 'POST', headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
-            body: JSON.stringify({ url: vercelUrl, project_name: inf.name, ...getProvisionAuthPayload() })
+            body: JSON.stringify({ url: vercelUrl, project_name: inf.name, project_id: vercelProjectId, ...getProvisionAuthPayload() })
           });
           const liveData = await liveCheck.json();
 
@@ -11509,7 +11509,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
                 const routeCheck = await fetch(`/api/provision?action=verify_live`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', ...getProvisionAuthHeaders() },
-                  body: JSON.stringify({ url: `${String(vercelUrl).replace(/\/$/, '')}${path}`, project_name: inf.name, ...getProvisionAuthPayload() })
+                  body: JSON.stringify({ url: `${String(vercelUrl).replace(/\/$/, '')}${path}`, project_name: inf.name, project_id: vercelProjectId, ...getProvisionAuthPayload() })
                 });
                 const routeData = await routeCheck.json();
                 const routePass = routeData.ok && routeData.status === 200 && routeData.has_content && !routeData.has_template_branding;

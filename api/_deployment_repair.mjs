@@ -23,6 +23,13 @@ export function classifyVercelFailure(events = []) {
     return diagnostic;
   }
 
+  if (/Deployment Protection|Authentication Required|Vercel Authentication|401 Unauthorized|403 Forbidden/i.test(text)) {
+    diagnostic.class = 'deployment_protection';
+    diagnostic.summary = 'Vercel deployment protection is blocking public live verification';
+    diagnostic.rawSnippet = lines.filter(Boolean).slice(-12).join(' | ').slice(0, 600);
+    return diagnostic;
+  }
+
   const addPath = (value) => {
     if (value && !diagnostic.paths.includes(value)) diagnostic.paths.push(value.replace(/^\.\//, ''));
   };
@@ -181,6 +188,8 @@ function summarizeDiagnostic(diagnostic) {
       return 'Vercel root directory/build command mismatch';
     case 'quality':
       return 'Quality contract failed';
+    case 'deployment_protection':
+      return 'Deployment protection blocked public verification';
     default:
       return diagnostic.rawSnippet || 'Unknown deployment failure';
   }
