@@ -71,7 +71,7 @@ function codes(result) {
 const beforeFiles = syntheticBrokenFixture();
 const before = detectGeneratedRepoIssues(beforeFiles, contract);
 assert.equal(before.ok, false, 'AI Collision fixture must be detected as broken');
-for (const code of ['duplicate_next_trees', 'template_residue', 'domain_drift', 'backend_schema_drift', 'api_contract_drift', 'env_contract_drift', 'missing_byoc_infra']) {
+for (const code of ['duplicate_next_trees', 'template_residue', 'domain_drift', 'backend_schema_drift', 'api_contract_drift', 'env_contract_drift', 'missing_byoc_infra', 'central_config_missing', 'business_unit_structure_missing', 'mcp_tools_missing', 'pre_saas_revenue_missing']) {
   assert.ok(codes(before).has(code), `fixture should expose ${code}`);
 }
 
@@ -79,6 +79,13 @@ const repaired = repairGeneratedRepoIssues(beforeFiles, contract);
 assert.ok(repaired.telemetry.length > 0, 'repair should emit telemetry');
 const after = verifyGeneratedRepo(repaired.files, contract);
 assert.equal(after.ok, true, `repair should verify cleanly: ${JSON.stringify(after.issues, null, 2)}`);
+for (const requiredPath of ['config/master.config.yaml', 'agents/tool-registry.json', 'products/product-catalog.yaml', 'revops/contract-templates/msa.md', 'workflows/lead-to-sale.yaml', 'src/providers/payment.ts', 'tests/build-completeness.test.ts']) {
+  assert.ok(repaired.files[requiredPath], `repair should generate ${requiredPath}`);
+}
+const toolRegistry = JSON.parse(repaired.files['agents/tool-registry.json']);
+assert.ok(toolRegistry.tools.some((tool) => tool.name === 'create_payment_link'), 'MCP registry should expose payment tools');
+assert.ok(repaired.files['src/providers/payment.ts'].includes('interface PaymentProvider'), 'payment abstraction should be generated');
+assert.ok(!/from ['"]stripe['"]|require\(['"]stripe['"]/.test(repaired.files['src/billing/payments.ts']), 'core billing must not import Stripe directly');
 const telemetry = buildRepairTelemetry(before, after, repaired.telemetry);
 assert.equal(telemetry.verification_ok, true, 'repair telemetry should record success');
 
