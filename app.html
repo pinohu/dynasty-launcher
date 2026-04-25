@@ -10699,6 +10699,27 @@ await Promise.allSettled([
         }
       }
 
+      // Next.js gives root `app/` precedence over `src/app/`. Template auth
+      // stubs often leave `app/sign-in` and `app/sign-up` behind without a
+      // root `app/layout.tsx`, which fails Vercel with "doesn't have a root
+      // layout" even when `src/app/layout.tsx` exists. Keep one routed tree.
+      if (isNextJs && files['src/app/layout.tsx']) {
+        const rootAppPaths = Object.keys(files).filter((p) => p.startsWith('app/'));
+        if (rootAppPaths.length && !files['app/layout.tsx']) {
+          for (const p of rootAppPaths) delete files[p];
+        }
+      }
+
+      // The launcher mutates package.json repeatedly after template assembly.
+      // A stale lockfile makes `npm ci` and some Vercel installs fail before
+      // Next starts. Delete generated lockfiles unless the builder can produce
+      // them from the final package manifest in the same pass.
+      if (isNextJs) {
+        for (const lockPath of ['package-lock.json', 'npm-shrinkwrap.json', 'frontend/package-lock.json', 'frontend/npm-shrinkwrap.json']) {
+          if (files[lockPath]) delete files[lockPath];
+        }
+      }
+
       // ── 0. Guarantee a clean package.json exists (replaces template bloat) ──
       if (isNextJs && !files['package.json']) {
         files['package.json'] = JSON.stringify({

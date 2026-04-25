@@ -20,6 +20,12 @@ for (const file of htmlFiles) {
   if (!html.includes('Retry deployment failed — invoking L2 Vercel repair') && !html.includes('Retry deployment failed â€” invoking L2 Vercel repair')) {
     failures.push(`${file}: missing retry-to-L2 repair path`);
   }
+  if (!html.includes("if (isNextJs && files['src/app/layout.tsx'])")) {
+    failures.push(`${file}: missing root app/ precedence guard for src/app builds`);
+  }
+  if (!html.includes("'package-lock.json', 'npm-shrinkwrap.json', 'frontend/package-lock.json', 'frontend/npm-shrinkwrap.json'")) {
+    failures.push(`${file}: missing stale lockfile removal before push`);
+  }
 }
 
 const provision = fs.readFileSync('api/provision.js', 'utf8');
@@ -31,6 +37,22 @@ if (!provision.includes("project?.automation_mode === 'zero_cost' && project?.au
 }
 if (provision.includes('await fetch(`${n8nUrl}/api/v1/workflows/${wd.id}/activate`')) {
   failures.push('api/provision.js: stale n8nUrl typo remains in starter workflow activation');
+}
+
+const generatedRepair = fs.readFileSync('api/_generated_repo_repair.mjs', 'utf8');
+if (!generatedRepair.includes("'next_root_layout_missing'")) {
+  failures.push('api/_generated_repo_repair.mjs: missing root-layout generated repo detector');
+}
+if (!generatedRepair.includes("'package_lock_drift'")) {
+  failures.push('api/_generated_repo_repair.mjs: missing package-lock drift detector');
+}
+
+const deploymentRepair = fs.readFileSync('api/_deployment_repair.mjs', 'utf8');
+if (!deploymentRepair.includes("diagnostic.class = 'next_root_layout_missing'")) {
+  failures.push('api/_deployment_repair.mjs: missing Vercel root-layout classifier');
+}
+if (!deploymentRepair.includes("diagnostic.class = 'package_lock_drift'")) {
+  failures.push('api/_deployment_repair.mjs: missing Vercel package-lock classifier');
 }
 
 if (failures.length) {

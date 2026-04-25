@@ -342,6 +342,26 @@ function parseJson(value) {
   }
 }
 
+function packageLockDrifted(files, lockPath) {
+  const pkgPath = lockPath.startsWith('frontend/') ? 'frontend/package.json' : 'package.json';
+  const pkg = parseJson(text(files, pkgPath));
+  const lock = parseJson(text(files, lockPath));
+  if (!pkg || !lock) return true;
+  const lockRoot = lock.packages?.[''] || lock;
+  const sections = ['dependencies', 'devDependencies'];
+  for (const section of sections) {
+    const wanted = pkg[section] || {};
+    const locked = lockRoot[section] || {};
+    for (const [name, range] of Object.entries(wanted)) {
+      if (!locked[name] || locked[name] !== range) return true;
+    }
+    for (const name of Object.keys(locked)) {
+      if (!wanted[name]) return true;
+    }
+  }
+  return false;
+}
+
 function issue(code, message, paths = [], severity = 'high') {
   return { code, message, paths, severity };
 }
@@ -368,6 +388,14 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
 
   if ([hasRootSrcApp, hasRootApp, hasFrontendApp].filter(Boolean).length > 1) {
     issues.push(issue('duplicate_next_trees', 'Multiple Next.js app trees are present; routing will be ambiguous.', paths.filter((p) => /^(src\/app|app|frontend\/app)\//.test(p)).slice(0, 12), 'critical'));
+  }
+  if (hasRootApp && !hasPath(files, 'app/layout.tsx')) {
+    issues.push(issue('next_root_layout_missing', 'Root app/ pages exist without app/layout.tsx; Next.js will ignore src/app and fail the build.', paths.filter((p) => /^app\//.test(p)).slice(0, 12), 'critical'));
+  }
+  const driftedLocks = ['package-lock.json', 'npm-shrinkwrap.json', 'frontend/package-lock.json', 'frontend/npm-shrinkwrap.json']
+    .filter((lockPath) => hasPath(files, lockPath) && packageLockDrifted(files, lockPath));
+  if (driftedLocks.length) {
+    issues.push(issue('package_lock_drift', 'Generated package lockfile is out of sync with package.json and can fail install before build.', driftedLocks, 'critical'));
   }
   if (revo && (!hasFrontendApp || !hasBackend)) {
     issues.push(issue('wrong_canonical_layout', 'RevOS/BYOC products must use frontend/ + backend/ as the canonical app layout.', [], 'critical'));
@@ -639,6 +667,7 @@ export function repairGeneratedRepoIssues(files, contract = {}) {
       (revo && STALE_REVO_PATHS.some((re) => re.test(path)))
       || /(?:^|\/)(?:ventures|agents)(?:\/|\.|$)/i.test(path)
       || /^migrations\/versions\/.*\.py$/.test(path)
+      || ['package-lock.json', 'npm-shrinkwrap.json', 'frontend/package-lock.json', 'frontend/npm-shrinkwrap.json'].includes(path)
       || /(^|\/)\.env(?:\.|$)/.test(path) && path !== '.env.example'
     ) {
       delete out[path];

@@ -50,11 +50,14 @@ function syntheticBrokenFixture() {
     'SPEC.md': 'RevOS BYOC product with tenants, vpc_deployments, revenue_goals, xai_actions and audit_logs.',
     'src/app/page.tsx': 'export default function Page(){ return <div>RevOS</div> }',
     'app/sign-in/[[...sign-in]]/page.tsx': 'export default function Page(){ return <div>demo@example.com demo123</div> }',
+    'app/sign-up/[[...sign-up]]/page.tsx': 'export default function Page(){ return <div>demo@example.com demo123</div> }',
     'frontend/app/dashboard/ventures/page.tsx': 'console.log("ventures"); export default function Page(){ return <div>Ventures and Agents</div> }',
     'frontend/lib/utils.ts.tmp': '',
     'backend/main.py': 'SECRET_KEY = "change-me"\napp.add_middleware(CORSMiddleware, allow_origins=["*"])\nBase.metadata.create_all(bind=engine)\n@app.get("/models")\ndef models(): pass\n',
     'migrations/versions/initial_migration.py': 'def upgrade(): op.create_table("ventures")',
     'next.config.js': 'module.exports = { typescript: { ignoreBuildErrors: true }, eslint: { ignoreDuringBuilds: true } }',
+    'package.json': JSON.stringify({ dependencies: { next: '14.1.0', react: '^18.2.0' }, devDependencies: { vitest: '^3.0.0' } }),
+    'package-lock.json': JSON.stringify({ lockfileVersion: 3, packages: { '': { dependencies: { next: '14.2.28', react: '^18.2.0' } } } }),
     '.env.example': 'CLERK_SECRET_KEY=\n',
   };
 }
@@ -71,7 +74,7 @@ function codes(result) {
 const beforeFiles = syntheticBrokenFixture();
 const before = detectGeneratedRepoIssues(beforeFiles, contract);
 assert.equal(before.ok, false, 'AI Collision fixture must be detected as broken');
-for (const code of ['duplicate_next_trees', 'template_residue', 'domain_drift', 'backend_schema_drift', 'api_contract_drift', 'env_contract_drift', 'missing_byoc_infra', 'central_config_missing', 'business_unit_structure_missing', 'full_sdlc_coverage_missing', 'mcp_tools_missing', 'pre_saas_revenue_missing', 'authority_content_engine_missing', 'video_asset_pipeline_missing', 'standards_alignment_missing', 'semantic_promise_coverage_missing']) {
+for (const code of ['duplicate_next_trees', 'next_root_layout_missing', 'package_lock_drift', 'template_residue', 'domain_drift', 'backend_schema_drift', 'api_contract_drift', 'env_contract_drift', 'missing_byoc_infra', 'central_config_missing', 'business_unit_structure_missing', 'full_sdlc_coverage_missing', 'mcp_tools_missing', 'pre_saas_revenue_missing', 'authority_content_engine_missing', 'video_asset_pipeline_missing', 'standards_alignment_missing', 'semantic_promise_coverage_missing']) {
   assert.ok(codes(before).has(code), `fixture should expose ${code}`);
 }
 
@@ -127,6 +130,19 @@ assert.equal(JSON.parse(vercelRepair.files['vercel.json']).outputDirectory, 'fro
 
 const protectionDiag = classifyVercelFailure([{ text: '401 Unauthorized\nAuthentication Required\nVercel Deployment Protection' }]);
 assert.equal(protectionDiag.class, 'deployment_protection', 'Vercel parser should classify deployment protection blocks');
+
+const rootLayoutDiag = classifyVercelFailure([{ text: "sign-up/[[...sign-up]]/page.tsx doesn't have a root layout. To fix this error, make sure every page has a root layout." }]);
+assert.equal(rootLayoutDiag.class, 'next_root_layout_missing', 'Vercel parser should classify root app layout failures');
+const rootLayoutRepair = repairDeploymentFailure({
+  'src/app/layout.tsx': 'export default function RootLayout({children}){return <html><body>{children}</body></html>}',
+  'app/sign-up/[[...sign-up]]/page.tsx': 'export default function Page(){return null}',
+}, rootLayoutDiag);
+assert.equal(rootLayoutRepair.files['app/sign-up/[[...sign-up]]/page.tsx'], undefined, 'root layout repair should delete noncanonical app/ pages when src/app exists');
+
+const lockDiag = classifyVercelFailure([{ text: 'npm ci can only install packages when your package.json and package-lock.json or npm-shrinkwrap.json are in sync. Missing: next@14.1.0 from lock file' }]);
+assert.equal(lockDiag.class, 'package_lock_drift', 'Vercel parser should classify npm lock drift failures');
+const lockRepair = repairDeploymentFailure({ 'package-lock.json': '{}', 'package.json': '{}' }, lockDiag);
+assert.equal(lockRepair.files['package-lock.json'], undefined, 'lock repair should delete stale lockfiles');
 
 if (fs.existsSync(localFixture)) {
   const localResult = detectGeneratedRepoIssues(loadFilesFromDir(localFixture), contract);

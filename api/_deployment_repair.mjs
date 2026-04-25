@@ -30,6 +30,22 @@ export function classifyVercelFailure(events = []) {
     return diagnostic;
   }
 
+  if (/doesn['’]t have a root layout|missing root layout|make sure every page has a root layout/i.test(text)) {
+    diagnostic.class = 'next_root_layout_missing';
+    diagnostic.summary = 'Next.js is routing through a root app/ tree that has pages but no app/layout.tsx';
+    diagnostic.paths = Array.from(text.matchAll(/([\w./()[\]\-@]+\/page\.tsx)/g)).map((match) => match[1].replace(/^\.\//, ''));
+    diagnostic.rawSnippet = lines.filter(Boolean).slice(-12).join(' | ').slice(0, 600);
+    return diagnostic;
+  }
+
+  if (/npm ci can only install packages when your package\.json and package-lock\.json.*in sync|Missing: .* from lock file|Invalid: lock file/i.test(text)) {
+    diagnostic.class = 'package_lock_drift';
+    diagnostic.summary = 'package-lock.json is out of sync with package.json';
+    diagnostic.paths = ['package-lock.json'];
+    diagnostic.rawSnippet = lines.filter(Boolean).slice(-12).join(' | ').slice(0, 600);
+    return diagnostic;
+  }
+
   const addPath = (value) => {
     if (value && !diagnostic.paths.includes(value)) diagnostic.paths.push(value.replace(/^\.\//, ''));
   };
@@ -155,6 +171,24 @@ export function repairDeploymentFailure(files, diagnostic) {
 
   if (diagnostic.class === 'module_not_found') {
     actions.push({ code: 'module_not_found', action: 'needs_constructive_regeneration', detail: diagnostic.paths.join(', ') });
+  }
+
+  if (diagnostic.class === 'next_root_layout_missing') {
+    for (const path of Object.keys(out)) {
+      if (path.startsWith('app/') && !out['app/layout.tsx'] && out['src/app/layout.tsx']) {
+        delete out[path];
+        actions.push({ code: 'next_root_layout_missing', action: 'delete_noncanonical_root_app_file', path });
+      }
+    }
+  }
+
+  if (diagnostic.class === 'package_lock_drift') {
+    for (const path of ['package-lock.json', 'npm-shrinkwrap.json', 'frontend/package-lock.json', 'frontend/npm-shrinkwrap.json']) {
+      if (out[path]) {
+        delete out[path];
+        actions.push({ code: 'package_lock_drift', action: 'delete_stale_lockfile', path });
+      }
+    }
   }
 
   return { files: out, actions };
