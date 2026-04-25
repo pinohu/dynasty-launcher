@@ -63,14 +63,14 @@ nav.scrolled{background:rgba(9,9,11,.95)}
 .hero h1{font-family:'Playfair Display',serif;font-size:clamp(42px,6.8vw,86px);font-weight:400;line-height:.98;letter-spacing:0;margin:0 auto 18px;max-width:940px;color:var(--tx);text-wrap:balance;animation:heroIn .7s ease-out both}
 .hero h1 em{font-style:normal;color:var(--gold)}
 .hero p{font-size:18px;color:var(--sub);max-width:540px;margin:0 auto 40px;font-weight:300;line-height:1.7}
-.hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:100%;min-width:0}
 .hero-proof{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:880px;margin:22px auto 26px}
 .hero-proof div{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035);border-radius:10px;padding:12px 14px;text-align:left}
 .hero-proof strong{display:block;color:var(--tx);font-size:18px;font-weight:700;margin-bottom:3px}
 .hero-proof span{display:block;color:var(--sub);font-size:12px;line-height:1.35}
-.btn-p{padding:12px 28px;background:var(--gold);color:var(--ink);border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s;font-family:inherit;text-decoration:none;display:inline-block;text-align:center}
+.btn-p{padding:12px 28px;background:var(--gold);color:var(--ink);border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center;max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
 .btn-p:hover{box-shadow:0 8px 32px rgba(201,168,76,.25);transform:translateY(-2px)}
-.btn-g{padding:12px 28px;background:transparent;color:var(--sub);border:1px solid var(--bdr);border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;transition:all .25s;font-family:inherit;text-decoration:none;display:inline-block;text-align:center}
+.btn-g{padding:12px 28px;background:transparent;color:var(--sub);border:1px solid var(--bdr);border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;transition:all .25s;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center;max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
 .btn-g:hover{color:var(--tx);border-color:rgba(255,255,255,.15)}
 .demo-wrap{max-width:960px;margin:0 auto;padding:0 24px}
 .demo{background:#1A1A28;border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.08)}
@@ -127,7 +127,7 @@ section{max-width:1080px;margin:0 auto;padding:56px 24px}
 .pc .rx{font-size:13px;color:var(--sub);line-height:1.55;margin:0 0 14px}
 .pc .rx em{color:var(--gold);font-style:normal;font-weight:600}
 .pc .cta-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.pc a.sm{display:inline-block;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;font-family:inherit}
+.pc a.sm{display:inline-flex;align-items:center;justify-content:center;max-width:100%;min-width:0;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;text-decoration:none;font-family:inherit;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
 .pc a.sm-p{background:var(--gold);color:var(--ink)}
 .pc a.sm-g{background:transparent;color:var(--sub);border:1px solid var(--bdr)}
 .pc a.sm-p:hover{box-shadow:0 4px 16px rgba(201,168,76,.2)}
@@ -340,7 +340,7 @@ section{padding:32px 16px}
 <div class="pl" role="listitem" style="border-color:rgba(96,165,250,.3);background:linear-gradient(135deg,rgba(96,165,250,.03),rgba(96,165,250,.01))"><h3 style="color:#60A5FA">Enterprise</h3><div class="pr">$9,997<span>/build</span></div><div class="ds">13 integration slots (adds WordPress + post-deploy verification)</div><ul><li>Everything in Professional, plus on the server allowlist:</li><li><strong>WordPress</strong> / managed CMS path (20i)</li><li><strong>Post-deploy verification</strong> checks on the live URL</li><li>Voice, SMS, CRM, directory, lead intel, and full video pipelines require <strong>Custom Volume</strong> (sales) &#8212; not included in default Enterprise</li><li>Priority support + build review (operational)</li></ul><a href="app?plan=enterprise" class="btn-p" style="width:100%;text-align:center;padding:12px;background:rgba(96,165,250,.15);border-color:rgba(96,165,250,.4);color:#60A5FA">Start Enterprise &#8212; $9,997</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">13 slots in code today &#183; Custom Volume: up to 19</div></div>
 
 </div>
-<div id="waitlist-box" style="max-width:720px;margin:24px auto 0;background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(201,168,76,0.01));border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:28px 36px;text-align:center"><h3 style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:4px">Get notified when Managed Runtime launches</h3><p style="font-size:13px;color:var(--dim);margin-bottom:14px">Managed Automation Runtime ($497/mo) &#8212; ongoing monitoring, retry queues, optimization reports. Join the waitlist.</p><form id="waitlist-form" onsubmit="return submitWaitlist(event)" style="display:flex;gap:8px;max-width:400px;margin:0 auto"><input id="wl-email" type="email" placeholder="you@example.com" required aria-label="Email address for waitlist" style="flex:1;padding:10px 14px;border:1px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(12,12,20,.8);color:#fff;font-size:14px;font-family:inherit;outline:none"><button type="submit" style="padding:10px 20px;background:var(--gold);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Join waitlist</button></form><div id="wl-msg" style="font-size:12px;margin-top:8px;min-height:18px"></div></div></section>
+<div id="waitlist-box" style="max-width:720px;margin:24px auto 0;background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(201,168,76,0.01));border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:28px 36px;text-align:center"><h3 style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:4px">Get notified when Managed Runtime launches</h3><p style="font-size:13px;color:var(--dim);margin-bottom:14px">Managed Automation Runtime ($497/mo) &#8212; ongoing monitoring, retry queues, optimization reports. Join the waitlist.</p><form id="waitlist-form" onsubmit="return submitWaitlist(event)" style="display:flex;gap:8px;max-width:400px;margin:0 auto;flex-wrap:wrap"><input id="wl-email" type="email" placeholder="you@example.com" required aria-label="Email address for waitlist" style="flex:1 1 220px;min-width:0;padding:10px 14px;border:1px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(12,12,20,.8);color:#fff;font-size:14px;font-family:inherit;outline:none"><button type="submit" style="padding:10px 20px;background:var(--gold);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:normal;overflow-wrap:anywhere;max-width:100%;flex:1 1 140px">Join waitlist</button></form><div id="wl-msg" style="font-size:12px;margin-top:8px;min-height:18px"></div></div></section>
 <div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
 
 <div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
@@ -378,4 +378,5 @@ function submitWaitlist(e){
 <script src="/site-shell.js" defer></script>
 </body>
 </html>
+
 

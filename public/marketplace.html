@@ -172,7 +172,9 @@
       margin: -1px;
       overflow: hidden;
       clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      min-width: 0;
       border: 0;
     }
 
@@ -240,7 +242,16 @@
       font-size: 14px;
       cursor: pointer;
       transition: all 0.2s ease;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 100%;
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.25;
+      text-align: center;
       text-decoration: none;
     }
 
@@ -263,7 +274,16 @@
       font-size: 13px;
       cursor: pointer;
       transition: all 0.2s ease;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 100%;
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.25;
+      text-align: center;
       text-decoration: none;
     }
 
@@ -510,7 +530,9 @@
       border-radius: 4px;
       padding: 4px 8px;
       color: var(--muted);
-      white-space: nowrap;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      min-width: 0;
     }
 
     .card-cta {
@@ -522,6 +544,10 @@
     .card-cta a,
     .card-cta button {
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
       text-align: center;
     }
 
@@ -533,7 +559,9 @@
       letter-spacing: 0.04em;
       text-transform: uppercase;
       font-weight: 600;
-      white-space: nowrap;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      min-width: 0;
     }
 
     .badge-coming-soon {
@@ -1252,7 +1280,7 @@
           This is the operating layer: lead capture, products, quotes, proposals, contracts, invoices, payments, onboarding, support, analytics, internal workflows, agent permissions, MCP-compatible tools, and optional provider adapters.
         </p>
         <div class="hero-cta">
-          <a href="#core-section" class="btn-primary" style="font-size:16px;padding:14px 32px;display:inline-block;">
+          <a href="#core-section" class="btn-primary" style="font-size:16px;padding:14px 32px;">
             See Plans & Pricing ↓
           </a>
         </div>
@@ -1662,7 +1690,7 @@
         <div class="card">
           <div class="card-header">
             <h3>${t?.name || 'Untitled'}</h3>
-            ${t?.positioning ? `<span style="font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;">${t.positioning}</span>` : ''}
+            ${t?.positioning ? `<span style="font-size:11px;color:var(--muted);font-weight:500;white-space:normal;overflow-wrap:anywhere;">${t.positioning}</span>` : ''}
           </div>
           ${t?.price_monthly !== null && t?.price_monthly !== undefined ? `<div class="price"><strong>${formatMoney(t.price_monthly)}</strong><span>/mo</span></div>` : ''}
           ${t?.description ? `<p class="card-description">${t.description}</p>` : ''}
@@ -1671,7 +1699,7 @@
             <span>${Array.isArray(t?.included_modules) ? t.included_modules.length : 0} included modules</span>
           </div>
           <div class="card-cta">
-            <a href="${planRoute(t)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">
+            <a href="${planRoute(t)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;">
               Start with ${t?.name || 'Plan'} →
             </a>
           </div>
@@ -1703,7 +1731,7 @@
               ${packsHtml}
             </div>
             <div class="card-cta">
-              <a href="${editionRoute(e)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Learn More →</a>
+              <a href="${editionRoute(e)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;">Learn More →</a>
             </div>
           </div>
         `;
@@ -1731,7 +1759,7 @@
               ${savings ? `<span>${savings}</span>` : ''}
             </div>
             <div class="card-cta">
-              <a href="${suiteRoute(s)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Activate →</a>
+              <a href="${suiteRoute(s)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;">Activate →</a>
             </div>
           </div>
         `;
@@ -1768,7 +1796,7 @@
                 ${b?.implied_savings_monthly ? `<span>Saves $${b.implied_savings_monthly}/mo</span>` : ''}
               </div>
               <div class="card-cta">
-                <a href="${packRoute(b)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Pack →</a>
+                <a href="${packRoute(b)}" class="btn-secondary" style="width:100%;text-align:center;">View Pack →</a>
               </div>
             </div>
           `;
@@ -1812,7 +1840,7 @@
               ${Array.isArray(m?.capabilities_required) ? m.capabilities_required.slice(0, 2).map((c) => `<span>${c}</span>`).join('') : ''}
             </div>
             <div class="card-cta">
-              <a href="${moduleRoute(m)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;">View Workflow →</a>
+              <a href="${moduleRoute(m)}" class="btn-secondary" style="width:100%;text-align:center;">View Workflow →</a>
             </div>
           </div>
         `).join('');
@@ -1834,7 +1862,7 @@
           <div class="card">
             <div class="card-header">
               <h3>${bp?.name || 'Industry Blueprint'}</h3>
-              <span style="font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;">${bp?.archetype || 'operating map'}</span>
+              <span style="font-size:11px;color:var(--muted);font-weight:500;white-space:normal;overflow-wrap:anywhere;">${bp?.archetype || 'operating map'}</span>
             </div>
             ${bp?.ideal_customer_profile ? `<p class="card-description">${bp.ideal_customer_profile}</p>` : ''}
             <div class="card-meta">
@@ -1843,7 +1871,7 @@
               <span>${seasonality}</span>
             </div>
             <div class="card-cta">
-              <a href="${blueprintRoute(bp)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">View Blueprint →</a>
+              <a href="${blueprintRoute(bp)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;">View Blueprint →</a>
             </div>
           </div>
         `;
@@ -1869,7 +1897,7 @@
               <span>${c?.delivery_mode || 'Expert setup'}</span>
             </div>
             <div class="card-cta">
-              <a href="${setupRoute(code)}" class="btn-secondary" style="display:inline-block;width:100%;text-align:center;text-decoration:none;">Book Now →</a>
+              <a href="${setupRoute(code)}" class="btn-secondary" style="width:100%;text-align:center;text-decoration:none;">Book Now →</a>
             </div>
           </div>
         `;
@@ -2046,7 +2074,7 @@
           <a href="${autoHref}" class="card" style="display:block;color:inherit;text-decoration:none;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
               <h3 style="font-size:13px;margin:0;">${a?.name || 'Untitled'}</h3>
-              <span style="font-size:10px;color:var(--muted);white-space:nowrap;">${a?.id || ''}</span>
+              <span style="font-size:10px;color:var(--muted);white-space:normal;overflow-wrap:anywhere;">${a?.id || ''}</span>
             </div>
             <div class="card-meta">
               <span>${trigLabel}${cronLabel}</span>

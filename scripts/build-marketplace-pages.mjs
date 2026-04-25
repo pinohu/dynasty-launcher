@@ -105,8 +105,8 @@ h1{font-family:'Playfair Display',serif;font-size:clamp(38px,6vw,70px);line-heig
 .hero-card{background:linear-gradient(145deg,rgba(201,168,76,.10),rgba(255,255,255,.025));border:1px solid rgba(201,168,76,.25);border-radius:18px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.36)}
 .price{font-size:34px;color:var(--gold);font-weight:800;margin-bottom:8px}.price span{font-size:14px;color:var(--sub);font-weight:500}
 .hero-card p{color:var(--sub);font-size:14px;margin-bottom:18px}
-.cta-row{display:flex;gap:10px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;transition:all .18s;border:1px solid var(--bdr)}
+.cta-row{display:flex;gap:10px;flex-wrap:wrap;max-width:100%;min-width:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;max-width:100%;min-width:0;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:800;text-align:center;text-decoration:none;transition:all .18s;border:1px solid var(--bdr);white-space:normal;overflow-wrap:anywhere;line-height:1.25}
 .btn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,0,0,.32);text-decoration:none}
 .btn-primary{background:var(--gold);color:#09090B;border-color:var(--gold)}.btn-ghost{background:transparent;color:var(--sub)}
 .section{padding:34px 0;border-top:1px solid rgba(255,255,255,.07)}.section h2{font-size:22px;margin-bottom:10px}.section p{color:var(--sub);max-width:860px}

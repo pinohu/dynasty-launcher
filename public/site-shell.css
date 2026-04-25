@@ -15,11 +15,25 @@
 
  html {
    scroll-padding-top: calc(var(--yd-header-height) + 18px);
+   overflow-x: hidden;
  }
 
  body.yd-has-shell {
    padding-top: var(--yd-header-height);
    overflow-x: clip;
+ }
+
+ body.yd-has-shell *,
+ body.yd-has-shell *::before,
+ body.yd-has-shell *::after {
+   min-width: 0;
+ }
+
+ body.yd-has-shell a,
+ body.yd-has-shell button {
+   max-width: 100%;
+   overflow-wrap: anywhere;
+   word-break: normal;
  }
 
  body.yd-has-shell > nav:not(.yd-site-header),
@@ -137,12 +151,16 @@
    display: inline-flex;
    align-items: center;
    justify-content: center;
+   flex-wrap: wrap;
    min-height: 42px;
+   max-width: 100%;
    padding: 0 16px;
    border-radius: 9px;
    color: #09090b;
    background: var(--yd-gold);
    font: 750 13px/1 system-ui, -apple-system, Segoe UI, sans-serif;
+   line-height: 1.2;
+   text-align: center;
    box-shadow: 0 8px 24px rgba(201, 168, 76, 0.16);
  }
 
@@ -190,6 +208,7 @@
    background: rgba(255, 255, 255, 0.03);
    border: 1px solid rgba(255, 255, 255, 0.07);
    font: 650 14px/1.25 system-ui, -apple-system, Segoe UI, sans-serif;
+   overflow-wrap: anywhere;
  }
 
  .yd-mobile-panel a:hover,
@@ -397,6 +416,19 @@
 
    .yd-mobile-grid {
      width: calc(100% - 24px);
+   }
+
+   .yd-mobile-panel a,
+   .yd-footer-col a,
+   .yd-site-map-card a,
+   .yd-footer-bottom a {
+     white-space: normal;
+     overflow-wrap: anywhere;
+   }
+
+   .yd-cta,
+   .yd-menu-button {
+     flex-shrink: 0;
    }
 
    .yd-footer-bottom {
