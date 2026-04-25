@@ -16,6 +16,13 @@ export function classifyVercelFailure(events = []) {
     rawSnippet: '',
   };
 
+  if (/No Next\.js version detected|Could not identify Next\.js version|Root Directory setting matches the directory/i.test(text)) {
+    diagnostic.class = 'vercel_root_mismatch';
+    diagnostic.summary = 'Vercel is building the repo root but the Next.js app lives in frontend/';
+    diagnostic.rawSnippet = lines.filter(Boolean).slice(-12).join(' | ').slice(0, 600);
+    return diagnostic;
+  }
+
   const addPath = (value) => {
     if (value && !diagnostic.paths.includes(value)) diagnostic.paths.push(value.replace(/^\.\//, ''));
   };
@@ -94,6 +101,33 @@ export function repairDeploymentFailure(files, diagnostic) {
     }
   }
 
+  if (diagnostic.class === 'vercel_root_mismatch') {
+    const rootPkg = parseJson(out['package.json']) || { private: true, scripts: {}, engines: { node: '20.x' } };
+    rootPkg.scripts = rootPkg.scripts || {};
+    rootPkg.scripts['vercel-build'] = 'npm install --prefix frontend --no-package-lock --engine-strict=false && npm --prefix frontend run build';
+    rootPkg.scripts['frontend:build'] = rootPkg.scripts['frontend:build'] || 'npm --prefix frontend run build';
+    rootPkg.engines = rootPkg.engines || { node: '20.x' };
+    rootPkg.devDependencies = { ...(rootPkg.devDependencies || {}), next: '^15.2.4', react: '^18.3.1', 'react-dom': '^18.3.1' };
+    out['package.json'] = JSON.stringify(rootPkg, null, 2) + '\n';
+    out['vercel.json'] = JSON.stringify({
+      framework: 'nextjs',
+      installCommand: 'npm install --prefix frontend --no-package-lock --engine-strict=false',
+      buildCommand: 'npm run vercel-build',
+      outputDirectory: 'frontend/.next',
+      headers: [
+        {
+          source: '/(.*)',
+          headers: [
+            { key: 'X-Frame-Options', value: 'DENY' },
+            { key: 'X-Content-Type-Options', value: 'nosniff' },
+            { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          ],
+        },
+      ],
+    }, null, 2) + '\n';
+    actions.push({ code: 'vercel_root_mismatch', action: 'write_frontend_aware_vercel_contract', path: 'vercel.json' });
+  }
+
   if (diagnostic.class === 'eslint_error') {
     for (const item of diagnostic.eslintIssues) {
       const path = item.file.replace(/^\.\//, '');
@@ -143,6 +177,8 @@ function summarizeDiagnostic(diagnostic) {
       return `${diagnostic.eslintIssues.length} ESLint issue(s)`;
     case 'route_or_live_content':
       return 'Route/live content verification failed';
+    case 'vercel_root_mismatch':
+      return 'Vercel root directory/build command mismatch';
     case 'quality':
       return 'Quality contract failed';
     default:

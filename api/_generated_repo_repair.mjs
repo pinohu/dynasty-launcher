@@ -64,6 +64,14 @@ function text(files, path) {
   return typeof value === 'string' ? value : '';
 }
 
+function parseJson(value) {
+  try {
+    return JSON.parse(value || '');
+  } catch {
+    return null;
+  }
+}
+
 function issue(code, message, paths = [], severity = 'high') {
   return { code, message, paths, severity };
 }
@@ -87,6 +95,18 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
   }
   if (revo && (!hasFrontendApp || !hasBackend)) {
     issues.push(issue('wrong_canonical_layout', 'RevOS/BYOC products must use frontend/ + backend/ as the canonical app layout.', [], 'critical'));
+  }
+  if (revo && hasFrontendApp) {
+    const rootPackage = parseJson(text(files, 'package.json')) || {};
+    const vercel = parseJson(text(files, 'vercel.json')) || {};
+    const hasFrontendAwareBuild = rootPackage.scripts?.['vercel-build'] === 'npm install --prefix frontend --no-package-lock --engine-strict=false && npm --prefix frontend run build'
+      && vercel.installCommand === 'npm install --prefix frontend --no-package-lock --engine-strict=false'
+      && vercel.buildCommand === 'npm run vercel-build'
+      && vercel.outputDirectory === 'frontend/.next';
+    const exposesNextVersion = rootPackage.devDependencies?.next || rootPackage.dependencies?.next;
+    if (!hasFrontendAwareBuild || !exposesNextVersion) {
+      issues.push(issue('vercel_root_mismatch', 'Vercel must be configured to install and build the canonical frontend/ app from the repo root.', ['package.json', 'vercel.json'].filter((p) => hasPath(files, p)), 'critical'));
+    }
   }
 
   const stale = paths.filter((p) => STALE_REVO_PATHS.some((re) => re.test(p)));
@@ -185,6 +205,8 @@ export function repairGeneratedRepoIssues(files, contract = {}) {
   out['frontend/app/page.tsx'] = buildRevoFrontendPage();
   out['frontend/package.json'] = buildFrontendPackageJson();
   out['frontend/next.config.js'] = 'const nextConfig = {};\nmodule.exports = nextConfig;\n';
+  out['package.json'] = buildRootPackageJson();
+  out['vercel.json'] = buildVercelJson();
   out['BUILD-REPORT.json'] = JSON.stringify({
     generated_at: new Date().toISOString(),
     status: 'repaired',
@@ -205,6 +227,7 @@ export function verifyGeneratedRepo(files, contract = {}) {
       quality: first.issues.length === 0,
       routes: REVO_ENDPOINTS.every((endpoint) => text(files, 'backend/main.py').includes(endpoint)),
       byoc: Object.keys(files).some((p) => /^terraform\/.*\.tf$/.test(p)) && Object.keys(files).some((p) => /^k8s\/.*\.ya?ml$/.test(p)),
+      vercel: !detectGeneratedRepoIssues(files, contract).issues.some((i) => i.code === 'vercel_root_mismatch'),
     },
     issues: first.issues,
   };
@@ -668,5 +691,47 @@ function buildFrontendPackageJson() {
       eslint: '^8',
       'eslint-config-next': '15.2.4',
     },
+  }, null, 2) + '\n';
+}
+
+function buildRootPackageJson() {
+  return JSON.stringify({
+    name: 'ai-collision-deploy',
+    version: '0.1.0',
+    private: true,
+    scripts: {
+      'verify:contract': 'node scripts/verify-generated-contract.mjs',
+      'frontend:build': 'npm --prefix frontend run build',
+      'vercel-build': 'npm install --prefix frontend --no-package-lock --engine-strict=false && npm --prefix frontend run build',
+      'backend:test': 'pytest backend/tests',
+      test: 'npm run verify:contract',
+    },
+    engines: {
+      node: '20.x',
+    },
+    devDependencies: {
+      next: '^15.2.4',
+      react: '^18.3.1',
+      'react-dom': '^18.3.1',
+    },
+  }, null, 2) + '\n';
+}
+
+function buildVercelJson() {
+  return JSON.stringify({
+    framework: 'nextjs',
+    installCommand: 'npm install --prefix frontend --no-package-lock --engine-strict=false',
+    buildCommand: 'npm run vercel-build',
+    outputDirectory: 'frontend/.next',
+    headers: [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ],
   }, null, 2) + '\n';
 }
