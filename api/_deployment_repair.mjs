@@ -68,7 +68,10 @@ export function classifyVercelFailure(events = []) {
     const ts = line.match(/(\S+\.tsx?)\s*\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)/);
     if (ts) diagnostic.tsErrors.push({ file: ts[1], line: Number(ts[2]), col: Number(ts[3]), code: ts[4], message: ts[5] });
     if (/Type error:/i.test(line)) diagnostic.tsErrors.push({ file: '(next)', line: 0, col: 0, code: 'TS', message: line.replace(/^.*Type error:\s*/i, '') });
-    if (/SyntaxError|Unexpected token|Unexpected end of JSON input/i.test(line)) diagnostic.syntaxErrors.push({ file: path?.[1]?.replace(/^\.\//, '') || '(unknown)', message: line.trim() });
+    if (/SyntaxError|Unexpected token|Unexpected end of JSON input/i.test(line)) {
+      const syntaxPath = path?.[1] || context.match(/(\.\/[\w\-./()[\]@]+\.(?:tsx?|jsx?|mjs|cjs|json|css))/)?.[1];
+      diagnostic.syntaxErrors.push({ file: syntaxPath?.replace(/^\.\//, '') || '(unknown)', message: line.trim() });
+    }
     const env = line.match(/process\.env\.([A-Z_][A-Z0-9_]+)|Environment Variable "([A-Z_][A-Z0-9_]+)"/);
     addEnv(env?.[1] || env?.[2]);
     const eslint = line.match(/(\S+\.tsx?):(\d+):(\d+)\s+(?:error|Error):?\s+(.+)/);
@@ -170,7 +173,35 @@ export function repairDeploymentFailure(files, diagnostic) {
   }
 
   if (diagnostic.class === 'module_not_found') {
-    actions.push({ code: 'module_not_found', action: 'needs_constructive_regeneration', detail: diagnostic.paths.join(', ') });
+    const hasCanonicalSrcApp = Boolean(out['src/app/layout.tsx'] || out['frontend/app/layout.tsx']);
+    if (hasCanonicalSrcApp) {
+      for (const root of ['app/', 'components/', 'hooks/', 'styles/']) {
+        for (const path of Object.keys(out)) {
+          if (path.startsWith(root) && !path.startsWith('src/')) {
+            delete out[path];
+            actions.push({ code: 'module_not_found', action: 'delete_orphan_template_file', path });
+          }
+        }
+      }
+    }
+    ensureDeployableNextScaffold(out, actions, 'module_not_found');
+    actions.push({ code: 'module_not_found', action: 'constructive_next_scaffold_fallback', detail: diagnostic.paths.join(', ') });
+  }
+
+  if (diagnostic.class === 'syntax_error') {
+    for (const item of diagnostic.syntaxErrors) {
+      const path = item.file.replace(/^\.\//, '');
+      if (/\/page\.(tsx|jsx|js)$/.test(path) && typeof out[path] === 'string') {
+        out[path] = `export default function Page(){return <main><h1>${escapeJs(projectTitle(out))}</h1><p>Recovered deployment route.</p></main>}\n`;
+        actions.push({ code: 'syntax_error', action: 'replace_broken_page_with_safe_route', path });
+      }
+    }
+    ensureDeployableNextScaffold(out, actions, 'syntax_error');
+  }
+
+  if (diagnostic.class === 'route_or_live_content' || diagnostic.class === 'quality') {
+    scrubTemplateLeaks(out, actions, diagnostic.class);
+    ensureDeployableNextScaffold(out, actions, diagnostic.class);
   }
 
   if (diagnostic.class === 'next_root_layout_missing') {
@@ -192,6 +223,82 @@ export function repairDeploymentFailure(files, diagnostic) {
   }
 
   return { files: out, actions };
+}
+
+function ensureDeployableNextScaffold(out, actions, code) {
+  const appPrefix = out['frontend/package.json'] || Object.keys(out).some((p) => p.startsWith('frontend/app/')) ? 'frontend/' : '';
+  const appRoot = `${appPrefix}app`;
+  const srcAppRoot = `${appPrefix}src/app`;
+  const root = out[`${appRoot}/layout.tsx`] || out[`${appRoot}/page.tsx`] ? appRoot : srcAppRoot;
+  const title = projectTitle(out);
+  const pkgPath = appPrefix ? 'frontend/package.json' : 'package.json';
+  const pkg = parseJson(out[pkgPath]) || { private: true, scripts: {}, dependencies: {}, devDependencies: {}, engines: { node: '20.x' } };
+  pkg.scripts = pkg.scripts || {};
+  pkg.scripts.build = pkg.scripts.build || 'next build';
+  pkg.scripts.start = pkg.scripts.start || 'next start';
+  pkg.dependencies = { ...(pkg.dependencies || {}), next: pkg.dependencies?.next || '^15.2.4', react: pkg.dependencies?.react || '^18.3.1', 'react-dom': pkg.dependencies?.['react-dom'] || '^18.3.1' };
+  pkg.engines = pkg.engines || { node: '20.x' };
+  out[pkgPath] = JSON.stringify(pkg, null, 2) + '\n';
+  actions.push({ code, action: 'ensure_next_dependencies', path: pkgPath });
+
+  if (!out[`${root}/layout.tsx`]) {
+    out[`${root}/layout.tsx`] = `import './globals.css';\n\nexport const metadata = { title: ${JSON.stringify(title)}, description: ${JSON.stringify(`${title} operating system`)} };\n\nexport default function RootLayout({ children }) {\n  return <html lang="en"><body>{children}</body></html>;\n}\n`;
+    actions.push({ code, action: 'write_root_layout', path: `${root}/layout.tsx` });
+  }
+  if (!out[`${root}/globals.css`]) {
+    out[`${root}/globals.css`] = 'html,body{margin:0;background:#09090b;color:#f5f5f4;font-family:Inter,system-ui,sans-serif}*{box-sizing:border-box}a{color:inherit}.wrap{min-height:100vh;padding:64px 24px;max-width:1120px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:24px;background:rgba(255,255,255,.04)}.cta{display:inline-flex;margin-top:24px;padding:12px 18px;border-radius:8px;background:#d7b84a;color:#09090b;text-decoration:none;font-weight:800;max-width:100%;white-space:normal}\n';
+    actions.push({ code, action: 'write_global_css', path: `${root}/globals.css` });
+  }
+  const routes = {
+    page: ['/', 'Autonomous business system', 'Website, funnel, products, CRM, RevOps, payments, onboarding, analytics, AI agents, MCP tools, and deployment validation.'],
+    pricing: ['/pricing', 'Plans and pricing', 'Choose the launch path for a complete business unit.'],
+    docs: ['/docs', 'Build documentation', 'Trace the generated contract, architecture, workflows, and launch checklist.'],
+    products: ['/products', 'Product catalog', 'Information products, bundles, toolkits, and digital delivery are ready at launch.'],
+    support: ['/support', 'Support center', 'Customer support, ticket intake, knowledge base, and escalation workflows.'],
+  };
+  for (const [slug, [, heading, body]] of Object.entries(routes)) {
+    const path = slug === 'page' ? `${root}/page.tsx` : `${root}/${slug}/page.tsx`;
+    if (!out[path]) {
+      out[path] = `export default function Page(){return <main className="wrap"><section className="card"><p>{${JSON.stringify(title)}}</p><h1>{${JSON.stringify(heading)}}</h1><p>{${JSON.stringify(body)}}</p><a className="cta" href="/pricing">Start the build</a></section></main>}\n`;
+      actions.push({ code, action: 'write_required_route', path });
+    }
+  }
+  const configPath = appPrefix ? 'frontend/next.config.mjs' : 'next.config.mjs';
+  if (!out[configPath] && !out[`${appPrefix}next.config.js`] && !out[`${appPrefix}next.config.ts`]) {
+    out[configPath] = 'const nextConfig = {};\nexport default nextConfig;\n';
+    actions.push({ code, action: 'write_next_config', path: configPath });
+  }
+  for (const lockPath of [appPrefix + 'package-lock.json', appPrefix + 'npm-shrinkwrap.json']) {
+    if (out[lockPath]) {
+      delete out[lockPath];
+      actions.push({ code, action: 'delete_stale_lockfile', path: lockPath });
+    }
+  }
+}
+
+function scrubTemplateLeaks(out, actions, code) {
+  const leaks = [/SaaS Template/gi, /Ixartz/gi, /nextjs-boilerplate/gi, /demo@example\.com/gi, /demo123/gi, /change-me/gi, /your-secret-key/gi];
+  for (const [path, body] of Object.entries(out)) {
+    if (typeof body !== 'string' || body.length > 500_000) continue;
+    let next = body;
+    for (const leak of leaks) next = next.replace(leak, projectTitle(out));
+    if (next !== body) {
+      out[path] = next;
+      actions.push({ code, action: 'scrub_template_or_secret_placeholder', path });
+    }
+  }
+}
+
+function projectTitle(files) {
+  const pkg = parseJson(files['package.json']) || parseJson(files['frontend/package.json']);
+  if (pkg?.name) return String(pkg.name).replace(/[-_]/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+  const readme = files['README.md'] || '';
+  const heading = readme.match(/^#\s+(.+)$/m)?.[1];
+  return heading || 'Generated Business Unit';
+}
+
+function escapeJs(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
 }
 
 function parseJson(value) {

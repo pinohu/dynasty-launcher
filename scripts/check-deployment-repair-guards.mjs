@@ -54,6 +54,14 @@ if (!deploymentRepair.includes("diagnostic.class = 'next_root_layout_missing'"))
 if (!deploymentRepair.includes("diagnostic.class = 'package_lock_drift'")) {
   failures.push('api/_deployment_repair.mjs: missing Vercel package-lock classifier');
 }
+if (deploymentRepair.includes('needs_constructive_regeneration')) {
+  failures.push('api/_deployment_repair.mjs: module_not_found must constructively repair, not defer to regeneration');
+}
+for (const guard of ['ensureDeployableNextScaffold', "diagnostic.class === 'route_or_live_content'", "diagnostic.class === 'quality'", 'scrubTemplateLeaks', 'constructive_next_scaffold_fallback']) {
+  if (!deploymentRepair.includes(guard)) {
+    failures.push(`api/_deployment_repair.mjs: missing deployment repair guard ${guard}`);
+  }
+}
 
 if (failures.length) {
   console.error('check-deployment-repair-guards: failed');

@@ -121,6 +121,34 @@ assert.equal(depDiag.class, 'missing_dependency', 'Vercel parser should classify
 const depRepair = repairDeploymentFailure({ 'frontend/package.json': '{"dependencies":{}}' }, depDiag);
 assert.ok(JSON.parse(depRepair.files['frontend/package.json']).dependencies.zod, 'dependency repair should add missing package');
 
+const orphanModuleDiag = classifyVercelFailure([{ text: "Module not found: Can't resolve '@/components/ui/button'\n./app/sign-in/page.tsx" }]);
+assert.equal(orphanModuleDiag.class, 'module_not_found', 'Vercel parser should classify unresolved local module failures');
+const orphanModuleRepair = repairDeploymentFailure({
+  'package.json': '{"dependencies":{}}',
+  'src/app/layout.tsx': 'export default function RootLayout({children}){return <html><body>{children}</body></html>}',
+  'app/sign-in/page.tsx': "import { Button } from '@/components/ui/button'; export default function Page(){return <Button/>}",
+}, orphanModuleDiag);
+assert.equal(orphanModuleRepair.files['app/sign-in/page.tsx'], undefined, 'module repair should delete orphan root app files when src/app is canonical');
+assert.ok(orphanModuleRepair.files['src/app/page.tsx'], 'module repair should ensure a safe deployable homepage');
+
+const syntaxDiag = classifyVercelFailure([{ text: 'SyntaxError: Unexpected token\n./src/app/page.tsx' }]);
+assert.equal(syntaxDiag.class, 'syntax_error', 'Vercel parser should classify syntax failures');
+const syntaxRepair = repairDeploymentFailure({ 'package.json': '{"dependencies":{}}', 'src/app/page.tsx': 'export default function Page(){ return <main>' }, syntaxDiag);
+assert.ok(syntaxRepair.files['src/app/layout.tsx'], 'syntax repair should add a safe root layout');
+assert.ok(syntaxRepair.actions.some((a) => a.action === 'replace_broken_page_with_safe_route'), 'syntax repair should replace broken page routes when identifiable');
+
+const qualityDiag = classifyVercelFailure([{ text: 'Quality gate flagged placeholders or invalid patterns: SaaS Template demo@example.com change-me' }]);
+assert.equal(qualityDiag.class, 'quality', 'Vercel parser should classify quality gate failures');
+const qualityRepair = repairDeploymentFailure({ 'package.json': '{"name":"revos-orchestrator","dependencies":{}}', 'src/app/page.tsx': 'export default function Page(){return <div>SaaS Template demo@example.com change-me</div>}' }, qualityDiag);
+assert.ok(!qualityRepair.files['src/app/page.tsx'].includes('SaaS Template'), 'quality repair should scrub template branding');
+assert.ok(qualityRepair.files['src/app/pricing/page.tsx'], 'quality repair should ensure route coverage');
+
+const routeDiag = classifyVercelFailure([{ text: 'Required routes failed content checks: /docs /pricing missing route content check' }]);
+assert.equal(routeDiag.class, 'route_or_live_content', 'Vercel parser should classify route coverage failures');
+const routeRepair = repairDeploymentFailure({ 'package.json': '{"name":"route-test","dependencies":{}}' }, routeDiag);
+assert.ok(routeRepair.files['src/app/docs/page.tsx'], 'route repair should generate docs route');
+assert.ok(routeRepair.files['src/app/pricing/page.tsx'], 'route repair should generate pricing route');
+
 const vercelDiag = classifyVercelFailure([{ text: 'Error: No Next.js version detected. Make sure your package.json has "next" in either "dependencies" or "devDependencies". Also check your Root Directory setting matches the directory of your package.json file.' }]);
 assert.equal(vercelDiag.class, 'vercel_root_mismatch', 'Vercel parser should classify root/frontend mismatch');
 const vercelRepair = repairDeploymentFailure({ 'package.json': '{"scripts":{},"engines":{"node":"20.x"}}' }, vercelDiag);
