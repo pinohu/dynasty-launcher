@@ -8055,8 +8055,32 @@ function animateValue(el, start, end, duration, suffix = '') {
 const DYNASTY_CKPT_DB = 'dynasty_launcher_ckpt';
 const DYNASTY_CKPT_STORE = 'checkpoint';
 const DYNASTY_CKPT_VER = 2;
+const DYNASTY_STAGE_ORDER = {
+  generated: 1,
+  pre_push: 2,
+  files_pushed: 3,
+  report_pushed: 4,
+  provisioned: 5,
+  v3_modules: 6,
+  verifying: 7,
+  done: 8
+};
 let _dynastyCkptTimer = null;
 let _dynastyCkptPending = false;
+
+function dynastyStageRank(stage) {
+  return DYNASTY_STAGE_ORDER[String(stage || 'generated')] || 0;
+}
+
+function dynastyCheckpointReached(ck, stage) {
+  return dynastyStageRank(ck && ck.stage) >= dynastyStageRank(stage);
+}
+
+function dynastyMergeCheckpointState(extra) {
+  const current = window.__dynastyCheckpointState || {};
+  window.__dynastyCheckpointState = Object.assign({}, current, extra || {});
+  return window.__dynastyCheckpointState;
+}
 
 function dynastyOpenCkptDb() {
   return new Promise((resolve, reject) => {
@@ -8133,6 +8157,7 @@ function _dynastyCkptDoSave(desc, inf, extra) {
   _dynastyCkptPending = false;
   try {
     if (!window._buildInProgress) return;
+    const state = dynastyMergeCheckpointState(extra);
     const files = window._buildFiles;
     if (!files || typeof files !== 'object') return;
     const keys = Object.keys(files);
@@ -8148,8 +8173,15 @@ function _dynastyCkptDoSave(desc, inf, extra) {
       isAuthority: !!isAuthority,
       v2DeployTarget: V2_DEPLOY_TARGET,
       v2Category: V2_CATEGORY,
-      gateCompleted: !!(extra && extra.gateCompleted),
-      prePush: !!(extra && extra.prePush),
+      stage: state.stage || 'generated',
+      gateCompleted: !!state.gateCompleted,
+      prePush: !!state.prePush,
+      pushedPaths: Array.isArray(state.pushedPaths) ? state.pushedPaths : [],
+      launchUrl: state.launchUrl || LAUNCH_URL || '',
+      provRes: state.provRes || provRes || null,
+      v3Results: state.v3Results || null,
+      verifyResults: state.verifyResults || null,
+      buildOutcome: state.buildOutcome || window._buildOutcome || null,
       prgs: (PRGS || []).map(p => ({ id: p.id, l: p.l, n: p.n, s: p.s, g: p.g })),
     };
     dynastySaveBuildCheckpoint(payload).catch(() => {});
@@ -8204,6 +8236,10 @@ async function resumeBuildFromCheckpoint() {
   const ok = confirm('Resume saved session for "' + (ck.inf.name || ck.inf.repo) + '"?\n\nSaved: ' + new Date(ck.ts).toLocaleString() + '\nFiles: ' + Object.keys(ck.files).length + '\n\nContinues from social → deploy (skips finished steps when possible).');
   if (!ok) return;
   INFERRED = ck.inf;
+  window.__dynastyResumeCheckpoint = ck;
+  window.__dynastyCheckpointState = Object.assign({}, ck);
+  if (ck.launchUrl) LAUNCH_URL = ck.launchUrl;
+  if (ck.provRes) provRes = ck.provRes;
   try {
     const ta = document.getElementById('project-desc');
     if (ta && ck.desc) ta.value = ck.desc;
@@ -8242,6 +8278,9 @@ try {
 async function dynastyContinueBuildFromPostMerge(desc, inf, files, _resumeFlags) {
   _resumeFlags = _resumeFlags || {};
   const _res = !!_resumeFlags.resume;
+  const resumeCk = _res ? (window.__dynastyResumeCheckpoint || window.__dynastyCheckpointState || {}) : {};
+  if (_res && resumeCk.launchUrl) LAUNCH_URL = resumeCk.launchUrl;
+  if (_res && resumeCk.provRes) provRes = resumeCk.provRes;
   const repo = `${ORG}/${inf.repo}`;
     files['docs/V4-ARCHETYPE-FILE-COUNTS.md'] = `# V4 archetype — indicative file counts (sales parity)
 
@@ -12070,7 +12109,12 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       }
 
       let batchOk = false;
-      try {
+      if (_res && dynastyCheckpointReached(resumeCk, 'files_pushed')) {
+        batchOk = true;
+        for (const p of (resumeCk.pushedPaths && resumeCk.pushedPaths.length ? resumeCk.pushedPaths : Object.keys(batchFileMap))) pushedPaths.add(p);
+        setP('pf', 'ok', `Resumed after GitHub push · ${pushedPaths.size} file(s) already checkpointed`);
+      }
+      if (!batchOk) try {
         const batchResult = await pushFiles(`${ORG}/${inf.repo}`, batchFileMap, `feat: dynasty scaffold — ${Object.keys(batchFileMap).length} files`);
         if (batchResult.ok && batchResult.file_count > 0) {
           batchOk = true;
@@ -12149,6 +12193,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
         setP('pf', 'er', `CRITICAL: missing ${missingCritical.join(', ')} — build will fail`);
         throw new Error(`Critical files missing from repo: ${missingCritical.join(', ')}. Aborting build — fix pushF errors or re-run.`);
       }
+      try { dynastyScheduleCheckpointSave(desc, inf, { stage: 'files_pushed', gateCompleted: true, prePush: true, pushedPaths: Array.from(pushedPaths) }); } catch {}
       try {
         if (getBuildProfile().archetype === 'demo_express') {
           window._v4Phase8DoneAt = Date.now();
@@ -12208,12 +12253,14 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
         })();
         const reportHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>${reportTitle} — Build Report</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0A0A0A;color:#EEEDE8;padding:2rem;max-width:700px;margin:0 auto;line-height:1.6}h1{font-size:1.8rem;margin-bottom:.5rem}h2{color:#C9A84C;font-size:1rem;margin:1.5rem 0 .5rem;border-bottom:1px solid #222;padding-bottom:4px}.meta{color:#666;font-size:13px}.card{background:#1a1a1a;border:1px solid #222;border-radius:8px;padding:1rem;margin:8px 0}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}ul{padding-left:1.2rem;font-size:13px;color:#888}li{margin:3px 0}.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}</style></head><body><h1>${reportTitle}</h1><p class="meta">${inf.type_label} · ${inf.revenue_model} · ${inf.price} · ${reportDate}</p>${scoreHtml}${moduleReport}<h2>Generated Files (${Object.keys(window._buildFiles||{}).length})</h2><ul>${filesTable}</ul><h2>Quick Start</h2><pre style="background:#111;padding:12px;border-radius:6px;font-size:12px;color:#C9A84C">gh repo clone ${ORG}/${inf.repo} && cd ${inf.repo} && claude</pre><h2>Documentation</h2><div class="g"><div class="card"><a href="MANUAL-ACTIONS.md" style="color:#C9A84C;text-decoration:none">MANUAL-ACTIONS.md</a><div style="font-size:12px;color:#888">Setup &amp; configuration guide</div></div><div class="card"><a href=".env.example" style="color:#C9A84C;text-decoration:none">.env.example</a><div style="font-size:12px;color:#888">Environment variables template</div></div></div><p style="margin-top:2rem;text-align:center;color:#333;font-size:11px">${isWhiteLabel() ? '' : 'Built with Your Deputy V3 · '}${reportDate}</p></body></html>`;
         await pushF(`${ORG}/${inf.repo}`, 'REPORT.html', reportHtml, 'docs: shareable build report');
+        try { dynastyScheduleCheckpointSave(desc, inf, { stage: 'report_pushed', gateCompleted: true, prePush: true, pushedPaths: Array.from(pushedPaths) }); } catch {}
       } catch {}
     }
 
     // ── Live tool provisioning ────────────────────────────────────────────
     // ── Live tool provisioning (type-aware: 20i/Neon/Vercel/Stripe/Acumbamail) ─
-    provRes=null;
+    const resumedProvision = _res && dynastyCheckpointReached(resumeCk, 'provisioned') && resumeCk.provRes;
+    provRes = resumedProvision ? resumeCk.provRes : null;
     const provisionSvcs=['stripe','acumbamail','n8n','comms'];
     {
       const isWP=inf?.type_id==='wp-theme'||inf?.type_id==='wordpress'||V2_DEPLOY_TARGET==='wordpress';
@@ -12223,7 +12270,9 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       updateEduCard('prov');
     addP('prov',provLabel,provNote);setP('prov','run');
       updateGlobalProgress(9, 12, 'Phase 9 of 14 \u00b7 Provisioning');
-      try{
+      if (resumedProvision) {
+        setP('prov','ok','Resumed provisioned infrastructure from checkpoint');
+      } else try{
         const pr=await fetch('/api/provision?action=provision',{method:'POST',
           headers:{'Content-Type':'application/json', ...getProvisionAuthHeaders()},
           body:JSON.stringify({ inf: {...inf, deploy_target: V2_DEPLOY_TARGET}, svcs:provisionSvcs, custom_domain: localStorage.getItem('dynasty_custom_domain') || null, ...getProvisionAuthPayload() })});
@@ -12239,6 +12288,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     }
 
     // ── Direct Vercel deploy (no Flint needed) ──────────────────────────────
+    try { dynastyScheduleCheckpointSave(desc, inf, { stage: 'provisioned', gateCompleted: true, prePush: true, pushedPaths: Array.from(pushedPaths), provRes, launchUrl: LAUNCH_URL || provRes?.results?.vercel?.url || '' }); } catch {}
+
     if(isAuthority){
       updateEduCard('deploy');
     addP('deploy','Deploying authority site to Vercel','Forking template → AI content generation → Google directory → auto-build');setP('deploy','run');
@@ -12276,6 +12327,8 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     // Read from `files` (the parameter) so this works in both fresh builds
     // and resumed/post-merge builds where the local `df`/`dc`/`bz`/`be`
     // variables from build() are not in scope.
+    try { dynastyScheduleCheckpointSave(desc, inf, { stage: 'provisioned', gateCompleted: true, prePush: true, pushedPaths: Array.from(pushedPaths), provRes, launchUrl: LAUNCH_URL || provRes?.results?.vercel?.url || '' }); } catch {}
+
     let qualityOk = true;
     try {
       const criticalFiles = {
@@ -12321,7 +12374,14 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
     }
     const anyModulesEnabled = Object.values(v3Modules).some(v => v);
     let v3Results = null;
-    if (anyModulesEnabled) {
+    const resumedV3Modules = _res && dynastyCheckpointReached(resumeCk, 'v3_modules') && resumeCk.v3Results;
+    if (resumedV3Modules) {
+      v3Results = resumeCk.v3Results;
+      if (provRes && v3Results.modules) provRes.modules = v3Results.modules;
+      addP('v3-start', 'V3 Modules');
+      setP('v3-start', 'ok', 'Resumed module results from checkpoint');
+    }
+    if (anyModulesEnabled && !resumedV3Modules) {
       const liveUrl = LAUNCH_URL || provRes?.results?.vercel?.url || `https://${inf.repo}.vercel.app`;
       const v3Project = getV3Project(inf);
       const moduleNames = { hosting: 'Domain + Email', billing: 'Stripe Billing', email: 'Email Marketing', phone: 'Phone + Voice', sms: 'SMS Campaigns', chatbot: 'Website Chatbot', seo: 'SEO Content', video: 'Explainer Video', design: 'Design Assets', analytics: 'Analytics', leads: 'Lead Intelligence', automation: 'Automation Workflows', docs: 'Legal PDFs', crm: 'CRM Portal', directory: 'Directory', wordpress: 'WordPress', social: 'Social Scheduling', verify: 'Post-deploy verification', vertical_tool: 'Niche vertical tool scaffold' };
@@ -12368,6 +12428,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
           // Store module results for done screen
           if (provRes) provRes.modules = v3Results.modules;
           else provRes = { results: {}, modules: v3Results.modules };
+          try { dynastyScheduleCheckpointSave(desc, inf, { stage: 'v3_modules', gateCompleted: true, prePush: true, pushedPaths: Array.from(pushedPaths), provRes, v3Results, launchUrl: LAUNCH_URL || provRes?.results?.vercel?.url || '' }); } catch {}
         } else {
           setP('v3-start', 'sk', v3Results.error || 'Module provisioning failed');
         }
@@ -12388,7 +12449,10 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
 
     const vercelUrl = provRes?.results?.vercel?.url;
     const vercelProjectId = provRes?.results?.vercel?.project_id;
-    const verifyResults = { github: false, vercel: false, live: false, route_coverage: false, issues: [], fixes_applied: [] };
+    const verifyResults = (_res && resumeCk.verifyResults)
+      ? Object.assign({ github: false, vercel: false, live: false, route_coverage: false, issues: [], fixes_applied: [] }, resumeCk.verifyResults)
+      : { github: false, vercel: false, live: false, route_coverage: false, issues: [], fixes_applied: [] };
+    try { dynastyScheduleCheckpointSave(desc, inf, { stage: 'verifying', gateCompleted: true, prePush: true, pushedPaths: Array.from(pushedPaths), provRes, v3Results, verifyResults, launchUrl: LAUNCH_URL || vercelUrl || '' }); } catch {}
 
     for (let pass = 1; pass <= VERIFY_MAX_PASS; pass++) {
       const passLabel = pass === 1 ? 'Audit' : pass === 2 ? 'Fix' : `Recheck (${pass - 2}/${VERIFY_MAX_PASS - 2})`;
@@ -12658,6 +12722,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
 
       if (allPassed) {
         setP(`verify-pass-${pass}`, 'ok', passChecks.join(' · '));
+        try { dynastyScheduleCheckpointSave(desc, inf, { stage: 'verifying', gateCompleted: true, prePush: true, pushedPaths: Array.from(pushedPaths), provRes, v3Results, verifyResults, launchUrl: LAUNCH_URL || vercelUrl || '' }); } catch {}
         // All checks passed — skip remaining passes
         if (pass < VERIFY_MAX_PASS) {
           for (let skip = pass + 1; skip <= VERIFY_MAX_PASS; skip++) {
@@ -12672,6 +12737,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
           : '';
         setP(`verify-pass-${pass}`, pass === VERIFY_MAX_PASS ? 'er' : 'sk', passChecks.join(' · ') + fixNote);
       }
+      try { dynastyScheduleCheckpointSave(desc, inf, { stage: 'verifying', gateCompleted: true, prePush: true, pushedPaths: Array.from(pushedPaths), provRes, v3Results, verifyResults, launchUrl: LAUNCH_URL || vercelUrl || '' }); } catch {}
 
       // Brief pause between passes
       if (pass < VERIFY_MAX_PASS && !allPassed) await new Promise(r => setTimeout(r, 3000));
@@ -12739,6 +12805,7 @@ Technical originals live at the repo root (e.g. BUSINESS-SYSTEM.md). This folder
       customerFullReady,
       customerDeployReady,
     };
+    try { dynastyScheduleCheckpointSave(desc, inf, { stage: 'done', gateCompleted: true, prePush: true, pushedPaths: Array.from(pushedPaths), provRes, v3Results, verifyResults, launchUrl: LAUNCH_URL || vercelUrl || '', buildOutcome: window._buildOutcome }); } catch {}
     showDone(inf,repo,isAuthority ? 0 : Object.keys(files).length,inf.manual_svcs||[]);
 
     if (doneCount < doneTotal) {
@@ -12809,6 +12876,11 @@ async function build(desc,inf,buildOpts){
       isAuthority = !!ck.isAuthority;
       if (ck.v2DeployTarget) V2_DEPLOY_TARGET = ck.v2DeployTarget;
       if (ck.v2Category) V2_CATEGORY = ck.v2Category;
+      window.__dynastyResumeCheckpoint = ck;
+      window.__dynastyCheckpointState = Object.assign({}, ck);
+      if (ck.launchUrl) LAUNCH_URL = ck.launchUrl;
+      if (ck.provRes) provRes = ck.provRes;
+      if (ck.buildOutcome) window._buildOutcome = ck.buildOutcome;
       if (ck.prgs && ck.prgs.length) {
         PRGS = ck.prgs.map(p => ({ id: p.id, l: p.l, n: p.n, s: p.s, g: p.g }));
         renderProg();
@@ -15697,6 +15769,8 @@ See **[MANUAL-ACTIONS.md](./MANUAL-ACTIONS.md)** for service-specific setup:
   }catch(e){
     const eb=document.getElementById('err-box');
     eb.style.display='block';eb.textContent=e.message||'Unknown error';
+    const resume=document.createElement('span');resume.className='again';resume.textContent='Resume saved session';
+    resume.onclick=resumeBuildFromCheckpoint;eb.appendChild(resume);
     const again=document.createElement('span');again.className='again';again.textContent='Start over';
     again.onclick=reset;eb.appendChild(again);
   }
