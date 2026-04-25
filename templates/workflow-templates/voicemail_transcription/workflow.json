@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "voicemail_transcription",
+  "name": "Voicemail Transcription to CRM Workflow",
+  "description": "Production workflow for Voicemail Transcription to CRM: Every voicemail is transcribed, saved on the contact record, and surfaced to the right staffer.",
+  "trigger": {
+    "event": "voicemail.received"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "transcribe",
+      "params": {}
+    },
+    {
+      "step": 2,
+      "action": "attach_to_contact",
+      "params": {}
+    },
+    {
+      "step": 3,
+      "action": "notify_owner",
+      "params": {
+        "channel_from": "settings.notify_channel"
+      }
+    },
+    {
+      "step": 4,
+      "action": "auto_tag_intent",
+      "params": {}
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "speed_to_lead_response",
+  "name": "Speed-to-Lead Dispatcher Workflow",
+  "description": "Production workflow for Speed-to-Lead Dispatcher: Route new leads to the right person in under 60 seconds with SMS/call cascades until someone accepts.",
+  "trigger": {
+    "event": "lead.created"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "ping_staff",
+      "params": {}
+    },
+    {
+      "step": 2,
+      "action": "escalate_on_no_accept",
+      "params": {}
+    },
+    {
+      "step": 3,
+      "action": "log_dispatch_chain",
+      "params": {}
+    },
+    {
+      "step": 4,
+      "action": "send_customer_update",
+      "params": {}
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

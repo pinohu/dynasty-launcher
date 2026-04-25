@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "module_code": "proposal_view_tracker",
   "name": "Proposal View Tracker",
-  "description_short": "Get notified when a proposal is viewed, for how long, and by whom \u2014 with a nudge if it's stalling.",
+  "description_short": "Get notified when a proposal is viewed, for how long, and by whom — with a nudge if it's stalling.",
   "outcome": "Know which deals are alive so the owner spends time on the right follow-ups.",
   "category": "sales",
   "price_monthly": 19,
@@ -78,5 +78,9 @@
   "source_refs": [
     "6.04"
   ],
-  "status": "spec"
+  "status": "live",
+  "deployment_state": "active",
+  "marketplace_ready": true,
+  "ready_for_use": true,
+  "production_ready_on": "2026-04-25"
 }

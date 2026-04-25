@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "reschedule_workflow",
+  "name": "Self-Serve Reschedule Workflow Workflow",
+  "description": "Production workflow for Self-Serve Reschedule Workflow: Let customers reschedule with one tap, without involving staff.",
+  "trigger": {
+    "event": "reschedule.requested",
+    "conditions": {
+      "source": [
+        "link_click",
+        "sms_reply",
+        "customer_portal"
+      ]
+    }
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "present_slots",
+      "params": {}
+    },
+    {
+      "step": 2,
+      "action": "update_calendar",
+      "params": {}
+    },
+    {
+      "step": 3,
+      "action": "send_confirmation",
+      "params": {}
+    },
+    {
+      "step": 4,
+      "action": "notify_staff",
+      "params": {}
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

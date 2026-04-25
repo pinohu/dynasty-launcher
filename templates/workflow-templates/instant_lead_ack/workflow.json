@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "instant_lead_ack",
+  "name": "Instant Lead Acknowledgment (multi-source) Workflow",
+  "description": "Production workflow for Instant Lead Acknowledgment (multi-source): Any inbound lead (form, call, chat, paid ad, referral) gets a unified instant acknowledgment.",
+  "trigger": {
+    "event": "lead.created",
+    "conditions": {
+      "lead.first_touch_ack_sent": false
+    }
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "send_email",
+      "params": {
+        "template_ref": "tmpl_instant_lead_ack_email",
+        "to": "payload.email"
+      }
+    },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "params": {
+        "template_ref": "tmpl_instant_lead_ack_sms",
+        "to": "payload.phone"
+      }
+    },
+    {
+      "step": 3,
+      "action": "tag_contact",
+      "params": {
+        "tags": [
+          "instant-lead-ack"
+        ]
+      }
+    },
+    {
+      "step": 4,
+      "action": "start_followup_clock",
+      "params": {}
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

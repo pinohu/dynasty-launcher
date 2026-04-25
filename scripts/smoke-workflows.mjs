@@ -13,7 +13,7 @@
 //   - inactive module does NOT fire when its trigger event arrives
 //   - unknown event type dispatches zero workflows
 //   - tenant with no matching active module dispatches zero
-//   - workflow-less module emits module.run.skipped_no_workflow
+//   - every marketplace module has a workflow template
 // -----------------------------------------------------------------------------
 
 import { _reset as resetStore } from '../api/tenants/_store.mjs';
@@ -238,8 +238,8 @@ async function main() {
   await resetStore(); resetBus();
 
   // ============================================================
-  // Active module without workflow template: skipped_no_workflow
-  // (reschedule_workflow has no workflow.json yet — Wave 3 module)
+  // Every marketplace module has a runnable workflow template.
+  // reschedule_workflow used to be the no-op canary; it must now complete.
   // ============================================================
   {
     const tenant = await setupHvacTenant(h, ['calendar', 'crm', 'email', 'sms']);
@@ -248,12 +248,14 @@ async function main() {
       method: 'POST',
       body: { tenant_id: tenant.tenant_id, event_type: 'reschedule.requested', payload: { source: 'link_click' } },
     });
+    const result = r.body.dispatch.results[0];
     const evts = getEvents({ tenant_id: tenant.tenant_id });
+    const complete = evts.find((e) => e.event_type === 'module.run.completed' && e.payload.module_code === 'reschedule_workflow');
     const skip = evts.find((e) => e.event_type === 'module.run.skipped_no_workflow');
     fails += log(
-      r.body.dispatch.dispatched === 1 && skip && skip.payload.module_code === 'reschedule_workflow',
-      'module without workflow template emits module.run.skipped_no_workflow (honest)',
-      `skipped=${!!skip}`,
+      r.body.dispatch.dispatched === 1 && result?.status === 'completed' && complete && !skip,
+      'reschedule_workflow has a runnable workflow template and completes',
+      `status=${result?.status} completed=${!!complete} skipped=${!!skip}`,
     );
   }
 

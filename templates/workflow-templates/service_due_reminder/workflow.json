@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "service_due_reminder",
+  "name": "Service-Due Reminder Workflow",
+  "description": "Production workflow for Service-Due Reminder: For recurring services (HVAC tune-up, pest treatment, cleaning), remind customers when they're due.",
+  "trigger": {
+    "event": "service.due",
+    "conditions": {
+      "lead_time_days_in": [
+        30,
+        14,
+        7
+      ]
+    }
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "send_email",
+      "params": {
+        "template_ref": "tmpl_service_due_reminder_email",
+        "to": "payload.email"
+      }
+    },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "params": {
+        "template_ref": "tmpl_service_due_reminder_sms",
+        "to": "payload.phone"
+      }
+    },
+    {
+      "step": 3,
+      "action": "offer_booking_link",
+      "params": {}
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

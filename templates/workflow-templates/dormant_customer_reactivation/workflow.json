@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "dormant_customer_reactivation",
+  "name": "Dormant Customer Reactivation Workflow",
+  "description": "Production workflow for Dormant Customer Reactivation: If a customer hasn't booked in 6/9/12 months, send a personalized win-back with a reason to come back.",
+  "trigger": {
+    "event": "customer.dormant",
+    "conditions": {
+      "months_since_last_job_in": [
+        6,
+        9,
+        12
+      ]
+    }
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "send_email",
+      "params": {
+        "template_ref": "tmpl_dormant_customer_reactivation_email",
+        "to": "payload.email"
+      }
+    },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "params": {
+        "template_ref": "tmpl_dormant_customer_reactivation_sms",
+        "to": "payload.phone"
+      }
+    },
+    {
+      "step": 3,
+      "action": "offer_booking_link",
+      "params": {}
+    },
+    {
+      "step": 4,
+      "action": "tag_contact",
+      "params": {
+        "tags": [
+          "dormant-customer-reactivation"
+        ]
+      }
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

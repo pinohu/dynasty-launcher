@@ -9,6 +9,7 @@
     "verify:product": "node scripts/verify-product-alignment.mjs",
     "test:validate": "node scripts/validate-smoke.mjs",
     "test:catalog": "node scripts/smoke-catalog.mjs",
+    "test:marketplace-readiness": "node scripts/check-marketplace-readiness.mjs",
     "test:tenants": "node scripts/smoke-tenants.mjs",
     "test:activation": "node scripts/smoke-activation.mjs",
     "test:events": "node scripts/smoke-events.mjs",
@@ -23,7 +24,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:html-script-safety && npm run test:button-containment"
+    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:marketplace-readiness && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:html-script-safety && npm run test:button-containment"
   },
   "engines": {
     "node": "20.x"

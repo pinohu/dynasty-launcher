@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "unhappy_customer_interception",
+  "name": "Unhappy Customer Interception Workflow",
+  "description": "Production workflow for Unhappy Customer Interception: If the review-request response is low-rating, route the customer to a private feedback form and alert the owner — before they leave a public review.",
+  "trigger": {
+    "event": "review_request.reply",
+    "conditions": {
+      "sentiment": "negative_or_neutral"
+    }
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "send_private_feedback_form",
+      "params": {}
+    },
+    {
+      "step": 2,
+      "action": "notify_owner",
+      "params": {
+        "channel_from": "settings.notify_channel"
+      }
+    },
+    {
+      "step": 3,
+      "action": "create_task",
+      "params": {
+        "reason": "unhappy_customer_interception"
+      }
+    },
+    {
+      "step": 4,
+      "action": "pause_public_ask",
+      "params": {}
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

@@ -4,7 +4,7 @@
 //   - product/*.json loads correctly
 //   - response shape is consistent
 //   - filtering works
-//   - marketplace gating returns 0 results today (nothing is live yet)
+//   - marketplace gating returns all live, ready-to-use modules and packs
 //   - cross-refs resolve between endpoints
 //
 // Run:  node scripts/smoke-catalog.mjs
@@ -60,9 +60,9 @@ async function main() {
   }
   {
     const r = await invoke(h.modules, { query: { marketplace: 'true' } });
-    // Today: nothing is live or deployable, so marketplace view is empty by design
-    const ok = r.status === 200 && r.body.count === 0 && r.body.total === 20;
-    log(ok, 'modules?marketplace=true returns 0 (no live modules yet)', `count=${r.body.count}, total=${r.body.total}`);
+    const ok = r.status === 200 && r.body.count === 20 && r.body.total === 20
+      && r.body.modules.every((m) => m.status === 'live' && m.marketplace_ready === true && m.ready_for_use === true);
+    log(ok, 'modules?marketplace=true returns all 20 live ready-to-use modules', `count=${r.body.count}, total=${r.body.total}`);
     if (!ok) fails++;
   }
   {
@@ -109,14 +109,15 @@ async function main() {
   }
   {
     const r = await invoke(h.bundles, { query: { marketplace: 'true' } });
-    const ok = r.status === 200 && r.body.count === 0;
-    log(ok, 'bundles?marketplace=true returns 0 (all bundles effective_status=spec)', `count=${r.body.count}`);
+    const ok = r.status === 200 && r.body.count === 5
+      && r.body.bundles.every((b) => b.effective_status === 'live' && b.marketplace_ready === true && b.ready_for_use === true);
+    log(ok, 'bundles?marketplace=true returns all 5 live outcome packs', `count=${r.body.count}`);
     if (!ok) fails++;
   }
   {
     const r = await invoke(h.bundles, { query: { code: 'lead_capture_pack' } });
     const ok = r.status === 200 && r.body.bundle && r.body.bundle.bundle_code === 'lead_capture_pack'
-      && r.body.bundle.effective_status === 'spec'
+      && r.body.bundle.effective_status === 'live'
       && r.body.bundle.pricing_detail
       && r.body.bundle.pricing_detail.price_monthly === 49;
     log(ok, 'bundles?code=lead_capture_pack returns pack + $49 pricing_detail');
@@ -159,8 +160,10 @@ async function main() {
       && Array.isArray(r.body.editions) && r.body.editions.length === 4
       && Array.isArray(r.body.suites) && r.body.suites.length === 3
       && r.body.launcher_build_handoff.status === 'RESOLVED';
-    log(ok, 'GET /api/catalog/tiers returns 1 tier + 4 editions + 3 suites + RESOLVED handoff');
-    if (!ok) fails++;
+    const liveEditions = (r.body.editions || []).every((e) => e.status === 'live' && e.ready_for_use === true);
+    const liveSuites = (r.body.suites || []).every((s) => s.status === 'live' && s.ready_for_use === true);
+    log(ok && liveEditions && liveSuites, 'GET /api/catalog/tiers returns 1 tier + 4 live editions + 3 live suites + RESOLVED handoff');
+    if (!ok || !liveEditions || !liveSuites) fails++;
   }
   {
     const r = await invoke(h.tiers, { query: { view: 'commercial' } });

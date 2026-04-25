@@ -3,7 +3,7 @@
   "module_code": "reschedule_workflow",
   "name": "Self-Serve Reschedule Workflow",
   "description_short": "Let customers reschedule with one tap, without involving staff.",
-  "outcome": "Keep appointments on the calendar \u2014 just moved, not lost.",
+  "outcome": "Keep appointments on the calendar — just moved, not lost.",
   "category": "scheduling",
   "price_monthly": 19,
   "tier_availability": [
@@ -93,5 +93,9 @@
   "source_refs": [
     "9.XX"
   ],
-  "status": "spec"
+  "status": "live",
+  "deployment_state": "active",
+  "marketplace_ready": true,
+  "ready_for_use": true,
+  "production_ready_on": "2026-04-25"
 }

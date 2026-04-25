@@ -3,7 +3,7 @@
   "module_code": "webform_autoreply",
   "name": "Web Form Auto-Reply",
   "description_short": "When a lead submits a web form, acknowledge instantly over email and/or SMS.",
-  "outcome": "Prove the business is paying attention in the first 60 seconds \u2014 the biggest predictor of close rate.",
+  "outcome": "Prove the business is paying attention in the first 60 seconds — the biggest predictor of close rate.",
   "category": "lead-capture",
   "price_monthly": 19,
   "tier_availability": [
@@ -104,5 +104,9 @@
     "2.15",
     "5.01"
   ],
-  "status": "spec"
+  "status": "live",
+  "deployment_state": "active",
+  "marketplace_ready": true,
+  "ready_for_use": true,
+  "production_ready_on": "2026-04-25"
 }

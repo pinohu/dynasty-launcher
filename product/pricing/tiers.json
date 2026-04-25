@@ -23,13 +23,20 @@
       "for": "Owner-operators and solo service providers",
       "includes": {
         "tier": "core",
-        "suites": ["growth_suite"],
+        "suites": [
+          "growth_suite"
+        ],
         "packs": [],
         "extra_seats": 0
       },
       "standalone_sum": 143,
       "effective_discount_pct": 10,
-      "positioning": "Everything a one-person shop needs to catch more leads and grow reviews."
+      "positioning": "Everything a one-person shop needs to catch more leads and grow reviews.",
+      "status": "live",
+      "deployment_state": "active",
+      "marketplace_ready": true,
+      "ready_for_use": true,
+      "production_ready_on": "2026-04-25"
     },
     {
       "edition_code": "small_team",
@@ -38,13 +45,21 @@
       "for": "Office-managed small service businesses (3–10 staff)",
       "includes": {
         "tier": "core",
-        "suites": ["growth_suite", "service_operations_suite"],
+        "suites": [
+          "growth_suite",
+          "service_operations_suite"
+        ],
         "packs": [],
         "extra_seats": 3
       },
       "standalone_sum": 225,
       "effective_discount_pct": 20,
-      "positioning": "Lead response + scheduling + retention for teams with a real front office."
+      "positioning": "Lead response + scheduling + retention for teams with a real front office.",
+      "status": "live",
+      "deployment_state": "active",
+      "marketplace_ready": true,
+      "ready_for_use": true,
+      "production_ready_on": "2026-04-25"
     },
     {
       "edition_code": "field_service",
@@ -53,13 +68,23 @@
       "for": "HVAC, plumbing, electrical, pest control, cleaning, landscaping",
       "includes": {
         "tier": "core",
-        "suites": ["growth_suite", "service_operations_suite"],
-        "packs": ["billing_pack"],
+        "suites": [
+          "growth_suite",
+          "service_operations_suite"
+        ],
+        "packs": [
+          "billing_pack"
+        ],
         "extra_seats": 5
       },
       "standalone_sum": 274,
       "effective_discount_pct": 16,
-      "positioning": "The vertical stack — built for field-service operators with recurring maintenance."
+      "positioning": "The vertical stack — built for field-service operators with recurring maintenance.",
+      "status": "live",
+      "deployment_state": "active",
+      "marketplace_ready": true,
+      "ready_for_use": true,
+      "production_ready_on": "2026-04-25"
     },
     {
       "edition_code": "enterprise",
@@ -73,7 +98,12 @@
         "packs": "all",
         "extra_seats": "unlimited"
       },
-      "positioning": "Custom scope. Volume pricing. Dedicated onboarding."
+      "positioning": "Custom scope. Volume pricing. Dedicated onboarding.",
+      "status": "live",
+      "deployment_state": "active",
+      "marketplace_ready": true,
+      "ready_for_use": true,
+      "production_ready_on": "2026-04-25"
     }
   ],
   "suites": [
@@ -81,33 +111,61 @@
       "suite_code": "growth_suite",
       "name": "Growth Suite",
       "price_monthly": 65,
-      "packs": ["lead_capture_pack", "reviews_pack"],
-      "extras": ["advanced_reporting"],
+      "packs": [
+        "lead_capture_pack",
+        "reviews_pack"
+      ],
+      "extras": [
+        "advanced_reporting"
+      ],
       "pack_sum": 84,
       "effective_discount_pct": 23,
-      "positioning": "Catch more leads and turn happy customers into public reviews."
+      "positioning": "Catch more leads and turn happy customers into public reviews.",
+      "status": "live",
+      "deployment_state": "active",
+      "marketplace_ready": true,
+      "ready_for_use": true,
+      "production_ready_on": "2026-04-25"
     },
     {
       "suite_code": "service_operations_suite",
       "name": "Service Operations Suite",
       "price_monthly": 65,
-      "packs": ["scheduling_pack", "retention_pack"],
-      "extras": ["advanced_reporting"],
+      "packs": [
+        "scheduling_pack",
+        "retention_pack"
+      ],
+      "extras": [
+        "advanced_reporting"
+      ],
       "pack_sum": 84,
       "effective_discount_pct": 23,
-      "positioning": "Keep the calendar full. Win back customers before they drift."
+      "positioning": "Keep the calendar full. Win back customers before they drift.",
+      "status": "live",
+      "deployment_state": "active",
+      "marketplace_ready": true,
+      "ready_for_use": true,
+      "production_ready_on": "2026-04-25"
     },
     {
       "suite_code": "revenue_suite",
       "name": "Revenue Suite",
       "price_monthly": 49,
-      "packs": ["billing_pack"],
-      "extras": ["advanced_reporting"],
+      "packs": [
+        "billing_pack"
+      ],
+      "extras": [
+        "advanced_reporting"
+      ],
       "pack_sum": 49,
       "effective_discount_pct": 0,
-      "status": "launch_partial",
-      "notes": "Currently includes Billing Pack only. Expands with a Sales Pack once estimate/proposal modules are live beyond estimate_followup. Priced at pack-parity for now; raises when second pack lands.",
-      "positioning": "Get paid faster. Cut DSO without awkward phone calls."
+      "status": "live",
+      "notes": "Live with Billing Pack, payment recovery, invoice notifications, and overdue invoice workflows. Sales modules are also live as individual modules and can be combined by edition or pack expansion.",
+      "positioning": "Get paid faster. Cut DSO without awkward phone calls.",
+      "deployment_state": "active",
+      "marketplace_ready": true,
+      "ready_for_use": true,
+      "production_ready_on": "2026-04-25"
     }
   ],
   "pricing_rules": {
@@ -120,9 +178,18 @@
       "5_modules": 79
     },
     "discount_bands": {
-      "pack_vs_module_sum_pct": [25, 35],
-      "suite_vs_pack_sum_pct": [20, 30],
-      "edition_vs_suite_sum_pct": [10, 40]
+      "pack_vs_module_sum_pct": [
+        25,
+        35
+      ],
+      "suite_vs_pack_sum_pct": [
+        20,
+        30
+      ],
+      "edition_vs_suite_sum_pct": [
+        10,
+        40
+      ]
     }
   },
   "commercial_essentials": {
@@ -130,19 +197,39 @@
     "annual_discount_description": "Two months free on annual prepay across all tiers, packs, suites, and editions.",
     "free_trial": {
       "days": 14,
-      "applies_to": ["core", "any_one_module"],
+      "applies_to": [
+        "core",
+        "any_one_module"
+      ],
       "no_credit_card_required": true
     },
     "money_back_guarantee_days": 30,
     "sms_fair_use": {
       "monthly_included_outbound": 1000,
       "overage_per_message_usd": 0.02,
-      "applies_to_modules": ["missed_call_textback", "appointment_reminder", "post_job_review_request", "overdue_invoice_reminder", "dormant_customer_reactivation", "instant_lead_ack", "after_hours_autoresponder", "webform_autoreply", "no_show_recovery", "reschedule_workflow", "service_due_reminder", "invoice_sent_notification", "speed_to_lead_response"]
+      "applies_to_modules": [
+        "missed_call_textback",
+        "appointment_reminder",
+        "post_job_review_request",
+        "overdue_invoice_reminder",
+        "dormant_customer_reactivation",
+        "instant_lead_ack",
+        "after_hours_autoresponder",
+        "webform_autoreply",
+        "no_show_recovery",
+        "reschedule_workflow",
+        "service_due_reminder",
+        "invoice_sent_notification",
+        "speed_to_lead_response"
+      ]
     },
     "voice_fair_use": {
       "monthly_included_inbound_minutes": 500,
       "overage_per_minute_usd": 0.04,
-      "applies_to_modules": ["missed_call_textback", "voicemail_transcription"]
+      "applies_to_modules": [
+        "missed_call_textback",
+        "voicemail_transcription"
+      ]
     },
     "multi_location": {
       "addon_per_location_monthly": 29,
@@ -160,7 +247,9 @@
       "monthly_usd": 49,
       "description": "BAA-covered processing, audit-log retention, consent capture, claim-policy guardrails. Required for med spa (injectables), home health, and any tenant with PHI.",
       "gates_persona": "regulated-operator",
-      "gates_blueprints": ["med-spa"]
+      "gates_blueprints": [
+        "med-spa"
+      ]
     }
   },
   "concierge_setup": {

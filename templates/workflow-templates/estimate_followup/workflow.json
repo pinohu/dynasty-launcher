@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "estimate_followup",
+  "name": "Estimate Follow-Up Sequence Workflow",
+  "description": "Production workflow for Estimate Follow-Up Sequence: After an estimate is sent, follow up on a 24h / 72h / 7d cadence until it's signed, declined, or expires.",
+  "trigger": {
+    "event": "estimate.sent"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "send_email",
+      "params": {
+        "template_ref": "tmpl_estimate_followup_email",
+        "to": "payload.email"
+      }
+    },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "params": {
+        "template_ref": "tmpl_estimate_followup_sms",
+        "to": "payload.phone"
+      }
+    },
+    {
+      "step": 3,
+      "action": "create_task",
+      "params": {
+        "reason": "estimate_followup"
+      }
+    },
+    {
+      "step": 4,
+      "action": "move_pipeline_stage",
+      "params": {}
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

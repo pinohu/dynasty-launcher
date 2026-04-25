@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "lost_deal_reactivation",
+  "name": "Lost Deal Reactivation Workflow",
+  "description": "Production workflow for Lost Deal Reactivation: Re-engage estimates that went cold 30, 60, or 90 days ago with a fresh, light-touch offer.",
+  "trigger": {
+    "event": "pipeline.deal_cold",
+    "conditions": {
+      "days_since_last_activity_in": [
+        30,
+        60,
+        90
+      ]
+    }
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "send_email",
+      "params": {
+        "template_ref": "tmpl_lost_deal_reactivation_email",
+        "to": "payload.email"
+      }
+    },
+    {
+      "step": 2,
+      "action": "send_sms",
+      "params": {
+        "template_ref": "tmpl_lost_deal_reactivation_sms",
+        "to": "payload.phone"
+      }
+    },
+    {
+      "step": 3,
+      "action": "create_task",
+      "params": {
+        "reason": "lost_deal_reactivation"
+      }
+    },
+    {
+      "step": 4,
+      "action": "tag_contact",
+      "params": {
+        "tags": [
+          "lost-deal-reactivation"
+        ]
+      }
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

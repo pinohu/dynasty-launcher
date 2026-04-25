@@ -92,5 +92,9 @@
     "5.01",
     "5.07"
   ],
-  "status": "spec"
+  "status": "live",
+  "deployment_state": "active",
+  "marketplace_ready": true,
+  "ready_for_use": true,
+  "production_ready_on": "2026-04-25"
 }

@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "payment_recovery",
+  "name": "Failed Payment Recovery Workflow",
+  "description": "Production workflow for Failed Payment Recovery: Automatically retry failed card charges, notify the customer, and capture updated payment methods.",
+  "trigger": {
+    "event": "payment.failed"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "retry_schedule",
+      "params": {}
+    },
+    {
+      "step": 2,
+      "action": "send_update_card_link",
+      "params": {}
+    },
+    {
+      "step": 3,
+      "action": "notify_owner",
+      "params": {
+        "channel_from": "settings.notify_channel"
+      }
+    },
+    {
+      "step": 4,
+      "action": "pause_service_if_applicable",
+      "params": {}
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}

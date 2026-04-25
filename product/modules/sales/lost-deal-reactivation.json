@@ -3,7 +3,7 @@
   "module_code": "lost_deal_reactivation",
   "name": "Lost Deal Reactivation",
   "description_short": "Re-engage estimates that went cold 30, 60, or 90 days ago with a fresh, light-touch offer.",
-  "outcome": "Recover 5\u201315% of 'lost' deals at near-zero cost.",
+  "outcome": "Recover 5–15% of 'lost' deals at near-zero cost.",
   "category": "sales",
   "price_monthly": 19,
   "tier_availability": [
@@ -101,5 +101,9 @@
   "source_refs": [
     "5.09"
   ],
-  "status": "spec"
+  "status": "live",
+  "deployment_state": "active",
+  "marketplace_ready": true,
+  "ready_for_use": true,
+  "production_ready_on": "2026-04-25"
 }

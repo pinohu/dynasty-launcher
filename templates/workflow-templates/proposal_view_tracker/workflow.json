@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "module_code": "proposal_view_tracker",
+  "name": "Proposal View Tracker Workflow",
+  "description": "Production workflow for Proposal View Tracker: Get notified when a proposal is viewed, for how long, and by whom — with a nudge if it's stalling.",
+  "trigger": {
+    "event": "estimate.viewed"
+  },
+  "actions": [
+    {
+      "step": 1,
+      "action": "notify_owner",
+      "params": {
+        "channel_from": "settings.notify_channel"
+      }
+    },
+    {
+      "step": 2,
+      "action": "log_engagement_score",
+      "params": {}
+    },
+    {
+      "step": 3,
+      "action": "trigger_nudge_if_idle",
+      "params": {}
+    }
+  ],
+  "observability": {
+    "emit_on_start": "module.run.started",
+    "emit_on_complete": "module.run.completed",
+    "emit_on_fail": "module.run.failed"
+  },
+  "version": "1.0.0"
+}
