@@ -1,9 +1,9 @@
+import { getCatalog, indexModules } from '../catalog/_lib.mjs';
 import { emit, getEvents } from '../events/_bus.mjs';
 import { dispatchEvent } from '../events/_dispatcher.mjs';
-import { getCatalog, indexModules } from '../catalog/_lib.mjs';
 import { activateModule, grantEntitlement } from '../tenants/_activation.mjs';
-import { createTenant, getTenant, setTenantCapability } from '../tenants/_store.mjs';
 import { provisionAllAutomations } from '../tenants/_provision.mjs';
+import { createTenant, getTenant, setTenantCapability } from '../tenants/_store.mjs';
 
 const sessions = new Map();
 const traces = new Map();
@@ -13,7 +13,9 @@ function id(prefix) {
 }
 
 function normalizeCode(code) {
-  return String(code || '').trim().replace(/-/g, '_');
+  return String(code || '')
+    .trim()
+    .replace(/-/g, '_');
 }
 
 function slug(value) {
@@ -48,21 +50,37 @@ function samplePayloadFor(module) {
   };
   if (event.includes('invoice')) base.days_overdue = 7;
   if (event.includes('call')) base.call_status = 'missed';
-  if (event.includes('appointment')) base.appointment_at = new Date(Date.now() + 86400000).toISOString();
+  if (event.includes('appointment'))
+    base.appointment_at = new Date(Date.now() + 86400000).toISOString();
   if (event.includes('form') || event.includes('lead')) base.form_name = 'Estimate Request';
   if (event.includes('review')) base.review_url = 'https://example.com/review/demo';
   if (event.includes('report')) base.report_type = 'owner_digest';
+  for (const [key, required] of Object.entries(module?.trigger?.conditions || {})) {
+    const value = Array.isArray(required) ? required[0] : required;
+    base[key] = value;
+    if (key.endsWith('_in')) base[key.slice(0, -3)] = value;
+  }
   return base;
 }
 
 function collectUnitModules({ unit_type = 'module', unit_code }) {
   const catalog = getCatalog();
   const modulesByCode = indexModules(catalog.modules || []);
-  const bundlesByCode = Object.fromEntries((catalog.bundles || []).map((b) => [normalizeCode(b.bundle_code), b]));
-  const blueprintsByCode = Object.fromEntries((catalog.blueprints || []).map((b) => [normalizeCode(b.blueprint_code), b]));
-  const suitesByCode = Object.fromEntries(((catalog.tiers?.suites) || []).map((s) => [normalizeCode(s.suite_code), s]));
-  const editionsByCode = Object.fromEntries(((catalog.tiers?.editions) || []).map((e) => [normalizeCode(e.edition_code), e]));
-  const tiersByCode = Object.fromEntries(((catalog.tiers?.tiers) || []).map((t) => [normalizeCode(t.tier_code), t]));
+  const bundlesByCode = Object.fromEntries(
+    (catalog.bundles || []).map((b) => [normalizeCode(b.bundle_code), b]),
+  );
+  const blueprintsByCode = Object.fromEntries(
+    (catalog.blueprints || []).map((b) => [normalizeCode(b.blueprint_code), b]),
+  );
+  const suitesByCode = Object.fromEntries(
+    (catalog.tiers?.suites || []).map((s) => [normalizeCode(s.suite_code), s]),
+  );
+  const editionsByCode = Object.fromEntries(
+    (catalog.tiers?.editions || []).map((e) => [normalizeCode(e.edition_code), e]),
+  );
+  const tiersByCode = Object.fromEntries(
+    (catalog.tiers?.tiers || []).map((t) => [normalizeCode(t.tier_code), t]),
+  );
   const code = normalizeCode(unit_code);
   const out = new Set();
   const skipped = [];
@@ -87,7 +105,10 @@ function collectUnitModules({ unit_type = 'module', unit_code }) {
   if (unit_type === 'module') addModule(code, 'module');
   else if (unit_type === 'category') {
     for (const module of catalog.modules || []) {
-      if (slug(module.category || 'uncategorized') === slug(unit_code) || normalizeCode(module.category) === code) {
+      if (
+        slug(module.category || 'uncategorized') === slug(unit_code) ||
+        normalizeCode(module.category) === code
+      ) {
         addModule(module.module_code, 'category');
       }
     }
@@ -96,8 +117,10 @@ function collectUnitModules({ unit_type = 'module', unit_code }) {
     const blueprint = blueprintsByCode[code];
     if (!blueprint) skipped.push({ code, via: 'blueprint', reason: 'blueprint_not_found' });
     else {
-      for (const moduleCode of blueprint.recommended_modules || []) addModule(moduleCode, blueprint.blueprint_code);
-      for (const bundleCode of blueprint.recommended_bundles || []) addBundle(bundleCode, blueprint.blueprint_code);
+      for (const moduleCode of blueprint.recommended_modules || [])
+        addModule(moduleCode, blueprint.blueprint_code);
+      for (const bundleCode of blueprint.recommended_bundles || [])
+        addBundle(bundleCode, blueprint.blueprint_code);
     }
   } else if (unit_type === 'suite') addSuite(code);
   else if (unit_type === 'edition') {
@@ -105,17 +128,26 @@ function collectUnitModules({ unit_type = 'module', unit_code }) {
     if (!edition) skipped.push({ code, via: 'edition', reason: 'edition_not_found' });
     else {
       const includes = edition.includes || {};
-      if (includes.suites === 'all') Object.values(suitesByCode).forEach((suite) => addSuite(suite.suite_code, edition.edition_code));
+      if (includes.suites === 'all')
+        Object.values(suitesByCode).forEach((suite) =>
+          addSuite(suite.suite_code, edition.edition_code),
+        );
       else for (const suiteCode of includes.suites || []) addSuite(suiteCode, edition.edition_code);
-      if (includes.packs === 'all') Object.values(bundlesByCode).forEach((bundle) => addBundle(bundle.bundle_code, edition.edition_code));
-      else for (const bundleCode of includes.packs || []) addBundle(bundleCode, edition.edition_code);
+      if (includes.packs === 'all')
+        Object.values(bundlesByCode).forEach((bundle) =>
+          addBundle(bundle.bundle_code, edition.edition_code),
+        );
+      else
+        for (const bundleCode of includes.packs || []) addBundle(bundleCode, edition.edition_code);
       const baseTier = tiersByCode[normalizeCode(includes.tier)];
-      for (const moduleCode of baseTier?.included_modules || []) addModule(moduleCode, includes.tier);
+      for (const moduleCode of baseTier?.included_modules || [])
+        addModule(moduleCode, includes.tier);
     }
   } else if (unit_type === 'plan' || unit_type === 'tier') {
     const tier = tiersByCode[code];
     if (!tier) skipped.push({ code, via: 'tier', reason: 'tier_not_found' });
-    else for (const moduleCode of tier.included_modules || []) addModule(moduleCode, tier.tier_code);
+    else
+      for (const moduleCode of tier.included_modules || []) addModule(moduleCode, tier.tier_code);
   } else {
     skipped.push({ code, via: unit_type, reason: 'unknown_unit_type' });
   }
@@ -131,7 +163,11 @@ export function resolveDemoUnit(input) {
   return collectUnitModules(input);
 }
 
-export async function createDemoSession({ unit_type = 'module', unit_code = null, blueprint_code = 'hvac' } = {}) {
+export async function createDemoSession({
+  unit_type = 'module',
+  unit_code = null,
+  blueprint_code = 'hvac',
+} = {}) {
   const tenant = await createTenant({
     business_name: 'Your Deputy Demo Sandbox',
     business_type: blueprint_code,
@@ -142,7 +178,10 @@ export async function createDemoSession({ unit_type = 'module', unit_code = null
     profile: { demo: true, unit_type, unit_code },
     capabilities_enabled: [],
   });
-  const provisioning = await provisionAllAutomations({ tenant_id: tenant.tenant_id, blueprint_code });
+  const provisioning = await provisionAllAutomations({
+    tenant_id: tenant.tenant_id,
+    blueprint_code,
+  });
   const session = {
     session_id: id('demo'),
     tenant_id: tenant.tenant_id,
@@ -153,7 +192,12 @@ export async function createDemoSession({ unit_type = 'module', unit_code = null
     provisioning,
   };
   sessions.set(session.session_id, session);
-  emit('demo.session_created', { tenant_id: tenant.tenant_id, session_id: session.session_id, unit_type, unit_code });
+  emit('demo.session_created', {
+    tenant_id: tenant.tenant_id,
+    session_id: session.session_id,
+    unit_type,
+    unit_code,
+  });
   return session;
 }
 
@@ -163,7 +207,8 @@ async function ensureSession(session_id, unit_type, unit_code) {
 }
 
 async function activateForDemo(tenant_id, module, modulesByCode = null, seen = new Set()) {
-  if (seen.has(module.module_code)) return { activation: { status: 'idempotent_ok' }, capabilities_enabled: [] };
+  if (seen.has(module.module_code))
+    return { activation: { status: 'idempotent_ok' }, capabilities_enabled: [] };
   seen.add(module.module_code);
   const catalog = getCatalog();
   const byCode = modulesByCode || indexModules(catalog.modules || []);
@@ -181,7 +226,11 @@ async function activateForDemo(tenant_id, module, modulesByCode = null, seen = n
     await setTenantCapability(tenant_id, capability, true);
     enabled.push(capability);
   }
-  const activation = await activateModule({ tenant_id, module_code: module.module_code, user_input: { demo: true } });
+  const activation = await activateModule({
+    tenant_id,
+    module_code: module.module_code,
+    user_input: { demo: true },
+  });
   return { activation, capabilities_enabled: enabled };
 }
 
@@ -189,16 +238,32 @@ function outputPreviewFor(module, dispatchResult, event) {
   const actions = (dispatchResult.steps || []).map((s) => s.action);
   const previews = [];
   if (actions.includes('send_sms')) {
-    previews.push({ type: 'sms', title: 'Sandbox SMS', body: `Hi Demo Customer, ${module.name} handled your request. Reply HELP for support.` });
+    previews.push({
+      type: 'sms',
+      title: 'Sandbox SMS',
+      body: `Hi Demo Customer, ${module.name} handled your request. Reply HELP for support.`,
+    });
   }
   if (actions.includes('send_email')) {
-    previews.push({ type: 'email', title: 'Sandbox Email', body: `Subject: Your Deputy: ${module.name}\n\nThis is the email preview generated by the demo workflow.` });
+    previews.push({
+      type: 'email',
+      title: 'Sandbox Email',
+      body: `Subject: Your Deputy: ${module.name}\n\nThis is the email preview generated by the demo workflow.`,
+    });
   }
   if (actions.includes('notify_owner')) {
-    previews.push({ type: 'owner_alert', title: 'Owner Alert', body: `${module.name} completed for ${event.payload.email || event.payload.phone}.` });
+    previews.push({
+      type: 'owner_alert',
+      title: 'Owner Alert',
+      body: `${module.name} completed for ${event.payload.email || event.payload.phone}.`,
+    });
   }
   if (actions.includes('log_outcome') || previews.length === 0) {
-    previews.push({ type: 'activity_log', title: 'Activity Timeline', body: `${module.name} recorded a completed workflow run with ${dispatchResult.steps?.length || 0} step(s).` });
+    previews.push({
+      type: 'activity_log',
+      title: 'Activity Timeline',
+      body: `${module.name} recorded a completed workflow run with ${dispatchResult.steps?.length || 0} step(s).`,
+    });
   }
   return previews;
 }
@@ -227,7 +292,10 @@ export async function runDemoUnit({
       ...eventPayload,
     });
     const dispatch = await dispatchEvent(event);
-    const result = dispatch.results.find((r) => r.module_code === module.module_code) || dispatch.results[0] || null;
+    const result =
+      dispatch.results.find((r) => r.module_code === module.module_code) ||
+      dispatch.results[0] ||
+      null;
     runs.push({
       module_code: module.module_code,
       module_name: module.name,
@@ -239,12 +307,28 @@ export async function runDemoUnit({
       trace_steps: [
         { label: 'demo.session', status: 'ok', detail: session.session_id },
         { label: 'tenant.loaded', status: tenant ? 'ok' : 'missing', detail: session.tenant_id },
-        { label: 'entitlement.granted', status: activation.activation?.status ? 'ok' : 'unknown', detail: module.module_code },
+        {
+          label: 'entitlement.granted',
+          status: activation.activation?.status ? 'ok' : 'unknown',
+          detail: module.module_code,
+        },
         { label: 'capabilities.enabled', status: 'ok', detail: activation.capabilities_enabled },
-        { label: 'module.activated', status: activation.activation?.status || 'unknown', detail: activation.activation?.reason || null },
+        {
+          label: 'module.activated',
+          status: activation.activation?.status || 'unknown',
+          detail: activation.activation?.reason || null,
+        },
         { label: 'event.emitted', status: 'ok', detail: event.event_type },
-        { label: 'workflow.dispatched', status: result?.status || 'no_match', detail: result?.run_id || null },
-        { label: 'output.previewed', status: 'ok', detail: `${outputPreviewFor(module, result || { steps: [] }, event).length} preview(s)` },
+        {
+          label: 'workflow.dispatched',
+          status: result?.status || 'no_match',
+          detail: result?.run_id || null,
+        },
+        {
+          label: 'output.previewed',
+          status: 'ok',
+          detail: `${outputPreviewFor(module, result || { steps: [] }, event).length} preview(s)`,
+        },
       ],
     });
   }
