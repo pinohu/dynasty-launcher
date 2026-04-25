@@ -19,6 +19,7 @@
 
  body.yd-has-shell {
    padding-top: var(--yd-header-height);
+   overflow-x: clip;
  }
 
  body.yd-has-shell > nav:not(.yd-site-header),
@@ -63,6 +64,7 @@
 
  .yd-shell-inner {
    width: min(1240px, calc(100% - 32px));
+   max-width: 100%;
    min-height: var(--yd-header-height);
    margin: 0 auto;
    display: flex;
@@ -170,6 +172,7 @@
 
  .yd-mobile-grid {
    width: min(760px, calc(100% - 32px));
+   max-width: 100%;
    margin: 0 auto;
    padding: 14px 0 18px;
    display: grid;
@@ -362,6 +365,21 @@
      --yd-header-height: 64px;
    }
 
+   body.yd-has-shell {
+     overflow-x: hidden;
+   }
+
+   .yd-site-header,
+   .yd-mobile-panel {
+     max-width: 100vw;
+     overflow-x: hidden;
+   }
+
+   .yd-shell-inner {
+     width: calc(100% - 24px);
+     gap: 12px;
+   }
+
    .yd-brand {
      font-size: 14px;
    }
@@ -375,6 +393,10 @@
    .yd-footer-grid,
    .yd-site-map-grid {
      grid-template-columns: 1fr;
+   }
+
+   .yd-mobile-grid {
+     width: calc(100% - 24px);
    }
 
    .yd-footer-bottom {
