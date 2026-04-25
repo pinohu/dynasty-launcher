@@ -15,12 +15,13 @@
     "test:billing": "node scripts/smoke-billing.mjs",
     "test:generated-repair": "node scripts/generated-repo-regression.mjs",
     "test:site-links": "node scripts/check-site-links.mjs",
+    "test:builder-clickability": "node scripts/check-builder-clickability.mjs",
     "test:html-script-safety": "node scripts/check-html-script-safety.mjs",
     "test:prompts": "npx --yes promptfoo@0.120.19 eval -c promptfooconfig.yaml",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:generated-repair && npm run test:site-links && npm run test:html-script-safety"
+    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:html-script-safety"
   },
   "engines": {
     "node": "20.x"

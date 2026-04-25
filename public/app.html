@@ -637,7 +637,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
   <div class="logo" id="builder-header">
     <div class="lm">⚡</div>
     <div><div class="lt">Your Deputy</div><div class="ls">Describe the business unit - we validate the niche, generate the operating layer, repair build issues, and report whether revenue, RevOps, CRM, AI/MCP, infrastructure, routes, live content, and quality gates passed</div></div>
-    <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:70px;background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600" onclick="handleSignIn()">Sign In</button>
+    <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:70px;background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600">Sign In</button>
     <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">📊</button>
     <button class="lset" id="settings-btn" title="Settings">⚙</button>
   </div>
@@ -650,13 +650,13 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     </div>
 
     <div class="mode-cards">
-      <div class="mode-card" id="mode-quick" onclick="selectMode('quick')">
+      <div class="mode-card" id="mode-quick">
         <div class="mc-icon">⚡</div>
         <h3>Quick Build</h3>
         <p>Fast path from idea to deployable build. Start lean, then expand.</p>
         <div class="mc-tag">~3 min target to push · varies</div>
       </div>
-      <div class="mode-card" id="mode-strategic" onclick="selectMode('strategic')">
+      <div class="mode-card" id="mode-strategic">
         <div class="mc-icon">🏛️</div>
         <h3>Strategic Build</h3>
         <p>Add deeper analysis and planning before launching through the same pipeline.</p>
@@ -666,8 +666,8 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
 
     <div class="view-toggle">
       <span class="vt-label">Layout:</span>
-      <button class="vt-btn active" id="vt-wizard" onclick="selectView('wizard')">Step-by-step wizard</button>
-      <button class="vt-btn" id="vt-scroll" onclick="selectView('scroll')">Single page scroll</button>
+      <button class="vt-btn active" id="vt-wizard">Step-by-step wizard</button>
+      <button class="vt-btn" id="vt-scroll">Single page scroll</button>
     </div>
   </div>
 
@@ -1345,8 +1345,8 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
       '<p style="font-size:12px;color:rgba(255,255,255,.3);margin-top:12px;cursor:pointer" onclick="document.getElementById(\'step1\').style.display=\'block\';document.getElementById(\'step2\').style.display=\'none\'">← Use a different email</p>',
       '</div></div>',
       '<p style="font-size:13px;color:rgba(255,255,255,.25);margin-top:8px">New here? <a href="/" style="color:#C9A84C;text-decoration:none">Start free →</a></p>',
-      '<script src="/site-shell.js" defer><\\/script>
-</body></html>'
+      '<script src="/site-shell.js" defer><\\/script>',
+      '</body></html>'
     ].join('');
     // Recovery logic
     var _recoverEmail = '';
@@ -1567,10 +1567,8 @@ function updateAuthUI() {
     authBtn.innerHTML = avatar 
       ? `<img src="${escapeHtml(avatar)}" loading="lazy" width="28" height="28" alt="" style="width:24px;height:24px;border-radius:50%;vertical-align:middle" /> ${escapeHtml(name)}`
       : name;
-    authBtn.onclick = () => CLERK_INSTANCE?.openUserProfile();
   } else {
     authBtn.innerHTML = 'Sign In';
-    authBtn.onclick = () => handleSignIn();
   }
   updateHistoryButtonVisibility();
 }
@@ -3397,6 +3395,44 @@ function selectView(view) {
   V2_VIEW = view;
   document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('vt-' + view).classList.add('active');
+}
+
+function bindBuilderEntryControls() {
+  const authBtn = document.getElementById('auth-btn');
+  if (authBtn && !authBtn.dataset.boundBuilderAuth) {
+    authBtn.dataset.boundBuilderAuth = 'true';
+    authBtn.addEventListener('click', handleSignIn);
+  }
+
+  const quickCard = document.getElementById('mode-quick');
+  if (quickCard && !quickCard.dataset.boundBuilderMode) {
+    quickCard.dataset.boundBuilderMode = 'true';
+    quickCard.addEventListener('click', () => selectMode('quick'));
+  }
+
+  const strategicCard = document.getElementById('mode-strategic');
+  if (strategicCard && !strategicCard.dataset.boundBuilderMode) {
+    strategicCard.dataset.boundBuilderMode = 'true';
+    strategicCard.addEventListener('click', () => selectMode('strategic'));
+  }
+
+  const wizardBtn = document.getElementById('vt-wizard');
+  if (wizardBtn && !wizardBtn.dataset.boundBuilderView) {
+    wizardBtn.dataset.boundBuilderView = 'true';
+    wizardBtn.addEventListener('click', () => selectView('wizard'));
+  }
+
+  const scrollBtn = document.getElementById('vt-scroll');
+  if (scrollBtn && !scrollBtn.dataset.boundBuilderView) {
+    scrollBtn.dataset.boundBuilderView = 'true';
+    scrollBtn.addEventListener('click', () => selectView('scroll'));
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindBuilderEntryControls);
+} else {
+  bindBuilderEntryControls();
 }
 
 // Framework toggling + scorecard
