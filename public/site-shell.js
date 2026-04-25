@@ -1,6 +1,6 @@
 (function () {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
-  const toolPaths = new Set(["/app", "/admin"]);
+  const toolPaths = new Set(["/admin"]);
   const skipShell = document.documentElement.hasAttribute("data-no-site-shell") || toolPaths.has(path);
 
   const navLinks = [

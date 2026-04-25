@@ -2281,6 +2281,25 @@ function showPreflightModal(report) {
           </div>
         </div>
       </div>`;
+    const project = report.project || {};
+    const files = report.files_to_generate || [];
+    const fileItems = files.map((f) => '<code>' + escapeHtml(String(f)) + '</code>').join(' ');
+    modal.innerHTML = [
+      '<div class="pf-overlay" onclick="window._pfResolve && window._pfResolve(false)">',
+      '<div class="pf-card" onclick="event.stopPropagation()">',
+      '<div class="pf-header"><span class="pf-icon">🛫</span><h3>Preflight Review</h3><p>Review what will be created before launching</p></div>',
+      '<div class="pf-section"><h4>Project</h4>',
+      '<div class="pf-infra-item"><span class="pf-label">Name</span><span class="pf-value">' + escapeHtml(project.name || '') + '</span></div>',
+      '<div class="pf-infra-item"><span class="pf-label">Type</span><span class="pf-value">' + escapeHtml(project.type || '') + '</span></div>',
+      '<div class="pf-infra-item"><span class="pf-label">Stack</span><span class="pf-value">' + escapeHtml((project.stack || []).join(', ')) + '</span></div>',
+      '</div>',
+      '<div class="pf-section"><h4>' + files.length + ' Files to Generate</h4><div class="pf-files">' + fileItems + '</div></div>',
+      '<div class="pf-section"><h4>Infrastructure</h4>' + (infraItems || '<div class="pf-muted">No infrastructure provisioning</div>') + '</div>',
+      '<div class="pf-section"><h4>Estimated Time</h4><div class="pf-infra-item"><span class="pf-label">With parallel execution</span><span class="pf-value">' + escapeHtml(report.estimated_time?.with_parallel || '~30s') + '</span></div></div>',
+      '<div class="pf-section"><h4>Active Flags</h4><div class="pf-flags">' + (flagsList || '<span class="pf-muted">defaults</span>') + '</div></div>',
+      '<div class="pf-actions"><button class="pf-btn pf-btn-cancel" onclick="window._pfResolve && window._pfResolve(false)">Cancel</button><button class="pf-btn pf-btn-launch" onclick="window._pfResolve && window._pfResolve(true)">🚀 Launch Build</button></div>',
+      '</div></div>'
+    ].join('');
     document.body.appendChild(modal);
     modal.querySelector('.pf-btn-launch')?.focus();
   });
@@ -15181,5 +15200,6 @@ window.addEventListener('scroll', () => {
 
 window.addEventListener('load', () => { dynastyRefreshCkptBanner(); });
 </script>
+<script src="/site-shell.js" defer></script>
 </body>
 </html>
