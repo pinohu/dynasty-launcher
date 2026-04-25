@@ -1,0 +1,44 @@
+{
+  "tools": [
+    {
+      "name": "vercel_env_list",
+      "description": "List env var NAMES (never values) set on a Vercel project. ALWAYS call this before setting new vars to avoid clobbering secrets placed by earlier subagents.",
+      "input_schema": {"type": "object", "properties": {"project_id": {"type": "string"}, "environment": {"enum": ["production", "preview", "development"]}}, "required": ["project_id"]}
+    },
+    {
+      "name": "vercel_env_set",
+      "description": "Set env vars on a Vercel project. ALWAYS team=team_fuTLGjBMk3NAD32Bm5hA7wkr. Values are written, never echoed back — tool result returns only names. NEVER pass plaintext values that should be secrets; reference DYNASTY_TOOL_CONFIG keys instead.",
+      "input_schema": {"type": "object", "properties": {"project_id": {"type": "string"}, "environment": {"enum": ["production", "preview", "development"]}, "vars": {"type": "object"}}, "required": ["project_id", "environment", "vars"]}
+    },
+    {
+      "name": "vercel_deploy",
+      "description": "Trigger a deploy of a GitHub commit. production=true by default. ALWAYS team=team_fuTLGjBMk3NAD32Bm5hA7wkr. Returns a deployment_id; you then call wait_deployment until ready.",
+      "input_schema": {"type": "object", "properties": {"project_id": {"type": "string"}, "git_ref": {"type": "string"}, "production": {"type": "boolean"}}, "required": ["project_id", "git_ref"]}
+    },
+    {
+      "name": "wait_deployment",
+      "description": "Wait for a deployment to reach ready or error state. Returns state transitions; does NOT poll blindly. Max wait 5 minutes — if building still at 5 minutes, returns timeout and you emit halt with reason=time_cap.",
+      "input_schema": {"type": "object", "properties": {"deployment_id": {"type": "string"}}, "required": ["deployment_id"]}
+    },
+    {
+      "name": "smoke_fetch",
+      "description": "Perform one HTTP request against a live URL and return status, timing, and body size (not body content unless it's under 4KB and text). 200/301/302 are acceptable; 4xx/5xx are recorded but don't auto-halt unless every route fails.",
+      "input_schema": {"type": "object", "properties": {"url": {"type": "string"}, "method": {"enum": ["GET", "POST", "HEAD"]}, "expect_status": {"type": "integer"}}, "required": ["url"]}
+    },
+    {
+      "name": "wcag_preflight",
+      "description": "Run axe-core against a URL and return violation counts by severity. This is the deployer's FAST sanity check — the auditor subagent runs the full WCAG audit later. Violations > 0 is a signal, NOT a halt condition for the deployer.",
+      "input_schema": {"type": "object", "properties": {"url": {"type": "string"}}, "required": ["url"]}
+    },
+    {
+      "name": "emit_halt",
+      "description": "Halt per halt-conditions or escalation policy. Build timeout is a halt. Smoke test failures are NOT a halt unless every tested route failed.",
+      "input_schema": {"type": "object", "properties": {"run_id": {"type": "string"}, "reason": {"type": "string"}, "context": {"type": "string"}}, "required": ["run_id", "reason"]}
+    },
+    {
+      "name": "submit_results",
+      "description": "Return the deployment + smoke tests per the submit contract in loop.txt. NEVER include env var values — names only.",
+      "input_schema": {"type": "object", "properties": {"plan_item_id": {"type": "string"}, "run_id": {"type": "string"}, "deployment": {"type": "object"}, "env_vars_set": {"type": "array"}, "smoke_tests": {"type": "array"}, "wcag_preflight": {"type": "object"}, "acceptance_met": {"type": "array"}}, "required": ["plan_item_id", "run_id", "deployment"]}
+    }
+  ]
+}
