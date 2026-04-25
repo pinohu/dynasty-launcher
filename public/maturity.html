@@ -45,7 +45,7 @@ details.matrix table{display:block;overflow-x:auto;-webkit-overflow-scrolling:to
 <p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/deliverables">Full deliverables inventory</a> · <a href="/#pricing">Pricing</a></p>
 <h1>What ships in an autonomous business unit</h1>
 <p class="lead">This page exists for one reason: <strong>accountability before purchase</strong>. Dynasty now targets a business-complete operating unit: website, funnel, products, CRM, RevOps, payments, onboarding, support, analytics, AI agents, MCP tools, workflows, and self-hosted infrastructure, with credential-gated integrations called out plainly.</p>
-<p class="note"><strong>Last reviewed:</strong> 2026-04-25. <strong>Current launch standard:</strong> generated repos are validated for master config, required schemas, required workflows, MCP tools, RevOps modules, info products, pricing, checkout, payment abstraction, onboarding, support, analytics, security baseline, niche alignment, and self-hostable infrastructure before they can report BUILD STATUS: PASS.<br><br> Seven tiers are available today:<br>
+<p class="note"><strong>Last reviewed:</strong> 2026-04-25. <strong>Current launch standard:</strong> generated repos are validated for master config, required schemas, required workflows, MCP tools, RevOps modules, info products, pricing, checkout, payment abstraction, onboarding, support, analytics, security baseline, niche alignment, self-hostable infrastructure, full SaaS/company SDLC coverage, OWASP ASVS/SAMM evidence, NIST AI RMF risk tracking, ISO 42001 readiness, official MCP conformance metadata, OpenTelemetry observability, GitHub deployment protection, tenancy decision records, and semantic promise-equivalence fixtures before they can report BUILD STATUS: PASS.<br><br> Seven tiers are available today:<br>
 <strong>Free Scoring</strong> ($0) — viability scorecard only.<br>
 <strong>Scoring Pro</strong> ($19/mo) — unlimited scoring with priority models.<br>
 <strong>Blueprint</strong> ($297) — deep diagnostic + execution plan.<br>
@@ -65,12 +65,12 @@ details.matrix table{display:block;overflow-x:auto;-webkit-overflow-scrolling:to
 <div class="sum">
 <span><strong style="color:var(--live)">Live:</strong> 22</span>
 <span><strong style="color:var(--partial)">Partial:</strong> 6</span>
-<span><strong style="color:var(--sub)">Codegen:</strong> 4</span>
+<span><strong style="color:var(--sub)">Codegen:</strong> 12</span>
 <span><strong style="color:var(--ready)">Planned:</strong> 5</span>
 </div>
 
 <details class="matrix">
-<summary>Detailed technical matrix (37 rows)</summary>
+<summary>Detailed technical matrix (45 rows)</summary>
 <table role="table" aria-label="Feature status matrix">
 <thead>
 <tr><th>Outcome area</th><th>Status</th><th>Customer-visible proof</th><th>Notes</th></tr>
@@ -84,6 +84,14 @@ details.matrix table{display:block;overflow-x:auto;-webkit-overflow-scrolling:to
 <tr><td>Design system + CLAUDE.md per project</td><td><span class="tag gen">Codegen</span></td><td><code>DESIGN.md</code>, <code>CLAUDE.md</code></td><td>—</td></tr>
 <tr><td>Next.js app + validation gate (icons, branding, i18n, etc.)</td><td><span class="tag gen">Codegen</span></td><td>Runnable repo; 8-check gate in builder</td><td>—</td></tr>
 <tr><td>Artifact quality gate (critical docs / backend snippet)</td><td><span class="tag partial">Partial</span></td><td><code>/api/validate</code> + completion checklist</td><td>Placeholder &amp; template-leak patterns; project-name grounding in SPEC + BUSINESS-SYSTEM; not a compliance certification.</td></tr>
+<tr><td>Full SaaS + company SDLC contract</td><td><span class="tag gen">Codegen</span></td><td><code>sdlc/</code> artifacts plus semantic-equivalence tests</td><td>Problem discovery, product strategy, architecture, UX, MVP scoping, planning, development, QA, launch, GTM, retention, operations, and continuous improvement are required generated evidence.</td></tr>
+<tr><td>OWASP security assurance pack</td><td><span class="tag gen">Codegen</span></td><td><code>security/owasp-asvs-checklist.yaml</code>, <code>security/owasp-samm-maturity.yaml</code></td><td>Security control evidence is generated as a readiness checklist; it does not replace a penetration test or formal certification.</td></tr>
+<tr><td>AI governance readiness</td><td><span class="tag gen">Codegen</span></td><td><code>governance/nist-ai-rmf-risk-register.yaml</code>, <code>governance/iso-42001-readiness.md</code></td><td>NIST AI RMF govern/map/measure/manage coverage and ISO 42001 readiness prompts are required for AI-native builds.</td></tr>
+<tr><td>MCP conformance evidence</td><td><span class="tag gen">Codegen</span></td><td><code>mcp/mcp-conformance.yaml</code>, <code>tests/mcp-conformance.test.ts</code></td><td>Tool metadata must cover tools/list, tools/call, resources, prompts, authorization, consent, side effects, idempotency, and error states.</td></tr>
+<tr><td>OpenTelemetry observability scaffold</td><td><span class="tag gen">Codegen</span></td><td><code>observability/otel-config.yaml</code>, <code>src/observability/tracing.ts</code></td><td>Generated apps include trace, metric, log, trace_id, collector, and business-event correlation scaffolds.</td></tr>
+<tr><td>GitHub deployment protection contract</td><td><span class="tag gen">Codegen</span></td><td><code>deployment/github-actions-protection.yaml</code>, <code>tests/deployment-protection.test.ts</code></td><td>Required checks, protected environments, concurrency, branch protection, and deployment protection are encoded as launch evidence.</td></tr>
+<tr><td>Tenancy architecture decision</td><td><span class="tag gen">Codegen</span></td><td><code>architecture/tenancy-decision.md</code></td><td>Generated repos must record tenant isolation, shared-table/schema/database tradeoffs, migration, backup, and disaster-recovery posture.</td></tr>
+<tr><td>Semantic promise-equivalence evals</td><td><span class="tag gen">Codegen</span></td><td><code>evals/semantic-niche-rubric.yaml</code>, <code>evals/promise-equivalence-fixtures.yaml</code></td><td>Website promises are mapped to generated artifacts so future builds cannot silently ship generic or promise-incomplete output.</td></tr>
 <tr><td>Multi-pass deploy verification (GitHub, Vercel, live, routes)</td><td><span class="tag live">Live</span></td><td>Build log + honest done screen when checks fail</td><td>Strict live check (project name, no template branding leak on home + key routes). Retries/stabilization passes in client pipeline.</td></tr>
 <tr><td>U.S. government contracting planning pack</td><td><span class="tag gen">Codegen</span></td><td><code>docs/GOV-READINESS.md</code>, NAICS candidates, capabilities template, RFP outline</td><td><strong>Opt-in</strong> in builder; informational only; no fabricated solicitations or awards; verify on official .gov sources.</td></tr>
 <tr><td>Vertical niche tool scaffold (e.g. takeoff assist)</td><td><span class="tag partial">Partial</span></td><td>Routes, schema SQL, env examples; Blob/Postgres wired when configured</td><td>Assist-only positioning; not a licensed bid.</td></tr>

@@ -145,8 +145,23 @@ const FULL_SDLC_REQUIRED_PATHS = [
   'pre-saas/data-feedback-loop.yaml',
   'pre-saas/saas-transition-triggers.yaml',
   'memory/knowledge-system.md',
+  'security/owasp-asvs-checklist.yaml',
+  'security/owasp-samm-maturity.yaml',
+  'governance/nist-ai-rmf-risk-register.yaml',
+  'governance/iso-42001-readiness.md',
+  'mcp/mcp-conformance.yaml',
+  'observability/otel-config.yaml',
+  'src/observability/tracing.ts',
+  'deployment/github-actions-protection.yaml',
+  'architecture/tenancy-decision.md',
+  'evals/semantic-niche-rubric.yaml',
+  'evals/promise-equivalence-fixtures.yaml',
   'ux/accessibility-checklist.md',
   'ux/design-system.md',
+  'tests/security-standards.test.ts',
+  'tests/mcp-conformance.test.ts',
+  'tests/observability.test.ts',
+  'tests/deployment-protection.test.ts',
   'tests/accessibility.test.ts',
   'tests/semantic-equivalence.test.ts',
   'tests/revenue-loop.test.ts',
@@ -165,6 +180,12 @@ const SEMANTIC_PROMISE_GROUPS = [
   { code: 'continuous_improvement', label: 'continuous improvement loop', terms: ['usage analytics', 'conversion analysis', 'product telemetry', 'pricing optimization', 'A/B testing', 'feature rollout', 'market expansion', 'ecosystem'] },
   { code: 'pre_saas_revenue_loop', label: 'pre-SaaS revenue engine', terms: ['authority engine', 'information product factory', 'auto-listing', 'lead magnet', 'checkout', 'digital delivery', 'revenue reinvestment', 'winner detection', 'SaaS transition'] },
   { code: 'ai_mcp_memory', label: 'AI-native MCP and memory system', terms: ['MCP', 'tool registry', 'agent permissions', 'pgvector', 'document ingestion', 'retrieval API', 'customer-specific retrieval', 'prompt injection'] },
+  { code: 'security_standards', label: 'OWASP security assurance', terms: ['OWASP ASVS', 'OWASP SAMM', 'authentication', 'session', 'access control', 'input validation', 'secrets', 'logging', 'verification'] },
+  { code: 'ai_governance', label: 'NIST AI risk management and ISO 42001 readiness', terms: ['NIST AI RMF', 'AI risk register', 'govern', 'map', 'measure', 'manage', 'ISO 42001', 'lifecycle', 'supplier'] },
+  { code: 'mcp_conformance', label: 'official MCP conformance', terms: ['Model Context Protocol', 'tools/list', 'tools/call', 'resources', 'prompts', 'consent', 'authorization', 'security implications'] },
+  { code: 'observability', label: 'OpenTelemetry observability', terms: ['OpenTelemetry', 'traces', 'metrics', 'logs', 'span', 'trace_id', 'collector', 'business event'] },
+  { code: 'deployment_protection', label: 'GitHub deployment protection', terms: ['GitHub Actions', 'environments', 'required status checks', 'concurrency', 'deployment protection', 'branch protection'] },
+  { code: 'tenancy_decision', label: 'multi-tenancy architecture decision', terms: ['shared table', 'schema-per-tenant', 'database-per-tenant', 'tenant isolation', 'migration', 'backup', 'disaster recovery'] },
 ];
 
 const REQUIRED_SCHEMA_FILES = [
@@ -487,6 +508,24 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
         break;
       }
     }
+    const standardsText = [
+      'security/owasp-asvs-checklist.yaml',
+      'security/owasp-samm-maturity.yaml',
+      'governance/nist-ai-rmf-risk-register.yaml',
+      'governance/iso-42001-readiness.md',
+      'mcp/mcp-conformance.yaml',
+      'observability/otel-config.yaml',
+      'deployment/github-actions-protection.yaml',
+      'architecture/tenancy-decision.md',
+      'evals/semantic-niche-rubric.yaml',
+      'evals/promise-equivalence-fixtures.yaml',
+    ].map((path) => text(files, path)).join('\n');
+    for (const marker of ['OWASP ASVS', 'OWASP SAMM', 'NIST AI RMF', 'ISO 42001', 'Model Context Protocol', 'OpenTelemetry', 'GitHub Actions', 'semantic equivalence', 'tenant isolation']) {
+      if (!new RegExp(marker, 'i').test(standardsText)) {
+        issues.push(issue('standards_alignment_missing', `Generated standards alignment is missing ${marker}.`, ['security/', 'governance/', 'mcp/', 'observability/', 'deployment/', 'architecture/', 'evals/'], 'critical'));
+        break;
+      }
+    }
 
     const revopsText = ['revops/pricing.yaml', 'revops/quote-templates/default.md', 'revops/proposal-templates/default.md', 'revops/contract-templates/msa.md', 'revops/invoice-templates/default.md']
       .map((path) => text(files, path)).join('\n');
@@ -536,6 +575,17 @@ export function detectGeneratedRepoIssues(files, contract = {}) {
       'analytics/revenue-metrics.yaml',
       'src/auth/rbac.ts',
       'src/events/bus.ts',
+      'security/owasp-asvs-checklist.yaml',
+      'security/owasp-samm-maturity.yaml',
+      'governance/nist-ai-rmf-risk-register.yaml',
+      'governance/iso-42001-readiness.md',
+      'mcp/mcp-conformance.yaml',
+      'observability/otel-config.yaml',
+      'src/observability/tracing.ts',
+      'deployment/github-actions-protection.yaml',
+      'architecture/tenancy-decision.md',
+      'evals/semantic-niche-rubric.yaml',
+      'evals/promise-equivalence-fixtures.yaml',
     ].map((path) => text(files, path)).join('\n').toLowerCase();
     const missingPromiseGroups = SEMANTIC_PROMISE_GROUPS.filter((group) => {
       const hits = group.terms.filter((term) => semanticCorpus.includes(term.toLowerCase())).length;
@@ -1180,6 +1230,7 @@ function buildBusinessUnitFiles(contract = {}) {
   Object.assign(files, buildContentFiles({ businessName, niche, targetCustomer, primaryOffer }));
   Object.assign(files, buildFullSdlcFiles({ businessName, niche, targetCustomer, primaryOffer, domain }));
   Object.assign(files, buildPreSaasLoopFiles({ niche, targetCustomer, primaryOffer }));
+  Object.assign(files, buildStandardsFiles({ businessName, niche, targetCustomer, primaryOffer }));
   files['products/product-catalog.yaml'] = buildProductCatalog({ niche, targetCustomer, primaryOffer });
   files['analytics/funnel-metrics.yaml'] = buildMetricYaml('funnel', ['visitors', 'leads', 'conversion_rate', 'checkout_conversion', 'article_performance']);
   files['analytics/revenue-metrics.yaml'] = buildMetricYaml('revenue', ['product_revenue', 'recurring_revenue', 'failed_payments', 'revenue_by_product', 'revenue_by_offer', 'revenue_by_niche']);
@@ -1193,6 +1244,10 @@ function buildBusinessUnitFiles(contract = {}) {
   files['tests/revops.test.ts'] = buildGeneratedTest('revops', ['revops/pricing.yaml', 'revops/proposal-templates/default.md', 'revops/contract-templates/msa.md', 'revops/invoice-templates/default.md']);
   files['tests/niche-validation.test.ts'] = buildGeneratedTest('niche-validation', ['content/seo-plan.yaml', 'products/product-catalog.yaml', 'prompts/niche-research.md']);
   files['tests/accessibility.test.ts'] = buildGeneratedTest('accessibility', ['ux/accessibility-checklist.md', 'ux/design-system.md']);
+  files['tests/security-standards.test.ts'] = buildGeneratedTest('security-standards', ['security/owasp-asvs-checklist.yaml', 'security/owasp-samm-maturity.yaml', 'governance/nist-ai-rmf-risk-register.yaml']);
+  files['tests/mcp-conformance.test.ts'] = buildGeneratedTest('mcp-conformance', ['mcp/mcp-conformance.yaml', 'agents/tool-registry.json']);
+  files['tests/observability.test.ts'] = buildGeneratedTest('observability', ['observability/otel-config.yaml', 'src/observability/tracing.ts']);
+  files['tests/deployment-protection.test.ts'] = buildGeneratedTest('deployment-protection', ['deployment/github-actions-protection.yaml']);
   files['tests/semantic-equivalence.test.ts'] = buildGeneratedTest('semantic-equivalence', FULL_SDLC_REQUIRED_PATHS);
   files['tests/revenue-loop.test.ts'] = buildGeneratedTest('revenue-loop', ['pre-saas/auto-listing-adapters.yaml', 'pre-saas/revenue-reinvestment-loop.yaml', 'pre-saas/data-feedback-loop.yaml', 'pre-saas/saas-transition-triggers.yaml']);
   files['tests/build-completeness.test.ts'] = buildGeneratedTest('build-completeness', [...BUSINESS_UNIT_REQUIRED_PATHS, ...FULL_SDLC_REQUIRED_PATHS, ...REQUIRED_SCHEMA_FILES]);
@@ -1609,6 +1664,173 @@ function buildPreSaasLoopFiles({ niche, targetCustomer, primaryOffer }) {
     'pre-saas/revenue-reinvestment-loop.yaml': `revenue reinvestment:\n  winner detection:\n    inputs: [product_revenue, conversion_rate, refund_rate, engagement_time]\n  actions:\n    - expand winning products\n    - create product variant generation tasks\n    - increase pricing within guardrails\n    - promote more heavily through SEO and email\n  target_customer: "${targetCustomer}"\n`,
     'pre-saas/data-feedback-loop.yaml': `data feedback loop:\n  listens_to: [click-through rate, conversion rate, refund rate, engagement time, search queries]\n  improves: [products, landing pages, checkout, email nurture, support content]\n  analytics: internal\n`,
     'pre-saas/saas-transition-triggers.yaml': `SaaS transition:\n  repeated_problem_patterns: required\n  high_demand_topics: required\n  high_converting_products: required\n  trigger_action: convert signal into SaaS feature, service, or subscription\n  primary_offer: "${primaryOffer}"\n`,
+  };
+}
+
+function buildStandardsFiles({ businessName, niche, targetCustomer, primaryOffer }) {
+  return {
+    'security/owasp-asvs-checklist.yaml': `standard: OWASP ASVS
+business: "${businessName}"
+niche: "${niche}"
+verification_level: level_2_baseline
+required_controls:
+  - id: ASVS-authentication
+    topic: authentication
+    required: true
+  - id: ASVS-session
+    topic: session management
+    required: true
+  - id: ASVS-access-control
+    topic: access control and tenant isolation
+    required: true
+  - id: ASVS-input-validation
+    topic: input validation and output encoding
+    required: true
+  - id: ASVS-secrets
+    topic: secrets and configuration
+    required: true
+  - id: ASVS-logging
+    topic: logging, audit trails, and verification evidence
+    required: true
+`,
+    'security/owasp-samm-maturity.yaml': `standard: OWASP SAMM
+target_maturity: 2
+streams:
+  governance: [strategy, policy, education]
+  design: [threat_assessment, security_requirements, secure_architecture]
+  implementation: [secure_build, secure_deployment, defect_management]
+  verification: [architecture_assessment, requirements_testing, security_testing]
+  operations: [incident_management, environment_management, operational_management]
+score_rule: generated build cannot report PASS until every stream has owner, artifact, and test evidence.
+`,
+    'governance/nist-ai-rmf-risk-register.yaml': `standard: NIST AI RMF
+profile: generative_ai
+business: "${businessName}"
+functions:
+  govern:
+    - owner assigned for AI tools, model choices, prompt registry, and approval thresholds
+  map:
+    - document AI use cases, affected users, data sources, and ${niche} business context
+  measure:
+    - run semantic equivalence evals, prompt injection tests, tool permission tests, and hallucination checks
+  manage:
+    - log residual risk, degraded fallbacks, vendor outages, and human approval requirements
+risks:
+  - prompt injection
+  - off-niche generation
+  - unsafe autonomous tool action
+  - privacy leakage
+  - unsupported legal or financial advice
+`,
+    'governance/iso-42001-readiness.md': `# ISO 42001 Readiness
+
+Business: ${businessName}
+Niche: ${niche}
+
+This generated business unit includes an AI management-system starter: leadership ownership, AI inventory, lifecycle controls, supplier and third-party management, risk assessment, monitoring, incident response, and continuous improvement. It is a readiness artifact, not a certification.
+`,
+    'mcp/mcp-conformance.yaml': `standard: Model Context Protocol
+server:
+  exposes: [tools/list, tools/call, resources/list, resources/read, prompts/list, prompts/get]
+  consent: user-visible before side effects
+  authorization: RBAC plus agent permissions
+  security implications: documented per tool
+tools:
+  registry: /agents/tool-registry.json
+  idempotency: required for writes
+  side_effects: explicit
+  error_states: explicit
+resources:
+  schemas: /schemas
+  memory: pgvector-backed retrieval API
+`,
+    'observability/otel-config.yaml': `standard: OpenTelemetry
+signals: [traces, metrics, logs]
+collector: enabled
+required_spans:
+  - api.request
+  - workflow.run
+  - mcp.tool_call
+  - payment.event
+  - business.event
+  - build.repair
+required_attributes:
+  - trace_id
+  - span_id
+  - tenant_id
+  - business_event_type
+  - tool_name
+  - workflow_id
+`,
+    'src/observability/tracing.ts': `export type BusinessTrace = { trace_id: string; span_id: string; tenant_id: string; business_event_type: string };
+
+export function startBusinessSpan(name: string, attrs: Record<string, string>) {
+  return {
+    name,
+    trace_id: attrs.trace_id || crypto.randomUUID(),
+    span_id: crypto.randomUUID(),
+    attributes: attrs,
+    standard: 'OpenTelemetry',
+  };
+}
+
+export function correlateBusinessEvent(event: { tenant_id: string; type: string }) {
+  return startBusinessSpan('business.event', { tenant_id: event.tenant_id, business_event_type: event.type });
+}
+`,
+    'deployment/github-actions-protection.yaml': `platform: GitHub Actions
+summary: GitHub Actions deployment protection requires branch protection, required status checks, protected environments, and production concurrency before launch.
+branch_protection:
+  required_status_checks:
+    - build-completeness
+    - security-standards
+    - mcp-conformance
+    - observability
+    - semantic-equivalence
+    - live-route-smoke
+environments:
+  production:
+    concurrency: production
+    deployment protection: contract and quality checks must pass
+    secrets_scope: production only
+`,
+    'architecture/tenancy-decision.md': `# Tenancy Architecture Decision
+
+Business: ${businessName}
+Niche: ${niche}
+Target customer: ${targetCustomer}
+
+Options considered:
+- shared table with tenant_id: lowest cost, strongest need for row-level access control.
+- schema-per-tenant: better tenant isolation, harder migrations at high tenant counts.
+- database-per-tenant: strongest isolation and disaster recovery, higher operational cost.
+
+Default decision: shared table for early self-hosted builds with strict tenant isolation, audit logs, backup validation, and migration playbooks. Regulated or BYOC customers may promote to schema-per-tenant or database-per-tenant.
+`,
+    'evals/semantic-niche-rubric.yaml': `semantic equivalence:
+  niche: "${niche}"
+  target_customer: "${targetCustomer}"
+  primary_offer: "${primaryOffer}"
+  pass_threshold: 0.86
+  dimensions:
+    - niche keyword relevance
+    - buyer persona alignment
+    - product-offer alignment
+    - pricing-offer alignment
+    - contract-scope alignment
+    - workflow-purpose alignment
+    - no generic SaaS filler
+`,
+    'evals/promise-equivalence-fixtures.yaml': `semantic equivalence fixtures:
+  pass:
+    - "A ${niche} offer for ${targetCustomer} that connects ${primaryOffer} to lead capture, checkout, onboarding, and support."
+  fail:
+    - "A generic SaaS website with auth and a dashboard."
+  judge:
+    deterministic_checks: [required_artifacts, required_counts, banned_placeholders]
+    llm_as_judge: optional_when_provider_available
+    fallback: fail closed when semantic equivalence cannot be established
+`,
   };
 }
 
