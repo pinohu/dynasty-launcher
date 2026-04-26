@@ -108,12 +108,24 @@ export function repairDeploymentFailure(files, diagnostic) {
 
   if (diagnostic.class === 'missing_dependency' && pkg) {
     pkg.dependencies = pkg.dependencies || {};
+    pkg.devDependencies = pkg.devDependencies || {};
+    const dependencyMap = {
+      'drizzle-orm': { section: 'dependencies', version: '^0.39.3' },
+      '@vitejs/plugin-react': { section: 'devDependencies', version: '^4.3.4' },
+      '@testing-library/jest-dom': { section: 'devDependencies', version: '^6.6.0' },
+      '@testing-library/react': { section: 'devDependencies', version: '^16.2.0' },
+      vitest: { section: 'devDependencies', version: '^3.2.4' },
+      zod: { section: 'dependencies', version: '^3.23.8' },
+    };
     for (const dep of diagnostic.missingPackages) {
       if (!pkg.dependencies[dep] && !pkg.devDependencies?.[dep]) {
-        pkg.dependencies[dep] = 'latest';
+        const mapped = dependencyMap[dep] || { section: 'dependencies', version: 'latest' };
+        pkg[mapped.section] = pkg[mapped.section] || {};
+        pkg[mapped.section][dep] = mapped.version;
         actions.push({ code: 'missing_dependency', action: 'add_dependency', path: pkgPath, detail: dep });
       }
     }
+    pkg.overrides = { ...(pkg.overrides || {}), postcss: '^8.5.10' };
     out[pkgPath] = JSON.stringify(pkg, null, 2) + '\n';
   }
 
@@ -133,7 +145,8 @@ export function repairDeploymentFailure(files, diagnostic) {
     rootPkg.scripts['vercel-build'] = 'npm --prefix frontend run build';
     rootPkg.scripts['frontend:build'] = rootPkg.scripts['frontend:build'] || 'npm --prefix frontend run build';
     rootPkg.engines = rootPkg.engines || { node: '20.x' };
-    rootPkg.devDependencies = { ...(rootPkg.devDependencies || {}), next: '^15.2.4', react: '^18.3.1', 'react-dom': '^18.3.1' };
+    rootPkg.devDependencies = { ...(rootPkg.devDependencies || {}), next: '^16.2.4', react: '^19.2.3', 'react-dom': '^19.2.3', postcss: '^8.5.10' };
+    rootPkg.overrides = { ...(rootPkg.overrides || {}), postcss: '^8.5.10' };
     out['package.json'] = JSON.stringify(rootPkg, null, 2) + '\n';
     out['vercel.json'] = JSON.stringify({
       framework: 'nextjs',
@@ -236,7 +249,9 @@ function ensureDeployableNextScaffold(out, actions, code) {
   pkg.scripts = pkg.scripts || {};
   pkg.scripts.build = pkg.scripts.build || 'next build';
   pkg.scripts.start = pkg.scripts.start || 'next start';
-  pkg.dependencies = { ...(pkg.dependencies || {}), next: pkg.dependencies?.next || '^15.2.4', react: pkg.dependencies?.react || '^18.3.1', 'react-dom': pkg.dependencies?.['react-dom'] || '^18.3.1' };
+  pkg.dependencies = { ...(pkg.dependencies || {}), next: pkg.dependencies?.next || '^16.2.4', react: pkg.dependencies?.react || '^19.2.3', 'react-dom': pkg.dependencies?.['react-dom'] || '^19.2.3', postcss: pkg.dependencies?.postcss || '^8.5.10' };
+  pkg.devDependencies = { ...(pkg.devDependencies || {}), '@types/react': pkg.devDependencies?.['@types/react'] || '^19.2.7', '@types/react-dom': pkg.devDependencies?.['@types/react-dom'] || '^19.2.3' };
+  pkg.overrides = { ...(pkg.overrides || {}), postcss: '^8.5.10' };
   pkg.engines = pkg.engines || { node: '20.x' };
   out[pkgPath] = JSON.stringify(pkg, null, 2) + '\n';
   actions.push({ code, action: 'ensure_next_dependencies', path: pkgPath });

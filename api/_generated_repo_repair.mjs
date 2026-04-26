@@ -1207,19 +1207,23 @@ function buildFrontendPackageJson() {
       lint: 'next lint',
     },
     dependencies: {
-      '@next/eslint-plugin-next': '^15.2.4',
-      next: '^15.2.4',
-      react: '^18.3.1',
-      'react-dom': '^18.3.1',
+      '@next/eslint-plugin-next': '^16.2.4',
+      next: '^16.2.4',
+      react: '^19.2.3',
+      'react-dom': '^19.2.3',
       'lucide-react': '^0.468.0',
+      postcss: '^8.5.10',
     },
     devDependencies: {
       '@types/node': '^20',
-      '@types/react': '^18',
-      '@types/react-dom': '^18',
+      '@types/react': '^19.2.7',
+      '@types/react-dom': '^19.2.3',
       typescript: '^5',
       eslint: '^8',
-      'eslint-config-next': '15.2.4',
+      'eslint-config-next': '16.2.4',
+    },
+    overrides: {
+      postcss: '^8.5.10',
     },
   }, null, 2) + '\n';
 }
@@ -1240,9 +1244,14 @@ function buildRootPackageJson() {
       node: '20.x',
     },
     devDependencies: {
-      next: '^15.2.4',
-      react: '^18.3.1',
-      'react-dom': '^18.3.1',
+      next: '^16.2.4',
+      react: '^19.2.3',
+      'react-dom': '^19.2.3',
+      postcss: '^8.5.10',
+      '@vitejs/plugin-react': '^4.3.4',
+    },
+    overrides: {
+      postcss: '^8.5.10',
     },
   }, null, 2) + '\n';
 }
@@ -1918,14 +1927,14 @@ function buildRevopsFiles({ businessName, niche, targetCustomer, primaryOffer })
     'revops/renewal-rules.yaml': 'renewal_notice_days: [60, 30, 7]\nauto_renewal: configurable\nchurn_risk_response: enabled\n',
     'revops/quote-templates/default.md': `# Quote for ${niche}\n\nLine items, pricing rules, discount rules, expiration date, approval rules, and quote-to-proposal workflow for ${targetCustomer}.\n`,
     'revops/proposal-templates/default.md': `# ${businessName} Proposal\n\nExecutive summary, problem statement, solution description, deliverables, implementation plan, timeline, pricing section, risk reversal, and acceptance section for ${primaryOffer}.\n`,
-    'revops/contract-templates/msa.md': '# Master Service Agreement\n\nContract scope, payment terms, renewal terms, termination terms, limitation of liability, data protection, intellectual property, dispute resolution, governing law placeholder, and signature block.\n',
+    'revops/contract-templates/msa.md': '# Master Service Agreement\n\nContract scope, payment terms, renewal terms, termination terms, limitation of liability, data protection, intellectual property, dispute resolution, customer-provided governing law field, and signature block.\n',
     'revops/contract-templates/sow.md': '# Statement of Work\n\nDeliverables, timeline, acceptance criteria, change control, fees, and signature block.\n',
     'revops/contract-templates/saas-subscription.md': '# SaaS Subscription Agreement\n\nSubscription scope, service levels, renewal, termination, data protection, and payment terms.\n',
     'revops/contract-templates/nda.md': '# NDA\n\nConfidential information, exclusions, term, remedies, and signature block.\n',
     'revops/contract-templates/dpa.md': '# Data Processing Agreement\n\nProcessor obligations, subprocessors, security measures, data subject requests, and audit cooperation.\n',
     'revops/contract-templates/white-label.md': '# White-label Agreement\n\nBranding rights, usage restrictions, support, payment, termination, and IP language.\n',
     'revops/contract-templates/partner.md': '# Partner Agreement\n\nReferral terms, revenue share, compliance duties, payment terms, and termination.\n',
-    'revops/invoice-templates/default.md': '# Invoice\n\nInvoice line items, taxes placeholder, payment terms, recurring billing rules, late payment language, failed payment workflow, and receipt generation.\n',
+    'revops/invoice-templates/default.md': '# Invoice\n\nInvoice line items, customer-provided tax calculation field, payment terms, recurring billing rules, late payment language, failed payment workflow, and receipt generation.\n',
   };
 }
 

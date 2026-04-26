@@ -10974,7 +10974,7 @@ await Promise.allSettled([
           version: '0.1.0',
           private: true,
           scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
-          dependencies: { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^4.0.0' },
+          dependencies: { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^19.2.3', 'lucide-react': '^0.400.0', 'tailwindcss': '^4.0.0' },
           devDependencies: { 'typescript': '^5.3.3', '@types/react': '^18.2.0', '@types/node': '^20.11.0', 'postcss': '^8.4.33', 'autoprefixer': '^10.4.17' },
           engines: { node: '20.x' }
         }, null, 2);
@@ -11040,7 +11040,7 @@ await Promise.allSettled([
             // postcss config below. Force `tailwindcss` and `@tailwindcss/postcss`
             // to v4 even if the template pinned v3 — otherwise webpack tries to
             // resolve the v3 runtime and fails with "Module not found: tailwindcss".
-            const reqDeps = { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^18.3.1', 'lucide-react': '^0.400.0', 'tailwindcss': '^4.0.0', '@tailwindcss/postcss': '^4.0.0' };
+            const reqDeps = { 'next': '14.2.35', 'react': '^18.3.1', 'react-dom': '^19.2.3', 'lucide-react': '^0.400.0', 'tailwindcss': '^4.0.0', '@tailwindcss/postcss': '^4.0.0' };
             const reqDev = { 'typescript': '^5.3.3', '@types/react': '^18.2.0', '@types/node': '^20.11.0' };
             for (const [k,v] of Object.entries(reqDeps)) {
               // For tailwind + its postcss plugin, OVERRIDE any version the template set.
@@ -15049,15 +15049,17 @@ Generate these files using ---BEGIN:key--- / ---END:key--- delimiters:
             pkg.dependencies['lucide-react'] = '^0.400.0';
             delete pkg.dependencies['@heroicons/react'];
             // Ensure essential deps
-            if (!pkg.dependencies['next']) pkg.dependencies['next'] = '14.2.35';
-            if (!pkg.dependencies['react']) pkg.dependencies['react'] = '^18.3.1';
-            if (!pkg.dependencies['react-dom']) pkg.dependencies['react-dom'] = '^18.3.1';
+            pkg.dependencies['next'] = pkg.dependencies['next'] || '^16.2.4';
+            pkg.dependencies['react'] = pkg.dependencies['react'] || '^19.2.3';
+            pkg.dependencies['react-dom'] = pkg.dependencies['react-dom'] || '^19.2.3';
             if (!pkg.dependencies['tailwindcss']) pkg.dependencies['tailwindcss'] = '^3.4.1';
             if (!pkg.devDependencies) pkg.devDependencies = {};
             if (!pkg.devDependencies['typescript']) pkg.devDependencies['typescript'] = '^5.3.3';
-            if (!pkg.devDependencies['@types/react']) pkg.devDependencies['@types/react'] = '^18.2.0';
+            pkg.devDependencies['@types/react'] = pkg.devDependencies['@types/react'] || '^19.2.7';
+            pkg.devDependencies['@types/react-dom'] = pkg.devDependencies['@types/react-dom'] || '^19.2.3';
             if (!pkg.devDependencies['@types/node']) pkg.devDependencies['@types/node'] = '^20.11.0';
-            if (!pkg.devDependencies['postcss']) pkg.devDependencies['postcss'] = '^8.4.33';
+            pkg.devDependencies['postcss'] = pkg.devDependencies['postcss'] || '^8.5.10';
+            pkg.overrides = { ...(pkg.overrides || {}), postcss: '^8.5.10' };
             if (!pkg.devDependencies['autoprefixer']) pkg.devDependencies['autoprefixer'] = '^10.4.17';
             feFiles['package.json'] = JSON.stringify(pkg, null, 2);
           } catch {}
@@ -15794,7 +15796,7 @@ export const nicheConfig = {
         try {
           const pkg = JSON.parse(feFiles['package.json'] || '{}');
           pkg.dependencies = pkg.dependencies || {};
-          pkg.dependencies['@vercel/blob'] = '^0.27.0';
+          pkg.dependencies['@vercel/blob'] = '^2.3.3';
           pkg.dependencies['@vercel/postgres'] = '^0.10.0';
           feFiles['package.json'] = JSON.stringify(pkg, null, 2);
         } catch {}
