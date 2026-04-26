@@ -153,10 +153,11 @@ const syntaxRepair = repairDeploymentFailure({ 'package.json': '{"dependencies":
 assert.ok(syntaxRepair.files['src/app/layout.tsx'], 'syntax repair should add a safe root layout');
 assert.ok(syntaxRepair.actions.some((a) => a.action === 'replace_broken_page_with_safe_route'), 'syntax repair should replace broken page routes when identifiable');
 
-const qualityDiag = classifyVercelFailure([{ text: 'Quality gate flagged placeholders or invalid patterns: SaaS Template demo@example.com change-me' }]);
+const qualityLeaks = 'SaaS Template demo@example.com change-me [PLACEHOLDER] [TBD] [COMPANY NAME] lorem ipsum nextjs-boilerplate My Awesome SaaS';
+const qualityDiag = classifyVercelFailure([{ text: `Quality gate flagged placeholders or invalid patterns: ${qualityLeaks}` }]);
 assert.equal(qualityDiag.class, 'quality', 'Vercel parser should classify quality gate failures');
-const qualityRepair = repairDeploymentFailure({ 'package.json': '{"name":"revos-orchestrator","dependencies":{}}', 'src/app/page.tsx': 'export default function Page(){return <div>SaaS Template demo@example.com change-me</div>}' }, qualityDiag);
-assert.ok(!qualityRepair.files['src/app/page.tsx'].includes('SaaS Template'), 'quality repair should scrub template branding');
+const qualityRepair = repairDeploymentFailure({ 'package.json': '{"name":"revos-orchestrator","dependencies":{}}', 'src/app/page.tsx': `export default function Page(){return <div>${qualityLeaks}</div>}` }, qualityDiag);
+assert.ok(!/SaaS Template|demo@example\.com|change-me|\[PLACEHOLDER\]|\[TBD\]|\[COMPANY NAME\]|lorem ipsum|nextjs-boilerplate|My Awesome SaaS/i.test(qualityRepair.files['src/app/page.tsx']), 'quality repair should scrub template, secret, and bracket placeholder leaks');
 assert.ok(qualityRepair.files['src/app/pricing/page.tsx'], 'quality repair should ensure route coverage');
 
 const routeDiag = classifyVercelFailure([{ text: 'Required routes failed content checks: /docs /pricing missing route content check' }]);

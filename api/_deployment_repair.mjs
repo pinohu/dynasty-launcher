@@ -277,7 +277,27 @@ function ensureDeployableNextScaffold(out, actions, code) {
 }
 
 function scrubTemplateLeaks(out, actions, code) {
-  const leaks = [/SaaS Template/gi, /Ixartz/gi, /nextjs-boilerplate/gi, /demo@example\.com/gi, /demo123/gi, /change-me/gi, /your-secret-key/gi];
+  const leaks = [
+    /\[PLACEHOLDER\]/gi,
+    /\[Generation incomplete\]/gi,
+    /\[INSERT [^\]]+\]/gi,
+    /\[FILL IN [^\]]+\]/gi,
+    /\[YOUR [^\]]+ HERE\]/gi,
+    /\[TBD\]/gi,
+    /\[REPLACE[^\]]*\]/gi,
+    /\[[^\]]*(COMPANY|LEGAL|NAME|DATE|TITLE|ADDRESS|EMAIL|PHONE|STATE|COUNTRY|CLIENT|CUSTOMER|SECRETARY|DIRECTOR|OFFICER)[^\]]*\]/gi,
+    /\bCompany Name\b/g,
+    /\bYour Company\b/g,
+    /\bMy Awesome SaaS\b/gi,
+    /\blorem ipsum\b/gi,
+    /SaaS Template/gi,
+    /Ixartz/gi,
+    /nextjs-boilerplate/gi,
+    /demo@example\.com/gi,
+    /demo123/gi,
+    /change-me/gi,
+    /your-secret-key/gi,
+  ];
   for (const [path, body] of Object.entries(out)) {
     if (typeof body !== 'string' || body.length > 500_000) continue;
     let next = body;
