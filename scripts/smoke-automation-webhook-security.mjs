@@ -12,11 +12,11 @@ Reflect.deleteProperty(process.env, 'STRIPE_WEBHOOK_SECRET');
 Reflect.deleteProperty(process.env, 'FORM_WEBHOOK_SECRET');
 Reflect.deleteProperty(process.env, 'AUTOMATION_FORM_WEBHOOK_SECRET');
 
-function makeReq({ source, payload, headers = {} }) {
+function makeReq({ source, payload, headers = {}, query = {} }) {
   const body = JSON.stringify(payload);
   return {
     method: 'POST',
-    query: { source },
+    query: { source, ...query },
     headers,
     rawBody: body,
   };
@@ -137,6 +137,73 @@ async function main() {
     fails += log(
       r.status === 401 && r.body.error === 'invalid_signature',
       'form webhook rejects invalid signatures before side effects',
+      `status=${r.status} error=${r.body.error}`,
+    );
+  }
+
+  {
+    process.env.CALLSCALER_WEBHOOK_SECRET = 'real-callscaler-secret';
+    const r = await invoke(
+      webhook,
+      makeReq({
+        source: 'callscaler',
+        query: { webhook_token: 'real-callscaler-secret' },
+        payload: { source: 'callscaler', event_type: 'call.missed' },
+      }),
+    );
+    fails += log(
+      r.status === 400 && r.body.error === 'tenant_id required in webhook',
+      'CallScaler provider URL token is accepted but still requires tenant binding',
+      `status=${r.status} error=${r.body.error}`,
+    );
+  }
+
+  {
+    process.env.TRAFFT_WEBHOOK_SECRET = 'real-trafft-secret';
+    const r = await invoke(
+      webhook,
+      makeReq({
+        source: 'trafft',
+        payload: { source: 'trafft', event: 'appointment.created' },
+        headers: { Authorization: 'Bearer real-trafft-secret' },
+      }),
+    );
+    fails += log(
+      r.status === 400 && r.body.error === 'tenant_id required in webhook',
+      'Trafft authorization-token webhook is accepted but still requires tenant binding',
+      `status=${r.status} error=${r.body.error}`,
+    );
+  }
+
+  {
+    process.env.FORM_WEBHOOK_SECRET = 'real-form-secret';
+    const r = await invoke(
+      webhook,
+      makeReq({
+        source: 'form',
+        payload: { source: 'form', email: 'lead@example.com' },
+        headers: { 'x-formaloo-token': 'real-form-secret' },
+      }),
+    );
+    fails += log(
+      r.status === 400 && r.body.error === 'tenant_id required in webhook',
+      'Formaloo provider token header is accepted but still requires tenant binding',
+      `status=${r.status} error=${r.body.error}`,
+    );
+  }
+
+  {
+    const r = await invoke(
+      webhook,
+      makeReq({
+        source: 'form',
+        payload: { source: 'form', tenant_id: 'tnt_demo', email: 'lead@example.com' },
+        headers: { 'x-formaloo-token': 'wrong-token' },
+      }),
+    );
+    fails += log(
+      r.status === 401 && r.body.error === 'webhook_signature_required',
+      'provider token auth rejects invalid token',
       `status=${r.status} error=${r.body.error}`,
     );
   }
