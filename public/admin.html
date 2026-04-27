@@ -216,19 +216,48 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
 </div>
 
 <script>
-const TOKEN = localStorage.getItem('dynasty_admin_token');
+const TOKEN = sessionStorage.getItem('dynasty_admin_token');
+localStorage.removeItem('dynasty_admin_token');
 if (!TOKEN) { window.location.href = '/admin'; }
 
 let AUTH_FAILED = false;
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function safeHtml(strings, ...values) {
+  return strings.reduce((out, part, i) => out + part + (i < values.length ? escapeHtml(values[i]) : ''), '');
+}
+function safeUrl(value) {
+  try {
+    const url = new URL(String(value || ''), window.location.origin);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch { return ''; }
+}
+function healthDetailHtml(check) {
+  if (check.error) return `<span style="color:var(--red)">${escapeHtml(check.error)}</span>`;
+  if (check.user) return `User: ${escapeHtml(check.user)}`;
+  if (Array.isArray(check.balance)) return escapeHtml(check.balance.join(', '));
+  if (check.lists !== undefined) return `Lists: ${escapeHtml(check.lists)}`;
+  if (check.scopes) return `Scopes: ${escapeHtml(check.scopes)}`;
+  return escapeHtml(check.status || 'Connected');
+}
 function surfaceAuthError(msg) {
   if (AUTH_FAILED) return;
   AUTH_FAILED = true;
   const banner = document.createElement('div');
   banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#E5534B;color:#fff;padding:14px 20px;text-align:center;font-size:13px;z-index:1000;font-weight:500';
-  banner.innerHTML = `<strong>Admin token rejected:</strong> ${msg} <button onclick="reauth()" style="margin-left:12px;padding:6px 14px;background:#fff;color:#E5534B;border:none;border-radius:6px;font-weight:600;cursor:pointer">Re-authenticate</button>`;
+  const strong = document.createElement('strong');
+  strong.textContent = 'Admin token rejected: ';
+  const text = document.createTextNode(String(msg || 'Token rejected by server.'));
+  const button = document.createElement('button');
+  button.textContent = 'Re-authenticate';
+  button.style.cssText = 'margin-left:12px;padding:6px 14px;background:#fff;color:#E5534B;border:none;border-radius:6px;font-weight:600;cursor:pointer';
+  button.addEventListener('click', reauth);
+  banner.append(strong, text, button);
   document.body.appendChild(banner);
 }
 function reauth() {
+  sessionStorage.removeItem('dynasty_admin_token');
   localStorage.removeItem('dynasty_admin_token');
   localStorage.removeItem('dynasty_tier');
   localStorage.removeItem('dynasty_paid_session');
@@ -279,6 +308,7 @@ function toast(msg) {
 }
 
 function logout() {
+  sessionStorage.removeItem('dynasty_admin_token');
   localStorage.removeItem('dynasty_admin_token');
   localStorage.removeItem('dynasty_tier');
   localStorage.removeItem('dynasty_paid_session');
@@ -293,18 +323,18 @@ async function loadOverview() {
   const envKeys = Object.entries(env);
   const configured = envKeys.filter(([,v]) => v).length;
 
-  document.getElementById('overview-stats').innerHTML = `
+  document.getElementById('overview-stats').innerHTML = safeHtml`
     <div class="stat ${configured === envKeys.length ? 'ok' : 'warn'}"><div class="label">Env Vars</div><div class="value">${configured}/${envKeys.length}</div><div class="sub">configured</div></div>
     <div class="stat"><div class="label">Config Categories</div><div class="value">${Object.keys(d.config_keys).length}</div><div class="sub">in DYNASTY_TOOL_CONFIG</div></div>
     <div class="stat"><div class="label">Vercel Team</div><div class="value" style="font-size:12px">${d.vercel.team.slice(0,12)}...</div></div>
   `;
 
   document.getElementById('env-status').innerHTML = `<table><tr><th>Variable</th><th>Status</th></tr>` +
-    envKeys.map(([k, v]) => `<tr><td>${k}</td><td><span class="pill ${v ? 'ok' : 'err'}">${v ? 'SET' : 'MISSING'}</span></td></tr>`).join('') + `</table>`;
+    envKeys.map(([k, v]) => safeHtml`<tr><td>${k}</td><td><span class="pill ${v ? 'ok' : 'err'}">${v ? 'SET' : 'MISSING'}</span></td></tr>`).join('') + `</table>`;
 
   document.getElementById('config-keys').innerHTML = Object.entries(d.config_keys).map(([cat, keys]) =>
-    `<div style="margin-bottom:8px"><strong style="color:var(--gold)">${cat}</strong><br>` +
-    Object.entries(keys).map(([k, v]) => `  ${k}: <span style="color:${v === 'EMPTY' ? 'var(--red)' : 'var(--grn)'}">${v}</span>`).join('<br>') + `</div>`
+    safeHtml`<div style="margin-bottom:8px"><strong style="color:var(--gold)">${cat}</strong><br>` +
+    Object.entries(keys).map(([k, v]) => safeHtml`  ${k}: <span style="color:${v === 'EMPTY' ? 'var(--red)' : 'var(--grn)'}">${v}</span>`).join('<br>') + `</div>`
   ).join('');
 }
 
@@ -319,9 +349,9 @@ async function loadHealth() {
 
   document.getElementById('health-grid').innerHTML = Object.entries(d.checks).map(([name, check]) => `
     <div class="stat ${check.ok ? 'ok' : 'bad'}">
-      <div class="label">${name}</div>
+      <div class="label">${escapeHtml(name)}</div>
       <div class="value" style="font-size:16px">${check.ok ? 'Online' : 'Offline'}</div>
-      <div class="sub">${check.error ? `<span style="color:var(--red)">${check.error}</span>` : check.user ? `User: ${check.user}` : check.balance ? check.balance.join(', ') : check.lists !== undefined ? `Lists: ${check.lists}` : check.scopes ? `Scopes: ${check.scopes}` : check.status || 'Connected'}</div>
+      <div class="sub">${healthDetailHtml(check)}</div>
     </div>
   `).join('');
 }
@@ -331,7 +361,7 @@ async function loadBuilds() {
   const d = await api('builds');
   if (!d.builds?.length) { document.getElementById('builds-table').innerHTML = '<div class="empty">No builds recorded yet (Neon DB may not be configured)</div>'; return; }
   document.getElementById('builds-table').innerHTML = `<table><tr><th>Project</th><th>Type</th><th>Tier</th><th>Cost</th><th>Duration</th><th>Date</th></tr>` +
-    d.builds.map(b => `<tr><td><strong>${b.project_slug || b.niche_name || '—'}</strong></td><td>${b.project_type || '—'}</td><td><span class="pill info">${b.tier || '—'}</span></td>
+    d.builds.map(b => safeHtml`<tr><td><strong>${b.project_slug || b.niche_name || '—'}</strong></td><td>${b.project_type || '—'}</td><td><span class="pill info">${b.tier || '—'}</span></td>
     <td>$${(b.total_cost || 0).toFixed(3)}</td><td>${b.build_duration_ms ? (b.build_duration_ms / 1000).toFixed(0) + 's' : '—'}</td>
     <td>${b.created_at ? new Date(b.created_at).toLocaleDateString() : '—'}</td></tr>`).join('') + `</table>`;
 }
@@ -377,19 +407,22 @@ async function deleteUser(userId, email) {
 
 async function loadCustomers() {
   const d = await api('clerk_users');
-  if (!d.users?.length) { document.getElementById('customers-table').innerHTML = '<div class="empty">No customers found (Clerk may not be configured)</div>'; return; }
-  document.getElementById('customers-table').innerHTML = `<table><tr><th>Email</th><th>Name</th><th>Tier</th><th>Builds</th><th>Actions</th></tr>` +
-    d.users.map(u => `<tr><td>${u.email || '—'}</td><td>${u.name || '—'}</td>
+  const table = document.getElementById('customers-table');
+  if (!d.users?.length) { table.innerHTML = '<div class="empty">No customers found (Clerk may not be configured)</div>'; return; }
+  table.innerHTML = `<table><tr><th>Email</th><th>Name</th><th>Tier</th><th>Builds</th><th>Actions</th></tr>` +
+    d.users.map(u => safeHtml`<tr><td>${u.email || '—'}</td><td>${u.name || '—'}</td>
     <td><span class="pill info">${u.plan || 'free'}</span></td><td>${u.builds || 0}</td>
     <td style="display:flex;gap:4px;align-items:center">
-      <select onchange="updateTier('${u.id}', this.value)" style="padding:4px;font-size:10px;background:var(--panel);border:1px solid var(--bdr);border-radius:4px;color:var(--tx)">
+      <select data-user-id="${u.id}" class="tier-select" style="padding:4px;font-size:10px;background:var(--panel);border:1px solid var(--bdr);border-radius:4px;color:var(--tx)">
         <option value="">Change tier...</option>
         <option value="free">Free</option><option value="foundation">Foundation</option>
         <option value="professional">Professional</option><option value="enterprise">Enterprise</option>
         <option value="managed">Managed</option>
       </select>
-      <button class="btn danger" onclick="deleteUser('${u.id}','${(u.email||'').replace(/'/g,'')}')" style="padding:3px 8px;font-size:10px">Delete</button>
+      <button class="btn danger delete-user" data-user-id="${u.id}" data-email="${u.email || ''}" style="padding:3px 8px;font-size:10px">Delete</button>
     </td></tr>`).join('') + `</table>`;
+  table.querySelectorAll('.tier-select').forEach(el => el.addEventListener('change', () => updateTier(el.dataset.userId, el.value)));
+  table.querySelectorAll('.delete-user').forEach(el => el.addEventListener('click', () => deleteUser(el.dataset.userId, el.dataset.email)));
 }
 
 async function updateTier(userId, tier) {
@@ -404,7 +437,7 @@ async function loadPayments() {
   const d = await api('stripe_customers');
   if (!d.sessions?.length) { document.getElementById('payments-table').innerHTML = '<div class="empty">No payments found</div>'; return; }
   document.getElementById('payments-table').innerHTML = `<table><tr><th>Email</th><th>Plan</th><th>Amount</th><th>Status</th><th>Mode</th><th>Date</th></tr>` +
-    d.sessions.map(s => `<tr><td>${s.email || '—'}</td><td><span class="pill info">${s.plan || '—'}</span></td>
+    d.sessions.map(s => safeHtml`<tr><td>${s.email || '—'}</td><td><span class="pill info">${s.plan || '—'}</span></td>
     <td>$${((s.amount || 0) / 100).toFixed(0)}</td>
     <td><span class="pill ${s.status === 'paid' ? 'ok' : 'warn'}">${s.status}</span></td>
     <td>${s.mode}</td><td>${s.created ? new Date(s.created).toLocaleDateString() : '—'}</td></tr>`).join('') + `</table>`;
@@ -416,7 +449,7 @@ async function loadLicenses() {
   if (!d.ok) return;
   document.getElementById('licenses-grid').innerHTML = Object.entries(d.licenses).map(([name, lic]) => {
     const pct = Math.round((lic.used_db || lic.used) / lic.total * 100);
-    return `<div class="stat"><div class="label">${name}</div><div class="value">${lic.used_db || lic.used}/${lic.total}</div>
+    return safeHtml`<div class="stat"><div class="label">${name}</div><div class="value">${lic.used_db || lic.used}/${lic.total}</div>
     <div class="sub">${pct}% allocated</div>
     <div style="margin-top:6px;background:#222;border-radius:4px;height:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${pct > 80 ? 'var(--red)' : 'var(--gold)'}"></div></div></div>`;
   }).join('');
@@ -425,15 +458,21 @@ async function loadLicenses() {
 // ── VERCEL PROJECTS ───────────────────────────────────────────────
 async function loadProjects() {
   const d = await api('vercel_projects');
-  if (!d.projects?.length) { document.getElementById('projects-table').innerHTML = '<div class="empty">No projects found</div>'; return; }
-  document.getElementById('projects-table').innerHTML = `<table><tr><th>Name</th><th>Framework</th><th>Status</th><th>URL</th><th>Actions</th></tr>` +
-    d.projects.map(p => `<tr><td><strong>${p.name}</strong></td><td>${p.framework || '—'}</td>
-    <td><span class="pill ${p.state === 'READY' ? 'ok' : p.state === 'ERROR' ? 'err' : 'warn'}">${p.state || '—'}</span></td>
-    <td>${p.url ? `<a href="${p.url}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-size:11px">${p.url.replace('https://','').slice(0,30)}...</a>` : '—'}</td>
+  const table = document.getElementById('projects-table');
+  if (!d.projects?.length) { table.innerHTML = '<div class="empty">No projects found</div>'; return; }
+  table.innerHTML = `<table><tr><th>Name</th><th>Framework</th><th>Status</th><th>URL</th><th>Actions</th></tr>` +
+    d.projects.map(p => {
+      const url = safeUrl(p.url);
+      return `<tr><td><strong>${escapeHtml(p.name)}</strong></td><td>${escapeHtml(p.framework || '—')}</td>
+    <td><span class="pill ${p.state === 'READY' ? 'ok' : p.state === 'ERROR' ? 'err' : 'warn'}">${escapeHtml(p.state || '—')}</span></td>
+    <td>${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-size:11px">${escapeHtml(url.replace('https://','').slice(0,30))}...</a>` : '—'}</td>
     <td style="display:flex;gap:4px">
-      <button class="btn" onclick="redeploy('${p.id}','${p.name}')">Redeploy</button>
-      <button class="btn danger" onclick="deleteProject('${p.id}','${p.name}')">Delete</button>
-    </td></tr>`).join('') + `</table>`;
+      <button class="btn redeploy-project" data-project-id="${escapeHtml(p.id)}" data-project-name="${escapeHtml(p.name)}">Redeploy</button>
+      <button class="btn danger delete-project" data-project-id="${escapeHtml(p.id)}" data-project-name="${escapeHtml(p.name)}">Delete</button>
+    </td></tr>`;
+    }).join('') + `</table>`;
+  table.querySelectorAll('.redeploy-project').forEach(el => el.addEventListener('click', () => redeploy(el.dataset.projectId, el.dataset.projectName)));
+  table.querySelectorAll('.delete-project').forEach(el => el.addEventListener('click', () => deleteProject(el.dataset.projectId, el.dataset.projectName)));
 }
 
 async function redeploy(id, name) {

@@ -165,9 +165,12 @@ export async function createPrice({ product, unit_amount, currency = 'usd', recu
 // -----------------------------------------------------------------------------
 
 export function constructEvent(rawBody, signatureHeader, webhookSecret) {
-  if (!stripEnabled() || !webhookSecret) {
+  if (!stripEnabled()) {
     // Stub mode: accept the raw body as the event directly
     try { return JSON.parse(rawBody); } catch { return null; }
+  }
+  if (!webhookSecret || webhookSecret.startsWith('STUB') || webhookSecret.startsWith('EXPIRED')) {
+    throw new Error('webhook_secret_missing');
   }
   const parts = String(signatureHeader || '').split(',').reduce((acc, p) => {
     const [k, v] = p.split('=');
@@ -182,6 +185,9 @@ export function constructEvent(rawBody, signatureHeader, webhookSecret) {
     .update(`${timestamp}.${rawBody}`)
     .digest('hex');
 
+  if (Buffer.byteLength(expected) !== Buffer.byteLength(v1sig)) {
+    throw new Error('signature_mismatch');
+  }
   if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(v1sig))) {
     throw new Error('signature_mismatch');
   }

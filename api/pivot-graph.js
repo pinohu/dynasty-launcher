@@ -22,6 +22,13 @@ export const maxDuration = 300;
 
 import { generateTyped } from './ai-sdk.js';
 import { startTrace } from './_langfuse.js';
+import {
+  aiCorsHeaders,
+  authorizeAiRequest,
+  maxPivotModels,
+  validateAiTextLimit,
+  writeAiAuthError,
+} from './_ai_security.mjs';
 
 // Lazy import — keeps the cold-start light on endpoints that never hit this.
 async function loadLangGraph() {
@@ -222,7 +229,7 @@ async function runGraph(initialState) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', aiCorsHeaders());
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
@@ -230,6 +237,19 @@ export default async function handler(req, res) {
   if (!idea || !scorecard || !Array.isArray(models) || !models.length) {
     return res.status(400).json({ error: 'idea, scorecard, models required' });
   }
+  const modelLimit = maxPivotModels();
+  if (models.length > modelLimit) {
+    return res.status(400).json({ ok: false, error: 'model_count_exceeds_limit', max_models: modelLimit });
+  }
+  const ideaLimit = validateAiTextLimit('idea', idea);
+  if (!ideaLimit.ok) return res.status(ideaLimit.status).json({ ok: false, error: ideaLimit.error, max_chars: ideaLimit.max_chars });
+  const frameworkLimit = validateAiTextLimit('framework_analyses', frameworkAnalyses || '');
+  if (!frameworkLimit.ok) return res.status(frameworkLimit.status).json({ ok: false, error: frameworkLimit.error, max_chars: frameworkLimit.max_chars });
+
+  const auth = await authorizeAiRequest(req, req.body || {}, { cost: models.length * 3 });
+  if (!auth.ok) return writeAiAuthError(res, auth);
+  res.setHeader('X-AI-Auth-Type', auth.auth_type);
+  res.setHeader('X-AI-Rate-Remaining', String(auth.budget?.remaining ?? ''));
 
   const trace = await startTrace({ name: 'pivot-graph', sessionId, userId, metadata: { modelCount: models.length } });
 
@@ -238,7 +258,7 @@ export default async function handler(req, res) {
     scorecardJSON: JSON.stringify(scorecard, null, 2).slice(0, 6000),
     frameworkAnalyses: String(frameworkAnalyses || '').slice(0, 8000),
     composite: scorecard.composite || 0,
-    models: models.slice(0, 20), // hard cap
+    models,
     sessionId, userId,
   };
 

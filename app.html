@@ -1321,6 +1321,25 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
   } catch (e) {}
 })();
 
+function getAdminToken() {
+  try {
+    localStorage.removeItem('dynasty_admin_token');
+    return sessionStorage.getItem('dynasty_admin_token') || '';
+  } catch (e) { return ''; }
+}
+function setAdminToken(token) {
+  try {
+    sessionStorage.setItem('dynasty_admin_token', token);
+    localStorage.removeItem('dynasty_admin_token');
+  } catch (e) {}
+}
+function clearAdminToken() {
+  try {
+    sessionStorage.removeItem('dynasty_admin_token');
+    localStorage.removeItem('dynasty_admin_token');
+  } catch (e) {}
+}
+
 // ── Access Gate — server-verified admin + payment check ─────────────────────────────────────
 (function(){
   var params = new URLSearchParams(window.location.search);
@@ -1335,7 +1354,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     }).then(function(r) { return r.json(); }).then(function(d) {
       if (d.ok && d.admin) {
         try {
-          localStorage.setItem('dynasty_admin_token', d.token);
+          setAdminToken(d.token);
           localStorage.setItem('dynasty_tier', 'enterprise');
           localStorage.setItem('dynasty_paid_session', 'admin');
           localStorage.setItem('dynasty_paid_at', new Date().toISOString());
@@ -1349,7 +1368,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     return; // Let the async verification handle it
   }
   // Previously authenticated admin (server-signed token)
-  var adminToken = localStorage.getItem('dynasty_admin_token');
+  var adminToken = getAdminToken();
   if (adminToken) {
     // Admins who signed in via /admin only have the token — backfill the tier
     // and paid-session markers the rest of the builder reads directly.
@@ -1365,7 +1384,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     }).then(function(r) { return r.json(); }).then(function(d) {
       if (!d.ok || !d.valid) {
         // Token expired or invalid — clear and redirect
-        localStorage.removeItem('dynasty_admin_token');
+        clearAdminToken();
         localStorage.removeItem('dynasty_tier');
         localStorage.removeItem('dynasty_paid_session');
         localStorage.removeItem('dynasty_paid_token');
@@ -1512,7 +1531,7 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
     fetch('/api/checkout?action=verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: paidSession, user_id: CLERK_USER?.id || '' })
+      body: JSON.stringify({ session_id: paidSession, user_id: CLERK_USER?.id || '', verify_nonce: getCheckoutVerifyNonce() })
     }).then(function(r) { return r.json() }).then(function(v) {
       if (v.ok && v.paid && v.access_token) {
         localStorage.setItem('dynasty_paid_token', v.access_token);
@@ -1673,12 +1692,12 @@ function updateAuthUI() {
 }
 
 function hasHistoryAccess() {
-  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  const isAdmin = !!getAdminToken();
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   return isAdmin || hasPaid || !!CLERK_USER;
 }
 function isAdminSession() {
-  return !!localStorage.getItem('dynasty_admin_token');
+  return !!getAdminToken();
 }
 
 function updateHistoryButtonVisibility() {
@@ -1688,7 +1707,7 @@ function updateHistoryButtonVisibility() {
 }
 
 async function requireAuth() {
-  if (localStorage.getItem('dynasty_admin_token')) return true; // Admin bypass — no Clerk account needed
+  if (getAdminToken()) return true; // Admin bypass — no Clerk account needed
   if (!CLERK_INSTANCE) return true; // No Clerk = open access
   if (CLERK_USER) return true; // Already signed in
 
@@ -3299,7 +3318,7 @@ function archetypeMinTierRank(arch) {
 function refreshTierAccessNotice() {
   const el = document.getElementById('tier-access-notice');
   if (!el) return;
-  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  const isAdmin = !!getAdminToken();
   if (isAdmin) { el.style.display = 'none'; return; }
   const tier = getUserTier();
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
@@ -3448,7 +3467,7 @@ const V3_TIERS = {
 };
 function getUserTier() {
   // Admin tokens always get the top tier so module/archetype gates don't fire for them.
-  if (localStorage.getItem('dynasty_admin_token')) return 'enterprise';
+  if (getAdminToken()) return 'enterprise';
   // Tier is set ONLY by verified Stripe payment in checkPaymentReturn. Never from URL params.
   return localStorage.getItem('dynasty_tier') || 'free';
 }
@@ -3461,7 +3480,7 @@ function getProvisionAuthPayload() {
   };
 }
 function getProvisionAuthHeaders() {
-  const adminToken = localStorage.getItem('dynasty_admin_token') || '';
+  const adminToken = getAdminToken();
   return adminToken ? { 'x-dynasty-admin-token': adminToken } : {};
 }
 
@@ -3484,7 +3503,7 @@ function updateOieOutput(payload) {
 }
 
 function getOieHeaders() {
-  const adminToken = localStorage.getItem('dynasty_admin_token') || '';
+  const adminToken = getAdminToken();
   const headers = { 'Content-Type': 'application/json' };
   if (adminToken) headers['x-dynasty-admin-token'] = adminToken;
   return headers;
@@ -3573,7 +3592,7 @@ function triggerOIEShipWorkflow() {
 function mountOiePanel() {
   const panel = document.getElementById('oie-panel');
   if (!panel) return;
-  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  const isAdmin = !!getAdminToken();
   panel.style.display = isAdmin ? 'block' : 'none';
 }
 function getAiAuthPayload() {
@@ -3582,7 +3601,7 @@ function getAiAuthPayload() {
     stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
     access_token: localStorage.getItem('dynasty_paid_token') || '',
     user_id: CLERK_USER?.id || '',
-    admin_token: localStorage.getItem('dynasty_admin_token') || ''
+    admin_token: getAdminToken()
   };
 }
 function isFreeTier() {
@@ -3677,7 +3696,7 @@ function updateBuildScopePreview() {
 // ── Builder Entry + Payment Flow ────────────────────────────────────
 async function enterBuilder() {
   // Free tier: allow entry for scoring — build is gated separately in startBuild()
-  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  const isAdmin = !!getAdminToken();
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   const isFreeScoring = !isAdmin && !hasPaid;
 
@@ -3703,6 +3722,25 @@ async function enterBuilder() {
   try { applyBuildPackageTierConstraints(); } catch {}
 }
 
+function newCheckoutVerifyNonce() {
+  let nonce = '';
+  try {
+    if (window.crypto?.randomUUID) nonce = window.crypto.randomUUID().replace(/-/g, '');
+    else if (window.crypto?.getRandomValues) {
+      const bytes = new Uint8Array(24);
+      window.crypto.getRandomValues(bytes);
+      nonce = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch {}
+  if (!nonce) nonce = `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`;
+  localStorage.setItem('dynasty_checkout_verify_nonce', nonce);
+  return nonce;
+}
+
+function getCheckoutVerifyNonce() {
+  return localStorage.getItem('dynasty_checkout_verify_nonce') || '';
+}
+
 async function startCheckout(plan) {
   if (plan === 'custom_volume') {
     trackEvent('custom_volume_contact_requested', {
@@ -3718,6 +3756,7 @@ async function startCheckout(plan) {
     const params = new URLSearchParams(window.location.search);
     const sourceSegment = params.get('segment') || diag.recommended_segment || '';
     const diagId = params.get('diag_id') || diag.session_id || localStorage.getItem('dynasty_diag_session_id') || '';
+    const checkoutVerifyNonce = newCheckoutVerifyNonce();
     trackEvent('checkout_started', {
       selected_plan: plan,
       source_segment: sourceSegment,
@@ -3736,7 +3775,8 @@ async function startCheckout(plan) {
         build_archetype: bp.archetype || '',
         source_segment: sourceSegment,
         diagnostic_session_id: diagId,
-        recommended_plan: diag.recommended_plan || ''
+        recommended_plan: diag.recommended_plan || '',
+        verify_nonce: checkoutVerifyNonce
       })
     });
     const data = await resp.json();
@@ -3809,7 +3849,7 @@ async function startCheckout(plan) {
       try {
         const verifyResp = await fetch('/api/checkout?action=verify', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sessionId, user_id: CLERK_USER?.id || '' })
+          body: JSON.stringify({ session_id: sessionId, user_id: CLERK_USER?.id || '', verify_nonce: getCheckoutVerifyNonce() })
         });
         const vd = await verifyResp.json();
         if (vd.ok && vd.paid) {
@@ -5891,7 +5931,7 @@ Return 3-4 paragraphs. If the idea has become genuinely strong, your critique sh
 
 async function startBuild() {
   // ── Payment verification: require paid session or admin key ────────────
-  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  const isAdmin = !!getAdminToken();
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   if (!isAdmin && !hasPaid) {
     // Free tier can score but not build — show upgrade prompt
@@ -6929,7 +6969,7 @@ function renderProg(){
 // GitHub — all calls proxied server-side (token stays secret)
 const sl=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 async function gh(path,method='GET',body=null){
-  const adminToken = localStorage.getItem('dynasty_admin_token') || '';
+  const adminToken = getAdminToken();
   const paidToken = localStorage.getItem('dynasty_paid_token') || '';
   const headers = { 'Content-Type':'application/json' };
   if (adminToken) headers['x-dynasty-admin-token'] = adminToken;
@@ -8464,7 +8504,7 @@ async function resumeBuildFromCheckpoint() {
     alert('No recoverable build session found.');
     return;
   }
-  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  const isAdmin = !!getAdminToken();
   const hasPaid = !!localStorage.getItem('dynasty_paid_session');
   if (!isAdmin && !hasPaid) {
     alert('Paid or admin session required to resume a full build.');
@@ -14639,7 +14679,7 @@ Scenarios to cover: JWT/Auth failure, Database connection loss, Stripe webhook f
     // Merge bz1 + bz2 into bz
    
     // ── Strategy Pack gate: documents generated, skip code + deploy ──
-    if (getUserTier() === 'strategy_pack' && !localStorage.getItem('dynasty_admin_token')) {
+    if (getUserTier() === 'strategy_pack' && !getAdminToken()) {
       updateGlobalProgress(12, 12, 'Strategy Pack complete');
       const docCount = Object.keys(window._buildFiles || {}).length;
       const d = document.getElementById('dynasty-results');
@@ -16390,7 +16430,7 @@ function sendWebhook(inf, repo, fc, provRes) {
 
 // ── Build History: store for comparison ─────────────────────────
 function getBuildHistoryStorageKey() {
-  const isAdmin = !!localStorage.getItem('dynasty_admin_token');
+  const isAdmin = !!getAdminToken();
   if (isAdmin) return 'dynasty_build_history_admin';
   if (CLERK_USER?.id) return `dynasty_build_history_user_${CLERK_USER.id}`;
   const paidSession = localStorage.getItem('dynasty_paid_session') || '';

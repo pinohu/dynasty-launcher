@@ -12,7 +12,7 @@
 //   billing     — Stripe config, recent webhook events, checkout sessions
 //   workflows   — templates available, executed, skipped counts
 //
-// Admin-gated: requires x-admin-key header matching ADMIN_KEY.
+// Admin-gated: requires signed admin bearer token or x-admin-key.
 // Response is intentionally large — the dashboard renders it all.
 // -----------------------------------------------------------------------------
 
@@ -20,6 +20,7 @@ import { backend, healthcheck, _stats } from '../tenants/_store.mjs';
 import { getCatalog, indexModules, effectiveBundleStatus } from '../catalog/_lib.mjs';
 import { isConfigured as stripeConfigured } from '../billing/_stripe.mjs';
 import { getEventStats } from '../events/_events_store.mjs';
+import { verifyAdminCredential } from '../tenants/_auth.mjs';
 import { readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -44,9 +45,7 @@ function pool() {
 }
 
 function isAuthorized(req) {
-  const supplied = req.headers['x-admin-key'] || req.headers['X-Admin-Key'];
-  const expected = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY;
-  return !!expected && supplied === expected;
+  return verifyAdminCredential(req).ok;
 }
 
 // ---- Catalog summary ----
@@ -197,7 +196,7 @@ async function billingSummary() {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-key, x-dynasty-admin-token');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
   if (!isAuthorized(req)) return res.status(401).json({ error: 'admin_key_required' });

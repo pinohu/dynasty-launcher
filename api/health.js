@@ -1,4 +1,6 @@
 export const maxDuration = 15;
+import { verifyRawAdminHeader } from './tenants/_auth.mjs';
+
 const _se = (m) => typeof m === 'string' ? m.replace(/sk_live_\w+/g,'sk_live_***').replace(/ghp_\w+/g,'ghp_***').replace(/postgres(ql)?:\/\/[^\s]+/g,'postgres://***').slice(0,200) : 'Error';
 
 export default async function handler(req, res) {
@@ -8,9 +10,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key');
   if (req.method === 'OPTIONS') return res.status(204).end();
   // Public health returns minimal info; full details require admin
-  const adminKey = req.query?.key || req.headers['x-admin-key'] || '';
-  const ADMIN = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY || '';
-  if (!ADMIN || adminKey !== ADMIN) {
+  if (!verifyRawAdminHeader(req)) {
     return res.json({ ok: true, status: 'operational', timestamp: new Date().toISOString() });
   }
   if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'GET only' });

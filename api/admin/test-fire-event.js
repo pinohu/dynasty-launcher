@@ -11,15 +11,14 @@
 
 import { corsPreflight, methodGuard, readBody } from '../tenants/_lib.mjs';
 import { getTenant } from '../tenants/_store.mjs';
+import { verifyRawAdminHeader } from '../tenants/_auth.mjs';
 import { emit } from '../events/_bus.mjs';
 import { dispatchEvent } from '../events/_dispatcher.mjs';
 
 export const maxDuration = 30;
 
 function adminOnly(req, res) {
-  const key = req.headers['x-admin-key'] || req.query?.key;
-  const expected = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY;
-  if (!expected || key !== expected) {
+  if (!verifyRawAdminHeader(req)) {
     res.status(403).json({ error: 'admin_only' });
     return false;
   }

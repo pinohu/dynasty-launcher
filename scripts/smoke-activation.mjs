@@ -70,7 +70,7 @@ async function main() {
   // Path: activation before checkout
   // ============================================================
   {
-    const r = await invoke(h.activate, { body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
+    const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
     fails += log(r.status === 400 && r.body.reason === 'not_purchased',
       'activate dormant pre-provisioned module before checkout returns not_purchased', `status=${r.status} reason=${r.body.reason}`);
   }
@@ -84,7 +84,7 @@ async function main() {
       headers: ADMIN,
       body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' },
     });
-    const r = await invoke(h.activate, { body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
+    const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
     const ok = r.status === 200
       && r.body.status === 'deferred'
       && Array.isArray(r.body.missing_capabilities)
@@ -107,6 +107,7 @@ async function main() {
       });
     }
     const r = await invoke(h.activate, {
+      headers: ADMIN,
       body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply', user_input: { ack_channel: 'email' } },
     });
     const ok = r.status === 200
@@ -121,7 +122,7 @@ async function main() {
   // Idempotency: second activate call returns idempotent_ok
   // ============================================================
   {
-    const r = await invoke(h.activate, { body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
+    const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
     fails += log(r.body.status === 'idempotent_ok', 'repeat activate returns idempotent_ok', `status=${r.body.status}`);
   }
 
@@ -129,7 +130,7 @@ async function main() {
   // Tenant sync: modules_active updated on activation
   // ============================================================
   {
-    const r = await invoke(h.getTenant, { method: 'GET', query: { tenant_id: tenantHvac.tenant_id } });
+    const r = await invoke(h.getTenant, { method: 'GET', query: { tenant_id: tenantHvac.tenant_id }, headers: ADMIN });
     fails += log(
       r.body.tenant.modules_active.includes('webform_autoreply'),
       'tenant.modules_active contains activated module',
@@ -142,6 +143,7 @@ async function main() {
   // ============================================================
   {
     const r = await invoke(h.deactivate, {
+      headers: ADMIN,
       body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' },
     });
     const ok = r.status === 200
@@ -157,7 +159,7 @@ async function main() {
   // Path: reactivation restores config
   // ============================================================
   {
-    const r = await invoke(h.activate, { body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
+    const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
     const ok = r.status === 200 && r.body.status === 'ok'
       && r.body.entitlement.state === 'active'
       && r.body.entitlement.config_state && r.body.entitlement.config_state.ack_channel === 'email';
@@ -175,7 +177,7 @@ async function main() {
       await invoke(h.setCap, { headers: ADMIN, body: { tenant_id: tenant.tenant_id, capability_code: cap, enabled: true } });
     }
     await invoke(h.grant, { headers: ADMIN, body: { tenant_id: tenant.tenant_id, module_code: 'unhappy_customer_interception' } });
-    const r = await invoke(h.activate, { body: { tenant_id: tenant.tenant_id, module_code: 'unhappy_customer_interception' } });
+    const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: tenant.tenant_id, module_code: 'unhappy_customer_interception' } });
     fails += log(
       r.status === 400 && r.body.reason === 'prereq_not_active' && r.body.prereq === 'post_job_review_request',
       'activate unhappy_customer_interception without post_job_review_request active → prereq_not_active',
@@ -189,7 +191,7 @@ async function main() {
   {
     const { body: { tenant } } = await invoke(h.createTenant, { body: { plan: 'foundation' } });
     await invoke(h.grant, { headers: ADMIN, body: { tenant_id: tenant.tenant_id, module_code: 'missed_call_textback' } });
-    const r = await invoke(h.activate, { body: { tenant_id: tenant.tenant_id, module_code: 'missed_call_textback' } });
+    const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: tenant.tenant_id, module_code: 'missed_call_textback' } });
     fails += log(
       r.status === 400 && r.body.reason === 'tier_mismatch',
       'activate pro-tier module on foundation tenant → tier_mismatch',
@@ -201,7 +203,7 @@ async function main() {
   // Path: module_not_found
   // ============================================================
   {
-    const r = await invoke(h.activate, { body: { tenant_id: tenantHvac.tenant_id, module_code: 'nonexistent_mod' } });
+    const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: tenantHvac.tenant_id, module_code: 'nonexistent_mod' } });
     fails += log(r.status === 400 && r.body.reason === 'no_entitlement',
       'activate with nonexistent module_code → no_entitlement first (never had an entitlement)',
       `status=${r.status} reason=${r.body.reason}`);
@@ -221,8 +223,8 @@ async function main() {
   // Idempotent deactivate
   // ============================================================
   {
-    const r1 = await invoke(h.deactivate, { body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
-    const r2 = await invoke(h.deactivate, { body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
+    const r1 = await invoke(h.deactivate, { headers: ADMIN, body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
+    const r2 = await invoke(h.deactivate, { headers: ADMIN, body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
     fails += log(
       r1.body.status === 'ok' && r2.body.status === 'idempotent_ok',
       'second deactivate is idempotent_ok',
@@ -241,7 +243,7 @@ async function main() {
       await invoke(h.setCap, { headers: ADMIN, body: { tenant_id: medSpa.tenant_id, capability_code: cap, enabled: true } });
     }
     await invoke(h.grant, { headers: ADMIN, body: { tenant_id: medSpa.tenant_id, module_code: 'post_job_review_request' } });
-    const r = await invoke(h.activate, { body: { tenant_id: medSpa.tenant_id, module_code: 'post_job_review_request' } });
+    const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: medSpa.tenant_id, module_code: 'post_job_review_request' } });
     fails += log(
       r.status === 400 && r.body.reason === 'hipaa_addon_required',
       'med-spa tenant without HIPAA add-on cannot activate PHI-touching module',

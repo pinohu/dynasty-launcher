@@ -16,19 +16,18 @@
 // -----------------------------------------------------------------------------
 
 import { getPersistedEvents } from '../events/_events_store.mjs';
+import { verifyAdminCredential } from '../tenants/_auth.mjs';
 
 export const maxDuration = 15;
 
 function isAuthorized(req) {
-  const supplied = req.headers['x-admin-key'] || req.headers['X-Admin-Key'];
-  const expected = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY;
-  return !!expected && supplied === expected;
+  return verifyAdminCredential(req).ok;
 }
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-key, x-dynasty-admin-token');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
   if (!isAuthorized(req)) return res.status(401).json({ error: 'admin_key_required' });

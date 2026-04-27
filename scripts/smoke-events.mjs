@@ -94,6 +94,7 @@ async function main() {
   {
     const r = await invoke(h.ingest, {
       method: 'POST',
+      headers: ADMIN,
       body: { tenant_id: tenant.tenant_id, event_type: 'tenant.call_missed', payload: { from: '+15551234' } },
     });
     fails += log(r.status === 201 && r.body.event?.event_type === 'tenant.call_missed',
@@ -104,7 +105,7 @@ async function main() {
   // Opportunity cards — empty tenant first
   // ============================================================
   {
-    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id } });
+    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id }, headers: ADMIN });
     fails += log(r.status === 200 && Array.isArray(r.body.cards),
       'cards endpoint returns a card array for any tenant', `count=${r.body.count} rules=${r.body.total_rules}`);
   }
@@ -120,7 +121,7 @@ async function main() {
     for (let i = 0; i < 11; i++) {
       emit('tenant.call_missed', { tenant_id: tenant.tenant_id, from: `+155551234${i}` });
     }
-    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id } });
+    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id }, headers: ADMIN });
     const card = r.body.cards.find((c) => c.rule_code === 'missed-calls-rule');
     fails += log(
       !!card
@@ -143,9 +144,10 @@ async function main() {
     });
     await invoke(h.activate, {
       method: 'POST',
+      headers: ADMIN,
       body: { tenant_id: tenant.tenant_id, module_code: 'missed_call_textback' },
     });
-    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id } });
+    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id }, headers: ADMIN });
     const card = r.body.cards.find((c) => c.rule_code === 'missed-calls-rule');
     fails += log(!card, 'missed-calls-rule does NOT fire once the module is active');
   }
@@ -157,7 +159,7 @@ async function main() {
     for (let i = 0; i < 6; i++) {
       emit('tenant.invoice_overdue', { tenant_id: tenant.tenant_id, invoice_id: `inv_${i}` });
     }
-    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id } });
+    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id }, headers: ADMIN });
     const card = r.body.cards.find((c) => c.rule_code === 'overdue-invoices-rule');
     fails += log(
       !!card && card.module_recommended === 'overdue_invoice_reminder',
@@ -175,7 +177,7 @@ async function main() {
     for (let i = 0; i < 25; i++) {
       emit('tenant.customer_service_due', { tenant_id: tenant.tenant_id, contact_id: `ctc_${i}` });
     }
-    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id, all: 'true' } });
+    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id, all: 'true' }, headers: ADMIN });
     const card = r.body.cards.find((c) => c.rule_code === 'service-due-rule');
     fails += log(
       !!card && card.module_recommended === 'service_due_reminder',
@@ -201,7 +203,7 @@ async function main() {
     for (let i = 0; i < 25; i++) {
       emit('tenant.customer_service_due', { tenant_id: plumbTenant.tenant_id, contact_id: `ctc_${i}` });
     }
-    const r = await invoke(h.cards, { query: { tenant_id: plumbTenant.tenant_id, all: 'true' } });
+    const r = await invoke(h.cards, { query: { tenant_id: plumbTenant.tenant_id, all: 'true' }, headers: ADMIN });
     const card = r.body.cards.find((c) => c.rule_code === 'service-due-rule');
     fails += log(!card, 'service-due-rule does NOT fire for plumbing (blueprint_in gate)');
   }
@@ -220,7 +222,7 @@ async function main() {
     for (let i = 0; i < 11; i++) {
       emit('tenant.deal_cold_30d', { tenant_id: tenant.tenant_id, deal_id: `deal_${i}` });
     }
-    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id } });
+    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id }, headers: ADMIN });
     const sortedDesc = r.body.cards.every((c, i, arr) => i === 0 || (arr[i - 1].priority || 0) >= (c.priority || 0));
     fails += log(
       r.body.cards.length <= 3 && sortedDesc && r.body.total_matches >= 3,
@@ -233,7 +235,7 @@ async function main() {
   // ?all=true returns everything (no cap)
   // ============================================================
   {
-    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id, all: 'true' } });
+    const r = await invoke(h.cards, { query: { tenant_id: tenant.tenant_id, all: 'true' }, headers: ADMIN });
     fails += log(r.body.cards.length === r.body.total_matches,
       '?all=true returns all matches, no cap', `count=${r.body.cards.length}`);
   }

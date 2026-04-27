@@ -18,6 +18,8 @@
 // =============================================================================
 
 import pg from 'pg';
+import { getTenant } from '../tenants/_store.mjs';
+import { requireTenantAccess } from '../tenants/_auth.mjs';
 
 const { Pool } = pg;
 
@@ -37,18 +39,11 @@ function pool() {
   return _pool;
 }
 
-// Utility: extract tenant_id from query or Authorization header
+// Utility: extract tenant_id from request data. Authorization carries a signed
+// token, never the tenant identifier itself.
 function extractTenantId(req) {
-  // Check query param first
   if (req.query?.tenant_id) return req.query.tenant_id;
-
-  // Check Authorization: Bearer <tenant_id> format
-  const auth = req.headers?.authorization || '';
-  if (auth.startsWith('Bearer ')) {
-    const token = auth.slice(7).trim();
-    return token;
-  }
-
+  if (req.body?.tenant_id) return req.body.tenant_id;
   return null;
 }
 
@@ -374,7 +369,7 @@ export default async function handler(req, res) {
   const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-key');
 
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
@@ -385,9 +380,12 @@ export default async function handler(req, res) {
   if (!tenant_id) {
     return res.status(401).json({
       ok: false,
-      error: 'Unauthorized: tenant_id required (query param or Authorization header)',
+      error: 'Unauthorized: tenant_id required',
     });
   }
+  const tenant = await getTenant(tenant_id);
+  if (!tenant) return res.status(404).json({ ok: false, error: 'tenant_not_found' });
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   // Route by action
   const action = req.query?.action || req.body?.action;

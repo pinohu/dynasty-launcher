@@ -17,6 +17,7 @@ import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
 import { getTenant } from './_store.mjs';
 import { getCatalog, indexModules } from '../catalog/_lib.mjs';
 import { emit } from '../events/_bus.mjs';
+import { requireTenantAccess } from './_auth.mjs';
 import pg from 'pg';
 
 const { Pool } = pg;
@@ -103,6 +104,7 @@ export default async function handler(req, res) {
   // Verify tenant exists (also triggers base schema migration)
   const tenant = await getTenant(tenant_id);
   if (!tenant) return res.status(404).json({ error: 'tenant_not_found' });
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   try {
     // Ensure automation-specific tables exist before inserting

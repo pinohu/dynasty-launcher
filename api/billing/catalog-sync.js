@@ -31,8 +31,7 @@
 //     operations: [ { sku_type, sku_code, product_id, prices: [...] } ]
 //   }
 //
-// Guard: requires x-admin-key header matching ADMIN_KEY (or TEST_ADMIN_KEY in
-// non-prod). Anyone hitting this endpoint without a key gets 401.
+// Guard: requires signed admin bearer token or x-admin-key.
 // -----------------------------------------------------------------------------
 
 import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
@@ -44,6 +43,7 @@ import {
   createPrice,
 } from './_stripe.mjs';
 import { getCatalog } from '../catalog/_lib.mjs';
+import { verifyAdminCredential } from '../tenants/_auth.mjs';
 
 export const maxDuration = 60;
 
@@ -52,10 +52,7 @@ export const maxDuration = 60;
 // -----------------------------------------------------------------------------
 
 function isAuthorized(req) {
-  const supplied = req.headers['x-admin-key'] || req.headers['X-Admin-Key'];
-  const expected = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY;
-  if (!expected) return false;
-  return supplied && supplied === expected;
+  return verifyAdminCredential(req).ok;
 }
 
 // -----------------------------------------------------------------------------

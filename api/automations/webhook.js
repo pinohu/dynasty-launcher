@@ -76,22 +76,56 @@ const now = () => new Date().toISOString();
 // =============================================================================
 
 function validateHmacSignature(body, signature, secret) {
-  if (!secret || secret.startsWith('STUB')) return true; // Stub mode
+  if (!realWebhookSecret(secret)) return { ok: false, status: 503, error: 'webhook_secret_missing' };
+  if (!signature) return { ok: false, status: 401, error: 'webhook_signature_required' };
   const hash = crypto
     .createHmac('sha256', secret)
     .update(body)
     .digest('hex');
-  return hash === signature;
+  return timingSafeEqualString(hash, signature)
+    ? { ok: true }
+    : { ok: false, status: 401, error: 'invalid_signature' };
 }
 
 // Stripe signature validation (using key from env or DYNASTY_TOOL_CONFIG)
 function validateStripeSignature(body, stripeSignature, secret) {
-  if (!secret || secret.startsWith('STUB')) return true; // Stub mode
-  const [timestamp, signature] = stripeSignature.split(',').map((s) => s.split('=')[1]);
-  if (!timestamp || !signature) return false;
+  if (!realWebhookSecret(secret)) return { ok: false, status: 503, error: 'webhook_secret_missing' };
+  if (!stripeSignature) return { ok: false, status: 401, error: 'webhook_signature_required' };
+  const parsed = {};
+  for (const part of String(stripeSignature).split(',')) {
+    const [key, value] = part.split('=');
+    if (!key || !value) continue;
+    if (!parsed[key]) parsed[key] = [];
+    parsed[key].push(value);
+  }
+  const timestamp = parsed.t?.[0];
+  const signatures = parsed.v1 || [];
+  if (!timestamp || !signatures.length) return { ok: false, status: 401, error: 'invalid_signature' };
+  const ts = Number(timestamp);
+  const toleranceSec = Number.parseInt(process.env.STRIPE_WEBHOOK_TOLERANCE_SECONDS || '300', 10);
+  if (!Number.isFinite(ts) || Math.abs(Math.floor(Date.now() / 1000) - ts) > toleranceSec) {
+    return { ok: false, status: 401, error: 'signature_timestamp_out_of_tolerance' };
+  }
   const signed = `${timestamp}.${body}`;
   const hash = crypto.createHmac('sha256', secret).update(signed).digest('hex');
-  return hash === signature;
+  return signatures.some((sig) => timingSafeEqualString(hash, sig))
+    ? { ok: true }
+    : { ok: false, status: 401, error: 'invalid_signature' };
+}
+
+function realWebhookSecret(value) {
+  const v = String(value || '').trim();
+  return v && !v.startsWith('STUB') && !v.startsWith('EXPIRED') ? v : '';
+}
+
+function timingSafeEqualString(a, b) {
+  const left = Buffer.from(String(a || ''));
+  const right = Buffer.from(String(b || ''));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
+function rejectSignature(res, check) {
+  return res.status(check.status || 401).json({ ok: false, error: check.error || 'invalid_signature' });
 }
 
 // =============================================================================
@@ -119,9 +153,8 @@ async function handleCallScalerWebhook(body, headers, res) {
     // Validate signature
     const signature = headers['x-callscaler-signature'] || '';
     const secret = process.env.CALLSCALER_WEBHOOK_SECRET || '';
-    if (!validateHmacSignature(typeof body === 'string' ? body : JSON.stringify(body), signature, secret)) {
-      return res.status(401).json({ ok: false, error: 'Invalid signature' });
-    }
+    const signatureCheck = validateHmacSignature(typeof body === 'string' ? body : JSON.stringify(body), signature, secret);
+    if (!signatureCheck.ok) return rejectSignature(res, signatureCheck);
 
     const webhook_id = newId('wh');
 
@@ -172,9 +205,8 @@ async function handleStripeWebhook(body, headers, res) {
     const secret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
     const raw = typeof body === 'string' ? body : JSON.stringify(body);
-    if (!validateStripeSignature(raw, signature, secret)) {
-      return res.status(401).json({ ok: false, error: 'Invalid signature' });
-    }
+    const signatureCheck = validateStripeSignature(raw, signature, secret);
+    if (!signatureCheck.ok) return rejectSignature(res, signatureCheck);
 
     const data = typeof body === 'string' ? JSON.parse(body) : body;
     const webhook_id = newId('wh');
@@ -229,9 +261,8 @@ async function handleTrafftWebhook(body, headers, res) {
     // Validate signature
     const signature = headers['x-trafft-signature'] || '';
     const secret = process.env.TRAFFT_WEBHOOK_SECRET || '';
-    if (!validateHmacSignature(typeof body === 'string' ? body : JSON.stringify(body), signature, secret)) {
-      return res.status(401).json({ ok: false, error: 'Invalid signature' });
-    }
+    const signatureCheck = validateHmacSignature(typeof body === 'string' ? body : JSON.stringify(body), signature, secret);
+    if (!signatureCheck.ok) return rejectSignature(res, signatureCheck);
 
     const webhook_id = newId('wh');
     const event_type = data.event || 'appointment.created';
@@ -281,7 +312,11 @@ async function handleFormWebhook(body, headers, res) {
     const data = typeof body === 'string' ? JSON.parse(body) : body;
     const webhook_id = newId('wh');
 
-    // Form webhooks are trusted (authenticated client sends them).
+    const signature = headers['x-form-signature'] || headers['x-webhook-signature'] || '';
+    const secret = process.env.FORM_WEBHOOK_SECRET || process.env.AUTOMATION_FORM_WEBHOOK_SECRET || '';
+    const signatureCheck = validateHmacSignature(typeof body === 'string' ? body : JSON.stringify(body), signature, secret);
+    if (!signatureCheck.ok) return rejectSignature(res, signatureCheck);
+
     // tenant_id is required.
     const tenant_id = data.tenant_id || data.metadata?.tenant_id;
     if (!tenant_id) {
@@ -327,7 +362,7 @@ export default async function handler(req, res) {
   const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-callscaler-signature, stripe-signature, x-trafft-signature');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-callscaler-signature, stripe-signature, x-trafft-signature, x-form-signature, x-webhook-signature');
 
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
@@ -354,10 +389,9 @@ export default async function handler(req, res) {
   }
 
   const source = req.query?.source || parsed.source || 'unknown';
-  const req_with_body = { ...req, rawBody: body };
 
   if (source === 'callscaler' || req.headers['x-callscaler-signature']) {
-    return await handleCallScalerWebhook(parsed, req.headers, res);
+    return await handleCallScalerWebhook(body, req.headers, res);
   }
 
   if (source === 'stripe' || req.headers['stripe-signature']) {
@@ -365,11 +399,11 @@ export default async function handler(req, res) {
   }
 
   if (source === 'trafft' || req.headers['x-trafft-signature']) {
-    return await handleTrafftWebhook(parsed, req.headers, res);
+    return await handleTrafftWebhook(body, req.headers, res);
   }
 
   if (source === 'form') {
-    return await handleFormWebhook(parsed, req.headers, res);
+    return await handleFormWebhook(body, req.headers, res);
   }
 
   // Unknown source

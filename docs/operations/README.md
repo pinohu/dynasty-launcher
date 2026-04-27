@@ -8,6 +8,9 @@ into concrete work agents can execute without needing to ask questions.
 ## Read order by role
 
 ### I'm a founder / program owner
+Start with [PRODUCT_PROMISE_MATRIX.md](./PRODUCT_PROMISE_MATRIX.md) before
+shipping public copy, pricing, marketplace modules, or self-running claims.
+
 1. [PRODUCTION_PROGRAM_BOARD.md](./PRODUCTION_PROGRAM_BOARD.md) — the 12
    tracks, dependencies, current status
 2. [RELEASE_TRAIN.md](./RELEASE_TRAIN.md) — what ships in each wave
@@ -46,6 +49,7 @@ into concrete work agents can execute without needing to ask questions.
 
 | File | Purpose |
 |---|---|
+| [PRODUCT_PROMISE_MATRIX.md](./PRODUCT_PROMISE_MATRIX.md) | Public promises, evidence state, conflicts, and release gates |
 | [PRODUCTION_PROGRAM_BOARD.md](./PRODUCTION_PROGRAM_BOARD.md) | 12 tracks, dependencies, exit criteria |
 | [ACTIVATION_FLOW_SPEC.md](./ACTIVATION_FLOW_SPEC.md) | 14-step activation contract |
 | [MODULE_PRODUCTION_MATRIX.md](./MODULE_PRODUCTION_MATRIX.md) | Per-module production detail |

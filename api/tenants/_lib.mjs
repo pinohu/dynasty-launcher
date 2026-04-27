@@ -3,6 +3,8 @@
 // HTTP helpers, body parsing, and CORS shared by every tenant endpoint.
 // -----------------------------------------------------------------------------
 
+import { verifyRawAdminHeader } from './_auth.mjs';
+
 export function corsPreflight(req, res) {
   const origin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', origin);
@@ -37,9 +39,7 @@ export async function readBody(req) {
 }
 
 export function adminOnly(req, res) {
-  const key = req.headers['x-admin-key'] || req.query?.key;
-  const expected = process.env.ADMIN_KEY || process.env.TEST_ADMIN_KEY;
-  if (!expected || key !== expected) {
+  if (!verifyRawAdminHeader(req)) {
     res.status(403).json({ error: 'admin_only' });
     return false;
   }

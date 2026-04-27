@@ -1,80 +1,105 @@
-// Serverless Function — proxies GitHub API using server-side GITHUB_TOKEN
-// Security: validates path prefix to prevent abuse
+// Serverless Function - proxies GitHub API using server-side GITHUB_TOKEN.
+// Paid users may read allowed repository paths; only admins may mutate GitHub.
 export const maxDuration = 30;
 
-const ALLOWED_PATH_PREFIXES = [
-  '/repos/pinohu/',
-  '/user/repos',
-];
+import {
+  bearerToken,
+  verifyAdminSessionToken,
+  verifyPaymentAccessToken,
+  verifyRawAdminHeader,
+} from './tenants/_auth.mjs';
+
+const ALLOWED_PATH_PREFIXES = ['/repos/pinohu/', '/user/repos'];
+
+function header(req, name) {
+  const needle = String(name).toLowerCase();
+  for (const [key, value] of Object.entries(req.headers || {})) {
+    if (String(key).toLowerCase() === needle)
+      return Array.isArray(value) ? String(value[0] || '') : String(value || '');
+  }
+  return '';
+}
+
+function isMutation(method) {
+  return !['GET', 'HEAD', 'OPTIONS'].includes(String(method || '').toUpperCase());
+}
+
+function authForGitHubProxy(req) {
+  if (verifyRawAdminHeader(req)) return { ok: true, auth_type: 'admin_key', admin: true };
+
+  const adminCandidates = [header(req, 'x-dynasty-admin-token'), bearerToken(req)].filter(Boolean);
+  for (const token of adminCandidates) {
+    if (verifyAdminSessionToken(token))
+      return { ok: true, auth_type: 'admin_session', admin: true };
+  }
+
+  const paidCandidates = [
+    header(req, 'x-dynasty-access-token'),
+    req.body?.access_token,
+    bearerToken(req),
+  ].filter(Boolean);
+  for (const token of paidCandidates) {
+    if (!String(token).startsWith('pay:')) continue;
+    const paid = verifyPaymentAccessToken(String(token));
+    if (paid.ok) return { ok: true, auth_type: 'payment_token', admin: false, tier: paid.tier };
+    return paid;
+  }
+
+  return { ok: false, status: 401, error: 'Authentication required' };
+}
+
+function sanitizedBody(req) {
+  if (!req.body || typeof req.body !== 'object') return req.body;
+  const body = { ...req.body };
+  body.access_token = undefined;
+  body.admin_token = undefined;
+  body.paid_access_token = undefined;
+  return body;
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, x-admin-key, x-dynasty-admin-token, x-dynasty-access-token',
+  );
 
   if (req.method === 'OPTIONS') return res.status(204).end();
 
-  // ── Security: require paid session or admin token (HMAC-verified) ──
-  const _adminTok = (req.headers['x-dynasty-admin-token'] || '').toString();
-  const _paidTok = (req.body?.access_token || req.headers['x-dynasty-access-token'] || '').toString();
-  let _authed = false;
-  if (_adminTok) {
-    try {
-      const parts = _adminTok.split(':');
-      if (parts.length === 3) {
-        const [prefix, expiry, hash] = parts;
-        const secret = prefix === 'admin' ? (process.env.ADMIN_KEY || '') : (prefix === 'admin_test' ? (process.env.TEST_ADMIN_KEY || '') : '');
-        if (secret && parseInt(expiry) > Date.now()) {
-          const { createHmac, timingSafeEqual } = await import('crypto');
-          const expected = createHmac('sha256', secret).update(prefix + ':' + expiry).digest('hex');
-          if (expected.length === hash.length && timingSafeEqual(Buffer.from(expected), Buffer.from(hash))) _authed = true;
-        }
-      }
-    } catch {}
+  const auth = authForGitHubProxy(req);
+  if (!auth.ok) {
+    return res
+      .status(auth.status || 401)
+      .json({ ok: false, error: auth.error || 'Authentication required' });
   }
-  if (!_authed && _paidTok) {
-    try {
-      const parts = _paidTok.split(':');
-      if (parts.length === 6 && parts[0] === 'pay') {
-        const [prefix, tokSession, tokUser, tokTier, exp, sig] = parts;
-        const expNum = parseInt(exp, 10);
-        if (Number.isFinite(expNum) && Date.now() <= expNum) {
-          const secret = process.env.PAYMENT_ACCESS_SECRET || process.env.STRIPE_SECRET_KEY || '';
-          if (secret) {
-            const { createHmac, timingSafeEqual } = await import('crypto');
-            const payload = prefix + ':' + tokSession + ':' + tokUser + ':' + tokTier + ':' + exp;
-            const expected = createHmac('sha256', secret).update(payload).digest('hex');
-            if (expected.length === sig.length && timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) _authed = true;
-          }
-        }
-      }
-    } catch {}
+  if (isMutation(req.method) && !auth.admin) {
+    return res.status(403).json({ ok: false, error: 'admin_required_for_mutation' });
   }
-  if (!_authed) return res.status(401).json({ ok: false, error: 'Authentication required' });
-
 
   const ghToken = process.env.GITHUB_TOKEN;
   if (!ghToken) return res.status(500).json({ error: 'GITHUB_TOKEN not configured' });
 
   const ghPath = req.query.path || '';
 
-  // Validate path to prevent open relay abuse
   const normalizedPath = ghPath.replace(/\.\./g, '').replace(/\/\//g, '/');
-  const allowed = ALLOWED_PATH_PREFIXES.some(p => normalizedPath.startsWith(p)) && !ghPath.includes('..');
+  const allowed =
+    ALLOWED_PATH_PREFIXES.some((p) => normalizedPath.startsWith(p)) && !ghPath.includes('..');
   if (!allowed) {
     return res.status(403).json({ error: 'Path not allowed', path: ghPath });
   }
 
   const method = req.method;
-  const body = method !== 'GET' && method !== 'HEAD' ? JSON.stringify(req.body) : undefined;
+  const body =
+    method !== 'GET' && method !== 'HEAD' ? JSON.stringify(sanitizedBody(req)) : undefined;
 
   try {
     const upstream = await fetch(`https://api.github.com${ghPath}`, {
       method,
       headers: {
-        'Authorization': `token ${ghToken}`,
+        Authorization: `token ${ghToken}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/vnd.github.v3+json',
+        Accept: 'application/vnd.github.v3+json',
         'User-Agent': 'dynasty-launcher',
       },
       ...(body ? { body } : {}),
@@ -82,7 +107,7 @@ export default async function handler(req, res) {
 
     const data = await upstream.text();
     return res.status(upstream.status).send(data);
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: 'GitHub proxy error' });
   }
 }

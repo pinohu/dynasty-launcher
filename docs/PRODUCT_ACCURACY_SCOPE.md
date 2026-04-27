@@ -32,6 +32,15 @@ Content here may use **future voice**, **marketing compression**, or **illustrat
 
 If strategy copy is promoted to the homepage or `/public`, it must be edited to match `TIER_MODULES` and `/maturity`, then the warranted list updated if needed.
 
+## Promise control
+
+`docs/operations/PRODUCT_PROMISE_MATRIX.md` is the release-blocking audit
+ledger for public claims that span multiple surfaces. If a public page,
+generated page, product JSON file, strategy document, or test disagrees about
+whether a promise is live, sellable, self-serve, self-running, refundable, or
+validated, treat the promise as **conflicted** until the matrix is resolved and
+the relevant verifier enforces the chosen source of truth.
+
 ## Canonical facts (current contract)
 
 1. **Foundation** and **Professional** use the **same 11** integration keys in `TIER_MODULES` (order may vary; contents must match).

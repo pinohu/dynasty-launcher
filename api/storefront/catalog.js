@@ -22,6 +22,8 @@ import {
   upsertEntitlement,
   getEntitlement,
 } from '../tenants/_store.mjs';
+import { activateModule } from '../tenants/_activation.mjs';
+import { requireTenantAccess, realSecret } from '../tenants/_auth.mjs';
 import pg from 'pg';
 
 const { Pool } = pg;
@@ -47,25 +49,143 @@ function pool() {
 }
 
 // =============================================================================
-// Stripe Integration (optional)
+// Tenant/Auth + Stripe helpers
 // =============================================================================
 
-let _stripe = null;
-let _stripeLoaded = false;
+function stripeSecret() {
+  return realSecret(process.env.STRIPE_SECRET_KEY);
+}
 
-async function stripe() {
-  if (_stripeLoaded) return _stripe;
-  _stripeLoaded = true;
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key || key.startsWith('STUB-')) return null; // Dev mode
-  try {
-    const Stripe = (await import('stripe')).default;
-    _stripe = new Stripe(key);
-  } catch (e) {
-    console.error('[storefront] Stripe import failed:', e.message);
-    _stripe = null;
+function stripeConfigured() {
+  return !!stripeSecret();
+}
+
+
+function formEncode(obj, prefix = '') {
+  const out = [];
+  for (const [k, v] of Object.entries(obj || {})) {
+    const key = prefix ? `${prefix}[${k}]` : k;
+    if (v == null) continue;
+    if (Array.isArray(v)) {
+      v.forEach((item, i) => {
+        const itemKey = `${key}[${i}]`;
+        if (typeof item === 'object') out.push(formEncode(item, itemKey));
+        else out.push(`${encodeURIComponent(itemKey)}=${encodeURIComponent(String(item))}`);
+      });
+    } else if (typeof v === 'object') {
+      out.push(formEncode(v, key));
+    } else {
+      out.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`);
+    }
   }
-  return _stripe;
+  return out.join('&');
+}
+
+async function stripeCall(path, opts = {}) {
+  const key = stripeSecret();
+  if (!key) throw new Error('stripe_secret_missing');
+  const resp = await fetch(`https://api.stripe.com/v1${path}`, {
+    method: opts.method || 'GET',
+    headers: {
+      'Authorization': `Basic ${Buffer.from(`${key}:`).toString('base64')}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: opts.body ? formEncode(opts.body) : undefined,
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    const err = new Error(data.error?.message || `stripe ${resp.status}`);
+    err.status = resp.status;
+    err.code = data.error?.code;
+    err.type = data.error?.type;
+    throw err;
+  }
+  return data;
+}
+
+function stripeCustomerId(tenant) {
+  return tenant.stripe_customer_id
+    || tenant.billing?.stripe_customer_id
+    || tenant.profile?.stripe_customer_id
+    || null;
+}
+
+function subscriptionPaymentConfirmed(subscription) {
+  const status = subscription?.status;
+  const invoice = subscription?.latest_invoice;
+  const paymentIntent = invoice?.payment_intent;
+  return status === 'active'
+    || status === 'trialing'
+    || invoice?.status === 'paid'
+    || paymentIntent?.status === 'succeeded';
+}
+
+async function createPaidSubscription({ tenant, paymentMethodId, name, amount, metadata }) {
+  if (!stripeConfigured()) {
+    return { ok: true, stripe_subscription_id: null, payment_status: 'stub' };
+  }
+
+  const customer = stripeCustomerId(tenant);
+  if (!customer) {
+    return { ok: false, status: 402, error: 'stripe_customer_required' };
+  }
+  if (!paymentMethodId) {
+    return { ok: false, status: 402, error: 'payment_method_required' };
+  }
+
+  let subscription = null;
+  try {
+    subscription = await stripeCall('/subscriptions', {
+      method: 'POST',
+      body: {
+        customer,
+        payment_behavior: 'error_if_incomplete',
+        default_payment_method: paymentMethodId,
+        expand: ['latest_invoice.payment_intent'],
+        metadata,
+        items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: { name, metadata },
+            recurring: { interval: 'month' },
+            unit_amount: Math.round(amount * 100),
+          },
+        }],
+      },
+    });
+  } catch (err) {
+    console.error('[storefront] Stripe subscription creation failed:', err.message);
+    return {
+      ok: false,
+      status: err.status === 402 ? 402 : 502,
+      error: 'stripe_subscription_failed',
+      message: err.message,
+    };
+  }
+
+  if (!subscriptionPaymentConfirmed(subscription)) {
+    if (subscription?.id) {
+      try { await stripeCall(`/subscriptions/${encodeURIComponent(subscription.id)}`, { method: 'DELETE' }); } catch (_) { /* best effort */ }
+    }
+    return { ok: false, status: 402, error: 'payment_not_confirmed' };
+  }
+
+  return {
+    ok: true,
+    stripe_subscription_id: subscription.id,
+    payment_status: subscription.status || subscription.latest_invoice?.payment_intent?.status || 'confirmed',
+  };
+}
+
+async function cancelPaidSubscription(stripeSubscriptionId) {
+  if (!stripeSubscriptionId || !stripeConfigured()) return { ok: true, skipped: true };
+  try {
+    await stripeCall(`/subscriptions/${encodeURIComponent(stripeSubscriptionId)}`, { method: 'DELETE' });
+    return { ok: true };
+  } catch (err) {
+    console.error('[storefront] Stripe subscription cancellation failed:', err.message);
+    return { ok: false, error: 'stripe_cancellation_failed', message: err.message };
+  }
 }
 
 // =============================================================================
@@ -94,6 +214,27 @@ function getBundleByCode(catalog, bundleCode) {
 
 function getModuleByCode(catalog, moduleCode) {
   return (catalog.modules || []).find((m) => m.module_code === moduleCode);
+}
+
+function moduleAllowedForTenant(module, tenant) {
+  const allowed = module?.tier_availability || [];
+  return allowed.length === 0 || allowed.includes(tenant.plan) || tenant.plan === 'enterprise';
+}
+
+async function entitleAndActivateModule({ tenant_id, module_code, billing_source }) {
+  await upsertEntitlement(tenant_id, module_code, {
+    state: 'entitled',
+    billing_source,
+  });
+  const activation = await activateModule({ tenant_id, module_code, user_input: {} });
+  return {
+    module_code,
+    status: activation.status === 'ok' || activation.status === 'idempotent_ok'
+      ? 'active'
+      : activation.status,
+    reason: activation.reason || null,
+    missing_capabilities: activation.missing_capabilities || [],
+  };
 }
 
 // Build module item with tenant-specific status
@@ -184,6 +325,7 @@ async function actionBrowse(req, res) {
   if (!tenant) {
     return res.status(404).json({ error: `tenant '${tenantId}' not found` });
   }
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   const catalog = getCatalog();
   const entitlements = await listTenantEntitlements(tenantId);
@@ -210,6 +352,7 @@ async function actionMyAutomations(req, res) {
   if (!tenant) {
     return res.status(404).json({ error: `tenant '${tenantId}' not found` });
   }
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   const catalog = getCatalog();
   const entitlements = await listTenantEntitlements(tenantId);
@@ -267,6 +410,7 @@ async function actionPurchasePack(req, res) {
   if (!tenant) {
     return res.status(404).json({ error: `tenant '${tenant_id}' not found` });
   }
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   const catalog = getCatalog();
   const bundle = getBundleByCode(catalog, bundle_code);
@@ -275,64 +419,55 @@ async function actionPurchasePack(req, res) {
   }
 
   const moduleCodes = bundle.modules || [];
+  const unavailable = moduleCodes
+    .map((moduleCode) => getModuleByCode(catalog, moduleCode))
+    .filter((module) => !module || !moduleAllowedForTenant(module, tenant))
+    .map((module) => module?.module_code || 'unknown');
+  if (unavailable.length) {
+    return res.status(403).json({ error: 'module_not_available_for_tenant', modules: unavailable });
+  }
   const price = bundle.price_monthly || 49;
 
-  // Handle Stripe billing if configured
-  let stripeSubscriptionId = null;
-  const stripeClient = await stripe();
-  if (stripeClient && tenant.stripe_customer_id && payment_method_id) {
-    try {
-      const sub = await stripeClient.subscriptions.create({
-        customer: tenant.stripe_customer_id,
-        items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: bundle.name,
-                metadata: { bundle_code },
-              },
-              recurring: { interval: 'month' },
-              unit_amount: Math.round(price * 100),
-            },
-          },
-        ],
-        default_payment_method: payment_method_id,
-        expand: ['latest_invoice.payment_intent'],
-      });
-      stripeSubscriptionId = sub.id;
-    } catch (err) {
-      console.error('[storefront] Stripe subscription creation failed:', err.message);
-      // Continue without billing; just activate
-    }
+  const billing = await createPaidSubscription({
+    tenant,
+    paymentMethodId: payment_method_id,
+    name: bundle.name,
+    amount: price,
+    metadata: { tenant_id, bundle_code, sku_type: 'bundle' },
+  });
+  if (!billing.ok) {
+    return res.status(billing.status || 402).json({
+      error: billing.error,
+      message: process.env.NODE_ENV === 'development' ? billing.message : undefined,
+    });
   }
 
-  // Activate all modules in the pack
-  const activated = [];
+  const results = [];
   for (const moduleCode of moduleCodes) {
-    const existing = await getEntitlement(tenant_id, moduleCode);
-    const update = {
-      state: 'active',
-      activated_at: new Date().toISOString(),
+    const result = await entitleAndActivateModule({
+      tenant_id,
+      module_code: moduleCode,
       billing_source: {
         source_type: 'bundle',
         bundle_code,
-        stripe_subscription_id: stripeSubscriptionId || undefined,
+        stripe_subscription_id: billing.stripe_subscription_id || undefined,
+        payment_status: billing.payment_status,
       },
-    };
-    await upsertEntitlement(tenant_id, moduleCode, update);
-    activated.push(moduleCode);
+    });
+    results.push(result);
   }
 
   return res.json({
     ok: true,
     tenant_id,
     bundle_code,
-    modules_activated: activated,
+    modules_activated: results.filter((r) => r.status === 'active').map((r) => r.module_code),
+    modules: results,
     billing: {
       amount: price,
       interval: 'month',
-      stripe_subscription_id: stripeSubscriptionId || null,
+      stripe_subscription_id: billing.stripe_subscription_id || null,
+      payment_status: billing.payment_status,
     },
   });
 }
@@ -353,64 +488,55 @@ async function actionPurchaseModule(req, res) {
   if (!tenant) {
     return res.status(404).json({ error: `tenant '${tenant_id}' not found` });
   }
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   const catalog = getCatalog();
   const module = getModuleByCode(catalog, module_code);
   if (!module) {
     return res.status(404).json({ error: `module '${module_code}' not found` });
   }
+  if (!moduleAllowedForTenant(module, tenant)) {
+    return res.status(403).json({ error: 'module_not_available_for_tenant', module_code });
+  }
 
   const price = getModulePrice(catalog, module_code);
 
-  // Handle Stripe billing if configured
-  let stripeSubscriptionId = null;
-  const stripeClient = await stripe();
-  if (stripeClient && tenant.stripe_customer_id && payment_method_id) {
-    try {
-      const sub = await stripeClient.subscriptions.create({
-        customer: tenant.stripe_customer_id,
-        items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: module.name,
-                metadata: { module_code },
-              },
-              recurring: { interval: 'month' },
-              unit_amount: Math.round(price * 100),
-            },
-          },
-        ],
-        default_payment_method: payment_method_id,
-        expand: ['latest_invoice.payment_intent'],
-      });
-      stripeSubscriptionId = sub.id;
-    } catch (err) {
-      console.error('[storefront] Stripe subscription creation failed:', err.message);
-    }
+  const billing = await createPaidSubscription({
+    tenant,
+    paymentMethodId: payment_method_id,
+    name: module.name,
+    amount: price,
+    metadata: { tenant_id, module_code, sku_type: 'module' },
+  });
+  if (!billing.ok) {
+    return res.status(billing.status || 402).json({
+      error: billing.error,
+      message: process.env.NODE_ENV === 'development' ? billing.message : undefined,
+    });
   }
 
-  // Activate module
-  const update = {
-    state: 'active',
-    activated_at: new Date().toISOString(),
+  const activation = await entitleAndActivateModule({
+    tenant_id,
+    module_code,
     billing_source: {
       source_type: 'module',
-      stripe_subscription_id: stripeSubscriptionId || undefined,
+      stripe_subscription_id: billing.stripe_subscription_id || undefined,
+      payment_status: billing.payment_status,
     },
-  };
-  await upsertEntitlement(tenant_id, module_code, update);
+  });
 
   return res.json({
     ok: true,
     tenant_id,
     module_code,
-    status: 'active',
+    status: activation.status,
+    reason: activation.reason,
+    missing_capabilities: activation.missing_capabilities,
     billing: {
       amount: price,
       interval: 'month',
-      stripe_subscription_id: stripeSubscriptionId || null,
+      stripe_subscription_id: billing.stripe_subscription_id || null,
+      payment_status: billing.payment_status,
     },
   });
 }
@@ -431,6 +557,7 @@ async function actionDeactivate(req, res) {
   if (!tenant) {
     return res.status(404).json({ error: `tenant '${tenant_id}' not found` });
   }
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   const entitlement = await getEntitlement(tenant_id, module_code);
   if (!entitlement) {
@@ -438,13 +565,12 @@ async function actionDeactivate(req, res) {
   }
 
   // Cancel Stripe subscription if applicable
-  const stripeClient = stripe();
-  if (stripeClient && entitlement.billing_source?.stripe_subscription_id) {
-    try {
-      await stripeClient.subscriptions.del(entitlement.billing_source.stripe_subscription_id);
-    } catch (err) {
-      console.error('[storefront] Stripe subscription cancellation failed:', err.message);
-    }
+  const cancellation = await cancelPaidSubscription(entitlement.billing_source?.stripe_subscription_id);
+  if (!cancellation.ok) {
+    return res.status(502).json({
+      error: cancellation.error,
+      message: process.env.NODE_ENV === 'development' ? cancellation.message : undefined,
+    });
   }
 
   // Deactivate module
@@ -480,6 +606,7 @@ async function actionBillingSummary(req, res) {
   if (!tenant) {
     return res.status(404).json({ error: `tenant '${tenantId}' not found` });
   }
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   const catalog = getCatalog();
   const entitlements = await listTenantEntitlements(tenantId);

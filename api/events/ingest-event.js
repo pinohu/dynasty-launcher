@@ -23,6 +23,7 @@ import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
 import { emit } from './_bus.mjs';
 import { dispatchEvent } from './_dispatcher.mjs';
 import { getTenant } from '../tenants/_store.mjs';
+import { requireTenantAccess } from '../tenants/_auth.mjs';
 
 export const maxDuration = 30;
 
@@ -38,7 +39,9 @@ export default async function handler(req, res) {
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
   if (!event_type) return res.status(400).json({ error: 'event_type required' });
 
-  if (!await getTenant(tenant_id)) return res.status(404).json({ error: 'tenant_not_found' });
+  const tenant = await getTenant(tenant_id);
+  if (!tenant) return res.status(404).json({ error: 'tenant_not_found' });
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   const event = emit(event_type, { tenant_id, ...(payload || {}) });
 

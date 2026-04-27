@@ -14,10 +14,18 @@
     "test:demo-coverage": "node scripts/check-demo-coverage.mjs",
     "test:promised-services": "node scripts/check-promised-service-coverage.mjs",
     "test:tenants": "node scripts/smoke-tenants.mjs",
+    "test:tenant-auth": "node scripts/smoke-tenant-auth.mjs",
     "test:activation": "node scripts/smoke-activation.mjs",
     "test:events": "node scripts/smoke-events.mjs",
     "test:workflows": "node scripts/smoke-workflows.mjs",
     "test:billing": "node scripts/smoke-billing.mjs",
+    "test:storefront-security": "node scripts/smoke-storefront-security.mjs",
+    "test:ai-security": "node scripts/smoke-ai-security.mjs",
+    "test:automation-webhook-security": "node scripts/smoke-automation-webhook-security.mjs",
+    "test:github-security": "node scripts/smoke-github-proxy-security.mjs",
+    "test:admin-key-security": "node scripts/smoke-admin-key-security.mjs",
+    "test:checkout-security": "node scripts/smoke-checkout-security.mjs",
+    "test:admin-ui-security": "node scripts/check-admin-ui-security.mjs",
     "test:generated-repair": "node scripts/generated-repo-regression.mjs",
     "test:site-links": "node scripts/check-site-links.mjs",
     "test:builder-clickability": "node scripts/check-builder-clickability.mjs",
@@ -29,10 +37,12 @@
     "test:deployment-repair-guards": "node scripts/check-deployment-repair-guards.mjs",
     "test:resumable-builds": "node scripts/check-resumable-builds.mjs",
     "test:prompts": "npx --yes promptfoo@0.120.19 eval -c promptfooconfig.yaml",
-    "lint": "biome check .",
+    "lint": "npm run lint:security",
+    "lint:security": "biome check api/_ai_security.mjs api/github.js api/tenants/_auth.mjs api/tenants/issue-token.js scripts/check-admin-ui-security.mjs scripts/smoke-ai-security.mjs scripts/smoke-automation-webhook-security.mjs scripts/smoke-github-proxy-security.mjs scripts/smoke-admin-key-security.mjs scripts/smoke-checkout-security.mjs scripts/smoke-storefront-security.mjs scripts/smoke-tenant-auth.mjs",
+    "lint:all": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:marketplace-readiness && npm run test:demo-coverage && npm run test:promised-services && npm run test:tenants && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:planning-fallbacks && npm run test:html-script-safety && npm run test:quality-gate-repair && npm run test:button-containment && npm run test:public-branding && npm run test:deployment-repair-guards && npm run test:resumable-builds"
+    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:marketplace-readiness && npm run test:demo-coverage && npm run test:promised-services && npm run test:tenants && npm run test:tenant-auth && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:storefront-security && npm run test:ai-security && npm run test:automation-webhook-security && npm run test:github-security && npm run test:admin-key-security && npm run test:checkout-security && npm run test:admin-ui-security && npm run lint:security && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:planning-fallbacks && npm run test:html-script-safety && npm run test:quality-gate-repair && npm run test:button-containment && npm run test:public-branding && npm run test:deployment-repair-guards && npm run test:resumable-builds"
   },
   "engines": {
     "node": "20.x"
