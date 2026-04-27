@@ -90,6 +90,8 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
     <a href="#licenses" onclick="showPage('licenses')">Licenses</a>
     <div class="section">Strategy</div>
     <a href="#oie" onclick="showPage('oie')">Offer Intelligence</a>
+    <a href="#portfolio" onclick="showPage('portfolio')">Portfolio Allocator</a>
+    <a href="#shipped" onclick="showPage('shipped')">Shipped &amp; Metrics</a>
     <div class="section">Infrastructure</div>
     <a href="#projects" onclick="showPage('projects')">Vercel Projects</a>
     <a href="#modules" onclick="showPage('modules')">Module Testing</a>
@@ -256,6 +258,91 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)}
       </div>
     </div>
 
+    <!-- PORTFOLIO ALLOCATOR -->
+    <div class="page" id="page-portfolio">
+      <div class="page-title">
+        Portfolio Allocator
+        <span class="badge" id="pae-version" style="font-size:10px;background:rgba(201,168,76,0.15);color:var(--gold);padding:2px 8px;border-radius:99px;margin-left:8px">loading...</span>
+        <button class="btn" onclick="paeLoadCurrentState()" style="margin-left:8px">Refresh state</button>
+      </div>
+      <p style="color:var(--dim);margin-bottom:16px;max-width:760px;font-size:12px">
+        Sits above OIE. Reads approved + shipped decisions, computes the deterministic current-state snapshot, then runs an AI gap analysis against your target mix to recommend what to ship next (or kill). Investment-committee tone — empty recommendations are valid output when the portfolio is balanced.
+      </p>
+
+      <div class="card">
+        <h3>Current State (deterministic)</h3>
+        <div id="pae-current-state"><div class="loading">Loading...</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Run Allocator</h3>
+        <div class="form-row"><label for="pae-capacity">Capacity / month</label><input type="number" id="pae-capacity" value="2" min="1" max="20"></div>
+        <div class="form-row" style="align-items:flex-start">
+          <label for="pae-target">Target mix (JSON)</label>
+          <textarea id="pae-target" rows="6" style="font-family:monospace;font-size:11px">{
+  "flagship_authority": 1,
+  "low_ticket_tripwire": 2,
+  "backend_ascension": 1,
+  "diagnostic_lead_magnet": 1,
+  "recurring_retainer_feeder": 1
+}</textarea>
+        </div>
+        <div class="form-row"><label for="pae-constraints">Constraints (one per line)</label><textarea id="pae-constraints" rows="2" placeholder="e.g. avoid identity-collision concentration&#10;prefer fast-shipping over flagship for next 60 days"></textarea></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn primary" id="pae-run-btn" onclick="paeRun()">Run Allocator</button>
+        </div>
+        <p id="pae-run-status" style="color:var(--dim);font-size:11px;margin-top:8px"></p>
+      </div>
+
+      <div class="card" id="pae-allocation-card" style="display:none">
+        <h3>Allocation Report</h3>
+        <div id="pae-allocation-body"></div>
+      </div>
+    </div>
+
+    <!-- SHIPPED + METRICS -->
+    <div class="page" id="page-shipped">
+      <div class="page-title">
+        Shipped &amp; Metrics
+        <button class="btn" onclick="metricsLoadSummary()" style="margin-left:8px">Refresh</button>
+        <button class="btn primary" onclick="metricsRunCollection()" style="margin-left:4px">Run collection now</button>
+      </div>
+      <p style="color:var(--dim);margin-bottom:16px;max-width:760px;font-size:12px">
+        Closes the OIE feedback loop. Mark approved decisions shipped (link them to PostHog event prefix / Stripe product / Vercel project), and the daily cron pulls 30-day metrics into <code style="background:var(--panel);padding:2px 5px;border-radius:4px">dynasty_offer_intelligence_metrics</code>. <code style="background:var(--panel);padding:2px 5px;border-radius:4px">predicted_vs_actual_delta</code> compares OIE's opportunity_score against composite real performance. Negative delta = OIE was optimistic; positive = OIE under-rated.
+      </p>
+
+      <div class="card">
+        <h3>Mark Approved Decision Shipped</h3>
+        <div class="form-row"><label for="ship-id">Decision ID</label><input type="number" id="ship-id" placeholder="from OIE history"></div>
+        <div class="form-row"><label for="ship-url">Shipped URL</label><input type="text" id="ship-url" placeholder="https://product.example.com"></div>
+        <div class="form-row"><label for="ship-vercel">Vercel project ID</label><input type="text" id="ship-vercel" placeholder="prj_..."></div>
+        <div class="form-row"><label for="ship-stripe">Stripe product ID</label><input type="text" id="ship-stripe" placeholder="prod_..."></div>
+        <div class="form-row"><label for="ship-posthog">PostHog event prefix</label><input type="text" id="ship-posthog" placeholder="e.g. suitedash_calc"></div>
+        <button class="btn primary" onclick="metricsMarkShipped()">Mark Shipped</button>
+        <p id="ship-status" style="color:var(--dim);font-size:11px;margin-top:8px"></p>
+      </div>
+
+      <div class="card">
+        <h3>Shipped Roster</h3>
+        <div id="shipped-table"><div class="loading">Loading...</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Manual Metrics Entry</h3>
+        <p style="color:var(--dim);font-size:11px;margin-bottom:8px">Use when automated PostHog/Stripe pulls aren't wired up. Conversion + refund rates use 0–1 (e.g. 0.045 = 4.5%).</p>
+        <div class="form-row"><label for="met-id">Decision ID</label><input type="number" id="met-id"></div>
+        <div class="form-row"><label for="met-pageviews">Pageviews (30d)</label><input type="number" id="met-pageviews"></div>
+        <div class="form-row"><label for="met-conv">Conversion rate</label><input type="text" id="met-conv" placeholder="0.045"></div>
+        <div class="form-row"><label for="met-refund">Refund rate</label><input type="text" id="met-refund" placeholder="0.02"></div>
+        <div class="form-row"><label for="met-review">Review quality avg</label><input type="text" id="met-review" placeholder="4.2"></div>
+        <div class="form-row"><label for="met-friction">Support friction events</label><input type="number" id="met-friction"></div>
+        <div class="form-row"><label for="met-upsell">Upsell conv rate</label><input type="text" id="met-upsell" placeholder="0.12"></div>
+        <div class="form-row" style="align-items:flex-start"><label for="met-notes">Notes</label><textarea id="met-notes" rows="2"></textarea></div>
+        <button class="btn primary" onclick="metricsManualEntry()">Record Metrics</button>
+        <p id="met-status" style="color:var(--dim);font-size:11px;margin-top:8px"></p>
+      </div>
+    </div>
+
     <!-- MODULE TESTING -->
     <div class="page" id="page-modules">
       <div class="page-title">Module Testing</div>
@@ -348,6 +435,8 @@ function showPage(id) {
   if (id === 'projects') loadProjects();
   if (id === 'licenses') loadLicenses();
   if (id === 'oie') oieInit();
+  if (id === 'portfolio') paeInit();
+  if (id === 'shipped') metricsInit();
 }
 
 function toast(msg) {
@@ -818,6 +907,218 @@ async function oieLoadHistory() {
         <td><button class="btn" onclick="oieLoadAndRender(${d.id})" style="padding:3px 8px;font-size:10px">Open</button></td>
       </tr>`;
     }).join('') + `</table>`;
+}
+
+// ── PORTFOLIO ALLOCATOR ───────────────────────────────────────────
+let PAE_LOADED = false;
+async function paeInit() {
+  if (PAE_LOADED) return;
+  PAE_LOADED = true;
+  fetch('/api/portfolio-allocator?action=version', { headers: { 'Authorization': `Bearer ${TOKEN}` } })
+    .then(r => r.json()).then(v => { if (v.ok) document.getElementById('pae-version').textContent = v.model_version; }).catch(() => {});
+  paeLoadCurrentState();
+}
+
+async function paeLoadCurrentState() {
+  const el = document.getElementById('pae-current-state');
+  el.innerHTML = '<div class="loading">Loading...</div>';
+  const r = await fetch('/api/portfolio-allocator?action=current_state', { headers: { 'Authorization': `Bearer ${TOKEN}` } }).then(x => x.json()).catch(() => ({ ok: false }));
+  if (!r.ok) { el.innerHTML = `<div class="empty" style="color:var(--red)">${esc(r.error || 'failed')}</div>`; return; }
+  const s = r.state;
+  const tally = (obj) => Object.keys(obj || {}).length
+    ? Object.entries(obj).map(([k, v]) => `<span class="pill info" style="margin:2px 4px 2px 0">${esc(k)} · ${v}</span>`).join('')
+    : '<span style="color:var(--dim);font-size:11px">none</span>';
+  el.innerHTML = `
+    <div class="grid" style="margin-bottom:12px">
+      <div class="stat"><div class="label">Total decisions</div><div class="value">${s.total_decisions}</div></div>
+      <div class="stat ok"><div class="label">Approved</div><div class="value">${s.approved_count}</div></div>
+      <div class="stat"><div class="label">Shipped</div><div class="value">${s.shipped_count}</div></div>
+      <div class="stat"><div class="label">Pending</div><div class="value">${s.pending_count}</div></div>
+      <div class="stat bad"><div class="label">DO_NOT_BUILD</div><div class="value">${s.do_not_build_count}</div></div>
+      <div class="stat"><div class="label">Overrides</div><div class="value">${s.override_count}</div></div>
+      <div class="stat"><div class="label">Avg score (approved)</div><div class="value">${(s.avg_opportunity_score || 0).toFixed(1)}</div></div>
+      <div class="stat ${s.shipped_with_metrics_count > 0 ? 'ok' : ''}"><div class="label">Shipped w/ metrics</div><div class="value">${s.shipped_with_metrics_count}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px">
+      <div class="card"><h3 style="color:var(--gold);font-size:11px">Portfolio role</h3>${tally(s.by_portfolio_role)}</div>
+      <div class="card"><h3 style="color:var(--gold);font-size:11px">Upsell role</h3>${tally(s.by_upsell_role)}</div>
+      <div class="card"><h3 style="color:var(--gold);font-size:11px">Authority role</h3>${tally(s.by_authority_role)}</div>
+      <div class="card"><h3 style="color:var(--gold);font-size:11px">Category</h3>${tally(s.by_category)}</div>
+      <div class="card"><h3 style="color:var(--gold);font-size:11px">Delivery format</h3>${tally(s.by_delivery_format)}</div>
+      <div class="card"><h3 style="color:var(--gold);font-size:11px">Identity-risk concentration</h3>
+        <span class="pill ${s.identity_risk_concentration.high > 2 ? 'err' : 'ok'}">high · ${s.identity_risk_concentration.high}</span>
+        <span class="pill warn">med · ${s.identity_risk_concentration.medium}</span>
+        <span class="pill ok">low · ${s.identity_risk_concentration.low}</span>
+      </div>
+    </div>
+  `;
+}
+
+async function paeRun() {
+  const targetRaw = document.getElementById('pae-target').value;
+  let target_mix;
+  try { target_mix = JSON.parse(targetRaw); } catch { document.getElementById('pae-run-status').textContent = 'Target mix is not valid JSON'; return; }
+  const capacity_per_month = parseInt(document.getElementById('pae-capacity').value) || 2;
+  const constraints = splitLines(document.getElementById('pae-constraints').value);
+  const btn = document.getElementById('pae-run-btn');
+  btn.disabled = true; btn.textContent = 'Running...';
+  document.getElementById('pae-run-status').textContent = 'Running allocator (deterministic snapshot + AI gap analysis)...';
+  const r = await fetch('/api/portfolio-allocator?action=recommend', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target_mix, capacity_per_month, constraints }),
+  }).then(x => x.json()).catch(e => ({ ok: false, error: e.message }));
+  btn.disabled = false; btn.textContent = 'Run Allocator';
+  if (!r.ok) { document.getElementById('pae-run-status').innerHTML = `<span style="color:var(--red)">Failed: ${esc(r.error || '')}</span>`; return; }
+  document.getElementById('pae-run-status').innerHTML = `<span style="color:var(--grn)">Allocation generated · health ${r.allocation.gap_analysis.portfolio_health_score}/100 · confidence ${(r.allocation.confidence * 100).toFixed(0)}%</span>`;
+  paeRenderAllocation(r.allocation);
+}
+
+function paeRenderAllocation(a) {
+  const ga = a.gap_analysis || {};
+  const tm = a.target_mix || {};
+  const recs = a.recommended_next_builds || [];
+  const recsHtml = recs.length ? recs.map(b => {
+    const actCls = b.action === 'kill_low_performer' ? 'err' : b.action === 'no_action_needed' ? 'info' : 'ok';
+    return `<tr>
+      <td><strong>${b.priority}</strong></td>
+      <td>${pill(b.action.replace(/_/g, ' '), actCls)}</td>
+      <td>${b.decision_id ? `<a href="javascript:oieLoadAndRender(${b.decision_id});showPage('oie')" style="color:var(--blue)">#${b.decision_id}</a>` : '<span style="color:var(--dim)">—</span>'}</td>
+      <td>${esc(b.title)}</td>
+      <td>${pill(b.portfolio_role, 'info')}</td>
+      <td><span class="pill ${b.estimated_capacity_load === 'high' ? 'err' : b.estimated_capacity_load === 'medium' ? 'warn' : 'ok'}">${b.estimated_capacity_load}</span></td>
+      <td style="font-size:11px;color:var(--dim)">${esc(b.fills_gap)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="color:var(--grn);text-align:center;padding:20px">no_action_needed — portfolio already balanced</td></tr>';
+
+  document.getElementById('pae-allocation-body').innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <span class="pill ${ga.portfolio_health_score >= 70 ? 'ok' : ga.portfolio_health_score >= 40 ? 'warn' : 'err'}" style="font-size:12px">health ${ga.portfolio_health_score}/100</span>
+      <span style="color:var(--dim);font-size:11px">model ${esc(a.model_version)} · confidence ${(a.confidence * 100).toFixed(0)}%</span>
+    </div>
+    <p style="font-size:12px;margin-bottom:10px">${esc(ga.summary || '')}</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      ${ga.over_concentrated_in?.length ? `<div class="card" style="margin:0"><h3 style="color:var(--red);font-size:11px">Over-concentrated</h3><div style="font-size:11px">${ga.over_concentrated_in.map(esc).join(', ')}</div></div>` : ''}
+      ${ga.missing_roles?.length ? `<div class="card" style="margin:0"><h3 style="color:var(--gold);font-size:11px">Missing roles</h3><div style="font-size:11px">${ga.missing_roles.map(esc).join(', ')}</div></div>` : ''}
+      ${ga.identity_collision_warnings?.length ? `<div class="card" style="margin:0;grid-column:1/-1"><h3 style="color:var(--red);font-size:11px">Identity-collision warnings</h3><ul style="font-size:11px;color:var(--dim);padding-left:18px">${ga.identity_collision_warnings.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+    </div>
+
+    <div class="card" style="margin:0 0 10px">
+      <h3 style="color:var(--gold);font-size:11px">Target mix</h3>
+      <div style="font-size:11px">${Object.entries(tm).map(([k,v]) => `<span class="pill info" style="margin:2px">${esc(k)} · ${v}</span>`).join('')}</div>
+      <p style="font-size:11px;color:var(--dim);margin-top:6px">${esc(a.target_mix_rationale || '')}</p>
+    </div>
+
+    <h4 style="font-size:12px;color:var(--gold);margin:12px 0 6px">Recommended Next Builds</h4>
+    <table style="font-size:11px"><tr><th>P</th><th>Action</th><th>Decision</th><th>Title</th><th>Role</th><th>Load</th><th>Fills gap</th></tr>${recsHtml}</table>
+
+    <p style="font-size:11px;color:var(--dim);margin-top:10px"><strong style="color:var(--gold)">Capacity advice:</strong> ${esc(a.capacity_advice || '')}</p>
+  `;
+  document.getElementById('pae-allocation-card').style.display = 'block';
+}
+
+// ── SHIPPED + METRICS ─────────────────────────────────────────────
+let METRICS_LOADED = false;
+async function metricsInit() {
+  if (METRICS_LOADED) return;
+  METRICS_LOADED = true;
+  metricsLoadSummary();
+}
+
+async function metricsLoadSummary() {
+  const r = await fetch('/api/post-launch-metrics?action=summary', { headers: { 'Authorization': `Bearer ${TOKEN}` } }).then(x => x.json()).catch(() => ({ ok: false }));
+  const target = document.getElementById('shipped-table');
+  if (!r.ok) { target.innerHTML = `<div class="empty" style="color:var(--red)">${esc(r.error || 'failed')}</div>`; return; }
+  if (!r.shipped?.length) { target.innerHTML = '<div class="empty">Nothing shipped yet — mark an approved decision shipped above.</div>'; return; }
+  target.innerHTML = `<table style="font-size:11px"><tr><th>ID</th><th>Topic</th><th>Shipped</th><th>OIE score</th><th>Δ pred/act</th><th>Last metric</th><th>Linked vendors</th></tr>` +
+    r.shipped.map(d => {
+      const lm = d.latest_metric || {};
+      const delta = lm.latest_predicted_vs_actual_delta;
+      const deltaCls = delta == null ? 'info' : delta < -10 ? 'err' : delta > 10 ? 'ok' : 'warn';
+      const vendors = [];
+      if (d.shipped_posthog_event_prefix) vendors.push(`<code style="font-size:10px">PH:${esc(d.shipped_posthog_event_prefix)}</code>`);
+      if (d.shipped_stripe_product_id) vendors.push(`<code style="font-size:10px">St:${esc(d.shipped_stripe_product_id.slice(0, 14))}…</code>`);
+      if (d.shipped_vercel_project_id) vendors.push(`<code style="font-size:10px">V:${esc(d.shipped_vercel_project_id.slice(0, 12))}…</code>`);
+      return `<tr>
+        <td>#${d.id}</td>
+        <td>${esc((d.topic || '').slice(0, 60))}${d.shipped_url ? ` · <a href="${esc(d.shipped_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-size:10px">↗</a>` : ''}</td>
+        <td style="color:var(--dim)">${d.shipped_at ? new Date(d.shipped_at).toLocaleDateString() : '—'}</td>
+        <td>${d.opportunity_score}</td>
+        <td>${delta == null ? '<span style="color:var(--dim)">—</span>' : pill((delta > 0 ? '+' : '') + delta, deltaCls)}</td>
+        <td style="color:var(--dim);font-size:10px">${lm.last_recorded_at ? new Date(lm.last_recorded_at).toLocaleDateString() : '—'} (${lm.record_count || 0})</td>
+        <td>${vendors.join(' ') || '<span style="color:var(--dim)">none linked</span>'}</td>
+      </tr>`;
+    }).join('') + `</table>`;
+}
+
+async function metricsMarkShipped() {
+  const id = parseInt(document.getElementById('ship-id').value);
+  if (!id) { document.getElementById('ship-status').innerHTML = '<span style="color:var(--red)">Decision ID required</span>'; return; }
+  const body = {
+    decision_id: id,
+    shipped_url: document.getElementById('ship-url').value.trim(),
+    shipped_vercel_project_id: document.getElementById('ship-vercel').value.trim(),
+    shipped_stripe_product_id: document.getElementById('ship-stripe').value.trim(),
+    shipped_posthog_event_prefix: document.getElementById('ship-posthog').value.trim(),
+  };
+  const r = await fetch('/api/offer-intelligence?action=mark_shipped', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(x => x.json()).catch(e => ({ ok: false, error: e.message }));
+  if (r.ok) {
+    document.getElementById('ship-status').innerHTML = `<span style="color:var(--grn)">Decision #${id} marked shipped</span>`;
+    metricsLoadSummary();
+  } else {
+    document.getElementById('ship-status').innerHTML = `<span style="color:var(--red)">${esc(r.error || 'failed')}</span>`;
+  }
+}
+
+async function metricsManualEntry() {
+  const id = parseInt(document.getElementById('met-id').value);
+  if (!id) { document.getElementById('met-status').innerHTML = '<span style="color:var(--red)">Decision ID required</span>'; return; }
+  const num = (id) => { const v = document.getElementById(id).value.trim(); return v === '' ? null : parseFloat(v); };
+  const intNum = (id) => { const v = document.getElementById(id).value.trim(); return v === '' ? null : parseInt(v); };
+  const body = {
+    decision_id: id,
+    shipped: true,
+    pageviews_30d: intNum('met-pageviews'),
+    conversion_rate: num('met-conv'),
+    refund_rate: num('met-refund'),
+    review_quality_avg: num('met-review'),
+    support_friction_events: intNum('met-friction'),
+    upsell_conversion_rate: num('met-upsell'),
+    notes: document.getElementById('met-notes').value.trim(),
+  };
+  const r = await fetch('/api/post-launch-metrics?action=manual_entry', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(x => x.json()).catch(e => ({ ok: false, error: e.message }));
+  if (r.ok) {
+    document.getElementById('met-status').innerHTML = `<span style="color:var(--grn)">Recorded metric #${r.metric_id}</span>`;
+    metricsLoadSummary();
+  } else {
+    document.getElementById('met-status').innerHTML = `<span style="color:var(--red)">${esc(r.error || 'failed')}</span>`;
+  }
+}
+
+async function metricsRunCollection() {
+  if (!confirm('Trigger metrics collection now? Pulls PostHog + Stripe data for every shipped decision.')) return;
+  const before = document.getElementById('shipped-table').innerHTML;
+  document.getElementById('shipped-table').innerHTML = '<div class="loading">Running collection...</div>';
+  const r = await fetch('/api/post-launch-metrics?action=run_collection_now', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+  }).then(x => x.json()).catch(e => ({ ok: false, error: e.message }));
+  if (r.ok) {
+    toast(`Collection complete — processed ${r.processed} shipped decisions`);
+    metricsLoadSummary();
+  } else {
+    document.getElementById('shipped-table').innerHTML = before;
+    toast('Collection failed: ' + (r.error || 'unknown'));
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────

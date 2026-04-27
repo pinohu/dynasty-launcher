@@ -60,19 +60,34 @@ async function ensureTables(pool) {
       override_by             TEXT,
       override_at             TIMESTAMPTZ,
       outline_generated_at    TIMESTAMPTZ,
+      shipped_at              TIMESTAMPTZ,
+      shipped_url             TEXT,
+      shipped_vercel_project_id  TEXT,
+      shipped_stripe_product_id  TEXT,
+      shipped_posthog_event_prefix TEXT,
       created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+  // Forward-compatible: add ship columns when upgrading from a phase-1 schema.
+  // These no-op when columns already exist.
+  await pool.query(`ALTER TABLE dynasty_offer_intelligence ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMPTZ;`).catch(() => {});
+  await pool.query(`ALTER TABLE dynasty_offer_intelligence ADD COLUMN IF NOT EXISTS shipped_url TEXT;`).catch(() => {});
+  await pool.query(`ALTER TABLE dynasty_offer_intelligence ADD COLUMN IF NOT EXISTS shipped_vercel_project_id TEXT;`).catch(() => {});
+  await pool.query(`ALTER TABLE dynasty_offer_intelligence ADD COLUMN IF NOT EXISTS shipped_stripe_product_id TEXT;`).catch(() => {});
+  await pool.query(`ALTER TABLE dynasty_offer_intelligence ADD COLUMN IF NOT EXISTS shipped_posthog_event_prefix TEXT;`).catch(() => {});
+
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_oi_topic_slug ON dynasty_offer_intelligence(topic_slug);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_oi_decision ON dynasty_offer_intelligence(build_decision);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_oi_status ON dynasty_offer_intelligence(status);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_oi_model_version ON dynasty_offer_intelligence(model_version);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_oi_shipped_at ON dynasty_offer_intelligence(shipped_at);`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS dynasty_offer_intelligence_metrics (
       id                   SERIAL PRIMARY KEY,
       decision_id          INTEGER NOT NULL REFERENCES dynasty_offer_intelligence(id) ON DELETE CASCADE,
       recorded_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      source               TEXT NOT NULL DEFAULT 'manual',
       shipped              BOOLEAN NOT NULL DEFAULT FALSE,
       shipped_at           TIMESTAMPTZ,
       pageviews_30d        INTEGER,
@@ -85,6 +100,7 @@ async function ensureTables(pool) {
       notes                TEXT DEFAULT ''
     );
   `);
+  await pool.query(`ALTER TABLE dynasty_offer_intelligence_metrics ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'manual';`).catch(() => {});
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_oim_decision ON dynasty_offer_intelligence_metrics(decision_id);`);
 }
 
@@ -311,8 +327,10 @@ export async function isOutlineAllowed(id) {
 }
 
 // Record post-launch reality for the feedback loop (spec §6).
-// Called by ops tooling once metrics are known.
-export async function recordPostLaunchMetrics({ decision_id, metrics }) {
+// `source` distinguishes manual entry from automated vendor pulls so the
+// allocator can weight automated data higher when computing
+// avg_predicted_vs_actual_delta.
+export async function recordPostLaunchMetrics({ decision_id, metrics, source }) {
   const pool = await getPool();
   if (!pool) return { ok: false, error: 'Neon not configured' };
   try {
@@ -320,13 +338,14 @@ export async function recordPostLaunchMetrics({ decision_id, metrics }) {
     const m = metrics || {};
     const r = await pool.query(
       `INSERT INTO dynasty_offer_intelligence_metrics
-         (decision_id, shipped, shipped_at, pageviews_30d, conversion_rate, refund_rate,
+         (decision_id, source, shipped, shipped_at, pageviews_30d, conversion_rate, refund_rate,
           review_quality_avg, support_friction_events, upsell_conversion_rate,
           predicted_vs_actual_delta, notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        RETURNING id, recorded_at`,
       [
         parseInt(decision_id),
+        String(source || 'manual'),
         !!m.shipped,
         m.shipped_at || null,
         m.pageviews_30d ?? null,
@@ -342,6 +361,211 @@ export async function recordPostLaunchMetrics({ decision_id, metrics }) {
     return { ok: true, metric_id: r.rows[0].id, recorded_at: r.rows[0].recorded_at };
   } catch (e) {
     return { ok: false, error: e.message };
+  } finally {
+    await pool.end().catch(() => {});
+  }
+}
+
+// Link an approved decision to vendor IDs so automated metrics collection
+// can find the right PostHog project / Stripe product / Vercel deployment.
+// Only decisions in approved/approved_override status can be marked shipped.
+export async function markShipped({ decision_id, shipped_url, shipped_vercel_project_id, shipped_stripe_product_id, shipped_posthog_event_prefix, shipped_at }) {
+  const pool = await getPool();
+  if (!pool) return { ok: false, error: 'Neon not configured' };
+  try {
+    await ensureTables(pool);
+    const r = await pool.query(
+      `UPDATE dynasty_offer_intelligence
+         SET shipped_at = COALESCE($2, NOW()),
+             shipped_url = $3,
+             shipped_vercel_project_id = $4,
+             shipped_stripe_product_id = $5,
+             shipped_posthog_event_prefix = $6
+         WHERE id = $1 AND status IN ('approved', 'approved_override')
+         RETURNING id, status, shipped_at, shipped_url, topic, topic_slug,
+                   shipped_vercel_project_id, shipped_stripe_product_id,
+                   shipped_posthog_event_prefix`,
+      [
+        parseInt(decision_id),
+        shipped_at || null,
+        shipped_url || '',
+        shipped_vercel_project_id || '',
+        shipped_stripe_product_id || '',
+        shipped_posthog_event_prefix || '',
+      ]
+    );
+    if (!r.rows[0]) return { ok: false, error: 'Cannot mark shipped — decision not found or not in approved/approved_override status.' };
+    return { ok: true, decision: r.rows[0] };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  } finally {
+    await pool.end().catch(() => {});
+  }
+}
+
+// Used by the metrics collector cron to find what to fetch metrics for.
+export async function listShippedDecisions() {
+  const pool = await getPool();
+  if (!pool) return { ok: false, decisions: [], error: 'Neon not configured' };
+  try {
+    await ensureTables(pool);
+    const r = await pool.query(
+      `SELECT id, topic, topic_slug, shipped_at, shipped_url,
+              shipped_vercel_project_id, shipped_stripe_product_id,
+              shipped_posthog_event_prefix, opportunity_score, report
+         FROM dynasty_offer_intelligence
+         WHERE shipped_at IS NOT NULL
+         ORDER BY shipped_at DESC`
+    );
+    return { ok: true, decisions: r.rows };
+  } catch (e) {
+    return { ok: false, decisions: [], error: e.message };
+  } finally {
+    await pool.end().catch(() => {});
+  }
+}
+
+export async function listPostLaunchMetricsAll() {
+  const pool = await getPool();
+  if (!pool) return { ok: false, metrics: [] };
+  try {
+    await ensureTables(pool);
+    const r = await pool.query(
+      `SELECT decision_id,
+              MAX(recorded_at) as last_recorded_at,
+              MAX(predicted_vs_actual_delta) as latest_predicted_vs_actual_delta,
+              COUNT(*) as record_count
+         FROM dynasty_offer_intelligence_metrics
+         WHERE source != 'manual' OR predicted_vs_actual_delta IS NOT NULL
+         GROUP BY decision_id`
+    );
+    return { ok: true, metrics: r.rows };
+  } catch (e) {
+    return { ok: false, metrics: [], error: e.message };
+  } finally {
+    await pool.end().catch(() => {});
+  }
+}
+
+// Deterministic snapshot of the current portfolio. Computed without AI.
+// Drives the PortfolioAllocation report so two consecutive allocator runs
+// see the same numbers.
+export async function computeCurrentState() {
+  const pool = await getPool();
+  const empty = {
+    total_decisions: 0, approved_count: 0, shipped_count: 0, pending_count: 0,
+    rejected_count: 0, do_not_build_count: 0, override_count: 0,
+    by_portfolio_role: {}, by_upsell_role: {}, by_authority_role: {},
+    by_category: {}, by_delivery_format: {}, identity_risk_concentration: { low: 0, medium: 0, high: 0 },
+    avg_opportunity_score: 0, avg_predicted_vs_actual_delta: null, shipped_with_metrics_count: 0,
+  };
+  if (!pool) return { ok: false, state: empty, error: 'Neon not configured' };
+  try {
+    await ensureTables(pool);
+    const counts = await pool.query(`
+      SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status IN ('approved','approved_override')) as approved,
+        COUNT(*) FILTER (WHERE shipped_at IS NOT NULL) as shipped,
+        COUNT(*) FILTER (WHERE status = 'pending_review') as pending,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected,
+        COUNT(*) FILTER (WHERE build_decision = 'DO_NOT_BUILD') as do_not_build,
+        COUNT(*) FILTER (WHERE operator_override = TRUE) as overrides,
+        AVG(opportunity_score) FILTER (WHERE status IN ('approved','approved_override')) as avg_score
+      FROM dynasty_offer_intelligence;
+    `);
+    const c = counts.rows[0] || {};
+
+    // Status filter for breakdowns: only approved+shipped products count
+    // toward the allocator's "current portfolio". Pending/rejected are noise.
+    const breakdownWhere = `WHERE status IN ('approved','approved_override')`;
+
+    const tally = async (jsonField) => {
+      const r = await pool.query(`
+        SELECT report->'decision'->'portfolio_metadata'->>'${jsonField}' as k, COUNT(*) as n
+        FROM dynasty_offer_intelligence ${breakdownWhere}
+        GROUP BY k;
+      `);
+      const out = {};
+      for (const row of r.rows) {
+        const k = row.k || 'unknown';
+        out[k] = (out[k] || 0) + parseInt(row.n);
+      }
+      return out;
+    };
+    const tallyByPath = async (path) => {
+      const r = await pool.query(`
+        SELECT report->'decision'->>'${path}' as k, COUNT(*) as n
+        FROM dynasty_offer_intelligence ${breakdownWhere}
+        GROUP BY k;
+      `);
+      const out = {};
+      for (const row of r.rows) {
+        const k = row.k || 'unknown';
+        out[k] = (out[k] || 0) + parseInt(row.n);
+      }
+      return out;
+    };
+    const tallyDeliveryFormat = async () => {
+      const r = await pool.query(`
+        SELECT report->'decision'->'best_delivery_format'->>'format' as k, COUNT(*) as n
+        FROM dynasty_offer_intelligence ${breakdownWhere}
+        GROUP BY k;
+      `);
+      const out = {};
+      for (const row of r.rows) {
+        const k = row.k || 'unknown';
+        out[k] = (out[k] || 0) + parseInt(row.n);
+      }
+      return out;
+    };
+    const tallyIdentityRisk = async () => {
+      const r = await pool.query(`
+        SELECT report->'judgment'->'identity_safety'->>'score' as score
+        FROM dynasty_offer_intelligence ${breakdownWhere};
+      `);
+      const out = { low: 0, medium: 0, high: 0 };
+      for (const row of r.rows) {
+        const s = parseFloat(row.score);
+        if (Number.isFinite(s)) {
+          if (s >= 7) out.low++;
+          else if (s >= 4) out.medium++;
+          else out.high++;
+        }
+      }
+      return out;
+    };
+    const [byPortfolioRole, byUpsellRole, byAuthorityRole, byCategory, byDeliveryFormat, identityConc, deltaAgg, withMetrics] = await Promise.all([
+      tally('portfolio_role'),
+      tally('upsell_role'),
+      tally('authority_role'),
+      tallyByPath('category'),
+      tallyDeliveryFormat(),
+      tallyIdentityRisk(),
+      pool.query(`SELECT AVG(predicted_vs_actual_delta) as avg_delta FROM dynasty_offer_intelligence_metrics WHERE predicted_vs_actual_delta IS NOT NULL;`),
+      pool.query(`SELECT COUNT(DISTINCT decision_id) as n FROM dynasty_offer_intelligence_metrics;`),
+    ]);
+    const state = {
+      total_decisions: parseInt(c.total) || 0,
+      approved_count: parseInt(c.approved) || 0,
+      shipped_count: parseInt(c.shipped) || 0,
+      pending_count: parseInt(c.pending) || 0,
+      rejected_count: parseInt(c.rejected) || 0,
+      do_not_build_count: parseInt(c.do_not_build) || 0,
+      override_count: parseInt(c.overrides) || 0,
+      by_portfolio_role: byPortfolioRole,
+      by_upsell_role: byUpsellRole,
+      by_authority_role: byAuthorityRole,
+      by_category: byCategory,
+      by_delivery_format: byDeliveryFormat,
+      identity_risk_concentration: identityConc,
+      avg_opportunity_score: parseFloat(c.avg_score) || 0,
+      avg_predicted_vs_actual_delta: deltaAgg.rows[0]?.avg_delta != null ? parseFloat(deltaAgg.rows[0].avg_delta) : null,
+      shipped_with_metrics_count: parseInt(withMetrics.rows[0]?.n) || 0,
+    };
+    return { ok: true, state };
+  } catch (e) {
+    return { ok: false, state: empty, error: e.message };
   } finally {
     await pool.end().catch(() => {});
   }

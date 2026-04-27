@@ -31,6 +31,8 @@ import {
   isOutlineAllowed,
   recordPostLaunchMetrics,
   listPostLaunchMetrics,
+  markShipped,
+  listShippedDecisions,
 } from './_intelligence-store.js';
 
 export const maxDuration = 300;
@@ -326,6 +328,25 @@ export default async function handler(req, res) {
     return res.json(out);
   }
 
+  // ── MARK SHIPPED: link an approved decision to vendor IDs ─────────────────
+  // Required before automated metrics collection knows where to look. Only
+  // approved/approved_override decisions can be shipped.
+  if (action === 'mark_shipped') {
+    const { decision_id, shipped_url, shipped_vercel_project_id, shipped_stripe_product_id, shipped_posthog_event_prefix, shipped_at } = req.body || {};
+    if (!decision_id) return res.status(400).json({ ok: false, error: 'decision_id required' });
+    const out = await markShipped({
+      decision_id, shipped_url, shipped_vercel_project_id,
+      shipped_stripe_product_id, shipped_posthog_event_prefix, shipped_at,
+    });
+    return res.json(out);
+  }
+
+  // ── LIST SHIPPED: roster of decisions that have been marked shipped ───────
+  if (action === 'list_shipped') {
+    const out = await listShippedDecisions();
+    return res.json(out);
+  }
+
   // ── MODEL VERSION (lets UIs show "running oie-1.0.0") ─────────────────────
   if (action === 'version') {
     return res.json({ ok: true, model_version: OFFER_INTELLIGENCE_MODEL_VERSION });
@@ -334,6 +355,6 @@ export default async function handler(req, res) {
   return res.status(400).json({
     ok: false,
     error: `Unknown OIE action: ${action}`,
-    valid_actions: ['run', 'list', 'get', 'approve', 'override', 'reject', 'outline_gate', 'record_metrics', 'get_metrics', 'version'],
+    valid_actions: ['run', 'list', 'get', 'approve', 'override', 'reject', 'outline_gate', 'record_metrics', 'get_metrics', 'mark_shipped', 'list_shipped', 'version'],
   });
 }

@@ -374,6 +374,112 @@ export const OfferOutline = z.object({
   sourcing_notes: z.string().max(1200),
 });
 
+// ── Portfolio Allocation Engine (PAE) ───────────────────────────────────────
+// Phase 2 of OIE. Reads approved/shipped decisions, computes the current
+// product mix, and recommends next builds (or kills) so the operator runs
+// a balanced portfolio instead of a pile of similar offers. AI-driven gap
+// analysis on top of deterministic counts — like an investment-committee
+// portfolio review, not a brainstorm.
+
+export const PORTFOLIO_ALLOCATOR_VERSION = 'pae-1.0.0';
+
+// Deterministic snapshot of the current portfolio. Computed from the DB
+// without AI, so two consecutive calls yield identical numbers. Embedded
+// inside PortfolioAllocation as the input the AI reasoned about.
+export const PortfolioCurrentState = z.object({
+  total_decisions: z.number().int().nonnegative(),
+  approved_count: z.number().int().nonnegative(),
+  shipped_count: z.number().int().nonnegative(),
+  pending_count: z.number().int().nonnegative(),
+  rejected_count: z.number().int().nonnegative(),
+  do_not_build_count: z.number().int().nonnegative(),
+  override_count: z.number().int().nonnegative(),
+  by_portfolio_role: z.record(z.number().int().nonnegative()),
+  by_upsell_role: z.record(z.number().int().nonnegative()),
+  by_authority_role: z.record(z.number().int().nonnegative()),
+  by_category: z.record(z.number().int().nonnegative()),
+  by_delivery_format: z.record(z.number().int().nonnegative()),
+  identity_risk_concentration: z.object({
+    low: z.number().int().nonnegative(),
+    medium: z.number().int().nonnegative(),
+    high: z.number().int().nonnegative(),
+  }),
+  avg_opportunity_score: z.number().min(0).max(100),
+  avg_predicted_vs_actual_delta: z.number().nullable(),
+  shipped_with_metrics_count: z.number().int().nonnegative(),
+});
+
+export const NextBuildAction = z.enum([
+  'ship_existing_approved',
+  'kill_low_performer',
+  'run_new_oie_for_gap',
+  'reactivate_archived',
+  'no_action_needed',
+]);
+
+export const RecommendedNextBuild = z.object({
+  priority: z.number().int().min(1).max(10),
+  action: NextBuildAction,
+  decision_id: z.number().int().nonnegative().nullable(),
+  title: z.string().max(200),
+  portfolio_role: PortfolioRole,
+  rationale: z.string().max(800),
+  fills_gap: z.string().max(300),
+  sequencing_hint: z.string().max(400),
+  estimated_capacity_load: z.enum(['low', 'medium', 'high']),
+});
+
+export const PortfolioAllocation = z.object({
+  model_version: z.string().default(PORTFOLIO_ALLOCATOR_VERSION),
+  current_state_snapshot: PortfolioCurrentState,
+  target_mix: z.object({
+    flagship_authority: z.number().int().nonnegative(),
+    low_ticket_tripwire: z.number().int().nonnegative(),
+    backend_ascension: z.number().int().nonnegative(),
+    diagnostic_lead_magnet: z.number().int().nonnegative(),
+    recurring_retainer_feeder: z.number().int().nonnegative(),
+  }),
+  target_mix_rationale: z.string().max(800),
+  gap_analysis: z.object({
+    over_concentrated_in: z.array(z.string()).default([]),
+    missing_roles: z.array(z.string()).default([]),
+    identity_collision_warnings: z.array(z.string()).default([]),
+    category_imbalance: z.string().max(600),
+    portfolio_health_score: z.number().min(0).max(100),
+    summary: z.string().max(1200),
+  }),
+  recommended_next_builds: z.array(RecommendedNextBuild).min(0).max(10),
+  capacity_advice: z.string().max(800),
+  confidence: z.number().min(0).max(1),
+});
+
+// ── Post-launch metrics (manual entry) ──────────────────────────────────────
+// Used by the admin "Record metrics" form when automated collection isn't
+// wired up for a given vendor.
+export const PostLaunchMetricsEntry = z.object({
+  decision_id: z.number().int().positive(),
+  shipped: z.boolean().default(true),
+  shipped_at: z.string().nullable().default(null),
+  pageviews_30d: z.number().int().nullable().default(null),
+  conversion_rate: z.number().min(0).max(1).nullable().default(null),
+  refund_rate: z.number().min(0).max(1).nullable().default(null),
+  review_quality_avg: z.number().min(0).max(5).nullable().default(null),
+  support_friction_events: z.number().int().nullable().default(null),
+  upsell_conversion_rate: z.number().min(0).max(1).nullable().default(null),
+  predicted_vs_actual_delta: z.number().nullable().default(null),
+  notes: z.string().max(1200).default(''),
+});
+
+// ── Mark Shipped (link an approved decision to vendor IDs for collection) ───
+export const MarkShippedInput = z.object({
+  decision_id: z.number().int().positive(),
+  shipped_url: z.string().max(500).default(''),
+  shipped_vercel_project_id: z.string().max(200).default(''),
+  shipped_stripe_product_id: z.string().max(200).default(''),
+  shipped_posthog_event_prefix: z.string().max(200).default(''),
+  shipped_at: z.string().nullable().default(null),
+});
+
 export const SCHEMAS = {
   viability: ViabilityScorecard,
   pivot: PivotProposal,
@@ -384,4 +490,5 @@ export const SCHEMAS = {
   offer_intelligence_input: OfferIntelligenceInput,
   offer_intelligence: OfferIntelligenceReport,
   offer_outline: OfferOutline,
+  portfolio_allocation: PortfolioAllocation,
 };

@@ -187,8 +187,26 @@
     "api/storefront/catalog.js": {
       "maxDuration": 30,
       "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+    },
+    "api/offer-intelligence.js": {
+      "maxDuration": 300
+    },
+    "api/outline-generator.js": {
+      "maxDuration": 300
+    },
+    "api/portfolio-allocator.js": {
+      "maxDuration": 120
+    },
+    "api/post-launch-metrics.js": {
+      "maxDuration": 300
     }
   },
+  "crons": [
+    {
+      "path": "/api/post-launch-metrics?action=collect_cron",
+      "schedule": "17 6 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",

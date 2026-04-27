@@ -24,6 +24,8 @@ dynasty-launcher/
 │   ├── neon.js             # Neon DB provisioner (~130 lines)
 │   ├── offer-intelligence.js # Offer Intelligence Engine — admin-gated BUILD/DO_NOT_BUILD decision engine
 │   ├── outline-generator.js  # Outline generator — refuses to run without OIE approval
+│   ├── portfolio-allocator.js # Portfolio Allocation Engine — gap analysis + next-build recommendations
+│   ├── post-launch-metrics.js # Metrics collector — PostHog + Stripe pulls + manual entry; cron-callable
 │   ├── _intelligence-store.js # OIE persistence (Neon + local gumroad-output/_intelligence/ archive)
 │   ├── admin.js            # Admin dashboard backend
 │   ├── claude.js           # Anthropic Claude API proxy (auth-gated)
@@ -240,3 +242,24 @@ Strategic governor for the product portfolio. This is not a generator — it is 
 **Persistence:** Neon table `dynasty_offer_intelligence` is source of truth (carries `model_version`, `status`, `operator_override`). Secondary best-effort local FS writes to `gumroad-output/_intelligence/<slug>/<timestamp>.json` + `decision-history.md` (works in local dev; silent no-op on Vercel's read-only FS). `DO_NOT_BUILD` verdicts are also mirrored to `gumroad-output/_intelligence/_do_not_build_archive/` so operators don't re-evaluate the same killed idea every three months. A sibling `dynasty_offer_intelligence_metrics` table wires the post-launch feedback loop (pageviews / conversion / refunds / review quality) so OIE can eventually compare predicted vs. actual outcomes.
 
 **Do not auto-trigger downstream work.** OIE is a governor, not an autopilot. Never generate outlines, PDFs, checkout assets, or pricing publications from a BUILD verdict without going through the human approval action. The outline generator enforces this explicitly — it returns HTTP 409 `outline_blocked` if the decision isn't approved.
+
+## Portfolio Allocation Engine (PAE) — OIE Phase 2
+Sits above OIE. OIE asks "should we build *this*?"; PAE asks "is the *portfolio* balanced?" Reads approved + shipped decisions, computes a deterministic current-state snapshot, and runs an AI gap analysis against the operator's target mix to recommend what to ship next (or kill).
+
+**Surfaces:** `/admin#portfolio` — current-state grid + target-mix form + allocation report with recommended next builds (priority-ordered, action-typed: `ship_existing_approved` / `kill_low_performer` / `run_new_oie_for_gap` / `reactivate_archived` / `no_action_needed`).
+
+**Endpoints (admin-gated):** `POST /api/portfolio-allocator?action={current_state,recommend,version}`. The deterministic snapshot (computed via SQL aggregations in `_intelligence-store.js#computeCurrentState`) is forced into the AI report by the endpoint so the model can't edit the numbers it reasoned about. `PORTFOLIO_ALLOCATOR_VERSION = 'pae-1.0.0'` — bump when target-mix defaults or system prompt changes.
+
+## Post-Launch Metrics — feedback loop
+Closes the OIE prediction loop. Each shipped product has its `dynasty_offer_intelligence` row linked to vendor IDs (PostHog event prefix, Stripe product ID, Vercel project ID) via `mark_shipped`. A daily Vercel cron (`crons[]` in `vercel.json`, schedule `17 6 * * *`) hits `/api/post-launch-metrics?action=collect_cron`, which pulls 30-day pageviews + conversion from PostHog and 30-day refund rate from Stripe, computes `predicted_vs_actual_delta` (composite of conversion-quality 60% + refund-quality 40% mapped to 0–100, minus the OIE `opportunity_score`), and writes a row to `dynasty_offer_intelligence_metrics` with `source='auto'`. Manual entry (`action=manual_entry`) is available for products without automated vendor hooks.
+
+**Surfaces:** `/admin#shipped` — mark-shipped form, shipped roster with vendor links, manual metrics entry form, "Run collection now" trigger.
+
+**Endpoints (admin or `CRON_SECRET`-gated):** `POST /api/post-launch-metrics?action={summary,manual_entry,run_collection_now,collect_cron}`. Cron action accepts both an admin HMAC token and a `Bearer ${CRON_SECRET}` header so Vercel's scheduled invocations work without an admin login.
+
+**Required env vars for automation:**
+- `POSTHOG_PERSONAL_API_KEY` + `POSTHOG_PROJECT_ID` — for pageview/conversion pulls.
+- `STRIPE_SECRET_KEY` — for 30-day refund-rate pulls (already in `DYNASTY_TOOL_CONFIG.payments.stripe_live`).
+- `CRON_SECRET` — Vercel cron auth header (set in Vercel project env).
+
+When a vendor isn't linked or env vars are missing, the collector logs `skipped: true` for that vendor and continues — partial data is better than no data.
