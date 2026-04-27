@@ -24,6 +24,14 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createGroq } from '@ai-sdk/groq';
 import { SCHEMAS } from './_schemas.js';
 import { startTrace } from './_langfuse.js';
+import {
+  aiCorsHeaders,
+  authorizeAiRequest,
+  coerceAiMaxTokens,
+  resolveAiMaxTokens,
+  validateAiTextLimit,
+  writeAiAuthError,
+} from './_ai_security.mjs';
 
 const sanitize = (s) => String(s || '').replace(/[\r\n]/g, ' ').slice(0, 500);
 
@@ -125,7 +133,7 @@ export async function generateTyped({ schemaName, prompt, model: preferredModel,
         schema,
         prompt,
         temperature: typeof temperature === 'number' ? temperature : 0.7,
-        maxTokens: maxTokens || 3000,
+        maxTokens: coerceAiMaxTokens(maxTokens, 3000),
       });
       trace.generation({
         name: `gen:${schemaName}`,
@@ -158,7 +166,7 @@ export async function streamTokens({ prompt, model: preferredModel, sessionId, u
       const { textStream } = await streamText({
         model: resolved.model,
         prompt,
-        maxTokens: maxTokens || 2000,
+        maxTokens: coerceAiMaxTokens(maxTokens, 2000),
       });
       let full = '';
       for await (const delta of textStream) {
@@ -179,16 +187,27 @@ export async function streamTokens({ prompt, model: preferredModel, sessionId, u
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', aiCorsHeaders());
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   const { action, prompt, model, schemaName, sessionId, userId, temperature, maxTokens } = req.body || {};
   if (!prompt) return res.status(400).json({ error: 'prompt required' });
 
+  const promptLimit = validateAiTextLimit('prompt', prompt);
+  if (!promptLimit.ok) return res.status(promptLimit.status).json({ ok: false, error: promptLimit.error, max_chars: promptLimit.max_chars });
+
+  const tokenLimit = resolveAiMaxTokens(maxTokens, action === 'generate_typed' ? 3000 : 2000);
+  if (!tokenLimit.ok) return res.status(tokenLimit.status).json({ ok: false, error: tokenLimit.error, max_tokens_limit: tokenLimit.max_tokens_limit });
+
+  const auth = await authorizeAiRequest(req, req.body || {});
+  if (!auth.ok) return writeAiAuthError(res, auth);
+  res.setHeader('X-AI-Auth-Type', auth.auth_type);
+  res.setHeader('X-AI-Rate-Remaining', String(auth.budget?.remaining ?? ''));
+
   if (action === 'generate_typed') {
     if (!schemaName) return res.status(400).json({ error: 'schemaName required' });
-    const out = await generateTyped({ schemaName, prompt, model, sessionId, userId, temperature, maxTokens });
+    const out = await generateTyped({ schemaName, prompt, model, sessionId, userId, temperature, maxTokens: tokenLimit.value });
     return res.json(out);
   }
 
@@ -199,7 +218,7 @@ export default async function handler(req, res) {
     res.setHeader('X-Accel-Buffering', 'no');
     const write = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
     const result = await streamTokens({
-      prompt, model, sessionId, userId, maxTokens,
+      prompt, model, sessionId, userId, maxTokens: tokenLimit.value,
       onToken: (delta, full) => write({ type: 'token', delta, full_length: full.length }),
     });
     write({ type: 'done', ok: result.ok, model: result.model, error: result.error });
@@ -213,7 +232,7 @@ export default async function handler(req, res) {
       const r = resolveProvider(mId);
       if (!r) continue;
       try {
-        const out = await generateText({ model: r.model, prompt, temperature: temperature ?? 0.7, maxTokens: maxTokens || 2000 });
+        const out = await generateText({ model: r.model, prompt, temperature: temperature ?? 0.7, maxTokens: tokenLimit.value });
         return res.json({ ok: true, text: out.text, model: mId, usage: out.usage });
       } catch {}
     }

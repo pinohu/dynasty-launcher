@@ -38,6 +38,8 @@ function log(ok, name, detail = '') {
   return ok ? 0 : 1;
 }
 
+const ADMIN = { 'x-admin-key': 'test-admin-key' };
+
 async function main() {
   await _reset();
   const h = await loadHandlers();
@@ -74,7 +76,7 @@ async function main() {
 
   // 4. GET tenant
   {
-    const r = await invoke(h.get, { query: { tenant_id: tenantA.tenant_id } });
+    const r = await invoke(h.get, { query: { tenant_id: tenantA.tenant_id }, headers: ADMIN });
     const ok = r.status === 200 && r.body.tenant && r.body.tenant.tenant_id === tenantA.tenant_id
       && Array.isArray(r.body.entitlements)
       && r.body.entitlements.length >= 15
@@ -91,7 +93,7 @@ async function main() {
 
   // 6. GET capabilities (none enabled)
   {
-    const r = await invoke(h.caps, { query: { tenant_id: tenantA.tenant_id } });
+    const r = await invoke(h.caps, { query: { tenant_id: tenantA.tenant_id }, headers: ADMIN });
     const ok = r.status === 200
       && Array.isArray(r.body.all_capabilities)
       && r.body.all_capabilities.length === 10
@@ -128,7 +130,7 @@ async function main() {
 
   // 10. GET capabilities after enable
   {
-    const r = await invoke(h.caps, { query: { tenant_id: tenantA.tenant_id } });
+    const r = await invoke(h.caps, { query: { tenant_id: tenantA.tenant_id }, headers: ADMIN });
     const email = r.body.all_capabilities.find((c) => c.capability_code === 'email');
     fails += log(email?.enabled === true && email.required_by.length > 0,
       'GET capabilities shows email enabled + required_by list', `required_by=${email?.required_by.length}`);

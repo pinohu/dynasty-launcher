@@ -74,6 +74,7 @@ async function entitleAndActivate(h, tenant, module_code, user_input) {
   });
   return invoke(h.activate, {
     method: 'POST',
+    headers: ADMIN,
     body: { tenant_id: tenant.tenant_id, module_code, user_input: user_input || {} },
   });
 }
@@ -98,6 +99,7 @@ async function main() {
 
     const r = await invoke(h.ingest, {
       method: 'POST',
+      headers: ADMIN,
       body: {
         tenant_id: tenant.tenant_id,
         event_type: 'form.submitted',
@@ -127,6 +129,7 @@ async function main() {
     await entitleAndActivate(h, tenant, 'webform_autoreply', { ack_channel: 'email' });
     await invoke(h.ingest, {
       method: 'POST',
+      headers: ADMIN,
       body: {
         tenant_id: tenant.tenant_id,
         event_type: 'form.submitted',
@@ -156,6 +159,7 @@ async function main() {
     // Event with condition met
     const r1 = await invoke(h.ingest, {
       method: 'POST',
+      headers: ADMIN,
       body: {
         tenant_id: tenant.tenant_id,
         event_type: 'call.missed',
@@ -166,6 +170,7 @@ async function main() {
     // Event with condition NOT met (known caller)
     const r2 = await invoke(h.ingest, {
       method: 'POST',
+      headers: ADMIN,
       body: {
         tenant_id: tenant.tenant_id,
         event_type: 'call.missed',
@@ -187,6 +192,7 @@ async function main() {
     await entitleAndActivate(h, tenant, 'post_job_review_request', { channel: 'both', primary_platform: 'google' });
     const r = await invoke(h.ingest, {
       method: 'POST',
+      headers: ADMIN,
       body: {
         tenant_id: tenant.tenant_id,
         event_type: 'job.completed',
@@ -215,6 +221,7 @@ async function main() {
     });
     const r = await invoke(h.ingest, {
       method: 'POST',
+      headers: ADMIN,
       body: { tenant_id: tenant.tenant_id, event_type: 'form.submitted', payload: {} },
     });
     fails += log(r.body.dispatch.dispatched === 0, 'entitled-but-not-active module does NOT dispatch');
@@ -230,6 +237,7 @@ async function main() {
     await entitleAndActivate(h, tenant, 'webform_autoreply', { ack_channel: 'email' });
     const r = await invoke(h.ingest, {
       method: 'POST',
+      headers: ADMIN,
       body: { tenant_id: tenant.tenant_id, event_type: 'unrelated.event', payload: {} },
     });
     fails += log(r.body.dispatch.dispatched === 0, 'unrelated event type dispatches zero workflows');
@@ -246,6 +254,7 @@ async function main() {
     await entitleAndActivate(h, tenant, 'reschedule_workflow', {});
     const r = await invoke(h.ingest, {
       method: 'POST',
+      headers: ADMIN,
       body: { tenant_id: tenant.tenant_id, event_type: 'reschedule.requested', payload: { source: 'link_click' } },
     });
     const result = r.body.dispatch.results[0];

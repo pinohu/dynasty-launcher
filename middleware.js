@@ -53,8 +53,8 @@ button:hover{opacity:.92}.row{display:flex;gap:10px;align-items:center}.hint{fon
   <p>Paste your test admin key and continue to the builder with full privileges. No manual URL encoding required.</p>
   <input id="k" type="password" autocomplete="off" placeholder="Paste TEST_ADMIN_KEY" value="${safeQueryKey}">
   <div class="row">
-    <button onclick="go()">Continue to Builder</button>
-    <button onclick="window.location.href='/admin'" style="background:#1f1f1f;color:#ddd;border:1px solid #333">Open Admin</button>
+    <button id="builder-login-submit">Continue to Builder</button>
+    <button id="builder-open-admin" style="background:#1f1f1f;color:#ddd;border:1px solid #333">Open Admin</button>
   </div>
   <p class="hint">Tip: You can also open this page as <code>/app/test-login#yourKey</code>.</p>
 </div>
@@ -72,6 +72,8 @@ button:hover{opacity:.92}.row{display:flex;gap:10px;align-items:center}.hint{fon
     const enc = encodeURIComponent(raw);
     window.location.href = '/app?k=' + enc;
   }
+  document.getElementById('builder-login-submit').addEventListener('click', go);
+  document.getElementById('builder-open-admin').addEventListener('click', () => { window.location.href = '/admin'; });
 </script></body></html>`, {
       status: 200,
       headers: SEC_HEADERS,
@@ -93,13 +95,15 @@ input{padding:10px 16px;background:#1a1a1a;border:1px solid #333;border-radius:8
 button{padding:10px 24px;background:#C9A84C;color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px}
 button:hover{opacity:.9}p{color:#666;font-size:12px}</style></head><body>
 <div style="font-size:2rem">⚡</div><h2>Admin Access</h2>
-<input type="password" id="ak" placeholder="Admin key" onkeydown="if(event.key==='Enter')go()">
-<button onclick="go()">Authenticate</button>
+<input type="password" id="ak" placeholder="Admin key">
+<button id="admin-auth-submit">Authenticate</button>
 <p id="err"></p>
 <script>function go(){const k=document.getElementById('ak').value;if(!k)return;
 fetch('/api/auth?action=verify_admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k})})
-.then(r=>r.json()).then(d=>{if(d.ok&&d.admin){localStorage.setItem('dynasty_admin_token',d.token);localStorage.setItem('dynasty_tier','enterprise');localStorage.setItem('dynasty_paid_session','admin');localStorage.setItem('dynasty_paid_at',new Date().toISOString());window.location.href='/admin?auth=token';}
-else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{document.getElementById('err').textContent='Server error';});}</script>
+.then(r=>r.json()).then(d=>{if(d.ok&&d.admin){sessionStorage.setItem('dynasty_admin_token',d.token);localStorage.removeItem('dynasty_admin_token');localStorage.setItem('dynasty_tier','enterprise');localStorage.setItem('dynasty_paid_session','admin');localStorage.setItem('dynasty_paid_at',new Date().toISOString());window.location.href='/admin?auth=token';}
+else{document.getElementById('err').textContent='Invalid key';}}).catch(()=>{document.getElementById('err').textContent='Server error';});}
+document.getElementById('admin-auth-submit').addEventListener('click',go);
+document.getElementById('ak').addEventListener('keydown',e=>{if(e.key==='Enter')go();});</script>
 </body></html>`, { status: 200, headers: SEC_HEADERS });
   }
 

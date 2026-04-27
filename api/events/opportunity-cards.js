@@ -20,6 +20,7 @@ import { corsPreflight, methodGuard } from './_lib.mjs';
 import { getTenant, getEntitlement } from '../tenants/_store.mjs';
 import { getCatalog } from '../catalog/_lib.mjs';
 import { computeMetric } from './_aggregates.mjs';
+import { requireTenantAccess } from '../tenants/_auth.mjs';
 
 export const maxDuration = 15;
 
@@ -117,6 +118,7 @@ export default async function handler(req, res) {
 
   const tenant = await getTenant(tenant_id);
   if (!tenant) return res.status(404).json({ error: 'tenant_not_found' });
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   const { recommendations } = getCatalog();
 

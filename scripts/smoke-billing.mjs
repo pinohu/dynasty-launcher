@@ -67,6 +67,26 @@ async function main() {
   console.log('Smoke test: api/billing/* (stub mode)');
   console.log('-'.repeat(60));
 
+  // ============================================================
+  // Webhook fail-closed: live Stripe secret without webhook secret
+  // ============================================================
+  {
+    process.env.STRIPE_SECRET_KEY = 'sk_live_fake_for_signature_gate';
+    delete process.env.STRIPE_WEBHOOK_SECRET;
+    const payload = JSON.stringify({ id: 'evt_forged', type: 'checkout.session.completed', data: { object: {} } });
+    const r = await invoke(h.webhook, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: payload,
+    });
+    fails += log(
+      r.status === 400 && r.body.error === 'invalid_signature' && r.body.message === 'webhook_secret_missing',
+      'webhook rejects unsigned payload when Stripe is configured without webhook secret',
+      `status=${r.status} message=${r.body.message}`,
+    );
+    delete process.env.STRIPE_SECRET_KEY;
+  }
+
   const { body: { tenant } } = await invoke(h.createTenant, {
     body: { blueprint_code: 'hvac', plan: 'professional' },
   });
@@ -155,7 +175,7 @@ async function main() {
 
   // Verify entitlements landed
   {
-    const r = await invoke(h.getTenant, { method: 'GET', query: { tenant_id: tenant.tenant_id } });
+    const r = await invoke(h.getTenant, { method: 'GET', query: { tenant_id: tenant.tenant_id }, headers: { 'x-admin-key': 'test-admin-key' } });
     const activeCodes = (r.body.entitlements || []).filter((e) => e.state === 'active').map((e) => e.module_code).sort();
     fails += log(
       activeCodes.includes('webform_autoreply') && activeCodes.includes('appointment_reminder'),

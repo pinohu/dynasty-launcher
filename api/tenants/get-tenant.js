@@ -5,6 +5,7 @@
 
 import { corsPreflight, methodGuard } from './_lib.mjs';
 import { getTenant, listTenantEntitlements } from './_store.mjs';
+import { requireTenantAccess } from './_auth.mjs';
 
 export const maxDuration = 10;
 
@@ -17,6 +18,7 @@ export default async function handler(req, res) {
 
   const tenant = await getTenant(tenant_id);
   if (!tenant) return res.status(404).json({ error: `tenant '${tenant_id}' not found` });
+  if (!requireTenantAccess(req, res, tenant)) return;
 
   return res.json({
     tenant,

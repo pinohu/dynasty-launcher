@@ -3,6 +3,9 @@
 // OpenAI, paid Mistral, paid Grok, paid Perplexity Sonar Pro) were
 // purged to guarantee zero inference cost. Gemini 2.5 Pro / 2.5 Flash
 // are kept because Google AI Studio ships them with a free quota tier.
+import { aiCorsHeaders } from './_ai_security.mjs';
+import { verifyAdminCredential } from './tenants/_auth.mjs';
+
 export const maxDuration = 300;
 
 const PROVIDERS = {
@@ -727,17 +730,13 @@ const CALLERS = {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', aiCorsHeaders());
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   // ── POST /api/ai?action=reset_quota — admin-only quota reset ──────────────
   if (req.query?.action === 'reset_quota') {
-    const adminKey = process.env.ADMIN_KEY || '';
-    const testAdminKey = process.env.TEST_ADMIN_KEY || '';
-    const k = req.query?.k || req.body?.k || '';
-    if (!k || (!adminKey && !testAdminKey) || ((() => { try { const { timingSafeEqual } = require("crypto"); const a = Buffer.from(String(k || "")); const b = Buffer.from(String(adminKey || "")); return a.length !== b.length || !timingSafeEqual(a, b); } catch { return true; } })() && k !== testAdminKey)) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
+    const adminAuth = verifyAdminCredential(req);
+    if (!adminAuth.ok) return res.status(adminAuth.status || 403).json({ error: 'Unauthorized' });
     const monthKey = getMonthKey();
     const pool = await getUsagePool();
     if (pool) {

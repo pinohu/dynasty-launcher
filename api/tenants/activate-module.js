@@ -13,6 +13,8 @@
 
 import { corsPreflight, methodGuard, readBody } from './_lib.mjs';
 import { activateModule } from './_activation.mjs';
+import { getTenant } from './_store.mjs';
+import { requireTenantAccess } from './_auth.mjs';
 
 export const maxDuration = 30;
 
@@ -28,6 +30,9 @@ export default async function handler(req, res) {
   const { tenant_id, module_code, user_input } = body || {};
   if (!tenant_id) return res.status(400).json({ error: 'tenant_id required' });
   if (!module_code) return res.status(400).json({ error: 'module_code required' });
+
+  const tenant = await getTenant(tenant_id);
+  if (tenant && !requireTenantAccess(req, res, tenant)) return;
 
   const result = await activateModule({ tenant_id, module_code, user_input });
 

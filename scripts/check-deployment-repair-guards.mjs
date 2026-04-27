@@ -2,6 +2,12 @@ import fs from 'node:fs';
 
 const failures = [];
 const htmlFiles = ['app.html', 'public/app.html'];
+const vercelConfig = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
+const vercelFunctionCount = Object.keys(vercelConfig.functions || {}).length;
+
+if (vercelFunctionCount > 50) {
+  failures.push(`vercel.json: Vercel accepts at most 50 function config entries, found ${vercelFunctionCount}`);
+}
 
 for (const file of htmlFiles) {
   const html = fs.readFileSync(file, 'utf8');

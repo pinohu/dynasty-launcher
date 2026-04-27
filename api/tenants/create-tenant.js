@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'invalid_json' });
   }
 
-  const { business_name, blueprint_code, plan, timezone, locale, profile } = body || {};
+  const { business_name, blueprint_code, plan, timezone, locale, profile, user_id, owner_user_id, owner_email } = body || {};
 
   let blueprint = null;
   if (blueprint_code) {
@@ -42,6 +42,7 @@ export default async function handler(req, res) {
     }
   }
 
+  const ownerSubject = owner_user_id || user_id || profile?.owner_user_id || profile?.user_id || profile?.clerk_user_id || owner_email || profile?.email || null;
   const input = {
     business_name: business_name || (blueprint ? `New ${blueprint.name}` : 'Untitled Business'),
     business_type: blueprint_code || 'general',
@@ -52,6 +53,8 @@ export default async function handler(req, res) {
     profile: {
       ...(blueprint?.default_hours ? { hours: blueprint.default_hours } : {}),
       ...(profile || {}),
+      ...(ownerSubject ? { owner_user_id: ownerSubject, user_id: ownerSubject } : {}),
+      ...(owner_email ? { email: owner_email } : {}),
     },
     // New tenants start with zero capabilities — they get enabled by wizards.
     capabilities_enabled: [],

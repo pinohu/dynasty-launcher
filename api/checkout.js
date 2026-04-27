@@ -2,13 +2,107 @@
 // Handles: create checkout session, verify payment, usage tracking, session recovery
 // Uses Stripe REST API directly (no SDK — no package.json in this project)
 
+import crypto from 'node:crypto';
+
 const STRIPE_SECRET = process.env.STRIPE_SECRET_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://yourdeputy.com';
 const ACCESS_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const RECOVER_ATTEMPTS = new Map();
+const RECOVERY_CODES = new Map();
 const RECOVER_MAX = 5;
 const RECOVER_WINDOW_MS = 15 * 60 * 1000;
+const RECOVER_CODE_TTL_MS = 10 * 60 * 1000;
+const RECOVER_CODE_MAX_ATTEMPTS = 5;
+
+function signingSecret() {
+  return process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET || '';
+}
+
+function hmacHex(payload) {
+  const secret = signingSecret();
+  if (!secret) return '';
+  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
+}
+
+function timingSafeEqualString(a, b) {
+  const left = Buffer.from(String(a || ''));
+  const right = Buffer.from(String(b || ''));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
+function hashCheckoutNonce(nonce) {
+  const value = String(nonce || '').trim();
+  if (!value || value.length < 16 || value.length > 128) return '';
+  return hmacHex(`checkout-verify:${value}`);
+}
+
+function verifyCheckoutNonce(nonce, expectedHash) {
+  const hash = hashCheckoutNonce(nonce);
+  return !!hash && !!expectedHash && timingSafeEqualString(hash, expectedHash);
+}
+
+function recoveryEmailKey(email) {
+  return hmacHex(`recover-email:${String(email || '').trim().toLowerCase()}`);
+}
+
+function recoveryCodeHash(email, code) {
+  return hmacHex(`recover-code:${String(email || '').trim().toLowerCase()}:${String(code || '').trim().toUpperCase()}`);
+}
+
+function randomRecoveryCode() {
+  return crypto.randomInt(0, 1_000_000).toString().padStart(6, '0');
+}
+
+function cleanupRecoveryCodes() {
+  const now = Date.now();
+  if (RECOVERY_CODES.size <= 5000) return;
+  for (const [key, value] of RECOVERY_CODES) {
+    if (!value || value.expires_at <= now) RECOVERY_CODES.delete(key);
+  }
+}
+
+function genericRecoveryStart(res) {
+  return res.json({
+    ok: true,
+    sent: true,
+    message: 'If a paid session exists for that email, a sign-in code will be sent.',
+  });
+}
+
+function storeRecoveryCode(email, code, paidSession) {
+  const key = recoveryEmailKey(email);
+  if (!key) return false;
+  RECOVERY_CODES.set(key, {
+    code_hash: recoveryCodeHash(email, code),
+    expires_at: Date.now() + RECOVER_CODE_TTL_MS,
+    attempts: 0,
+    paid_session: paidSession,
+  });
+  cleanupRecoveryCodes();
+  return true;
+}
+
+function verifyStoredRecoveryCode(email, code) {
+  const key = recoveryEmailKey(email);
+  const entry = key ? RECOVERY_CODES.get(key) : null;
+  if (!entry) return { ok: false, error: 'Invalid or expired code' };
+  if (entry.expires_at <= Date.now()) {
+    RECOVERY_CODES.delete(key);
+    return { ok: false, error: 'Invalid or expired code' };
+  }
+  entry.attempts += 1;
+  if (entry.attempts > RECOVER_CODE_MAX_ATTEMPTS) {
+    RECOVERY_CODES.delete(key);
+    return { ok: false, error: 'Too many attempts. Request a new code.' };
+  }
+  const supplied = recoveryCodeHash(email, code);
+  if (!supplied || !timingSafeEqualString(supplied, entry.code_hash)) {
+    return { ok: false, error: 'Invalid or expired code' };
+  }
+  RECOVERY_CODES.delete(key);
+  return { ok: true, paid_session: entry.paid_session };
+}
 
 function isRecoverRateLimited(req) {
   const xf = (req.headers['x-forwarded-for'] || '').toString();
@@ -25,14 +119,13 @@ function isRecoverRateLimited(req) {
 }
 
 async function signPaidAccessToken({ sessionId, userId, plan }) {
-  const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET || '';
+  const secret = signingSecret();
   if (!secret || !sessionId) return null;
   const uid = (userId || '').trim() || 'anon';
   const tier = (plan || 'foundation').toString().toLowerCase();
   const exp = Date.now() + ACCESS_TOKEN_TTL_MS;
   const payload = `pay:${sessionId}:${uid}:${tier}:${exp}`;
-  const { createHmac } = await import('crypto');
-  const sig = createHmac('sha256', secret).update(payload).digest('hex');
+  const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
   return `${payload}:${sig}`;
 }
 
@@ -157,7 +250,7 @@ export default async function handler(req, res) {
     if (isSessionRateLimited(req)) { res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many checkout attempts. Try again later.' }); }
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Stripe not configured' });
 
-    const { plan, email, user_id, training_opt_in, build_archetype, source_segment, diagnostic_session_id, recommended_plan, apply_blueprint_credit } = req.body || {};
+    const { plan, email, user_id, training_opt_in, build_archetype, source_segment, diagnostic_session_id, recommended_plan, apply_blueprint_credit, verify_nonce } = req.body || {};
     const normalizedPlan = (plan || 'foundation').toString().toLowerCase();
     if (normalizedPlan === 'custom_volume') {
       return res.json({
@@ -184,6 +277,7 @@ export default async function handler(req, res) {
     const blueprintCreditCents = wantsBlueprintCredit ? Math.min(29700, Math.max(0, tierDef.amount - 5000)) : 0;
     const finalAmount = Math.max(5000, tierDef.amount - blueprintCreditCents);
     const enc = (s) => encodeURIComponent(s);
+    const verifyNonceHash = hashCheckoutNonce(verify_nonce);
 
     try {
       const params = [
@@ -199,6 +293,7 @@ export default async function handler(req, res) {
         `metadata[diagnostic_session_id]=${enc((diagnostic_session_id || '').slice(0, 96))}`,
         `metadata[recommended_plan]=${enc((recommended_plan || '').slice(0, 48))}`,
         `metadata[user_id]=${enc((user_id || '').slice(0, 96))}`,
+        `metadata[verify_nonce_hash]=${verifyNonceHash}`,
         `metadata[blueprint_credit_applied]=${blueprintCreditCents > 0 ? 'yes' : 'no'}`,
         `metadata[blueprint_credit_amount]=${blueprintCreditCents}`,
         `line_items[0][price_data][currency]=usd`,
@@ -224,6 +319,7 @@ export default async function handler(req, res) {
           `metadata[diagnostic_session_id]=${enc((diagnostic_session_id || '').slice(0, 96))}`,
           `metadata[recommended_plan]=${enc((recommended_plan || '').slice(0, 48))}`,
           `metadata[user_id]=${enc((user_id || '').slice(0, 96))}`,
+          `metadata[verify_nonce_hash]=${verifyNonceHash}`,
           'line_items[0][price_data][currency]=usd',
           `line_items[0][price_data][unit_amount]=${normalizedPlan === 'managed' ? 49700 : 1900}`,
           `line_items[0][price_data][product_data][name]=${enc(normalizedPlan === 'managed' ? 'Your Deputy — Managed Automation Runtime' : 'Your Deputy — Scoring Pro')}`,
@@ -251,7 +347,7 @@ export default async function handler(req, res) {
   if (action === 'verify') {
     if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Stripe not configured' });
 
-    const { session_id, user_id } = req.body || {};
+    const { session_id, user_id, verify_nonce } = req.body || {};
     if (!session_id) return res.json({ ok: false, error: 'session_id required' });
 
     try {
@@ -259,8 +355,19 @@ export default async function handler(req, res) {
       if (session.error) return res.json({ ok: false, error: session.error.message });
       const sessionUserId = (session.metadata?.user_id || '').toString().trim();
       const requestUserId = (user_id || '').toString().trim();
+      const nonceHash = (session.metadata?.verify_nonce_hash || '').toString().trim();
+      const nonceOk = verifyCheckoutNonce(verify_nonce, nonceHash);
       if (sessionUserId && requestUserId && sessionUserId !== requestUserId) {
         return res.status(403).json({ ok: false, error: 'Session ownership mismatch' });
+      }
+      if (nonceHash && !nonceOk) {
+        return res.status(403).json({ ok: false, error: 'Session verification failed' });
+      }
+      if (sessionUserId && !requestUserId && !nonceOk) {
+        return res.status(403).json({ ok: false, error: 'Session ownership mismatch' });
+      }
+      if (!sessionUserId && !nonceHash) {
+        return res.status(403).json({ ok: false, error: 'Session verification binding required' });
       }
       const isPaid = session.payment_status === 'paid' ||
                      (session.mode === 'subscription' && session.status === 'complete');
@@ -288,7 +395,7 @@ export default async function handler(req, res) {
 
   // ── Session Recovery — send a code to email ─────────────────────
   if (action === 'recover_start') {
-    if (!STRIPE_SECRET) return res.json({ ok: false, error: 'Recovery unavailable' });
+    if (!STRIPE_SECRET) return genericRecoveryStart(res);
     if (isRecoverRateLimited(req)) { res.setHeader('Retry-After', '900'); return res.status(429).json({ ok: false, error: 'Too many attempts. Try again later.' }); }
     const { email } = req.body || {};
     if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -297,24 +404,20 @@ export default async function handler(req, res) {
     const normalizedEmail = email.trim().toLowerCase();
     try {
       const lookup = await findPaidSessionByEmail(normalizedEmail);
-      if (!lookup.ok) return res.json({ ok: false, error: 'Could not verify purchase email. Please try again.' });
-      if (!lookup.paid) return res.json({ ok: false, error: 'No paid build session was found for that email.' });
+      if (!lookup.ok || !lookup.paid) return genericRecoveryStart(res);
 
-      const { createHmac } = await import('crypto');
-      const window5m = Math.floor(Date.now() / 300000);
-      const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET;
-      const code = createHmac('sha256', secret).update(`recover:${normalizedEmail}:${window5m}`).digest('hex').slice(-6).toUpperCase();
-
+      const code = randomRecoveryCode();
+      storeRecoveryCode(normalizedEmail, code, lookup.paid);
       const delivery = await sendRecoveryEmail({ email: normalizedEmail, code });
-      if (delivery.ok) {
-        return res.json({ ok: true, sent: true, provider: delivery.provider });
+      if (!delivery.ok) {
+        RECOVERY_CODES.delete(recoveryEmailKey(normalizedEmail));
+        console.error('[recover_start] email delivery failed', { provider: delivery.provider, status: delivery.status, body: delivery.body, error: delivery.error });
       }
-      console.error('[recover_start] email delivery failed', { provider: delivery.provider, status: delivery.status, body: delivery.body, error: delivery.error });
-      return res.status(502).json({ ok: false, error: 'The sign-in email could not be sent. Please try again or contact support.' });
+      return genericRecoveryStart(res);
 
     } catch (e) {
       console.error('[recover_start] failed', e);
-      return res.json({ ok: false, error: 'Could not send code. Try again.' });
+      return genericRecoveryStart(res);
     }
   }
 
@@ -325,21 +428,12 @@ export default async function handler(req, res) {
     const { email, code } = req.body || {};
     if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Valid email required' });
     if (!code) return res.status(400).json({ ok: false, error: 'Verification code required' });
+    const normalizedEmail = email.trim().toLowerCase();
     try {
-      const { createHmac, timingSafeEqual } = await import('crypto');
-      const secret = process.env.PAYMENT_ACCESS_SECRET || STRIPE_SECRET;
-      const now5m = Math.floor(Date.now() / 300000);
-      let valid = false;
-      for (let w = now5m; w >= now5m - 1; w--) {
-        const expected = createHmac('sha256', secret).update(`recover:${email.toLowerCase()}:${w}`).digest('hex').slice(-6).toUpperCase();
-        const userCode = code.toUpperCase().padEnd(expected.length).slice(0, expected.length);
-        if (expected.length === userCode.length && timingSafeEqual(Buffer.from(expected), Buffer.from(userCode))) { valid = true; break; }
-      }
-      if (!valid) return res.json({ ok: false, error: 'Invalid or expired code' });
+      const codeCheck = verifyStoredRecoveryCode(normalizedEmail, code);
+      if (!codeCheck.ok) return res.json({ ok: false, error: codeCheck.error });
 
-      const lookup = await findPaidSessionByEmail(email.toLowerCase());
-      if (!lookup.ok) return res.json({ ok: false, error: 'Could not verify. Check your email and try again.' });
-      const paid = lookup.paid;
+      const paid = codeCheck.paid_session;
       if (!paid) return res.json({ ok: false, error: 'Could not verify. Check your email and try again.' });
 
       const accessToken = await signPaidAccessToken({
