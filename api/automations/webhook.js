@@ -420,7 +420,7 @@ async function handleFormWebhook(body, headers, query, res) {
       },
     });
 
-    return res.json({ ok: true, webhook_id, status: 'received' });
+    return res.status(200).end();
   } catch (e) {
     console.error('[webhooks.form]', e.message);
     return res.status(500).json({ ok: false, error: e.message });
