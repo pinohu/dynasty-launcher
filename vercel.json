@@ -15,9 +15,6 @@
     }
   ],
   "functions": {
-    "api/claude.js": {
-      "maxDuration": 300
-    },
     "api/github.js": {
       "maxDuration": 30
     },
@@ -113,9 +110,6 @@
       "maxDuration": 30,
       "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
     },
-    "api/health.js": {
-      "maxDuration": 15
-    },
     "api/twentyi.js": {
       "maxDuration": 60
     },
@@ -142,9 +136,6 @@
     },
     "api/memory.js": {
       "maxDuration": 30
-    },
-    "api/flags.js": {
-      "maxDuration": 10
     },
     "api/research.js": {
       "maxDuration": 60
