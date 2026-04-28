@@ -296,6 +296,188 @@ pre {
   background: linear-gradient(90deg, var(--yds-blue), var(--yds-green), var(--yds-amber)) !important;
 }
 
+/* Builder app: operational tool surface */
+body.has-site-shell main {
+  padding-top: 96px !important;
+}
+
+.page {
+  max-width: 1120px !important;
+  padding: 2.5rem 1.5rem 4rem !important;
+}
+
+.logo {
+  background: var(--yds-surface) !important;
+  border: 1px solid var(--yds-border) !important;
+  border-radius: var(--yds-radius-lg) !important;
+  padding: 12px 14px !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.lm {
+  background: rgba(36, 84, 184, 0.08) !important;
+  color: var(--yds-blue) !important;
+  border-color: rgba(36, 84, 184, 0.24) !important;
+}
+
+.lt,
+.hero h1 span,
+.sc-title,
+.edu-phase,
+.cfg-label,
+.fw-tag,
+.mc-tag {
+  color: var(--yds-blue) !important;
+}
+
+.hero {
+  max-width: 760px !important;
+  margin-bottom: 1.75rem !important;
+}
+
+.hero h1 {
+  color: var(--yds-ink) !important;
+  font-size: 42px !important;
+  letter-spacing: 0 !important;
+}
+
+.hero p {
+  color: var(--yds-muted) !important;
+  font-size: 16px !important;
+  max-width: 700px !important;
+}
+
+.mode-card,
+.fw-card,
+.model-chip,
+.preview,
+.scorecard,
+.rc,
+.edu-card,
+.pi,
+#oie-panel,
+.im-panel,
+#cfg-build-scope-preview,
+.tbanner {
+  background: var(--yds-surface) !important;
+  border: 1px solid var(--yds-border) !important;
+  box-shadow: var(--yds-shadow) !important;
+}
+
+.mode-card:hover,
+.fw-card:hover,
+.mode-card.selected,
+.fw-card.selected,
+.vt-btn.active,
+.model-chip.selected {
+  border-color: var(--yds-blue) !important;
+  background: var(--yds-surface-alt) !important;
+  color: var(--yds-blue) !important;
+}
+
+.big-input,
+.ti,
+.im-url-input,
+.im-convo-input input,
+#oie-panel textarea,
+#oie-panel input,
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+select,
+textarea {
+  width: 100%;
+  min-height: 42px;
+  background: var(--yds-surface) !important;
+  color: var(--yds-text) !important;
+  border: 1px solid var(--yds-border-strong) !important;
+  border-radius: var(--yds-radius) !important;
+  font: inherit !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  padding: 10px 12px !important;
+  outline: none !important;
+}
+
+textarea,
+.big-input {
+  min-height: 124px;
+  resize: vertical;
+}
+
+#oie-panel textarea {
+  min-height: 92px !important;
+}
+
+.big-input:focus,
+.ti:focus,
+.im-url-input:focus,
+.im-convo-input input:focus,
+#oie-panel textarea:focus,
+#oie-panel input:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--yds-blue) !important;
+  box-shadow: 0 0 0 3px rgba(36, 84, 184, 0.14) !important;
+}
+
+.im-btn,
+.vt-btn,
+.lset,
+.launch,
+.tsave,
+.im-convo-input button {
+  min-height: 40px;
+  border-radius: var(--yds-radius) !important;
+  border: 1px solid var(--yds-border-strong) !important;
+  background: var(--yds-surface) !important;
+  color: var(--yds-text) !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+.launch,
+.tsave,
+.im-convo-input button {
+  background: var(--yds-blue) !important;
+  border-color: var(--yds-blue) !important;
+  color: #ffffff !important;
+}
+
+.im-btn:hover,
+.vt-btn:hover,
+.lset:hover {
+  border-color: var(--yds-blue) !important;
+  color: var(--yds-blue) !important;
+}
+
+#oie-output,
+.cmd,
+.edu-file-preview {
+  background: var(--yds-surface-alt) !important;
+  border: 1px solid var(--yds-border) !important;
+  color: var(--yds-blue) !important;
+}
+
+.char-hint,
+.im-status,
+.tnote,
+.ps,
+.cfg-desc,
+.mode-card p,
+.fw-card p,
+.edu-body,
+.edu-tip,
+.sc-label {
+  color: var(--yds-muted) !important;
+}
+
+.build-layout {
+  grid-template-columns: minmax(0, 1fr) 300px !important;
+}
+
 @media (max-width: 860px) {
   main,
   .wrap {
