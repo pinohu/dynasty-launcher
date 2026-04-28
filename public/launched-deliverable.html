@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Launched Deliverable - Your Deputy</title>
+<meta name="description" content="A customer-specific Your Deputy deliverable that has been provisioned and launched.">
+<link rel="canonical" href="https://www.yourdeputy.com/launched-deliverable">
+<link rel="stylesheet" href="/site-shell.css">
+<style>
+:root{--gold:#c9a84c;--ink:#09090b;--bg:#0c0c14;--panel:#171720;--line:rgba(255,255,255,.13);--text:#fafaf9;--muted:#a1a1aa;--ok:#22c55e;--blue:#60a5fa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}
+a{color:var(--gold);font-weight:800;text-decoration:none}
+main{max-width:1120px;margin:0 auto;padding:92px 20px 60px}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:18px;align-items:start}
+.panel,.card{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:10px;padding:18px}
+.panel{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+.eyebrow{color:var(--gold);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;margin-bottom:12px}
+h1{font-size:clamp(34px,6vw,68px);line-height:1;margin:0 0 14px}
+h2{font-size:24px;margin:0 0 12px}
+h3{font-size:17px;margin:0 0 7px}
+p{color:var(--muted);margin:0 0 13px}
+.lead{font-size:20px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tag{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:var(--muted);font-size:12px;font-weight:800}
+label{display:block;color:var(--text);font-weight:800;font-size:13px;margin:12px 0 6px}
+input,textarea{width:100%;border:1px solid var(--line);background:#101018;color:var(--text);border-radius:9px;min-height:42px;padding:10px 12px;font:inherit}
+textarea{min-height:88px}
+.btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:9px;background:var(--gold);color:var(--ink);font-weight:900;padding:11px 14px;cursor:pointer;margin-top:14px}
+.ok{color:var(--ok);font-weight:900}
+.section{padding:26px 0;border-top:1px solid rgba(255,255,255,.08);margin-top:26px}
+@media(max-width:860px){main{padding-top:82px}.hero,.grid,.grid.two{grid-template-columns:1fr}.btn{width:100%}}
+</style>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Created and launched</div>
+      <h1 id="title">Provisioned deliverable</h1>
+      <p class="lead" id="outcome">Loading customer-specific runtime...</p>
+      <p><span class="ok">Live:</span> this page is generated from the production provisioning API response. Secrets are never placed in the public launch URL.</p>
+    </div>
+    <form class="panel" id="lead-form">
+      <h2>Lead capture is active</h2>
+      <label for="lead-name">Name</label>
+      <input id="lead-name" name="name" required>
+      <label for="lead-contact">Phone or email</label>
+      <input id="lead-contact" name="contact" required>
+      <label for="lead-need">What do you need?</label>
+      <textarea id="lead-need" name="need" required></textarea>
+      <button class="btn" type="submit">Capture lead</button>
+    </form>
+  </section>
+
+  <section class="section">
+    <h2>Provisioned components</h2>
+    <div class="grid" id="components"></div>
+  </section>
+
+  <section class="section">
+    <h2>Activated modules</h2>
+    <div class="grid two" id="modules"></div>
+  </section>
+</main>
+<script src="/site-shell.js" defer></script>
+<script>
+(function(){
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+  function parsePayload() {
+    const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const token = hash.get('payload') || '';
+    if (!token) return null;
+    const padded = token.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - token.length % 4) % 4);
+    try {
+      const bytes = Uint8Array.from(atob(padded), function(c) { return c.charCodeAt(0); });
+      return JSON.parse(new TextDecoder().decode(bytes));
+    } catch (error) { return null; }
+  }
+  const data = parsePayload();
+  if (!data) {
+    document.getElementById('title').textContent = 'Launch payload missing';
+    document.getElementById('outcome').textContent = 'Generate a deliverable from /sign-up to create a public launched URL.';
+    return;
+  }
+  document.title = data.profile.business_name + ' - Launched Deliverable';
+  document.getElementById('title').textContent = data.profile.business_name + ' ' + data.offer.name;
+  document.getElementById('outcome').textContent = data.offer.outcome;
+  document.getElementById('components').innerHTML = (data.components || []).map(function(component) {
+    return '<article class="card"><span class="tag">' + esc(component.status) + '</span><h3>' + esc(component.name) + '</h3><p>' + (component.public ? 'Public customer-facing surface.' : 'Operational runtime component.') + '</p></article>';
+  }).join('');
+  document.getElementById('modules').innerHTML = (data.modules || []).map(function(module) {
+    return '<article class="card"><span class="tag">' + esc(module.category || 'runtime') + '</span><h3>' + esc(module.name) + '</h3><p>Actions: ' + esc((module.actions || []).join(', ') || 'configured') + '</p><p>KPIs: ' + esc((module.kpis || []).join(', ') || 'activation tracked') + '</p></article>';
+  }).join('');
+  document.getElementById('lead-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const lead = Object.fromEntries(new FormData(event.currentTarget).entries());
+    const key = 'yd_launched_leads_' + data.launch_id;
+    const leads = JSON.parse(localStorage.getItem(key) || '[]');
+    leads.push({ ...lead, captured_at: new Date().toISOString(), launch_id: data.launch_id });
+    localStorage.setItem(key, JSON.stringify(leads));
+    event.currentTarget.innerHTML = '<h2>Lead captured</h2><p>The launched deliverable captured this lead locally and the generated backend file includes the production API contract for routing it.</p>';
+  });
+})();
+</script>
+</body>
+</html>

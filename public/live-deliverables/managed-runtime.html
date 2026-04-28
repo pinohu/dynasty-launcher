@@ -52,6 +52,8 @@ p{color:var(--muted);margin:0 0 14px}
   <p class="lead">A monthly runtime package with health checks, workflow monitoring, error receipts, and operator reports.</p>
   <div class="actions">
     <a class="btn primary" href="/api/deliverables/instant?offer=managed-runtime">Open instant JSON package</a>
+    <a class="btn primary" href="/sign-up?offer=managed-runtime">Provision this deliverable</a>
+    <a class="btn" href="/api/deliverables/provision?offer=managed-runtime">Open credential schema</a>
     <a class="btn" href="/live-deliverables">All live deliverables</a>
   </div>
   <div class="matrix">
@@ -59,19 +61,19 @@ p{color:var(--muted);margin:0 0 14px}
     <div>Type</div><div>launch_offer</div>
     <div>Price</div><div>$497 / month</div>
     <div>Buyer</div><div>Operator who wants the runtime monitored after launch</div>
-    <div>Manual package creation</div><div>None. The package is generated immediately by /api/deliverables/instant.</div>
+    <div>Manual package creation</div><div>None. Customer submits the SKU-specific credential form and /api/deliverables/provision creates and launches the deliverable.</div>
   </div>
 </section>
 <section class="section">
   <h2>Smallest complete deliverable</h2>
-  <p>This is the minimum finished package a customer can receive immediately after signup for this offer.</p>
+  <p>This is the minimum finished package a customer can receive immediately after signup for this offer. The live provisioning path creates runtime pages, forms, workflows, CRM seed data, templates, and integration files in addition to the supporting receipt artifacts.</p>
   <ul class="list"><li>health check report</li><li>workflow monitor</li><li>monthly operating receipt</li><li>incident log</li><li>optimization backlog</li></ul>
 </section>
 <section class="section">
   <h2>Package receipt</h2>
   <div class="panel">
     <div class="receipt">
-      <div><strong>Receipt</strong><span>yd_live_managed-runtime_moimv2ip</span></div>
+      <div><strong>Receipt</strong><span>yd_live_managed-runtime_moiovup6</span></div>
       <div><strong>Instant delivery</strong><span>true</span></div>
       <div><strong>Manual creation step</strong><span>none</span></div>
       <div><strong>Customer-owned boundary</strong><span>vendor credentials, domains, payment accounts, legal/tax review</span></div>
@@ -95,11 +97,11 @@ Use this first. It explains what was generated, what is ready now, and what cred
   <h3>DELIVERY-MANIFEST.json</h3>
   <p>Machine-readable package manifest.</p>
   <pre>{
-  &quot;receipt_id&quot;: &quot;yd_live_managed-runtime_moimv2ip&quot;,
+  &quot;receipt_id&quot;: &quot;yd_live_managed-runtime_moiovup6&quot;,
   &quot;offer_id&quot;: &quot;managed-runtime&quot;,
   &quot;offer_type&quot;: &quot;launch_offer&quot;,
   &quot;name&quot;: &quot;Managed Runtime&quot;,
-  &quot;generated_at&quot;: &quot;2026-04-28T12:59:38.497Z&quot;,
+  &quot;generated_at&quot;: &quot;2026-04-28T13:56:14.250Z&quot;,
   &quot;price_label&quot;: &quot;$497 / month&quot;,
   &quot;instant_delivery&quot;: true,
   &quot;no_manual_step_required_for_package_creation&quot;: true,
@@ -181,8 +183,8 @@ Pass condition: the customer can open this package, understand the outcome, insp
   <p>Plain receipt of what was generated and what was not silently promised.</p>
   <pre># Delivery Receipt
 
-Receipt: yd_live_managed-runtime_moimv2ip
-Generated: 2026-04-28T12:59:38.497Z
+Receipt: yd_live_managed-runtime_moiovup6
+Generated: 2026-04-28T13:56:14.250Z
 
 Delivered now:
 - health check report

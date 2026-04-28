@@ -160,7 +160,7 @@
       "maxDuration": 60,
       "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
-    "api/deliverables/instant.js": {
+    "api/deliverables/*.js": {
       "maxDuration": 30,
       "includeFiles": "product/**/*.json"
     },

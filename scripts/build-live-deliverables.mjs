@@ -106,16 +106,16 @@ function buildIndex(offers) {
   <h1>Full live examples for every offer.</h1>
   <p class="lead">These are complete example packages, not click-through demos. Each page shows the smallest finished deliverable a customer can receive immediately after signup, plus the instant package API used to generate it.</p>
   <div class="actions">
-    <a class="btn primary" href="/api/deliverables/instant?list=1">Open instant package API</a>
+    <a class="btn primary" href="/api/deliverables/provision?list=1">Open provisioning API</a>
     <a class="btn" href="/deliverables">Compare artifact inventory</a>
     <a class="btn" href="/maturity">Read delivery boundaries</a>
   </div>
 </section>
 <section class="section">
   <div class="grid three">
-    <article class="card"><h3>Instant handoff</h3><p>Every package includes START-HERE, manifest, outcome brief, workflow, acceptance tests, and receipt.</p></article>
-    <article class="card"><h3>No manual creation step</h3><p>The package API returns a usable deliverable immediately. Vendor account setup remains customer-owned when credentials are required.</p></article>
-    <article class="card"><h3>Customer-ready proof</h3><p>Use these pages in sales calls to show exactly what a buyer receives for each SKU.</p></article>
+    <article class="card"><h3>Built outcome</h3><p>Every paid package provisions pages, forms, workflows, CRM seed data, templates, runtime files, and integration receipts.</p></article>
+    <article class="card"><h3>Credential form</h3><p>The provisioning API returns the exact customer-owned credentials required for the selected SKU before launch.</p></article>
+    <article class="card"><h3>Launched URL</h3><p>After the form is submitted, production returns a public launched deliverable URL and generated runtime files.</p></article>
   </div>
 </section>
 ${sections}`,
@@ -146,6 +146,8 @@ function buildOfferPage(offer) {
   <p class="lead">${esc(offer.outcome)}</p>
   <div class="actions">
     <a class="btn primary" href="/api/deliverables/instant?offer=${esc(offer.id)}">Open instant JSON package</a>
+    <a class="btn primary" href="/sign-up?offer=${esc(offer.id)}">Provision this deliverable</a>
+    <a class="btn" href="/api/deliverables/provision?offer=${esc(offer.id)}">Open credential schema</a>
     <a class="btn" href="/live-deliverables">All live deliverables</a>
   </div>
   <div class="matrix">
@@ -153,12 +155,12 @@ function buildOfferPage(offer) {
     <div>Type</div><div>${esc(offer.type)}</div>
     <div>Price</div><div>${esc(offer.price_label)}</div>
     <div>Buyer</div><div>${esc(offer.buyer)}</div>
-    <div>Manual package creation</div><div>None. The package is generated immediately by /api/deliverables/instant.</div>
+    <div>Manual package creation</div><div>None. Customer submits the SKU-specific credential form and /api/deliverables/provision creates and launches the deliverable.</div>
   </div>
 </section>
 <section class="section">
   <h2>Smallest complete deliverable</h2>
-  <p>This is the minimum finished package a customer can receive immediately after signup for this offer.</p>
+  <p>This is the minimum finished package a customer can receive immediately after signup for this offer. The live provisioning path creates runtime pages, forms, workflows, CRM seed data, templates, and integration files in addition to the supporting receipt artifacts.</p>
   <ul class="list">${offer.included.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>
 </section>
 <section class="section">

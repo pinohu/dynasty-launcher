@@ -52,6 +52,8 @@ p{color:var(--muted);margin:0 0 14px}
   <p class="lead">Nothing said on voicemail gets lost or re-listened to by three different people.</p>
   <div class="actions">
     <a class="btn primary" href="/api/deliverables/instant?offer=module-voicemail-transcription">Open instant JSON package</a>
+    <a class="btn primary" href="/sign-up?offer=module-voicemail-transcription">Provision this deliverable</a>
+    <a class="btn" href="/api/deliverables/provision?offer=module-voicemail-transcription">Open credential schema</a>
     <a class="btn" href="/live-deliverables">All live deliverables</a>
   </div>
   <div class="matrix">
@@ -59,19 +61,19 @@ p{color:var(--muted);margin:0 0 14px}
     <div>Type</div><div>module</div>
     <div>Price</div><div>$19/mo</div>
     <div>Buyer</div><div>office-manager, owner-operator</div>
-    <div>Manual package creation</div><div>None. The package is generated immediately by /api/deliverables/instant.</div>
+    <div>Manual package creation</div><div>None. Customer submits the SKU-specific credential form and /api/deliverables/provision creates and launches the deliverable.</div>
   </div>
 </section>
 <section class="section">
   <h2>Smallest complete deliverable</h2>
-  <p>This is the minimum finished package a customer can receive immediately after signup for this offer.</p>
+  <p>This is the minimum finished package a customer can receive immediately after signup for this offer. The live provisioning path creates runtime pages, forms, workflows, CRM seed data, templates, and integration files in addition to the supporting receipt artifacts.</p>
   <ul class="list"><li>activation manifest</li><li>workflow trigger</li><li>message/template set</li><li>sample event</li><li>acceptance test</li></ul>
 </section>
 <section class="section">
   <h2>Package receipt</h2>
   <div class="panel">
     <div class="receipt">
-      <div><strong>Receipt</strong><span>yd_live_module-voicemail-transcription_moimv2iw</span></div>
+      <div><strong>Receipt</strong><span>yd_live_module-voicemail-transcription_moiovupc</span></div>
       <div><strong>Instant delivery</strong><span>true</span></div>
       <div><strong>Manual creation step</strong><span>none</span></div>
       <div><strong>Customer-owned boundary</strong><span>vendor credentials, domains, payment accounts, legal/tax review</span></div>
@@ -95,11 +97,11 @@ Use this first. It explains what was generated, what is ready now, and what cred
   <h3>DELIVERY-MANIFEST.json</h3>
   <p>Machine-readable package manifest.</p>
   <pre>{
-  &quot;receipt_id&quot;: &quot;yd_live_module-voicemail-transcription_moimv2iw&quot;,
+  &quot;receipt_id&quot;: &quot;yd_live_module-voicemail-transcription_moiovupc&quot;,
   &quot;offer_id&quot;: &quot;module-voicemail-transcription&quot;,
   &quot;offer_type&quot;: &quot;module&quot;,
   &quot;name&quot;: &quot;Voicemail Transcription to CRM&quot;,
-  &quot;generated_at&quot;: &quot;2026-04-28T12:59:38.504Z&quot;,
+  &quot;generated_at&quot;: &quot;2026-04-28T13:56:14.256Z&quot;,
   &quot;price_label&quot;: &quot;$19/mo&quot;,
   &quot;instant_delivery&quot;: true,
   &quot;no_manual_step_required_for_package_creation&quot;: true,
@@ -178,8 +180,8 @@ Pass condition: the customer can open this package, understand the outcome, insp
   <p>Plain receipt of what was generated and what was not silently promised.</p>
   <pre># Delivery Receipt
 
-Receipt: yd_live_module-voicemail-transcription_moimv2iw
-Generated: 2026-04-28T12:59:38.504Z
+Receipt: yd_live_module-voicemail-transcription_moiovupc
+Generated: 2026-04-28T13:56:14.256Z
 
 Delivered now:
 - activation manifest
