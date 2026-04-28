@@ -34,6 +34,12 @@ async function timingSafeEqualString(a, b) {
   return timingSafeEqual(ab, bb);
 }
 
+function setNoStore(res) {
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -61,6 +67,8 @@ export default async function handler(req, res) {
 
   // ── Verify admin key (server-side — key never exposed in client code) ──
   if (action === 'verify_admin') {
+    setNoStore(res);
+    if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
     const { key } = req.body || {};
     const ADMIN_KEY = process.env.ADMIN_KEY || '';
     const TEST_ADMIN_KEY = process.env.TEST_ADMIN_KEY || '';
@@ -100,6 +108,8 @@ export default async function handler(req, res) {
 
   // ── Validate existing admin token ──────────────────────────────────
   if (action === 'validate_admin') {
+    setNoStore(res);
+    if (req.method !== 'POST') return res.status(405).json({ ok: false, valid: false, error: 'POST only' });
     const { token } = req.body || {};
     const ADMIN_KEY = process.env.ADMIN_KEY || '';
     const TEST_ADMIN_KEY = process.env.TEST_ADMIN_KEY || '';

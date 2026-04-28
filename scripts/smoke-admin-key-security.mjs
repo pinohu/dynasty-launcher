@@ -41,6 +41,7 @@ function log(ok, name, detail = '') {
 }
 
 async function main() {
+  const auth = await import('../api/auth.js');
   const health = await import('../api/health.js');
   const fireEvent = await import('../api/admin/test-fire-event.js');
   const setCapability = await import('../api/tenants/set-tenant-capability.js');
@@ -75,6 +76,49 @@ async function main() {
     fails += log(
       r.status === 405 && r.body.error === 'GET only',
       'health rejects unsupported methods before public fallback',
+      `status=${r.status}`,
+    );
+  }
+
+  {
+    const r = await invoke(auth, {
+      method: 'GET',
+      query: { action: 'verify_admin', key: process.env.TEST_ADMIN_KEY },
+    });
+    fails += log(
+      r.status === 405 && r.body.error === 'POST only' && r.headers['cache-control'] === 'no-store',
+      'admin token issuance is POST-only and no-store',
+      `status=${r.status}`,
+    );
+  }
+
+  let adminToken = '';
+  {
+    const r = await invoke(auth, {
+      method: 'POST',
+      query: { action: 'verify_admin' },
+      body: { key: process.env.TEST_ADMIN_KEY },
+    });
+    adminToken = r.body?.token || '';
+    fails += log(
+      r.status === 200 &&
+        r.body.ok === true &&
+        adminToken &&
+        r.headers['cache-control'] === 'no-store',
+      'admin token issuance uses no-store cache headers',
+      `status=${r.status}`,
+    );
+  }
+
+  {
+    const r = await invoke(auth, {
+      method: 'POST',
+      query: { action: 'validate_admin' },
+      body: { token: adminToken },
+    });
+    fails += log(
+      r.status === 200 && r.body.valid === true && r.headers['cache-control'] === 'no-store',
+      'admin token validation uses no-store cache headers',
       `status=${r.status}`,
     );
   }
