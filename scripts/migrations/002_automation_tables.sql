@@ -42,6 +42,24 @@ CREATE TABLE IF NOT EXISTS leads (
   updated_at timestamptz DEFAULT now()
 );
 
+-- Older production deployments used a public lead-capture table named leads.
+-- Upgrade it in-place so tenant-scoped business-factory tables can coexist
+-- without dropping or rewriting existing customer inquiry data.
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_id text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS tenant_id text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS contact_id text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS status text DEFAULT 'new';
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS score integer DEFAULT 0;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS service_type text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS assigned_to text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS page_url text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS campaign_id text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS campaign_name text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS referral_code text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS attributes jsonb DEFAULT '{}';
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
+CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_lead_id_unique ON leads(lead_id);
 CREATE INDEX IF NOT EXISTS idx_leads_tenant_id ON leads(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_leads_contact_id ON leads(tenant_id, contact_id);
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(tenant_id, status);
