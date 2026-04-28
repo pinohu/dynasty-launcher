@@ -24,6 +24,7 @@
     "test:automation-schema-guards": "node scripts/check-automation-schema-guards.mjs",
     "test:automation-webhook-security": "node scripts/smoke-automation-webhook-security.mjs",
     "test:public-ingress-security": "node scripts/smoke-public-ingress-security.mjs",
+    "test:privileged-api-security": "node scripts/smoke-privileged-api-security.mjs",
     "test:github-security": "node scripts/smoke-github-proxy-security.mjs",
     "test:admin-key-security": "node scripts/smoke-admin-key-security.mjs",
     "test:checkout-security": "node scripts/smoke-checkout-security.mjs",
@@ -41,11 +42,11 @@
     "check:integrations": "node scripts/check-external-integrations.mjs",
     "test:prompts": "npx --yes promptfoo@0.120.19 eval -c promptfooconfig.yaml",
     "lint": "npm run lint:security",
-    "lint:security": "biome check api/_ai_security.mjs api/github.js api/tenants/_auth.mjs api/tenants/issue-token.js scripts/check-admin-ui-security.mjs scripts/smoke-ai-security.mjs scripts/smoke-automation-webhook-security.mjs scripts/smoke-github-proxy-security.mjs scripts/smoke-admin-key-security.mjs scripts/smoke-checkout-security.mjs scripts/smoke-storefront-security.mjs scripts/smoke-tenant-auth.mjs",
+    "lint:security": "biome check api/_ai_security.mjs api/github.js api/tenants/_auth.mjs api/tenants/issue-token.js scripts/check-admin-ui-security.mjs scripts/smoke-ai-security.mjs scripts/smoke-automation-webhook-security.mjs scripts/smoke-github-proxy-security.mjs scripts/smoke-admin-key-security.mjs scripts/smoke-checkout-security.mjs scripts/smoke-storefront-security.mjs scripts/smoke-tenant-auth.mjs scripts/smoke-privileged-api-security.mjs",
     "lint:all": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:marketplace-readiness && npm run test:demo-coverage && npm run test:promised-services && npm run test:tenants && npm run test:tenant-auth && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:storefront-security && npm run test:ai-security && npm run test:automation-schema-guards && npm run test:automation-webhook-security && npm run test:public-ingress-security && npm run test:github-security && npm run test:admin-key-security && npm run test:checkout-security && npm run test:admin-ui-security && npm run lint:security && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:planning-fallbacks && npm run test:html-script-safety && npm run test:quality-gate-repair && npm run test:button-containment && npm run test:public-branding && npm run test:deployment-repair-guards && npm run test:resumable-builds"
+    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:marketplace-readiness && npm run test:demo-coverage && npm run test:promised-services && npm run test:tenants && npm run test:tenant-auth && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:storefront-security && npm run test:ai-security && npm run test:automation-schema-guards && npm run test:automation-webhook-security && npm run test:public-ingress-security && npm run test:privileged-api-security && npm run test:github-security && npm run test:admin-key-security && npm run test:checkout-security && npm run test:admin-ui-security && npm run lint:security && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:planning-fallbacks && npm run test:html-script-safety && npm run test:quality-gate-repair && npm run test:button-containment && npm run test:public-branding && npm run test:deployment-repair-guards && npm run test:resumable-builds"
   },
   "engines": {
     "node": "20.x"

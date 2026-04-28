@@ -166,26 +166,6 @@ const USAGE_TABLE = 'dynasty_ai_usage_daily';
 const QUOTA_TABLE = 'dynasty_ai_quota_usage';
 const PAID_TIERS = new Set(['foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume', 'scoring_pro']);
 
-async function isValidAdminToken(token) {
-  if (!token) return false;
-  const adminKey = process.env.ADMIN_KEY || '';
-  const testAdminKey = process.env.TEST_ADMIN_KEY || '';
-  if (!adminKey && !testAdminKey) return false;
-  const parts = token.split(':');
-  if (parts.length !== 3) return false;
-  const [prefix, expiry, hash] = parts;
-  const secret = prefix === 'admin' ? adminKey : (prefix === 'admin_test' ? testAdminKey : '');
-  if (!secret) return false;
-  const exp = parseInt(expiry, 10);
-  if (!Number.isFinite(exp) || Date.now() > exp) return false;
-  const { createHmac } = await import('crypto');
-  const payload = `${prefix}:${expiry}`;
-  const expected = createHmac('sha256', secret).update(payload).digest('hex');
-  if (expected.length !== hash.length) return false;
-  const { timingSafeEqual } = await import('crypto');
-  return timingSafeEqual(Buffer.from(expected), Buffer.from(hash));
-}
-
 function getClientIp(req) {
   const fwd = req.headers['x-forwarded-for'];
   if (typeof fwd === 'string' && fwd.trim()) return fwd.split(',')[0].trim();
@@ -794,11 +774,10 @@ export default async function handler(req, res) {
   const claimedTier = (body.tier || 'free').toString().toLowerCase();
   const stripeSessionId = (body.stripe_session_id || body.session_id || '').toString().trim();
   const accessToken = (body.access_token || '').toString().trim();
-  const adminToken = (body.admin_token || '').toString().trim();
   const userId = (body.user_id || '').toString().trim();
   const actorKey = userId ? `u:${userId}` : `ip:${getClientIp(req)}`;
   let model = requestedModel;
-  const adminBypass = await isValidAdminToken(adminToken);
+  const adminBypass = verifyAdminCredential(req).ok;
 
   if (body.action === 'transcribe_audio') {
     if (usageContext !== 'free_scoring' && !adminBypass) {

@@ -123,13 +123,9 @@ function resolveGatewayToken(req) {
   return null;
 }
 
-function resolveAdmin(req, body) {
+function resolveAdmin(req) {
   if (verifyRawAdminHeader(req)) return authOk('admin_key', 'admin');
-  const candidates = [
-    header(req, 'x-dynasty-admin-token'),
-    stringValue(body?.admin_token),
-    bearerToken(req),
-  ].filter(Boolean);
+  const candidates = [header(req, 'x-dynasty-admin-token'), bearerToken(req)].filter(Boolean);
   for (const token of candidates) {
     if (verifyAdminSessionToken(token)) return authOk('admin_session', 'admin');
   }
@@ -206,7 +202,7 @@ function resolvePayment(req, body) {
 }
 
 export async function authorizeAiRequest(req, body = {}, { cost = 1 } = {}) {
-  const admin = resolveAdmin(req, body);
+  const admin = resolveAdmin(req);
   const auth =
     admin ||
     resolveGatewayToken(req) ||

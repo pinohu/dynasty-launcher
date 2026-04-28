@@ -11,14 +11,14 @@
 
 import { corsPreflight, methodGuard, readBody } from '../tenants/_lib.mjs';
 import { getTenant } from '../tenants/_store.mjs';
-import { verifyRawAdminHeader } from '../tenants/_auth.mjs';
+import { verifyAdminCredential } from '../tenants/_auth.mjs';
 import { emit } from '../events/_bus.mjs';
 import { dispatchEvent } from '../events/_dispatcher.mjs';
 
 export const maxDuration = 30;
 
 function adminOnly(req, res) {
-  if (!verifyRawAdminHeader(req)) {
+  if (!verifyAdminCredential(req).ok) {
     res.status(403).json({ error: 'admin_only' });
     return false;
   }

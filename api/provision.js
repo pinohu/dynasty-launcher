@@ -1,5 +1,6 @@
 export const maxDuration = 300; // 5 min — AI content generation takes time
 import { classifyVercelFailure } from './_deployment_repair.mjs';
+import { privilegedCorsHeaders, verifyAdminCredential, verifyPaymentAccessToken } from './tenants/_auth.mjs';
 
 // Credential boundary: DYNASTY_TOOL_CONFIG keys serve build-time / one-time provisioning (derivative
 // creation and setup). Customer deploys must not rely on this pool for ongoing operation — use
@@ -499,52 +500,18 @@ async function resolveProvisionUserTier({ tier, stripeSessionId, bypassStripe })
   return { userTier: fromStripe, tierSource: 'stripe_checkout' };
 }
 
-function readAdminTokenFromRequest(req) {
-  const hdr = (req.headers['x-dynasty-admin-token'] || '').toString().trim();
-  if (hdr) return hdr;
-  const auth = (req.headers.authorization || '').toString();
-  if (auth.startsWith('Bearer ')) return auth.slice('Bearer '.length).trim();
-  return '';
+function isAdminRequest(req) {
+  return verifyAdminCredential(req).ok;
 }
 
-async function isValidAdminToken(token) {
-  if (!token) return false;
-  const adminKey = process.env.ADMIN_KEY || '';
-  const testAdminKey = process.env.TEST_ADMIN_KEY || '';
-  if (!adminKey && !testAdminKey) return false;
-  const parts = token.split(':');
-  if (parts.length !== 3) return false;
-  const [prefix, expiry, hash] = parts;
-  const secret = prefix === 'admin' ? adminKey : (prefix === 'admin_test' ? testAdminKey : '');
-  if (!secret) return false;
-  const exp = parseInt(expiry, 10);
-  if (!Number.isFinite(exp) || Date.now() > exp) return false;
-  const { createHmac, timingSafeEqual } = await import('crypto');
-  const payload = `${prefix}:${expiry}`;
-  const expected = createHmac('sha256', secret).update(payload).digest('hex');
-  if (expected.length !== hash.length) return false;
-  return timingSafeEqual(Buffer.from(expected), Buffer.from(hash));
-}
-
-async function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
-  if (!token) return false;
-  const secret = process.env.PAYMENT_ACCESS_SECRET || process.env.STRIPE_SECRET_KEY || '';
-  if (!secret) return false;
-  const parts = token.split(':');
-  if (parts.length !== 6) return false;
-  const [prefix, tokSessionId, tokUserId, tokTier, exp, sig] = parts;
-  if (prefix !== 'pay') return false;
-  if (tokSessionId !== (sessionId || '').trim()) return false;
-  if ((tier || '').trim() && tokTier !== String(tier).toLowerCase()) return false;
+function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
+  const paid = verifyPaymentAccessToken(token);
+  if (!paid.ok) return false;
+  if (paid.session_id !== (sessionId || '').trim()) return false;
+  if ((tier || '').trim() && paid.tier !== String(tier).toLowerCase()) return false;
   const reqUser = (userId || '').trim();
-  if (tokUserId !== 'anon' && reqUser && tokUserId !== reqUser) return false;
-  const expNum = parseInt(exp, 10);
-  if (!Number.isFinite(expNum) || Date.now() > expNum) return false;
-  const { createHmac, timingSafeEqual } = await import('crypto');
-  const payload = `${prefix}:${tokSessionId}:${tokUserId}:${tokTier}:${exp}`;
-  const expected = createHmac('sha256', secret).update(payload).digest('hex');
-  if (expected.length !== sig.length) return false;
-  return timingSafeEqual(Buffer.from(expected), Buffer.from(sig));
+  if (paid.subject !== 'anon' && reqUser && paid.subject !== reqUser) return false;
+  return true;
 }
 
 // ── V3 INTEGRATION MODULES ──────────────────────────────────────────────────
@@ -555,7 +522,7 @@ async function mod_hosting(config, project, liveUrl) {
   const results = { ok: false, service: 'hosting', details: {} };
   const apiKey = config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
   if (!apiKey) { results.error = 'No hosting API key'; results.fallback = 'Add infrastructure hosting credentials to configuration.'; return results; }
-  const auth = `Bearer ${Buffer.from(apiKey).toString('base64')}`;
+  const auth = `Bearer ${apiKey}`;
   const domain = project.domain || `${project.slug}.com`;
   const resellerId = config.infrastructure?.twentyi_reseller_id || '10455';
   try {
@@ -1800,7 +1767,7 @@ async function mod_wordpress(config, project) {
   const results = { ok: false, service: 'wordpress', details: {} };
   const apiKey = config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
   if (!apiKey) { results.error = 'No managed CMS hosting API key'; results.fallback = 'Add managed CMS hosting credentials to infrastructure settings.'; return results; }
-  const auth = `Bearer ${Buffer.from(apiKey).toString('base64')}`;
+  const auth = `Bearer ${apiKey}`;
   const domain = project.domain || `${project.slug}.com`;
   const resellerId = config.infrastructure?.twentyi_reseller_id || '10455';
   try {
@@ -2398,7 +2365,7 @@ async function runModules(config, project, liveUrl, enabledModules, userTier) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', privilegedCorsHeaders());
   if (req.method==='OPTIONS') return res.status(200).end();
 
   const action = req.method==='GET'
@@ -2432,8 +2399,7 @@ export default async function handler(req, res) {
   const VERCEL_TEAM  = 'team_fuTLGjBMk3NAD32Bm5hA7wkr';
   const NEON_STORE   = process.env.NEON_STORE_ID || 'store_dlRpluZOBH0L34D3';
   const ORG          = 'pinohu';
-  const adminToken = readAdminTokenFromRequest(req);
-  const isAdminRequest = await isValidAdminToken(adminToken);
+  const isAdmin = isAdminRequest(req);
 
   const sensitiveActions = new Set([
     'authority_deploy',
@@ -2459,11 +2425,11 @@ export default async function handler(req, res) {
     const access = await resolveProvisionUserTier({
       tier: claimTier,
       stripeSessionId,
-      bypassStripe: isAdminRequest,
+      bypassStripe: isAdmin,
     });
-    req._dynastyAccess = { ...access, isAdminRequest };
-    if (!isAdminRequest) {
-      const tokenOk = await isValidPaidAccessToken({
+    req._dynastyAccess = { ...access, isAdminRequest: isAdmin };
+    if (!isAdmin) {
+      const tokenOk = isValidPaidAccessToken({
         token: accessToken,
         sessionId: stripeSessionId,
         userId,
@@ -2477,7 +2443,7 @@ export default async function handler(req, res) {
       }
     }
     const isPaidTier = ['foundation', 'starter', 'professional', 'enterprise', 'managed', 'custom_volume'].includes(access.userTier);
-    if (!isAdminRequest && !isPaidTier) {
+    if (!isAdmin && !isPaidTier) {
       return res.status(402).json({
         ok: false,
         error: 'Paid checkout verification required for provisioning and deployment actions.',
@@ -3364,7 +3330,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
       if(!gen){
         results.twentyi={manual:true, action:'Add twentyi_general to DYNASTY_TOOL_CONFIG.infrastructure'};
       }else{
-        const auth=`Bearer ${Buffer.from(gen).toString('base64')}`;
+        const auth=`Bearer ${gen}`;
         const typeRef=isWP?'88291':'80359';
         try{
           const pr=await fetch('https://api.20i.com/reseller/10455/addWeb',{
@@ -3445,22 +3411,22 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         const n8nBaseUrl = config.automation?.n8n_url || process.env.N8N_URL || '';
         if (!n8nBaseUrl) {
           results.n8n = { manual: true, error: 'Configure n8n URL in DYNASTY_TOOL_CONFIG or N8N_URL env var.' };
-          continue;
-        }
-        const wr = await fetch(`${n8nBaseUrl}/api/v1/workflows`, {
-          method: 'POST',
-          headers: { 'X-N8N-API-KEY': N8N_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify(wfBody),
-        });
-        const wd = await wr.json();
-        if (wd.id) {
-          // Activate the workflow
-          await fetch(`${n8nBaseUrl}/api/v1/workflows/${wd.id}/activate`, {
-            method: 'POST', headers: { 'X-N8N-API-KEY': N8N_KEY },
-          });
-          results.n8n = { ok: true, workflow_id: wd.id, name: wfBody.name, webhook_path: `/${slug}` };
         } else {
-          results.n8n = { manual: true, error: JSON.stringify(wd).slice(0, 80) };
+          const wr = await fetch(`${n8nBaseUrl}/api/v1/workflows`, {
+            method: 'POST',
+            headers: { 'X-N8N-API-KEY': N8N_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify(wfBody),
+          });
+          const wd = await wr.json();
+          if (wd.id) {
+            // Activate the workflow
+            await fetch(`${n8nBaseUrl}/api/v1/workflows/${wd.id}/activate`, {
+              method: 'POST', headers: { 'X-N8N-API-KEY': N8N_KEY },
+            });
+            results.n8n = { ok: true, workflow_id: wd.id, name: wfBody.name, webhook_path: `/${slug}` };
+          } else {
+            results.n8n = { manual: true, error: JSON.stringify(wd).slice(0, 80) };
+          }
         }
       } catch (e) {
         results.n8n = { manual: true, error: sanitizeError(e.message) };

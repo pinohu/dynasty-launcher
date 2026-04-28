@@ -3,13 +3,13 @@
 // HTTP helpers, body parsing, and CORS shared by every tenant endpoint.
 // -----------------------------------------------------------------------------
 
-import { verifyRawAdminHeader } from './_auth.mjs';
+import { adminCorsHeaders, verifyAdminCredential } from './_auth.mjs';
 
 export function corsPreflight(req, res) {
   const origin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-key');
+  res.setHeader('Access-Control-Allow-Headers', adminCorsHeaders());
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return true;
@@ -39,7 +39,7 @@ export async function readBody(req) {
 }
 
 export function adminOnly(req, res) {
-  if (!verifyRawAdminHeader(req)) {
+  if (!verifyAdminCredential(req).ok) {
     res.status(403).json({ error: 'admin_only' });
     return false;
   }

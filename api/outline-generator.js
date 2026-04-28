@@ -1,6 +1,6 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { OfferIntelligenceSchema } from './_schemas.js';
+import { adminCorsHeaders, verifyAdminCredential } from './tenants/_auth.mjs';
 
 export const maxDuration = 30;
 
@@ -9,40 +9,14 @@ const OutlineRequest = z.object({
   oie_report: OfferIntelligenceSchema.output,
 });
 
-function verifyAdminToken(req) {
-  const ADMIN_KEY = process.env.ADMIN_KEY || '';
-  const TEST_ADMIN_KEY = process.env.TEST_ADMIN_KEY || '';
-  if (!ADMIN_KEY && !TEST_ADMIN_KEY) return false;
-
-  const adminHeader = (req.headers['x-dynasty-admin-token'] || '').toString().trim();
-  const bearer = (req.headers.authorization || '').replace('Bearer ', '').trim();
-  const token = adminHeader || bearer;
-  if (!token) return false;
-
-  try {
-    const parts = token.split(':');
-    if (parts.length !== 3) return false;
-    const [prefix, expiry, hash] = parts;
-    const tokenSecret = prefix === 'admin' ? ADMIN_KEY : (prefix === 'admin_test' ? TEST_ADMIN_KEY : '');
-    if (!tokenSecret) return false;
-    const payload = `${prefix}:${expiry}`;
-    const expected = createHmac('sha256', tokenSecret).update(payload).digest('hex');
-    if (expected.length !== hash.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(hash))) return false;
-    if (Date.now() > Number.parseInt(expiry, 10)) return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-dynasty-admin-token');
+  res.setHeader('Access-Control-Allow-Headers', adminCorsHeaders());
 
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-  if (!verifyAdminToken(req)) return res.status(401).json({ error: 'admin_token_required' });
+  if (!verifyAdminCredential(req).ok) return res.status(401).json({ error: 'admin_token_required' });
 
   const parsed = OutlineRequest.safeParse(req.body || {});
   if (!parsed.success) return res.status(400).json({ ok: false, error: 'invalid_input', details: parsed.error.flatten() });

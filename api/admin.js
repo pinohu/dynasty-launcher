@@ -1,40 +1,19 @@
 // Your Deputy — Admin API
 // All actions require valid admin token (HMAC-signed, checked server-side)
-import { createHmac, timingSafeEqual } from 'crypto';
+import { adminCorsHeaders, verifyAdminCredential } from './tenants/_auth.mjs';
 
 function safeErr(msg) { return typeof msg === 'string' ? msg.replace(/sk_live_\w+/g, 'sk_live_***').replace(/ghp_\w+/g, 'ghp_***').replace(/postgres(ql)?:\/\/[^\s]+/g, 'postgres://***').slice(0, 300) : 'Unknown error'; }
 
 export const maxDuration = 60;
 
-function verifyAdmin(req) {
-  const ADMIN_KEY = process.env.ADMIN_KEY || '';
-  const TEST_ADMIN_KEY = process.env.TEST_ADMIN_KEY || '';
-  if (!ADMIN_KEY && !TEST_ADMIN_KEY) return false;
-
-  const auth = req.headers.authorization?.replace('Bearer ', '') || '';
-  if (!auth) return false;
-  try {
-    const parts = auth.split(':');
-    if (parts.length !== 3) return false;
-    const [prefix, expiry, hash] = parts;
-    const tokenSecret = prefix === 'admin' ? ADMIN_KEY : (prefix === 'admin_test' ? TEST_ADMIN_KEY : '');
-    if (!tokenSecret) return false;
-    const payload = `${prefix}:${expiry}`;
-    const expected = createHmac('sha256', tokenSecret).update(payload).digest('hex');
-    if (expected.length !== hash.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(hash))) return false;
-    if (Date.now() > parseInt(expiry)) return false;
-    return true;
-  } catch { return false; }
-}
-
 export default async function handler(req, res) {
   const origin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', adminCorsHeaders());
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  if (!verifyAdmin(req)) return res.status(401).json({ ok: false, error: 'Unauthorized — valid admin token required' });
+  if (!verifyAdminCredential(req).ok) return res.status(401).json({ ok: false, error: 'Unauthorized — valid admin token required' });
 
   const action = req.query?.action || req.body?.action;
   let config = {};
@@ -109,7 +88,7 @@ export default async function handler(req, res) {
       check('twentyi', async () => {
         const key = config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY;
         if (!key) return { ok: false, error: 'No key' };
-        const auth = `Bearer ${Buffer.from(key).toString('base64')}`;
+        const auth = `Bearer ${key}`;
         const r = await fetch('https://api.20i.com/reseller/10455', { headers: { 'Authorization': auth } });
         if (r.ok) return { ok: true, status: r.status };
         const d = await r.json().catch(() => ({}));

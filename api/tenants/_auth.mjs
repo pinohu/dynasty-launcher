@@ -44,8 +44,18 @@ export function timingSafeEqualString(a, b) {
   return left.length === right.length && crypto.timingSafeEqual(left, right);
 }
 
+export function headerValue(req, name) {
+  const needle = String(name || '').toLowerCase();
+  for (const [key, value] of Object.entries(req.headers || {})) {
+    if (String(key).toLowerCase() === needle) {
+      return Array.isArray(value) ? String(value[0] || '') : String(value || '');
+    }
+  }
+  return '';
+}
+
 export function bearerToken(req) {
-  const header = req.headers?.authorization || req.headers?.Authorization || '';
+  const header = headerValue(req, 'authorization');
   const [scheme, token] = String(header).split(/\s+/, 2);
   return scheme?.toLowerCase() === 'bearer' && token ? token : '';
 }
@@ -95,7 +105,7 @@ export function verifyAdminSessionToken(token) {
 }
 
 export function verifyRawAdminHeader(req) {
-  const supplied = req.headers?.['x-admin-key'] || req.headers?.['X-Admin-Key'];
+  const supplied = headerValue(req, 'x-admin-key');
   const primary = realSecret(process.env.ADMIN_KEY);
   const test = realSecret(process.env.TEST_ADMIN_KEY);
   return (
@@ -107,12 +117,70 @@ export function verifyRawAdminHeader(req) {
 
 export function verifyAdminCredential(req) {
   if (verifyRawAdminHeader(req)) return { ok: true, auth_type: 'admin_key' };
-  const token =
-    bearerToken(req) ||
-    req.headers?.['x-dynasty-admin-token'] ||
-    req.headers?.['X-Dynasty-Admin-Token'];
+  const token = bearerToken(req) || headerValue(req, 'x-dynasty-admin-token');
   if (verifyAdminSessionToken(token)) return { ok: true, auth_type: 'admin_session' };
   return { ok: false, error: 'admin_auth_required', status: 401 };
+}
+
+export function verifyPaidOrAdminCredential(req, body = {}, options = {}) {
+  const admin = verifyAdminCredential(req);
+  if (admin.ok) return { ...admin, admin: true };
+
+  const candidates = [
+    headerValue(req, 'x-dynasty-access-token'),
+    body?.access_token,
+    body?.paid_access_token,
+    body?.project?.access_token,
+    bearerToken(req),
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    if (!String(candidate).startsWith('pay:')) continue;
+    const paid = verifyPaymentAccessToken(candidate);
+    if (!paid.ok) return paid;
+
+    const expectedSession = String(
+      options.session_id ||
+        body?.stripe_session_id ||
+        body?.session_id ||
+        body?.project?.stripe_session_id ||
+        '',
+    ).trim();
+    if (expectedSession && paid.session_id !== expectedSession) {
+      return { ok: false, error: 'payment_session_mismatch', status: 403 };
+    }
+
+    const expectedSubject = String(
+      options.subject || body?.user_id || body?.userId || body?.project?.user_id || '',
+    ).trim();
+    if (
+      expectedSubject &&
+      paid.subject &&
+      paid.subject !== 'anon' &&
+      paid.subject !== expectedSubject
+    ) {
+      return { ok: false, error: 'payment_user_mismatch', status: 403 };
+    }
+
+    const expectedTier = String(options.tier || body?.tier || body?.project?.tier || '')
+      .trim()
+      .toLowerCase();
+    if (expectedTier && paid.tier !== expectedTier) {
+      return { ok: false, error: 'payment_tier_mismatch', status: 403 };
+    }
+
+    return { ...paid, admin: false };
+  }
+
+  return { ok: false, error: 'authentication_required', status: 401 };
+}
+
+export function privilegedCorsHeaders() {
+  return 'Content-Type, Authorization, x-admin-key, x-dynasty-admin-token, x-dynasty-access-token';
+}
+
+export function adminCorsHeaders() {
+  return 'Content-Type, Authorization, x-admin-key, x-dynasty-admin-token';
 }
 
 export function verifyTenantActionToken(token, tenant) {

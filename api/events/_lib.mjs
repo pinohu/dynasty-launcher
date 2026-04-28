@@ -1,10 +1,12 @@
 // api/events/_lib.mjs — shared HTTP helpers for api/events/*
 
+import { privilegedCorsHeaders } from '../tenants/_auth.mjs';
+
 export function corsPreflight(req, res) {
   const origin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-key');
+  res.setHeader('Access-Control-Allow-Headers', privilegedCorsHeaders());
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return true;

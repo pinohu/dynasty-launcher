@@ -1,3 +1,5 @@
+import { privilegedCorsHeaders, verifyPaidOrAdminCredential } from './tenants/_auth.mjs';
+
 export const maxDuration = 60;
 
 // ── 20i Hosting Provisioner ───────────────────────────────────────────────
@@ -25,46 +27,12 @@ async function twentyiRequest(auth, method, path, body) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-dynasty-admin-token, x-dynasty-access-token');
+  res.setHeader('Access-Control-Allow-Headers', privilegedCorsHeaders());
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   // ── Security: require paid session or admin token (HMAC-verified) ──
-  const _adminTok = (req.headers['x-dynasty-admin-token'] || '').toString();
-  const _paidTok = (req.body?.access_token || req.headers['x-dynasty-access-token'] || '').toString();
-  let _authed = false;
-  if (_adminTok) {
-    try {
-      const parts = _adminTok.split(':');
-      if (parts.length === 3) {
-        const [prefix, expiry, hash] = parts;
-        const secret = prefix === 'admin' ? (process.env.ADMIN_KEY || '') : (prefix === 'admin_test' ? (process.env.TEST_ADMIN_KEY || '') : '');
-        if (secret && parseInt(expiry) > Date.now()) {
-          const { createHmac, timingSafeEqual } = await import('crypto');
-          const expected = createHmac('sha256', secret).update(prefix + ':' + expiry).digest('hex');
-          if (expected.length === hash.length && timingSafeEqual(Buffer.from(expected), Buffer.from(hash))) _authed = true;
-        }
-      }
-    } catch {}
-  }
-  if (!_authed && _paidTok) {
-    try {
-      const parts = _paidTok.split(':');
-      if (parts.length === 6 && parts[0] === 'pay') {
-        const [prefix, tokSession, tokUser, tokTier, exp, sig] = parts;
-        const expNum = parseInt(exp, 10);
-        if (Number.isFinite(expNum) && Date.now() <= expNum) {
-          const secret = process.env.PAYMENT_ACCESS_SECRET || process.env.STRIPE_SECRET_KEY || '';
-          if (secret) {
-            const { createHmac, timingSafeEqual } = await import('crypto');
-            const payload = prefix + ':' + tokSession + ':' + tokUser + ':' + tokTier + ':' + exp;
-            const expected = createHmac('sha256', secret).update(payload).digest('hex');
-            if (expected.length === sig.length && timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) _authed = true;
-          }
-        }
-      }
-    } catch {}
-  }
-  if (!_authed) return res.status(401).json({ ok: false, error: 'Authentication required' });
+  const authCheck = verifyPaidOrAdminCredential(req, req.body || {});
+  if (!authCheck.ok) return res.status(authCheck.status || 401).json({ ok: false, error: 'Authentication required' });
 
 
   let config = {}; try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch {}
