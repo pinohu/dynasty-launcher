@@ -300,6 +300,16 @@ CREATE TABLE IF NOT EXISTS automations_config (
 
 ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS state text;
 ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS is_enabled boolean;
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS tenant_id text;
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS module_code text;
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS settings jsonb DEFAULT '{}';
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS quiet_hours_start time;
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS quiet_hours_end time;
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS timezone text DEFAULT 'America/New_York';
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS last_triggered_at timestamptz;
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS trigger_count integer DEFAULT 0;
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 UPDATE automations_config
   SET state = CASE WHEN COALESCE(is_enabled, false) THEN 'enabled' ELSE 'disabled' END
   WHERE state IS NULL;
@@ -332,6 +342,16 @@ ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS trigger_type text;
 ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS result jsonb;
 ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS webhook_source text;
 ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS webhook_id text;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS tenant_id text;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS module_code text;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS trigger_event_id text;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS started_at timestamptz DEFAULT now();
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS completed_at timestamptz;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS duration_ms integer;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS actions_executed integer DEFAULT 0;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS error_message text;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS input_payload jsonb;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS output_payload jsonb;
 ALTER TABLE automation_runs ALTER COLUMN tenant_id DROP NOT NULL;
 ALTER TABLE automation_runs ALTER COLUMN module_code DROP NOT NULL;
 ALTER TABLE automation_runs ALTER COLUMN trigger_type DROP NOT NULL;

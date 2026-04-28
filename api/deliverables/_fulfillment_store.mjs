@@ -12,6 +12,20 @@ const memory = {
 let _pool;
 let _ready = false;
 
+function normalizedDatabaseUrl(value) {
+  const raw = String(value || '');
+  try {
+    const url = new URL(raw);
+    const sslmode = url.searchParams.get('sslmode');
+    if (['prefer', 'require', 'verify-ca'].includes(sslmode)) {
+      url.searchParams.set('sslmode', 'verify-full');
+    }
+    return url.toString();
+  } catch {
+    return raw;
+  }
+}
+
 function usePostgres() {
   return !!process.env.DATABASE_URL;
 }
@@ -21,8 +35,7 @@ function pool() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL not set');
   _pool = new Pool({
-    connectionString: url,
-    ssl: url.includes('sslmode=require') ? { rejectUnauthorized: false } : undefined,
+    connectionString: normalizedDatabaseUrl(url),
     max: 5,
   });
   return _pool;

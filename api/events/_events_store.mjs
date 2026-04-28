@@ -18,13 +18,26 @@ const { Pool } = pg;
 
 let _pool = null;
 
+function normalizedDatabaseUrl(value) {
+  const raw = String(value || '');
+  try {
+    const url = new URL(raw);
+    const sslmode = url.searchParams.get('sslmode');
+    if (['prefer', 'require', 'verify-ca'].includes(sslmode)) {
+      url.searchParams.set('sslmode', 'verify-full');
+    }
+    return url.toString();
+  } catch {
+    return raw;
+  }
+}
+
 function pool() {
   if (_pool) return _pool;
   const url = process.env.DATABASE_URL;
   if (!url) return null;
   _pool = new Pool({
-    connectionString: url,
-    ssl: url.includes('sslmode=require') ? { rejectUnauthorized: false } : undefined,
+    connectionString: normalizedDatabaseUrl(url),
     max: 5,
   });
   return _pool;
