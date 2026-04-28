@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 process.env.ADMIN_KEY = 'test-admin-key';
 process.env.TEST_ADMIN_KEY = 'test-admin-key';
@@ -108,6 +109,18 @@ for (let i = 0; i < 60; i += 1) {
     r.statusCode === 200 && r.body?.manual === true,
     'Neon mutating path uses shared admin credential helper',
     `status=${r.statusCode}`,
+  );
+}
+
+{
+  const files = ['api/admin.js', 'api/provision.js', 'api/waitlist.js'];
+  const offenders = files.filter((file) =>
+    /https:\/\/acumbamail\.com[^`'"]*auth_token=/.test(readFileSync(file, 'utf8')),
+  );
+  log(
+    offenders.length === 0,
+    'Acumbamail auth tokens are not placed in request URLs',
+    offenders.length ? offenders.join(',') : 'ok',
   );
 }
 

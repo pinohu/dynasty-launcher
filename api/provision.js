@@ -863,7 +863,11 @@ async function mod_email(config, project, liveUrl) {
 
     // 4. Get subscription form HTML
     try {
-      const formResp = await fetch(`https://acumbamail.com/api/1/getSubscriptionForm/?auth_token=${apiKey}&list_id=${listId}`);
+      const formResp = await fetch('https://acumbamail.com/api/1/getSubscriptionForm/', {
+        method: 'POST',
+        headers: ah,
+        body: JSON.stringify({ auth_token: apiKey, list_id: listId }),
+      });
       if (formResp.ok) {
         const formData = await formResp.json();
         results.details.form_html = formData.form || formData.html || null;

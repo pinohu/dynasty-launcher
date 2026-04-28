@@ -118,7 +118,11 @@ export default async function handler(req, res) {
       check('acumbamail', async () => {
         const key = config.comms?.acumbamail;
         if (!key) return { ok: false, error: 'No key' };
-        const r = await fetch(`https://acumbamail.com/api/1/getLists/?auth_token=${key}&response_type=json`);
+        const r = await fetch('https://acumbamail.com/api/1/getLists/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ auth_token: key, response_type: 'json' }).toString(),
+        });
         const d = await r.json(); return { ok: r.ok, lists: Array.isArray(d) ? d.length : 0 };
       }),
       check('n8n', async () => {

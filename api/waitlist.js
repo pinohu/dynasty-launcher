@@ -49,7 +49,11 @@ export default async function handler(req, res) {
   if (acumbaKey) {
     try {
       const listName = 'Deputy Waitlist';
-      const listsResp = await fetch(`https://acumbamail.com/api/1/getLists/?auth_token=${acumbaKey}&response_type=json`);
+      const listsResp = await fetch('https://acumbamail.com/api/1/getLists/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ auth_token: acumbaKey, response_type: 'json' }).toString(),
+      });
       if (!listsResp.ok) throw new Error('Acumbamail getLists failed');
       const lists = await listsResp.json();
       let listId = null;
