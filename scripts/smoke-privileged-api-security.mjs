@@ -22,6 +22,20 @@ function signAdminToken() {
   return `${payload}:${sig}`;
 }
 
+function signPaymentToken({
+  sessionId = 'cs_research_budget',
+  subject = 'research_user',
+  tier = 'professional',
+} = {}) {
+  const expiry = Date.now() + 60 * 60 * 1000;
+  const payload = `pay:${sessionId}:${subject}:${tier}:${expiry}`;
+  const sig = crypto
+    .createHmac('sha256', process.env.PAYMENT_ACCESS_SECRET)
+    .update(payload)
+    .digest('hex');
+  return `${payload}:${sig}`;
+}
+
 function invoke(handlerModule, { method = 'POST', query = {}, body = null, headers = {} } = {}) {
   return new Promise((resolve, reject) => {
     const res = {
@@ -133,6 +147,60 @@ async function main() {
       '/api/research accepts signed admin header then dispatches safely',
       `status=${r.status}`,
     );
+  }
+
+  {
+    const originalFetch = globalThis.fetch;
+    const calls = [];
+    globalThis.fetch = async (input) => {
+      calls.push(String(input));
+      return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+    };
+    try {
+      const r = await invoke(research, {
+        headers: { 'x-dynasty-admin-token': adminToken },
+        body: { action: 'scrape_url', url: 'https://127.0.0.1/latest/meta-data' },
+      });
+      fails += log(
+        r.status === 400 && r.body.error === 'public_url_required' && calls.length === 0,
+        '/api/research rejects private scrape URLs before provider spend',
+        `status=${r.status} error=${r.body.error} calls=${calls.length}`,
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  }
+
+  {
+    const previousLimit = process.env.AI_RATE_LIMIT;
+    const previousWindow = process.env.AI_RATE_WINDOW_MS;
+    process.env.AI_RATE_LIMIT = '3';
+    process.env.AI_RATE_WINDOW_MS = '60000';
+    const token = signPaymentToken();
+    const body = {
+      action: 'competitors',
+      niche: 'field service scheduling',
+      access_token: token,
+      stripe_session_id: 'cs_research_budget',
+      user_id: 'research_user',
+      tier: 'professional',
+    };
+    try {
+      const first = await invoke(research, { body });
+      const second = await invoke(research, { body });
+      fails += log(
+        first.status === 200 &&
+          second.status === 429 &&
+          second.body.error === 'ai_rate_limit_exceeded',
+        '/api/research shares AI spend budget for paid provider calls',
+        `first=${first.status} second=${second.status} error=${second.body.error}`,
+      );
+    } finally {
+      if (previousLimit === undefined) Reflect.deleteProperty(process.env, 'AI_RATE_LIMIT');
+      else process.env.AI_RATE_LIMIT = previousLimit;
+      if (previousWindow === undefined) Reflect.deleteProperty(process.env, 'AI_RATE_WINDOW_MS');
+      else process.env.AI_RATE_WINDOW_MS = previousWindow;
+    }
   }
 
   {

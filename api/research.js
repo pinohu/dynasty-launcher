@@ -2,9 +2,98 @@
 // Pulls REAL market data before framework analysis runs.
 // Sources: Firecrawl (deep page content), Exa.ai (semantic competitors/market),
 //          NeuronWriter (SEO), Outscraper (local)
-import { privilegedCorsHeaders, verifyPaidOrAdminCredential } from './tenants/_auth.mjs';
+import net from 'node:net';
+
+import {
+  aiCorsHeaders,
+  authorizeAiRequest,
+  validateAiTextLimit,
+  writeAiAuthError,
+} from './_ai_security.mjs';
 
 export const maxDuration = 60;
+
+const MAX_RESEARCH_QUERY_CHARS = 500;
+const MAX_RESEARCH_NICHE_CHARS = 300;
+const MAX_RESEARCH_LOCATION_CHARS = 180;
+const MAX_RESEARCH_URL_CHARS = 2048;
+const BLOCKED_HOST_SUFFIXES = ['.local', '.localhost', '.internal', '.test'];
+
+function researchActionCost(action) {
+  switch (String(action || '').trim()) {
+    case 'full_research':
+      return 10;
+    case 'firecrawl_search':
+      return 5;
+    case 'scrape_url':
+      return 4;
+    case 'competitors':
+      return 3;
+    case 'seo':
+      return 2;
+    default:
+      return 1;
+  }
+}
+
+function sendLimitError(res, check) {
+  return res.status(check.status || 413).json({
+    ok: false,
+    error: check.error,
+    length: check.length,
+    max_chars: check.max_chars,
+  });
+}
+
+function validateResearchText(res, name, value, maxChars) {
+  const check = validateAiTextLimit(name, value, maxChars);
+  if (!check.ok) return { ok: false, response: sendLimitError(res, check) };
+  return { ok: true, text: check.text.trim() };
+}
+
+function isBlockedIpv4(host) {
+  const parts = host.split('.').map((part) => Number.parseInt(part, 10));
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+    return false;
+  }
+  const [a, b] = parts;
+  return (
+    a === 10 ||
+    a === 127 ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    a === 0
+  );
+}
+
+function isBlockedIpv6(host) {
+  const h = host.toLowerCase();
+  return h === '::1' || h.startsWith('fc') || h.startsWith('fd') || h.startsWith('fe80:');
+}
+
+function validatePublicResearchUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return { ok: false, error: 'https url required' };
+  if (raw.length > MAX_RESEARCH_URL_CHARS) return { ok: false, error: 'url_too_large' };
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return { ok: false, error: 'invalid_url' };
+  }
+  if (parsed.protocol !== 'https:') return { ok: false, error: 'https url required' };
+  if (parsed.username || parsed.password) return { ok: false, error: 'url_credentials_not_allowed' };
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (!host || host === 'localhost' || BLOCKED_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix))) {
+    return { ok: false, error: 'public_url_required' };
+  }
+  const ipVersion = net.isIP(host);
+  if ((ipVersion === 4 && isBlockedIpv4(host)) || (ipVersion === 6 && isBlockedIpv6(host))) {
+    return { ok: false, error: 'public_url_required' };
+  }
+  return { ok: true, url: parsed.toString() };
+}
 
 // ── Firecrawl: deep page content + search-and-scrape in one call ─────────────
 // Used for TAM/SAM/SOM + competitive-matrix frameworks where snippets aren't
@@ -158,21 +247,30 @@ async function scrapeCompetitor(url) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', privilegedCorsHeaders());
+  res.setHeader('Access-Control-Allow-Headers', aiCorsHeaders());
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── Security: require paid session or admin token (HMAC-verified) ──
-  const auth = verifyPaidOrAdminCredential(req, req.body || {});
-  if (!auth.ok) return res.status(auth.status || 401).json({ ok: false, error: 'Authentication required' });
-
+  // Security: require paid/admin/gateway auth and share AI spend budget.
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  const { action, niche, description, location, keywords } = req.body || {};
+  const body = req.body || {};
+  const action = String(body.action || '').trim();
+
+  const auth = await authorizeAiRequest(req, body, { cost: researchActionCost(action) });
+  if (!auth.ok) return writeAiAuthError(res, auth);
+
+  const { niche, description, location, keywords } = body;
+  const nicheText = validateResearchText(res, 'niche', niche, MAX_RESEARCH_NICHE_CHARS);
+  const locationText = validateResearchText(res, 'location', location, MAX_RESEARCH_LOCATION_CHARS);
+  const descriptionText = validateResearchText(res, 'description', description, MAX_RESEARCH_QUERY_CHARS);
+  if (!nicheText.ok) return nicheText.response;
+  if (!locationText.ok) return locationText.response;
+  if (!descriptionText.ok) return descriptionText.response;
 
   // ── FULL RESEARCH PACKAGE ──────────────────────────────────────────────
   // Run all research in parallel, return combined results
   if (action === 'full_research') {
-    if (!niche) return res.status(400).json({ error: 'niche required' });
+    if (!nicheText.text) return res.status(400).json({ error: 'niche required' });
 
     const results = { sources: [], timestamp: new Date().toISOString() };
 
@@ -183,17 +281,17 @@ export default async function handler(req, res) {
     // and the pipeline falls back to Exa snippets only.
     const [competitors, marketData, pricingData, seoData, localData, firecrawlDeep] = await Promise.allSettled([
       // 1. Find competitors
-      searchExa(`${niche} competitors companies startups`, 5),
+      searchExa(`${nicheText.text} competitors companies startups`, 5),
       // 2. Market size / reports
-      searchExa(`${niche} market size TAM revenue 2025 2026`, 3),
+      searchExa(`${nicheText.text} market size TAM revenue 2025 2026`, 3),
       // 3. Pricing intelligence
-      searchExa(`${niche} software pricing plans monthly annual`, 3),
+      searchExa(`${nicheText.text} software pricing plans monthly annual`, 3),
       // 4. SEO keyword data
-      getNeuronWriterData(niche),
+      getNeuronWriterData(nicheText.text),
       // 5. Local business count (if applicable)
-      location ? countLocalBusinesses(niche, location) : Promise.resolve(null),
+      locationText.text ? countLocalBusinesses(nicheText.text, locationText.text) : Promise.resolve(null),
       // 6. Firecrawl deep content (page markdown for real pricing/competitor data)
-      firecrawlSearch(`${niche} pricing competitor comparison`, { limit: 4, scrape: true }),
+      firecrawlSearch(`${nicheText.text} pricing competitor comparison`, { limit: 4, scrape: true }),
     ]);
 
     // Compile competitors
@@ -285,14 +383,18 @@ export default async function handler(req, res) {
 
   // ── COMPETITOR SEARCH ONLY ─────────────────────────────────────────────
   if (action === 'competitors') {
-    const results = await searchExa(`${niche} competitors companies`, 8);
+    if (!nicheText.text) return res.status(400).json({ error: 'niche required' });
+    const results = await searchExa(`${nicheText.text} competitors companies`, 8);
     return res.json({ competitors: results || [] });
   }
 
   // ── SEO DATA ONLY ─────────────────────────────────────────────────────
   if (action === 'seo') {
-    const keyword = keywords?.[0] || niche;
-    const results = await getNeuronWriterData(keyword);
+    const keywordValue = Array.isArray(keywords) ? keywords[0] : nicheText.text;
+    const keyword = validateResearchText(res, 'keyword', keywordValue, MAX_RESEARCH_QUERY_CHARS);
+    if (!keyword.ok) return keyword.response;
+    if (!keyword.text) return res.status(400).json({ error: 'keyword or niche required' });
+    const results = await getNeuronWriterData(keyword.text);
     return res.json({ seo: results });
   }
 
@@ -300,19 +402,21 @@ export default async function handler(req, res) {
   // Used by framework generators that need full-page content (pricing tables,
   // competitor feature matrices, regulatory docs) instead of semantic snippets.
   if (action === 'scrape_url') {
-    const url = (req.body?.url || '').toString();
-    if (!url || !/^https:\/\//.test(url)) return res.status(400).json({ error: 'https url required' });
-    const out = await firecrawlScrape(url);
+    const safeUrl = validatePublicResearchUrl(req.body?.url);
+    if (!safeUrl.ok) return res.status(400).json({ error: safeUrl.error });
+    const out = await firecrawlScrape(safeUrl.url);
     if (!out) return res.json({ ok: false, error: 'firecrawl unavailable or scrape failed' });
     return res.json({ ok: true, ...out });
   }
 
   if (action === 'firecrawl_search') {
-    const query = (req.body?.query || niche || '').toString();
-    if (!query) return res.status(400).json({ error: 'query or niche required' });
+    const query = validateResearchText(res, 'query', req.body?.query || nicheText.text, MAX_RESEARCH_QUERY_CHARS);
+    if (!query.ok) return query.response;
+    if (!query.text) return res.status(400).json({ error: 'query or niche required' });
     const scrape = req.body?.scrape !== false;
-    const limit = Math.min(parseInt(req.body?.limit, 10) || 5, 10);
-    const out = await firecrawlSearch(query, { limit, scrape });
+    const parsedLimit = Number.parseInt(req.body?.limit, 10);
+    const limit = Math.min(Math.max(Number.isFinite(parsedLimit) ? parsedLimit : 5, 1), 8);
+    const out = await firecrawlSearch(query.text, { limit, scrape });
     if (!out) return res.json({ ok: false, error: 'firecrawl unavailable' });
     return res.json({ ok: true, results: out });
   }
