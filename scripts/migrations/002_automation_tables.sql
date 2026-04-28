@@ -285,7 +285,8 @@ CREATE TABLE IF NOT EXISTS automations_config (
   config_id text PRIMARY KEY,
   tenant_id text NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
   module_code text NOT NULL,
-  is_enabled boolean DEFAULT true,
+  state text NOT NULL DEFAULT 'disabled',
+  is_enabled boolean DEFAULT false,
   settings jsonb DEFAULT '{}',
   quiet_hours_start time,
   quiet_hours_end time,
@@ -297,6 +298,16 @@ CREATE TABLE IF NOT EXISTS automations_config (
   UNIQUE(tenant_id, module_code)
 );
 
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS state text;
+ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS is_enabled boolean;
+UPDATE automations_config
+  SET state = CASE WHEN COALESCE(is_enabled, false) THEN 'enabled' ELSE 'disabled' END
+  WHERE state IS NULL;
+UPDATE automations_config SET is_enabled = (state = 'enabled') WHERE is_enabled IS NULL;
+ALTER TABLE automations_config ALTER COLUMN state SET DEFAULT 'disabled';
+ALTER TABLE automations_config ALTER COLUMN is_enabled SET DEFAULT false;
+ALTER TABLE automations_config ALTER COLUMN state SET NOT NULL;
+ALTER TABLE automations_config ALTER COLUMN is_enabled SET NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_automations_config_tenant_id ON automations_config(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_automations_config_module_code ON automations_config(tenant_id, module_code);
 CREATE INDEX IF NOT EXISTS idx_automations_config_is_enabled ON automations_config(tenant_id, is_enabled);
@@ -317,6 +328,13 @@ CREATE TABLE IF NOT EXISTS automation_runs (
   output_payload jsonb
 );
 
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS trigger_type text;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS result jsonb;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS webhook_source text;
+ALTER TABLE automation_runs ADD COLUMN IF NOT EXISTS webhook_id text;
+ALTER TABLE automation_runs ALTER COLUMN tenant_id DROP NOT NULL;
+ALTER TABLE automation_runs ALTER COLUMN module_code DROP NOT NULL;
+ALTER TABLE automation_runs ALTER COLUMN trigger_type DROP NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_automation_runs_tenant_id ON automation_runs(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_automation_runs_module_code ON automation_runs(tenant_id, module_code);
 CREATE INDEX IF NOT EXISTS idx_automation_runs_status ON automation_runs(tenant_id, status);

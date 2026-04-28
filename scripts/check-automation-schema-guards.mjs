@@ -10,6 +10,7 @@ const automationRunFiles = [
   'api/automations/handler.js',
   'api/automations/webhook.js',
   'api/tenants/provision-automations.js',
+  'scripts/migrations/002_automation_tables.sql',
 ];
 
 const automationConfigFiles = [
@@ -17,6 +18,7 @@ const automationConfigFiles = [
   'api/tenants/provision-automations.js',
   'api/tenants/_provision.mjs',
   'api/tenants/upgrade-module.js',
+  'scripts/migrations/002_automation_tables.sql',
 ];
 
 const requiredAutomationRunSql = [
