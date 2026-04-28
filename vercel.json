@@ -159,6 +159,10 @@
       "maxDuration": 15,
       "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
     },
+    "api/business-factory.js": {
+      "maxDuration": 60,
+      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+    },
     "api/automations/handler.js": {
       "maxDuration": 30,
       "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql,automations/**/*.json}"
