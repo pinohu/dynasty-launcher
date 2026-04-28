@@ -149,8 +149,10 @@ function main() {
 
   const pubIndex = read("public/index.html")
   assert.ok(
-    pubIndex.includes("11-slot") || pubIndex.includes("same 11"),
-    "public/index.html must mention Foundation/Professional 11-slot parity",
+    pubIndex.includes("generated application code") &&
+      pubIndex.includes("deployment scaffolding") &&
+      pubIndex.includes("queued job is not the same as a completed vendor setup"),
+    "public/index.html must state the concrete Foundation delivery and factory queue boundary",
   )
 
   console.log("verify-product-alignment: ok")

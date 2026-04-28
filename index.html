@@ -3,380 +3,213 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Your Deputy - Launch an autonomous business unit you own</title>
-<meta name="description" content="Score a market, generate a launch manifest, validate production readiness, and queue business factory work through the Your Deputy Vercel backend.">
+<title>Your Deputy - Clear Business Launch Packages</title>
+<meta name="description" content="Choose the right Your Deputy path: score an idea, buy a strategy pack, start a Foundation build, or use the production Business Factory Console. Every offer states exactly what is delivered.">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#0C0C14">
-<link rel="canonical" href="https://yourdeputy.com/">
+<link rel="canonical" href="https://www.yourdeputy.com/">
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Your Deputy - Launch an autonomous business unit you own">
-<meta property="og:description" content="Your Deputy is a production launch control plane: validated manifests, revenue specs, funnel planning, automation templates, and durable factory jobs.">
-<meta property="og:url" content="https://yourdeputy.com/">
-<meta property="og:site_name" content="Your Deputy">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Your Deputy - Launch an autonomous business unit you own">
-<meta name="twitter:description" content="Business validation plus a production-backed launch manifest, revenue catalog, funnel plan, automation plan, and durable queue handoff.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@400;500;600;700&display=swap"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--gold:#C9A84C;--ink:#09090B;--panel:#16161B;--card:#252530;--bdr:rgba(255,255,255,.15);--tx:#FAFAF9;--sub:#A1A1AA;--dim:#8A8A8A;--grn:#22C55E}
-html{scroll-behavior:smooth}
-body{background:#0C0C14;color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;display:flex;align-items:center;padding:0 clamp(1rem,4vw,3rem);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);background:rgba(12,12,20,.8);border-bottom:1px solid rgba(255,255,255,.06);transition:all .3s}
-nav.scrolled{background:rgba(9,9,11,.95)}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--gold);font-weight:600;font-size:15px}
-.nav-logo svg{width:28px;height:28px}
-.desktop-links{display:flex;gap:22px;margin:0 auto}
-.desktop-links a{color:var(--sub);text-decoration:none;font-size:14px;font-weight:400;transition:color .2s;white-space:nowrap}
-.desktop-links a:hover{color:var(--tx)}
-.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:#0D0D15;border-bottom:1px solid rgba(255,255,255,.1);flex-direction:column;padding:16px 24px;gap:0;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-.mobile-menu a{padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:15px;text-decoration:none;color:var(--sub)}
-.mobile-menu a:last-child{border-bottom:none}
-.nav-right{display:flex;align-items:center;gap:16px}
-.nav-signin{color:var(--sub);font-size:14px;text-decoration:none;font-weight:400}
-.nav-signin:hover{color:var(--tx)}
-.nav-cta{padding:8px 22px;background:var(--gold);color:var(--ink);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;font-family:inherit}
-.nav-cta:hover{box-shadow:0 0 20px rgba(201,168,76,.3);transform:translateY(-1px)}
-.hamburger{display:none;background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer}
-@keyframes heroIn{from{transform:translateY(10px)}to{transform:translateY(0)}}
-@media(prefers-reduced-motion:reduce){.hero h1,.hero .outcome-ribbon,.hero-badge{animation:none!important}}
-.hero{max-width:980px;margin:0 auto;text-align:center;padding:40px 24px 34px;position:relative}
-.outcome-ribbon{background:linear-gradient(135deg,rgba(201,168,76,.14),rgba(201,168,76,.05));border:1px solid rgba(201,168,76,.28);border-radius:14px;padding:16px 22px;max-width:760px;margin:0 auto 22px;font-size:15px;color:var(--tx);line-height:1.55;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.25);animation:heroIn .75s ease-out .05s both}
-.outcome-ribbon strong{color:var(--gold);font-weight:600}
-.hero-lead{font-size:clamp(17px,2.4vw,20px);color:var(--sub);max-width:580px;margin:0 auto 18px;font-weight:400;line-height:1.65}
-.hero-lead strong{color:var(--tx);font-weight:500}
-.hero-sub{font-size:15px;color:var(--dim);max-width:520px;margin:0 auto 32px;line-height:1.6;font-weight:400}
-.hero-assurance{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px auto 0;max-width:680px}
-.hero-assurance span{font-size:12px;color:var(--sub);border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.02);padding:6px 10px;border-radius:999px}
-.hero-tensions{max-width:680px;margin:0 auto 24px;display:flex;flex-direction:column;gap:6px}
-.ht{font-size:14px;color:var(--sub);display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);text-decoration:none;transition:all .2s;gap:12px;line-height:1.4}
-.ht:hover{background:rgba(201,168,76,.06);border-color:rgba(201,168,76,.2);color:var(--tx)}
-.ht span{font-size:11px;color:var(--gold);font-weight:600;white-space:nowrap}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;font-size:12px;font-weight:500;color:var(--gold);border:1px solid rgba(201,168,76,.15);background:rgba(201,168,76,.05);margin-bottom:16px;animation:heroIn .6s ease-out both}
-.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--grn);animation:blink 2s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.hero h1{font-family:'Playfair Display',serif;font-size:clamp(42px,6.8vw,86px);font-weight:400;line-height:.98;letter-spacing:0;margin:0 auto 18px;max-width:940px;color:var(--tx);text-wrap:balance;animation:heroIn .7s ease-out both}
-.hero h1 em{font-style:normal;color:var(--gold)}
-.hero p{font-size:18px;color:var(--sub);max-width:540px;margin:0 auto 40px;font-weight:300;line-height:1.7}
-.hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:100%;min-width:0}
-.hero-proof{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;max-width:880px;margin:22px auto 26px}
-.hero-proof div{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035);border-radius:10px;padding:12px 14px;text-align:left}
-.hero-proof strong{display:block;color:var(--tx);font-size:18px;font-weight:700;margin-bottom:3px}
-.hero-proof span{display:block;color:var(--sub);font-size:12px;line-height:1.35}
-.btn-p{padding:12px 28px;background:var(--gold);color:var(--ink);border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .25s;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center;max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
-.btn-p:hover{box-shadow:0 8px 32px rgba(201,168,76,.25);transform:translateY(-2px)}
-.btn-g{padding:12px 28px;background:transparent;color:var(--sub);border:1px solid var(--bdr);border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;transition:all .25s;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center;max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
-.btn-g:hover{color:var(--tx);border-color:rgba(255,255,255,.15)}
-.demo-wrap{max-width:960px;margin:0 auto;padding:0 24px}
-.demo{background:#1A1A28;border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.08)}
-.demo-bar{height:36px;background:#333340;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;padding:0 14px;gap:8px}
-.demo-dot{width:10px;height:10px;border-radius:50%;background:var(--dim)}
-.demo-dot:first-child{background:#F87171}.demo-dot:nth-child(2){background:#FBBF24}.demo-dot:nth-child(3){background:#34D399}
-.demo-body{padding:28px 32px;display:grid;grid-template-columns:1fr 280px;gap:24px;min-height:280px}
-.demo-main h3{font-size:11px;font-weight:600;color:var(--gold);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px}
-.demo-phases{display:flex;flex-direction:column;gap:8px}
-.demo-phase{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--sub);padding:6px 10px;border-radius:6px;background:rgba(255,255,255,.05)}
-.demo-phase .ck{color:var(--grn);font-weight:700;font-size:14px}
-.demo-phase .sp{color:var(--gold);animation:spin 1s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
-.demo-sidebar{border-left:1px solid var(--bdr);padding-left:24px}
-.demo-sidebar h4{font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
-.demo-file{font-size:12px;color:var(--sub);padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03)}
-.demo-file span{color:var(--gold);margin-right:6px;font-size:10px}
-.trust{max-width:800px;margin:0 auto;padding:28px 24px 0;text-align:center}
-.trust p{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;font-weight:500;margin-bottom:24px}
-.trust-logos{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;align-items:center;opacity:.6}
-.trust-logos span{font-size:13px;font-weight:700;color:var(--sub);letter-spacing:2px;text-transform:uppercase}
-.stats{max-width:860px;margin:0 auto;padding:32px 24px}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;background:#1A1A26;box-shadow:0 4px 24px rgba(0,0,0,.3)}
-.stat{padding:32px 24px;text-align:center;border-right:1px solid rgba(255,255,255,.12)}
-.stat:last-child{border-right:none}
-.stat .num{font-family:'Playfair Display',serif;font-size:40px;font-weight:400;letter-spacing:-.02em}
-.stat .label{font-size:12px;color:var(--dim);margin-top:4px;text-transform:uppercase;letter-spacing:1px;font-weight:500}
-section{max-width:1080px;margin:0 auto;padding:56px 24px}
-.sl{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:12px;text-align:center}
-.st{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);font-weight:400;text-align:center;letter-spacing:-.02em;margin-bottom:12px;color:#FAFAF9}
-.ss{font-size:16px;color:var(--sub);text-align:center;max-width:560px;margin:0 auto 32px;font-weight:300;line-height:1.65}
-.sss{font-size:16px;color:var(--sub);text-align:center;max-width:560px;margin:0 auto 32px;font-weight:300;line-height:1.65}
-.compare{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:center;max-width:800px;margin:0 auto}
-.cc{background:#1E1E2A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,.4)}
-.cc h3{font-size:15px;font-weight:600;margin-bottom:16px}
-.cc.bad{opacity:.5}.cc.bad h3{color:#F87171}
-.cc.good{border-color:rgba(34,197,94,.3);box-shadow:0 4px 24px rgba(34,197,94,.08)}.cc.good h3{color:var(--grn)}
-.ci{font-size:14px;color:var(--sub);padding:6px 0;display:flex;justify-content:space-between}
-.ci strong{color:var(--tx);font-weight:500}
-.cv{font-family:'Playfair Display',serif;font-size:24px;color:var(--dim)}
-.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.ft{background:#1E1E2A;border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--gold);border-radius:14px;padding:28px 24px;transition:all .3s;box-shadow:0 4px 24px rgba(0,0,0,.4)}
-.ft:hover{border-color:rgba(201,168,76,.3);box-shadow:0 8px 32px rgba(201,168,76,.1);transform:translateY(-2px)}
-.ft.w{grid-column:span 2}
-.ft-i{font-size:24px;margin-bottom:14px}
-.ft h3{font-size:15px;font-weight:600;margin-bottom:6px}
-.ft p{font-size:13px;color:var(--sub);line-height:1.6;font-weight:300}
-.ft .tg{font-size:11px;color:var(--dim);margin-top:10px;font-weight:500}
-.pg{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:1080px;margin:0 auto}
-.pc{background:#1A1A24;border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--gold);border-radius:14px;padding:22px 22px 20px;box-shadow:0 4px 24px rgba(0,0,0,.35)}
-.pc h3{font-size:15px;font-weight:600;margin:0 0 10px;color:var(--tx);line-height:1.35}
-.pc .pain{font-size:13px;color:var(--sub);line-height:1.55;margin:0 0 10px;font-weight:300}
-.pc .pain strong{color:var(--tx);font-weight:500}
-.pc .rx{font-size:13px;color:var(--sub);line-height:1.55;margin:0 0 14px}
-.pc .rx em{color:var(--gold);font-style:normal;font-weight:600}
-.pc .cta-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.pc a.sm{display:inline-flex;align-items:center;justify-content:center;max-width:100%;min-width:0;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;text-decoration:none;font-family:inherit;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
-.pc a.sm-p{background:var(--gold);color:var(--ink)}
-.pc a.sm-g{background:transparent;color:var(--sub);border:1px solid var(--bdr)}
-.pc a.sm-p:hover{box-shadow:0 4px 16px rgba(201,168,76,.2)}
-.pc a.sm-g:hover{color:var(--tx);border-color:rgba(255,255,255,.2)}
-@media(max-width:768px){.pg{grid-template-columns:1fr}.pc{padding:18px}.stat-grid{grid-template-columns:repeat(3,1fr)!important}}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;counter-reset:s}
-.stp{counter-increment:s;position:relative;padding:24px}
-.stp::before{content:counter(s);font-family:'Playfair Display',serif;font-size:64px;color:rgba(201,168,76,.08);position:absolute;top:0;left:16px;line-height:1}
-.stp h3{font-size:16px;font-weight:600;margin:24px 0 8px}
-.stp p{font-size:14px;color:var(--sub);line-height:1.6;font-weight:300}
-.pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;max-width:1240px;margin:0 auto}
-.pricing-row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
-.pricing-row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px;margin:0 auto}
-.pl{background:#1E1E2A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:36px 28px;position:relative;box-shadow:0 4px 24px rgba(0,0,0,.4)}
-.pl.pop{border-color:var(--gold);background:linear-gradient(180deg,rgba(201,168,76,.06),#1E1E2A 40%);box-shadow:0 4px 32px rgba(201,168,76,.12)}
-.pl .bdg{position:absolute;top:-11px;left:50%;transform:translateX(-50%);padding:4px 16px;background:var(--gold);color:var(--ink);border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
-.pl h3{font-size:14px;color:var(--sub);font-weight:500}
-.pl .pr{font-family:'Playfair Display',serif;font-size:40px;font-weight:400;margin:12px 0 4px}
-.pl .pr span{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:400;color:var(--dim)}
-.pl .ds{font-size:13px;color:var(--dim);margin-bottom:24px;font-weight:300}
-.pl ul{list-style:none;margin-bottom:28px}
-.pl li{font-size:13px;color:var(--sub);padding:7px 0 7px 22px;position:relative}
-.pl li::before{content:'✓';position:absolute;left:0;color:var(--grn);font-weight:700;font-size:12px}
-.pl .btn-p,.pl .btn-g{width:100%;padding:12px;font-size:14px}
-.faq{max-width:640px;margin:0 auto}
-.fq{border-bottom:1px solid rgba(255,255,255,.1);padding:20px 0}
-.fq h3{font-size:15px;font-weight:500;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
-.fq h3::after{content:'+';font-size:20px;color:var(--dim);transition:transform .2s}
-.fq.open h3::after{transform:rotate(45deg);color:var(--gold)}
-.fq .ans{max-height:0;overflow:hidden;transition:max-height .3s;font-size:14px;color:var(--sub);line-height:1.7;font-weight:300}
-.fq.open .ans{max-height:min(90vh,920px);padding-top:12px}
-.cta-s{text-align:center;padding:48px 24px;position:relative}
-.cta-s::before{content:'';position:absolute;top:50%;left:50%;width:600px;height:400px;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(201,168,76,.04),transparent 70%);pointer-events:none}
-.cta-s h2{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,40px);font-weight:400;margin-bottom:12px;position:relative}
-.cta-s p{color:var(--sub);font-size:16px;margin-bottom:32px;position:relative;font-weight:300}
-.section-divider{max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.2),transparent);margin:0 auto}
-footer{border-top:1px solid rgba(255,255,255,.12);max-width:1080px;margin:0 auto;padding:60px 24px 32px}
-.fg{display:grid;grid-template-columns:2.5fr 1fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
-.fb{font-weight:600;color:var(--gold);font-size:15px;margin-bottom:10px}
-.fb+p{font-size:13px;color:var(--dim);line-height:1.6;max-width:260px;font-weight:300}
-.fc h4{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:16px}
-.fc a{display:block;font-size:13px;color:var(--sub);text-decoration:none;padding:4px 0;transition:color .2s}
-.fc a:hover{color:var(--gold)}
-.fbt{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--bdr);font-size:12px;color:var(--dim)}
-@media(max-width:768px){
-.desktop-links{display:none}
-.mobile-menu{top:56px}
-nav{height:56px;padding:0 16px}
-.nav-logo{font-size:14px}.nav-logo svg{width:24px;height:24px}
-.hamburger{display:block;font-size:20px}
-.nav-right{display:none}
-.hero{padding:28px 16px 32px;max-width:100%;overflow:hidden}.hero h1{font-size:34px;line-height:1.04;max-width:100%;overflow-wrap:break-word}
-.hero p{font-size:15px;margin-bottom:24px}
-.hero-badge{font-size:10px;padding:5px 12px;flex-wrap:wrap;justify-content:center;text-align:center;line-height:1.5;max-width:100%}
-.hero-ctas{flex-direction:column;gap:10px}.hero-ctas a{width:100%;padding:12px 20px;font-size:14px}
-.hero-tensions{margin:0 auto 20px;max-width:100%}.ht{font-size:13px;padding:9px 14px;align-items:flex-start;flex-direction:column;text-align:left}.ht span{white-space:normal}
-.hero-assurance{display:none}.hero-proof{grid-template-columns:1fr;margin:18px auto 22px;max-width:100%}.hero-proof div{text-align:center;padding:10px}.hero-proof strong{font-size:16px}
-.outcome-ribbon{font-size:13px;padding:12px 16px;margin:0 auto 20px;max-width:100%;border-radius:10px}
-.demo-phases .demo-phase:nth-child(n+5){display:none}
-.demo-sidebar .demo-file:nth-child(n+6){display:none}
-.demo-wrap{padding:0 16px}.demo-body{grid-template-columns:1fr;padding:20px 16px;min-height:auto}.demo-sidebar{border-left:none;border-top:1px solid var(--bdr);padding-left:0;padding-top:12px}
-.demo-phase{font-size:12px;padding:5px 8px}
-.stats-grid{grid-template-columns:1fr 1fr}.stat{padding:20px 16px;border-bottom:1px solid var(--bdr)}.stat .num{font-size:28px}
-.compare{grid-template-columns:1fr}.cv{text-align:center;font-size:18px;padding:4px 0}
-.cc{padding:20px}
-.features{grid-template-columns:1fr}.ft.w{grid-column:span 1}.ft{padding:20px 18px}
-.steps{grid-template-columns:1fr}.stp{padding:20px 16px}
-.pricing{grid-template-columns:1fr}.pricing-row-3{grid-template-columns:1fr}.pricing-row-2{grid-template-columns:1fr;max-width:100%}.pl{padding:24px 20px}.pl .pr{font-size:32px}
-.fg{grid-template-columns:1fr;gap:28px;text-align:center}
-.fb+p{max-width:none;margin:0 auto}
-.fc{text-align:center}
-.fc a{padding:8px 0;font-size:14px;min-height:44px;display:flex;align-items:center;justify-content:center}
-.fbt{flex-direction:column;gap:8px;text-align:center}
-section{padding:32px 16px}
-.sl{font-size:11px}.ss{font-size:14px;margin-bottom:24px}
-.cta-s{padding:32px 16px}.cta-s h2{font-size:24px}.cta-s p{font-size:14px;margin-bottom:20px}
-.trust-logos{gap:16px}.trust-logos span{font-size:11px}
-}
-@media(max-width:1200px){
-  .desktop-links{display:none}
-  .nav-right{display:none}
-  .hamburger{display:block}
-  nav{justify-content:space-between}
-}
-@media(min-width:1201px){
-  .mobile-menu{display:none!important}
-}
-:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
-.skip-link:focus{position:fixed;left:16px;top:16px;width:auto;height:auto;overflow:visible;background:var(--gold);color:var(--ink);padding:8px 16px;border-radius:8px;font-weight:600;font-size:14px;z-index:9999}
-@media(max-width:380px){.hero h1{font-size:24px}.hero-badge{font-size:9px}.stat .num{font-size:24px}.pl .pr{font-size:28px}.ci{flex-direction:column;gap:2px}.ci strong{font-size:13px}.ht{font-size:12px;padding:8px 12px}.ht span{font-size:10px}}
-</style>
 <link rel="stylesheet" href="/site-shell.css">
+<style>
+  :root{--gold:#c9a84c;--ink:#09090b;--bg:#0c0c14;--panel:#171720;--card:#20202a;--line:rgba(255,255,255,.13);--text:#fafaf9;--muted:#a1a1aa;--dim:#85858d;--ok:#22c55e;--blue:#60a5fa}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px;line-height:1.6}
+  a{color:var(--gold);text-decoration:none;font-weight:800}
+  a:hover{text-decoration:underline}
+  main{max-width:1120px;margin:0 auto;padding:92px 20px 60px}
+  .hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:28px;align-items:center;padding:24px 0 28px}
+  .eyebrow{color:var(--gold);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;margin-bottom:14px}
+  h1{font-size:clamp(38px,6vw,72px);line-height:1;margin:0 0 16px;letter-spacing:0}
+  h2{font-size:clamp(26px,4vw,42px);line-height:1.1;margin:0 0 12px;letter-spacing:0}
+  h3{font-size:18px;margin:0 0 8px}
+  p{color:var(--muted);margin:0 0 16px}
+  .lead{font-size:20px;max-width:760px}
+  .panel,.card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border-radius:12px}
+  .panel{padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+  .card{padding:18px;background:rgba(255,255,255,.035)}
+  .hero-card{padding:22px}
+  .hero-card ul{padding:0;margin:0;list-style:none;display:grid;gap:11px}
+  .hero-card li{color:var(--muted);display:flex;gap:10px;align-items:flex-start}
+  .check{width:18px;height:18px;border-radius:50%;background:rgba(34,197,94,.14);color:var(--ok);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:12px;margin-top:3px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+  .btn{display:inline-flex;justify-content:center;align-items:center;border:1px solid var(--line);border-radius:9px;padding:12px 16px;font-weight:900;text-align:center;line-height:1.25;min-width:0;max-width:100%}
+  .btn.primary{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+  .btn.secondary{color:var(--text);background:rgba(255,255,255,.035)}
+  .section{padding:34px 0;border-top:1px solid rgba(255,255,255,.08)}
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+  .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .path{display:grid;grid-template-columns:130px minmax(0,1fr) 160px;gap:16px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035);margin-top:12px}
+  .price{font-size:22px;color:var(--gold);font-weight:900}
+  .tag{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:8px}
+  .plain-list{margin:12px 0 0;padding-left:19px;color:var(--muted)}
+  .plain-list li{margin:6px 0}
+  .warning{border-left:3px solid var(--gold);padding:13px 15px;background:rgba(201,168,76,.08);color:var(--muted);border-radius:8px;margin-top:14px}
+  .steps{counter-reset:step;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+  .step{counter-increment:step;padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035)}
+  .step:before{content:counter(step);display:inline-flex;width:30px;height:30px;border-radius:50%;align-items:center;justify-content:center;background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.3);font-weight:900;margin-bottom:10px}
+  .step p,.card p{font-size:14px}
+  .mini{font-size:13px;color:var(--dim)}
+  .visual{background:#0a0a10;border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:18px}
+  .bar{height:8px;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--blue),var(--ok));margin-bottom:14px}
+  .receipt{display:grid;gap:8px}
+  .receipt div{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:7px;color:var(--muted);font-size:13px}
+  .receipt strong{color:var(--text)}
+  @media(max-width:860px){main{padding-top:82px}.hero,.grid,.grid.two,.steps{grid-template-columns:1fr}.path{grid-template-columns:1fr}.actions .btn{width:100%}}
+</style>
 </head>
 <body>
-<a href="#main" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999">Skip to content</a>
-<nav id="nav" role="navigation" aria-label="Main navigation">
-<a href="/" class="nav-logo"><svg viewBox="0 0 28 28" fill="none"><path d="M14 2L26 14L14 26L2 14L14 2Z" fill="#C9A84C" opacity=".2"/><path d="M14 6L22 14L14 22L6 14L14 6Z" fill="#C9A84C"/></svg> Your Deputy</a>
-<div class="desktop-links"><a href="#who-its-for">Who it’s for</a><a href="/quiz">Diagnostic</a><a href="/business-factory">Factory</a><a href="/for/">Guides</a><a href="/deliverables">Deliverables</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="maturity">What’s included</a><a href="#faq">FAQ</a></div>
-<div class="nav-right"><a href="app?returning=1" class="nav-signin">Sign in</a><a href="/quiz" class="nav-cta">Take diagnostic</a></div>
-<button class="hamburger" aria-label="Toggle navigation menu" aria-controls="mobile-nav" aria-expanded="false" onclick="var n=document.getElementById('mobile-nav');var isOpen=n.style.display==='flex';n.style.display=isOpen?'none':'flex';this.textContent=isOpen?'☰':'✕';this.setAttribute('aria-expanded',!isOpen)">☰</button>
-<div class="mobile-menu" id="mobile-nav"><a href="#who-its-for" onclick="closeNav()">Who it’s for</a><a href="/quiz" onclick="closeNav()">Diagnostic</a><a href="/for/" onclick="closeNav()">Guides</a><a href="/deliverables" onclick="closeNav()">Deliverables</a><a href="#how" onclick="closeNav()">How it works</a><a href="#pricing" onclick="closeNav()">Pricing</a><a href="maturity" onclick="closeNav()">What’s included</a><a href="#faq" onclick="closeNav()">FAQ</a><a href="app?returning=1" onclick="closeNav()" style="color:var(--gold);font-weight:600">Sign in</a><a href="/quiz" onclick="closeNav()" style="background:var(--gold);color:#000;border-radius:8px;text-align:center;font-weight:600;padding:12px;margin-top:8px">Take diagnostic</a></div>
-</nav>
-<main id="main">
-<div class="hero">
-<div class="hero-badge"><span class="dot"></span> Autonomous business-unit launcher · Self-hostable by default · AI-native · Revenue-ready</div>
-<h1>Launch a complete business unit, not another website.</h1>
-<p class="hero-lead">Your Deputy turns market pain into a production-backed launch manifest: offer, website plan, funnel, products, CRM and RevOps modules, Stripe catalog specs, onboarding, analytics, agent-callable interfaces, workflow templates, deployment checks, and durable factory jobs.</p>
-<div class="hero-proof"><div><strong>15+</strong><span>business systems validated before launch</span></div><div><strong>160+</strong><span>files across code, docs, content, governance, and ops</span></div><div><strong>AI/MCP</strong><span>agent-operable tools plus model routing</span></div><div><strong>Repair</strong><span>resume checkpoints, BUILD-REPORT telemetry, and live gates</span></div></div>
-<div class="outcome-ribbon">The production backend now exposes the <strong>Business Factory Console</strong>: generate a validated launch manifest, check production readiness, and queue a durable <code>business_factory.launch</code> job. Worker execution and third-party actions still depend on configured credentials and an active worker loop.</div>
-<p class="hero-sub">Start with validation. Inspect exactly what the production backend can generate and queue.</p>
-<div class="hero-ctas"><a href="/business-factory" class="btn-p">Open factory console</a><a href="/quiz" class="btn-g">Find my best path</a><a href="app?plan=free&source=hub" class="btn-g">Score my idea free</a></div>
-<div class="hero-assurance"><span>No credit card to start</span><span>You keep your deliverables</span><span>Clear scope before payment</span></div>
-<div class="hero-tensions"><a class="ht" href="app?plan=free&amp;segment=viability&amp;source=hub">“I need to know if this idea is even viable.” <span>Free · $0 →</span></a><a class="ht" href="app?plan=blueprint&amp;source=hub">“I need a real plan before I commit real money.” <span>Blueprint · $297 →</span></a><a class="ht" href="app?plan=strategy_pack&amp;source=hub">“I want the full document pack — I’ll decide on the build later.” <span>Strategy Pack · $697 →</span></a><a class="ht" href="app?plan=foundation&amp;source=hub">“Ship the product, docs, and integration attempts — I own vendor handoffs.” <span>Foundation · $1,997 →</span></a></div>
-<p style="text-align:center;font-size:12px;color:var(--dim);margin:-20px auto 24px;max-width:580px">Different situation? <a href="/quiz" style="color:var(--gold)">Take the 2-min diagnostic</a> or <a href="/for/" style="color:var(--gold)">browse all paths</a>.</p>
-</div>
-<div id="build-inventory" style="max-width:880px;margin:0 auto;padding:28px 24px 0">
-<div style="background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.02));border:1px solid rgba(201,168,76,.22);border-radius:18px;padding:28px 32px 24px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-<p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:10px">What one build delivers</p>
-<div style="display:flex;justify-content:center;gap:clamp(16px,4vw,40px);flex-wrap:wrap;margin-bottom:16px">
-<div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,44px);color:var(--gold);line-height:1">120+</div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">Files in your repo</div></div>
-<div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,44px);color:var(--gold);line-height:1">10</div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">Categories</div></div>
-<div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,44px);color:var(--gold);line-height:1">50K+</div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">Words of strategy</div></div>
-<div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,44px);color:var(--gold);line-height:1">$71K+</div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">Equivalent value</div></div>
-</div>
-<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-bottom:18px">
-<a href="/deliverables#strategy" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--sub);background:rgba(255,255,255,.03);text-decoration:none;transition:all .2s">Strategy &amp; Planning</a>
-<a href="/deliverables#legal" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--sub);background:rgba(255,255,255,.03);text-decoration:none;transition:all .2s">Legal &amp; Compliance</a>
-<a href="/deliverables#frontend" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--sub);background:rgba(255,255,255,.03);text-decoration:none;transition:all .2s">Frontend Code</a>
-<a href="/deliverables#backend" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--sub);background:rgba(255,255,255,.03);text-decoration:none;transition:all .2s">Backend &amp; Config</a>
-<a href="/deliverables#financial" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--sub);background:rgba(255,255,255,.03);text-decoration:none;transition:all .2s">Financial Models</a>
-<a href="/deliverables#marketing" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--sub);background:rgba(255,255,255,.03);text-decoration:none;transition:all .2s">Marketing &amp; Growth</a>
-<a href="/deliverables#operations" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--sub);background:rgba(255,255,255,.03);text-decoration:none;transition:all .2s">Operations &amp; Team</a>
-<a href="/deliverables#techdocs" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--sub);background:rgba(255,255,255,.03);text-decoration:none;transition:all .2s">Technical Docs</a>
-<a href="/deliverables#testing" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:var(--sub);background:rgba(255,255,255,.03);text-decoration:none;transition:all .2s">Testing &amp; QA</a>
-<a href="/deliverables#launch" style="font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid rgba(201,168,76,.25);color:var(--gold);background:rgba(201,168,76,.06);text-decoration:none;transition:all .2s">Day-1 Launch Kit</a>
-</div>
-<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">
-<a href="app?plan=blueprint&amp;source=inventory_strip" class="btn-g" style="padding:12px 28px;font-size:14px;text-decoration:none">Blueprint &#8212; $297</a>
-<a href="app?plan=strategy_pack&amp;source=inventory_strip" class="btn-g" style="padding:12px 28px;font-size:14px;text-decoration:none">Strategy Pack &#8212; $697</a>
-<a href="app?plan=foundation&amp;source=inventory_strip" class="btn-p" style="padding:12px 28px;font-size:14px;font-weight:600;text-decoration:none">Foundation &#8212; $1,997</a>
-<a href="/deliverables" class="btn-g" style="padding:12px 28px;font-size:14px;text-decoration:none">See every file &#8594;</a>
-</div>
-<p style="font-size:11px;color:var(--dim);margin:0">Every file is generated from <em>your</em> business description &#8212; not a generic template. You own it all.</p>
-</div>
-</div>
-<div class="demo-wrap"><p style="text-align:center;font-size:13px;color:var(--sub);max-width:680px;margin:0 auto 14px;line-height:1.55">Example of a <strong>Foundation build</strong>. Score the idea, generate the full document + code bundle, and deploy to your domain — all in one session.</p><div class="demo"><div class="demo-bar"><div class="demo-dot"></div><div class="demo-dot"></div><div class="demo-dot"></div></div><div class="demo-body"><div class="demo-main"><h3>Turning "DataPilot AI" into a real business…</h3><div class="demo-phases"><div class="demo-phase"><span class="ck">✓</span> Clear go / no-go score — stress-tested, not hype</div><div class="demo-phase"><span class="ck">✓</span> Strategy pack: plan, model, GTM, investor storyline</div><div class="demo-phase"><span class="ck">✓</span> Lender- and investor-ready materials in one place</div><div class="demo-phase"><span class="ck">✓</span> Live product on your domain — you own it</div><div class="demo-phase"><span class="ck">✓</span> Day-1 Kit: onboarding dashboard, tests, seed data</div><div class="demo-phase"><span class="ck">✓</span> Financial models, cap table, tax strategy, hiring plan</div><div class="demo-phase"><span class="ck">✓</span> Legal templates, compliance docs, operations playbooks</div><div class="demo-phase"><span class="ck">✓</span> 90-day launch playbook + API collection ready</div></div></div><div class="demo-sidebar"><h4>You walk away with</h4><div class="demo-file"><span>Pack</span>Operating strategy &amp; risk picture</div><div class="demo-file"><span>Pack</span>Fundraising &amp; diligence storyline</div><div class="demo-file"><span>Pack</span>Loan-room business plan</div><div class="demo-file"><span>Pack</span>Revenue &amp; unit economics</div><div class="demo-file"><span>Pack</span>90-day launch playbook</div><div class="demo-file"><span>Live</span>Interactive setup dashboard</div><div class="demo-file"><span>Pack</span>Legal templates &amp; compliance docs</div><div class="demo-file"><span>Pack</span>Financial models &amp; cap table</div><div class="demo-file"><span>Kit</span>Test suite, seed data &amp; API collection</div><div class="demo-file" style="color:var(--dim)">+ 120 more files in your repo…</div></div></div></div></div>
-<div class="trust"><p>Built on the same rails serious companies trust</p><div class="trust-logos"><span>Secure hosting</span><span>Payments</span><span>Email &amp; CRM</span><span>Automation</span><span>Analytics</span></div></div>
-<div class="stats"><div class="stats-grid" role="list" aria-label="Key metrics"><div class="stat" role="listitem"><div class="num">24</div><div class="label">MCP-ready tools</div></div><div class="stat" role="listitem"><div class="num">15</div><div class="label">Event workflows</div></div><div class="stat" role="listitem"><div class="num">8</div><div class="label">Agent roles</div></div><div class="stat" role="listitem"><div class="num">1</div><div class="label">Master config</div></div></div></div>
-<section id="operating-system"><p class="sl">What the codebase now enforces</p><h2 class="st">A complete business operating system ships with every serious build.</h2><div class="ss">The builder validates the generated repo against a launch contract. A build is not complete unless the business can attract leads, sell products, create commercial documents, collect money, onboard customers, operate through agents, prove standards coverage, recover from failures, and run on self-hostable infrastructure.</div><div class="features"><div class="ft"><div class="ft-i">01</div><h3>Revenue engine</h3><p>Lead magnets, product catalog, checkout metadata, upsells, bundles, pricing rules, quote templates, proposal templates, contracts, invoices, receipts, failed-payment recovery, and revenue metrics.</p><div class="tg">Pre-SaaS monetization included</div></div><div class="ft"><div class="ft-i">02</div><h3>CRM + lifecycle</h3><p>Leads, contacts, customers, deals, opportunities, quotes, proposals, contracts, invoices, payments, subscriptions, tickets, tasks, notes, and activity stages from visitor through renewal.</p><div class="tg">Internal customer system</div></div><div class="ft"><div class="ft-i">03</div><h3>AI + MCP surface</h3><p>Tool registry, agent permissions, workflow definitions, prompts, retrieval scaffolding, customer context tools, support tools, finance tools, approval gates, MCP conformance metadata, and open-weight model routing.</p><div class="tg">AI-operable, permissioned by role</div></div><div class="ft"><div class="ft-i">04</div><h3>Self-hostable architecture</h3><p>Master config, Docker compose, API service, worker service, Postgres/pgvector, Redis, local storage, reverse proxy, migrations, provider abstractions, and no mandatory external SaaS in core logic.</p><div class="tg">Optional adapters, internal defaults</div></div><div class="ft"><div class="ft-i">05</div><h3>Security + governance</h3><p>OWASP ASVS checklist, OWASP SAMM maturity stream, NIST AI RMF risk register, ISO 42001 readiness notes, RBAC, tenant isolation, audit logs, and prompt-injection safeguards.</p><div class="tg">Standards-aligned evidence</div></div><div class="ft"><div class="ft-i">06</div><h3>Observability + deployment gates</h3><p>OpenTelemetry traces, PostHog-ready event plans, metrics, logs, business-event correlation, GitHub Actions checks, environment protection, concurrency, branch protection, and live route smoke tests.</p><div class="tg">Operational proof, not vibes</div></div><div class="ft"><div class="ft-i">07</div><h3>Event workflows</h3><p>Lead-to-sale, proposal-to-contract, contract-to-invoice, payment-to-onboarding, product delivery, failed-payment recovery, support resolution, renewal, churn response, and winback workflows.</p><div class="tg">YAML-based and testable</div></div><div class="ft"><div class="ft-i">08</div><h3>Tenancy + architecture decisions</h3><p>Shared-table, schema-per-tenant, and database-per-tenant tradeoffs are captured with migration, backup, disaster recovery, isolation, and regulated/BYOC promotion guidance.</p><div class="tg">Architecture is explicit</div></div><div class="ft"><div class="ft-i">09</div><h3>Semantic validation gates</h3><p>Generated artifacts must pass required counts, banned placeholder checks, niche relevance, buyer alignment, offer alignment, accessibility/button safety, and promise-equivalence fixtures before BUILD STATUS: PASS.</p><div class="tg">Promises become tests</div></div><div class="ft"><div class="ft-i">10</div><h3>Resumable repair loop</h3><p>Detector/remediator pairs, deployment failure classification, BUILD-REPORT telemetry, checkpoint manifests, and Codex operator guidance help future builds continue from the last verified state.</p><div class="tg">Failures become repair inputs</div></div><div class="ft"><div class="ft-i">11</div><h3>Media + model expansion</h3><p>Optional video-use planning, VibeVoice-compatible voice notes, PostHog analytics hooks, Claude Context-style repo context, RTK-style routing, Hermes agent notes, and an open-weight model catalog are generated as capability evidence.</p><div class="tg">Optional, traceable adapters</div></div></div></section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section id="who-its-for"><p class="sl">Who it’s for</p><h2 class="st">Choose your bottleneck. Get a matched execution path.</h2><div class="sss">Each path starts with a free score and delivers what you actually need — with clear scope before payment. Unsure? <a href="/quiz" style="color:var(--gold)">Take the 2-minute diagnostic</a> or <a href="app?plan=free&archetype=demo_express&segment=organic_unknown&source=hub" style="color:var(--gold)">start with a free score</a>.</div><div class="pg"><div class="pc"><h3>“I can’t afford to bet on the wrong idea.”</h3><p class="pain"><strong>You:</strong> early founder, demo seller, or pivoting operator. <strong>Stuck:</strong> no clear, defensible read on whether the business works.</p><p class="rx"><strong>Outcome:</strong> free viability score + critique before spend. Then <em>Foundation</em> implements your full document set, live product, and deployment — with clear handoff.</p><div class="cta-row"><a class="sm sm-g" href="app?plan=free&archetype=demo_express&segment=viability&source=hub">Score free — $0</a><a class="sm sm-p" href="app?plan=foundation&archetype=landing_1p&segment=viability_buy&source=hub">Foundation — $1,997</a><a class="sm sm-g" href="/for/viability">Guide →</a></div></div><div class="pc"><h3>“The bank or investors expect a real pack.”</h3><p class="pain"><strong>You:</strong> raising or borrowing. <strong>Stuck:</strong> spreadsheets everywhere, narrative scattered, no single artifact that holds up in the room.</p><p class="rx"><strong>Outcome:</strong> funding-ready materials with numbers and story in one place — <em>Foundation</em> delivers the core bundle.</p><div class="cta-row"><a class="sm sm-g" href="app?plan=strategy_pack&archetype=starter_5p&segment=capital&source=hub">Strategy Pack — $697</a><a class="sm sm-p" href="app?plan=foundation&archetype=starter_5p&segment=capital&source=hub">Foundation — $1,997</a><a class="sm sm-g" href="/for/capital">Guide →</a></div></div><div class="pc"><h3>“Ship the product and docs — I’ll wire the tools myself.”</h3><p class="pain"><strong>You:</strong> technical or budget-conscious. <strong>Stuck:</strong> you want code, deployment, and operator narrative without us touching your vendor accounts.</p><p class="rx"><strong>Outcome:</strong> <em>Foundation</em> — full implementation and deployment, with a clear activation guide. Connect services on your own timeline.</p><div class="cta-row"><a class="sm sm-g" href="app?plan=strategy_pack&archetype=landing_1p&segment=foundation_diy&source=hub">Strategy Pack — $697</a><a class="sm sm-p" href="app?plan=foundation&archetype=landing_1p&segment=foundation_diy&source=hub">Foundation — $1,997</a><a class="sm sm-g" href="/for/foundation-diy">Guide →</a></div></div><div class="pc"><h3>“Leads and money are leaking everywhere.”</h3><p class="pain"><strong>You:</strong> owner or small team. <strong>Stuck:</strong> no clean payments, CRM, or follow-ups — it’s all in inboxes and memory.</p><p class="rx"><strong>Outcome:</strong> <em>Foundation</em> builds your full strategy + product + deployment. Your bundle includes activation guides for connecting payments, CRM, and automations. <span style="color:var(--gold);font-size:12px">Provider-backed operational connections are scaffolded and activated when credentials are present.</span></p><div class="cta-row"><a class="sm sm-p" href="app?plan=foundation&archetype=growth&segment=revenue_ops&source=hub">Foundation — $1,997</a><a class="sm sm-g" href="/for/revenue-ops">Guide →</a></div></div><div class="pc"><h3>“We’re going to market for real.”</h3><p class="pain"><strong>You:</strong> serious launch or authority-led business. <strong>Stuck:</strong> need depth across strategy, product, and operations — not a thin page.</p><p class="rx"><strong>Outcome:</strong> <em>Foundation</em> delivers the deepest document + product bundle available today. <span style="color:var(--gold);font-size:12px">Broader operational paths are represented through editions, suites, and setup routes.</span></p><div class="cta-row"><a class="sm sm-p" href="app?plan=foundation&archetype=enterprise_full&segment=full_launch&source=hub">Foundation — $1,997</a><a class="sm sm-g" href="/for/full-launch">Guide →</a></div></div><div class="pc"><h3>“Trade or vertical — I need assist, not a fake guarantee.”</h3><p class="pain"><strong>You:</strong> contractor or adjacent operator. <strong>Stuck:</strong> slow plan-to-planning; liability worries; need drafts a human signs off on.</p><p class="rx"><strong>Outcome:</strong> <em>Foundation</em> with optional vertical assist — <strong>drafts for your review only</strong>, never a substitute for licensed pros. <span style="color:var(--gold);font-size:12px">Deeper vertical workflows route through blueprint and module activation.</span></p><div class="cta-row"><a class="sm sm-p" href="app?plan=foundation&archetype=growth&vertical=1&segment=trades_vertical&source=hub">Foundation — $1,997</a><a class="sm sm-g" href="/for/trades-vertical">Guide →</a></div></div><div class="pc"><h3>“The business is the directory or community.”</h3><p class="pain"><strong>You:</strong> directory or membership operator. <strong>Stuck:</strong> generic SaaS shells don’t match how you monetize.</p><p class="rx"><strong>Outcome:</strong> <em>Foundation</em> generates strategy, product, and deployment tuned to directory models. <span style="color:var(--gold);font-size:12px">Directory integrations are represented as optional, customer-owned adapter paths.</span></p><div class="cta-row"><a class="sm sm-p" href="app?plan=foundation&archetype=enterprise_full&segment=directory&source=hub">Foundation — $1,997</a><a class="sm sm-g" href="/for/directory">Guide →</a></div></div><div class="pc"><h3>“It’s live — keep it healthy.”</h3><p class="pain"><strong>You:</strong> post-launch owner. <strong>Stuck:</strong> automations break, content stalls, nobody owns the cadence.</p><p class="rx"><strong>Outcome:</strong> Ongoing monitoring, health checks, retries, and reporting you can track. <span style="color:var(--gold);font-size:12px">Managed runtime is represented as monitoring, retry, and repair-readiness guidance.</span></p><div class="cta-row"><a class="sm sm-g" href="/for/managed">Learn more →</a></div></div></div><p style="text-align:center;font-size:12px;color:var(--dim);max-width:560px;margin:28px auto 0;line-height:1.55">One platform — judgment on the plan, implementation you own, and accountable scope. <a href="maturity" style="color:var(--gold)">See exactly what ships today</a>.</p></section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section id="outcome-packages"><p class="sl">What you get</p><h2 class="st">Seven outcomes — from “should I do this?” to “it’s deployed”</h2><div class="ss">Foundation delivers all seven. Before work runs, you see an <strong>honest preview</strong> of what’s in scope — no surprise shrink-wrapping.</div><div class="features"><div class="ft"><div class="ft-i" aria-hidden="true" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);line-height:1">1</div><h3>Decide with confidence</h3><p>A rigorous score and independent stress test — so you proceed, pivot, or pause before you sink real money.</p><div class="tg"><a href="app?plan=free" style="color:var(--gold)">Start free</a></div></div><div class="ft"><div class="ft-i" aria-hidden="true" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);line-height:1">2</div><h3>Document like you hired the room</h3><p>Investor-, lender-, and operator-grade packs in your bundle — plus optional plain-English summaries for day-to-day use.</p><div class="tg">Boardroom-ready depth</div></div><div class="ft"><div class="ft-i" aria-hidden="true" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);line-height:1">3</div><h3>Ship a real product</h3><p>Private repo, production app, your domain — you own what ships.</p><div class="tg">Yours to extend or hand off</div></div><div class="ft"><div class="ft-i" aria-hidden="true" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);line-height:1">4</div><h3>Financial clarity from day one</h3><p>Revenue models, cap tables, runway calculators, tax strategy, valuation frameworks — the numbers your lender or investor expects.</p><div class="tg">Funding-ready financials</div></div><div class="ft"><div class="ft-i" aria-hidden="true" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);line-height:1">5</div><h3>Legal templates ready for review</h3><p>Operating agreements, NDAs, IP assignments, privacy policies, contractor agreements, GDPR plan — all tailored to your business for attorney review.</p><div class="tg">Attorney-review ready</div></div><div class="ft"><div class="ft-i" aria-hidden="true" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);line-height:1">6</div><h3>Launch with a real plan</h3><p>90-day launch playbook, marketing strategy, social calendar outlines, hiring plan, operations playbook — so you know what to do after deployment.</p><div class="tg">Clear next steps</div></div><div class="ft w"><div class="ft-i" aria-hidden="true" style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);line-height:1">7</div><h3>Day-1 Success Kit</h3><p>Interactive onboarding dashboard, automated test suite, seed data, API collection, activation guides — everything needed to start operating immediately.</p><div class="tg">Ready to use, not just read</div></div></div></section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section><p class="sl">The problem you're solving</p><h2 class="st">Between your idea and first revenue, there is usually six-figure setup work.</h2><div class="ss">Most founders piece this together across consultants, legal, development, and operations vendors before they can even test demand.</div><div class="compare"><div class="cc bad"><h3>Typical route</h3><div class="ci">Strategy + financial modeling <strong>$15K–40K</strong></div><div class="ci">Legal drafting + review <strong>$5K–15K</strong></div><div class="ci">Build + deployment <strong>$8K–22K</strong></div><div class="ci">Payments, CRM, and automations <strong>$15K–40K</strong></div><div class="ci">Timeline <strong>2–4 months</strong></div></div><div class="cv">vs</div><div class="cc good"><h3>Your Deputy route</h3><div class="ci">Decision-grade plan + documents <strong>$48K–$71K equivalent</strong></div><div class="ci">Live product on your domain <strong>$8K–$22K equivalent</strong></div><div class="ci">Day-1 launch kit + activation guides <strong>$5K–$10K equivalent</strong></div><div class="ci">Legal/compliance starter pack <strong>$5K–$15K equivalent</strong></div><div class="ci">Timeline <strong>One guided build session</strong></div></div></div></section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section id="deliverables"><p class="sl">What you walk away with</p><h2 class="st">160+ files. 11 categories. Your repo, your domain.</h2><div class="ss">This is not a vague deliverable list. Every build produces a concrete, file-by-file inventory across strategy, legal, code, finance, marketing, operations, technical docs, testing, launch resources, and standards evidence — tailored to your business. <a href="/deliverables" style="color:var(--gold);font-weight:600">See every file &rarr;</a></div>
-<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-width:900px;margin:0 auto 28px;text-align:center" class="stat-grid">
-<div style="background:#1E1E2A;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 8px"><div style="font-family:'Playfair Display',serif;font-size:28px;color:var(--gold)">15</div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px">Strategy docs</div></div>
-<div style="background:#1E1E2A;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 8px"><div style="font-family:'Playfair Display',serif;font-size:28px;color:var(--gold)">15</div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px">Legal templates</div></div>
-<div style="background:#1E1E2A;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 8px"><div style="font-family:'Playfair Display',serif;font-size:28px;color:var(--gold)">30+</div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px">Source code</div></div>
-<div style="background:#1E1E2A;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 8px"><div style="font-family:'Playfair Display',serif;font-size:28px;color:var(--gold)">15</div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px">Financial models</div></div>
-<div style="background:#1E1E2A;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 8px"><div style="font-family:'Playfair Display',serif;font-size:28px;color:var(--gold)">15</div><div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px">Marketing &amp; growth</div></div>
-</div>
-<div class="features">
-<div class="ft"><div class="ft-i">📊</div><h3>Strategy &amp; business planning</h3><p>SPEC, revenue model, GTM playbook, SBA business plan, investor readiness, pitch deck, scenario planning, cap table, and more.</p><div class="tg">15 documents · Board-ready depth</div></div>
-<div class="ft"><div class="ft-i">⚖️</div><h3>Legal &amp; compliance templates</h3><p>Terms, privacy, operating agreement, NDA, IP assignment, contractor agreement, GDPR plan, government contracting readiness.</p><div class="tg">15 templates · Attorney-review ready</div></div>
-<div class="ft"><div class="ft-i">🖥️</div><h3>Production Next.js application</h3><p>Homepage, dashboard, pricing, docs, FAQ, navbar, footer, CTA — all with your branding, your content, your design tokens.</p><div class="tg">15+ frontend files · Deployed on your domain</div></div>
-<div class="ft"><div class="ft-i">⚙️</div><h3>Backend, infrastructure &amp; config</h3><p>API routes, database schema, Docker config, CI pipeline, env vars, Tailwind config, TypeScript strict mode, Zod validation.</p><div class="tg">15 config files · Developer-ready handoff</div></div>
-<div class="ft"><div class="ft-i">💰</div><h3>Financial planning &amp; modeling</h3><p>Runway calculator, valuation model, three-statement model, tax strategy, term sheets, dilution waterfall, board deck template.</p><div class="tg">15 documents · Lender &amp; investor ready</div></div>
-<div class="ft"><div class="ft-i">📣</div><h3>Marketing &amp; growth</h3><p>260-post social calendar, email sequences, competitive analysis, video scripts, A/B messaging, referral programs, channel playbooks.</p><div class="tg">15 resources · Multi-channel ready</div></div>
-<div class="ft"><div class="ft-i">🏢</div><h3>Operations &amp; team building</h3><p>Operations playbook, hiring plan, culture doc, performance framework, crisis playbook, customer success, retention strategy.</p><div class="tg">15 playbooks · Scale-ready ops</div></div>
-<div class="ft"><div class="ft-i">📖</div><h3>Technical documentation</h3><p>Design system, API contracts, OpenAPI spec, Postman collection, data model docs, accessibility plan, analytics instrumentation.</p><div class="tg">15 docs · Clean dev handoff</div></div>
-<div class="ft"><div class="ft-i">🧪</div><h3>Testing &amp; quality assurance</h3><p>Vitest unit tests, Playwright e2e, component tests, experiment frameworks, cohort analysis, user research plans, JTBD guides.</p><div class="tg">15 artifacts · CI-integrated</div></div>
-<div class="ft"><div class="ft-i">🚀</div><h3>Day-1 Success Kit</h3><p>Interactive onboarding dashboard, automated test suite, seed data for instant demos, API testing collection, 90-day launch playbook, plain-language companion docs. Ready to use, not just read.</p><div class="tg">15 launch resources · In your repo from day one</div></div><div class="ft w"><div class="ft-i">STD</div><h3>Standards, governance &amp; semantic assurance</h3><p>OWASP ASVS, OWASP SAMM, NIST AI RMF, ISO 42001 readiness, MCP conformance, OpenTelemetry, deployment protection, tenancy decisions, and promise-equivalence evals.</p><div class="tg">Standards evidence · Generated and tested</div></div>
-</div>
-<div style="text-align:center;margin-top:24px"><a href="/deliverables" class="btn-p" style="padding:14px 32px;font-size:15px;font-weight:600;text-decoration:none">See every file in detail &rarr;</a><p style="font-size:12px;color:var(--dim);margin-top:10px">Every file is generated from <em>your</em> specific business description — not a generic template.</p></div>
-</section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section id="features"><p class="sl">How we validate your idea</p><h2 class="st">Before we build, we stress-test the plan on purpose.</h2><div class="sss">You get a clear score and a blunt critique: where the idea wins, where it’s fragile, and what to fix before you spend.</div><div class="features"><div class="ft"><div class="ft-i">🔬</div><h3>Multiple lenses, one verdict</h3><p>Market, competition, economics, positioning — the kinds of questions lenders and investors ask. You see strengths and gaps in plain language.</p></div><div class="ft"><div class="ft-i">🤖</div><h3>Independent second opinions</h3><p>Several evaluations run separately, then reconcile. Disagreement is surfaced — not buried under a single score.</p></div><div class="ft"><div class="ft-i">😈</div><h3>Independent stress test</h3><p>We pressure-test assumptions and failure modes. Better to see the holes in writing than in a funding conversation.</p></div></div></section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section id="build-packages"><p class="sl">Choose your depth</p><h2 class="st">From a fast proof to a full go-to-market build</h2><div class="sss">In the app you pick two things together: <strong>how much implementation scope you unlock</strong> (your paid tier) and <strong>how big the first version is</strong> (your site shape). That pairing keeps scope honest — you’re never forced into “enterprise everything” when you only needed clarity and a product.</div><div class="features"><div class="ft w"><div class="ft-i">📦</div><h3>Site shapes that match real launches</h3><p>From a <strong>quick proof</strong> to a <strong>credible multi-page presence</strong>, <strong>growth</strong> depth, <strong>authority</strong> content, or the <strong>fullest</strong> first version — each path sets sensible defaults for what runs first vs what waits. Combinations that don’t make sense are disabled, so you can’t accidentally buy the wrong shape.</p><div class="tg">Proof · Lean · Credible · Growth · Authority · Fullest</div></div><div class="ft"><div class="ft-i">📖</div><h3>Plain-English companions</h3><p>Optional owner-friendly summaries alongside full technical depth — fast for your team, rigorous for banks and investors.</p><div class="tg">Same depth · Easier handoffs</div></div><div class="ft"><div class="ft-i">⏱️</div><h3>Fast proof path</h3><p>When speed matters, the leanest shape targets a <strong>minutes-not-months</strong> proof path so you see something real quickly, then deepen deliberately.</p><div class="tg">Built for momentum</div></div><div class="ft"><div class="ft-i">🔧</div><h3>Vertical assist (drafts only)</h3><p>For trades-style workflows, optional assist produces <strong>drafts for human review</strong> — not a binding bid or licensed substitute.</p><div class="tg">Human-in-the-loop</div></div><div class="ft w"><div class="ft-i" aria-hidden="true">&#x2696;&#xFE0F;</div><h3>Authority vs fullest launch</h3><p><strong>Authority</strong> leans into trust content and search depth. <strong>Fullest</strong> leans into the broadest operational automation your tier allows. Same engine — different emphasis.</p><div class="tg">Match emphasis to how you monetize</div></div></div></section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section id="how" style="border-top:1px solid rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02)"><p class="sl">How it works</p><h2 class="st">Three steps. Clear at every step.</h2><div class="steps"><div class="stp"><h3>1. Tell us what you’re building</h3><p>Type it, say it, show it, or upload it — pitch deck, napkin sketch, or a walkthrough video. We turn it into a structured brief you can refine.</p></div><div class="stp"><h3>2. See if the business holds up</h3><p>Before build work starts, you get a clear score plus a tough critique — market, economics, competition, and risk. Proceed, pivot, or pause with eyes open.</p></div><div class="stp"><h3>3. We implement what you unlocked</h3><p>Your product goes live on your domain with modern security. <strong>Foundation</strong> delivers the full document + product bundle with 120+ files. Your repo includes activation guides for connecting payments, CRM, and other services on your timeline. Scope and status stay visible — including a practical activation guide in your bundle. Details: <a href="maturity">what’s included</a>.</p></div></div></section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section id="entry-offer"><p class="sl">Start with low risk</p><h2 class="st">Diagnostic + execution blueprint: $297</h2><div class="ss">If you're unsure, start with a paid decision layer first. You get a concrete execution sequence, risk map, and persona-matched package recommendation. If you start a paid build within 14 days, this fee is credited at checkout.</div><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="app?plan=blueprint" class="btn-g" style="font-size:14px;padding:12px 24px">Blueprint — $297</a><a href="app?plan=strategy_pack" class="btn-g" style="font-size:14px;padding:12px 24px">Strategy Pack — $697</a><a href="/quiz" class="btn-p" style="font-size:14px;padding:12px 24px">Find my best path</a><a href="app?plan=scoring_pro" class="btn-p" style="font-size:14px;padding:12px 24px">Unlimited scoring — $19/mo</a></div><p style="font-size:12px;color:var(--dim);text-align:center;margin-top:10px">Scoring runs locally on your device using WebGPU — unlimited and private. No server calls, no quota limits. Cloud fallback available if your browser lacks WebGPU support.</p></section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section id="pricing"><p class="sl">Pricing</p><h2 class="st">Start free. Step up when you're ready.</h2><div class="ss">Every step delivers real value. No commitment until you're confident.</div>
-<div role="list" aria-label="Pricing tiers" style="max-width:1080px;margin:0 auto">
-<div class="pricing-row-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px">
+<main id="main-content">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Plain-English launch paths</div>
+      <h1>Choose the outcome you need. See exactly what gets delivered.</h1>
+      <p class="lead">Your Deputy helps founders and operators decide whether an idea is worth building, then produces the planning assets or build package for that stage. It is not a vague promise that a company runs itself.</p>
+      <div class="actions">
+        <a class="btn primary" href="#choose">Choose my path</a>
+        <a class="btn secondary" href="/business-factory">Use production factory console</a>
+        <a class="btn secondary" href="/maturity">See delivery limits</a>
+      </div>
+    </div>
+    <aside class="panel hero-card">
+      <h2 style="font-size:24px">What you can do here</h2>
+      <ul>
+        <li><span class="check">✓</span><span>Score a business idea before spending serious money.</span></li>
+        <li><span class="check">✓</span><span>Buy a planning pack when you need documents, not code.</span></li>
+        <li><span class="check">✓</span><span>Start a Foundation build when you need code, deployment scaffolding, and a Day-1 handoff.</span></li>
+        <li><span class="check">✓</span><span>Use the Business Factory Console when you are an operator with the admin key.</span></li>
+      </ul>
+      <div class="visual" aria-label="Delivery receipt preview">
+        <div class="bar"></div>
+        <div class="receipt">
+          <div><strong>Input</strong><span>market + pain</span></div>
+          <div><strong>Output</strong><span>manifest or package</span></div>
+          <div><strong>Proof</strong><span>tests + receipt</span></div>
+        </div>
+      </div>
+    </aside>
+  </section>
 
-<div class="pl" role="listitem"><h3>Free Scoring</h3><div class="pr">$0</div><div class="ds">Know before you invest</div><ul><li>Multi-lens viability scorecard</li><li>Independent stress test</li><li>Composite score with confidence</li><li>Framework-by-framework breakdown</li><li>Risk summary + key assumptions</li><li>Runs locally via WebGPU &#8212; unlimited</li><li>No credit card required</li></ul><a href="app?plan=free" class="btn-g" style="width:100%;text-align:center;padding:12px">Score Your Idea Free</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">~2 minutes &#183; Zero risk</div></div>
+  <section class="section" id="choose">
+    <h2>Start with the pain you have today.</h2>
+    <p>No funnel maze. Pick the row that matches what brought you here.</p>
 
-<div class="pl" role="listitem"><h3>Scoring Pro</h3><div class="pr">$19<span>/mo</span></div><div class="ds">Ongoing scoring access</div><ul><li>Everything in Free Scoring, plus:</li><li>Unlimited monthly scoring runs</li><li>Priority model access (faster, deeper)</li><li>Score multiple ideas per month</li><li>Compare and track scores over time</li><li>Cancel anytime</li></ul><a href="app?plan=scoring_pro" class="btn-g" style="width:100%;text-align:center;padding:12px">Start Scoring Pro</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">For serial ideators and advisors</div></div>
+    <div class="path">
+      <div class="price">$0</div>
+      <div>
+        <span class="tag">I have an idea, but I am not sure it is worth building.</span>
+        <h3>Free Idea Score</h3>
+        <p>Answer the diagnostic and get a go/no-go style read on the market, buyer, offer, and build risk.</p>
+      </div>
+      <a class="btn primary" href="/launch/score-an-idea-free">Score free</a>
+    </div>
 
-<div class="pl" role="listitem"><h3>Blueprint</h3><div class="pr">$297<span>/one-time</span></div><div class="ds">Deep diagnostic + execution plan</div><ul><li>Everything in Scoring Pro, plus:</li><li>Execution blueprint document</li><li>Competitive landscape analysis</li><li>Revenue model + unit economics</li><li>Go-to-market strategy draft</li><li>Architecture recommendation</li><li>Risk assessment + mitigation plan</li><li>Investor-ready summary narrative</li></ul><a href="app?plan=blueprint" class="btn-p" style="width:100%;text-align:center;padding:12px;background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.4)">Get Your Blueprint &#8212; $297</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">The plan before the build</div></div>
+    <div class="path">
+      <div class="price">$297</div>
+      <div>
+        <span class="tag">I need a deeper decision before a build.</span>
+        <h3>Diagnostic + Execution Blueprint</h3>
+        <p>Get a practical assessment of the opportunity, recommended offer, risks, and the next build path.</p>
+      </div>
+      <a class="btn primary" href="/app?plan=diagnostic">Start diagnostic</a>
+    </div>
 
-</div>
-<div class="pricing-row-2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px;margin:0 auto">
+    <div class="path">
+      <div class="price">$697</div>
+      <div>
+        <span class="tag">I need the plan, documents, and business narrative.</span>
+        <h3>Strategy Pack</h3>
+        <p>Receive the planning and operating documents. This does not include generated production code or deployment.</p>
+      </div>
+      <a class="btn primary" href="/app?plan=strategy_pack">Get Strategy Pack</a>
+    </div>
 
-<div class="pl" role="listitem"><h3>Strategy Pack</h3><div class="pr">$697<span>/one-time</span></div><div class="ds">All 90+ documents &#183; No code or deployment</div><ul><li>Everything in Blueprint, plus:</li><li>90+ consulting-grade documents</li><li>SBA business plan + investor readiness</li><li>Legal templates (OA, IP, NDA, GDPR)</li><li>Financial models + valuation framework</li><li>Marketing strategy + social calendar</li><li>Operations playbook + hiring plan</li><li>Downloadable .zip &#8212; yours to keep</li><li>$697 credited if you upgrade to Foundation</li></ul><a href="app?plan=strategy_pack" class="btn-p" style="width:100%;text-align:center;padding:12px;background:rgba(201,168,76,.15);border-color:rgba(201,168,76,.4)">Get Strategy Pack &#8212; $697</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">Documents only &#8212; upgrade anytime</div></div>
+    <div class="path">
+      <div class="price">$1,997</div>
+      <div>
+        <span class="tag">I need the first build package.</span>
+        <h3>Foundation Build</h3>
+        <p>Receive the Strategy Pack plus generated application code, deployment scaffolding, backend/API files, tests, seed data, and a Day-1 Success Kit.</p>
+      </div>
+      <a class="btn primary" href="/launch/start-foundation-build">Start Foundation</a>
+    </div>
 
-<div class="pl pop" role="listitem"><div class="bdg">The Full Build</div><h3>Foundation</h3><div class="pr">$1,997<span>/build</span></div><div class="ds">120+ files &#183; Deployed product &#183; You own everything</div><ul><li>Everything in Strategy Pack, plus:</li><li>Production Next.js app on your domain</li><li>Backend API + database schema</li><li>Design system wired to your brand</li><li>Private GitHub repo &#8212; yours to extend</li><li><strong>Day-1 Kit:</strong> onboarding dashboard, tests, seed data, API collection, 90-day playbook</li><li><strong>Integrations:</strong> server attempts the <strong>same 11-slot allowlist</strong> as Professional (Stripe path, email, chatbot, SEO, design, analytics, n8n, docs, social, hosting/DNS, vertical tool) when keys + archetype allow &#8212; see <a href="maturity" style="color:var(--gold)">/maturity</a></li></ul><a href="app?plan=foundation" class="btn-p" style="width:100%;text-align:center;padding:12px">Start Foundation &#8212; $1,997</a><div style="font-size:11px;color:var(--gold);text-align:center;margin-top:8px">Replaces $71K+ of specialist work</div></div>
+    <div class="path">
+      <div class="price">Admin</div>
+      <div>
+        <span class="tag">I operate the production system.</span>
+        <h3>Business Factory Console</h3>
+        <p>Generate a validated launch manifest, check production readiness, and queue durable factory jobs. Requires the production admin key.</p>
+      </div>
+      <a class="btn primary" href="/business-factory">Open console</a>
+    </div>
+  </section>
 
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:720px;margin:16px auto 0">
+  <section class="section">
+    <h2>What is actually delivered?</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>Free Idea Score</h3>
+        <p>A front-end diagnostic path that helps you decide whether the idea deserves more work. It is for triage, not a finished business plan.</p>
+      </article>
+      <article class="card">
+        <h3>Strategy Pack</h3>
+        <p>Documents and business planning assets: offer, customer, strategy, revenue model, GTM, operations, and related artifacts. No live app deployment.</p>
+      </article>
+      <article class="card">
+        <h3>Foundation Build</h3>
+        <p>Generated code and delivery assets: app surface, API/backend files, deployment scaffolding, tests, seed data, docs, and handoff materials.</p>
+      </article>
+      <article class="card">
+        <h3>Integration Attempts</h3>
+        <p>Server-side provisioning attempts run only when the plan, archetype, credentials, and vendor APIs allow. Failed or missing vendor steps become receipts and manual actions.</p>
+      </article>
+      <article class="card">
+        <h3>Business Factory API</h3>
+        <p>Production admin endpoint that generates launch manifests and queues jobs. A queued job is not the same as a completed vendor setup.</p>
+      </article>
+      <article class="card">
+        <h3>Delivery Receipts</h3>
+        <p>Tests, manifests, maturity pages, and docs show what was generated, what was attempted, what passed, and what still requires operator action.</p>
+      </article>
+    </div>
+  </section>
 
-<div class="pl" role="listitem" style="border-color:rgba(34,197,94,.3);background:linear-gradient(135deg,rgba(34,197,94,.03),rgba(34,197,94,.01))"><h3 style="color:#22C55E">Professional</h3><div class="pr">$4,997<span>/build</span></div><div class="ds">Higher build tier &#183; same 11 integration slots as Foundation</div><ul><li>Everything in Foundation (including the 11-slot orchestrator allowlist)</li><li>Choose Professional when procurement or advisors expect the $4,997 build line item</li><li>Outcomes still depend on vendor keys, archetype skips, and API health</li></ul><a href="app?plan=professional" class="btn-p" style="width:100%;text-align:center;padding:12px;background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#22C55E">Start Professional &#8212; $4,997</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">Same allowlist as Foundation &#183; see <a href="maturity" style="color:var(--gold)">/maturity</a></div></div>
+  <section class="section">
+    <h2>The simplest delivery journey</h2>
+    <div class="steps">
+      <div class="step"><h3>Pick the outcome</h3><p>Score, diagnostic, document pack, build package, or operator console.</p></div>
+      <div class="step"><h3>Submit the brief</h3><p>Describe the market, customer, pain, offer, and constraints.</p></div>
+      <div class="step"><h3>Receive the package</h3><p>Get documents, code, manifest, or queued job depending on the path.</p></div>
+      <div class="step"><h3>Review the receipt</h3><p>Use maturity pages, tests, and manifests to see exactly what shipped.</p></div>
+    </div>
+  </section>
 
-<div class="pl" role="listitem" style="border-color:rgba(96,165,250,.3);background:linear-gradient(135deg,rgba(96,165,250,.03),rgba(96,165,250,.01))"><h3 style="color:#60A5FA">Enterprise</h3><div class="pr">$9,997<span>/build</span></div><div class="ds">13 integration slots (adds WordPress + post-deploy verification)</div><ul><li>Everything in Professional, plus on the server allowlist:</li><li><strong>WordPress</strong> / managed CMS path (20i)</li><li><strong>Post-deploy verification</strong> checks on the live URL</li><li>Voice, SMS, CRM, directory, lead intel, and full video pipelines require <strong>Custom Volume</strong> (sales) &#8212; not included in default Enterprise</li><li>Priority support + build review (operational)</li></ul><a href="app?plan=enterprise" class="btn-p" style="width:100%;text-align:center;padding:12px;background:rgba(96,165,250,.15);border-color:rgba(96,165,250,.4);color:#60A5FA">Start Enterprise &#8212; $9,997</a><div style="font-size:11px;color:var(--dim);text-align:center;margin-top:8px">13 slots in code today &#183; Custom Volume: up to 19</div></div>
+  <section class="section">
+    <h2>What this does not promise</h2>
+    <div class="grid two">
+      <article class="card">
+        <h3>Not guaranteed revenue</h3>
+        <p>Revenue still depends on market demand, traffic, buyer trust, offer quality, follow-up, and execution.</p>
+      </article>
+      <article class="card">
+        <h3>Not hidden vendor magic</h3>
+        <p>Domains, email, Stripe, CRM, analytics, and automations depend on configured accounts, credentials, vendor approval, and tier rules.</p>
+      </article>
+    </div>
+    <div class="warning"><strong>Plain boundary:</strong> if a page says “build,” it means generated files, deployment scaffolding, tests, and handoff assets. If a third-party account is required, the receipt will show whether it ran, failed, or needs manual action.</div>
+  </section>
 
-</div>
-<div id="waitlist-box" style="max-width:720px;margin:24px auto 0;background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(201,168,76,0.01));border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:28px 36px;text-align:center"><h3 style="font-size:16px;font-weight:600;color:var(--gold);margin-bottom:4px">Get notified when Managed Runtime launches</h3><p style="font-size:13px;color:var(--dim);margin-bottom:14px">Managed Automation Runtime ($497/mo) &#8212; ongoing monitoring, retry queues, optimization reports. Join the waitlist.</p><form id="waitlist-form" onsubmit="return submitWaitlist(event)" style="display:flex;gap:8px;max-width:400px;margin:0 auto;flex-wrap:wrap"><input id="wl-email" type="email" placeholder="you@example.com" required aria-label="Email address for waitlist" style="flex:1 1 220px;min-width:0;padding:10px 14px;border:1px solid rgba(255,255,255,.15);border-radius:8px;background:rgba(12,12,20,.8);color:#fff;font-size:14px;font-family:inherit;outline:none"><button type="submit" style="padding:10px 20px;background:var(--gold);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:normal;overflow-wrap:anywhere;max-width:100%;flex:1 1 140px">Join waitlist</button></form><div id="wl-msg" style="font-size:12px;margin-top:8px;min-height:18px"></div></div></section>
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-
-<div style="max-width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.25),transparent);margin:0 auto"></div>
-<section id="faq"><p class="sl">FAQ</p><h2 class="st">Straight answers</h2><div class="faq" style="margin-top:48px"><div class="fq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('open')}"><h3>What strategy documents do I receive?</h3><div class="ans">You receive <strong>90+ artifacts</strong> (typically about 30,000–50,000 words of core material) spanning strategy, revenue and operating model, go-to-market, investor- and lender-ready packs, competitive landscape, pitch narrative, risk and failure-mode runbooks, product specification, data and API design, design system, content outlines, and customer discovery — organized in your bundle so your team (and your advisors) can work from one place. <a href="/deliverables" style="color:var(--gold)">See the full file-by-file inventory</a>.</div></div><div class="fq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('open')}"><h3>Can I use these documents for funding applications?</h3><div class="ans">Yes — the bundle is built to support <strong>fundraising and lending conversations</strong> with serious structure (plans, numbers, narrative, diligence-friendly organization). Treat them as a strong starting point: have your attorney, CPA, and any industry advisors review before you sign, file, or submit.</div></div><div class="fq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('open')}"><h3>What live infrastructure is provisioned?</h3><div class="ans"><strong>Foundation ($1,997)</strong> delivers your document set + live product + deployment + Day-1 Success Kit (onboarding dashboard, tests, seed data, API collection, 90-day playbook — <a href="/deliverables" style="color:var(--gold)">full inventory</a>). The orchestrator also runs the <strong>same 11-slot integration allowlist</strong> as Professional when you complete a paid build: hosting/DNS, billing, email, chatbot, SEO, design, analytics, automation, docs, social, vertical tool. <strong>Not every vendor call succeeds</strong> — outcomes depend on keys, archetype rules, and API health; your build&apos;s <code>BUILD-MANIFEST.json</code> is the receipt.<br><br><strong>Professional ($4,997)</strong> uses that <strong>same 11-slot allowlist</strong> in code today; it is the higher build tier for buyers who need that positioning.<br><br><strong>Enterprise ($9,997)</strong> expands the allowlist to <strong>13 slots</strong> (adds WordPress + post-deploy verification). Voice, SMS, CRM, directory, and similar modules require <strong>Custom Volume</strong> (up to 19 slots) or manual work. Always read <a href="maturity" style="color:var(--gold)">/maturity</a> before you buy.</div></div><div class="fq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('open')}"><h3>How does the multi-model viability analysis work?</h3><div class="ans">Multiple independent evaluations score your idea across several business lenses, then reconcile into one clear verdict. If the story doesn’t hold together, that shows up — before you spend. A final independent stress test helps surface weak points before they cost you money.</div></div><div class="fq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('open')}"><h3>What is the ownership model?</h3><div class="ans">You own what we deliver in your repository: product code, documents, and configuration. What’s “live” in third-party dashboards depends on what you activate using the guides in your bundle. Your bundle includes activation guidance; use <a href="maturity" style="color:var(--gold)">what’s included</a> to see typical readiness by category. Legal and regulated use still requires your qualified advisors.</div></div><div class="fq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('open')}"><h3>What input methods are supported?</h3><div class="ans">Nine ways to describe your venture: type a description, speak via voice, paste a competitor URL for analysis, upload or photograph an image (business card, whiteboard, storefront), open your camera for live capture, record a video walkthrough, upload a document (pitch deck, business plan, research PDF), have a conversational interview with AI, or start from a template. All inputs are processed by vision-capable AI models to extract a structured business brief.</div></div><div class="fq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('open')}"><h3>Do you support non‑US businesses or enterprise procurement?</h3><div class="ans">Defaults (legal copy, entity examples, some vendor regions) are <strong>US-oriented</strong>. Non‑US and regulated industries need advisor review. <strong>Enterprise procurement</strong> (SSO, MSA, custom DPA) is not self-serve in the builder — contact sales for vendor review workflows.</div></div><div class="fq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('open')}"><h3>What’s the difference between Strategy Pack and Foundation?</h3><div class="ans"><strong>Strategy Pack ($697)</strong> generates all 90+ documents — strategy, legal, financial, marketing, and operations — as a downloadable .zip file. No code generation, no deployment. Perfect if you need the full planning + narrative pack but aren’t ready for a live product.<br><br><strong>Foundation ($1,997)</strong> includes everything in Strategy Pack <em>plus</em> production code (Next.js app), deployment to your domain, backend API routes, design system, and a Day-1 Success Kit. If you start with Strategy Pack and upgrade to Foundation within 30 days, the $697 is credited toward the $1,997.</div></div></div></div></section>
-<div class="cta-s"><h2>Stop renting clarity. Own the outcome.</h2><p>Start at $0. Step up when you’re ready — $19/mo for scoring, $297 for a diagnostic, $697 for all documents, or $1,997 for the full build.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="app?plan=free" class="btn-g" style="font-size:14px;padding:12px 24px">Score free</a><a href="app?plan=strategy_pack" class="btn-g" style="font-size:14px;padding:12px 24px">Strategy Pack — $697</a><a href="app?plan=foundation" class="btn-p" style="font-size:15px;padding:12px 28px">Foundation — $1,997</a></div><p style="font-size:12px;color:var(--dim);margin-top:12px">Most buyers compare this to five- and six-figure specialist stacks — not to another SaaS subscription.</p></div></div>
+  <section class="section">
+    <h2>Still unsure?</h2>
+    <p>Use the diagnostic first. It is the lowest-friction way to turn confusion into a recommended path.</p>
+    <div class="actions">
+      <a class="btn primary" href="/quiz">Take the 2-minute diagnostic</a>
+      <a class="btn secondary" href="/deliverables">Inspect deliverables</a>
+      <a class="btn secondary" href="/maturity">Read the maturity matrix</a>
+    </div>
+    <p class="mini" style="margin-top:14px">Updated to match the production backend and public deployment.</p>
+  </section>
 </main>
-<footer role="contentinfo">
-<div class="fg"><div class="fb">Your Deputy</div><p>One platform: stress-test the idea, deliver the business pack, ship the product, and run scoped operating work with clear logs and limits.</p></div><div class="fc"><h4>Product</h4><a href="#who-its-for">Who it’s for</a><a href="/deliverables">Deliverables</a><a href="#features">Validation</a><a href="#pricing">Pricing</a><a href="#how">How it works</a><a href="#faq">FAQ</a></div><div class="fc"><h4>Resources</h4><a href="/quiz">2-minute diagnostic</a><a href="/for/">Guides hub</a><a href="app?plan=free">Score free</a><a href="maturity">What’s included</a><a href="#pricing">Compare tiers</a></div><div class="fc"><h4>Company</h4><a href="https://dynastyempire.com" target="_blank" rel="noopener noreferrer">Company</a><a href="mailto:ikeohu@dynastyempire.com">Contact</a></div><div class="fc"><h4>Legal</h4><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="app?returning=1">Sign in</a></div></div><div class="fbt"><p>© 2026 PA Registered Office Services, LLC</p><div style="display:flex;gap:20px"><a href="https://github.com/pinohu" target="_blank" rel="noopener noreferrer" style="color:var(--dim);text-decoration:none;font-size:13px">GitHub</a><a href="https://linkedin.com/in/ikeohu" target="_blank" rel="noopener noreferrer" style="color:var(--dim);text-decoration:none;font-size:13px">LinkedIn</a></div></div></footer>
-<script>
-addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('scrolled',scrollY>50)});
-function closeNav(){var n=document.getElementById('mobile-nav');n.style.display='none';document.querySelector('.hamburger').textContent='☰';}
-
-</script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Your Deputy","description":"Score your business idea free. If it holds up, build what you need: 120+ deliverables across strategy, legal, code, finance, marketing, ops, and more. Lender-ready plans, a product on your domain, and the full revenue stack. One build, clear scope, you own everything.","url":"https://yourdeputy.com","applicationCategory":"BusinessApplication","operatingSystem":"Web","offers":[{"@type":"Offer","name":"Free Scoring","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Diagnostic + Execution Blueprint","price":"297","priceCurrency":"USD"},{"@type":"Offer","name":"Strategy Pack","price":"697","priceCurrency":"USD"},{"@type":"Offer","name":"Scoring Pro (Monthly)","price":"19","priceCurrency":"USD"},{"@type":"Offer","name":"Foundation","price":"1997","priceCurrency":"USD"},{"@type":"Offer","name":"Professional","price":"4997","priceCurrency":"USD"},{"@type":"Offer","name":"Enterprise","price":"9997","priceCurrency":"USD"},{"@type":"Offer","name":"Managed Automation Runtime (Monthly)","price":"497","priceCurrency":"USD"}]}
-</script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What strategy documents do I receive?","acceptedAnswer":{"@type":"Answer","text":"90+ organized artifacts spanning strategy, revenue model, go-to-market, investor and lender readiness, competitive analysis, risk runbooks, product specification, design system, and more — typically about 30,000–50,000 words of core material, reconciled from independent evaluations into one bundle you can defend in the room."}},{"@type":"Question","name":"Can I use these documents for funding applications?","acceptedAnswer":{"@type":"Answer","text":"Yes. Investor-readiness and SBA-format materials are included; review with qualified advisors before submission."}},{"@type":"Question","name":"What live infrastructure is provisioned?","acceptedAnswer":{"@type":"Answer","text":"Foundation delivers 120+ files plus the same 11-slot server integration allowlist as Professional when keys allow. Professional is the higher build tier with the same allowlist in code. Enterprise adds two slots (13 total): WordPress and post-deploy verification. Voice, SMS, CRM, and directory require Custom Volume (19-slot allowlist) or manual activation. See the maturity page."}},{"@type":"Question","name":"How does the multi-model viability analysis work?","acceptedAnswer":{"@type":"Answer","text":"Multiple independent evaluations score the idea across business lenses, reconcile into one verdict, and include an independent stress test so weaknesses surface early."}},{"@type":"Question","name":"What is the ownership model?","acceptedAnswer":{"@type":"Answer","text":"You own repository outputs (code, documents, configs). What is live in vendor dashboards depends on tier and session. Your bundle includes activation guidance; the maturity page summarizes readiness by category."}},{"@type":"Question","name":"What input methods are supported?","acceptedAnswer":{"@type":"Answer","text":"Nine input paths including typed description, voice, competitor URL, images and camera, video, document upload, conversational refinement, and templates—processed into a structured brief."}},{"@type":"Question","name":"Do you support non-US businesses or enterprise procurement?","acceptedAnswer":{"@type":"Answer","text":"Defaults are US-oriented; non-US and regulated industries need advisor review. Enterprise procurement such as SSO, MSA, or custom DPA is not self-serve in the builder—contact sales."}},{"@type":"Question","name":"What is the difference between Strategy Pack and Foundation?","acceptedAnswer":{"@type":"Answer","text":"Strategy Pack ($697) delivers all 90+ documents as a downloadable zip. Foundation ($1,997) adds production code, deployment, Day-1 Success Kit, and the same 11-slot integration allowlist as Professional. Professional ($4,997) is the higher build tier with the same allowlist. Enterprise ($9,997) expands to 13 slots. Upgrade credits apply within 30 days where advertised."}}]}
-</script>
-
-<script>
-function submitWaitlist(e){
-  e.preventDefault();
-  var email=document.getElementById('wl-email').value.trim();
-  var msg=document.getElementById('wl-msg');
-  if(!email){msg.style.color='#EF4444';msg.textContent='Enter your email';return false}
-  msg.style.color='var(--dim)';msg.textContent='Joining...';
-  fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,tier_interest:'managed',source:'homepage'})}).then(function(r){return r.json()}).then(function(d){
-    if(d.ok){msg.style.color='#22C55E';msg.textContent='You\'re on the list! We\'ll email you when it\'s ready.';document.getElementById('wl-email').value=''}
-    else{msg.style.color='#EF4444';msg.textContent=d.error||'Something went wrong'}
-  }).catch(function(){msg.style.color='#EF4444';msg.textContent='Network error — try again'});
-  return false
-}
-</script>
 <script src="/site-shell.js" defer></script>
 </body>
 </html>
-
-
