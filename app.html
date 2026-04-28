@@ -631,37 +631,72 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
 </script>
 <link rel="stylesheet" href="/site-shell.css">
 <link rel="stylesheet" href="/design-system.css">
+<style id="builder-ux-overrides">
+body{background:#f6f7f9!important;color:#20232b!important}
+.page{width:min(860px,calc(100% - 36px))!important;max-width:860px!important;padding:96px 0 64px!important}
+.logo{background:#fff!important;border:1px solid #dce1ea!important;border-radius:8px!important;padding:14px 16px!important;margin-bottom:24px!important;box-shadow:0 12px 30px rgba(24,34,53,.06)!important;align-items:flex-start!important}
+.lm{background:#2454b8!important;color:#fff!important;border:0!important;border-radius:8px!important;font-size:13px!important;font-weight:850!important}
+.lt{color:#15171c!important;font-size:15px!important;font-weight:850!important}
+.ls{color:#5f6876!important;font-size:12px!important;line-height:1.45!important;max-width:560px!important}
+.lset{background:#fff!important;border:1px solid #dce1ea!important;color:#20232b!important;border-radius:8px!important;min-height:38px!important}
+#auth-btn{background:#2454b8!important;border-color:#2454b8!important;color:#fff!important}
+.hero{background:transparent!important;margin-bottom:20px!important}
+.hero h1{font-size:clamp(32px,5vw,52px)!important;line-height:1.02!important;color:#15171c!important;font-weight:820!important;letter-spacing:0!important}
+.hero h1 span{color:#2454b8!important}
+.hero p{font-size:16px!important;color:#5f6876!important;max-width:720px!important}
+.mode-cards{grid-template-columns:1fr 1fr!important;gap:14px!important}
+.mode-card{background:#fff!important;border:1px solid #dce1ea!important;border-radius:8px!important;padding:20px!important;box-shadow:none!important}
+.mode-card:hover,.mode-card.selected{border-color:#2454b8!important;background:#eef3ff!important;box-shadow:0 0 0 1px #2454b8!important}
+.mc-icon{display:inline-flex!important;width:34px!important;height:34px!important;align-items:center!important;justify-content:center!important;border-radius:8px!important;background:#eef3ff!important;color:#2454b8!important;font-size:13px!important;font-weight:850!important;margin-bottom:12px!important}
+.mc-tag,.vt-label,.inf-label,.pg{color:#5f6876!important;letter-spacing:.06em!important}
+.view-toggle{background:#fff!important;border:1px solid #dce1ea!important;border-radius:8px!important;padding:10px!important}
+.vt-btn{min-height:36px!important;border-radius:7px!important}
+.vt-btn.active{background:#2454b8!important;border-color:#2454b8!important;color:#fff!important}
+.big-input{background:#fff!important;border:1px solid #cfd6e3!important;color:#20232b!important;border-radius:8px!important;min-height:132px!important;font-size:16px!important;box-shadow:none!important}
+.big-input:focus{border-color:#2454b8!important;box-shadow:0 0 0 3px rgba(36,84,184,.12)!important}
+.input-methods{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(136px,1fr))!important;gap:8px!important;margin-top:14px!important}
+.im-btn{min-height:42px!important;border-radius:8px!important;background:#fff!important;border:1px solid #dce1ea!important;color:#20232b!important;font-weight:720!important}
+.im-btn:hover{border-color:#2454b8!important;color:#2454b8!important}.im-icon{display:none!important}
+#oie-panel{background:#fff!important;border:1px solid #dce1ea!important;border-radius:8px!important;box-shadow:0 12px 30px rgba(24,34,53,.06)!important}
+#oie-panel strong{color:#2454b8!important}
+#oie-panel textarea,#oie-panel input{background:#f8fafc!important;border:1px solid #dce1ea!important;color:#20232b!important;border-radius:7px!important;font-size:13px!important;min-height:42px!important}
+#oie-panel textarea{min-height:72px!important}
+.launch{background:#2454b8!important;color:#fff!important;border-radius:8px!important;min-height:50px!important;font-weight:820!important}
+.eb{background:#feedea!important;border:1px solid #f2c2bd!important;color:#b42318!important;border-radius:8px!important}
+.preview,.rc,.tbanner,.edu-card,.pi{background:#fff!important;border-color:#dce1ea!important;color:#20232b!important;border-radius:8px!important}
+@media(max-width:720px){.page{width:min(100% - 28px,860px)!important;padding-top:86px!important}.logo{display:grid!important;grid-template-columns:auto 1fr!important}.lset{width:100%!important}.mode-cards{grid-template-columns:1fr!important}.view-toggle{display:grid!important}}
+</style>
 </head>
 <body>
 <a href="#project-desc" class="skip-link">Skip to main content</a>
 <div class="page">
   <div class="logo" id="builder-header">
-    <div class="lm">⚡</div>
-    <div><div class="lt">Your Deputy</div><div class="ls">Describe the business unit - we validate the niche, generate the operating layer, repair build issues, and report whether revenue, RevOps, CRM, AI/MCP, infrastructure, routes, live content, and quality gates passed</div></div>
+    <div class="lm">YD</div>
+    <div><div class="lt">Your Deputy Builder</div><div class="ls">Create a scoped deliverable from a buyer problem. The output is a package with files, runtime, workflows, checks, and an honest receipt.</div></div>
     <button class="lset" id="auth-btn" title="Sign In" style="margin-right:4px;min-width:70px;background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600">Sign In</button>
-    <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">📊</button>
-    <button class="lset" id="settings-btn" title="Settings">⚙</button>
+    <button class="lset" id="history-btn" title="Build History" onclick="showBuildHistory()" style="margin-right:4px">History</button>
+    <button class="lset" id="settings-btn" title="Settings">Settings</button>
   </div>
 
 
   <div id="mode-screen">
     <div class="hero">
-      <h1>Your Deputy <span>Deliverable Builder</span></h1>
-      <p>Describe the buyer, problem, offer, and operating model. The builder creates the scoped files, launch runtime, workflow templates, seed data, readiness checks, and credential-aware handoff that the backend can actually provision.</p>
+      <h1>Start with the buyer problem. <span>Get a scoped deliverable.</span></h1>
+      <p>Choose how much work you need. Quick Build creates a lean package. Strategic Build adds the deeper planning layer before the same provisioning checks.</p>
     </div>
 
     <div class="mode-cards">
       <div class="mode-card" id="mode-quick">
-        <div class="mc-icon">⚡</div>
+        <div class="mc-icon">QB</div>
         <h3>Quick Build</h3>
         <p>Fast path from idea to deployable build. Start lean, then expand.</p>
-        <div class="mc-tag">~3 min target to push · varies</div>
+        <div class="mc-tag">~3 min target to push - varies</div>
       </div>
       <div class="mode-card" id="mode-strategic">
-        <div class="mc-icon">🏛️</div>
+        <div class="mc-icon">SB</div>
         <h3>Strategic Build</h3>
         <p>Add deeper analysis and planning before launching through the same pipeline.</p>
-        <div class="mc-tag">Longer run · analysis before build · time varies</div>
+        <div class="mc-tag">Longer run - analysis before build - time varies</div>
       </div>
     </div>
 
@@ -674,8 +709,8 @@ try { window.__webllm.supported = !!navigator.gpu; } catch { window.__webllm.sup
 
     <div id="input-screen" style="display:none">
     <div class="hero">
-      <h1>What are you <span>building?</span></h1>
-      <p>Describe the business in plain English. We infer the niche, target customer, location, model, offer, stack, pricing, and operating requirements, then generate the scoped deliverable and show exactly what launched, what was stored, and which vendor credentials are still required.</p>
+      <h1>Describe the outcome. <span>Keep it specific.</span></h1>
+      <p>Write who the customer is, what pain they have, what you want sold or launched, and any required location, price, tool, or credential constraints.</p>
     </div>
 
     <div class="input-area">

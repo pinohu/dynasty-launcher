@@ -5,90 +5,36 @@
 
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/#choose", label: "Offers" },
+    { href: "/#offers", label: "Offers" },
     { href: "/sign-up?offer=foundation-build", label: "Provision" },
-    { href: "/live-deliverables", label: "Live examples" },
-    { href: "/deliverables", label: "Inventory" },
-    { href: "/maturity", label: "Maturity" },
-    { href: "/business-factory", label: "Factory" },
+    { href: "/deliverables", label: "Examples" },
+    { href: "/app?returning=1", label: "Builder" },
+    { href: "/maturity", label: "Limits" },
   ];
 
   const sitemapGroups = [
     {
-      title: "Launch",
+      title: "Buy",
       links: [
-        { href: "/", label: "Homepage" },
-        { href: "/quiz", label: "2-minute diagnostic" },
-        { href: "/launch/score-an-idea-free", label: "Score an idea free" },
-        { href: "/launch/start-foundation-build", label: "Start Foundation build" },
-        { href: "/launch/customer-dashboard", label: "Customer dashboard" },
-        { href: "/launch/documentation", label: "Documentation" },
-        { href: "/business-factory", label: "Business factory console" },
-        { href: "/live-deliverables", label: "Full live deliverable examples" },
-      ],
-    },
-    {
-      title: "Build Standard",
-      links: [
-        { href: "/deliverables", label: "Full deliverables inventory" },
-        { href: "/maturity", label: "What ships today" },
-        { href: "/docs", label: "Build contract docs" },
-        { href: "/observability", label: "Observability" },
-        { href: "/for/", label: "Path guides" },
-        { href: "/for/full-launch", label: "Full-launch guide" },
-      ],
-    },
-    {
-      title: "Marketplace",
-      links: [
-        { href: "/marketplace", label: "Business-unit marketplace" },
-        { href: "/demo", label: "Working demo directory" },
-        { href: "/demo/modules/webform-autoreply", label: "Module demo example" },
-        { href: "/automations/modules/", label: "Automation modules" },
-        { href: "/automations/packs/", label: "Outcome packs" },
-        { href: "/automations/categories/", label: "Categories" },
-        { href: "/automations/blueprints/", label: "Industry blueprints" },
-        { href: "/plans/your-deputy-core", label: "Core plan" },
-      ],
-    },
-    {
-      title: "Capabilities",
-      links: [
-        { href: "/maturity", label: "Resumable repair pipeline" },
-        { href: "/docs", label: "Open-weight model routing" },
-        { href: "/deliverables/marketing/video-script", label: "Video asset planning" },
-        { href: "/deliverables/technical/analytics", label: "PostHog-ready analytics" },
-        { href: "/deliverables/technical/openapi", label: "API and MCP evidence" },
-      ],
-    },
-    {
-      title: "Editions",
-      links: [
-        { href: "/editions/solo-service-edition", label: "Solo edition" },
-        { href: "/editions/small-team-edition", label: "Small-team edition" },
-        { href: "/editions/field-service-edition", label: "Field-service edition" },
-        { href: "/editions/enterprise-multi-location", label: "Enterprise edition" },
-        { href: "/suites/revenue-suite", label: "Revenue suite" },
-      ],
-    },
-    {
-      title: "Setup",
-      links: [
-        { href: "/setup/starter", label: "Starter setup" },
-        { href: "/setup/guided", label: "Guided setup" },
-        { href: "/setup/premium", label: "Premium setup" },
-        { href: "/suites/growth-suite", label: "Growth suite" },
-        { href: "/suites/service-operations-suite", label: "Operations suite" },
-      ],
-    },
-    {
-      title: "Company",
-      links: [
-        { href: "/privacy", label: "Privacy" },
+        { href: "/#offers", label: "Compare offers" },
+        { href: "/sign-up?offer=foundation-build", label: "Provision a purchase" },
         { href: "/terms", label: "Terms" },
+      ],
+    },
+    {
+      title: "Verify",
+      links: [
+        { href: "/deliverables", label: "Deliverable examples" },
+        { href: "/maturity", label: "What ships today" },
+        { href: "/observability", label: "System status" },
+      ],
+    },
+    {
+      title: "Operate",
+      links: [
+        { href: "/app?returning=1", label: "Builder" },
+        { href: "/business-factory", label: "Admin factory" },
         { href: "mailto:ikeohu@dynastyempire.com", label: "Contact" },
-        { href: "https://dynastyempire.com", label: "Company" },
-        { href: "https://github.com/pinohu/dynasty-launcher", label: "GitHub" },
       ],
     },
   ];
@@ -177,7 +123,7 @@
         <div class="yd-footer-grid">
           <section class="yd-footer-col" aria-labelledby="yd-footer-brand">
             <div class="yd-footer-brand" id="yd-footer-brand">Your Deputy</div>
-            <p class="yd-footer-copy">Operational launch system for paid deliverables: credential intake, durable launch records, runtime pages, lead capture, activated modules, workflow templates, generated files, integration receipts, and explicit production readiness checks.</p>
+            <p class="yd-footer-copy">Paid deliverable system: customer credentials in, launched runtime and receipt out. Every page should say exactly what is delivered and what still depends on customer-owned accounts.</p>
           </section>
           ${sitemapGroups.map((group) => `
             <section class="yd-footer-col" aria-labelledby="yd-footer-${group.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}">
@@ -203,8 +149,8 @@
     section.className = "yd-site-map";
     section.setAttribute("aria-labelledby", "yd-site-map-title");
     section.innerHTML = `
-      <h2 id="yd-site-map-title">Every major page is reachable from here.</h2>
-      <p>Use this directory when you want the full product surface: builder, diagnostic, deliverables, marketplace, setup paths, automation modules, analytics, video planning, AI/MCP tooling, model-routing evidence, repair/resume status, legal pages, and status pages.</p>
+      <h2 id="yd-site-map-title">Need the proof before buying?</h2>
+      <p>Open examples, check delivery limits, or provision a paid offer. These are the three paths most customers need.</p>
       <div class="yd-site-map-grid">
         ${sitemapGroups.map((group) => `
           <div class="yd-site-map-card">

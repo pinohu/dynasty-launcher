@@ -3,229 +3,178 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Your Deputy - Clear Business Launch Packages</title>
-<meta name="description" content="Choose the right Your Deputy path: score an idea, buy a strategy pack, start a Foundation build, or use the production Business Factory Console. Every offer states exactly what is delivered.">
+<title>Your Deputy - Paid business deliverables that launch</title>
+<meta name="description" content="Pick a business deliverable, provide the required customer credentials, and receive a launched runtime page, lead capture, workflow setup, generated files, and a delivery receipt.">
 <meta name="robots" content="index, follow">
-<meta name="theme-color" content="#0C0C14">
+<meta name="theme-color" content="#f6f7f9">
 <link rel="canonical" href="https://www.yourdeputy.com/">
 <link rel="manifest" href="/manifest.json">
 <link rel="stylesheet" href="/site-shell.css">
-<style>
-  :root{--gold:#c9a84c;--ink:#09090b;--bg:#0c0c14;--panel:#171720;--card:#20202a;--line:rgba(255,255,255,.13);--text:#fafaf9;--muted:#a1a1aa;--dim:#85858d;--ok:#22c55e;--blue:#60a5fa}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px;line-height:1.6}
-  a{color:var(--gold);text-decoration:none;font-weight:800}
-  a:hover{text-decoration:underline}
-  main{max-width:1120px;margin:0 auto;padding:92px 20px 60px}
-  .hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:28px;align-items:center;padding:24px 0 28px}
-  .eyebrow{color:var(--gold);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;margin-bottom:14px}
-  h1{font-size:clamp(38px,6vw,72px);line-height:1;margin:0 0 16px;letter-spacing:0}
-  h2{font-size:clamp(26px,4vw,42px);line-height:1.1;margin:0 0 12px;letter-spacing:0}
-  h3{font-size:18px;margin:0 0 8px}
-  p{color:var(--muted);margin:0 0 16px}
-  .lead{font-size:20px;max-width:760px}
-  .panel,.card{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border-radius:12px}
-  .panel{padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
-  .card{padding:18px;background:rgba(255,255,255,.035)}
-  .hero-card{padding:22px}
-  .hero-card ul{padding:0;margin:0;list-style:none;display:grid;gap:11px}
-  .hero-card li{color:var(--muted);display:flex;gap:10px;align-items:flex-start}
-  .check{width:18px;height:18px;border-radius:50%;background:rgba(34,197,94,.14);color:var(--ok);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:12px;margin-top:3px}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
-  .btn{display:inline-flex;justify-content:center;align-items:center;border:1px solid var(--line);border-radius:9px;padding:12px 16px;font-weight:900;text-align:center;line-height:1.25;min-width:0;max-width:100%}
-  .btn.primary{background:var(--gold);color:var(--ink);border-color:var(--gold)}
-  .btn.secondary{color:var(--text);background:rgba(255,255,255,.035)}
-  .section{padding:34px 0;border-top:1px solid rgba(255,255,255,.08)}
-  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
-  .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .path{display:grid;grid-template-columns:130px minmax(0,1fr) 160px;gap:16px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035);margin-top:12px}
-  .price{font-size:22px;color:var(--gold);font-weight:900}
-  .tag{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:8px}
-  .plain-list{margin:12px 0 0;padding-left:19px;color:var(--muted)}
-  .plain-list li{margin:6px 0}
-  .warning{border-left:3px solid var(--gold);padding:13px 15px;background:rgba(201,168,76,.08);color:var(--muted);border-radius:8px;margin-top:14px}
-  .steps{counter-reset:step;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
-  .step{counter-increment:step;padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035)}
-  .step:before{content:counter(step);display:inline-flex;width:30px;height:30px;border-radius:50%;align-items:center;justify-content:center;background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.3);font-weight:900;margin-bottom:10px}
-  .step p,.card p{font-size:14px}
-  .mini{font-size:13px;color:var(--dim)}
-  .visual{background:#0a0a10;border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:18px}
-  .bar{height:8px;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--blue),var(--ok));margin-bottom:14px}
-  .receipt{display:grid;gap:8px}
-  .receipt div{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:7px;color:var(--muted);font-size:13px}
-  .receipt strong{color:var(--text)}
-  @media(max-width:860px){main{padding-top:82px}.hero,.grid,.grid.two,.steps{grid-template-columns:1fr}.path{grid-template-columns:1fr}.actions .btn{width:100%}}
-</style>
 <link rel="stylesheet" href="/design-system.css">
+<style>
+:root{--blue:#2454b8;--ink:#15171c;--text:#20232b;--muted:#5f6876;--faint:#7b8493;--line:#dce1ea;--panel:#fff;--soft:#f1f4f8;--canvas:#f6f7f9;--green:#15803d;--amber:#9a6700;--red:#b42318}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+a{color:var(--blue);font-weight:750;text-decoration:none}
+a:hover{text-decoration:underline}
+main{width:min(1120px,calc(100% - 36px));margin:0 auto;padding:92px 0 56px}
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:32px;align-items:center;padding:34px 0 28px}
+.eyebrow{color:var(--blue);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px}
+h1{font-size:clamp(42px,6vw,72px);line-height:.98;letter-spacing:0;margin:0 0 18px;color:var(--ink)}
+h2{font-size:clamp(28px,3.5vw,42px);line-height:1.08;margin:0 0 12px;color:var(--ink)}
+h3{font-size:18px;line-height:1.25;margin:0 0 8px;color:var(--ink)}
+p{margin:0 0 14px;color:var(--muted)}
+.lead{font-size:clamp(18px,2vw,21px);max-width:720px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;border-radius:8px;padding:0 16px;border:1px solid var(--line);font-weight:820;text-align:center}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff!important}
+.btn.secondary{background:#fff;color:var(--ink)!important}
+.proof-panel{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 18px 46px rgba(24,34,53,.08);overflow:hidden}
+.proof-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:760;color:var(--green)}
+.status:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
+.receipt{padding:18px;display:grid;gap:10px}
+.receipt-row{display:grid;grid-template-columns:132px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid #edf0f5}
+.receipt-row:last-child{border-bottom:0}
+.receipt-row strong{color:var(--ink);font-size:13px}
+.receipt-row span{color:var(--muted);font-size:14px}
+.section{padding:34px 0;border-top:1px solid var(--line)}
+.intro-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+.plain-card,.offer,.step,.callout{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px}
+.plain-card p,.offer p,.step p{font-size:14px}
+.offer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:20px}
+.offer{display:flex;flex-direction:column;min-height:100%}
+.offer .meta{color:var(--faint);font-size:12px;font-weight:820;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.price{font-size:26px;font-weight:850;color:var(--ink);margin-bottom:10px}
+.offer ul{margin:2px 0 18px;padding-left:18px;color:var(--muted);font-size:14px}
+.offer li{margin:7px 0}
+.offer .btn{margin-top:auto}
+.journey{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:20px}
+.step b{display:inline-flex;width:30px;height:30px;align-items:center;justify-content:center;border-radius:50%;background:#eaf1ff;color:var(--blue);margin-bottom:12px}
+.callout{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;background:#eef3ff;border-color:#cad8ff}
+.callout p{margin-bottom:0}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+.limit{border-left:4px solid var(--amber);background:#fff8e6}
+.ok{border-left:4px solid var(--green);background:#eef8f1}
+.small{font-size:13px;color:var(--faint)}
+@media(max-width:860px){main{padding-top:84px}.hero,.intro-grid,.offer-grid,.journey,.split,.callout{grid-template-columns:1fr}.actions .btn,.callout .btn{width:100%}.receipt-row{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <main id="main-content">
   <section class="hero">
     <div>
-      <div class="eyebrow">Plain-English launch paths</div>
-      <h1>Choose the outcome you need. See exactly what gets delivered.</h1>
-      <p class="lead">Your Deputy helps founders and operators decide whether an idea is worth building, then produces the planning assets or build package for that stage. It is not a vague promise that a company runs itself.</p>
+      <p class="eyebrow">Simple promise</p>
+      <h1>Buy a business deliverable. Submit the required credentials. Get the launched result.</h1>
+      <p class="lead">Your Deputy is for founders and operators who need a concrete launch asset, not a vague strategy portal. Every paid offer has a credential form, a provisioning path, a public runtime, and a receipt that says what shipped.</p>
       <div class="actions">
-        <a class="btn primary" href="#choose">Choose my path</a>
-        <a class="btn secondary" href="/business-factory">Use production factory console</a>
-        <a class="btn secondary" href="/maturity">See delivery limits</a>
+        <a class="btn primary" href="#offers">Choose an offer</a>
+        <a class="btn secondary" href="/deliverables">See examples first</a>
       </div>
     </div>
-    <aside class="panel hero-card">
-      <h2 style="font-size:24px">What you can do here</h2>
-      <ul>
-        <li><span class="check">✓</span><span>Score a business idea before spending serious money.</span></li>
-        <li><span class="check">✓</span><span>Buy a planning pack when you need documents, not code.</span></li>
-        <li><span class="check">✓</span><span>Start a Foundation build when you need code, deployment scaffolding, and a Day-1 handoff.</span></li>
-        <li><span class="check">✓</span><span>Use the Business Factory Console when you are an operator with the admin key.</span></li>
-      </ul>
-      <div class="visual" aria-label="Delivery receipt preview">
-        <div class="bar"></div>
-        <div class="receipt">
-          <div><strong>Input</strong><span>market + pain</span></div>
-          <div><strong>Output</strong><span>manifest or package</span></div>
-          <div><strong>Proof</strong><span>tests + receipt</span></div>
-        </div>
+    <aside class="proof-panel" aria-label="Example delivery receipt">
+      <div class="proof-head">
+        <strong>Foundation Build receipt</strong>
+        <span class="status">Launch record ready</span>
+      </div>
+      <div class="receipt">
+        <div class="receipt-row"><strong>Customer submits</strong><span>Business details, owner contact, required vendor credentials, authorization checkboxes.</span></div>
+        <div class="receipt-row"><strong>Backend creates</strong><span>Tenant, launched URL, lead form, workflow templates, module activations, CRM seed data, generated files.</span></div>
+        <div class="receipt-row"><strong>Customer receives</strong><span>Public deliverable URL, handoff files, activation receipt, and clear failed-step notes if a vendor rejects credentials.</span></div>
       </div>
     </aside>
   </section>
 
-  <section class="section" id="choose">
-    <h2>Start with the pain you have today.</h2>
-    <p>No funnel maze. Pick the row that matches what brought you here.</p>
+  <section class="section">
+    <h2>Use this when you need one of three outcomes.</h2>
+    <div class="intro-grid">
+      <article class="plain-card">
+        <h3>Validate an idea</h3>
+        <p>Use the free or diagnostic path when you need to decide whether the market, buyer, and offer are worth pursuing.</p>
+      </article>
+      <article class="plain-card">
+        <h3>Package a business</h3>
+        <p>Use Strategy Pack when you need the business narrative, documents, operating plan, and launch story before code.</p>
+      </article>
+      <article class="plain-card">
+        <h3>Launch a runtime</h3>
+        <p>Use Foundation Build or higher when you need a customer-specific runtime page, lead capture, workflows, files, and receipts.</p>
+      </article>
+    </div>
+  </section>
 
-    <div class="path">
-      <div class="price">$0</div>
-      <div>
-        <span class="tag">I have an idea, but I am not sure it is worth building.</span>
+  <section class="section" id="offers">
+    <p class="eyebrow">Pick the smallest useful package</p>
+    <h2>Offers are separated by what the backend can actually deliver.</h2>
+    <div class="offer-grid">
+      <article class="offer">
+        <div class="meta">Decision</div>
         <h3>Free Idea Score</h3>
-        <p>Answer the diagnostic and get a go/no-go style read on the market, buyer, offer, and build risk.</p>
-      </div>
-      <a class="btn primary" href="/launch/score-an-idea-free">Score free</a>
-    </div>
-
-    <div class="path">
-      <div class="price">$297</div>
-      <div>
-        <span class="tag">I need a deeper decision before a build.</span>
-        <h3>Diagnostic + Execution Blueprint</h3>
-        <p>Get a practical assessment of the opportunity, recommended offer, risks, and the next build path.</p>
-      </div>
-      <a class="btn primary" href="/app?plan=diagnostic">Start diagnostic</a>
-    </div>
-
-    <div class="path">
-      <div class="price">$697</div>
-      <div>
-        <span class="tag">I need the plan, documents, and business narrative.</span>
+        <div class="price">$0</div>
+        <p>A fast read on whether an idea deserves more attention.</p>
+        <ul>
+          <li>Market and buyer triage</li>
+          <li>Offer risk notes</li>
+          <li>Recommended next path</li>
+        </ul>
+        <a class="btn secondary" href="/launch/score-an-idea-free">Score an idea</a>
+      </article>
+      <article class="offer">
+        <div class="meta">Planning</div>
         <h3>Strategy Pack</h3>
-        <p>Receive the planning and operating documents. This does not include generated production code or deployment.</p>
-      </div>
-      <a class="btn primary" href="/app?plan=strategy_pack">Get Strategy Pack</a>
-    </div>
-
-    <div class="path">
-      <div class="price">$1,997</div>
-      <div>
-        <span class="tag">I need the first build package.</span>
+        <div class="price">$697</div>
+        <p>Business and launch documents for buyers who are not ready for code yet.</p>
+        <ul>
+          <li>Offer, ICP, revenue, GTM, operations</li>
+          <li>Handoff documents and acceptance tests</li>
+          <li>No live app deployment included</li>
+        </ul>
+        <a class="btn secondary" href="/app?plan=strategy_pack">Start Strategy Pack</a>
+      </article>
+      <article class="offer">
+        <div class="meta">Provisioned build</div>
         <h3>Foundation Build</h3>
-        <p>Receive the Strategy Pack plus generated application code, deployment scaffolding, backend/API files, tests, seed data, and a Day-1 Success Kit.</p>
-      </div>
-      <a class="btn primary" href="/launch/start-foundation-build">Start Foundation</a>
+        <div class="price">$1,997</div>
+        <p>The first package that creates a customer-specific launched runtime.</p>
+        <ul>
+          <li>Runtime page and lead capture</li>
+          <li>Activated modules and workflow templates</li>
+          <li>Generated files, CRM seed data, receipt</li>
+        </ul>
+        <a class="btn primary" href="/sign-up?offer=foundation-build">Provision Foundation</a>
+      </article>
     </div>
+  </section>
 
-    <div class="path">
-      <div class="price">Admin</div>
+  <section class="section">
+    <p class="eyebrow">After payment</p>
+    <h2>The delivery journey is four steps.</h2>
+    <div class="journey">
+      <div class="step"><b>1</b><h3>Choose package</h3><p>Select the outcome that matches the job: score, strategy, or provisioned build.</p></div>
+      <div class="step"><b>2</b><h3>Submit credentials</h3><p>Fill the SKU-specific form. Secret fields are stored server-side and redacted from public output.</p></div>
+      <div class="step"><b>3</b><h3>System provisions</h3><p>The backend creates the tenant, runtime, modules, workflows, files, seed data, and receipt.</p></div>
+      <div class="step"><b>4</b><h3>Open the result</h3><p>You receive the launched URL and can inspect exactly what passed or failed.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="callout">
       <div>
-        <span class="tag">I operate the production system.</span>
-        <h3>Business Factory Console</h3>
-        <p>Generate a validated launch manifest, check production readiness, and queue durable factory jobs. Requires the production admin key.</p>
+        <h2>Want proof before you buy?</h2>
+        <p>Open the deliverables inventory to see the example outputs and the production boundaries for each package.</p>
       </div>
-      <a class="btn primary" href="/business-factory">Open console</a>
+      <a class="btn primary" href="/deliverables">View examples</a>
     </div>
-  </section>
-
-  <section class="section">
-    <h2>What is actually delivered?</h2>
-    <div class="grid">
-      <article class="card">
-        <h3>Free Idea Score</h3>
-        <p>A front-end diagnostic path that helps you decide whether the idea deserves more work. It is for triage, not a finished business plan.</p>
+    <div class="split">
+      <article class="plain-card ok">
+        <h3>What is real today</h3>
+        <p>Credential intake, tenant creation, launch records, runtime pages, lead capture, workflow templates, module activation records, generated application code, deployment scaffolding, generated files, and receipts.</p>
       </article>
-      <article class="card">
-        <h3>Strategy Pack</h3>
-        <p>Documents and business planning assets: offer, customer, strategy, revenue model, GTM, operations, and related artifacts. No live app deployment.</p>
-      </article>
-      <article class="card">
-        <h3>Foundation Build</h3>
-        <p>Generated code and delivery assets: app surface, API/backend files, deployment scaffolding, tests, seed data, docs, and handoff materials.</p>
-      </article>
-      <article class="card">
-        <h3>Integration Attempts</h3>
-        <p>Server-side provisioning attempts run only when the plan, archetype, credentials, and vendor APIs allow. Failed or missing vendor steps become receipts and manual actions.</p>
-      </article>
-      <article class="card">
-        <h3>Business Factory API</h3>
-        <p>Production admin endpoint that generates launch manifests and queues jobs. A queued job is not the same as a completed vendor setup.</p>
-      </article>
-      <article class="card">
-        <h3>Delivery Receipts</h3>
-        <p>Tests, manifests, maturity pages, and docs show what was generated, what was attempted, what passed, and what still requires operator action.</p>
+      <article class="plain-card limit">
+        <h3>What still depends on you</h3>
+        <p>Third-party services such as Stripe, Twilio, Resend, CRM, domains, calendars, and analytics require valid customer-owned accounts and permissions. A queued job is not the same as a completed vendor setup.</p>
       </article>
     </div>
-  </section>
-
-  <section class="section">
-    <h2>See full live examples before buying.</h2>
-    <p>Every offer, module, pack, suite, edition, setup path, and launch package now has a complete live example and an automatic provisioning path. These are not demos: each path shows the smallest finished deliverable, the credential form required to launch it, and the production API that creates the customer-specific runtime.</p>
-    <div class="grid two">
-      <article class="card">
-        <h3>Customer-ready examples</h3>
-        <p>Use the live deliverables catalog in sales calls to show the exact files, workflow, acceptance tests, receipt, and handoff boundary for each SKU.</p>
-        <p><a href="/live-deliverables">Open live deliverables</a></p>
-      </article>
-      <article class="card">
-        <h3>Automatic provisioning API</h3>
-        <p>New signups submit the exact SKU-specific credentials to <code>/api/deliverables/provision</code>. The system creates pages, forms, workflows, CRM seed data, templates, runtime files, and a launched URL.</p>
-        <p><a href="/sign-up?offer=foundation-build">Try provisioning handoff</a></p>
-      </article>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>The simplest delivery journey</h2>
-    <div class="steps">
-      <div class="step"><h3>Pick the outcome</h3><p>Score, diagnostic, document pack, build package, or operator console.</p></div>
-      <div class="step"><h3>Submit the brief</h3><p>Describe the market, customer, pain, offer, and constraints.</p></div>
-      <div class="step"><h3>Receive the package</h3><p>Get documents, code, manifest, or queued job depending on the path.</p></div>
-      <div class="step"><h3>Review the receipt</h3><p>Use maturity pages, tests, and manifests to see exactly what shipped.</p></div>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>What this does not promise</h2>
-    <div class="grid two">
-      <article class="card">
-        <h3>Not guaranteed revenue</h3>
-        <p>Revenue still depends on market demand, traffic, buyer trust, offer quality, follow-up, and execution.</p>
-      </article>
-      <article class="card">
-        <h3>Not hidden vendor magic</h3>
-        <p>Domains, email, Stripe, CRM, analytics, and automations depend on configured accounts, credentials, vendor approval, and tier rules.</p>
-      </article>
-    </div>
-    <div class="warning"><strong>Plain boundary:</strong> if a page says “build,” it means generated files, deployment scaffolding, tests, and handoff assets. If a third-party account is required, the receipt will show whether it ran, failed, or needs manual action.</div>
-  </section>
-
-  <section class="section">
-    <h2>Still unsure?</h2>
-    <p>Use the diagnostic first. It is the lowest-friction way to turn confusion into a recommended path.</p>
-    <div class="actions">
-      <a class="btn primary" href="/quiz">Take the 2-minute diagnostic</a>
-      <a class="btn secondary" href="/deliverables">Inspect deliverables</a>
-      <a class="btn secondary" href="/maturity">Read the maturity matrix</a>
-    </div>
-    <p class="mini" style="margin-top:14px">Updated to match the production backend and public deployment.</p>
   </section>
 </main>
 <script src="/site-shell.js" defer></script>
