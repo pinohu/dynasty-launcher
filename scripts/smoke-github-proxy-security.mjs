@@ -109,6 +109,30 @@ async function main() {
 
   {
     const r = await invoke(github, {
+      query: { path: '/user/repos' },
+      headers: { 'x-dynasty-access-token': paidToken },
+    });
+    fails += log(
+      r.status === 403 && r.body.error === 'Path not allowed',
+      'paid token cannot list server-account repositories',
+      `status=${r.status} error=${r.body.error}`,
+    );
+  }
+
+  {
+    const r = await invoke(github, {
+      query: { path: '/repos/pinohu/dynasty-launcher/actions/secrets' },
+      headers: { 'x-dynasty-access-token': paidToken },
+    });
+    fails += log(
+      r.status === 403 && r.body.error === 'Path not allowed',
+      'paid token cannot read sensitive repo API subpaths',
+      `status=${r.status} error=${r.body.error}`,
+    );
+  }
+
+  {
+    const r = await invoke(github, {
       method: 'PATCH',
       query: { path: '/repos/pinohu/dynasty-launcher' },
       headers: { 'x-dynasty-admin-token': signAdminToken() },
@@ -117,6 +141,18 @@ async function main() {
     fails += log(
       r.status === 500 && r.body.error === 'GITHUB_TOKEN not configured',
       'admin token can reach mutation path after auth',
+      `status=${r.status}`,
+    );
+  }
+
+  {
+    const r = await invoke(github, {
+      query: { path: '/user/repos' },
+      headers: { 'x-dynasty-admin-token': signAdminToken() },
+    });
+    fails += log(
+      r.status === 500 && r.body.error === 'GITHUB_TOKEN not configured',
+      'admin token can still reach operational repo-list path',
       `status=${r.status}`,
     );
   }

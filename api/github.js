@@ -9,7 +9,17 @@ import {
   verifyRawAdminHeader,
 } from './tenants/_auth.mjs';
 
-const ALLOWED_PATH_PREFIXES = ['/repos/pinohu/', '/user/repos'];
+const ADMIN_PATH_PREFIXES = ['/repos/pinohu/', '/user/repos'];
+const DEFAULT_PAID_REPOS = ['pinohu/dynasty-launcher'];
+const PAID_REPO_SAFE_SUBPATHS = [
+  '',
+  '/contents',
+  '/git/trees',
+  '/branches',
+  '/commits',
+  '/releases',
+  '/tags',
+];
 
 function header(req, name) {
   const needle = String(name).toLowerCase();
@@ -22,6 +32,47 @@ function header(req, name) {
 
 function isMutation(method) {
   return !['GET', 'HEAD', 'OPTIONS'].includes(String(method || '').toUpperCase());
+}
+
+function paidRepoAllowlist() {
+  return new Set(
+    String(process.env.GITHUB_PROXY_PAID_REPOS || DEFAULT_PAID_REPOS.join(','))
+      .split(',')
+      .map((repo) => repo.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+function normalizeGitHubPath(path) {
+  const raw = String(path || '');
+  if (!raw.startsWith('/') || raw.includes('..') || raw.includes('\\')) {
+    return { ok: false, error: 'path_not_allowed', path: raw };
+  }
+  return { ok: true, path: raw.replace(/\/{2,}/g, '/') };
+}
+
+function repoInfoFromPath(path) {
+  const match = String(path || '').match(/^\/repos\/([^/?#]+)\/([^/?#]+)(\/[^?#]*)?/i);
+  if (!match) return null;
+  return {
+    owner: decodeURIComponent(match[1]).toLowerCase(),
+    repo: decodeURIComponent(match[2]).toLowerCase(),
+    subpath: match[3] || '',
+  };
+}
+
+function isPaidRepoReadAllowed(path) {
+  const info = repoInfoFromPath(path);
+  if (!info) return false;
+  if (!paidRepoAllowlist().has(`${info.owner}/${info.repo}`)) return false;
+  return PAID_REPO_SAFE_SUBPATHS.some(
+    (prefix) => info.subpath === prefix || (prefix && info.subpath.startsWith(`${prefix}/`)),
+  );
+}
+
+function isPathAllowedForAuth(path, auth) {
+  if (auth.admin) return ADMIN_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
+  return isPaidRepoReadAllowed(path);
 }
 
 function authForGitHubProxy(req) {
@@ -77,24 +128,22 @@ export default async function handler(req, res) {
     return res.status(403).json({ ok: false, error: 'admin_required_for_mutation' });
   }
 
+  const normalizedPath = normalizeGitHubPath(req.query.path || '');
+  if (!normalizedPath.ok || !isPathAllowedForAuth(normalizedPath.path, auth)) {
+    return res
+      .status(403)
+      .json({ error: normalizedPath.error || 'Path not allowed', path: req.query.path || '' });
+  }
+
   const ghToken = process.env.GITHUB_TOKEN;
   if (!ghToken) return res.status(500).json({ error: 'GITHUB_TOKEN not configured' });
-
-  const ghPath = req.query.path || '';
-
-  const normalizedPath = ghPath.replace(/\.\./g, '').replace(/\/\//g, '/');
-  const allowed =
-    ALLOWED_PATH_PREFIXES.some((p) => normalizedPath.startsWith(p)) && !ghPath.includes('..');
-  if (!allowed) {
-    return res.status(403).json({ error: 'Path not allowed', path: ghPath });
-  }
 
   const method = req.method;
   const body =
     method !== 'GET' && method !== 'HEAD' ? JSON.stringify(sanitizedBody(req)) : undefined;
 
   try {
-    const upstream = await fetch(`https://api.github.com${ghPath}`, {
+    const upstream = await fetch(`https://api.github.com${normalizedPath.path}`, {
       method,
       headers: {
         Authorization: `token ${ghToken}`,
