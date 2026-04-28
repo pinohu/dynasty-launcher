@@ -11,8 +11,11 @@
 // Run: node scripts/smoke-events.mjs
 // -----------------------------------------------------------------------------
 
+import { Readable } from 'node:stream';
+
 import { _reset as resetStore } from '../api/tenants/_store.mjs';
 import { _reset as resetBus, emit } from '../api/events/_bus.mjs';
+import { readBody } from '../api/events/_lib.mjs';
 
 process.env.TEST_ADMIN_KEY = 'test-admin-key';
 
@@ -83,6 +86,43 @@ async function main() {
     const r = await invoke(h.ingest, { method: 'POST', body: { tenant_id: tenant.tenant_id } });
     fails += log(r.status === 400 && r.body.error.includes('event_type'),
       'ingest-event without event_type returns 400');
+  }
+  {
+    const r = await invoke(h.ingest, {
+      method: 'POST',
+      body: { tenant_id: tenant.tenant_id, event_type: `tenant.${'x'.repeat(130)}` },
+    });
+    fails += log(r.status === 400 && r.body.error === 'event_type too long',
+      'ingest-event rejects oversized event_type before auth');
+  }
+  {
+    const r = await invoke(h.ingest, {
+      method: 'POST',
+      body: { tenant_id: tenant.tenant_id, event_type: 'tenant.call_missed', payload: [] },
+    });
+    fails += log(r.status === 400 && r.body.error === 'payload object required',
+      'ingest-event rejects non-object payloads before auth');
+  }
+  {
+    const r = await invoke(h.ingest, {
+      method: 'POST',
+      body: {
+        tenant_id: tenant.tenant_id,
+        event_type: 'tenant.call_missed',
+        payload: { blob: 'x'.repeat(260_000) },
+      },
+    });
+    fails += log(r.status === 413 && r.body.error === 'payload_too_large',
+      'ingest-event caps parsed event body size before auth');
+  }
+  {
+    let rejected = false;
+    try {
+      await readBody(Readable.from(['x'.repeat(32)]), { maxBytes: 16 });
+    } catch (e) {
+      rejected = e?.code === 'payload_too_large';
+    }
+    fails += log(rejected, 'event body stream reader rejects oversized raw bodies');
   }
   {
     const r = await invoke(h.ingest, {
