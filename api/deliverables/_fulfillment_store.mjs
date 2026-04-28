@@ -93,13 +93,11 @@ function id(prefix) {
 
 function encryptionSecret() {
   if (!usePostgres()) return 'local-memory-fulfillment-vault';
-  return (
-    process.env.FULFILLMENT_ENCRYPTION_KEY ||
-    process.env.CREDENTIAL_VAULT_KEY ||
-    process.env.PAYMENT_ACCESS_SECRET ||
-    process.env.ADMIN_KEY ||
-    ''
-  );
+  const dedicated = process.env.FULFILLMENT_ENCRYPTION_KEY || process.env.CREDENTIAL_VAULT_KEY || '';
+  if (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production') {
+    return dedicated;
+  }
+  return dedicated || process.env.PAYMENT_ACCESS_SECRET || process.env.ADMIN_KEY || '';
 }
 
 function encryptValue(value) {

@@ -41,7 +41,7 @@ async function freeLLM(prompt, maxTokens = 4000) {
         const text = d.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
         if (text) return text;
       }
-    } catch {}
+    } catch (e) { results.details.connect_error = sanitizeError(e.message); }
   }
 
   // OpenAI-compatible fallback (Groq, Cerebras, Moonshot, Z.AI, MiniMax, Fireworks, DeepSeek)
@@ -623,7 +623,7 @@ async function mod_hosting(config, project, liveUrl) {
         body: JSON.stringify({ new: { txt: [{ host: '@', txt: 'v=spf1 include:spf.20i.com include:acumbamail.com ~all' }] } })
       });
       results.details.spf = true;
-    } catch {}
+    } catch (e) { results.details.spf_error = sanitizeError(e.message); }
 
     // 5. DKIM — fetch key and add DNS record
     try {
@@ -640,7 +640,7 @@ async function mod_hosting(config, project, liveUrl) {
           results.details.dkim = true;
         }
       }
-    } catch {}
+    } catch (e) { results.details.dkim_error = sanitizeError(e.message); }
 
     // 6. DMARC record
     try {
@@ -649,7 +649,7 @@ async function mod_hosting(config, project, liveUrl) {
         body: JSON.stringify({ new: { txt: [{ host: '_dmarc', txt: `v=DMARC1; p=none; rua=mailto:hello@${domain}; adkim=r; aspf=r` }] } })
       });
       results.details.dmarc = true;
-    } catch {}
+    } catch (e) { results.details.dmarc_error = sanitizeError(e.message); }
 
     // 7. Request SSL
     try {
@@ -658,7 +658,7 @@ async function mod_hosting(config, project, liveUrl) {
         body: JSON.stringify({ domain_name: domain })
       });
       results.details.ssl = 'requested';
-    } catch {}
+    } catch (e) { results.details.ssl_error = sanitizeError(e.message); }
 
     // 8. Register deferred DNS check in Neon
     try {
@@ -670,9 +670,14 @@ async function mod_hosting(config, project, liveUrl) {
         await addDeferredCheck(pool, project.slug, 'ssl_cert', domain, 'valid');
         await pool.end();
       }
-    } catch {}
+    } catch (e) { results.details.deferred_check_error = sanitizeError(e.message); }
 
-    results.ok = true;
+    const missing = ['dns', 'email', 'spf', 'dmarc', 'ssl'].filter((key) => !results.details[key]);
+    results.ok = missing.length === 0;
+    if (missing.length) {
+      results.error = `hosting incomplete: missing ${missing.join(', ')}`;
+      results.fallback = 'Retry hosting provisioning after checking 20i API permissions and DNS write access.';
+    }
     results.cost_usd = 0; // 20i is owned license
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Manage hosting package manually in your infrastructure panel.'; }
   return results;
@@ -750,7 +755,7 @@ async function mod_billing(config, project, liveUrl) {
           results.details.webhook_id = wh.id;
           results.details._webhook_secret = wh.secret; // For env var push only
         }
-      } catch {}
+      } catch (e) { results.details.webhook_error = sanitizeError(e.message); }
     }
 
     // 4. Generate onboarding link (only for connected accounts)
@@ -760,7 +765,7 @@ async function mod_billing(config, project, liveUrl) {
           body: `account=${acctId}&refresh_url=${enc(liveUrl || 'https://yourdeputy.com')}&return_url=${enc(liveUrl || 'https://yourdeputy.com')}&type=account_onboarding`
         }).then(r => r.json());
         if (link.url) results.details.onboarding_url = link.url;
-      } catch {}
+      } catch (e) { results.details.onboarding_error = sanitizeError(e.message); }
     }
 
     // 5. Do not push Stripe secrets or IDs to customer Vercel — handoff via repo only (option a).
@@ -771,14 +776,26 @@ async function mod_billing(config, project, liveUrl) {
         await pushFile(GH_TOKEN, 'pinohu', project.slug, '.env.example',
           `# ${project.name} — Environment Variables\n# Add these to Vercel → Project → Settings → Environment Variables (never committed).\n# Stripe Connect onboarding: ${results.details.onboarding_url || 'Create at dashboard.stripe.com'}\n\nSTRIPE_ACCOUNT_ID=${acctId || ''}\nSTRIPE_PRODUCT_ID=${prod?.id || ''}\nSTRIPE_PRICE_PRO_MONTHLY=${results.details.prices?.pro || ''}\nSTRIPE_PRICE_ENTERPRISE_MONTHLY=${results.details.prices?.enterprise || ''}\nNEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=\nSTRIPE_SECRET_KEY=\n# Webhook signing secret from Stripe Dashboard → Developers → Webhooks (after you register ${liveUrl || ''}/api/webhooks/stripe)\nSTRIPE_WEBHOOK_SECRET=\n\n# Clerk (your Clerk application — dashboard.clerk.com)\nNEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=\nCLERK_SECRET_KEY=\nNEXT_PUBLIC_CLERK_SIGN_IN_URL=/en/sign-in\nNEXT_PUBLIC_CLERK_SIGN_UP_URL=/en/sign-up\n\n# Database\nDATABASE_URL=\nNEXT_PUBLIC_APP_URL=${liveUrl || ''}\nBILLING_PLAN_ENV=test\n`,
           'docs: environment variables (customer-owned keys; add in Vercel dashboard)');
-      } catch {}
+      } catch (e) { results.details.env_example_error = sanitizeError(e.message); }
     }
 
     // Remove secret from response (only used for env var push)
     delete results.details._webhook_secret;
 
     results.details.note = 'Stripe Connected Account created. Client completes onboarding at the provided URL. Products, prices, and webhooks are on their connected account — add STRIPE_* and webhook secret to Vercel from .env.example (not auto-injected).';
-    results.ok = !!(results.details.stripe_account_id || results.details.product_id);
+    const missing = [];
+    if (!results.details.product_id) missing.push('product');
+    if (!results.details.prices?.pro || !results.details.prices?.enterprise) missing.push('prices');
+    if (liveUrl && !results.details.webhook_id) missing.push('webhook');
+    if (isConnected && !results.details.onboarding_url) missing.push('connect_onboarding_url');
+    results.details.note = missing.length
+      ? `Stripe billing incomplete: missing ${missing.join(', ')}.`
+      : 'Stripe billing was provisioned. If this is a connected account, the client completes Stripe onboarding at the provided URL.';
+    results.ok = missing.length === 0;
+    if (!results.ok) {
+      results.error = results.details.note;
+      results.fallback = 'Retry billing provisioning after checking Stripe API permissions, Connect status, and webhook access.';
+    }
     results.cost_usd = 0;
   } catch (e) { results.error = sanitizeError(e.message); results.fallback = 'Create Stripe account at dashboard.stripe.com — see docs/STRIPE-SETUP.md'; }
   return results;

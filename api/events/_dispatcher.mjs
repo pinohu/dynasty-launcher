@@ -232,6 +232,29 @@ async function executeWorkflow({ tenant, module, entitlement, trigger_event }) {
       const outcome = await runAction(step.action, stepCtx);
       ctx.prior_steps.push({ step: step.step, action: step.action, outcome });
 
+      if (outcome && outcome.ok === false && !outcome.skip) {
+        emit(workflow.observability?.emit_on_fail || 'module.run.failed', {
+          tenant_id: tenant.tenant_id,
+          module_code: module.module_code,
+          run_id,
+          reason: 'action_failed',
+          action: step.action,
+          step: step.step,
+          provider: outcome.provider,
+          error: outcome.error,
+        });
+        return {
+          run_id,
+          module_code: module.module_code,
+          status: 'failed',
+          reason: 'action_failed',
+          action: step.action,
+          step: step.step,
+          error: outcome.error,
+          steps: ctx.prior_steps,
+        };
+      }
+
       if (outcome && outcome.skip) {
         // Skip rest of workflow (abort semantic via `on_skip: "abort"`)
         if (step.on_skip === 'abort') {

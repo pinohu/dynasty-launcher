@@ -45,20 +45,34 @@ function pool() {
   return _pool;
 }
 
-// Auto-migrate on first use. Safe on every cold start because the migration
-// uses `CREATE TABLE IF NOT EXISTS` throughout. Idempotent by design.
+function migrationCandidates(selfDir, file) {
+  return [
+    join(process.cwd(), 'scripts', 'migrations', file),
+    join(selfDir, '..', '..', 'scripts', 'migrations', file),
+    join(selfDir, 'scripts', 'migrations', file),
+  ];
+}
+
+function readMigration(selfDir, file) {
+  for (const c of migrationCandidates(selfDir, file)) {
+    if (existsSync(c)) return readFileSync(c, 'utf-8');
+  }
+  return '';
+}
+
+async function applyMigration(selfDir, file) {
+  const sql = readMigration(selfDir, file);
+  if (!sql) throw new Error(`missing bundled migration ${file}`);
+  await pool().query(sql);
+}
+
+// Auto-migrate on first use. Safe on every cold start because the migrations
+// use idempotent DDL. Required migrations fail closed so production cannot run
+// with a partially initialized control plane.
 async function ensureSchema() {
   if (_migrated) return;
   const selfDir = dirname(fileURLToPath(import.meta.url));
-  const candidates = [
-    join(process.cwd(), 'scripts', 'migrations', '001_initial.sql'),
-    join(selfDir, '..', '..', 'scripts', 'migrations', '001_initial.sql'),
-    join(selfDir, 'scripts', 'migrations', '001_initial.sql'),
-  ];
-  let sql = null;
-  for (const c of candidates) {
-    if (existsSync(c)) { sql = readFileSync(c, 'utf-8'); break; }
-  }
+  let sql = readMigration(selfDir, '001_initial.sql');
   if (!sql) {
     // Inline fallback so the lambda works even if the migration file wasn't bundled.
     sql = `
@@ -96,23 +110,8 @@ async function ensureSchema() {
   }
   await pool().query(sql);
 
-  // Run additional migrations if present (002, 003, etc.)
-  const migrationDir = candidates[0] ? join(candidates[0], '..') : join(process.cwd(), 'scripts', 'migrations');
-  const extraMigrations = ['002_automation_tables.sql'];
-  for (const file of extraMigrations) {
-    const fileCandidates = [
-      join(process.cwd(), 'scripts', 'migrations', file),
-      join(selfDir, '..', '..', 'scripts', 'migrations', file),
-      join(selfDir, 'scripts', 'migrations', file),
-    ];
-    for (const c of fileCandidates) {
-      if (existsSync(c)) {
-        try { await pool().query(readFileSync(c, 'utf-8')); } catch (e) {
-          console.error(`[store_postgres] migration ${file} error (non-fatal):`, e.message);
-        }
-        break;
-      }
-    }
+  for (const file of ['002_automation_tables.sql', '003_factory_jobs.sql']) {
+    await applyMigration(selfDir, file);
   }
 
   _migrated = true;

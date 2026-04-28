@@ -207,7 +207,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://yourdeputy.com"
+          "value": "https://www.yourdeputy.com"
         },
         {
           "key": "Access-Control-Allow-Methods",
@@ -215,7 +215,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "value": "Content-Type, Authorization, x-admin-key, x-dynasty-admin-token, x-dynasty-access-token, x-dynasty-tenant-token, x-ai-gateway-token"
         },
         {
           "key": "Content-Security-Policy",

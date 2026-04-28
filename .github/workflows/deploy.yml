@@ -9,7 +9,20 @@ env:
   VERCEL_PROJECT_ID: prj_ohqrZxB5qgn4Hkc5rt8qZAG5fDHX
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run production regression suite
+        run: npm test
+
   deploy:
+    needs: validate
     runs-on: ubuntu-latest
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -18,12 +31,12 @@ jobs:
         if: ${{ env.VERCEL_TOKEN == '' }}
         run: echo "Vercel Git integration will deploy this push; token-based CLI deploy is skipped."
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         if: ${{ env.VERCEL_TOKEN != '' }}
 
       - name: Install Vercel CLI
         if: ${{ env.VERCEL_TOKEN != '' }}
-        run: npm install -g vercel@latest
+        run: npm install -g vercel@37.14.0
 
       - name: Pull Vercel config
         if: ${{ env.VERCEL_TOKEN != '' }}

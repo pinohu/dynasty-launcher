@@ -20,6 +20,10 @@ function isStub(key) {
   return !key || typeof key !== 'string' || key.startsWith('STUB') || key.startsWith('EXPIRED') || key.length < 10;
 }
 
+function productionRuntime() {
+  return process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+}
+
 // -----------------------------------------------------------------------------
 // Email: Acumbamail preferred, Resend fallback
 // -----------------------------------------------------------------------------
@@ -31,10 +35,13 @@ export async function sendEmail({ to, subject, body, template_ref = null, tenant
 
   // Stub mode — no provider configured
   if (isStub(acumba) && isStub(resend)) {
-    return { ok: true, provider: 'stub', to, subject, template_ref };
+    return productionRuntime()
+      ? { ok: false, provider: 'none', error: 'email_provider_not_configured', to, subject, template_ref }
+      : { ok: true, provider: 'stub', to, subject, template_ref };
   }
 
   // Prefer Acumbamail
+  let acumbaError = null;
   if (!isStub(acumba)) {
     try {
       const form = new URLSearchParams();
@@ -50,9 +57,10 @@ export async function sendEmail({ to, subject, body, template_ref = null, tenant
       });
       if (r.ok) return { ok: true, provider: 'acumbamail', to, subject };
       const text = await r.text();
-      return { ok: false, provider: 'acumbamail', error: text.slice(0, 200) };
+      acumbaError = text.slice(0, 200);
     } catch (e) {
       // Fall through to resend
+      acumbaError = e.message;
       console.error('[providers.email] acumbamail failed:', e.message);
     }
   }
@@ -81,7 +89,12 @@ export async function sendEmail({ to, subject, body, template_ref = null, tenant
     }
   }
 
-  return { ok: true, provider: 'stub', to };
+  return {
+    ok: false,
+    provider: 'acumbamail',
+    error: acumbaError || 'email_provider_failed_without_fallback',
+    to,
+  };
 }
 
 // -----------------------------------------------------------------------------
@@ -93,7 +106,9 @@ export async function sendSms({ to, body, template_ref = null, tenant_id = null,
   const smsit = process.env.SMSIT_KEY || cfg.comms?.smsit || null;
 
   if (isStub(smsit)) {
-    return { ok: true, provider: 'stub', to, body: body?.slice(0, 60), template_ref };
+    return productionRuntime()
+      ? { ok: false, provider: 'none', error: 'sms_provider_not_configured', to, template_ref }
+      : { ok: true, provider: 'stub', to, body: body?.slice(0, 60), template_ref };
   }
 
   try {

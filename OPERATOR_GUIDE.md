@@ -17,6 +17,16 @@
 4. On transient failure, call `POST /api/jobs/complete` with `{ "job_id": "...", "status": "failed", "error": "..." }`.
 5. Exhausted jobs remain in `failed` status for operator review.
 
+The production database must have migrations `001_initial.sql`, `002_automation_tables.sql`, and `003_factory_jobs.sql` applied. The Postgres adapter applies all three on first use and fails closed if a required migration is missing or invalid.
+
+Lead data is not available from public launch URLs. Use `GET /api/deliverables/leads?launch_id=<id>` with admin or tenant authorization when an operator needs to review captured leads.
+
+Read provisioning status literally:
+
+- `ok: true` means every required substep for that module completed.
+- `ok: false` means the deliverable is not complete; inspect `error`, `fallback`, and module details before telling a customer it is live.
+- External email and SMS workflow actions fail the workflow in production when the configured provider fails or is missing.
+
 ## Health Checks
 
 - `npm run test:business-factory`

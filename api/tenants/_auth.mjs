@@ -20,9 +20,15 @@ export function realSecret(value) {
   return v && !v.startsWith('STUB') && !v.startsWith('EXPIRED') ? v : '';
 }
 
+function productionRuntime() {
+  return process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+}
+
 function tenantActionSecret() {
+  const dedicated = realSecret(process.env.TENANT_ACTION_SECRET);
+  if (productionRuntime()) return dedicated;
   return (
-    realSecret(process.env.TENANT_ACTION_SECRET) ||
+    dedicated ||
     realSecret(process.env.PAYMENT_ACCESS_SECRET) ||
     realSecret(process.env.ADMIN_KEY) ||
     realSecret(process.env.TEST_ADMIN_KEY) ||
@@ -31,7 +37,9 @@ function tenantActionSecret() {
 }
 
 function paymentAccessSecret() {
-  return realSecret(process.env.PAYMENT_ACCESS_SECRET) || realSecret(process.env.STRIPE_SECRET_KEY);
+  const dedicated = realSecret(process.env.PAYMENT_ACCESS_SECRET);
+  if (productionRuntime()) return dedicated;
+  return dedicated || realSecret(process.env.STRIPE_SECRET_KEY);
 }
 
 export function hmacHex(secret, payload) {
