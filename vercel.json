@@ -128,9 +128,6 @@
     "api/pivot-graph.js": {
       "maxDuration": 300
     },
-    "api/template.js": {
-      "maxDuration": 30
-    },
     "api/orchestrate.js": {
       "maxDuration": 300
     },
@@ -162,6 +159,10 @@
     "api/business-factory.js": {
       "maxDuration": 60,
       "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+    },
+    "api/deliverables/instant.js": {
+      "maxDuration": 30,
+      "includeFiles": "product/**/*.json"
     },
     "api/automations/handler.js": {
       "maxDuration": 30,

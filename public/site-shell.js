@@ -9,6 +9,7 @@
     { href: "/quiz", label: "Diagnostic" },
     { href: "/marketplace", label: "Marketplace" },
     { href: "/business-factory", label: "Factory" },
+    { href: "/live-deliverables", label: "Live Examples" },
     { href: "/demo", label: "Demos" },
     { href: "/deliverables", label: "Deliverables" },
     { href: "/maturity", label: "Maturity" },
@@ -28,6 +29,7 @@
         { href: "/launch/customer-dashboard", label: "Customer dashboard" },
         { href: "/launch/documentation", label: "Documentation" },
         { href: "/business-factory", label: "Business factory console" },
+        { href: "/live-deliverables", label: "Full live deliverable examples" },
       ],
     },
     {

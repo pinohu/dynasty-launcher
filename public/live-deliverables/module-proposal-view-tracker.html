@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proposal View Tracker - Your Deputy Live Deliverables</title>
+<meta name="description" content="Full live deliverable example for Proposal View Tracker.">
+<link rel="canonical" href="https://www.yourdeputy.com/live-deliverables/module-proposal-view-tracker">
+<link rel="stylesheet" href="/site-shell.css">
+<style>
+:root{--gold:#c9a84c;--ink:#09090b;--bg:#0c0c14;--panel:#171720;--card:#22222c;--line:rgba(255,255,255,.13);--text:#fafaf9;--muted:#a1a1aa;--ok:#22c55e;--blue:#60a5fa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}
+a{color:var(--gold);font-weight:800;text-decoration:none}
+a:hover{text-decoration:underline}
+main{max-width:1120px;margin:0 auto;padding:92px 20px 60px}
+.hero{padding:20px 0 28px;border-bottom:1px solid rgba(255,255,255,.08)}
+.eyebrow{color:var(--gold);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;margin-bottom:12px}
+h1{font-size:clamp(36px,6vw,68px);line-height:1;margin:0 0 14px;letter-spacing:0}
+h2{font-size:clamp(24px,4vw,38px);line-height:1.08;margin:0 0 10px;letter-spacing:0}
+h3{font-size:17px;margin:0 0 8px}
+p{color:var(--muted);margin:0 0 14px}
+.lead{font-size:20px;max-width:840px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card,.panel{border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:10px;padding:18px}
+.panel{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));padding:22px}
+.tag{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:8px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:9px;padding:11px 15px;font-weight:900;text-align:center}
+.btn.primary{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.section{padding:30px 0;border-top:1px solid rgba(255,255,255,.08)}
+.receipt{display:grid;gap:8px;margin-top:14px}
+.receipt div{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:7px;color:var(--muted);font-size:13px}
+.receipt strong{color:var(--text)}
+.file{background:#09090f;border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto}
+.file pre{white-space:pre-wrap;color:#d4d4d8;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:0}
+.list{margin:10px 0 0;padding-left:18px;color:var(--muted)}
+.list li{margin:5px 0}
+.matrix{display:grid;grid-template-columns:170px minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:16px}
+.matrix div{padding:11px 13px;border-bottom:1px solid rgba(255,255,255,.08)}
+.matrix div:nth-child(odd){background:rgba(255,255,255,.045);font-weight:900;color:var(--text)}
+.matrix div:nth-child(even){color:var(--muted)}
+@media(max-width:860px){main{padding-top:82px}.grid,.grid.two,.matrix{grid-template-columns:1fr}.actions .btn{width:100%}}
+</style>
+</head>
+<body>
+<main id="main-content">
+<section class="hero">
+  <div class="eyebrow">Full live deliverable - not a demo</div>
+  <h1>Proposal View Tracker</h1>
+  <p class="lead">Know which deals are alive so the owner spends time on the right follow-ups.</p>
+  <div class="actions">
+    <a class="btn primary" href="/api/deliverables/instant?offer=module-proposal-view-tracker">Open instant JSON package</a>
+    <a class="btn" href="/live-deliverables">All live deliverables</a>
+  </div>
+  <div class="matrix">
+    <div>Offer ID</div><div>module-proposal-view-tracker</div>
+    <div>Type</div><div>module</div>
+    <div>Price</div><div>$19/mo</div>
+    <div>Buyer</div><div>owner-operator, sales-coordinator</div>
+    <div>Manual package creation</div><div>None. The package is generated immediately by /api/deliverables/instant.</div>
+  </div>
+</section>
+<section class="section">
+  <h2>Smallest complete deliverable</h2>
+  <p>This is the minimum finished package a customer can receive immediately after signup for this offer.</p>
+  <ul class="list"><li>activation manifest</li><li>workflow trigger</li><li>message/template set</li><li>sample event</li><li>acceptance test</li></ul>
+</section>
+<section class="section">
+  <h2>Package receipt</h2>
+  <div class="panel">
+    <div class="receipt">
+      <div><strong>Receipt</strong><span>yd_live_module-proposal-view-tracker_moimv2iz</span></div>
+      <div><strong>Instant delivery</strong><span>true</span></div>
+      <div><strong>Manual creation step</strong><span>none</span></div>
+      <div><strong>Customer-owned boundary</strong><span>vendor credentials, domains, payment accounts, legal/tax review</span></div>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <h2>Generated files</h2>
+  <div class="grid two"><article class="file">
+  <h3>START-HERE.md</h3>
+  <p>Customer-facing first page for the delivered package.</p>
+  <pre># Proposal View Tracker - Live Deliverable Example
+
+Business: Acme HVAC Recovery
+Buyer: owner-operator, sales-coordinator
+Outcome: Know which deals are alive so the owner spends time on the right follow-ups.
+
+Use this first. It explains what was generated, what is ready now, and what credentials or customer-owned accounts are required before live vendor actions run.</pre>
+</article>
+<article class="file">
+  <h3>DELIVERY-MANIFEST.json</h3>
+  <p>Machine-readable package manifest.</p>
+  <pre>{
+  &quot;receipt_id&quot;: &quot;yd_live_module-proposal-view-tracker_moimv2iz&quot;,
+  &quot;offer_id&quot;: &quot;module-proposal-view-tracker&quot;,
+  &quot;offer_type&quot;: &quot;module&quot;,
+  &quot;name&quot;: &quot;Proposal View Tracker&quot;,
+  &quot;generated_at&quot;: &quot;2026-04-28T12:59:38.507Z&quot;,
+  &quot;price_label&quot;: &quot;$19/mo&quot;,
+  &quot;instant_delivery&quot;: true,
+  &quot;no_manual_step_required_for_package_creation&quot;: true,
+  &quot;customer_owned_boundaries&quot;: [
+    &quot;production secrets&quot;,
+    &quot;domain accounts&quot;,
+    &quot;payment accounts&quot;,
+    &quot;email sender approval&quot;,
+    &quot;legal/tax review&quot;
+  ],
+  &quot;included&quot;: [
+    &quot;activation manifest&quot;,
+    &quot;workflow trigger&quot;,
+    &quot;message/template set&quot;,
+    &quot;sample event&quot;,
+    &quot;acceptance test&quot;
+  ]
+}</pre>
+</article>
+<article class="file">
+  <h3>OUTCOME-BRIEF.md</h3>
+  <p>Clear explanation of the problem, user, promise, and deliverable.</p>
+  <pre># Outcome Brief
+
+Customer problem: Know which deals are alive so the owner spends time on the right follow-ups.
+
+Primary buyer: owner-operator, sales-coordinator
+
+Delivered package:
+- activation manifest
+- workflow trigger
+- message/template set
+- sample event
+- acceptance test
+
+This is a complete smallest deliverable for this SKU. It is useful without waiting for a human operator.</pre>
+</article>
+<article class="file">
+  <h3>WORKFLOW.json</h3>
+  <p>Activation-ready workflow or delivery flow for the package.</p>
+  <pre>{
+  &quot;trigger&quot;: {
+    &quot;event&quot;: &quot;estimate.viewed&quot;
+  },
+  &quot;inputs&quot;: [
+    &quot;estimate_record&quot;,
+    &quot;view_event&quot;
+  ],
+  &quot;actions&quot;: [
+    &quot;notify_owner&quot;,
+    &quot;log_engagement_score&quot;,
+    &quot;trigger_nudge_if_idle&quot;
+  ],
+  &quot;kpis&quot;: [
+    &quot;view_to_close_rate&quot;,
+    &quot;stalled_deal_intervention_rate&quot;
+  ]
+}</pre>
+</article>
+<article class="file">
+  <h3>ACCEPTANCE-TESTS.md</h3>
+  <p>Tests that prove the deliverable is complete.</p>
+  <pre># Acceptance Tests
+
+1. Proposal View Tracker has a named buyer and a specific pain-to-outcome mapping.
+2. Proposal View Tracker includes at least one handoff artifact a customer can use immediately.
+3. Proposal View Tracker states credential or vendor boundaries instead of implying hidden setup.
+4. Proposal View Tracker includes a receipt showing what was delivered and what remains customer-owned.
+5. Module workflow includes trigger, action, template, sample event, and KPI.
+
+Pass condition: the customer can open this package, understand the outcome, inspect the artifact list, and run the next step without a manual handoff.</pre>
+</article>
+<article class="file">
+  <h3>DELIVERY-RECEIPT.md</h3>
+  <p>Plain receipt of what was generated and what was not silently promised.</p>
+  <pre># Delivery Receipt
+
+Receipt: yd_live_module-proposal-view-tracker_moimv2iz
+Generated: 2026-04-28T12:59:38.507Z
+
+Delivered now:
+- activation manifest
+- workflow trigger
+- message/template set
+- sample event
+- acceptance test
+
+Not silently performed:
+- Vendor account creation
+- Domain purchase
+- Payment account approval
+- Email sender approval
+- Legal or tax filing
+
+Those steps require customer-owned accounts or approvals. The package itself is generated instantly.</pre>
+</article></div>
+</section>
+</main>
+<script src="/site-shell.js" defer></script>
+</body>
+</html>
