@@ -16,6 +16,35 @@ process.env.AI_PIVOT_MAX_MODELS = '2';
 process.env.PAYMENT_ACCESS_SECRET = 'payment-secret-for-ai-smoke';
 process.env.TEST_ADMIN_KEY = 'admin-key-for-ai-smoke';
 
+const LEGACY_AI_PROVIDER_ENVS = [
+  'GOOGLE_AI_KEY',
+  'GEMINI_API_KEY',
+  'GROQ_API_KEY',
+  'GROQ_API_KEY_2',
+  'OPENROUTER_API_KEY',
+  'OLLAMA_URL',
+  'CEREBRAS_API_KEY',
+  'SAMBANOVA_API_KEY',
+  'MOONSHOT_API_KEY',
+  'ZAI_API_KEY',
+  'Z_AI_API_KEY',
+  'MINIMAX_API_KEY',
+  'FIREWORKS_API_KEY',
+  'HYPERBOLIC_API_KEY',
+  'TOGETHER_API_KEY',
+  'PERPLEXITY_API_KEY',
+  'DASHSCOPE_API_KEY',
+  'QWEN_API_KEY',
+  'NVIDIA_API_KEY',
+  'NIM_API_KEY',
+  'BASETEN_API_KEY',
+  'GITHUB_MODELS_TOKEN',
+  'GITHUB_TOKEN',
+  'CLOUDFLARE_API_TOKEN',
+  'CHUTES_API_KEY',
+  'INCEPTION_API_KEY',
+];
+
 function invoke(handlerModule, { method = 'POST', query = {}, body = null, headers = {} } = {}) {
   return new Promise((resolve, reject) => {
     const res = {
@@ -107,6 +136,70 @@ async function main() {
       r.status === 200 && r.body.ok === true,
       '/api/ai reset_quota accepts shared admin header auth',
       `status=${r.status}`,
+    );
+  }
+
+  {
+    process.env.GROQ_API_KEY = 'fake-groq-key-for-redaction';
+    const r = await invoke(h.legacyAi, {
+      method: 'GET',
+      query: { action: 'models' },
+    });
+    fails += log(
+      r.status === 200 &&
+        r.body.provider_availability_redacted === true &&
+        r.body.models?.['llama-3.1-8b-instant']?.available === false,
+      '/api/ai models redacts provider-key availability without admin auth',
+      `status=${r.status} redacted=${r.body.provider_availability_redacted}`,
+    );
+  }
+
+  {
+    const r = await invoke(h.legacyAi, {
+      method: 'GET',
+      query: { action: 'models' },
+      headers: { 'x-admin-key': process.env.TEST_ADMIN_KEY },
+    });
+    fails += log(
+      r.status === 200 &&
+        r.body.provider_availability_redacted === false &&
+        r.body.models?.['llama-3.1-8b-instant']?.available === true,
+      '/api/ai models shows provider-key availability to admins',
+      `status=${r.status} available=${r.body.models?.['llama-3.1-8b-instant']?.available}`,
+    );
+    Reflect.deleteProperty(process.env, 'GROQ_API_KEY');
+  }
+
+  {
+    const r = await invoke(h.legacyAi, {
+      body: {
+        model: 'gemini-2.0-flash',
+        messages: [{ role: 'user', content: 'hello' }],
+        max_tokens: 1001,
+      },
+    });
+    fails += log(
+      r.status === 400 && r.body.error === 'max_tokens_exceeds_limit',
+      '/api/ai enforces max-token cap before provider calls',
+      `status=${r.status} error=${r.body.error}`,
+    );
+  }
+
+  {
+    for (const key of LEGACY_AI_PROVIDER_ENVS) delete process.env[key];
+    process.env.DYNASTY_TOOL_CONFIG = '{}';
+    const r = await invoke(h.legacyAi, {
+      body: {
+        usage_context: 'free_scoring',
+        model: 'gemini-2.0-flash',
+        user_id: 'spoofed_registered_user',
+        messages: [{ role: 'user', content: 'score this idea' }],
+      },
+    });
+    fails += log(
+      r.status === 503 && r.headers['X-Scoring-Plan'] === 'guest',
+      '/api/ai treats unauthenticated free_scoring user_id as guest quota',
+      `status=${r.status} plan=${r.headers['X-Scoring-Plan']}`,
     );
   }
 

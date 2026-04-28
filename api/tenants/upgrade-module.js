@@ -60,6 +60,11 @@ function stripe() {
   return _stripe;
 }
 
+function stripeLiveConfigured() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  return !!key && !key.startsWith('STUB') && !key.startsWith('EXPIRED');
+}
+
 const now = () => new Date().toISOString();
 
 async function ensureAutomationConfigCompatibility() {
@@ -105,7 +110,7 @@ export default async function handler(req, res) {
   try {
     const result = await upgradeModule(tenant_id, module_code, module, payment_method_id);
     if (result.error) {
-      const code = result.error === 'no_payment_method' ? 402 : 400;
+      const code = ['no_payment_method', 'no_stripe_customer'].includes(result.error) ? 402 : 400;
       return res.status(code).json(result);
     }
     return res.status(200).json(result);
@@ -156,7 +161,24 @@ async function upgradeModule(tenant_id, module_code, module, payment_method_id) 
   };
 
   // Process payment (if Stripe available and configured)
-  const stripeClient = stripe();
+  const stripeLive = stripeLiveConfigured();
+  if (stripeLive && !stripeCustomerId) {
+    return {
+      error: 'no_stripe_customer',
+      reason: 'Stripe customer and payment method are required before activating paid modules',
+      module_code,
+    };
+  }
+
+  const stripeClient = stripeLive ? stripe() : null;
+  if (stripeLive && !stripeClient) {
+    return {
+      error: 'stripe_unavailable',
+      reason: 'Stripe is configured but the payment client is unavailable',
+      module_code,
+    };
+  }
+
   if (stripeClient && stripeCustomerId) {
     try {
       await processStripePayment({
@@ -173,7 +195,7 @@ async function upgradeModule(tenant_id, module_code, module, payment_method_id) 
         module_code,
       };
     }
-  } else if (!stripeClient) {
+  } else if (!stripeLive) {
     // Dev/test mode: no billing
     console.info('[upgrade-module] dev/test mode, skipping Stripe payment');
   }

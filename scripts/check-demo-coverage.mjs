@@ -75,6 +75,12 @@ function checkManifest({ kind, code, route, moduleCodes }) {
   for (const needle of ['Run working demo', '/api/demo/run-module', 'Execution trace']) {
     if (!html.includes(needle)) fail(`${kind}:${code} page missing ${needle}`);
   }
+  if (html.includes('outputEl.innerHTML = previews.map') || html.includes("' + item.title + '") || html.includes("' + item.body + '")) {
+    fail(`${kind}:${code} page renders output previews with raw HTML concatenation`);
+  }
+  if (!html.includes('outputEl.replaceChildren()') || !html.includes('title.textContent = item?.title')) {
+    fail(`${kind}:${code} page missing safe output preview renderer`);
+  }
 }
 
 const catalog = getCatalog();
@@ -201,4 +207,3 @@ for (let i = 0; i < 30; i += 1) {
 }
 
 console.log(`Demo coverage PASS: ${checked} demo units covered and representative runtime demos passed.`);
-

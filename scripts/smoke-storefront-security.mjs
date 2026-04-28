@@ -17,6 +17,7 @@ import {
 } from '../api/tenants/_store.mjs';
 
 process.env.TENANT_ACTION_SECRET = 'tenant-action-secret-for-smoke';
+process.env.TEST_ADMIN_KEY = 'test-admin-key';
 Reflect.deleteProperty(process.env, 'STRIPE_SECRET_KEY');
 Reflect.deleteProperty(process.env, 'STRIPE_WEBHOOK_SECRET');
 
@@ -67,6 +68,8 @@ function log(ok, name, detail = '') {
   return ok ? 0 : 1;
 }
 
+const ADMIN = { 'x-admin-key': 'test-admin-key' };
+
 async function main() {
   await resetStore();
   resetBus();
@@ -80,6 +83,7 @@ async function main() {
   const {
     body: { tenant },
   } = await invoke(h.createTenant, {
+    headers: ADMIN,
     body: {
       blueprint_code: 'hvac',
       plan: 'professional',

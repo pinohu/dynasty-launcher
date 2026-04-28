@@ -64,6 +64,7 @@ async function main() {
   // Create an HVAC tenant with CRM + SMS enabled (satisfies several rules' capability_present)
   const { body: { tenant } } = await invoke(h.createTenant, {
     method: 'POST',
+    headers: ADMIN,
     body: { blueprint_code: 'hvac', plan: 'professional' },
   });
   for (const cap of ['crm', 'sms', 'email', 'phone', 'invoicing']) {
@@ -231,6 +232,7 @@ async function main() {
   {
     const { body: { tenant: plumbTenant } } = await invoke(h.createTenant, {
       method: 'POST',
+      headers: ADMIN,
       body: { blueprint_code: 'plumbing', plan: 'professional' },
     });
     for (const cap of ['crm', 'sms']) {

@@ -14,6 +14,7 @@
 
 import { _reset as resetStore } from '../api/tenants/_store.mjs';
 import { _reset as resetBus } from '../api/events/_bus.mjs';
+import crypto from 'node:crypto';
 
 process.env.TEST_ADMIN_KEY = 'test-admin-key';
 // Ensure stub mode
@@ -58,6 +59,8 @@ function log(ok, name, detail = '') {
   return ok ? 0 : 1;
 }
 
+const ADMIN = { 'x-admin-key': 'test-admin-key' };
+
 async function main() {
   await resetStore();
   resetBus();
@@ -87,7 +90,33 @@ async function main() {
     delete process.env.STRIPE_SECRET_KEY;
   }
 
+  {
+    process.env.STRIPE_SECRET_KEY = 'sk_live_fake_for_signature_gate';
+    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_replay_gate';
+    const payload = JSON.stringify({ id: 'evt_replayed', type: 'checkout.session.completed', data: { object: {} } });
+    const timestamp = Math.floor(Date.now() / 1000) - 3600;
+    const sig = crypto
+      .createHmac('sha256', process.env.STRIPE_WEBHOOK_SECRET)
+      .update(`${timestamp}.${payload}`)
+      .digest('hex');
+    const r = await invoke(h.webhook, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'stripe-signature': `t=${timestamp},v1=${sig}` },
+      body: payload,
+    });
+    fails += log(
+      r.status === 400 &&
+        r.body.error === 'invalid_signature' &&
+        r.body.message === 'signature_timestamp_out_of_tolerance',
+      'webhook rejects replayed Stripe signatures outside tolerance',
+      `status=${r.status} message=${r.body.message}`,
+    );
+    delete process.env.STRIPE_SECRET_KEY;
+    delete process.env.STRIPE_WEBHOOK_SECRET;
+  }
+
   const { body: { tenant } } = await invoke(h.createTenant, {
+    headers: ADMIN,
     body: { blueprint_code: 'hvac', plan: 'professional' },
   });
 
@@ -189,6 +218,7 @@ async function main() {
   // ============================================================
   {
     const { body: { tenant: tenantSku } } = await invoke(h.createTenant, {
+      headers: ADMIN,
       body: { blueprint_code: 'hvac', plan: 'enterprise' },
     });
     const payload = JSON.stringify({

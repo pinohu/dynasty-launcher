@@ -40,6 +40,7 @@ async function loadHandlers() {
     setCap: await import('../api/tenants/set-tenant-capability.js'),
     grant: await import('../api/tenants/grant-entitlement.js'),
     activate: await import('../api/tenants/activate-module.js'),
+    upgrade: await import('../api/tenants/upgrade-module.js'),
     deactivate: await import('../api/tenants/deactivate-module.js'),
     getTenant: await import('../api/tenants/get-tenant.js'),
   };
@@ -63,6 +64,7 @@ async function main() {
 
   // Create a tenant on the HVAC blueprint
   const { body: { tenant: tenantHvac } } = await invoke(h.createTenant, {
+    headers: ADMIN,
     body: { blueprint_code: 'hvac', plan: 'professional' },
   });
 
@@ -73,6 +75,23 @@ async function main() {
     const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: tenantHvac.tenant_id, module_code: 'webform_autoreply' } });
     fails += log(r.status === 400 && r.body.reason === 'not_purchased',
       'activate dormant pre-provisioned module before checkout returns not_purchased', `status=${r.status} reason=${r.body.reason}`);
+  }
+
+  // ============================================================
+  // Path: live billing cannot activate when tenant has no Stripe customer
+  // ============================================================
+  {
+    process.env.STRIPE_SECRET_KEY = 'sk_live_fake_for_upgrade_gate';
+    const r = await invoke(h.upgrade, {
+      headers: ADMIN,
+      body: { tenant_id: tenantHvac.tenant_id, module_code: 'appointment_reminder' },
+    });
+    Reflect.deleteProperty(process.env, 'STRIPE_SECRET_KEY');
+    fails += log(
+      r.status === 402 && r.body.error === 'no_stripe_customer',
+      'upgrade-module in live Stripe mode requires a tenant Stripe customer',
+      `status=${r.status} error=${r.body.error}`,
+    );
   }
 
   // ============================================================
@@ -172,7 +191,7 @@ async function main() {
   // ============================================================
   {
     // Fresh tenant so the prereq chain is clean
-    const { body: { tenant } } = await invoke(h.createTenant, { body: { blueprint_code: 'hvac', plan: 'professional' } });
+    const { body: { tenant } } = await invoke(h.createTenant, { headers: ADMIN, body: { blueprint_code: 'hvac', plan: 'professional' } });
     for (const cap of ['crm', 'reviews', 'email', 'sms']) {
       await invoke(h.setCap, { headers: ADMIN, body: { tenant_id: tenant.tenant_id, capability_code: cap, enabled: true } });
     }
@@ -189,7 +208,7 @@ async function main() {
   // Path: tier_mismatch (module requires professional; tenant on core/foundation)
   // ============================================================
   {
-    const { body: { tenant } } = await invoke(h.createTenant, { body: { plan: 'foundation' } });
+    const { body: { tenant } } = await invoke(h.createTenant, { headers: ADMIN, body: { plan: 'foundation' } });
     await invoke(h.grant, { headers: ADMIN, body: { tenant_id: tenant.tenant_id, module_code: 'missed_call_textback' } });
     const r = await invoke(h.activate, { headers: ADMIN, body: { tenant_id: tenant.tenant_id, module_code: 'missed_call_textback' } });
     fails += log(
@@ -237,6 +256,7 @@ async function main() {
   // ============================================================
   {
     const { body: { tenant: medSpa } } = await invoke(h.createTenant, {
+      headers: ADMIN,
       body: { blueprint_code: 'med-spa', plan: 'professional' },
     });
     for (const cap of ['crm', 'reviews', 'email', 'sms']) {

@@ -564,6 +564,7 @@ function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
   if (paid.session_id !== (sessionId || '').trim()) return false;
   if ((tier || '').trim() && paid.tier !== String(tier).toLowerCase()) return false;
   const reqUser = (userId || '').trim();
+  if (paid.subject !== 'anon' && !reqUser) return false;
   if (paid.subject !== 'anon' && reqUser && paid.subject !== reqUser) return false;
   return true;
 }
@@ -2508,29 +2509,32 @@ export default async function handler(req, res) {
 
   // ── INVENTORY ─────────────────────────────────────────────────────────────
   if (action==='inventory') {
+    const revealAvailability = isAdmin;
+    const enabled = (value) => revealAvailability && !!value;
     return res.json({
-      ai: Object.keys(config.ai||{}).length ? ['available'] : [],
-      comms: Object.keys(config.comms||{}).length ? ['available'] : [],
-      automation: Object.keys(config.automation||{}).length ? ['available'] : [],
+      ai: enabled(Object.keys(config.ai||{}).length) ? ['available'] : [],
+      comms: enabled(Object.keys(config.comms||{}).length) ? ['available'] : [],
+      automation: enabled(Object.keys(config.automation||{}).length) ? ['available'] : [],
+      provider_availability_redacted: !revealAvailability,
       build_archetypes: ARCHETYPE_KEYS,
       modules_available: {
-        hosting: !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
+        hosting: enabled(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
         billing: true,
-        email: !!(config.comms?.acumbamail),
-        phone: !!(config.comms?.callscaler || config.comms?.insighto || config.comms?.trafft_client_id),
-        sms: !!(config.comms?.smsit),
-        chatbot: !!(process.env.ANTHROPIC_API_KEY),
-        seo: !!(config.content?.writerzen || config.content?.neuronwriter || process.env.ANTHROPIC_API_KEY),
-        video: !!(config.content?.vadoo_ai || config.content?.fliki),
-        design: !!(config.content?.supermachine),
-        analytics: !!(config.data_research?.posthog || config.data_research?.plerdy),
-        leads: !!(config.data_research?.happierleads || config.data_research?.salespanel),
-        automation: !!(process.env.N8N_API_KEY || config.automation?.n8n_api),
-        docs: !!(config.content?.documentero),
-        crm: !!(config.crm_pm?.suitedash_api),
-        directory: !!(config.directories?.brilliant_api),
-        wordpress: !!(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
-        social: !!(config.content?.vista_social),
+        email: enabled(config.comms?.acumbamail),
+        phone: enabled(config.comms?.callscaler || config.comms?.insighto || config.comms?.trafft_client_id),
+        sms: enabled(config.comms?.smsit),
+        chatbot: enabled(process.env.ANTHROPIC_API_KEY),
+        seo: enabled(config.content?.writerzen || config.content?.neuronwriter || process.env.ANTHROPIC_API_KEY),
+        video: enabled(config.content?.vadoo_ai || config.content?.fliki),
+        design: enabled(config.content?.supermachine),
+        analytics: enabled(config.data_research?.posthog || config.data_research?.plerdy),
+        leads: enabled(config.data_research?.happierleads || config.data_research?.salespanel),
+        automation: enabled(process.env.N8N_API_KEY || config.automation?.n8n_api),
+        docs: enabled(config.content?.documentero),
+        crm: enabled(config.crm_pm?.suitedash_api),
+        directory: enabled(config.directories?.brilliant_api),
+        wordpress: enabled(config.infrastructure?.twentyi_general || process.env.TWENTYI_API_KEY),
+        social: enabled(config.content?.vista_social),
         verify: true
       },
       modules_enabled: config.modules_enabled || {},

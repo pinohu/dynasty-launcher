@@ -150,6 +150,43 @@ async function main() {
   }
 
   {
+    process.env.DYNASTY_TOOL_CONFIG = JSON.stringify({
+      ai: { groq: 'configured' },
+      comms: { acumbamail: 'configured' },
+      infrastructure: { twentyi_general: 'configured' },
+    });
+    const r = await invoke(provision, {
+      method: 'GET',
+      query: { action: 'inventory' },
+    });
+    fails += log(
+      r.status === 200 &&
+        r.body.provider_availability_redacted === true &&
+        r.body.ai.length === 0 &&
+        r.body.modules_available?.hosting === false,
+      '/api/provision inventory redacts provider availability without admin auth',
+      `status=${r.status} redacted=${r.body.provider_availability_redacted}`,
+    );
+  }
+
+  {
+    const r = await invoke(provision, {
+      method: 'GET',
+      query: { action: 'inventory' },
+      headers: { 'x-dynasty-admin-token': adminToken },
+    });
+    fails += log(
+      r.status === 200 &&
+        r.body.provider_availability_redacted === false &&
+        r.body.ai[0] === 'available' &&
+        r.body.modules_available?.hosting === true,
+      '/api/provision inventory shows provider availability to admins',
+      `status=${r.status} hosting=${r.body.modules_available?.hosting}`,
+    );
+    process.env.DYNASTY_TOOL_CONFIG = '{}';
+  }
+
+  {
     const originalFetch = globalThis.fetch;
     const calls = [];
     globalThis.fetch = async (input) => {
@@ -213,6 +250,20 @@ async function main() {
       r.status === 200 && Array.isArray(r.body.execution_plan),
       '/api/orchestrate accepts signed admin header for read-only plan',
       `status=${r.status}`,
+    );
+  }
+
+  {
+    const paidToken = signPaymentToken();
+    const r = await invoke(twentyi, {
+      method: 'POST',
+      body: { action: 'create_package', site_name: 'Paid Caller', domain: 'paid.example.com' },
+      headers: { authorization: `Bearer ${paidToken}` },
+    });
+    fails += log(
+      r.status === 401 && r.body.error === 'admin_auth_required',
+      '/api/twentyi rejects paid tokens before reseller-token access',
+      `status=${r.status} error=${r.body.error}`,
     );
   }
 

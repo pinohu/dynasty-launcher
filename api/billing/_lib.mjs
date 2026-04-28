@@ -22,27 +22,87 @@ export function methodGuard(req, res, allowed) {
   return true;
 }
 
-export async function readBody(req) {
-  if (req.body && typeof req.body === 'object') return req.body;
+function payloadTooLargeError() {
+  const err = new Error('payload_too_large');
+  err.code = 'payload_too_large';
+  return err;
+}
+
+function checkContentLength(req, maxBytes) {
+  const raw = req.headers?.['content-length'] || req.headers?.['Content-Length'];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const size = Number.parseInt(String(value || ''), 10);
+  if (Number.isFinite(size) && size > maxBytes) throw payloadTooLargeError();
+}
+
+export async function readBody(req, { maxBytes = 1_000_000 } = {}) {
+  checkContentLength(req, maxBytes);
+  if (req.body && typeof req.body === 'object') {
+    if (Buffer.byteLength(JSON.stringify(req.body)) > maxBytes) throw payloadTooLargeError();
+    return req.body;
+  }
+  if (typeof req.body === 'string') {
+    if (Buffer.byteLength(req.body) > maxBytes) throw payloadTooLargeError();
+    if (!req.body) return {};
+    return JSON.parse(req.body);
+  }
   return new Promise((resolve, reject) => {
     let buf = '';
-    req.on('data', (chunk) => { buf += chunk; });
+    let done = false;
+    req.on('data', (chunk) => {
+      if (done) return;
+      buf += chunk;
+      if (Buffer.byteLength(buf) > maxBytes) {
+        done = true;
+        reject(payloadTooLargeError());
+      }
+    });
     req.on('end', () => {
+      if (done) return;
+      done = true;
       if (!buf) return resolve({});
       try { resolve(JSON.parse(buf)); } catch (e) { reject(e); }
     });
-    req.on('error', reject);
+    req.on('error', (err) => {
+      if (done) return;
+      done = true;
+      reject(err);
+    });
   });
 }
 
-export async function readRawBody(req) {
+export async function readRawBody(req, { maxBytes = 1_000_000 } = {}) {
   // For Stripe webhook signature verification we need the raw bytes.
-  if (typeof req.body === 'string') return req.body;
+  checkContentLength(req, maxBytes);
+  if (Buffer.isBuffer(req.body)) {
+    if (req.body.length > maxBytes) throw payloadTooLargeError();
+    return req.body.toString('utf-8');
+  }
+  if (typeof req.body === 'string') {
+    if (Buffer.byteLength(req.body) > maxBytes) throw payloadTooLargeError();
+    return req.body;
+  }
   return new Promise((resolve, reject) => {
     let buf = '';
-    req.on('data', (chunk) => { buf += chunk; });
-    req.on('end', () => resolve(buf));
-    req.on('error', reject);
+    let done = false;
+    req.on('data', (chunk) => {
+      if (done) return;
+      buf += chunk;
+      if (Buffer.byteLength(buf) > maxBytes) {
+        done = true;
+        reject(payloadTooLargeError());
+      }
+    });
+    req.on('end', () => {
+      if (done) return;
+      done = true;
+      resolve(buf);
+    });
+    req.on('error', (err) => {
+      if (done) return;
+      done = true;
+      reject(err);
+    });
   });
 }
 

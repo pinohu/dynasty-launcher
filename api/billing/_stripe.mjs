@@ -17,6 +17,7 @@ import crypto from 'node:crypto';
 import { getStripeConfig, stripEnabled } from './_lib.mjs';
 
 const STRIPE_API = 'https://api.stripe.com/v1';
+const DEFAULT_WEBHOOK_TOLERANCE_SECONDS = 300;
 
 function authHeader() {
   const { stripe_secret } = getStripeConfig();
@@ -179,6 +180,20 @@ export function constructEvent(rawBody, signatureHeader, webhookSecret) {
   }, {});
   const { t: timestamp, v1: v1sig } = parts;
   if (!timestamp || !v1sig) throw new Error('signature_missing');
+  const signedAt = Number(timestamp);
+  const tolerance = Number.parseInt(
+    process.env.STRIPE_WEBHOOK_TOLERANCE_SECONDS || String(DEFAULT_WEBHOOK_TOLERANCE_SECONDS),
+    10,
+  );
+  const maxAgeSeconds = Number.isFinite(tolerance) && tolerance > 0
+    ? tolerance
+    : DEFAULT_WEBHOOK_TOLERANCE_SECONDS;
+  if (
+    !Number.isFinite(signedAt) ||
+    Math.abs(Math.floor(Date.now() / 1000) - signedAt) > maxAgeSeconds
+  ) {
+    throw new Error('signature_timestamp_out_of_tolerance');
+  }
 
   const expected = crypto
     .createHmac('sha256', webhookSecret)

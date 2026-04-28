@@ -1340,6 +1340,29 @@ function clearAdminToken() {
   } catch (e) {}
 }
 
+function getPaidAccessToken() {
+  try {
+    var legacy = localStorage.getItem('dynasty_paid_token') || '';
+    if (legacy) {
+      sessionStorage.setItem('dynasty_paid_token', legacy);
+      localStorage.removeItem('dynasty_paid_token');
+    }
+    return sessionStorage.getItem('dynasty_paid_token') || '';
+  } catch (e) { return ''; }
+}
+function setPaidAccessToken(token) {
+  try {
+    if (token) sessionStorage.setItem('dynasty_paid_token', token);
+    localStorage.removeItem('dynasty_paid_token');
+  } catch (e) {}
+}
+function clearPaidAccessToken() {
+  try {
+    sessionStorage.removeItem('dynasty_paid_token');
+    localStorage.removeItem('dynasty_paid_token');
+  } catch (e) {}
+}
+
 // ── Access Gate — server-verified admin + payment check ─────────────────────────────────────
 (function(){
   var params = new URLSearchParams(window.location.search);
@@ -1387,7 +1410,7 @@ function clearAdminToken() {
         clearAdminToken();
         localStorage.removeItem('dynasty_tier');
         localStorage.removeItem('dynasty_paid_session');
-        localStorage.removeItem('dynasty_paid_token');
+        clearPaidAccessToken();
         window.location.href = '/';
       }
     }).catch(function() {});
@@ -1505,7 +1528,7 @@ function clearAdminToken() {
         var d = await r.json();
         if (d.ok && d.paid) {
           localStorage.setItem('dynasty_paid_session', d.session_id);
-          if (d.access_token) localStorage.setItem('dynasty_paid_token', d.access_token);
+          if (d.access_token) setPaidAccessToken(d.access_token);
           localStorage.setItem('dynasty_paid_at', new Date().toISOString());
           localStorage.setItem('dynasty_tier', d.plan || 'foundation');
           msg.className='msg ok'; msg.textContent='Session restored! Redirecting...';
@@ -1521,7 +1544,7 @@ function clearAdminToken() {
 
   // 4. Verified paid user (has a confirmed Stripe session)
   if (paidSession && paidAt) {
-    var existingToken = localStorage.getItem('dynasty_paid_token');
+    var existingToken = getPaidAccessToken();
     if (existingToken) {
       return;
     }
@@ -1534,7 +1557,7 @@ function clearAdminToken() {
       body: JSON.stringify({ session_id: paidSession, user_id: CLERK_USER?.id || '', verify_nonce: getCheckoutVerifyNonce() })
     }).then(function(r) { return r.json() }).then(function(v) {
       if (v.ok && v.paid && v.access_token) {
-        localStorage.setItem('dynasty_paid_token', v.access_token);
+        setPaidAccessToken(v.access_token);
         if (_accessGate) _accessGate.style.display = 'none';
       } else {
         localStorage.removeItem('dynasty_paid_session');
@@ -1746,6 +1769,22 @@ function escapeHtml(str) {
   if (str == null) return '';
   if (typeof str !== 'string') return String(str);
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function safeUrl(url) {
+  try {
+    const u = new URL(String(url || ''), window.location.origin);
+    if (!['http:', 'https:'].includes(u.protocol)) return '#';
+    return escapeHtml(u.href);
+  } catch (e) {
+    return '#';
+  }
+}
+function safeDisplayUrl(url) {
+  return escapeHtml(String(url || '').replace(/^https?:\/\//i, ''));
+}
+function safeNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 // ── Security: Prompt Injection Defense ───────────────────────────────────────
@@ -3475,7 +3514,7 @@ function getProvisionAuthPayload() {
   return {
     tier: getUserTier(),
     stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
-    access_token: localStorage.getItem('dynasty_paid_token') || '',
+    access_token: getPaidAccessToken(),
     user_id: CLERK_USER?.id || ''
   };
 }
@@ -3599,7 +3638,7 @@ function getAiAuthPayload() {
   return {
     tier: getUserTier(),
     stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
-    access_token: localStorage.getItem('dynasty_paid_token') || '',
+    access_token: getPaidAccessToken(),
     user_id: CLERK_USER?.id || '',
     admin_token: getAdminToken()
   };
@@ -3855,7 +3894,7 @@ async function startCheckout(plan) {
         if (vd.ok && vd.paid) {
           // Payment confirmed by Stripe — use tier from Stripe metadata, NOT URL
           localStorage.setItem('dynasty_paid_session', sessionId);
-          if (vd.access_token) localStorage.setItem('dynasty_paid_token', vd.access_token);
+          if (vd.access_token) setPaidAccessToken(vd.access_token);
           localStorage.setItem('dynasty_paid_at', new Date().toISOString());
           localStorage.setItem('dynasty_tier', vd.plan || 'foundation');
           if ((vd.plan || '').toLowerCase() === 'blueprint') {
@@ -3873,16 +3912,16 @@ async function startCheckout(plan) {
           });
           enterBuilder();
         } else {
-          localStorage.removeItem('dynasty_paid_token');
+          clearPaidAccessToken();
           alert('Payment verification failed. Please contact support if you were charged.');
         }
       } catch (e) {
-        localStorage.removeItem('dynasty_paid_token');
+        clearPaidAccessToken();
         alert('Could not verify payment. Please try again or contact support.');
       }
     })();
   } else if (payment === 'cancelled') {
-    localStorage.removeItem('dynasty_paid_token');
+    clearPaidAccessToken();
     trackEvent('checkout_cancelled', {
       source_segment: params.get('segment') || '',
       selected_plan: params.get('plan') || ''
@@ -6970,7 +7009,7 @@ function renderProg(){
 const sl=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 async function gh(path,method='GET',body=null){
   const adminToken = getAdminToken();
-  const paidToken = localStorage.getItem('dynasty_paid_token') || '';
+  const paidToken = getPaidAccessToken();
   const headers = { 'Content-Type':'application/json' };
   if (adminToken) headers['x-dynasty-admin-token'] = adminToken;
   if (paidToken) headers['x-dynasty-access-token'] = paidToken;
@@ -16361,17 +16400,22 @@ function showBuildHistory() {
   if (!hist.length) { alert('No build history yet.'); return; }
   const canSeeInternalCost = isAdminSession();
   
-  const rows = hist.slice().reverse().map((b, i) => `
+  const rows = hist.slice().reverse().map((b, i) => {
+    const score = safeNumber(b.composite_score, 0);
+    const hasScore = Number.isFinite(Number(b.composite_score)) && Number(b.composite_score) > 0;
+    const liveUrl = b.live_url ? safeUrl(b.live_url) : '';
+    return `
     <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
-      <td style="padding:6px;font-size:11px;color:var(--sec)">${new Date(b.date).toLocaleDateString()}</td>
-      <td style="padding:6px;font-size:11px;font-weight:600">${b.name}</td>
-      <td style="padding:6px;font-size:11px;color:var(--dim)">${b.category||b.type}</td>
-      <td style="padding:6px;font-size:12px;font-weight:700;color:${!b.composite_score?'var(--dim)':b.composite_score>=8?'var(--grn)':b.composite_score>=6?'var(--gold)':'var(--red)'}">${b.composite_score?.toFixed(1)||'—'}</td>
-      <td style="padding:6px;font-size:11px;color:var(--dim)">${b.files_count} files</td>
-      <td style="padding:6px;font-size:11px;color:var(--dim)">${b.words?.toLocaleString()||'—'} words</td>
-      ${canSeeInternalCost ? `<td style="padding:6px;font-size:11px;color:var(--dim)">$${(b.cost||0).toFixed(4)}</td>` : ''}
-      <td style="padding:6px;font-size:11px">${b.live_url?'<a href="'+b.live_url+'" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">Live</a>':'—'}</td>
-    </tr>`).join('');
+      <td style="padding:6px;font-size:11px;color:var(--sec)">${escapeHtml(new Date(b.date).toLocaleDateString())}</td>
+      <td style="padding:6px;font-size:11px;font-weight:600">${escapeHtml(b.name)}</td>
+      <td style="padding:6px;font-size:11px;color:var(--dim)">${escapeHtml(b.category||b.type)}</td>
+      <td style="padding:6px;font-size:12px;font-weight:700;color:${!hasScore?'var(--dim)':score>=8?'var(--grn)':score>=6?'var(--gold)':'var(--red)'}">${hasScore ? score.toFixed(1) : '—'}</td>
+      <td style="padding:6px;font-size:11px;color:var(--dim)">${safeNumber(b.files_count).toLocaleString()} files</td>
+      <td style="padding:6px;font-size:11px;color:var(--dim)">${Number.isFinite(Number(b.words)) ? safeNumber(b.words).toLocaleString() : '—'} words</td>
+      ${canSeeInternalCost ? `<td style="padding:6px;font-size:11px;color:var(--dim)">$${safeNumber(b.cost).toFixed(4)}</td>` : ''}
+      <td style="padding:6px;font-size:11px">${liveUrl ? '<a href="'+liveUrl+'" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">Live</a>' : '—'}</td>
+    </tr>`;
+  }).join('');
   
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999';
@@ -16490,7 +16534,10 @@ function showBuildComparison() {
   const canSeeInternalCost = isAdminSession();
   const a = hist[hist.length - 2];
   const b = hist[hist.length - 1];
-  const row = (label, va, vb) => `<tr><td style="color:var(--dim);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;width:120px">${label}</td><td style="font-size:12px">${va}</td><td style="font-size:12px">${vb}</td></tr>`;
+  const row = (label, va, vb) => `<tr><td style="color:var(--dim);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;width:120px">${escapeHtml(label)}</td><td style="font-size:12px">${va}</td><td style="font-size:12px">${vb}</td></tr>`;
+  const txt = (value) => escapeHtml(value == null || value === '' ? '—' : value);
+  const listTxt = (items) => (items || []).map((item) => escapeHtml(item)).join(', ') || '—';
+  const link = (url) => url ? '<a href="' + safeUrl(url) + '" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">' + safeDisplayUrl(url) + '</a>' : '—';
   const scoreColor = (s) => !s ? 'var(--dim)' : s >= 8 ? 'var(--grn)' : s >= 6 ? 'var(--gold)' : 'var(--red)';
   
   const modal = document.createElement('div');
@@ -16498,20 +16545,20 @@ function showBuildComparison() {
   modal.innerHTML = `<div style="background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:1.5rem;max-width:650px;width:95%;max-height:80vh;overflow-y:auto">
     <h3 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:1rem">📊 Build Comparison</h3>
     <table style="width:100%;border-collapse:collapse">
-      <thead><tr><th style="text-align:left;padding:6px;font-size:10px;color:var(--dim)"></th><th style="text-align:left;padding:6px;font-size:11px;color:var(--sec)">${a.name}</th><th style="text-align:left;padding:6px;font-size:11px;color:var(--sec)">${b.name}</th></tr></thead>
+      <thead><tr><th style="text-align:left;padding:6px;font-size:10px;color:var(--dim)"></th><th style="text-align:left;padding:6px;font-size:11px;color:var(--sec)">${escapeHtml(a.name)}</th><th style="text-align:left;padding:6px;font-size:11px;color:var(--sec)">${escapeHtml(b.name)}</th></tr></thead>
       <tbody>
-        ${row('Type', a.category, b.category)}
-        ${row('Revenue', a.revenue_model + ' · ' + a.price, b.revenue_model + ' · ' + b.price)}
-        ${row('Score', a.composite_score ? '<span style="color:' + scoreColor(a.composite_score) + ';font-weight:700">' + a.composite_score.toFixed(1) + '/10</span>' : '—', b.composite_score ? '<span style="color:' + scoreColor(b.composite_score) + ';font-weight:700">' + b.composite_score.toFixed(1) + '/10</span>' : '—')}
-        ${row('Verdict', a.verdict || '—', b.verdict || '—')}
-        ${row('Files', a.files_count, b.files_count)}
-        ${row('Words', a.words?.toLocaleString() || '—', b.words?.toLocaleString() || '—')}
-        ${canSeeInternalCost ? row('Cost', '$' + (a.cost || 0).toFixed(4), '$' + (b.cost || 0).toFixed(4)) : ''}
-        ${row('Duration', a.duration + 's', b.duration + 's')}
-        ${row('URL', a.live_url ? '<a href="' + a.live_url + '" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">' + a.live_url.replace('https://','') + '</a>' : '—', b.live_url ? '<a href="' + b.live_url + '" target="_blank" rel="noopener noreferrer" style="color:var(--gold)">' + b.live_url.replace('https://','') + '</a>' : '—')}
-        ${row('Infra', (a.infrastructure||[]).join(', ')||'—', (b.infrastructure||[]).join(', ')||'—')}
+        ${row('Type', txt(a.category), txt(b.category))}
+        ${row('Revenue', txt((a.revenue_model || '—') + ' · ' + (a.price || '—')), txt((b.revenue_model || '—') + ' · ' + (b.price || '—')))}
+        ${row('Score', a.composite_score ? '<span style="color:' + scoreColor(a.composite_score) + ';font-weight:700">' + safeNumber(a.composite_score).toFixed(1) + '/10</span>' : '—', b.composite_score ? '<span style="color:' + scoreColor(b.composite_score) + ';font-weight:700">' + safeNumber(b.composite_score).toFixed(1) + '/10</span>' : '—')}
+        ${row('Verdict', txt(a.verdict), txt(b.verdict))}
+        ${row('Files', safeNumber(a.files_count).toLocaleString(), safeNumber(b.files_count).toLocaleString())}
+        ${row('Words', Number.isFinite(Number(a.words)) ? safeNumber(a.words).toLocaleString() : '—', Number.isFinite(Number(b.words)) ? safeNumber(b.words).toLocaleString() : '—')}
+        ${canSeeInternalCost ? row('Cost', '$' + safeNumber(a.cost).toFixed(4), '$' + safeNumber(b.cost).toFixed(4)) : ''}
+        ${row('Duration', safeNumber(a.duration).toLocaleString() + 's', safeNumber(b.duration).toLocaleString() + 's')}
+        ${row('URL', link(a.live_url), link(b.live_url))}
+        ${row('Infra', listTxt(a.infrastructure), listTxt(b.infrastructure))}
         ${row('V3 Modules', (a.v3_modules_ok||[]).length ? '<span style="color:var(--grn)">' + (a.v3_modules_ok||[]).length + ' ok</span>' + ((a.v3_modules_failed||[]).length ? ' · <span style="color:var(--red)">' + (a.v3_modules_failed||[]).length + ' failed</span>' : '') : '—', (b.v3_modules_ok||[]).length ? '<span style="color:var(--grn)">' + (b.v3_modules_ok||[]).length + ' ok</span>' + ((b.v3_modules_failed||[]).length ? ' · <span style="color:var(--red)">' + (b.v3_modules_failed||[]).length + ' failed</span>' : '') : '—')}
-        ${row('Tier', a.tier||'—', b.tier||'—')}
+        ${row('Tier', txt(a.tier), txt(b.tier))}
       </tbody>
     </table>
     <div style="text-align:right;margin-top:1rem"><button onclick="this.closest('div[style]').parentElement.remove()" style="padding:7px 14px;background:var(--gold);color:var(--ink);border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer">Close</button></div>

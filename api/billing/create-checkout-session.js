@@ -64,8 +64,10 @@ export default async function handler(req, res) {
   if (!methodGuard(req, res, ['POST'])) return;
 
   let body;
-  try { body = await readBody(req); } catch (e) {
-    return res.status(400).json({ error: 'invalid_json' });
+  try { body = await readBody(req, { maxBytes: 64_000 }); } catch (e) {
+    return res.status(e.code === 'payload_too_large' ? 413 : 400).json({
+      error: e.code === 'payload_too_large' ? 'payload_too_large' : 'invalid_json',
+    });
   }
 
   const { tenant_id, items, billing_cycle, success_url, cancel_url } = body || {};

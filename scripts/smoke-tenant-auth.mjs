@@ -74,6 +74,8 @@ function log(ok, name, detail = '') {
   return ok ? 0 : 1;
 }
 
+const ADMIN = { 'x-admin-key': 'test-admin-key' };
+
 async function main() {
   await resetStore();
   const h = await loadHandlers();
@@ -87,6 +89,7 @@ async function main() {
     body: { tenant },
   } = await invoke(h.createTenant, {
     method: 'POST',
+    headers: ADMIN,
     body: {
       blueprint_code: 'hvac',
       plan: 'professional',

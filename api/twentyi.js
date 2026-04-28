@@ -1,4 +1,4 @@
-import { privilegedCorsHeaders, verifyPaidOrAdminCredential } from './tenants/_auth.mjs';
+import { privilegedCorsHeaders, verifyAdminCredential } from './tenants/_auth.mjs';
 
 export const maxDuration = 60;
 
@@ -31,8 +31,12 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   // ── Security: require paid session or admin token (HMAC-verified) ──
-  const authCheck = verifyPaidOrAdminCredential(req, req.body || {});
-  if (!authCheck.ok) return res.status(authCheck.status || 401).json({ ok: false, error: 'Authentication required' });
+  // 20i package inventory and provisioning use the server reseller token, so
+  // these paths are admin-only even when a caller has paid app access.
+  const authCheck = verifyAdminCredential(req);
+  if (!authCheck.ok) {
+    return res.status(authCheck.status || 401).json({ ok: false, error: 'admin_auth_required' });
+  }
 
 
   let config = {}; try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch {}

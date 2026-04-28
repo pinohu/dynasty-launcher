@@ -161,8 +161,9 @@ tr:hover{background:rgba(255,255,255,.02)}
 
 <script>
 (function(){
-const KEY_NAME='yd_admin_key';
-let adminKey=localStorage.getItem(KEY_NAME)||'';
+let adminToken=sessionStorage.getItem('dynasty_admin_token')||'';
+localStorage.removeItem('yd_admin_key');
+localStorage.removeItem('dynasty_admin_token');
 let data=null, countdown=30, timer=null, logState={offset:0,limit:50,total:0};
 
 /* ── helpers ─────────────────────────────────── */
@@ -171,40 +172,71 @@ const fmt=n=>n==null?'--':Number(n).toLocaleString();
 const pct=(n,max)=>max?Math.round(n/max*100):0;
 const trunc=(s,n)=>s&&s.length>n?s.slice(0,n)+'...':s||'--';
 const ts=iso=>iso?new Date(iso).toLocaleString():'-';
-const pill=(t,c)=>`<span class="pill pill-${c}">${t}</span>`;
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function safeClass(value){return String(value||'').replace(/[^a-z0-9_-]/gi,'');}
+function safeHtml(strings,...values){return strings.reduce((out,part,i)=>out+part+(i<values.length?escapeHtml(values[i]):''),'');}
+const pill=(t,c)=>`<span class="pill pill-${safeClass(c)}">${escapeHtml(t)}</span>`;
 const boolPill=v=>v?pill('yes','ok'):pill('no','err');
 
 function bars(obj,color){
   if(!obj||!Object.keys(obj).length) return '<div class="none">No data</div>';
   const max=Math.max(...Object.values(obj),1);
+  const safeColor=['var(--accent)','var(--warn)','var(--success)','var(--muted)','var(--danger)'].includes(color)?color:'var(--accent)';
   return '<div class="bars">'+Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>
-    `<div class="bar-row"><span class="lbl" title="${k}">${k}</span><div class="track"><div class="fill" style="width:${pct(v,max)}%;background:${color||'var(--accent)'}"></div></div><span class="cnt">${fmt(v)}</span></div>`
+    safeHtml`<div class="bar-row"><span class="lbl" title="${k}">${k}</span><div class="track"><div class="fill" style="width:${pct(v,max)}%;background:${safeColor}"></div></div><span class="cnt">${fmt(v)}</span></div>`
   ).join('')+'</div>';
 }
 
 function stCard(label,value,sub,cls){
-  return `<div class="st${cls?' '+cls:''}"><div class="l">${label}</div><div class="v">${value}</div>${sub?'<div class="s">'+sub+'</div>':''}</div>`;
+  const extra=cls?' '+safeClass(cls):'';
+  return `<div class="st${extra}"><div class="l">${escapeHtml(label)}</div><div class="v">${escapeHtml(value)}</div>${sub?'<div class="s">'+escapeHtml(sub)+'</div>':''}</div>`;
 }
 
 /* ── auth ─────────────────────────────────────── */
 function showAuth(){$('auth').style.display='flex'}
 function hideAuth(){$('auth').style.display='none'}
 
-window.tryAuth=function(){
+function clearAdminSession(){
+  adminToken='';
+  sessionStorage.removeItem('dynasty_admin_token');
+  localStorage.removeItem('dynasty_admin_token');
+  localStorage.removeItem('yd_admin_key');
+}
+
+window.tryAuth=async function(){
   const k=$('key-input').value.trim();
   if(!k){$('auth-err').textContent='Key required';return}
-  adminKey=k;localStorage.setItem(KEY_NAME,k);
-  $('auth-err').textContent='';
-  init();
+  $('auth-err').textContent='Checking...';
+  try{
+    const r=await fetch('/api/auth?action=verify_admin',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key:k})
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.ok||!d.token){
+      clearAdminSession();
+      $('auth-err').textContent=d.error||'Invalid admin key';
+      return;
+    }
+    adminToken=d.token;
+    sessionStorage.setItem('dynasty_admin_token',adminToken);
+    $('key-input').value='';
+    $('auth-err').textContent='';
+    init();
+  }catch(e){
+    clearAdminSession();
+    $('auth-err').textContent=e.message||'Authentication failed';
+  }
 };
 $('key-input').addEventListener('keydown',e=>{if(e.key==='Enter')tryAuth()});
 
 /* ── fetch ────────────────────────────────────── */
-function hdrs(){return{'x-admin-key':adminKey}}
+function hdrs(){return{'Authorization':`Bearer ${adminToken}`}}
 
 async function fetchMetrics(){
   const r=await fetch('/api/admin/metrics',{headers:hdrs()});
-  if(r.status===401){showAuth();return null}
+  if(r.status===401){clearAdminSession();showAuth();return null}
   return r.json();
 }
 
@@ -218,7 +250,7 @@ async function fetchEvents(p){
   q.set('limit',p.limit||50);
   q.set('offset',p.offset||0);
   const r=await fetch('/api/admin/events?'+q,{headers:hdrs()});
-  if(r.status===401){showAuth();return null}
+  if(r.status===401){clearAdminSession();showAuth();return null}
   return r.json();
 }
 
@@ -243,7 +275,7 @@ function rSystem(d){
 
 /* ── render: catalog ──────────────────────────── */
 function rCatalog(d){
-  if(!d||d.error){$('r-cat-stats').innerHTML='<div class="none">'+((d&&d.error)||'No data')+'</div>';return}
+  if(!d||d.error){$('r-cat-stats').innerHTML=safeHtml`<div class="none">${(d&&d.error)||'No data'}</div>`;return}
   let html=stCard('Modules',fmt(d.modules?.total));
   html+=stCard('Bundles',fmt(d.bundles?.total));
   html+=stCard('Suites',fmt(d.suites));
@@ -262,7 +294,7 @@ function rCatalog(d){
 function rTenants(d){
   const el=$('r-ten-stats');
   if(!d){el.innerHTML='<div class="none">No database connected</div>';return}
-  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  if(d.error){el.innerHTML=safeHtml`<div class="none">${d.error}</div>`;return}
   el.innerHTML=stCard('Total',fmt(d.total))+stCard('Last 7d',fmt(d.created_last_7d),'new tenants')+stCard('Last 30d',fmt(d.created_last_30d),'new tenants');
   $('r-ten-plan').innerHTML=bars(d.by_plan,'var(--accent)');
   $('r-ten-onb').innerHTML=bars(d.by_onboarding_status,'var(--warn)');
@@ -275,7 +307,7 @@ function rTenants(d){
 function rEntitlements(d){
   const el=$('r-ent-stats');
   if(!d){el.innerHTML='<div class="none">No database connected</div>';return}
-  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  if(d.error){el.innerHTML=safeHtml`<div class="none">${d.error}</div>`;return}
   let html=stCard('Total',fmt(d.total));
   if(d.by_state) Object.entries(d.by_state).forEach(([k,v])=>{html+=stCard(k,fmt(v))});
   html+=stCard('Activated 7d',fmt(d.activated_last_7d));
@@ -288,9 +320,9 @@ function rEntitlements(d){
     const states=new Set();
     Object.values(bm).forEach(o=>Object.keys(o).forEach(s=>states.add(s)));
     const sts=[...states].sort();
-    let t='<table><tr><th>Module</th>'+sts.map(s=>'<th>'+s+'</th>').join('')+'</tr>';
+    let t='<table><tr><th>Module</th>'+sts.map(s=>safeHtml`<th>${s}</th>`).join('')+'</tr>';
     Object.entries(bm).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mod,obj])=>{
-      t+='<tr><td><strong>'+mod+'</strong></td>'+sts.map(s=>'<td>'+(obj[s]||'-')+'</td>').join('')+'</tr>';
+      t+=safeHtml`<tr><td><strong>${mod}</strong></td>`+sts.map(s=>safeHtml`<td>${obj[s]||'-'}</td>`).join('')+'</tr>';
     });
     $('r-ent-mod').innerHTML=t+'</table>';
   } else $('r-ent-mod').innerHTML='<div class="none">No module data</div>';
@@ -298,7 +330,7 @@ function rEntitlements(d){
   // recent
   if(d.recent&&d.recent.length){
     let t='<table><tr><th>Tenant</th><th>Module</th><th>State</th><th>Activated</th><th>Deactivated</th></tr>';
-    d.recent.forEach(r=>{t+='<tr><td>'+trunc(r.tenant_id,16)+'</td><td>'+r.module_code+'</td><td>'+pill(r.state,r.state==='active'?'ok':r.state==='suspended'?'err':'warn')+'</td><td>'+ts(r.activated_at)+'</td><td>'+ts(r.deactivated_at)+'</td></tr>'});
+    d.recent.forEach(r=>{t+=safeHtml`<tr><td>${trunc(r.tenant_id,16)}</td><td>${r.module_code}</td><td>`+pill(r.state,r.state==='active'?'ok':r.state==='suspended'?'err':'warn')+safeHtml`</td><td>${ts(r.activated_at)}</td><td>${ts(r.deactivated_at)}</td></tr>`});
     $('r-ent-recent').innerHTML=t+'</table>';
   } else $('r-ent-recent').innerHTML='<div class="none">No recent entitlements</div>';
 }
@@ -307,12 +339,12 @@ function rEntitlements(d){
 function rEvents(d){
   const el=$('r-ev-stats');
   if(!d){el.innerHTML='<div class="none">No database connected</div>';return}
-  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  if(d.error){el.innerHTML=safeHtml`<div class="none">${d.error}</div>`;return}
   el.innerHTML=stCard('Total',fmt(d.total))+stCard('Last 1h',fmt(d.last_1h))+stCard('Last 24h',fmt(d.last_24h))+stCard('Last 7d',fmt(d.last_7d));
   $('r-ev-type').innerHTML=bars(d.by_type,'var(--accent)');
   if(d.recent_failures&&d.recent_failures.length){
     let t='<table><tr><th>Type</th><th>Tenant</th><th>Module</th><th>Time</th></tr>';
-    d.recent_failures.forEach(r=>{t+='<tr><td>'+pill(r.event_type,'err')+'</td><td>'+trunc(r.tenant_id,16)+'</td><td>'+(r.module_code||'-')+'</td><td>'+ts(r.emitted_at)+'</td></tr>'});
+    d.recent_failures.forEach(r=>{t+='<tr><td>'+pill(r.event_type,'err')+safeHtml`</td><td>${trunc(r.tenant_id,16)}</td><td>${r.module_code||'-'}</td><td>${ts(r.emitted_at)}</td></tr>`});
     $('r-ev-fail').innerHTML=t+'</table>';
   } else $('r-ev-fail').innerHTML='<div class="none">No recent failures</div>';
 }
@@ -321,7 +353,7 @@ function rEvents(d){
 function rActivations(d){
   const el=$('r-act-stats');
   if(!d){el.innerHTML='<div class="none">No database connected</div>';return}
-  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  if(d.error){el.innerHTML=safeHtml`<div class="none">${d.error}</div>`;return}
   el.innerHTML=stCard('Activated',fmt(d.activated),'','')
     +stCard('Failed',fmt(d.failed),'',d.failed>0?'':'')
     +stCard('Deferred',fmt(d.deferred));
@@ -332,12 +364,12 @@ function rActivations(d){
 function rBilling(d){
   const el=$('r-bill-stats');
   if(!d){el.innerHTML='<div class="none">No billing data</div>';return}
-  if(d.error){el.innerHTML='<div class="none">'+d.error+'</div>';return}
+  if(d.error){el.innerHTML=safeHtml`<div class="none">${d.error}</div>`;return}
   el.innerHTML=stCard('Stripe',d.stripe_configured?'Configured':'Not set');
   $('r-bill-wh').innerHTML=bars(d.webhook_event_counts,'var(--accent)');
   if(d.recent_checkouts&&d.recent_checkouts.length){
     let t='<table><tr><th>Tenant</th><th>Time</th><th>Payload</th></tr>';
-    d.recent_checkouts.forEach(r=>{t+='<tr><td>'+trunc(r.tenant_id,16)+'</td><td>'+ts(r.emitted_at)+'</td><td><code>'+trunc(JSON.stringify(r.payload),60)+'</code></td></tr>'});
+    d.recent_checkouts.forEach(r=>{t+=safeHtml`<tr><td>${trunc(r.tenant_id,16)}</td><td>${ts(r.emitted_at)}</td><td><code>${trunc(JSON.stringify(r.payload),60)}</code></td></tr>`});
     $('r-bill-chk').innerHTML=t+'</table>';
   } else $('r-bill-chk').innerHTML='<div class="none">No recent checkouts</div>';
 }
@@ -382,7 +414,7 @@ window.loadLog=async function(offset){
   logState.total=d.total;
   if(d.events&&d.events.length){
     let t='<table><tr><th>Event ID</th><th>Type</th><th>Tenant</th><th>Module</th><th>Time</th><th>Payload</th></tr>';
-    d.events.forEach(r=>{t+='<tr><td style="font-family:monospace;font-size:10px">'+trunc(r.event_id,12)+'</td><td>'+r.event_type+'</td><td>'+trunc(r.tenant_id,16)+'</td><td>'+(r.module_code||'-')+'</td><td>'+ts(r.emitted_at)+'</td><td><code style="font-size:10px">'+trunc(JSON.stringify(r.payload),50)+'</code></td></tr>'});
+    d.events.forEach(r=>{t+=safeHtml`<tr><td style="font-family:monospace;font-size:10px">${trunc(r.event_id,12)}</td><td>${r.event_type}</td><td>${trunc(r.tenant_id,16)}</td><td>${r.module_code||'-'}</td><td>${ts(r.emitted_at)}</td><td><code style="font-size:10px">${trunc(JSON.stringify(r.payload),50)}</code></td></tr>`});
     $('r-log').innerHTML=t+'</table>';
   } else $('r-log').innerHTML='<div class="none">No events found</div>';
   const start=logState.offset+1,end=Math.min(logState.offset+logState.limit,logState.total);
@@ -413,7 +445,7 @@ async function init(){
   timer=setInterval(tick,1000);
 }
 
-if(adminKey)init();else showAuth();
+if(adminToken)init();else showAuth();
 })();
 </script>
 <script src="/site-shell.js" defer></script>

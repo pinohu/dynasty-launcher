@@ -347,14 +347,125 @@ export async function generatePdf(title, markdownContent, branding = {}) {
 }
 
 // ── Generate branded Excel workbook from markdown tables ─────────────────
-export async function generateExcel(title, markdownContent, branding = {}) {
-  const ExcelJS = (await import('exceljs')).default;
-  const { name = 'Business', accent = '#C9A84C', date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) } = branding;
+function xmlEscape(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'Your Deputy';
-  workbook.created = new Date();
-  workbook.properties.date1904 = false;
+function columnName(index) {
+  let n = index;
+  let name = '';
+  while (n > 0) {
+    const r = (n - 1) % 26;
+    name = String.fromCharCode(65 + r) + name;
+    n = Math.floor((n - 1) / 26);
+  }
+  return name || 'A';
+}
+
+function normalizeAccent(accent) {
+  const hex = String(accent || '').replace(/^#/, '').toUpperCase();
+  return /^[0-9A-F]{6}$/.test(hex) ? hex : 'C9A84C';
+}
+
+function sanitizeSheetName(name, usedNames) {
+  const base = String(name || 'Data')
+    .replace(/[*?:/\\[\]]/g, '')
+    .trim()
+    .slice(0, 31) || 'Data';
+  let candidate = base;
+  let i = 2;
+  while (usedNames.has(candidate.toLowerCase())) {
+    const suffix = ` ${i}`;
+    candidate = `${base.slice(0, 31 - suffix.length)}${suffix}`;
+    i += 1;
+  }
+  usedNames.add(candidate.toLowerCase());
+  return candidate;
+}
+
+function parseWorkbookCell(value) {
+  const num = String(value ?? '').replace(/[$,%]/g, '').trim();
+  if (num !== '' && !Number.isNaN(Number(num))) return Number(num);
+  return String(value ?? '');
+}
+
+function buildCell(rowIndex, colIndex, value, styleId = 0) {
+  const ref = `${columnName(colIndex)}${rowIndex}`;
+  const style = styleId ? ` s="${styleId}"` : '';
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return `<c r="${ref}"${style}><v>${value}</v></c>`;
+  }
+  return `<c r="${ref}" t="inlineStr"${style}><is><t xml:space="preserve">${xmlEscape(value)}</t></is></c>`;
+}
+
+function buildSheetXml({ rows, widths = [], frozenRows = 0 }) {
+  const maxCols = Math.max(1, ...rows.map((row) => row.length));
+  const maxRows = Math.max(1, rows.length);
+  const cols = widths.length
+    ? `<cols>${widths.map((width, index) => `<col min="${index + 1}" max="${index + 1}" width="${Math.max(10, Math.min(50, width))}" customWidth="1"/>`).join('')}</cols>`
+    : '';
+  const pane = frozenRows > 0
+    ? `<sheetViews><sheetView workbookViewId="0"><pane ySplit="${frozenRows}" topLeftCell="A${frozenRows + 1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>`
+    : '<sheetViews><sheetView workbookViewId="0"/></sheetViews>';
+  const sheetRows = rows.map((row, rowIndex) => {
+    const cells = row.map((cell, colIndex) => buildCell(rowIndex + 1, colIndex + 1, cell.value, cell.style));
+    return `<row r="${rowIndex + 1}">${cells.join('')}</row>`;
+  }).join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <dimension ref="A1:${columnName(maxCols)}${maxRows}"/>
+  ${pane}
+  ${cols}
+  <sheetData>${sheetRows}</sheetData>
+</worksheet>`;
+}
+
+function buildStylesXml(accentHex) {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="6">
+    <font><sz val="10"/><color rgb="FF333333"/><name val="Calibri"/></font>
+    <font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+    <font><b/><sz val="24"/><color rgb="FF${accentHex}"/><name val="Calibri"/></font>
+    <font><i/><sz val="11"/><color rgb="FF999999"/><name val="Calibri"/></font>
+    <font><b/><sz val="9"/><color rgb="FFCC0000"/><name val="Calibri"/></font>
+    <font><i/><sz val="10"/><color rgb="FF666666"/><name val="Calibri"/></font>
+  </fonts>
+  <fills count="4">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF${accentHex}"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF5F5F5"/><bgColor indexed="64"/></patternFill></fill>
+  </fills>
+  <borders count="3">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border><left/><right/><top/><bottom style="medium"><color rgb="FF333333"/></bottom/><diagonal/></border>
+    <border><left/><right/><top/><bottom style="thin"><color rgb="FFEEEEEE"/></bottom/><diagonal/></border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="8">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+    <xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+    <xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+    <xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+    <xf numFmtId="0" fontId="0" fillId="3" borderId="2" xfId="0" applyFill="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="2" xfId="0" applyBorder="1"/>
+  </cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+}
+
+export async function generateExcel(title, markdownContent, branding = {}) {
+  const JSZip = (await import('jszip')).default;
+  const { name = 'Business', accent = '#C9A84C', date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) } = branding;
+  const accentHex = normalizeAccent(accent);
 
   // Parse markdown into sections — each ## heading becomes a sheet
   const sections = [];
@@ -387,89 +498,115 @@ export async function generateExcel(title, markdownContent, branding = {}) {
     if (allTables.length > 0) sections.push({ title: 'Data', tables: allTables, text: [] });
   }
 
-  // Create a Cover sheet
-  const cover = workbook.addWorksheet('Cover', { properties: { tabColor: { argb: accent.replace('#', 'FF') } } });
-  cover.getColumn(1).width = 50;
-  cover.getCell('A3').value = name;
-  cover.getCell('A3').font = { size: 24, bold: true, color: { argb: accent.replace('#', 'FF') } };
-  cover.getCell('A5').value = title;
-  cover.getCell('A5').font = { size: 18, color: { argb: 'FF333333' } };
-  cover.getCell('A7').value = `Generated ${date}`;
-  cover.getCell('A7').font = { size: 11, italic: true, color: { argb: 'FF999999' } };
-  cover.getCell('A8').value = 'Prepared by Your Deputy Intelligence Engine';
-  cover.getCell('A8').font = { size: 10, color: { argb: 'FFAAAAAA' } };
-  cover.getCell('A10').value = 'CONFIDENTIAL';
-  cover.getCell('A10').font = { size: 9, bold: true, color: { argb: 'FFCC0000' } };
+  const sheets = [{
+    name: 'Cover',
+    rows: [
+      [],
+      [],
+      [{ value: name, style: 2 }],
+      [],
+      [{ value: title, style: 0 }],
+      [],
+      [{ value: `Generated ${date}`, style: 3 }],
+      [{ value: 'Prepared by Your Deputy Intelligence Engine', style: 3 }],
+      [],
+      [{ value: 'CONFIDENTIAL', style: 4 }],
+    ],
+    widths: [50],
+    frozenRows: 0,
+  }];
 
   // Create sheets for each section with tables
+  const usedNames = new Set(['cover']);
   for (const section of sections) {
     if (section.tables.length === 0) continue;
-    const sheetName = section.title.slice(0, 31).replace(/[*?:/\\[\]]/g, '');
-    const ws = workbook.addWorksheet(sheetName, { properties: { tabColor: { argb: accent.replace('#', 'FF') } } });
+    const sheetName = sanitizeSheetName(section.title, usedNames);
+    const rows = [];
 
     // Add section description text
     if (section.text.length > 0) {
-      const descRow = ws.addRow([section.text.slice(0, 3).join(' ')]);
-      descRow.getCell(1).font = { italic: true, color: { argb: 'FF666666' }, size: 10 };
-      ws.addRow([]);
+      rows.push([{ value: section.text.slice(0, 3).join(' '), style: 5 }]);
+      rows.push([]);
     }
 
     // Add table data
     let isFirstRow = true;
     for (const cells of section.tables) {
-      const row = ws.addRow(cells.map(c => {
-        // Try to parse numbers
-        const num = c.replace(/[$,%]/g, '').trim();
-        if (!isNaN(num) && num !== '') return parseFloat(num);
-        return c;
-      }));
-
-      if (isFirstRow) {
-        // Style header row
-        row.eachCell((cell, colNumber) => {
-          cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: accent.replace('#', 'FF') } };
-          cell.alignment = { horizontal: 'center', vertical: 'middle' };
-          cell.border = { bottom: { style: 'medium', color: { argb: 'FF333333' } } };
-        });
-        isFirstRow = false;
-      } else {
-        // Style data rows with alternating colors
-        const rowIdx = row.number;
-        row.eachCell((cell) => {
-          cell.font = { size: 10, color: { argb: 'FF333333' } };
-          if (rowIdx % 2 === 0) {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F5F5' } };
-          }
-          cell.border = { bottom: { style: 'thin', color: { argb: 'FFEEEEEE' } } };
-          // Format cells that look like currency
-          if (typeof cell.value === 'number') {
-            cell.numFmt = cell.value > 100 ? '$#,##0' : '#,##0.0%';
-          }
-        });
-      }
+      const style = isFirstRow ? 1 : (rows.length % 2 === 0 ? 6 : 7);
+      rows.push(cells.map(c => ({ value: parseWorkbookCell(c), style })));
+      isFirstRow = false;
     }
 
     // Auto-fit columns
-    ws.columns.forEach(col => {
+    const maxCols = Math.max(1, ...rows.map((row) => row.length));
+    const widths = Array.from({ length: maxCols }, (_, colIndex) => {
       let maxLen = 10;
-      col.eachCell({ includeEmpty: false }, cell => {
-        const len = cell.value ? String(cell.value).length : 0;
+      for (const row of rows) {
+        const cell = row[colIndex];
+        if (!cell) continue;
+        const len = String(cell.value ?? '').length;
         if (len > maxLen) maxLen = Math.min(len + 2, 40);
-      });
-      col.width = maxLen;
+      }
+      return maxLen;
     });
 
     // Freeze header row
-    ws.views = [{ state: 'frozen', ySplit: section.text.length > 0 ? 3 : 1 }];
+    sheets.push({ name: sheetName, rows, widths, frozenRows: section.text.length > 0 ? 3 : 1 });
   }
 
   // If no data sheets were created, add a placeholder
-  if (workbook.worksheets.length <= 1) {
-    const ws = workbook.addWorksheet('Data');
-    ws.getCell('A1').value = 'This document contains narrative content. See the .md or .docx version for the full document.';
-    ws.getCell('A1').font = { italic: true, color: { argb: 'FF666666' } };
+  if (sheets.length <= 1) {
+    sheets.push({
+      name: 'Data',
+      rows: [[{ value: 'This document contains narrative content. See the .md or .docx version for the full document.', style: 5 }]],
+      widths: [50],
+      frozenRows: 0,
+    });
   }
 
-  return workbook.xlsx.writeBuffer();
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  ${sheets.map((_, index) => `<Override PartName="/xl/worksheets/sheet${index + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('\n  ')}
+</Types>`);
+  zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
+</Relationships>`);
+  zip.file('docProps/core.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dc:creator>Your Deputy</dc:creator>
+  <dc:title>${xmlEscape(title)}</dc:title>
+  <dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString()}</dcterms:created>
+</cp:coreProperties>`);
+  zip.file('docProps/app.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
+  <Application>Your Deputy</Application>
+  <DocSecurity>0</DocSecurity>
+  <ScaleCrop>false</ScaleCrop>
+  <HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Worksheets</vt:lpstr></vt:variant><vt:variant><vt:i4>${sheets.length}</vt:i4></vt:variant></vt:vector></HeadingPairs>
+  <TitlesOfParts><vt:vector size="${sheets.length}" baseType="lpstr">${sheets.map((sheet) => `<vt:lpstr>${xmlEscape(sheet.name)}</vt:lpstr>`).join('')}</vt:vector></TitlesOfParts>
+</Properties>`);
+  zip.file('xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>${sheets.map((sheet, index) => `<sheet name="${xmlEscape(sheet.name)}" sheetId="${index + 1}" r:id="rId${index + 1}"/>`).join('')}</sheets>
+</workbook>`);
+  zip.file('xl/_rels/workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${sheets.map((_, index) => `<Relationship Id="rId${index + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${index + 1}.xml"/>`).join('\n  ')}
+  <Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`);
+  zip.file('xl/styles.xml', buildStylesXml(accentHex));
+  sheets.forEach((sheet, index) => {
+    zip.file(`xl/worksheets/sheet${index + 1}.xml`, buildSheetXml(sheet));
+  });
+  return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
 }

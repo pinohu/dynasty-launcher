@@ -195,13 +195,58 @@ function resolveTenantId(data, query) {
 // READ RAW BODY (required for signature validation)
 // =============================================================================
 
-async function readRawBody(req) {
-  if (req.rawBody) return req.rawBody;
+function payloadTooLargeError() {
+  const err = new Error('payload_too_large');
+  err.code = 'payload_too_large';
+  return err;
+}
+
+function checkContentLength(req, maxBytes) {
+  const raw = req.headers?.['content-length'] || req.headers?.['Content-Length'];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const size = Number.parseInt(String(value || ''), 10);
+  if (Number.isFinite(size) && size > maxBytes) throw payloadTooLargeError();
+}
+
+async function readRawBody(req, { maxBytes = 1_000_000 } = {}) {
+  checkContentLength(req, maxBytes);
+  if (req.rawBody) {
+    if (Buffer.byteLength(req.rawBody) > maxBytes) throw payloadTooLargeError();
+    return req.rawBody;
+  }
+  if (Buffer.isBuffer(req.body)) {
+    if (req.body.length > maxBytes) throw payloadTooLargeError();
+    return req.body.toString('utf-8');
+  }
+  if (typeof req.body === 'string') {
+    if (Buffer.byteLength(req.body) > maxBytes) throw payloadTooLargeError();
+    return req.body;
+  }
   const chunks = [];
+  let size = 0;
+  let done = false;
   return new Promise((resolve, reject) => {
-    req.on('data', (chunk) => chunks.push(chunk));
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
-    req.on('error', reject);
+    req.on('data', (chunk) => {
+      if (done) return;
+      const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      size += buf.length;
+      if (size > maxBytes) {
+        done = true;
+        reject(payloadTooLargeError());
+        return;
+      }
+      chunks.push(buf);
+    });
+    req.on('end', () => {
+      if (done) return;
+      done = true;
+      resolve(Buffer.concat(chunks).toString('utf-8'));
+    });
+    req.on('error', (err) => {
+      if (done) return;
+      done = true;
+      reject(err);
+    });
   });
 }
 
@@ -456,8 +501,11 @@ export default async function handler(req, res) {
   // Determine webhook source
   let body;
   try {
-    body = await readRawBody(req);
+    body = await readRawBody(req, { maxBytes: 1_000_000 });
   } catch (e) {
+    if (e.code === 'payload_too_large') {
+      return res.status(413).json({ ok: false, error: 'payload_too_large' });
+    }
     return res.status(400).json({ ok: false, error: 'Failed to read body' });
   }
 

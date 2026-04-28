@@ -51,7 +51,14 @@ async function main() {
   // 1. Create without blueprint
   let tenantA;
   {
-    const r = await invoke(h.create, { method: 'POST', body: { business_name: 'Test Biz' } });
+    const unauth = await invoke(h.create, { method: 'POST', body: { business_name: 'No Auth Biz' } });
+    fails += log(
+      unauth.status === 401 && unauth.body.error === 'authentication_required',
+      'POST create-tenant without auth returns 401',
+      `status=${unauth.status}`,
+    );
+
+    const r = await invoke(h.create, { method: 'POST', headers: ADMIN, body: { business_name: 'Test Biz' } });
     tenantA = r.body.tenant;
     const ok = r.status === 201 && tenantA && tenantA.tenant_id.startsWith('tnt_');
     fails += log(ok, 'POST create-tenant (no blueprint)', `id=${tenantA?.tenant_id}`);
@@ -60,7 +67,7 @@ async function main() {
   // 2. Create with HVAC blueprint
   let tenantHvac;
   {
-    const r = await invoke(h.create, { method: 'POST', body: { blueprint_code: 'hvac', business_name: 'HVAC Shop' } });
+    const r = await invoke(h.create, { method: 'POST', headers: ADMIN, body: { blueprint_code: 'hvac', business_name: 'HVAC Shop' } });
     tenantHvac = r.body.tenant;
     const ok = r.status === 201
       && tenantHvac && tenantHvac.blueprint_installed === 'hvac'
@@ -70,7 +77,7 @@ async function main() {
 
   // 3. Create with bad blueprint
   {
-    const r = await invoke(h.create, { method: 'POST', body: { blueprint_code: 'xyz-not-real' } });
+    const r = await invoke(h.create, { method: 'POST', headers: ADMIN, body: { blueprint_code: 'xyz-not-real' } });
     fails += log(r.status === 400, 'POST create-tenant with unknown blueprint returns 400', `status=${r.status}`);
   }
 

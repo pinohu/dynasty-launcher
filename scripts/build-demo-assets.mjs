@@ -173,7 +173,17 @@ function setStatus(text, ok) {
 }
 function renderOutputs(trace) {
   const previews = (trace.runs || []).flatMap((run) => run.output_preview || []);
-  outputEl.innerHTML = previews.map((item) => '<div class="output"><b>' + item.title + '</b><span>' + item.body + '</span></div>').join('');
+  outputEl.replaceChildren();
+  for (const item of previews) {
+    const row = document.createElement('div');
+    row.className = 'output';
+    const title = document.createElement('b');
+    title.textContent = item?.title || '';
+    const body = document.createElement('span');
+    body.textContent = item?.body || '';
+    row.append(title, body);
+    outputEl.appendChild(row);
+  }
 }
 document.getElementById('run-demo').addEventListener('click', async () => {
   setStatus('Running sandbox demo...', null);

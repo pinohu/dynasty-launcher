@@ -56,6 +56,7 @@ const ADMIN = { 'x-admin-key': 'test-admin-key' };
 async function setupHvacTenant(h, caps) {
   const { body: { tenant } } = await invoke(h.createTenant, {
     method: 'POST',
+    headers: ADMIN,
     body: { blueprint_code: 'hvac', plan: 'professional' },
   });
   for (const cap of caps) {

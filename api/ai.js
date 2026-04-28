@@ -3,7 +3,7 @@
 // OpenAI, paid Mistral, paid Grok, paid Perplexity Sonar Pro) were
 // purged to guarantee zero inference cost. Gemini 2.5 Pro / 2.5 Flash
 // are kept because Google AI Studio ships them with a free quota tier.
-import { aiCorsHeaders } from './_ai_security.mjs';
+import { aiCorsHeaders, resolveAiMaxTokens, validateAiTextLimit } from './_ai_security.mjs';
 import { verifyAdminCredential } from './tenants/_auth.mjs';
 
 export const maxDuration = 300;
@@ -170,6 +170,18 @@ function getClientIp(req) {
   const fwd = req.headers['x-forwarded-for'];
   if (typeof fwd === 'string' && fwd.trim()) return fwd.split(',')[0].trim();
   return (req.headers['x-real-ip'] || 'unknown').toString();
+}
+
+function extractPromptText(body = {}) {
+  const parts = [];
+  if (typeof body.prompt === 'string') parts.push(body.prompt);
+  if (typeof body.system === 'string') parts.push(body.system);
+  if (Array.isArray(body.messages)) {
+    for (const message of body.messages) {
+      if (typeof message?.content === 'string') parts.push(message.content);
+    }
+  }
+  return parts.join('\n\n');
 }
 
 function getDayKey() {
@@ -453,6 +465,7 @@ async function isValidPaidAccessToken({ token, sessionId, userId, tier }) {
   if (tokSessionId !== (sessionId || '').trim()) return false;
   if ((tier || '').trim() && tokTier !== String(tier).toLowerCase()) return false;
   const reqUser = (userId || '').trim();
+  if (tokUserId !== 'anon' && !reqUser) return false;
   if (tokUserId !== 'anon' && reqUser && tokUserId !== reqUser) return false;
   const expNum = parseInt(exp, 10);
   if (!Number.isFinite(expNum) || Date.now() > expNum) return false;
@@ -730,18 +743,23 @@ export default async function handler(req, res) {
 
   // ── GET /api/ai?action=models — return available models with cost info ────
   if (req.method === 'GET' && req.query?.action === 'models') {
+    const showAvailability = verifyAdminCredential(req).ok;
     let config = {};
     try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { config = {}; }
     const available = {};
     for (const [model, info] of Object.entries(PROVIDERS)) {
-      const key = getApiKey(info.provider, config);
+      const key = showAvailability ? getApiKey(info.provider, config) : null;
       available[model] = {
         ...info,
-        available: !!key,
+        available: showAvailability ? !!key : false,
         estimatedBuildCost: info.free ? '$0.00' : `~$${((info.costPer1kIn * 30 + info.costPer1kOut * 50) * 7).toFixed(2)}`,
       };
     }
-    return res.json({ models: available, providers: [...new Set(Object.values(PROVIDERS).map(p => p.provider))] });
+    return res.json({
+      models: available,
+      providers: [...new Set(Object.values(PROVIDERS).map(p => p.provider))],
+      provider_availability_redacted: !showAvailability,
+    });
   }
 
   // ── POST /api/ai — generate completion ────────────────────────────────────
@@ -751,6 +769,15 @@ export default async function handler(req, res) {
   try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch { config = {}; }
   const body = req.body || {};
   const usageContext = (body.usage_context || 'standard').toString();
+  const textLimit = validateAiTextLimit('prompt', extractPromptText(body));
+  if (!textLimit.ok) {
+    return res.status(textLimit.status || 413).json(textLimit);
+  }
+  const tokenLimit = resolveAiMaxTokens(body.max_tokens ?? body.maxTokens, 4096);
+  if (!tokenLimit.ok) {
+    return res.status(tokenLimit.status || 400).json(tokenLimit);
+  }
+  body.max_tokens = tokenLimit.value;
   // Task-type routing: when caller doesn't pin a model, examine the prompt
   // and route to a specialist (code → Qwen3-Coder, reasoning → GLM-4.6,
   // long-context → Kimi K2, web/current → Perplexity Sonar, etc.).
@@ -775,9 +802,10 @@ export default async function handler(req, res) {
   const stripeSessionId = (body.stripe_session_id || body.session_id || '').toString().trim();
   const accessToken = (body.access_token || '').toString().trim();
   const userId = (body.user_id || '').toString().trim();
-  const actorKey = userId ? `u:${userId}` : `ip:${getClientIp(req)}`;
   let model = requestedModel;
   const adminBypass = verifyAdminCredential(req).ok;
+  const ipActorKey = `ip:${getClientIp(req)}`;
+  let dailyActorKey = adminBypass && userId ? `u:${userId}` : ipActorKey;
 
   if (body.action === 'transcribe_audio') {
     if (usageContext !== 'free_scoring' && !adminBypass) {
@@ -786,7 +814,7 @@ export default async function handler(req, res) {
         code: 'transcription_context_invalid',
       });
     }
-    const requestsToday = await incrementUsage(actorKey);
+    const requestsToday = await incrementUsage(dailyActorKey);
     const dailyRemaining = Math.max(0, FREE_SCORING_DAILY_LIMIT - requestsToday);
     res.setHeader('X-Free-Scoring-Limit', String(FREE_SCORING_DAILY_LIMIT));
     res.setHeader('X-Free-Scoring-Remaining', String(dailyRemaining));
@@ -858,12 +886,14 @@ export default async function handler(req, res) {
     let limit = FREE_GUEST_MONTHLY_LIMIT;
     let periodKey = getMonthKey();
     let quotaBucket = 'free_guest_monthly';
-    let quotaActorKey = userId ? `u:${userId}` : `ip:${getClientIp(req)}`;
+    let quotaActorKey = ipActorKey;
 
-    if (userId) {
+    if (adminBypass && userId) {
       scoringPlan = 'registered';
       limit = FREE_REGISTERED_MONTHLY_LIMIT;
       quotaBucket = 'free_registered_monthly';
+      quotaActorKey = `u:${userId}`;
+      dailyActorKey = `u:${userId}`;
     }
 
     if (!adminBypass && claimedTier === 'scoring_pro') {
@@ -891,6 +921,7 @@ export default async function handler(req, res) {
       limit = SCORING_PRO_MONTHLY_LIMIT;
       quotaBucket = 'scoring_pro_monthly';
       quotaActorKey = userId ? `u:${userId}` : `pay:${stripeSessionId}`;
+      dailyActorKey = quotaActorKey;
     }
 
     const requestsInPeriod = await getQuotaUsage(periodKey, quotaActorKey, quotaBucket);
@@ -920,7 +951,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const requestsToday = await incrementUsage(actorKey);
+    const requestsToday = await incrementUsage(dailyActorKey);
     const dailyRemaining = Math.max(0, FREE_SCORING_DAILY_LIMIT - requestsToday);
     res.setHeader('X-Free-Scoring-Limit', String(FREE_SCORING_DAILY_LIMIT));
     res.setHeader('X-Free-Scoring-Remaining', String(dailyRemaining));

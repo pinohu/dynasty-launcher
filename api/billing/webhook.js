@@ -178,9 +178,12 @@ export default async function handler(req, res) {
   const { webhook_secret } = getStripeConfig();
   let event;
   try {
-    const raw = await readRawBody(req);
+    const raw = await readRawBody(req, { maxBytes: 1_000_000 });
     event = constructEvent(raw, req.headers['stripe-signature'], webhook_secret);
   } catch (e) {
+    if (e.code === 'payload_too_large') {
+      return res.status(413).json({ error: 'payload_too_large' });
+    }
     return res.status(400).json({ error: 'invalid_signature', message: e.message });
   }
   if (!event || !event.type) return res.status(400).json({ error: 'invalid_event' });
