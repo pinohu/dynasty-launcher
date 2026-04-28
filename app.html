@@ -3523,6 +3523,15 @@ function getProvisionAuthHeaders() {
   return adminToken ? { 'x-dynasty-admin-token': adminToken } : {};
 }
 
+function getAiAuthHeaders(extra) {
+  const headers = { 'Content-Type': 'application/json', ...(extra || {}) };
+  const adminToken = getAdminToken();
+  const paidToken = getPaidAccessToken();
+  if (adminToken) headers['x-dynasty-admin-token'] = adminToken;
+  if (paidToken && !headers['x-dynasty-access-token']) headers['x-dynasty-access-token'] = paidToken;
+  return headers;
+}
+
 
 let OIE_LAST_REPORT = null;
 let OIE_HUMAN_APPROVED = false;
@@ -3639,8 +3648,7 @@ function getAiAuthPayload() {
     tier: getUserTier(),
     stripe_session_id: localStorage.getItem('dynasty_paid_session') || '',
     access_token: getPaidAccessToken(),
-    user_id: CLERK_USER?.id || '',
-    admin_token: getAdminToken()
+    user_id: CLERK_USER?.id || ''
   };
 }
 function isFreeTier() {
@@ -4999,7 +5007,7 @@ async function initReviewModels() {
 async function aiTyped(schemaName, prompt, { model, maxTokens = 3000, temperature = 0.7, sessionId, userId } = {}) {
   try {
     const r = await fetch('/api/ai-sdk', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getAiAuthHeaders(),
       body: JSON.stringify({
         action: 'generate_typed',
         schemaName, prompt, model, maxTokens, temperature, sessionId, userId,
@@ -5022,7 +5030,7 @@ async function aiRawWithModel(prompt, modelId, max = 4000) {
     try {
       if (attempt > 0) console.warn(`aiRawWithModel fallback: ${useModel}`);
       const r = await fetch('/api/ai', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: getAiAuthHeaders(),
         body: JSON.stringify({
           model: useModel,
           max_tokens: max,
@@ -6260,7 +6268,7 @@ async function handleImageUpload(file) {
     const mediaType = file.type || 'image/png';
 
     const r = await fetch('/api/ai', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getAiAuthHeaders(),
       body: JSON.stringify({
         model: 'gemini-2.0-flash',
         max_tokens: 1500,
@@ -6482,9 +6490,9 @@ async function handleVideoUpload(file, options = {}) {
       try {
         status.textContent = '⏳ Extracting speech from video audio...';
         const audioBase64 = await fileToBase64(file);
-        const tr = await fetch('/api/ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          const tr = await fetch('/api/ai', {
+            method: 'POST',
+            headers: getAiAuthHeaders(),
           body: JSON.stringify({
             action: 'transcribe_audio',
             audio_base64: audioBase64,
@@ -6541,7 +6549,7 @@ async function handleVideoUpload(file, options = {}) {
       : '';
 
     const r = await fetch('/api/ai', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getAiAuthHeaders(),
       body: JSON.stringify({
         model: 'gemini-2.0-flash',
         max_tokens: 2000,
@@ -6592,8 +6600,8 @@ async function handleDocUpload(file) {
     if (file.type === 'application/pdf') {
       // For PDFs, send as base64 to Claude
       const base64 = await fileToBase64(file);
-      const r = await fetch('/api/ai', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        const r = await fetch('/api/ai', {
+          method: 'POST', headers: getAiAuthHeaders(),
         body: JSON.stringify({
           model: 'gemini-2.0-flash', max_tokens: 1500,
           ...getAiAuthPayload(),
@@ -6658,7 +6666,7 @@ async function sendConvoMsg() {
 Ask ONE question at a time. Be conversational and encouraging. After 3-5 exchanges when you have enough info, summarize the idea as a clear project description (3-5 sentences) and say "Here's your project description:" followed by the summary.`;
 
     const r = await fetch('/api/ai', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: getAiAuthHeaders(),
       body: JSON.stringify({
         model: 'gemini-2.0-flash', max_tokens: 500,
         ...getAiAuthPayload(),
@@ -6810,7 +6818,7 @@ document.querySelectorAll('.ex').forEach(el=>el.addEventListener('click',()=>{
 async function loadModels() {
   if (V2_MODELS_CACHE) return V2_MODELS_CACHE;
   try {
-    const r = await fetch('/api/ai?action=models');
+    const r = await fetch('/api/ai?action=models', { headers: getAiAuthHeaders() });
     V2_MODELS_CACHE = await r.json();
     return V2_MODELS_CACHE;
   } catch { return { models: {}, providers: [] }; }
@@ -6881,7 +6889,7 @@ Available Dynasty tools: AI(${(TOOL_INVENTORY.ai||[]).join(',')}) Payments(${(TO
   try{
     const ctl = new AbortController();
     timeoutId = setTimeout(() => ctl.abort(), 45000);
-    const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await fetch('/api/ai',{method:'POST',headers:getAiAuthHeaders(),
       signal: ctl.signal,
       body:JSON.stringify({max_tokens:1200,
         ...getAiAuthPayload(),
@@ -7733,8 +7741,8 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
 7. Start your response DIRECTLY with the first ---BEGIN: delimiter
 
 ` : '';
-      const r = await fetch('/api/ai', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        const r = await fetch('/api/ai', {
+          method: 'POST', headers: getAiAuthHeaders(),
         body: JSON.stringify({ model: useModel, max_tokens: max, ...getAiAuthPayload(), usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: PROMPT_ARMOR + qualityPrimer + prompt }] })
       });
       if (r.status === 429) {
@@ -7780,8 +7788,8 @@ async function ai(prompt, keys, max = 8000, phaseId = null) {
       // Quality check failed — retry with a free high-quality model (Llama 70B via Groq)
       console.warn(`Quality check failed on ${useModel}, retrying with llama-3.3-70b-versatile...`);
       try {
-        const qr = await fetch('/api/ai', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          const qr = await fetch('/api/ai', {
+            method: 'POST', headers: getAiAuthHeaders(),
           body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: max, ...getAiAuthPayload(), usage_context: isFreeTier() ? 'free_scoring' : 'standard', messages: [{ role: 'user', content: prompt }] })
         });
         if (qr.ok) {
@@ -7958,8 +7966,8 @@ async function aiRaw(prompt, max = 4000, costTier = 'standard') {
   for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
     const useModel = fallbackModels[attempt];
     try {
-      const r = await fetch('/api/ai', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        const r = await fetch('/api/ai', {
+          method: 'POST', headers: getAiAuthHeaders(),
         body: JSON.stringify({
           model: useModel,
           max_tokens: max,

@@ -92,6 +92,13 @@ function signPaymentToken(subject = 'user_ai_smoke') {
   return `${payload}:${sig}`;
 }
 
+function signAdminSessionToken() {
+  const exp = Date.now() + 60 * 60 * 1000;
+  const payload = `admin_test:${exp}`;
+  const sig = crypto.createHmac('sha256', process.env.TEST_ADMIN_KEY).update(payload).digest('hex');
+  return `${payload}:${sig}`;
+}
+
 function log(ok, name, detail = '') {
   console.log(`${ok ? '  PASS' : '  FAIL'}  ${name}${detail ? ' - ' + detail : ''}`);
   return ok ? 0 : 1;
@@ -200,6 +207,26 @@ async function main() {
       r.status === 503 && r.headers['X-Scoring-Plan'] === 'guest',
       '/api/ai treats unauthenticated free_scoring user_id as guest quota',
       `status=${r.status} plan=${r.headers['X-Scoring-Plan']}`,
+    );
+  }
+
+  {
+    for (const key of LEGACY_AI_PROVIDER_ENVS) delete process.env[key];
+    process.env.DYNASTY_TOOL_CONFIG = '{}';
+    const r = await invoke(h.legacyAi, {
+      headers: { 'x-dynasty-admin-token': signAdminSessionToken() },
+      body: {
+        usage_context: 'standard',
+        model: 'gemini-2.0-flash',
+        tier: 'enterprise',
+        messages: [{ role: 'user', content: 'admin standard AI smoke' }],
+      },
+    });
+    fails += log(
+      r.status !== 402 &&
+        r.body?.error !== 'Paid access verification required for non-free AI usage.',
+      '/api/ai accepts signed admin sessions for standard builder usage',
+      `status=${r.status} error=${r.body?.error}`,
     );
   }
 

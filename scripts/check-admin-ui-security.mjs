@@ -90,6 +90,18 @@ for (const file of APP_FILES) {
       fail(`${file} is missing session-only paid-token helper: ${expected}`);
   }
   for (const expected of [
+    'function getAiAuthHeaders(',
+    "headers['x-dynasty-admin-token'] = adminToken",
+    "headers['x-dynasty-access-token'] = paidToken",
+    'headers: getAiAuthHeaders()',
+  ]) {
+    if (!html.includes(expected))
+      fail(`${file} does not send signed admin/paid headers to AI routes: ${expected}`);
+  }
+  if (html.includes('admin_token: getAdminToken()')) {
+    fail(`${file} sends admin session tokens in JSON bodies instead of auth headers`);
+  }
+  for (const expected of [
     'function safeUrl(',
     '${escapeHtml(b.name)}',
     'const liveUrl = b.live_url ? safeUrl(b.live_url) :',
