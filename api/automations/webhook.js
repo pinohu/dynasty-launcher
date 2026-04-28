@@ -54,6 +54,13 @@ async function ensureSchema() {
       webhook_source text,
       webhook_id text
     );
+    alter table automation_runs add column if not exists trigger_type text;
+    alter table automation_runs add column if not exists result jsonb;
+    alter table automation_runs add column if not exists webhook_source text;
+    alter table automation_runs add column if not exists webhook_id text;
+    alter table automation_runs alter column tenant_id drop not null;
+    alter table automation_runs alter column module_code drop not null;
+    alter table automation_runs alter column trigger_type drop not null;
     create index if not exists automation_runs_tenant_idx on automation_runs(tenant_id);
     create index if not exists automation_runs_webhook_idx on automation_runs(webhook_id);
   `;

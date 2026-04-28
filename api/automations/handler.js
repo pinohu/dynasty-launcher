@@ -65,8 +65,8 @@ async function ensureSchema() {
 
     create table if not exists automation_runs (
       run_id text primary key,
-      tenant_id text not null references tenants(tenant_id) on delete cascade,
-      module_code text not null,
+      tenant_id text references tenants(tenant_id) on delete cascade,
+      module_code text,
       trigger_type text not null,
       status text not null default 'pending',
       result jsonb,
@@ -75,6 +75,13 @@ async function ensureSchema() {
       completed_at timestamptz,
       duration_ms int
     );
+    alter table automation_runs add column if not exists trigger_type text;
+    alter table automation_runs add column if not exists result jsonb;
+    alter table automation_runs add column if not exists webhook_source text;
+    alter table automation_runs add column if not exists webhook_id text;
+    alter table automation_runs alter column tenant_id drop not null;
+    alter table automation_runs alter column module_code drop not null;
+    alter table automation_runs alter column trigger_type drop not null;
     create index if not exists automation_runs_tenant_idx on automation_runs(tenant_id);
     create index if not exists automation_runs_module_idx on automation_runs(module_code);
     create index if not exists automation_runs_created_idx on automation_runs(started_at desc);
