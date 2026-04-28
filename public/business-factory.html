@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Business Factory Console - Your Deputy</title>
+<meta name="description" content="Use the production Your Deputy business factory backend: generate a validated launch manifest, verify production readiness, enqueue launch jobs, and inspect the durable factory queue.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.yourdeputy.com/business-factory">
+<link rel="stylesheet" href="/site-shell.css">
+<style>
+  :root{--gold:#c9a84c;--ink:#09090b;--panel:#16161b;--card:#23232c;--line:rgba(255,255,255,.12);--text:#fafaf9;--muted:#a1a1aa;--ok:#22c55e;--bad:#ef4444}
+  body{background:#0c0c14;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0}
+  main{max-width:1120px;margin:0 auto;padding:96px 20px 56px}
+  .hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:28px;align-items:stretch;margin-bottom:28px}
+  .panel{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.24)}
+  .eyebrow{color:var(--gold);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px}
+  h1{font-size:clamp(34px,5vw,58px);line-height:1;margin:0 0 16px;letter-spacing:0}
+  h2{font-size:24px;margin:0 0 14px;letter-spacing:0}
+  h3{font-size:16px;margin:0 0 8px}
+  p{color:var(--muted);line-height:1.65;margin:0 0 16px}
+  .truth-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+  .truth{border:1px solid var(--line);border-radius:10px;padding:14px;background:rgba(0,0,0,.18)}
+  .truth strong{display:block;margin-bottom:5px}
+  .truth span{color:var(--muted);font-size:13px;line-height:1.45}
+  .status-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .status-list li{display:flex;gap:10px;align-items:flex-start;color:var(--muted);font-size:14px;line-height:1.45}
+  .dot{width:9px;height:9px;border-radius:99px;background:var(--ok);margin-top:6px;flex:0 0 auto}
+  .dot.warn{background:var(--gold)}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.8fr);gap:22px;margin-top:22px}
+  label{display:block;font-size:13px;color:var(--text);font-weight:700;margin:14px 0 7px}
+  input,textarea,select{width:100%;border:1px solid var(--line);background:#111119;color:var(--text);border-radius:9px;padding:11px 12px;font:inherit;min-height:44px}
+  textarea{min-height:112px;resize:vertical}
+  .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .check{display:flex;gap:10px;align-items:center;margin:16px 0;color:var(--muted);font-size:14px}
+  .check input{width:auto;min-height:0}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  button,.button{border:0;border-radius:9px;background:var(--gold);color:var(--ink);font-weight:800;padding:11px 16px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+  button.secondary,.button.secondary{background:transparent;color:var(--text);border:1px solid var(--line)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .result{white-space:pre-wrap;overflow:auto;max-height:520px;background:#08080d;border:1px solid var(--line);border-radius:10px;padding:14px;color:#d4d4d8;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px}
+  .card{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .card p{font-size:13px;margin:0}
+  .note{border-left:3px solid var(--gold);padding-left:14px;color:var(--muted);font-size:14px;margin-top:16px}
+  .danger{color:#fecaca}
+  @media(max-width:860px){main{padding-top:82px}.hero,.grid,.cards,.truth-grid,.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main id="main-content">
+  <section class="hero">
+    <div class="panel">
+      <div class="eyebrow">Production capability</div>
+      <h1>Business Factory Console</h1>
+      <p>This page reflects what is actually deployed in production today. The backend generates a complete launch manifest, validates production readiness, produces a revenue and funnel plan, and can enqueue a durable <code>business_factory.launch</code> job.</p>
+      <div class="truth-grid">
+        <div class="truth"><strong>Delivered now</strong><span>Idea scoring, offer creation, generated app manifest, funnel, Stripe catalog, automations plan, deployment contract, agent roles, and queue handoff.</span></div>
+        <div class="truth"><strong>Production URL</strong><span>The APIs run on this public Vercel domain behind admin authentication.</span></div>
+        <div class="truth"><strong>Operational boundary</strong><span>Queued jobs are durable. A worker or operator still has to claim and execute the job phases.</span></div>
+        <div class="truth"><strong>No hidden promise</strong><span>Vendor actions depend on configured credentials, tier allowlists, provider API health, and the worker loop.</span></div>
+      </div>
+    </div>
+    <aside class="panel">
+      <div class="eyebrow">Live backend surfaces</div>
+      <ul class="status-list">
+        <li><span class="dot"></span><span><strong>POST /api/business-factory</strong><br>Generate and optionally enqueue a business launch manifest.</span></li>
+        <li><span class="dot"></span><span><strong>POST /api/jobs/enqueue</strong><br>Create durable jobs with idempotency keys.</span></li>
+        <li><span class="dot"></span><span><strong>POST /api/jobs/claim</strong><br>Lease the next due job for a worker.</span></li>
+        <li><span class="dot"></span><span><strong>POST /api/jobs/complete</strong><br>Complete, fail, or retry a claimed job.</span></li>
+        <li><span class="dot warn"></span><span><strong>Admin required</strong><br>Use your production admin key. The key stays in this browser request and is never rendered by the page.</span></li>
+      </ul>
+    </aside>
+  </section>
+
+  <section class="grid">
+    <form class="panel" id="factory-form">
+      <div class="eyebrow">Run the production factory</div>
+      <h2>Create a launch manifest</h2>
+      <label for="admin-key">Admin key</label>
+      <input id="admin-key" name="admin-key" type="password" autocomplete="off" placeholder="Paste production ADMIN_KEY">
+
+      <label for="market">Market</label>
+      <input id="market" name="market" value="HVAC service businesses">
+
+      <label for="customer">Target customer</label>
+      <input id="customer" name="customer" value="multi-truck HVAC owners">
+
+      <label for="pain">Pain signals</label>
+      <textarea id="pain" name="pain">Missed call response is slow and causes lost revenue.
+Manual follow up means urgent estimate requests go cold.
+Owners pay for leads but do not know which calls convert.</textarea>
+
+      <div class="row">
+        <div>
+          <label for="profile">Build profile</label>
+          <select id="profile" name="profile">
+            <option value="micro_saas">Micro SaaS</option>
+            <option value="directory">Directory</option>
+            <option value="info_product">Info product</option>
+            <option value="service_funnel">Service funnel</option>
+          </select>
+        </div>
+        <div>
+          <label for="mode">Mode</label>
+          <select id="mode" name="mode">
+            <option value="dry_run">Dry run</option>
+            <option value="plan">Plan only</option>
+            <option value="launch">Launch readiness</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="check">
+        <input id="enqueue" name="enqueue" type="checkbox" checked>
+        <label for="enqueue" style="margin:0;font-weight:600;color:var(--muted)">Queue a durable launch job when the run is not blocked</label>
+      </div>
+
+      <div class="actions">
+        <button id="run-btn" type="submit">Generate manifest</button>
+        <button id="queue-btn" class="secondary" type="button">Inspect queue</button>
+        <a class="button secondary" href="/API_REFERENCE.md">API reference</a>
+      </div>
+      <p class="note">Choose <strong>dry run</strong> to generate and queue without requiring launch credentials. Choose <strong>launch readiness</strong> to fail fast if production credentials or operational requirements are missing.</p>
+    </form>
+
+    <aside class="panel">
+      <div class="eyebrow">Response</div>
+      <h2>Production result</h2>
+      <pre class="result" id="result">Run the factory or inspect the queue to see the live production response.</pre>
+    </aside>
+  </section>
+
+  <section class="cards">
+    <article class="card"><h3>What buyers can assess</h3><p>Exact generated outputs: offer ladder, app routes, data model, funnel sections, email sequence, Stripe catalog, automation workflows, deployment requirements, and agent roles.</p></article>
+    <article class="card"><h3>What operators can use</h3><p>A production admin can generate manifests, enqueue launch jobs, list queue state, and wire a worker to claim and complete jobs.</p></article>
+    <article class="card"><h3>What is not implied</h3><p>Public visitors cannot trigger vendor spend. Queued jobs do not execute themselves unless a worker loop is running with the required credentials.</p></article>
+  </section>
+</main>
+<script src="/site-shell.js" defer></script>
+<script>
+  const result = document.getElementById("result");
+  const form = document.getElementById("factory-form");
+  const runBtn = document.getElementById("run-btn");
+  const queueBtn = document.getElementById("queue-btn");
+
+  function adminKey() {
+    return document.getElementById("admin-key").value.trim();
+  }
+
+  function show(value) {
+    result.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+  }
+
+  async function apiFetch(url, options = {}) {
+    const key = adminKey();
+    if (!key) throw new Error("Paste the production admin key before calling the API.");
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-key": key,
+        ...(options.headers || {}),
+      },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message = payload.error || `HTTP ${response.status}`;
+      throw new Error(`${message}\n${JSON.stringify(payload, null, 2)}`);
+    }
+    return payload;
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    runBtn.disabled = true;
+    show("Calling production /api/business-factory...");
+    try {
+      const painSignals = document.getElementById("pain").value.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+      const payload = {
+        market: document.getElementById("market").value.trim(),
+        target_customer: document.getElementById("customer").value.trim(),
+        pain_signals: painSignals,
+        build_profile: document.getElementById("profile").value,
+        monetization_goal: "cash_first",
+        launch_channel: "partner",
+        mode: document.getElementById("mode").value,
+        enqueue_job: document.getElementById("enqueue").checked,
+      };
+      const data = await apiFetch("/api/business-factory", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      show({
+        ok: data.ok,
+        status: data.status,
+        run_id: data.run_id,
+        idea: data.idea,
+        validation: data.validation,
+        offer: data.offer,
+        queued_job: data.queued_job || null,
+        blockers: data.blockers,
+      });
+    } catch (error) {
+      show(`Error: ${error.message}`);
+    } finally {
+      runBtn.disabled = false;
+    }
+  });
+
+  queueBtn.addEventListener("click", async () => {
+    queueBtn.disabled = true;
+    show("Calling production /api/jobs/claim?queue=factory...");
+    try {
+      const data = await apiFetch("/api/jobs/claim?queue=factory&limit=10", { method: "GET" });
+      show(data);
+    } catch (error) {
+      show(`Error: ${error.message}`);
+    } finally {
+      queueBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

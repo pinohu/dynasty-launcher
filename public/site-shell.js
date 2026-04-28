@@ -8,6 +8,7 @@
     { href: "/app?returning=1", label: "Builder" },
     { href: "/quiz", label: "Diagnostic" },
     { href: "/marketplace", label: "Marketplace" },
+    { href: "/business-factory", label: "Factory" },
     { href: "/demo", label: "Demos" },
     { href: "/deliverables", label: "Deliverables" },
     { href: "/maturity", label: "Maturity" },
@@ -26,6 +27,7 @@
         { href: "/launch/start-foundation-build", label: "Start Foundation build" },
         { href: "/launch/customer-dashboard", label: "Customer dashboard" },
         { href: "/launch/documentation", label: "Documentation" },
+        { href: "/business-factory", label: "Business factory console" },
       ],
     },
     {
@@ -178,7 +180,7 @@
         <div class="yd-footer-grid">
           <section class="yd-footer-col" aria-labelledby="yd-footer-brand">
             <div class="yd-footer-brand" id="yd-footer-brand">Your Deputy</div>
-            <p class="yd-footer-copy">Autonomous business-unit launcher: validation, niche website, lead capture, products, CRM, RevOps, payments, onboarding, support, PostHog-ready analytics, AI/MCP tools, open-weight model routing, optional video assets, resumable repair telemetry, workflows, provider abstractions, and self-hostable infrastructure.</p>
+            <p class="yd-footer-copy">Business launch control plane: validation, generated launch manifests, niche website and funnel planning, revenue catalog specs, CRM and RevOps modules, payments, onboarding, analytics, AI/MCP-ready interfaces, workflow templates, durable job queues, and explicit production readiness checks.</p>
           </section>
           ${sitemapGroups.map((group) => `
             <section class="yd-footer-col" aria-labelledby="yd-footer-${group.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}">
