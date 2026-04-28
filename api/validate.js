@@ -1,6 +1,40 @@
 // api/validate.js — placeholder, template-leak, and niche-grounding checks for generated artifacts
 export const maxDuration = 15;
 
+const VALIDATE_ATTEMPTS = new Map();
+const VALIDATE_MAX = 30;
+const VALIDATE_WINDOW_MS = 10 * 60 * 1000;
+const MAX_BODY_BYTES = 2_000_000;
+const MAX_FILES = 50;
+const MAX_FILENAME_LENGTH = 180;
+const MAX_FILE_CHARS = 500_000;
+
+function getClientIp(req) {
+  const xf = (req.headers?.['x-forwarded-for'] || '').toString();
+  return xf.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
+}
+
+function isValidateRateLimited(req) {
+  const ip = getClientIp(req);
+  const now = Date.now();
+  const existing = VALIDATE_ATTEMPTS.get(ip);
+  if (!existing || now - existing.windowStart > VALIDATE_WINDOW_MS) {
+    VALIDATE_ATTEMPTS.set(ip, { windowStart: now, count: 1 });
+    return false;
+  }
+  existing.count += 1;
+  if (VALIDATE_ATTEMPTS.size > 5000) {
+    for (const [key, value] of VALIDATE_ATTEMPTS) {
+      if (now - value.windowStart > VALIDATE_WINDOW_MS) VALIDATE_ATTEMPTS.delete(key);
+    }
+  }
+  return existing.count > VALIDATE_MAX;
+}
+
+function isPlainObject(value) {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
 /** Any single match fails the file (template leaks, obvious placeholders). */
 const ZERO_TOLERANCE = [
   { re: /\[PLACEHOLDER\]/i, label: '[PLACEHOLDER]' },
@@ -55,11 +89,24 @@ function validateNicheGrounding({ filename, content, projectName }) {
     return issues;
   }
 
-  const stop = new Set(['the','and','for','with','from','into','your','their','inc','llc','ltd','co']);
+  const stop = new Set([
+    'the',
+    'and',
+    'for',
+    'with',
+    'from',
+    'into',
+    'your',
+    'their',
+    'inc',
+    'llc',
+    'ltd',
+    'co',
+  ]);
   const words = name
     .split(/\s+/)
-    .map(w => w.replace(/[^A-Za-z0-9]/g, ''))
-    .filter(w => w.length >= 4 && !stop.has(w.toLowerCase()));
+    .map((w) => w.replace(/[^A-Za-z0-9]/g, ''))
+    .filter((w) => w.length >= 4 && !stop.has(w.toLowerCase()));
 
   if (words.length === 0) {
     // Single short name like "NG" or "X" — fall back to substring match; already failed.
@@ -68,10 +115,12 @@ function validateNicheGrounding({ filename, content, projectName }) {
   }
 
   const lower = content.toLowerCase();
-  const hits = words.filter(w => lower.includes(w.toLowerCase())).length;
+  const hits = words.filter((w) => lower.includes(w.toLowerCase())).length;
   const needed = Math.max(1, Math.ceil(words.length * 0.5));
   if (hits < needed) {
-    issues.push(`Niche grounding: project name "${name.slice(0, 80)}" (or ${needed}/${words.length} of its key words) not found in this file`);
+    issues.push(
+      `Niche grounding: project name "${name.slice(0, 80)}" (or ${needed}/${words.length} of its key words) not found in this file`,
+    );
   }
   return issues;
 }
@@ -80,7 +129,6 @@ function validateCategoryHints({ filename, content, category }) {
   const issues = [];
   if (!category || !content) return issues;
   const c = String(category).toLowerCase();
-  const lower = content.toLowerCase();
   // Light signals — one missing keyword is a warning only for SPEC (product truth)
   if (filename !== 'SPEC.md') return issues;
   const need = [];
@@ -99,8 +147,13 @@ function validateCategoryHints({ filename, content, category }) {
   if (c === 'service' && !/\b(book|schedul|calendar|lead|client|appointment)\b/i.test(content)) {
     need.push('service-business SPEC should mention booking, leads, clients, or scheduling');
   }
-  if ((c === 'saas' || c === 'enterprise') && !/\b(subscrip|billing|tenant|auth|sso|role|plan)\b/i.test(content)) {
-    need.push('SaaS / enterprise SPEC should mention auth, roles, billing, subscriptions, or plans');
+  if (
+    (c === 'saas' || c === 'enterprise') &&
+    !/\b(subscrip|billing|tenant|auth|sso|role|plan)\b/i.test(content)
+  ) {
+    need.push(
+      'SaaS / enterprise SPEC should mention auth, roles, billing, subscriptions, or plans',
+    );
   }
   if (need.length) issues.push(...need);
   return issues;
@@ -112,13 +165,22 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+  if (isValidateRateLimited(req)) {
+    res.setHeader('Retry-After', '600');
+    return res
+      .status(429)
+      .json({ ok: false, error: 'Too many validation requests. Try again later.' });
+  }
 
   const bodyStr = JSON.stringify(req.body || {});
-  if (bodyStr.length > 2_000_000) return res.status(413).json({ ok: false, error: 'Payload too large (2MB max)' });
+  if (bodyStr.length > MAX_BODY_BYTES)
+    return res.status(413).json({ ok: false, error: 'Payload too large (2MB max)' });
 
   const { files, projectName, category } = req.body || {};
-  if (!files || Object.keys(files).length > 50) return res.status(400).json({ ok: false, error: 'Invalid files input (max 50 files)' });
-  const issues = {};
+  if (!isPlainObject(files) || Object.keys(files).length > MAX_FILES) {
+    return res.status(400).json({ ok: false, error: 'Invalid files input (max 50 files)' });
+  }
+  const issues = Object.create(null);
   let totalIssues = 0;
 
   // Files the client declares "always required" even when empty. Everything
@@ -127,6 +189,21 @@ export default async function handler(req, res) {
   const REQUIRED_FILES = new Set(['DESIGN.md', 'SPEC.md', 'BUSINESS-SYSTEM.md']);
 
   for (const [filename, content] of Object.entries(files || {})) {
+    if (filename.length > MAX_FILENAME_LENGTH) {
+      issues[filename.slice(0, MAX_FILENAME_LENGTH)] = ['Filename too long'];
+      totalIssues++;
+      continue;
+    }
+    if (typeof content !== 'string') {
+      issues[filename] = ['File content must be a string'];
+      totalIssues++;
+      continue;
+    }
+    if (content.length > MAX_FILE_CHARS) {
+      issues[filename] = [`File too large (${MAX_FILE_CHARS} character max)`];
+      totalIssues++;
+      continue;
+    }
     if (!content || content.length < 50) {
       if (REQUIRED_FILES.has(filename)) {
         issues[filename] = ['File too short or empty'];

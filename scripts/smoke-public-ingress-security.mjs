@@ -41,6 +41,7 @@ async function invoke(handler, { method = 'POST', query = {}, headers = {}, body
 
 const waitlist = (await import('../api/waitlist.js')).default;
 const telemetry = (await import('../api/telemetry.js')).default;
+const validate = (await import('../api/validate.js')).default;
 const neon = (await import('../api/neon.js')).default;
 
 let failures = 0;
@@ -86,6 +87,50 @@ for (let i = 0; i < 60; i += 1) {
   log(
     r.statusCode === 429 && r.headers['retry-after'] === '600',
     'telemetry throttles anonymous event floods',
+    `status=${r.statusCode}`,
+  );
+}
+
+const validationBody = {
+  files: {
+    'SPEC.md':
+      'AcmeValidateCo sells B2B SaaS with auth, roles, and subscription billing plans. '.repeat(3),
+    'BUSINESS-SYSTEM.md': 'AcmeValidateCo operating plan summary. '.repeat(4),
+  },
+  projectName: 'AcmeValidateCo',
+  category: 'saas',
+};
+for (let i = 0; i < 30; i += 1) {
+  const r = await invoke(validate, {
+    headers: { 'x-forwarded-for': '198.51.100.30' },
+    body: validationBody,
+  });
+  assert.notEqual(r.statusCode, 429);
+}
+{
+  const r = await invoke(validate, {
+    headers: { 'x-forwarded-for': '198.51.100.30' },
+    body: validationBody,
+  });
+  log(
+    r.statusCode === 429 && r.headers['retry-after'] === '600',
+    'validation endpoint throttles repeated public scans',
+    `status=${r.statusCode}`,
+  );
+}
+
+{
+  const files = Object.create(null);
+  files.__proto__ = 'lorem ipsum '.repeat(12);
+  const r = await invoke(validate, {
+    headers: { 'x-forwarded-for': '198.51.100.31' },
+    body: { files, projectName: 'AcmeValidateCo', category: 'saas' },
+  });
+  log(
+    r.statusCode === 200 &&
+      Object.getPrototypeOf(r.body?.issues) === null &&
+      Object.prototype.hasOwnProperty.call(r.body.issues, '__proto__'),
+    'validation issue map is safe for hostile filenames',
     `status=${r.statusCode}`,
   );
 }
