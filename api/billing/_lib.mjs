@@ -1,10 +1,12 @@
 // api/billing/_lib.mjs — shared billing helpers (CORS, body, stub detection)
 
+import { adminCorsHeaders } from '../tenants/_auth.mjs';
+
 export function corsPreflight(req, res) {
   const origin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Stripe-Signature, x-admin-key');
+  res.setHeader('Access-Control-Allow-Headers', `${adminCorsHeaders()}, Stripe-Signature`);
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return true;

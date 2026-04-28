@@ -20,7 +20,7 @@ import { backend, healthcheck, _stats } from '../tenants/_store.mjs';
 import { getCatalog, indexModules, effectiveBundleStatus } from '../catalog/_lib.mjs';
 import { isConfigured as stripeConfigured } from '../billing/_stripe.mjs';
 import { getEventStats } from '../events/_events_store.mjs';
-import { verifyAdminCredential } from '../tenants/_auth.mjs';
+import { adminCorsHeaders, verifyAdminCredential } from '../tenants/_auth.mjs';
 import { readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -196,7 +196,7 @@ async function billingSummary() {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-key, x-dynasty-admin-token');
+  res.setHeader('Access-Control-Allow-Headers', adminCorsHeaders());
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
   if (!isAuthorized(req)) return res.status(401).json({ error: 'admin_key_required' });

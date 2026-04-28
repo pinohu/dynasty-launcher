@@ -1,5 +1,5 @@
 export const maxDuration = 15;
-import { verifyRawAdminHeader } from './tenants/_auth.mjs';
+import { adminCorsHeaders, verifyAdminCredential } from './tenants/_auth.mjs';
 
 const _se = (m) => typeof m === 'string' ? m.replace(/sk_live_\w+/g,'sk_live_***').replace(/ghp_\w+/g,'ghp_***').replace(/postgres(ql)?:\/\/[^\s]+/g,'postgres://***').slice(0,200) : 'Error';
 
@@ -7,13 +7,14 @@ export default async function handler(req, res) {
   const allowedOrigin = process.env.CORS_ORIGIN || 'https://yourdeputy.com';
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key');
+  res.setHeader('Access-Control-Allow-Headers', adminCorsHeaders());
   if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'GET only' });
+
   // Public health returns minimal info; full details require admin
-  if (!verifyRawAdminHeader(req)) {
+  if (!verifyAdminCredential(req).ok) {
     return res.json({ ok: true, status: 'operational', timestamp: new Date().toISOString() });
   }
-  if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'GET only' });
 
   const checks = {};
   let config = {}; try { config = JSON.parse(process.env.DYNASTY_TOOL_CONFIG || '{}'); } catch {}

@@ -12,18 +12,21 @@ function invoke(handlerModule, { method = 'GET', query = {}, body = null, header
     const res = {
       _status: 200,
       _body: null,
+      _headers: {},
       status(s) {
         this._status = s;
         return this;
       },
-      setHeader() {},
+      setHeader(k, v) {
+        this._headers[String(k).toLowerCase()] = v;
+      },
       json(b) {
         this._body = b;
-        resolve({ status: this._status, body: b });
+        resolve({ status: this._status, body: b, headers: this._headers });
         return this;
       },
       end() {
-        resolve({ status: this._status, body: null });
+        resolve({ status: this._status, body: null, headers: this._headers });
         return this;
       },
     };
@@ -51,6 +54,27 @@ async function main() {
     fails += log(
       r.status === 200 && r.body.ok === true && r.body.status === 'operational' && !r.body.checks,
       'health ignores query-string admin key and returns public payload',
+      `status=${r.status}`,
+    );
+  }
+
+  {
+    const r = await invoke(health, { method: 'OPTIONS' });
+    const allowed = String(r.headers?.['access-control-allow-headers'] || '').toLowerCase();
+    fails += log(
+      r.status === 204 &&
+        allowed.includes('x-admin-key') &&
+        allowed.includes('x-dynasty-admin-token'),
+      'health preflight allows shared admin auth headers',
+      `status=${r.status}`,
+    );
+  }
+
+  {
+    const r = await invoke(health, { method: 'POST' });
+    fails += log(
+      r.status === 405 && r.body.error === 'GET only',
+      'health rejects unsupported methods before public fallback',
       `status=${r.status}`,
     );
   }
