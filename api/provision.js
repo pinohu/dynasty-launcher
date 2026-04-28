@@ -204,6 +204,67 @@ async function patchVercelProjectSettings({ token, team, projectId }) {
   }
 }
 
+const VERIFIED_URL_HOST_SUFFIXES = ['.vercel.app', '.yourdeputy.com', '.dynastyempire.com'];
+
+function isAllowedVerifiedHost(hostname) {
+  const host = String(hostname || '').toLowerCase();
+  return VERIFIED_URL_HOST_SUFFIXES.some((suffix) => {
+    const bare = suffix.replace(/^\./, '');
+    return host === bare || host.endsWith(suffix);
+  });
+}
+
+function validateVerifiedUrl(value) {
+  try {
+    const parsed = new URL(String(value || ''));
+    if (parsed.protocol !== 'https:') return { ok: false, error: 'HTTPS required' };
+    if (parsed.username || parsed.password) return { ok: false, error: 'URL credentials not allowed' };
+    if (!isAllowedVerifiedHost(parsed.hostname)) {
+      return { ok: false, error: 'URL domain not allowed' };
+    }
+    return { ok: true, url: parsed.toString(), parsed };
+  } catch {
+    return { ok: false, error: 'Invalid URL' };
+  }
+}
+
+function joinVerifiedUrl(baseUrl, route = '/') {
+  const base = validateVerifiedUrl(baseUrl);
+  if (!base.ok) return base;
+  const next = new URL(base.url);
+  const basePath = next.pathname.replace(/\/$/, '');
+  next.pathname = `${basePath}${route.startsWith('/') ? route : `/${route}`}` || '/';
+  return validateVerifiedUrl(next.toString());
+}
+
+async function fetchVerifiedUrl(url, { timeoutMs = 15000, headers = {} } = {}) {
+  let current = validateVerifiedUrl(url);
+  if (!current.ok) throw new Error(current.error);
+
+  for (let redirects = 0; redirects < 4; redirects += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const resp = await fetch(current.url, {
+        method: 'GET',
+        headers,
+        signal: controller.signal,
+        redirect: 'manual',
+      });
+      if (resp.status >= 300 && resp.status < 400 && resp.headers.get('location')) {
+        const next = validateVerifiedUrl(new URL(resp.headers.get('location'), current.url).toString());
+        if (!next.ok) throw new Error(next.error);
+        current = next;
+        continue;
+      }
+      return { resp, finalUrl: current.url };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  throw new Error('Too many redirects');
+}
+
 async function verifyLiveUrlWithRepair({ url, projectName, projectId, token, team }) {
   const result = {
     ok: false,
@@ -216,20 +277,11 @@ async function verifyLiveUrlWithRepair({ url, projectName, projectId, token, tea
     url,
   };
   const fetchOnce = async () => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const resp = await fetch(url, {
-        method: 'GET',
-        headers: { 'User-Agent': 'YourDeputy-VerifyBot/1.0' },
-        signal: controller.signal,
-        redirect: 'follow',
-      });
-      const text = await resp.text();
-      return { resp, text };
-    } finally {
-      clearTimeout(timeout);
-    }
+    const { resp, finalUrl } = await fetchVerifiedUrl(url, {
+      headers: { 'User-Agent': 'YourDeputy-VerifyBot/1.0' },
+    });
+    const text = await resp.text();
+    return { resp, text, finalUrl };
   };
 
   let first;
@@ -240,7 +292,8 @@ async function verifyLiveUrlWithRepair({ url, projectName, projectId, token, tea
     return result;
   }
 
-  let { resp, text } = first;
+  let { resp, text, finalUrl } = first;
+  if (finalUrl) result.url = finalUrl;
   const protectionDiag = classifyVercelFailure([{ text: `${resp.status} ${resp.statusText}\n${text.slice(0, 1000)}` }]);
   if ((resp.status === 401 || resp.status === 403 || protectionDiag.class === 'deployment_protection') && token && projectId) {
     const patched = await patchVercelProjectSettings({ token, team, projectId });
@@ -252,6 +305,7 @@ async function verifyLiveUrlWithRepair({ url, projectName, projectId, token, tea
         const second = await fetchOnce();
         resp = second.resp;
         text = second.text;
+        if (second.finalUrl) result.url = second.finalUrl;
       } catch (e) {
         result.error = sanitizeError(e.message);
         return result;
@@ -1859,18 +1913,15 @@ async function mod_social(config, project) {
 async function mod_verify(config, project, liveUrl) {
   const results = { ok: false, service: 'verify', details: {} };
   const url = liveUrl || `https://${project.slug}.vercel.app`;
-  // SSRF protection: only allow HTTPS to known domains
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== 'https:') { results.error = 'HTTPS required'; return results; }
-    const allowed = ['.vercel.app', '.yourdeputy.com', '.dynastyempire.com'];
-    if (!allowed.some(d => parsed.hostname.endsWith(d))) { results.error = 'URL domain not allowed for verification'; return results; }
-  } catch { results.error = 'Invalid URL'; return results; }
+  const safeBaseUrl = validateVerifiedUrl(url);
+  if (!safeBaseUrl.ok) { results.error = safeBaseUrl.error; return results; }
   const checks = [];
   const routes = ['/', '/docs', '/pricing'];
   for (const route of routes) {
     try {
-      const r = await fetch(`${url}${route}`, { redirect: 'follow' });
+      const routeUrl = joinVerifiedUrl(safeBaseUrl.url, route);
+      if (!routeUrl.ok) throw new Error(routeUrl.error);
+      const { resp: r } = await fetchVerifiedUrl(routeUrl.url);
       const html = await r.text();
       const hasName = html.includes(project.name) || html.includes(project.slug);
       const hasObjectObject = html.includes('[object Object]');
@@ -1880,13 +1931,15 @@ async function mod_verify(config, project, liveUrl) {
 
   // API health check
   try {
-    const api = await fetch(`${url}/api/v1`);
+    const apiUrl = joinVerifiedUrl(safeBaseUrl.url, '/api/v1');
+    if (!apiUrl.ok) throw new Error(apiUrl.error);
+    const { resp: api } = await fetchVerifiedUrl(apiUrl.url);
     checks.push({ route: '/api/v1', status: api.status, ok: api.status === 200 || api.status === 404 });
   } catch (e) { checks.push({ route: '/api/v1', status: 0, ok: false, error: sanitizeError(e.message) }); }
 
   // Security header check on homepage
   try {
-    const mainResp = await fetch(url, { redirect: 'follow' });
+    const { resp: mainResp } = await fetchVerifiedUrl(safeBaseUrl.url);
     const secHeaders = {};
     for (const h of ['x-frame-options', 'x-content-type-options', 'strict-transport-security', 'content-security-policy']) {
       secHeaders[h] = mainResp.headers.get(h) || 'missing';
@@ -1896,7 +1949,7 @@ async function mod_verify(config, project, liveUrl) {
 
   // PageSpeed Insights (free Google API — no key needed for basic scores)
   try {
-    const psiResp = await fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=performance&category=seo&category=accessibility`, { signal: AbortSignal.timeout(25000) });
+    const psiResp = await fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(safeBaseUrl.url)}&strategy=mobile&category=performance&category=seo&category=accessibility`, { signal: AbortSignal.timeout(25000) });
     if (psiResp.ok) {
       const psi = await psiResp.json();
       const cats = psi.lighthouseResult?.categories || {};
@@ -3708,18 +3761,13 @@ Return ONLY a valid JSON array (no markdown, no backticks):
   if (action === 'verify_live') {
     const { url, project_name } = req.body || {};
     if (!url) return res.status(400).json({ error: 'url required' });
-    // SSRF protection: only allow HTTPS URLs to vercel.app or known domains
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol !== 'https:') return res.status(400).json({ error: 'HTTPS required' });
-      const allowed = ['.vercel.app', '.yourdeputy.com', '.dynastyempire.com'];
-      if (!allowed.some(d => parsed.hostname.endsWith(d))) return res.status(400).json({ error: 'URL domain not allowed' });
-    } catch { return res.status(400).json({ error: 'Invalid URL' }); }
+    const safeUrl = validateVerifiedUrl(url);
+    if (!safeUrl.ok) return res.status(400).json({ error: safeUrl.error });
     try {
       const projectIdForRepair = req.body?.project_id || req.body?.vercel_project_id || null;
       if (projectIdForRepair) {
         const live = await verifyLiveUrlWithRepair({
-          url,
+          url: safeUrl.url,
           projectName: project_name,
           projectId: projectIdForRepair,
           token: VERCEL_TOKEN,
@@ -3727,15 +3775,9 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         });
         return res.json(live);
       }
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
-      const resp = await fetch(url, {
-        method: 'GET',
+      const { resp, finalUrl } = await fetchVerifiedUrl(safeUrl.url, {
         headers: { 'User-Agent': 'YourDeputy-VerifyBot/1.0' },
-        signal: controller.signal,
-        redirect: 'follow'
       });
-      clearTimeout(timeout);
       const status = resp.status;
       let has_content = false;
       let has_project_name = false;
@@ -3761,7 +3803,7 @@ Return ONLY a valid JSON array (no markdown, no backticks):
         ];
         has_template_branding = templateMarkers.some(rx => rx.test(text));
       }
-      return res.json({ ok: true, status, has_content, has_project_name, has_template_branding, body_length, url: resp.url });
+      return res.json({ ok: true, status, has_content, has_project_name, has_template_branding, body_length, url: finalUrl });
     } catch (e) {
       return res.json({ ok: false, status: 0, error: sanitizeError(e.message) });
     }

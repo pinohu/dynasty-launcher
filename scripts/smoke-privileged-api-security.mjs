@@ -162,6 +162,38 @@ async function main() {
   }
 
   {
+    const originalFetch = globalThis.fetch;
+    const calls = [];
+    globalThis.fetch = async (input) => {
+      calls.push(String(input));
+      return new Response('', {
+        status: 302,
+        headers: { Location: 'http://127.0.0.1/latest/meta-data' },
+      });
+    };
+    try {
+      const r = await invoke(provision, {
+        headers: { 'x-dynasty-admin-token': adminToken },
+        body: {
+          action: 'verify_live',
+          url: 'https://safe-preview.vercel.app',
+          project_name: 'Safe Preview',
+        },
+      });
+      fails += log(
+        r.status === 200 &&
+          r.body.ok === false &&
+          r.body.error === 'HTTPS required' &&
+          calls.length === 1,
+        '/api/provision verify_live rejects unsafe redirects before following',
+        `status=${r.status} error=${r.body.error} calls=${calls.length}`,
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  }
+
+  {
     const r = await invoke(fireEvent, {
       method: 'POST',
       headers: { 'x-dynasty-admin-token': adminToken },
