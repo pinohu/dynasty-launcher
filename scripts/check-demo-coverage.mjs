@@ -30,6 +30,33 @@ function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
+function invoke(handlerModule, { method = 'POST', body = null, headers = {}, query = {} } = {}) {
+  return new Promise((resolve, reject) => {
+    const res = {
+      _status: 200,
+      _body: null,
+      _headers: {},
+      status(s) {
+        this._status = s;
+        return this;
+      },
+      setHeader(k, v) {
+        this._headers[String(k).toLowerCase()] = v;
+      },
+      json(b) {
+        this._body = b;
+        resolve({ status: this._status, body: b, headers: this._headers });
+        return this;
+      },
+      end() {
+        resolve({ status: this._status, body: null, headers: this._headers });
+        return this;
+      },
+    };
+    Promise.resolve(handlerModule.default({ method, body, headers, query }, res)).catch(reject);
+  });
+}
+
 function checkManifest({ kind, code, route, moduleCodes }) {
   const folder = kind === 'category' ? 'categories' : `${kind}s`;
   const manifestFile = path.join(demoDir, folder, `${slug(code)}.json`);
@@ -113,6 +140,13 @@ for (const unit of representative) {
   if (!resolved.module_codes.length) fail(`${unit.unit_type}:${unit.unit_code} resolved zero modules`);
 }
 
+try {
+  await runDemoUnit({ unit_type: '../../private', unit_code: 'webform_autoreply' });
+  fail('invalid demo unit_type was accepted');
+} catch (err) {
+  if (!String(err.message || err).includes('unit_type invalid')) fail('invalid demo unit_type returned the wrong error');
+}
+
 await resetTenantStore();
 resetEventBus();
 for (const unit of representative) {
@@ -124,6 +158,45 @@ for (const unit of representative) {
   }
   if (!trace.runs.some((run) => run.workflow_result?.status === 'completed' || run.workflow_result?.status === 'idempotent_ok')) {
     fail(`${unit.unit_type}:${unit.unit_code} did not complete any workflow`);
+  }
+}
+
+const createSessionHandler = await import('../api/demo/create-session.js');
+const runModuleHandler = await import('../api/demo/run-module.js');
+{
+  const r = await invoke(createSessionHandler, {
+    body: { unit_type: 'module', unit_code: 'x'.repeat(101) },
+  });
+  if (r.status !== 400 || !String(r.body?.details || '').includes('unit_code too long')) {
+    fail('demo create-session did not reject oversized unit_code');
+  }
+}
+{
+  const r = await invoke(runModuleHandler, {
+    body: {
+      unit_type: 'module',
+      unit_code: 'webform_autoreply',
+      payload: { blob: 'x'.repeat(60_000) },
+    },
+  });
+  if (r.status !== 413 || r.body?.error !== 'payload_too_large') {
+    fail('demo run-module did not cap request body size');
+  }
+}
+for (let i = 0; i < 30; i += 1) {
+  const r = await invoke(runModuleHandler, {
+    headers: { 'x-forwarded-for': '198.51.100.77' },
+    body: { unit_type: 'module' },
+  });
+  if (r.status === 429) fail('demo run-module rate limit fired too early');
+}
+{
+  const r = await invoke(runModuleHandler, {
+    headers: { 'x-forwarded-for': '198.51.100.77' },
+    body: { unit_type: 'module' },
+  });
+  if (r.status !== 429 || r.headers['retry-after'] !== '600') {
+    fail('demo run-module did not throttle repeated public attempts');
   }
 }
 

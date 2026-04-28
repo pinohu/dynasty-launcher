@@ -7,6 +7,20 @@ import { createTenant, getTenant, setTenantCapability } from '../tenants/_store.
 
 const sessions = new Map();
 const traces = new Map();
+const ALLOWED_UNIT_TYPES = new Set([
+  'module',
+  'category',
+  'pack',
+  'bundle',
+  'blueprint',
+  'suite',
+  'edition',
+  'plan',
+  'tier',
+]);
+const MAX_CODE_CHARS = 100;
+const MAX_PAYLOAD_KEYS = 40;
+const MAX_PAYLOAD_STRING_CHARS = 1000;
 
 function id(prefix) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -16,6 +30,36 @@ function normalizeCode(code) {
   return String(code || '')
     .trim()
     .replace(/-/g, '_');
+}
+
+function normalizeUnitType(unitType) {
+  const value = normalizeCode(unitType || 'module');
+  if (!ALLOWED_UNIT_TYPES.has(value)) throw new Error('unit_type invalid');
+  return value;
+}
+
+function limitedCode(label, value, { required = false } = {}) {
+  const text = String(value || '').trim();
+  if (required && !text) throw new Error(`${label} required`);
+  if (text.length > MAX_CODE_CHARS) throw new Error(`${label} too long`);
+  return text || null;
+}
+
+function sanitizeDemoPayload(payload) {
+  if (payload == null) return null;
+  if (typeof payload !== 'object' || Array.isArray(payload)) throw new Error('payload object required');
+  const entries = Object.entries(payload);
+  if (entries.length > MAX_PAYLOAD_KEYS) throw new Error('payload has too many keys');
+  const out = {};
+  for (const [key, value] of entries) {
+    const safeKey = String(key || '').slice(0, 80);
+    if (!safeKey) continue;
+    if (typeof value === 'string') out[safeKey] = value.slice(0, MAX_PAYLOAD_STRING_CHARS);
+    else if (typeof value === 'number' || typeof value === 'boolean' || value == null) out[safeKey] = value;
+    else if (Array.isArray(value)) out[safeKey] = value.slice(0, 20).map((item) => String(item).slice(0, 200));
+    else out[safeKey] = String(value).slice(0, 200);
+  }
+  return out;
 }
 
 function slug(value) {
@@ -168,6 +212,9 @@ export async function createDemoSession({
   unit_code = null,
   blueprint_code = 'hvac',
 } = {}) {
+  unit_type = normalizeUnitType(unit_type);
+  unit_code = limitedCode('unit_code', unit_code);
+  blueprint_code = limitedCode('blueprint_code', blueprint_code) || 'hvac';
   const tenant = await createTenant({
     business_name: 'Your Deputy Demo Sandbox',
     business_type: blueprint_code,
@@ -275,11 +322,15 @@ export async function runDemoUnit({
   payload = null,
   limit = 12,
 } = {}) {
-  if (!unit_code) throw new Error('unit_code required');
+  session_id = limitedCode('session_id', session_id);
+  unit_type = normalizeUnitType(unit_type);
+  unit_code = limitedCode('unit_code', unit_code, { required: true });
+  payload = sanitizeDemoPayload(payload);
+  limit = Math.min(Math.max(1, Number(limit) || 12), 25);
   const session = await ensureSession(session_id, unit_type, unit_code);
   const tenant = await getTenant(session.tenant_id);
   const resolved = collectUnitModules({ unit_type, unit_code });
-  const selected = resolved.modules.slice(0, Math.max(1, Number(limit) || 12));
+  const selected = resolved.modules.slice(0, limit);
   const runs = [];
   const since = new Date().toISOString();
 

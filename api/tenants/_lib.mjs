@@ -25,16 +25,40 @@ export function methodGuard(req, res, allowed) {
   return true;
 }
 
-export async function readBody(req) {
-  if (req.body && typeof req.body === 'object') return req.body;
+export async function readBody(req, { maxBytes = 1_000_000 } = {}) {
+  if (req.body && typeof req.body === 'object') {
+    const bodySize = Buffer.byteLength(JSON.stringify(req.body));
+    if (bodySize > maxBytes) {
+      const err = new Error('payload_too_large');
+      err.code = 'payload_too_large';
+      throw err;
+    }
+    return req.body;
+  }
   return new Promise((resolve, reject) => {
     let buf = '';
-    req.on('data', (chunk) => { buf += chunk; });
+    let done = false;
+    req.on('data', (chunk) => {
+      if (done) return;
+      buf += chunk;
+      if (Buffer.byteLength(buf) > maxBytes) {
+        done = true;
+        const err = new Error('payload_too_large');
+        err.code = 'payload_too_large';
+        reject(err);
+      }
+    });
     req.on('end', () => {
+      if (done) return;
+      done = true;
       if (!buf) return resolve({});
       try { resolve(JSON.parse(buf)); } catch (e) { reject(e); }
     });
-    req.on('error', reject);
+    req.on('error', (err) => {
+      if (done) return;
+      done = true;
+      reject(err);
+    });
   });
 }
 
