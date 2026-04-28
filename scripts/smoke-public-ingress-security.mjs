@@ -124,6 +124,18 @@ for (let i = 0; i < 60; i += 1) {
   );
 }
 
+{
+  const files = ['api/admin.js', 'api/ai.js', 'api/health.js', 'api/provision.js'];
+  const offenders = files.filter((file) =>
+    /generativelanguage\.googleapis\.com[^`'"]*\?key=/.test(readFileSync(file, 'utf8')),
+  );
+  log(
+    offenders.length === 0,
+    'Google AI keys are not placed in request URLs',
+    offenders.length ? offenders.join(',') : 'ok',
+  );
+}
+
 console.log('------------------------------------------------------------');
 if (failures) {
   console.error(`FAIL - ${failures} public ingress security check(s) failed.`);

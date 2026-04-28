@@ -31,8 +31,8 @@ async function freeLLM(prompt, maxTokens = 4000) {
   // 1) Google Gemini (AI Studio — multiple keys for rotation)
   for (const key of [gemini1, gemini2].filter(Boolean)) {
     try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: Math.min(maxTokens, 8192), temperature: 0.7 } })
       });
       if (r.ok) {
