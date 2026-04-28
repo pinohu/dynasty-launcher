@@ -33,18 +33,20 @@ textarea{min-height:88px}
 .section{padding:26px 0;border-top:1px solid rgba(255,255,255,.08);margin-top:26px}
 @media(max-width:860px){main{padding-top:82px}.hero,.grid,.grid.two{grid-template-columns:1fr}.btn{width:100%}}
 </style>
+<link rel="stylesheet" href="/design-system.css">
 </head>
 <body>
 <main id="main-content">
   <section class="hero">
     <div>
-      <div class="eyebrow">Created and launched</div>
+      <div class="eyebrow">Live customer deliverable</div>
       <h1 id="title">Provisioned deliverable</h1>
       <p class="lead" id="outcome">Loading customer-specific runtime...</p>
-      <p><span class="ok">Live:</span> this page is generated from the production provisioning API response. Secrets are never placed in the public launch URL.</p>
+      <p><span class="ok">Live:</span> this page is loaded from the production launch runtime. The lead form below saves server-side and triggers the active workflow dispatcher.</p>
     </div>
     <form class="panel" id="lead-form">
-      <h2>Lead capture is active</h2>
+      <h2>Test lead capture</h2>
+      <p>Submit a real inquiry to confirm the launched runtime is usable. This creates a server-side lead for this launch.</p>
       <label for="lead-name">Name</label>
       <input id="lead-name" name="name" required>
       <label for="lead-contact">Phone or email</label>
@@ -100,7 +102,7 @@ textarea{min-height:88px}
     activeLaunch = data;
     document.title = data.profile.business_name + ' - Launched Deliverable';
     document.getElementById('title').textContent = data.profile.business_name + ' ' + data.offer.name;
-    document.getElementById('outcome').textContent = data.offer.outcome;
+    document.getElementById('outcome').textContent = data.offer.outcome + ' This launch is stored server-side as ' + data.launch_id + '.';
     document.getElementById('components').innerHTML = (data.components || []).map(function(component) {
       return '<article class="card"><span class="tag">' + esc(component.status) + '</span><h3>' + esc(component.name) + '</h3><p>' + (component.public ? 'Public customer-facing surface.' : 'Operational runtime component.') + '</p></article>';
     }).join('');

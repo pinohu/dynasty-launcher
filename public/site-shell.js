@@ -5,17 +5,12 @@
 
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/app?returning=1", label: "Builder" },
-    { href: "/quiz", label: "Diagnostic" },
-    { href: "/marketplace", label: "Marketplace" },
-    { href: "/business-factory", label: "Factory" },
-    { href: "/live-deliverables", label: "Live Examples" },
-    { href: "/demo", label: "Demos" },
-    { href: "/deliverables", label: "Deliverables" },
+    { href: "/#choose", label: "Offers" },
+    { href: "/sign-up?offer=foundation-build", label: "Provision" },
+    { href: "/live-deliverables", label: "Live examples" },
+    { href: "/deliverables", label: "Inventory" },
     { href: "/maturity", label: "Maturity" },
-    { href: "/observability", label: "Observability" },
-    { href: "/for/", label: "Guides" },
-    { href: "/automations/modules/", label: "Modules" },
+    { href: "/business-factory", label: "Factory" },
   ];
 
   const sitemapGroups = [
@@ -149,7 +144,7 @@
         </nav>
         <div class="yd-shell-actions">
           <a class="yd-link-muted" href="/sign-in">Sign in</a>
-          <a class="yd-cta" href="/quiz">Find my path</a>
+          <a class="yd-cta" href="/sign-up?offer=foundation-build">Provision</a>
         </div>
         <button class="yd-menu-button" type="button" aria-label="Open menu" aria-controls="yd-mobile-menu" aria-expanded="false">Menu</button>
       </div>
@@ -182,7 +177,7 @@
         <div class="yd-footer-grid">
           <section class="yd-footer-col" aria-labelledby="yd-footer-brand">
             <div class="yd-footer-brand" id="yd-footer-brand">Your Deputy</div>
-            <p class="yd-footer-copy">Business launch control plane: validation, generated launch manifests, niche website and funnel planning, revenue catalog specs, CRM and RevOps modules, payments, onboarding, analytics, AI/MCP-ready interfaces, workflow templates, durable job queues, and explicit production readiness checks.</p>
+            <p class="yd-footer-copy">Operational launch system for paid deliverables: credential intake, durable launch records, runtime pages, lead capture, activated modules, workflow templates, generated files, integration receipts, and explicit production readiness checks.</p>
           </section>
           ${sitemapGroups.map((group) => `
             <section class="yd-footer-col" aria-labelledby="yd-footer-${group.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}">

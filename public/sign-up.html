@@ -34,19 +34,21 @@ textarea{min-height:92px;resize:vertical}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--ok);margin-top:7px;flex:0 0 auto}
 @media(max-width:840px){main{padding-top:82px}.hero{grid-template-columns:1fr}.btn.secondary{margin-left:0;width:100%}.btn{width:100%}}
 </style>
+<link rel="stylesheet" href="/design-system.css">
 </head>
 <body>
 <main id="main-content">
   <section class="hero">
     <div>
-      <div class="eyebrow">Automatic provisioning</div>
-      <h1>Pay, fill out the credential form, and receive a launched deliverable.</h1>
-      <p class="lead">The customer does not receive only a manifest or brief. Those are included as proof, but the paid outcome is a created and launched system: pages, forms, workflows, CRM seed data, templates, runtime files, and integration receipts.</p>
-      <p>The form below changes by offer and asks for the exact customer-owned credentials needed for the purchased deliverable. Secrets are validated server-side and never placed in the public launch URL.</p>
+      <div class="eyebrow">Paid customer handoff</div>
+      <h1>Provision the deliverable you bought.</h1>
+      <p class="lead">Choose the purchased offer, paste the paid access token, and provide the customer-owned credentials needed to launch it. The backend creates the launch record, runtime page, lead form, workflow templates, CRM seed data, generated files, and integration receipt.</p>
+      <p>This is not a demo path. When provisioning succeeds, the customer receives a public launched URL and a server-side runtime record. Vendor actions still require valid customer-owned accounts and credentials.</p>
       <p><a href="/live-deliverables">See every full live deliverable example</a></p>
     </div>
     <form class="panel" id="instant-form">
       <h2>Provision paid deliverable</h2>
+      <p>Complete the fields below after checkout. Secret fields are sent to the server only and are never placed in the public launch URL.</p>
       <label for="offer">Offer</label>
       <select id="offer" name="offer">
         <option value="score-free">Free Idea Score</option>
@@ -62,14 +64,18 @@ textarea{min-height:92px;resize:vertical}
         <option value="edition-field-service">Field Service Edition</option>
         <option value="setup-starter">Starter Setup</option>
       </select>
-      <label for="business">Business name or market</label>
-      <input id="business" name="business" value="Acme HVAC Recovery">
+      <div id="schema-summary" class="yds-schema-summary" aria-live="polite">
+        <strong>Loading selected offer...</strong>
+      </div>
+      <label for="business">Business name</label>
+      <input id="business" name="business" placeholder="Acme HVAC Recovery" autocomplete="organization" required>
       <label for="buyer">Target buyer</label>
-      <input id="buyer" name="buyer" value="multi-truck HVAC owner">
+      <input id="buyer" name="buyer" placeholder="Multi-truck HVAC owner">
       <label for="brief">Pain or goal</label>
-      <textarea id="brief" name="brief">Missed urgent calls create immediate revenue loss, and paid leads go cold before the office can follow up.</textarea>
+      <textarea id="brief" name="brief" placeholder="Missed urgent calls create immediate revenue loss, and paid leads go cold before the office can follow up."></textarea>
       <label for="access-token">Paid access token</label>
-      <input id="access-token" name="access_token" type="password" placeholder="Provided after checkout">
+      <input id="access-token" name="access_token" type="password" placeholder="Paste the token issued after checkout" autocomplete="off" required>
+      <span class="yds-field-help">Admin authorization also works for internal provisioning. Do not put this token in a URL you share.</span>
       <div id="credential-fields"></div>
       <button class="btn" type="submit">Provision and launch now</button>
       <a class="btn secondary" href="/api/deliverables/provision?offer=foundation-build">Open credential schema</a>
@@ -93,6 +99,7 @@ textarea{min-height:92px;resize:vertical}
   const summary = document.getElementById('result-summary');
   const steps = document.getElementById('result-steps');
   const files = document.getElementById('result-files');
+  const schemaSummary = document.getElementById('schema-summary');
   const params = new URLSearchParams(window.location.search);
   if (params.get('offer')) document.getElementById('offer').value = params.get('offer');
   if (params.get('access_token')) document.getElementById('access-token').value = params.get('access_token');
@@ -123,18 +130,25 @@ textarea{min-height:92px;resize:vertical}
     const offer = document.getElementById('offer').value;
     const container = document.getElementById('credential-fields');
     container.innerHTML = '<p>Loading required credentials...</p>';
+    schemaSummary.innerHTML = '<strong>Loading selected offer...</strong>';
     const response = await fetch('/api/deliverables/provision?offer=' + encodeURIComponent(offer));
     const schema = await response.json();
     if (!schema.ok) {
       container.innerHTML = '<p>Could not load provisioning schema.</p>';
+      schemaSummary.innerHTML = '<strong>Schema unavailable.</strong><span>Try another offer or refresh the page.</span>';
       return;
     }
+    const modules = schema.modules || [];
+    const capabilities = schema.capabilities || [];
+    schemaSummary.innerHTML =
+      '<strong>' + esc(schema.offer.name) + '</strong>' +
+      '<span>' + esc(schema.offer.outcome) + '</span>' +
+      '<span>' + modules.length + ' modules activated when credentials are valid. ' + capabilities.length + ' capability groups required.</span>';
     container.innerHTML = '<h3>Required provisioning inputs</h3>' + schema.credential_fields.filter(function(field) {
       return field.key !== 'business_name';
     }).map(function(field) {
       const type = field.type === 'password' ? 'password' : field.type === 'checkbox' ? 'checkbox' : field.type;
-      const checked = field.type === 'checkbox' ? ' checked' : '';
-      const sample = {
+      const placeholder = {
         owner_name: 'Jordan Lee',
         owner_email: 'owner@example.com',
         public_phone: '+15551234567',
@@ -146,14 +160,22 @@ textarea{min-height:92px;resize:vertical}
         booking_url: 'https://calendar.example.com/acme',
         website_url: 'https://example.com',
         google_review_url: 'https://g.page/r/example/review',
-        twilio_account_sid: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        twilio_account_sid: 'Customer Twilio Account SID',
+        twilio_auth_token: 'Customer Twilio Auth Token',
         twilio_from_number: '+15551234567',
+        stripe_secret_key: 'Customer Stripe secret key',
+        resend_api_key: 'Customer Resend API key',
         stripe_price_id: 'price_123',
         invoice_sender_email: 'billing@example.com',
         estimate_sender_email: 'estimates@example.com'
-      }[field.key] || '';
-      const value = field.secret ? 'value="provided-to-server-only"' : 'value="' + esc(sample) + '"';
-      return '<label for="cred-' + esc(field.key) + '">' + esc(field.label) + '</label><input id="cred-' + esc(field.key) + '" name="' + esc(field.key) + '" type="' + esc(type) + '"' + (type === 'checkbox' ? checked : ' ' + value) + '>';
+      }[field.key] || field.label;
+      const required = field.required ? ' required' : '';
+      const help = field.secret
+        ? 'This secret is stored server-side for provisioning and redacted from public output.'
+        : field.type === 'checkbox'
+          ? 'Required authorization before the system can provision this part of the deliverable.'
+          : 'Used to create the customer-specific runtime and handoff receipt.';
+      return '<label for="cred-' + esc(field.key) + '">' + esc(field.label) + '</label><span class="yds-field-help">' + esc(help) + '</span><input id="cred-' + esc(field.key) + '" name="' + esc(field.key) + '" type="' + esc(type) + '" placeholder="' + esc(placeholder) + '"' + required + '>';
     }).join('');
   }
 

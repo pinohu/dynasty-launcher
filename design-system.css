@@ -1,0 +1,312 @@
+:root {
+  --yds-canvas: #f6f7f9;
+  --yds-surface: #ffffff;
+  --yds-surface-alt: #f1f4f8;
+  --yds-ink: #15171c;
+  --yds-text: #20232b;
+  --yds-muted: #5f6876;
+  --yds-faint: #7b8493;
+  --yds-border: #dce1ea;
+  --yds-border-strong: #bfc7d4;
+  --yds-navy: #182235;
+  --yds-blue: #2454b8;
+  --yds-blue-hover: #1c4496;
+  --yds-amber: #b88718;
+  --yds-amber-soft: #fff4d7;
+  --yds-green: #15803d;
+  --yds-green-soft: #eaf8ef;
+  --yds-red: #b42318;
+  --yds-red-soft: #feedea;
+  --yds-shadow: 0 16px 42px rgba(24, 34, 53, 0.08);
+  --yds-radius: 8px;
+  --yds-radius-lg: 12px;
+}
+
+html {
+  background: var(--yds-canvas);
+}
+
+body {
+  background: var(--yds-canvas) !important;
+  color: var(--yds-text) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--yds-blue) !important;
+}
+
+a:visited {
+  color: #553c9a !important;
+}
+
+a:hover {
+  color: var(--yds-blue-hover) !important;
+}
+
+main,
+.wrap {
+  width: min(1180px, calc(100% - 36px)) !important;
+  max-width: 1180px !important;
+}
+
+main {
+  padding-top: 74px !important;
+}
+
+h1,
+h2,
+h3,
+.section-title {
+  color: var(--yds-ink) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+h1 {
+  font-size: clamp(40px, 5.8vw, 72px) !important;
+  line-height: 0.98 !important;
+  font-weight: 760 !important;
+}
+
+h2,
+.section-title {
+  font-size: clamp(26px, 3vw, 40px) !important;
+  line-height: 1.08 !important;
+  font-weight: 740 !important;
+}
+
+h3 {
+  font-size: 18px !important;
+  line-height: 1.25 !important;
+  font-weight: 760 !important;
+}
+
+p,
+.lead,
+.section-desc,
+.desc,
+.note,
+.mini {
+  color: var(--yds-muted) !important;
+}
+
+.lead {
+  font-size: clamp(18px, 2vw, 21px) !important;
+  line-height: 1.55 !important;
+}
+
+.eyebrow,
+.tag,
+.section-count,
+.hero-d .ct .l {
+  color: var(--yds-blue) !important;
+  letter-spacing: 0.08em !important;
+}
+
+.hero,
+.hero-d {
+  min-height: auto !important;
+  padding-top: 34px !important;
+  padding-bottom: 34px !important;
+}
+
+.panel,
+.card,
+.item,
+.path,
+.step,
+.visual,
+.file,
+.hero-card,
+.yds-callout,
+.yds-receipt {
+  color: var(--yds-text) !important;
+  background: var(--yds-surface) !important;
+  border: 1px solid var(--yds-border) !important;
+  border-radius: var(--yds-radius) !important;
+  box-shadow: var(--yds-shadow) !important;
+}
+
+.card,
+.item,
+.step,
+.file {
+  box-shadow: none !important;
+}
+
+.card:hover,
+.item:hover,
+.path:hover {
+  border-color: var(--yds-border-strong) !important;
+  box-shadow: var(--yds-shadow) !important;
+}
+
+.grid {
+  gap: 14px !important;
+}
+
+.path {
+  align-items: start !important;
+  grid-template-columns: 120px minmax(0, 1fr) 178px !important;
+}
+
+.price,
+.hero-d .ct .n {
+  color: var(--yds-navy) !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 780 !important;
+}
+
+.btn,
+.btn-p,
+button.btn,
+input[type="submit"] {
+  min-height: 44px !important;
+  border-radius: var(--yds-radius) !important;
+  background: var(--yds-blue) !important;
+  border: 1px solid var(--yds-blue) !important;
+  color: #fff !important;
+  font-weight: 760 !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+.btn:hover,
+.btn-p:hover,
+button.btn:hover {
+  background: var(--yds-blue-hover) !important;
+  border-color: var(--yds-blue-hover) !important;
+  color: #fff !important;
+  transform: none !important;
+}
+
+.btn.secondary,
+.btn-g {
+  background: var(--yds-surface) !important;
+  border-color: var(--yds-border-strong) !important;
+  color: var(--yds-ink) !important;
+}
+
+.warning,
+.yds-warning {
+  background: var(--yds-amber-soft) !important;
+  border: 1px solid rgba(184, 135, 24, 0.28) !important;
+  border-left: 4px solid var(--yds-amber) !important;
+  color: #684a0b !important;
+}
+
+.ok,
+.yds-success {
+  color: var(--yds-green) !important;
+}
+
+label {
+  color: var(--yds-ink) !important;
+  font-weight: 740 !important;
+}
+
+input,
+select,
+textarea {
+  background: #fff !important;
+  color: var(--yds-ink) !important;
+  border: 1px solid var(--yds-border-strong) !important;
+  border-radius: var(--yds-radius) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(36, 84, 184, 0.28) !important;
+  outline-offset: 2px !important;
+  border-color: var(--yds-blue) !important;
+}
+
+#credential-fields {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--yds-border);
+}
+
+#credential-fields h3 {
+  margin: 0 !important;
+}
+
+.yds-field-help {
+  display: block;
+  color: var(--yds-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: -4px;
+}
+
+.yds-schema-summary {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 4px;
+  padding: 14px;
+  background: var(--yds-surface-alt);
+  border: 1px solid var(--yds-border);
+  border-radius: var(--yds-radius);
+}
+
+.yds-schema-summary strong {
+  color: var(--yds-ink);
+}
+
+.section {
+  border-top-color: var(--yds-border) !important;
+}
+
+.topnav {
+  background: var(--yds-surface);
+  border-bottom: 1px solid var(--yds-border);
+}
+
+.cats a {
+  background: var(--yds-surface) !important;
+  border-color: var(--yds-border) !important;
+  color: var(--yds-muted) !important;
+}
+
+.cats a:hover {
+  background: var(--yds-surface-alt) !important;
+  color: var(--yds-blue) !important;
+}
+
+.section-icon {
+  display: none !important;
+}
+
+code,
+pre {
+  color: var(--yds-ink) !important;
+  background: var(--yds-surface-alt) !important;
+  border-radius: 6px;
+}
+
+.bar {
+  background: linear-gradient(90deg, var(--yds-blue), var(--yds-green), var(--yds-amber)) !important;
+}
+
+@media (max-width: 860px) {
+  main,
+  .wrap {
+    width: min(100% - 28px, 1180px) !important;
+  }
+
+  main {
+    padding-top: 72px !important;
+  }
+
+  .path {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -212,3 +212,11 @@ See `DYNASTY_LAUNCHER_V3_FINAL.md` for the complete 720-line spec covering:
 - **Strategy frameworks:** 38 strategy frameworks are now available in `FW_PROMPTS` (core 8 surfaced by default + 30 in the "More strategy frameworks" expandable section of the builder). Scoring uses only the frameworks the user toggled; cross-framework synthesis runs on whatever set was selected.
 - **L2 Vercel recovery:** `dynastyParseVercelFailLog` in `app.html` classifies build failures into 6 diagnostic classes (`module_not_found`, `missing_dependency`, `ts_error`, `syntax_error`, `env_var_missing`, `eslint_error`, `unknown`). `module_not_found` auto-deletes orphan imports; `missing_dependency` patches `package.json`. Other classes surface the real error line to the user instead of "log has no parseable Module-not-found orphans".
 - **Multi-model pivot review:** All 4 phases (Independent Analysis → Cross-Review → Consensus → Devil's Advocate) now fan out across every available model in parallel (Phase 4 previously ran only DeepSeek-R1). A live stream panel under the pipeline visual shows each model's output as it lands — users see per-model insights in real time instead of waiting for a single end-of-run blob.
+
+## Design System
+Always read `DESIGN.md` before making any visual or UI decisions.
+All font choices, colors, spacing, form behavior, offer copy, and delivery-truth rules are defined there.
+Use `design-system.css` and `site-shell.css` for shared public-page styling before adding new inline styles.
+Read `UX_COPY.md` before changing paid-offer, provisioning, checkout, or launched-deliverable copy.
+Do not deviate from the operational SaaS design direction without explicit user approval.
+In QA mode, flag any code or page copy that promises more than the backend can create, store, activate, or expose through a public URL.

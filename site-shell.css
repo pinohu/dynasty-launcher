@@ -1,16 +1,16 @@
  :root {
-   --yd-bg: #0c0c14;
-   --yd-panel: #16161b;
-   --yd-card: #1e1e2a;
-   --yd-border: rgba(255, 255, 255, 0.14);
-   --yd-text: #fafaf9;
-   --yd-muted: #a1a1aa;
-   --yd-dim: #71717a;
-   --yd-gold: #c9a84c;
-   --yd-gold-strong: #e6c766;
-   --yd-green: #22c55e;
-   --yd-focus: #f4d36d;
-   --yd-header-height: 72px;
+   --yd-bg: #f6f7f9;
+   --yd-panel: #ffffff;
+   --yd-card: #f1f4f8;
+   --yd-border: #dce1ea;
+   --yd-text: #15171c;
+   --yd-muted: #5f6876;
+   --yd-dim: #7b8493;
+   --yd-gold: #2454b8;
+   --yd-gold-strong: #1c4496;
+   --yd-green: #15803d;
+   --yd-focus: #2454b8;
+   --yd-header-height: 68px;
  }
 
  html {
@@ -48,8 +48,8 @@
    top: 12px;
    z-index: 100000;
    transform: translateY(-180%);
-   background: var(--yd-focus);
-   color: #09090b;
+   background: #ffffff;
+   color: var(--yd-text);
    padding: 10px 14px;
    border-radius: 8px;
    font: 700 14px/1 system-ui, -apple-system, Segoe UI, sans-serif;
@@ -59,7 +59,7 @@
 
  .yd-skip:focus {
    transform: translateY(0);
-   outline: 2px solid #09090b;
+   outline: 2px solid var(--yd-focus);
    outline-offset: 2px;
  }
 
@@ -70,10 +70,11 @@
    right: 0;
    z-index: 99999;
    min-height: var(--yd-header-height);
-   background: rgba(12, 12, 20, 0.92);
-   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-   backdrop-filter: blur(18px);
-   -webkit-backdrop-filter: blur(18px);
+   background: rgba(255, 255, 255, 0.96);
+   border-bottom: 1px solid var(--yd-border);
+   box-shadow: 0 10px 28px rgba(24, 34, 53, 0.07);
+   backdrop-filter: blur(14px);
+   -webkit-backdrop-filter: blur(14px);
  }
 
  .yd-shell-inner {
@@ -102,9 +103,9 @@
    width: 34px;
    height: 34px;
    border-radius: 10px;
-   color: #09090b;
-   background: linear-gradient(135deg, var(--yd-gold-strong), var(--yd-gold));
-   box-shadow: 0 8px 24px rgba(201, 168, 76, 0.18);
+   color: #ffffff;
+   background: var(--yd-gold);
+   box-shadow: none;
  }
 
  .yd-primary-nav {
@@ -132,7 +133,7 @@
  .yd-primary-nav a:hover,
  .yd-primary-nav a[aria-current="page"] {
    color: var(--yd-text);
-   background: rgba(255, 255, 255, 0.055);
+   background: #eef3ff;
  }
 
  .yd-shell-actions {
@@ -156,12 +157,12 @@
    max-width: 100%;
    padding: 0 16px;
    border-radius: 9px;
-   color: #09090b;
+   color: #ffffff;
    background: var(--yd-gold);
    font: 750 13px/1 system-ui, -apple-system, Segoe UI, sans-serif;
    line-height: 1.2;
    text-align: center;
-   box-shadow: 0 8px 24px rgba(201, 168, 76, 0.16);
+   box-shadow: none;
  }
 
  .yd-menu-button {
@@ -172,7 +173,7 @@
    height: 44px;
    border-radius: 10px;
    border: 1px solid var(--yd-border);
-   background: rgba(255, 255, 255, 0.035);
+   background: #ffffff;
    color: var(--yd-text);
    cursor: pointer;
    font: 800 18px/1 system-ui, -apple-system, Segoe UI, sans-serif;
@@ -180,8 +181,8 @@
 
  .yd-mobile-panel {
    display: none;
-   border-top: 1px solid rgba(255, 255, 255, 0.08);
-   background: #0d0d15;
+   border-top: 1px solid var(--yd-border);
+   background: #ffffff;
  }
 
  .yd-mobile-panel[data-open="true"] {
@@ -205,8 +206,8 @@
    align-items: center;
    padding: 10px 12px;
    border-radius: 10px;
-   background: rgba(255, 255, 255, 0.03);
-   border: 1px solid rgba(255, 255, 255, 0.07);
+   background: #f6f7f9;
+   border: 1px solid var(--yd-border);
    font: 650 14px/1.25 system-ui, -apple-system, Segoe UI, sans-serif;
    overflow-wrap: anywhere;
  }
@@ -214,15 +215,13 @@
  .yd-mobile-panel a:hover,
  .yd-mobile-panel a:focus-visible {
    color: var(--yd-text);
-   border-color: rgba(201, 168, 76, 0.32);
+   border-color: rgba(36, 84, 184, 0.32);
  }
 
  .yd-site-footer {
    color: var(--yd-muted);
-   background:
-     radial-gradient(circle at 20% 0%, rgba(201, 168, 76, 0.08), transparent 28rem),
-     #09090f;
-   border-top: 1px solid rgba(255, 255, 255, 0.12);
+   background: #ffffff;
+   border-top: 1px solid var(--yd-border);
    margin-top: 64px;
  }
 
@@ -278,7 +277,7 @@
    gap: 14px;
    margin-top: 34px;
    padding-top: 18px;
-   border-top: 1px solid rgba(255, 255, 255, 0.1);
+   border-top: 1px solid var(--yd-border);
    color: var(--yd-dim);
    font: 500 12px/1.5 system-ui, -apple-system, Segoe UI, sans-serif;
  }
@@ -296,9 +295,10 @@
    width: min(1240px, calc(100% - 32px));
    margin: 54px auto 0;
    padding: 28px;
-   border: 1px solid rgba(255, 255, 255, 0.12);
-   border-radius: 18px;
-   background: linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+   border: 1px solid var(--yd-border);
+   border-radius: 12px;
+   background: #ffffff;
+   box-shadow: 0 16px 42px rgba(24, 34, 53, 0.08);
  }
 
  .yd-site-map h2 {
@@ -320,15 +320,15 @@
  }
 
  .yd-site-map-card {
-   border: 1px solid rgba(255, 255, 255, 0.1);
-   border-radius: 14px;
-   background: rgba(0, 0, 0, 0.16);
+   border: 1px solid var(--yd-border);
+   border-radius: 8px;
+   background: #f6f7f9;
    padding: 16px;
  }
 
  .yd-site-map-card h3 {
    margin: 0 0 8px;
-   color: var(--yd-gold-strong);
+   color: var(--yd-text);
    font: 760 13px/1.2 system-ui, -apple-system, Segoe UI, sans-serif;
  }
 
@@ -341,7 +341,7 @@
  }
 
  .yd-site-map-card a:hover {
-   color: var(--yd-text);
+   color: var(--yd-gold-strong);
  }
 
  .yd-site-header a:focus-visible,
