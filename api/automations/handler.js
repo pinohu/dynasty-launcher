@@ -54,12 +54,23 @@ async function ensureSchema() {
       config_id text primary key,
       tenant_id text not null references tenants(tenant_id) on delete cascade,
       module_code text not null,
-      state text not null default 'enabled',
+      state text not null default 'disabled',
+      is_enabled boolean not null default false,
       settings jsonb not null default '{}'::jsonb,
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now(),
       unique (tenant_id, module_code)
     );
+    alter table automations_config add column if not exists state text;
+    alter table automations_config add column if not exists is_enabled boolean;
+    update automations_config
+      set state = case when coalesce(is_enabled, false) then 'enabled' else 'disabled' end
+      where state is null;
+    update automations_config set is_enabled = (state = 'enabled') where is_enabled is null;
+    alter table automations_config alter column state set default 'disabled';
+    alter table automations_config alter column is_enabled set default false;
+    alter table automations_config alter column state set not null;
+    alter table automations_config alter column is_enabled set not null;
     create index if not exists automations_config_tenant_idx on automations_config(tenant_id);
     create index if not exists automations_config_module_idx on automations_config(module_code);
 
@@ -166,9 +177,9 @@ async function activate(tenant_id, module_code, res) {
 
     const config_id = newId('aconf');
     const result = await pool().query(
-      `insert into automations_config (config_id, tenant_id, module_code, state, created_at, updated_at)
-       values ($1, $2, $3, 'enabled', $4, $5)
-       on conflict (tenant_id, module_code) do update set state = 'enabled', updated_at = $5
+      `insert into automations_config (config_id, tenant_id, module_code, state, is_enabled, created_at, updated_at)
+       values ($1, $2, $3, 'enabled', true, $4, $5)
+       on conflict (tenant_id, module_code) do update set state = 'enabled', is_enabled = true, updated_at = $5
        returning *`,
       [config_id, tenant_id, module_code, now(), now()],
     );
@@ -190,7 +201,7 @@ async function deactivate(tenant_id, module_code, res) {
 
     const result = await pool().query(
       `update automations_config
-       set state = 'disabled', updated_at = $1
+       set state = 'disabled', is_enabled = false, updated_at = $1
        where tenant_id = $2 and module_code = $3
        returning *`,
       [now(), tenant_id, module_code],
@@ -250,7 +261,7 @@ async function trigger(tenant_id, module_code, body, res) {
     if (!configs.length) {
       return res.status(404).json({ ok: false, error: 'Automation config not found' });
     }
-    if (configs[0].state !== 'enabled') {
+    if (configs[0].state !== 'enabled' && configs[0].is_enabled !== true) {
       return res.status(400).json({ ok: false, error: 'Automation is disabled' });
     }
 

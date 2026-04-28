@@ -6,9 +6,20 @@
 
 import fs from 'node:fs';
 
-const files = ['api/automations/handler.js', 'api/automations/webhook.js'];
+const automationRunFiles = [
+  'api/automations/handler.js',
+  'api/automations/webhook.js',
+  'api/tenants/provision-automations.js',
+];
 
-const requiredSql = [
+const automationConfigFiles = [
+  'api/automations/handler.js',
+  'api/tenants/provision-automations.js',
+  'api/tenants/_provision.mjs',
+  'api/tenants/upgrade-module.js',
+];
+
+const requiredAutomationRunSql = [
   'alter table automation_runs add column if not exists trigger_type text',
   'alter table automation_runs add column if not exists result jsonb',
   'alter table automation_runs add column if not exists webhook_source text',
@@ -16,6 +27,17 @@ const requiredSql = [
   'alter table automation_runs alter column tenant_id drop not null',
   'alter table automation_runs alter column module_code drop not null',
   'alter table automation_runs alter column trigger_type drop not null',
+];
+
+const requiredAutomationConfigSql = [
+  'alter table automations_config add column if not exists state text',
+  'alter table automations_config add column if not exists is_enabled boolean',
+  "set state = case when coalesce(is_enabled, false) then 'enabled' else 'disabled' end",
+  "update automations_config set is_enabled = (state = 'enabled') where is_enabled is null",
+  "alter table automations_config alter column state set default 'disabled'",
+  'alter table automations_config alter column is_enabled set default false',
+  'alter table automations_config alter column state set not null',
+  'alter table automations_config alter column is_enabled set not null',
 ];
 
 let failures = 0;
@@ -28,9 +50,16 @@ function log(ok, name, detail = '') {
 console.log('Check: automation schema compatibility guards');
 console.log('-'.repeat(60));
 
-for (const file of files) {
+for (const file of automationRunFiles) {
   const text = fs.readFileSync(file, 'utf8').toLowerCase();
-  for (const sql of requiredSql) {
+  for (const sql of requiredAutomationRunSql) {
+    log(text.includes(sql), `${file} includes ${sql}`);
+  }
+}
+
+for (const file of automationConfigFiles) {
+  const text = fs.readFileSync(file, 'utf8').toLowerCase();
+  for (const sql of requiredAutomationConfigSql) {
     log(text.includes(sql), `${file} includes ${sql}`);
   }
 }

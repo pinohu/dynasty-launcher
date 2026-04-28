@@ -62,6 +62,21 @@ function stripe() {
 
 const now = () => new Date().toISOString();
 
+async function ensureAutomationConfigCompatibility() {
+  await pool().query(`
+    ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS state text;
+    ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS is_enabled boolean;
+    UPDATE automations_config
+      SET state = CASE WHEN COALESCE(is_enabled, false) THEN 'enabled' ELSE 'disabled' END
+      WHERE state IS NULL;
+    UPDATE automations_config SET is_enabled = (state = 'enabled') WHERE is_enabled IS NULL;
+    ALTER TABLE automations_config ALTER COLUMN state SET DEFAULT 'disabled';
+    ALTER TABLE automations_config ALTER COLUMN is_enabled SET DEFAULT false;
+    ALTER TABLE automations_config ALTER COLUMN state SET NOT NULL;
+    ALTER TABLE automations_config ALTER COLUMN is_enabled SET NOT NULL;
+  `);
+}
+
 export const maxDuration = 45;
 
 export default async function handler(req, res) {
@@ -203,9 +218,10 @@ async function upgradeModule(tenant_id, module_code, module, payment_method_id) 
   // Enable in automations_config
   const p = pool();
   try {
+    await ensureAutomationConfigCompatibility();
     await p.query(
       `UPDATE automations_config
-       SET is_enabled = true, updated_at = $1
+       SET is_enabled = true, state = 'enabled', updated_at = $1
        WHERE tenant_id = $2 AND module_code = $3`,
       [now(), tenant_id, module_code]
     );

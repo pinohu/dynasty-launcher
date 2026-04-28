@@ -44,6 +44,7 @@ async function ensureAutomationTables() {
       config_id text PRIMARY KEY,
       tenant_id text NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
       module_code text NOT NULL,
+      state text NOT NULL DEFAULT 'disabled',
       is_enabled boolean NOT NULL DEFAULT false,
       settings jsonb NOT NULL DEFAULT '{}'::jsonb,
       quiet_hours_start time,
@@ -55,6 +56,16 @@ async function ensureAutomationTables() {
       updated_at timestamptz NOT NULL DEFAULT now(),
       UNIQUE (tenant_id, module_code)
     );
+    ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS state text;
+    ALTER TABLE automations_config ADD COLUMN IF NOT EXISTS is_enabled boolean;
+    UPDATE automations_config
+      SET state = CASE WHEN COALESCE(is_enabled, false) THEN 'enabled' ELSE 'disabled' END
+      WHERE state IS NULL;
+    UPDATE automations_config SET is_enabled = (state = 'enabled') WHERE is_enabled IS NULL;
+    ALTER TABLE automations_config ALTER COLUMN state SET DEFAULT 'disabled';
+    ALTER TABLE automations_config ALTER COLUMN is_enabled SET DEFAULT false;
+    ALTER TABLE automations_config ALTER COLUMN state SET NOT NULL;
+    ALTER TABLE automations_config ALTER COLUMN is_enabled SET NOT NULL;
     CREATE INDEX IF NOT EXISTS automations_config_tenant_idx ON automations_config (tenant_id);
     CREATE INDEX IF NOT EXISTS automations_config_module_idx ON automations_config (module_code);
   `);
