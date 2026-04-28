@@ -190,6 +190,20 @@ button.btn:hover {
   color: var(--yds-ink) !important;
 }
 
+.yd-cta,
+.yd-cta:visited {
+  background: var(--yds-blue) !important;
+  border: 1px solid var(--yds-blue) !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+.yd-cta:hover {
+  background: var(--yds-blue-hover) !important;
+  border-color: var(--yds-blue-hover) !important;
+  color: #ffffff !important;
+}
+
 .warning,
 .yds-warning {
   background: var(--yds-amber-soft) !important;
