@@ -22,6 +22,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
+  if (isWaitlistRateLimited(req)) {
+    res.setHeader('Retry-After', '600');
+    return res.status(429).json({ ok: false, error: 'Too many signup attempts. Try again later.' });
+  }
 
   const { email, name, tier_interest, source } = req.body || {};
   if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -85,7 +89,7 @@ export default async function handler(req, res) {
         });
         if (addResp.ok) results.email_added = true;
       }
-    } catch (e) {
+    } catch {
       results.acumba_note = 'Email list service temporarily unavailable';
     }
   }

@@ -1,3 +1,5 @@
+import { verifyAdminCredential } from './tenants/_auth.mjs';
+
 export const maxDuration = 60;
 
 // ── Neon DB Provisioner ───────────────────────────────────────────────────
@@ -22,7 +24,7 @@ async function neonRequest(apiKey, method, path, body) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-dynasty-admin-token');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-key, x-dynasty-admin-token');
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   let config = {};
@@ -30,19 +32,17 @@ export default async function handler(req, res) {
   const NEON_API_KEY = process.env.NEON_API_KEY || config.infrastructure?.neon_api_key;
   const action = req.query?.action || req.body?.action;
 
-  // Auth: require admin token for mutating actions
-  const ADMIN_SECRET = process.env.DYNASTY_ADMIN_TOKEN || process.env.ADMIN_TOKEN || '';
-  const reqToken = req.headers['x-dynasty-admin-token'] || req.body?.admin_token || '';
+  // Auth: require shared signed admin credentials for credential checks and mutations.
   const isMutating = action === 'create_project' || action === 'set_vercel_db';
-  if (isMutating) {
-    if (!ADMIN_SECRET) return res.status(500).json({ ok: false, error: 'Admin token not configured' });
-    if ((() => { try { const { timingSafeEqual } = require("crypto"); const a = Buffer.from(String(reqToken)); const b = Buffer.from(String(ADMIN_SECRET)); return a.length !== b.length || !timingSafeEqual(a, b); } catch { return true; } })()) return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  const isCredentialCheck = action === 'check';
+  if (isMutating || isCredentialCheck) {
+    const auth = verifyAdminCredential(req);
+    if (!auth.ok) return res.status(auth.status || 401).json({ ok: false, error: 'admin_auth_required' });
   }
 
   // ── CHECK / TEST KEY ─────────────────────────────────────────────────────
   // check is admin-gated to prevent credential oracle
   if (action === 'check') {
-    if (!ADMIN_SECRET || reqToken !== ADMIN_SECRET) return res.status(401).json({ ok: false, error: 'Admin auth required for check' });
     const keyMissing = !NEON_API_KEY || NEON_API_KEY.startsWith('REPLACE');
     if (keyMissing) return res.json({ ok: false, has_key: false,
       error: 'NEON_API_KEY not set. Get from console.neon.tech → Account Settings → API Keys',

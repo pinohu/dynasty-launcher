@@ -3,10 +3,35 @@
 
 const POSTHOG_KEY = process.env.POSTHOG_API_KEY || ''
 const POSTHOG_HOST = process.env.POSTHOG_HOST || 'https://us.i.posthog.com'
+const TELEMETRY_ATTEMPTS = new Map()
+const TELEMETRY_MAX = 60
+const TELEMETRY_WINDOW_MS = 10 * 60 * 1000
 
 function sanitizeValue(value, max = 256) {
   if (value == null) return ''
   return String(value).slice(0, max)
+}
+
+function getClientIp(req) {
+  const xf = (req.headers['x-forwarded-for'] || '').toString()
+  return xf.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown'
+}
+
+function isTelemetryRateLimited(req) {
+  const ip = getClientIp(req)
+  const now = Date.now()
+  const existing = TELEMETRY_ATTEMPTS.get(ip)
+  if (!existing || now - existing.windowStart > TELEMETRY_WINDOW_MS) {
+    TELEMETRY_ATTEMPTS.set(ip, { windowStart: now, count: 1 })
+    return false
+  }
+  existing.count += 1
+  if (TELEMETRY_ATTEMPTS.size > 5000) {
+    for (const [key, value] of TELEMETRY_ATTEMPTS) {
+      if (now - value.windowStart > TELEMETRY_WINDOW_MS) TELEMETRY_ATTEMPTS.delete(key)
+    }
+  }
+  return existing.count > TELEMETRY_MAX
 }
 
 function sanitizeObject(input, maxKeys = 60) {
@@ -30,6 +55,10 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' })
+  if (isTelemetryRateLimited(req)) {
+    res.setHeader('Retry-After', '600')
+    return res.status(429).json({ ok: false, error: 'Too many telemetry events. Try again later.' })
+  }
 
   const body = req.body || {}
   const event = sanitizeValue(body.event, 96)
