@@ -36,6 +36,7 @@
     "test:public-branding": "node scripts/check-public-branding.mjs",
     "test:deployment-repair-guards": "node scripts/check-deployment-repair-guards.mjs",
     "test:resumable-builds": "node scripts/check-resumable-builds.mjs",
+    "check:integrations": "node scripts/check-external-integrations.mjs",
     "test:prompts": "npx --yes promptfoo@0.120.19 eval -c promptfooconfig.yaml",
     "lint": "npm run lint:security",
     "lint:security": "biome check api/_ai_security.mjs api/github.js api/tenants/_auth.mjs api/tenants/issue-token.js scripts/check-admin-ui-security.mjs scripts/smoke-ai-security.mjs scripts/smoke-automation-webhook-security.mjs scripts/smoke-github-proxy-security.mjs scripts/smoke-admin-key-security.mjs scripts/smoke-checkout-security.mjs scripts/smoke-storefront-security.mjs scripts/smoke-tenant-auth.mjs",
