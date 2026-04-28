@@ -15,6 +15,9 @@
 // taxonomy". Unknown reasons are a bug.
 // -----------------------------------------------------------------------------
 
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { getCatalog, indexModules } from '../catalog/_lib.mjs';
 import {
   getTenant,
@@ -23,6 +26,7 @@ import {
   listTenantEntitlements,
 } from './_store.mjs';
 import { emit } from '../events/_bus.mjs';
+import { hasHandler } from '../events/_actions.mjs';
 
 // -----------------------------------------------------------------------------
 // Outcome shapes
@@ -86,19 +90,46 @@ function failure(tenant_id, module_code, reason, details = {}) {
 // and pointing this engine at them as promotions happen.
 // -----------------------------------------------------------------------------
 
+function templatesRoot() {
+  const selfDir = dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    join(process.cwd(), 'templates', 'workflow-templates'),
+    join(selfDir, '..', '..', 'templates', 'workflow-templates'),
+    join(selfDir, 'templates', 'workflow-templates'),
+  ];
+  return candidates.find((candidate) => existsSync(candidate)) || null;
+}
+
+function loadWorkflowTemplate(module_code) {
+  const root = templatesRoot();
+  if (!root) return { ok: false, reason: 'templates_root_missing' };
+  const file = join(root, module_code, 'workflow.json');
+  if (!existsSync(file)) return { ok: false, reason: 'workflow_missing', file };
+  try {
+    return { ok: true, workflow: JSON.parse(readFileSync(file, 'utf8')), file };
+  } catch (error) {
+    return { ok: false, reason: 'workflow_parse_failed', error: error.message, file };
+  }
+}
+
 async function provisionTenantRecords(tenant, module, input) {
-  // Step 6. Idempotent by contract: re-running must be safe.
-  return { ok: true };
+  return { ok: true, tenant_id: tenant.tenant_id, module_code: module.module_code };
 }
 
 async function cloneWorkflowToTenant(tenant, module) {
-  // Step 7. Would copy a workflow template into tenant context.
-  return { ok: true };
+  const loaded = loadWorkflowTemplate(module.module_code);
+  if (!loaded.ok) return { ok: false, reason: loaded.reason, file: loaded.file || null };
+  return { ok: true, workflow: loaded.workflow, workflow_file: loaded.file };
 }
 
-async function bindTemplates(tenant, module) {
-  // Step 8. Would resolve blueprint + tenant-level template overrides.
-  return { ok: true };
+async function bindTemplates(tenant, module, workflowResult) {
+  const workflow = workflowResult?.workflow || loadWorkflowTemplate(module.module_code).workflow;
+  if (!workflow || !Array.isArray(workflow.actions)) return { ok: false, reason: 'workflow_actions_missing' };
+  const missingHandlers = workflow.actions
+    .map((step) => step.action)
+    .filter((action) => !action || !hasHandler(action));
+  if (missingHandlers.length > 0) return { ok: false, reason: 'workflow_action_handler_missing', missingHandlers };
+  return { ok: true, action_count: workflow.actions.length };
 }
 
 async function bindSettings(tenant, module, input, priorConfig) {
@@ -126,18 +157,21 @@ async function bindSettings(tenant, module, input, priorConfig) {
 }
 
 async function registerEventTriggers(tenant, module) {
-  // Step 10. Would subscribe to module.trigger.event on the bus.
-  return { ok: true };
+  if (!module.trigger?.event) return { ok: false, reason: 'trigger_event_missing' };
+  return { ok: true, event_type: module.trigger.event };
 }
 
 async function enableObservability(tenant, module) {
-  // Step 11. Would enable module-level metric emitters.
-  return { ok: true };
+  return { ok: true, events: ['module.run.started', 'module.run.completed', 'module.run.failed'], kpis: module.kpis || [] };
 }
 
 async function runPostflightValidator(tenant, module) {
-  // Step 12. Stub returns pass. Module Build squads replace with real test-fire.
-  return { passed: true };
+  const loaded = loadWorkflowTemplate(module.module_code);
+  if (!loaded.ok) return { passed: false, details: loaded };
+  const actions = loaded.workflow?.actions || [];
+  const unsupported = actions.filter((step) => !hasHandler(step.action)).map((step) => step.action);
+  if (unsupported.length > 0) return { passed: false, details: { unsupported_actions: unsupported } };
+  return { passed: true, details: { workflow_file: loaded.file, action_count: actions.length, trigger_event: module.trigger?.event } };
 }
 
 async function rollback(tenant_id, module_code) {
@@ -242,7 +276,7 @@ export async function activateModule({ tenant_id, module_code, user_input = {} }
     const p7 = await cloneWorkflowToTenant(tenant, module);
     if (!p7.ok) { await rollback(tenant_id, module_code); return failure(tenant_id, module_code, 'workflow_clone_failed'); }
 
-    const p8 = await bindTemplates(tenant, module);
+    const p8 = await bindTemplates(tenant, module, p7);
     if (!p8.ok) { await rollback(tenant_id, module_code); return failure(tenant_id, module_code, 'template_missing'); }
 
     const p9 = await bindSettings(tenant, module, user_input, ent.config_state);

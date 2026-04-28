@@ -64,7 +64,7 @@
     },
     "api/tenants/activate-module.js": {
       "maxDuration": 30,
-      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/tenants/deactivate-module.js": {
       "maxDuration": 15,
@@ -92,7 +92,7 @@
     },
     "api/billing/webhook.js": {
       "maxDuration": 30,
-      "includeFiles": "{product/**/*.json,scripts/migrations/**/*.sql}"
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/billing/catalog-sync.js": {
       "maxDuration": 60,
