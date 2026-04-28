@@ -68,6 +68,8 @@ textarea{min-height:92px;resize:vertical}
       <input id="buyer" name="buyer" value="multi-truck HVAC owner">
       <label for="brief">Pain or goal</label>
       <textarea id="brief" name="brief">Missed urgent calls create immediate revenue loss, and paid leads go cold before the office can follow up.</textarea>
+      <label for="access-token">Paid access token</label>
+      <input id="access-token" name="access_token" type="password" placeholder="Provided after checkout">
       <div id="credential-fields"></div>
       <button class="btn" type="submit">Provision and launch now</button>
       <a class="btn secondary" href="/api/deliverables/provision?offer=foundation-build">Open credential schema</a>
@@ -93,6 +95,10 @@ textarea{min-height:92px;resize:vertical}
   const files = document.getElementById('result-files');
   const params = new URLSearchParams(window.location.search);
   if (params.get('offer')) document.getElementById('offer').value = params.get('offer');
+  if (params.get('access_token')) document.getElementById('access-token').value = params.get('access_token');
+  if (!document.getElementById('access-token').value) {
+    document.getElementById('access-token').value = localStorage.getItem('yd_paid_access_token') || '';
+  }
 
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) {
@@ -157,7 +163,8 @@ textarea{min-height:92px;resize:vertical}
       offer: document.getElementById('offer').value,
       business_name: document.getElementById('business').value.trim(),
       buyer: document.getElementById('buyer').value.trim(),
-      pain: document.getElementById('brief').value.trim()
+      pain: document.getElementById('brief').value.trim(),
+      access_token: document.getElementById('access-token').value.trim()
     };
     document.querySelectorAll('#credential-fields input').forEach(function(input) {
       payload[input.name] = input.type === 'checkbox' ? input.checked : input.value.trim();

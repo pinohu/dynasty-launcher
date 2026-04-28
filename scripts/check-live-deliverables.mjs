@@ -67,10 +67,14 @@ for (const offer of offers) {
     if (field.type === 'tel') return [field.key, '+15551234567'];
     return [field.key, field.key === 'launch_slug' ? `test-${offer.id}` : `test ${field.key}`];
   }));
-  const provisioned = buildProvisionedDeliverable(offer.id, sample, 'https://www.yourdeputy.com');
+  const provisioned = await buildProvisionedDeliverable(offer.id, sample, 'https://www.yourdeputy.com', {
+    admin: true,
+    subject: 'regression@example.com',
+    auth_type: 'admin_test',
+  });
   assert.equal(provisioned.ok, true, `${offer.id} must provision successfully with required credentials`);
   assert.equal(provisioned.status_text, 'created_and_launched', `${offer.id} must create and launch`);
-  assert.ok(provisioned.launched_url.includes('/launched-deliverable.html#payload='), `${offer.id} must return launched URL`);
+  assert.ok(provisioned.launched_url.includes('/launched-deliverable.html?launch_id='), `${offer.id} must return durable launched URL`);
   for (const name of ['app/index.html', 'app/api/leads.js', 'app/api/events.js', 'app/automation-rules.json', 'app/crm-seed.json']) {
     assert.ok(provisioned.files.some((file) => file.name === name), `${offer.id} missing runtime file ${name}`);
   }

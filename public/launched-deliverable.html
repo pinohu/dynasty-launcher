@@ -68,12 +68,13 @@ textarea{min-height:88px}
 <script src="/site-shell.js" defer></script>
 <script>
 (function(){
+  let activeLaunch = null;
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) {
       return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
     });
   }
-  function parsePayload() {
+  function parseHashPayload() {
     const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
     const token = hash.get('payload') || '';
     if (!token) return null;
@@ -83,29 +84,63 @@ textarea{min-height:88px}
       return JSON.parse(new TextDecoder().decode(bytes));
     } catch (error) { return null; }
   }
-  const data = parsePayload();
+  async function loadLaunch() {
+    const params = new URLSearchParams(location.search);
+    const launchId = params.get('launch_id');
+    if (launchId) {
+      const response = await fetch('/api/deliverables/launch?launch_id=' + encodeURIComponent(launchId));
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || 'Launch not found');
+      return data.launch.runtime;
+    }
+    return parseHashPayload();
+  }
+
+  function render(data) {
+    activeLaunch = data;
+    document.title = data.profile.business_name + ' - Launched Deliverable';
+    document.getElementById('title').textContent = data.profile.business_name + ' ' + data.offer.name;
+    document.getElementById('outcome').textContent = data.offer.outcome;
+    document.getElementById('components').innerHTML = (data.components || []).map(function(component) {
+      return '<article class="card"><span class="tag">' + esc(component.status) + '</span><h3>' + esc(component.name) + '</h3><p>' + (component.public ? 'Public customer-facing surface.' : 'Operational runtime component.') + '</p></article>';
+    }).join('');
+    document.getElementById('modules').innerHTML = (data.modules || []).map(function(module) {
+      return '<article class="card"><span class="tag">' + esc(module.category || 'runtime') + '</span><h3>' + esc(module.name) + '</h3><p>Actions: ' + esc((module.actions || []).join(', ') || 'configured') + '</p><p>KPIs: ' + esc((module.kpis || []).join(', ') || 'activation tracked') + '</p></article>';
+    }).join('');
+  }
+
+  loadLaunch().then(function(data) {
   if (!data) {
     document.getElementById('title').textContent = 'Launch payload missing';
     document.getElementById('outcome').textContent = 'Generate a deliverable from /sign-up to create a public launched URL.';
     return;
   }
-  document.title = data.profile.business_name + ' - Launched Deliverable';
-  document.getElementById('title').textContent = data.profile.business_name + ' ' + data.offer.name;
-  document.getElementById('outcome').textContent = data.offer.outcome;
-  document.getElementById('components').innerHTML = (data.components || []).map(function(component) {
-    return '<article class="card"><span class="tag">' + esc(component.status) + '</span><h3>' + esc(component.name) + '</h3><p>' + (component.public ? 'Public customer-facing surface.' : 'Operational runtime component.') + '</p></article>';
-  }).join('');
-  document.getElementById('modules').innerHTML = (data.modules || []).map(function(module) {
-    return '<article class="card"><span class="tag">' + esc(module.category || 'runtime') + '</span><h3>' + esc(module.name) + '</h3><p>Actions: ' + esc((module.actions || []).join(', ') || 'configured') + '</p><p>KPIs: ' + esc((module.kpis || []).join(', ') || 'activation tracked') + '</p></article>';
-  }).join('');
+    render(data);
+  }).catch(function(error) {
+    document.getElementById('title').textContent = 'Launch unavailable';
+    document.getElementById('outcome').textContent = error.message || 'Could not load the launched deliverable.';
+  });
+
   document.getElementById('lead-form').addEventListener('submit', function(event) {
     event.preventDefault();
     const lead = Object.fromEntries(new FormData(event.currentTarget).entries());
-    const key = 'yd_launched_leads_' + data.launch_id;
-    const leads = JSON.parse(localStorage.getItem(key) || '[]');
-    leads.push({ ...lead, captured_at: new Date().toISOString(), launch_id: data.launch_id });
-    localStorage.setItem(key, JSON.stringify(leads));
-    event.currentTarget.innerHTML = '<h2>Lead captured</h2><p>The launched deliverable captured this lead locally and the generated backend file includes the production API contract for routing it.</p>';
+    const launchId = activeLaunch && activeLaunch.launch_id;
+    if (!launchId) {
+      event.currentTarget.innerHTML = '<h2>Lead captured locally</h2><p>The launch is in preview mode, so the lead stayed in this browser.</p>';
+      return;
+    }
+    fetch('/api/deliverables/launch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...lead, launch_id: launchId })
+    }).then(function(response) {
+      return response.json().then(function(data) { return { ok: response.ok && data.ok, data: data }; });
+    }).then(function(result) {
+      if (!result.ok) throw new Error(result.data.error || 'Lead capture failed');
+      event.currentTarget.innerHTML = '<h2>Lead captured</h2><p>The launched deliverable saved this lead server-side and fired the active automation dispatcher.</p>';
+    }).catch(function(error) {
+      event.currentTarget.innerHTML = '<h2>Lead capture failed</h2><p>' + esc(error.message || 'Could not save lead.') + '</p>';
+    });
   });
 })();
 </script>

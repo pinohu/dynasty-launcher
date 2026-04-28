@@ -1,5 +1,6 @@
 import { buildProvisionedDeliverable, buildProvisioningSchema } from './_provisioner.mjs';
 import { listInstantOffers } from './_instant.mjs';
+import { privilegedCorsHeaders, verifyPaidOrAdminCredential } from '../tenants/_auth.mjs';
 
 export const maxDuration = 30;
 
@@ -30,7 +31,7 @@ function baseUrl(req) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://www.yourdeputy.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', privilegedCorsHeaders());
   res.setHeader('Cache-Control', 'no-store');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -62,6 +63,15 @@ export default async function handler(req, res) {
     return res.status(200).json(schema);
   }
 
-  const result = buildProvisionedDeliverable(offerId, body, baseUrl(req));
+  const auth = verifyPaidOrAdminCredential(req, body);
+  if (!auth.ok) {
+    return res.status(auth.status || 401).json({
+      ok: false,
+      error: auth.error,
+      message: 'Paid checkout access or admin authorization is required before provisioning a deliverable.',
+    });
+  }
+
+  const result = await buildProvisionedDeliverable(offerId, body, baseUrl(req), auth);
   return res.status(result.status || 200).json(result);
 }

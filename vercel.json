@@ -162,7 +162,7 @@
     },
     "api/deliverables/*.js": {
       "maxDuration": 30,
-      "includeFiles": "product/**/*.json"
+      "includeFiles": "{product/**/*.json,templates/workflow-templates/**/*.json,scripts/migrations/**/*.sql}"
     },
     "api/automations/handler.js": {
       "maxDuration": 30,

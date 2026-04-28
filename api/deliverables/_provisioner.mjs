@@ -1,5 +1,9 @@
 import { getCatalog, indexModules } from '../catalog/_lib.mjs';
 import { findInstantOffer } from './_instant.mjs';
+import { activateModule } from '../tenants/_activation.mjs';
+import { createTenant, setTenantCapability, upsertEntitlement } from '../tenants/_store.mjs';
+import { signTenantActionToken } from '../tenants/_auth.mjs';
+import { saveCredentials, saveLaunch } from './_fulfillment_store.mjs';
 
 const SECRET_KEYS = [
   'api_key',
@@ -382,7 +386,77 @@ function sourceFile(name, kind, summary, body) {
   return { name, kind, summary, body };
 }
 
-export function buildProvisionedDeliverable(offerId, rawInput = {}, requestBaseUrl = 'https://www.yourdeputy.com') {
+function planForOffer(offer, modules) {
+  if (offer.type === 'edition') {
+    const code = offer.source?.edition_code || offer.source_code || '';
+    if (code.includes('enterprise') || code.includes('field_service')) return 'enterprise';
+    if (code.includes('small_team')) return 'professional';
+  }
+  if (offer.id?.includes('enterprise') || offer.id?.includes('professional') || offer.id?.includes('build')) return 'enterprise';
+  if (offer.type === 'pack' || offer.type === 'suite' || offer.type === 'blueprint') return 'enterprise';
+  if ((modules || []).some((module) => (module.tier_availability || []).includes('enterprise'))) return 'enterprise';
+  if ((modules || []).some((module) => (module.tier_availability || []).includes('professional'))) return 'professional';
+  return 'core';
+}
+
+function credentialsForVault(schema, input) {
+  return schema.credential_fields.map((field) => ({
+    key: field.key,
+    label: field.label,
+    secret: !!field.secret || isSecretKey(field.key),
+    provided: input[field.key] !== undefined && String(input[field.key]).length > 0,
+    raw_value: input[field.key],
+  }));
+}
+
+async function createAndActivateTenant({ offer, schema, profile, modules, auth }) {
+  const tenant = await createTenant({
+    business_name: profile.business_name,
+    business_type: profile.market || offer.type,
+    plan: planForOffer(offer, modules),
+    subscription_status: 'active',
+    onboarding_status: 'launched',
+    timezone: profile.timezone || 'America/New_York',
+    blueprint_code: offer.type === 'blueprint' ? offer.source_code : profile.blueprint_code || null,
+    profile: {
+      owner_name: profile.owner_name,
+      email: profile.owner_email,
+      owner_user_id: auth?.subject || profile.owner_email,
+      service_area: profile.service_area,
+      public_phone: profile.public_phone,
+      offer_id: offer.id,
+      launch_slug: profile.launch_slug,
+    },
+    capabilities_enabled: schema.capabilities,
+  });
+
+  for (const capability of schema.capabilities) {
+    await setTenantCapability(tenant.tenant_id, capability, true);
+  }
+
+  const activations = [];
+  for (const module of modules) {
+    await upsertEntitlement(tenant.tenant_id, module.module_code, {
+      state: 'entitled',
+      billing_source: {
+        source_type: auth?.admin ? 'admin_provision' : 'paid_checkout',
+        offer_id: offer.id,
+        session_id: auth?.session_id || null,
+        provisioned_at: new Date().toISOString(),
+      },
+    });
+    const activation = await activateModule({
+      tenant_id: tenant.tenant_id,
+      module_code: module.module_code,
+      user_input: profile,
+    });
+    activations.push({ module_code: module.module_code, status: activation.status, reason: activation.reason || null });
+  }
+
+  return { tenant, activations };
+}
+
+export async function buildProvisionedDeliverable(offerId, rawInput = {}, requestBaseUrl = 'https://www.yourdeputy.com', auth = {}) {
   const offer = findInstantOffer(offerId);
   if (!offer) return { ok: false, status: 404, error: 'unknown_deliverable_offer' };
   const schema = buildProvisioningSchema(offer.id);
@@ -419,7 +493,13 @@ export function buildProvisionedDeliverable(offerId, rawInput = {}, requestBaseU
 
   const runtimePayload = buildRuntimePayload({ launchId, offer, profile, modules, components });
   const token = b64urlJson(runtimePayload);
-  const launchedUrl = `${launchBase}/launched-deliverable.html#payload=${token}`;
+  const { tenant, activations } = await createAndActivateTenant({ offer, schema, profile, modules, auth });
+  const tenantToken = signTenantActionToken({
+    tenant_id: tenant.tenant_id,
+    subject: auth?.subject || profile.owner_email,
+    ttl_ms: 24 * 60 * 60 * 1000,
+  });
+  const launchedUrl = `${launchBase}/launched-deliverable.html?launch_id=${encodeURIComponent(launchId)}`;
   const templates = modules.map((module) => moduleTemplate(module, profile));
   const credentialMap = fieldMap(schema, input);
   const appHtml = landingHtml({ offer, profile, modules });
@@ -491,12 +571,14 @@ export default async function handler(req, res) {
       JSON.stringify(
         {
           launch_id: launchId,
+          tenant_id: tenant.tenant_id,
           generated_at: now,
           offer_id: offer.id,
           launched_url: launchedUrl,
           status: 'launched',
           no_manual_package_creation: true,
           components,
+          activations,
           credentials: credentialMap,
         },
         null,
@@ -505,21 +587,57 @@ export default async function handler(req, res) {
     ),
   ];
 
+  await saveLaunch({
+    launch_id: launchId,
+    tenant_id: tenant.tenant_id,
+    offer_id: offer.id,
+    status: 'launched',
+    public_slug: profile.launch_slug,
+    launched_url: launchedUrl,
+    profile: {
+      business_name: profile.business_name,
+      owner_name: profile.owner_name,
+      owner_email: profile.owner_email,
+      public_phone: profile.public_phone,
+      market: profile.market,
+      service_area: profile.service_area,
+      booking_url: profile.booking_url || '',
+      review_url: profile.google_review_url || '',
+    },
+    runtime: runtimePayload,
+    modules: schema.modules,
+    components,
+    files,
+  });
+
+  await saveCredentials({
+    launch_id: launchId,
+    tenant_id: tenant.tenant_id,
+    credentials: credentialsForVault(schema, input),
+  });
+
   return {
     ok: true,
     status: 200,
     launch_id: launchId,
+    tenant_id: tenant.tenant_id,
     generated_at: now,
     offer: schema.offer,
     provisioned: true,
     status_text: 'created_and_launched',
     launched_url: launchedUrl,
+    legacy_hash_preview_url: `${launchBase}/launched-deliverable.html#payload=${token}`,
     live_runtime: runtimePayload,
+    tenant_access: tenantToken ? {
+      token: tenantToken.token,
+      expires_at: tenantToken.expires_at,
+    } : null,
     credential_schema: schema.credential_fields,
     credentials_received: credentialMap,
     components,
     modules: schema.modules,
+    activations,
     files,
-    customer_next_step: 'Open the launched URL. The paid deliverable is already created; vendor credentials are recorded as provided and secrets are not exposed in the public page.',
+    customer_next_step: 'Open the launched URL. The paid deliverable is already created, saved server-side, and ready for lead capture.',
   };
 }
