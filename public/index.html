@@ -12,167 +12,190 @@
 <link rel="stylesheet" href="/site-shell.css">
 <link rel="stylesheet" href="/design-system.css">
 <style>
-:root{--blue:#2454b8;--ink:#15171c;--text:#20232b;--muted:#5f6876;--faint:#7b8493;--line:#dce1ea;--panel:#fff;--soft:#f1f4f8;--canvas:#f6f7f9;--green:#15803d;--amber:#9a6700;--red:#b42318}
+:root{--blue:#2454b8;--blue-dark:#183d8f;--ink:#15171c;--text:#20232b;--muted:#566171;--faint:#7b8493;--line:#d9e0ea;--panel:#fff;--soft:#f1f5fb;--canvas:#f7f8fb;--green:#148245;--green-soft:#e9f7ef;--amber:#9a6700;--amber-soft:#fff5dc}
 *{box-sizing:border-box}
 body{margin:0;background:var(--canvas);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
-a{color:var(--blue);font-weight:750;text-decoration:none}
+a{color:var(--blue);font-weight:760;text-decoration:none}
 a:hover{text-decoration:underline}
-main{width:min(1120px,calc(100% - 36px));margin:0 auto;padding:92px 0 56px}
-.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:32px;align-items:center;padding:34px 0 28px}
-.eyebrow{color:var(--blue);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px}
-h1{font-size:clamp(42px,6vw,72px);line-height:.98;letter-spacing:0;margin:0 0 18px;color:var(--ink)}
-h2{font-size:clamp(28px,3.5vw,42px);line-height:1.08;margin:0 0 12px;color:var(--ink)}
-h3{font-size:18px;line-height:1.25;margin:0 0 8px;color:var(--ink)}
+main{width:min(1180px,calc(100% - 48px));margin:0 auto;padding:104px 0 64px}
+.hero{display:grid;grid-template-columns:minmax(540px,1fr) 420px;gap:48px;align-items:center;padding:54px 0 46px}
+.eyebrow{color:var(--blue);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px}
+h1{font-size:clamp(42px,5.8vw,68px);line-height:1.02;letter-spacing:0;margin:0 0 20px;color:var(--ink);font-weight:830;max-width:760px}
+h2{font-size:clamp(28px,3.5vw,42px);line-height:1.08;letter-spacing:0;margin:0 0 12px;color:var(--ink);font-weight:820}
+h3{font-size:18px;line-height:1.25;margin:0 0 8px;color:var(--ink);font-weight:800}
 p{margin:0 0 14px;color:var(--muted)}
 .lead{font-size:clamp(18px,2vw,21px);max-width:720px}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;border-radius:8px;padding:0 16px;border:1px solid var(--line);font-weight:820;text-align:center}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;border-radius:8px;padding:0 18px;border:1px solid var(--line);font-weight:820;text-align:center}
 .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff!important}
+.btn.primary:hover{background:var(--blue-dark);border-color:var(--blue-dark);text-decoration:none}
 .btn.secondary{background:#fff;color:var(--ink)!important}
-.proof-panel{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 18px 46px rgba(24,34,53,.08);overflow:hidden}
-.proof-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
-.status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:760;color:var(--green)}
-.status:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
-.receipt{padding:18px;display:grid;gap:10px}
-.receipt-row{display:grid;grid-template-columns:132px minmax(0,1fr);gap:12px;padding:10px 0;border-bottom:1px solid #edf0f5}
+.trust-row{display:flex;gap:18px;flex-wrap:wrap;margin-top:24px;color:var(--faint);font-size:13px}
+.trust-row span{display:inline-flex;gap:8px;align-items:center}
+.trust-row span:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+.preview{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 24px 70px rgba(24,34,53,.12);overflow:hidden}
+.preview-top{height:42px;background:#101827;color:#dbe7ff;display:flex;align-items:center;gap:8px;padding:0 14px;font-size:12px}
+.preview-dot{width:8px;height:8px;border-radius:50%;background:#6ee7b7}
+.preview-body{padding:18px}
+.runtime-url{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);border-radius:8px;background:#f8fafc;padding:12px;margin-bottom:14px}
+.runtime-url strong{font-size:13px;color:var(--ink)}
+.badge{display:inline-flex;align-items:center;gap:7px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:12px;font-weight:820;padding:6px 10px}
+.badge:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.mini-card{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fff}
+.mini-card b{display:block;color:var(--ink);font-size:13px;margin-bottom:4px}
+.mini-card span{display:block;color:var(--muted);font-size:12px}
+.receipt{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.receipt-row{display:grid;grid-template-columns:118px minmax(0,1fr);gap:12px;padding:11px 12px;border-bottom:1px solid #edf0f5}
 .receipt-row:last-child{border-bottom:0}
 .receipt-row strong{color:var(--ink);font-size:13px}
-.receipt-row span{color:var(--muted);font-size:14px}
-.section{padding:34px 0;border-top:1px solid var(--line)}
-.intro-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
-.plain-card,.offer,.step,.callout{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px}
-.plain-card p,.offer p,.step p{font-size:14px}
-.offer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:20px}
-.offer{display:flex;flex-direction:column;min-height:100%}
-.offer .meta{color:var(--faint);font-size:12px;font-weight:820;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
-.price{font-size:26px;font-weight:850;color:var(--ink);margin-bottom:10px}
-.offer ul{margin:2px 0 18px;padding-left:18px;color:var(--muted);font-size:14px}
+.receipt-row span{color:var(--muted);font-size:13px}
+.section{padding:42px 0;border-top:1px solid var(--line)}
+.section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:20px}
+.section-head p{max-width:560px;margin-bottom:0}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.card,.offer,.step,.callout{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px}
+.card p,.offer p,.step p{font-size:14px}
+.offer{display:flex;flex-direction:column;min-height:100%;box-shadow:0 10px 26px rgba(24,34,53,.05)}
+.offer.featured{border-color:#9ab3ff;box-shadow:0 18px 42px rgba(36,84,184,.13)}
+.offer .meta{color:var(--blue);font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.price{font-size:28px;font-weight:860;color:var(--ink);margin-bottom:10px}
+.offer ul{margin:4px 0 20px;padding-left:18px;color:var(--muted);font-size:14px}
 .offer li{margin:7px 0}
 .offer .btn{margin-top:auto}
-.journey{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:20px}
-.step b{display:inline-flex;width:30px;height:30px;align-items:center;justify-content:center;border-radius:50%;background:#eaf1ff;color:var(--blue);margin-bottom:12px}
-.callout{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;background:#eef3ff;border-color:#cad8ff}
+.step b{display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:50%;background:#eaf1ff;color:var(--blue);margin-bottom:12px}
+.callout{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;background:#eef3ff;border-color:#cbd8ff}
 .callout p{margin-bottom:0}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
-.limit{border-left:4px solid var(--amber);background:#fff8e6}
-.ok{border-left:4px solid var(--green);background:#eef8f1}
-.small{font-size:13px;color:var(--faint)}
-@media(max-width:860px){main{padding-top:84px}.hero,.intro-grid,.offer-grid,.journey,.split,.callout{grid-template-columns:1fr}.actions .btn,.callout .btn{width:100%}.receipt-row{grid-template-columns:1fr}}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.limit{border-left:4px solid var(--amber);background:var(--amber-soft)}
+.ok{border-left:4px solid var(--green);background:var(--green-soft)}
+@media(max-width:1080px){main{width:min(100% - 32px,1180px);padding-top:88px}.hero,.grid-3,.grid-4,.split,.callout{grid-template-columns:1fr}.hero{gap:24px;padding-top:32px}.actions .btn,.callout .btn{width:100%}.preview{max-width:560px}.section-head{display:block}.receipt-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <main id="main-content">
   <section class="hero">
     <div>
-      <p class="eyebrow">Simple promise</p>
-      <h1>Buy a business deliverable. Submit the required credentials. Get the launched result.</h1>
-      <p class="lead">Your Deputy is for founders and operators who need a concrete launch asset, not a vague strategy portal. Every paid offer has a credential form, a provisioning path, a public runtime, and a receipt that says what shipped.</p>
+      <p class="eyebrow">Production deliverables, not vague automation</p>
+      <h1>Launch the customer-facing asset your buyer actually paid for.</h1>
+      <p class="lead">Your Deputy turns a purchased package into a credential-aware launch: runtime page, lead capture, workflow setup, generated files, seed data, and a delivery receipt that states what passed.</p>
       <div class="actions">
-        <a class="btn primary" href="#offers">Choose an offer</a>
-        <a class="btn secondary" href="/deliverables">See examples first</a>
+        <a class="btn primary" href="#offers">Choose a package</a>
+        <a class="btn secondary" href="/sign-up?offer=foundation-build">Provision a purchase</a>
+        <a class="btn secondary" href="/deliverables">Inspect examples</a>
+      </div>
+      <div class="trust-row" aria-label="Production boundaries">
+        <span>Public runtime URL</span>
+        <span>Private credential intake</span>
+        <span>Receipt-backed delivery</span>
       </div>
     </div>
-    <aside class="proof-panel" aria-label="Example delivery receipt">
-      <div class="proof-head">
-        <strong>Foundation Build receipt</strong>
-        <span class="status">Launch record ready</span>
-      </div>
-      <div class="receipt">
-        <div class="receipt-row"><strong>Customer submits</strong><span>Business details, owner contact, required vendor credentials, authorization checkboxes.</span></div>
-        <div class="receipt-row"><strong>Backend creates</strong><span>Tenant, launched URL, lead form, workflow templates, module activations, CRM seed data, generated files.</span></div>
-        <div class="receipt-row"><strong>Customer receives</strong><span>Public deliverable URL, handoff files, activation receipt, and clear failed-step notes if a vendor rejects credentials.</span></div>
+
+    <aside class="preview" aria-label="Launch runtime preview">
+      <div class="preview-top"><span class="preview-dot"></span><span>yourdeputy.com/launched-deliverable</span></div>
+      <div class="preview-body">
+        <div class="runtime-url">
+          <strong>Foundation Build</strong>
+          <span class="badge">Ready</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-card"><b>Runtime</b><span>Public page, lead form, offer copy</span></div>
+          <div class="mini-card"><b>Automation</b><span>Modules, workflow templates, event hooks</span></div>
+          <div class="mini-card"><b>Files</b><span>Generated application code and handoff docs</span></div>
+          <div class="mini-card"><b>Checks</b><span>Acceptance tests and delivery receipt</span></div>
+        </div>
+        <div class="receipt">
+          <div class="receipt-row"><strong>Customer gives</strong><span>Business details, owner contact, vendor credentials, authorization.</span></div>
+          <div class="receipt-row"><strong>Backend creates</strong><span>Tenant, launch record, runtime, modules, workflows, seed data.</span></div>
+          <div class="receipt-row"><strong>Receipt shows</strong><span>What shipped, what failed, and what requires vendor action.</span></div>
+        </div>
       </div>
     </aside>
   </section>
 
   <section class="section">
-    <h2>Use this when you need one of three outcomes.</h2>
-    <div class="intro-grid">
-      <article class="plain-card">
-        <h3>Validate an idea</h3>
-        <p>Use the free or diagnostic path when you need to decide whether the market, buyer, and offer are worth pursuing.</p>
-      </article>
-      <article class="plain-card">
-        <h3>Package a business</h3>
-        <p>Use Strategy Pack when you need the business narrative, documents, operating plan, and launch story before code.</p>
-      </article>
-      <article class="plain-card">
-        <h3>Launch a runtime</h3>
-        <p>Use Foundation Build or higher when you need a customer-specific runtime page, lead capture, workflows, files, and receipts.</p>
-      </article>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">The job to be done</p>
+        <h2>Customers should know exactly what to do next.</h2>
+      </div>
+      <p>Everything points to one of three paths: validate an idea, package the business, or provision the purchased runtime.</p>
+    </div>
+    <div class="grid-3">
+      <article class="card"><h3>1. Validate</h3><p>Use the free or diagnostic path when the buyer still needs a go/no-go read on market, pain, offer, and risk.</p></article>
+      <article class="card"><h3>2. Package</h3><p>Use Strategy Pack when the buyer needs documents, operating narrative, and handoff assets before code.</p></article>
+      <article class="card"><h3>3. Provision</h3><p>Use Foundation Build or higher when the buyer has paid for a launched runtime and can provide required credentials.</p></article>
     </div>
   </section>
 
   <section class="section" id="offers">
-    <p class="eyebrow">Pick the smallest useful package</p>
-    <h2>Offers are separated by what the backend can actually deliver.</h2>
-    <div class="offer-grid">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Packages</p>
+        <h2>Choose the smallest package that produces the needed outcome.</h2>
+      </div>
+      <p>Each package has a different delivery boundary. The page says what is generated, what is launched, and what depends on customer-owned vendor accounts.</p>
+    </div>
+    <div class="grid-3">
       <article class="offer">
         <div class="meta">Decision</div>
         <h3>Free Idea Score</h3>
         <div class="price">$0</div>
-        <p>A fast read on whether an idea deserves more attention.</p>
-        <ul>
-          <li>Market and buyer triage</li>
-          <li>Offer risk notes</li>
-          <li>Recommended next path</li>
-        </ul>
+        <p>A fast signal on whether the idea deserves deeper work.</p>
+        <ul><li>Market and buyer triage</li><li>Offer risk notes</li><li>Recommended next path</li></ul>
         <a class="btn secondary" href="/launch/score-an-idea-free">Score an idea</a>
       </article>
       <article class="offer">
         <div class="meta">Planning</div>
         <h3>Strategy Pack</h3>
         <div class="price">$697</div>
-        <p>Business and launch documents for buyers who are not ready for code yet.</p>
-        <ul>
-          <li>Offer, ICP, revenue, GTM, operations</li>
-          <li>Handoff documents and acceptance tests</li>
-          <li>No live app deployment included</li>
-        </ul>
+        <p>Business documents and launch narrative. No live runtime deployment.</p>
+        <ul><li>Offer, ICP, revenue, GTM, operations</li><li>Handoff documents and acceptance tests</li><li>Clear no-code boundary</li></ul>
         <a class="btn secondary" href="/app?plan=strategy_pack">Start Strategy Pack</a>
       </article>
-      <article class="offer">
+      <article class="offer featured">
         <div class="meta">Provisioned build</div>
         <h3>Foundation Build</h3>
         <div class="price">$1,997</div>
         <p>The first package that creates a customer-specific launched runtime.</p>
-        <ul>
-          <li>Runtime page and lead capture</li>
-          <li>Activated modules and workflow templates</li>
-          <li>Generated files, CRM seed data, receipt</li>
-        </ul>
+        <ul><li>Runtime page and lead capture</li><li>Workflow templates and module activation records</li><li>Generated application code, deployment scaffolding, receipt</li></ul>
         <a class="btn primary" href="/sign-up?offer=foundation-build">Provision Foundation</a>
       </article>
     </div>
   </section>
 
   <section class="section">
-    <p class="eyebrow">After payment</p>
-    <h2>The delivery journey is four steps.</h2>
-    <div class="journey">
-      <div class="step"><b>1</b><h3>Choose package</h3><p>Select the outcome that matches the job: score, strategy, or provisioned build.</p></div>
-      <div class="step"><b>2</b><h3>Submit credentials</h3><p>Fill the SKU-specific form. Secret fields are stored server-side and redacted from public output.</p></div>
-      <div class="step"><b>3</b><h3>System provisions</h3><p>The backend creates the tenant, runtime, modules, workflows, files, seed data, and receipt.</p></div>
-      <div class="step"><b>4</b><h3>Open the result</h3><p>You receive the launched URL and can inspect exactly what passed or failed.</p></div>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Fulfillment</p>
+        <h2>After payment, the journey is explicit.</h2>
+      </div>
+    </div>
+    <div class="grid-4">
+      <article class="step"><b>1</b><h3>Pick package</h3><p>The customer selects the outcome that matches their immediate need.</p></article>
+      <article class="step"><b>2</b><h3>Submit credentials</h3><p>The SKU-specific form asks only for what the backend needs to provision.</p></article>
+      <article class="step"><b>3</b><h3>Provision runtime</h3><p>The system creates tenant records, runtime pages, workflows, files, and seed data.</p></article>
+      <article class="step"><b>4</b><h3>Inspect receipt</h3><p>The customer sees what completed and what vendor steps require attention.</p></article>
     </div>
   </section>
 
   <section class="section">
     <div class="callout">
       <div>
-        <h2>Want proof before you buy?</h2>
-        <p>Open the deliverables inventory to see the example outputs and the production boundaries for each package.</p>
+        <h2>See the proof before selling it.</h2>
+        <p>Open the deliverables inventory to inspect examples, generated files, live boundaries, and acceptance evidence.</p>
       </div>
-      <a class="btn primary" href="/deliverables">View examples</a>
+      <a class="btn primary" href="/deliverables">View deliverables</a>
     </div>
     <div class="split">
-      <article class="plain-card ok">
-        <h3>What is real today</h3>
+      <article class="card ok">
+        <h3>Real today</h3>
         <p>Credential intake, tenant creation, launch records, runtime pages, lead capture, workflow templates, module activation records, generated application code, deployment scaffolding, generated files, and receipts.</p>
       </article>
-      <article class="plain-card limit">
-        <h3>What still depends on you</h3>
-        <p>Third-party services such as Stripe, Twilio, Resend, CRM, domains, calendars, and analytics require valid customer-owned accounts and permissions. A queued job is not the same as a completed vendor setup.</p>
+      <article class="card limit">
+        <h3>Depends on customer accounts</h3>
+        <p>Stripe, Twilio, Resend, CRM, domains, calendars, analytics, and similar services require valid credentials and permissions. A queued job is not the same as a completed vendor setup.</p>
       </article>
     </div>
   </section>

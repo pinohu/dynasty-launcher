@@ -169,14 +169,17 @@
    display: none;
    align-items: center;
    justify-content: center;
-   width: 44px;
+   width: auto;
+   min-width: 58px;
    height: 44px;
+   padding: 0 12px;
    border-radius: 10px;
    border: 1px solid var(--yd-border);
    background: #ffffff;
    color: var(--yd-text);
    cursor: pointer;
-   font: 800 18px/1 system-ui, -apple-system, Segoe UI, sans-serif;
+   font: 750 13px/1 system-ui, -apple-system, Segoe UI, sans-serif;
+   white-space: nowrap;
  }
 
  .yd-mobile-panel {
