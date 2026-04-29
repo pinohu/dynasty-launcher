@@ -621,6 +621,25 @@ body.yd-has-shell .announcement strong {
   color: #7a580c !important;
 }
 
+body.yd-has-shell .item .file,
+body.yd-has-shell .card .file {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-height: 24px !important;
+  margin: 0 0 8px !important;
+  padding: 4px 9px !important;
+  background: #eef3ff !important;
+  border: 1px solid #dce1ea !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  color: #2454b8 !important;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace !important;
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere !important;
+}
+
 body.yd-has-shell .card:hover,
 body.yd-has-shell .item:hover,
 body.yd-has-shell a.card:hover,
