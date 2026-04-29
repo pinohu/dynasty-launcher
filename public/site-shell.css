@@ -444,3 +444,287 @@
      transition: none;
    }
  }
+
+/* Public cohesion layer
+   Legacy pages still ship their own local CSS. These scoped rules normalize
+   public pages to one product UI without touching isolated tools such as /app. */
+body.yd-has-shell {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --card-hover: #f8fafc;
+  --border: #dce1ea;
+  --fg: #20232b;
+  --muted: #5f6876;
+  --accent: #2454b8;
+  --success: #15803d;
+  --warn: #b88718;
+  --danger: #b42318;
+  --gold: #2454b8;
+  --ink: #15171c;
+  --panel: #ffffff;
+  --bdr: #dce1ea;
+  --tx: #20232b;
+  --sub: #5f6876;
+  --dim: #7b8493;
+  background: #f6f7f9 !important;
+  color: #20232b !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+body.yd-has-shell > header:not(.yd-site-header),
+body.yd-has-shell > .topnav,
+body.yd-has-shell > .skip-link {
+  display: none !important;
+}
+
+body.yd-has-shell main,
+body.yd-has-shell .container,
+body.yd-has-shell .wrap {
+  width: min(1180px, calc(100% - 48px)) !important;
+  max-width: 1180px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+body.yd-has-shell main {
+  padding-top: 74px !important;
+}
+
+body.yd-has-shell a {
+  color: #2454b8 !important;
+}
+
+body.yd-has-shell a:hover {
+  color: #183d8f !important;
+}
+
+body.yd-has-shell .yd-brand,
+body.yd-has-shell .yd-brand:visited {
+  color: #15171c !important;
+}
+
+body.yd-has-shell .yd-primary-nav a,
+body.yd-has-shell .yd-link-muted,
+body.yd-has-shell .yd-mobile-panel a {
+  color: #5f6876 !important;
+}
+
+body.yd-has-shell .yd-primary-nav a:hover,
+body.yd-has-shell .yd-primary-nav a[aria-current="page"],
+body.yd-has-shell .yd-mobile-panel a:hover,
+body.yd-has-shell .yd-mobile-panel a:focus-visible {
+  color: #15171c !important;
+}
+
+body.yd-has-shell .yd-cta,
+body.yd-has-shell .yd-cta:visited,
+body.yd-has-shell .yd-cta:hover {
+  color: #ffffff !important;
+}
+
+body.yd-has-shell h1,
+body.yd-has-shell h2,
+body.yd-has-shell h3,
+body.yd-has-shell .section-title,
+body.yd-has-shell .hero-d h1,
+body.yd-has-shell .cta-bottom h2 {
+  color: #15171c !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+body.yd-has-shell h1,
+body.yd-has-shell .hero h1,
+body.yd-has-shell .hero-d h1 {
+  font-size: clamp(38px, 4.7vw, 56px) !important;
+  line-height: 1.04 !important;
+  font-weight: 820 !important;
+}
+
+body.yd-has-shell h2,
+body.yd-has-shell .section-title {
+  font-size: clamp(25px, 3vw, 38px) !important;
+  line-height: 1.12 !important;
+  font-weight: 800 !important;
+}
+
+body.yd-has-shell h3 {
+  font-size: 18px !important;
+  line-height: 1.25 !important;
+  font-weight: 780 !important;
+}
+
+body.yd-has-shell p,
+body.yd-has-shell li,
+body.yd-has-shell td,
+body.yd-has-shell .lead,
+body.yd-has-shell .subheading,
+body.yd-has-shell .section-lede,
+body.yd-has-shell .section-desc,
+body.yd-has-shell .card-description,
+body.yd-has-shell .item .desc,
+body.yd-has-shell .hero-d p,
+body.yd-has-shell .note {
+  color: #566171 !important;
+}
+
+body.yd-has-shell .eyebrow,
+body.yd-has-shell .tag,
+body.yd-has-shell .section-count,
+body.yd-has-shell .hero-d .ct .l,
+body.yd-has-shell .social-proof-label {
+  color: #2454b8 !important;
+  letter-spacing: 0.08em !important;
+}
+
+body.yd-has-shell .hero,
+body.yd-has-shell .hero-d {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding-top: 54px !important;
+  padding-bottom: 42px !important;
+}
+
+body.yd-has-shell .card,
+body.yd-has-shell .item,
+body.yd-has-shell .panel,
+body.yd-has-shell .path,
+body.yd-has-shell .step,
+body.yd-has-shell .st,
+body.yd-has-shell .note,
+body.yd-has-shell .announcement,
+body.yd-has-shell .social-proof,
+body.yd-has-shell .skeleton-card,
+body.yd-has-shell .overlay .box,
+body.yd-has-shell details.matrix,
+body.yd-has-shell .cta-bottom {
+  background: #ffffff !important;
+  border: 1px solid #dce1ea !important;
+  border-radius: 8px !important;
+  box-shadow: 0 12px 30px rgba(24, 34, 53, 0.06) !important;
+  color: #20232b !important;
+}
+
+body.yd-has-shell .announcement strong {
+  color: #7a580c !important;
+}
+
+body.yd-has-shell .card:hover,
+body.yd-has-shell .item:hover,
+body.yd-has-shell a.card:hover {
+  border-color: #bfc7d4 !important;
+  box-shadow: 0 16px 42px rgba(24, 34, 53, 0.08) !important;
+  transform: none !important;
+}
+
+body.yd-has-shell .grid,
+body.yd-has-shell .steps,
+body.yd-has-shell .stats {
+  gap: 14px !important;
+}
+
+body.yd-has-shell .btn,
+body.yd-has-shell .btn-primary,
+body.yd-has-shell .btn-p,
+body.yd-has-shell button.btn,
+body.yd-has-shell input[type="submit"] {
+  min-height: 44px !important;
+  border-radius: 8px !important;
+  background: #2454b8 !important;
+  border: 1px solid #2454b8 !important;
+  color: #ffffff !important;
+  font-weight: 780 !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+body.yd-has-shell .btn:hover,
+body.yd-has-shell .btn-primary:hover,
+body.yd-has-shell .btn-p:hover,
+body.yd-has-shell button.btn:hover {
+  background: #183d8f !important;
+  border-color: #183d8f !important;
+  color: #ffffff !important;
+  transform: none !important;
+}
+
+body.yd-has-shell .btn-secondary,
+body.yd-has-shell .btn.secondary,
+body.yd-has-shell .btn-g {
+  background: #ffffff !important;
+  border: 1px solid #bfc7d4 !important;
+  color: #15171c !important;
+}
+
+body.yd-has-shell input,
+body.yd-has-shell select,
+body.yd-has-shell textarea {
+  background: #ffffff !important;
+  color: #15171c !important;
+  border: 1px solid #bfc7d4 !important;
+  border-radius: 8px !important;
+}
+
+body.yd-has-shell input:focus,
+body.yd-has-shell select:focus,
+body.yd-has-shell textarea:focus,
+body.yd-has-shell button:focus-visible,
+body.yd-has-shell a:focus-visible {
+  outline: 3px solid rgba(36, 84, 184, 0.24) !important;
+  outline-offset: 2px !important;
+  border-color: #2454b8 !important;
+}
+
+body.yd-has-shell table {
+  background: #ffffff !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+body.yd-has-shell th {
+  background: #f1f4f8 !important;
+  color: #2454b8 !important;
+}
+
+body.yd-has-shell th,
+body.yd-has-shell td {
+  border-color: #dce1ea !important;
+}
+
+body.yd-has-shell .pill-ok,
+body.yd-has-shell .tag.live {
+  background: #eaf8ef !important;
+  color: #15803d !important;
+}
+
+body.yd-has-shell .pill-warn,
+body.yd-has-shell .tag.partial {
+  background: #fff4d7 !important;
+  color: #7a580c !important;
+}
+
+body.yd-has-shell .pill-info,
+body.yd-has-shell .tag.ready,
+body.yd-has-shell .tag.gen {
+  background: #eef3ff !important;
+  color: #2454b8 !important;
+}
+
+@media (max-width: 760px) {
+  body.yd-has-shell main,
+  body.yd-has-shell .container,
+  body.yd-has-shell .wrap {
+    width: calc(100% - 28px) !important;
+  }
+
+  body.yd-has-shell main {
+    padding-top: 72px !important;
+  }
+
+  body.yd-has-shell h1,
+  body.yd-has-shell .hero h1,
+  body.yd-has-shell .hero-d h1 {
+    font-size: clamp(34px, 11vw, 46px) !important;
+  }
+}
