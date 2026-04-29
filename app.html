@@ -1632,7 +1632,7 @@ function clearPaidAccessToken() {
     '<a href="/app?plan=foundation">Foundation — $1,997</a>',
     '<a href="/app?plan=professional" class="primary">Professional — $4,997</a>',
     '</div><div class="btns" style="margin-top:8px">',
-    '<a href="/#pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>',
+    '<a href="/pricing" style="border:none;padding:4px 0;font-size:13px;color:rgba(201,168,76,0.6)">View all plans</a>',
     '</div>',
     '<p style="font-size:13px;color:rgba(255,255,255,0.25);margin-top:12px">Already purchased? ',
     '<a href="/app?returning=1" style="border:none;padding:0;font-size:13px;color:rgba(201,168,76,0.6)">Sign in</a></p>',
@@ -3462,7 +3462,7 @@ function applyBuildPackageTierConstraints() {
       const lockBits = [];
       if (locked.length) lockBits.push(`locked packages: ${locked.slice(0, 3).join(', ')}${locked.length > 3 ? ` +${locked.length - 3} more` : ''}`);
       if (verticalBlocked) lockBits.push('vertical tool add-on');
-      lockNotice.innerHTML = `<strong>Tier restrictions active:</strong> ${lockBits.join(' · ')}.<br>Some features require a paid tier. <a href="/#pricing" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer;margin-left:6px;text-decoration:none">See pricing</a>`;
+      lockNotice.innerHTML = `<strong>Tier restrictions active:</strong> ${lockBits.join(' · ')}.<br>Some features require a paid tier. <a href="/pricing" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid rgba(201,168,76,.5);background:rgba(201,168,76,.15);color:var(--gold);cursor:pointer;margin-left:6px;text-decoration:none">See pricing</a>`;
       lockNotice.style.display = 'block';
     } else {
       lockNotice.style.display = 'none';
@@ -6020,7 +6020,7 @@ async function startBuild() {
   if (!isAdmin && !hasPaid) {
     // Free tier can score but not build — show upgrade prompt
     const action = confirm('Free tier includes viability scoring only.\n\nUpgrade to Foundation Automation Capacity ($1,997) to generate strategy docs + deployed application.\n\nClick OK to view plans.');
-    if (action) { window.location.href = '/#pricing'; }
+    if (action) { window.location.href = '/pricing'; }
     return;
   }
   if (!isAdmin && getUserTier() === 'blueprint') {

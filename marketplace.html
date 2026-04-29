@@ -1700,6 +1700,50 @@
     state.catalog = { tiers, bundles, modules, blueprints };
   }
 
+  function fallbackCatalog() {
+    return {
+      tiers: {
+        tiers: [
+          { name: 'Strategy Pack', positioning: 'Planning only', price_monthly: 697, max_users: 1, included_modules: ['offer', 'gtm', 'operations'], description: 'Business documents, launch narrative, and acceptance criteria. No live runtime deployment.' },
+          { name: 'Foundation Build', positioning: 'First provisioned runtime', price_monthly: 1997, max_users: 3, included_modules: ['runtime', 'lead_capture', 'workflows', 'receipt'], description: 'Creates the customer-specific launch page, lead capture, generated files, workflow templates, seed data, and receipt when credentials are valid.' },
+          { name: 'Enterprise Build', positioning: 'Expanded allowlist', price_monthly: 9997, max_users: 10, included_modules: ['runtime', 'cms', 'verification', 'analytics'], description: 'Adds the 13-slot Enterprise allowlist and post-deploy verification paths. Wider automation requires Custom Volume.' }
+        ],
+        editions: [
+          { name: 'Local Service Edition', price_label: 'From $1,997', for: 'Service businesses that need a launched intake and follow-up system.', positioning: 'Best for urgent-lead response and quote workflows.', includes: { suites: ['Lead capture'], packs: ['Follow-up'] } },
+          { name: 'Directory Edition', price_label: 'Custom Volume', for: 'Marketplaces and directories that need provider profiles, routing, and monetization.', positioning: 'Requires directory credentials and approval.', includes: { suites: ['Directory'], packs: ['Provider onboarding'] } }
+        ],
+        suites: [
+          { name: 'Lead Capture Suite', suite_code: 'lead-capture', price_label: 'Included in Foundation+', status: 'live', positioning: 'Public page, intake form, routing workflow, and receipt evidence.', packs: ['lead-capture-system', 'follow-up-pack'] },
+          { name: 'Revenue Operations Suite', suite_code: 'revenue-ops', price_label: 'Included when credentials allow', status: 'deployable', positioning: 'Checkout, payment handoff, invoices, and customer onboarding templates.', packs: ['checkout', 'onboarding'] }
+        ],
+        concierge_setup: {
+          starter: { price_onetime: 497, description: 'Guided setup for credentials, domains, analytics, and launch review.', delivery_mode: 'Operator-assisted' }
+        }
+      },
+      bundles: {
+        bundles: [
+          { name: 'Lead Capture Launch Pack', bundle_code: 'lead-capture-launch', effective_status: 'live', price_monthly: 0, description: 'Runtime page, lead form, routing workflow, CRM seed, and delivery receipt.', modules: ['runtime', 'lead_form', 'receipt'], hero_kpi: 'first lead captured', implied_savings_monthly: 500 },
+          { name: 'Paid Offer Pack', bundle_code: 'paid-offer', effective_status: 'deployable', price_monthly: 0, description: 'Offer page, checkout handoff, invoice template, and onboarding checklist.', modules: ['offer', 'checkout', 'onboarding'], hero_kpi: 'paid path live' }
+        ],
+        deferred: []
+      },
+      modules: {
+        modules: [
+          { name: 'Runtime launch page', module_code: 'runtime-page', status: 'live', price_monthly: 0, description_short: 'Customer-specific public page with outcome copy and lead capture.', category: 'Website', activation_type: 'automatic', capabilities_required: ['business_details', 'domain'] },
+          { name: 'Lead capture workflow', module_code: 'lead-capture', status: 'live', price_monthly: 0, description_short: 'Form submission, receipt, routing event, and CRM seed record.', category: 'RevOps', activation_type: 'automatic', capabilities_required: ['email', 'crm'] },
+          { name: 'Payment handoff', module_code: 'payment-handoff', status: 'deployable', price_monthly: 0, description_short: 'Stripe-ready product and checkout configuration with blocked steps called out when keys are missing.', category: 'Revenue', activation_type: 'credential-gated', capabilities_required: ['stripe', 'webhook'] },
+          { name: 'Post-deploy verification', module_code: 'post-deploy-verification', status: 'deployable', price_monthly: 0, description_short: 'Live route, SSL, content, and acceptance checks for Enterprise and Custom Volume paths.', category: 'QA', activation_type: 'tier-gated', capabilities_required: ['hosting'] }
+        ]
+      },
+      blueprints: {
+        blueprints: [
+          { name: 'Urgent Service Recovery', blueprint_code: 'urgent-service-recovery', archetype: 'local service', ideal_customer_profile: 'Businesses losing revenue because high-intent leads are not answered, routed, or followed up quickly.', recommended_modules: ['runtime-page', 'lead-capture'], dashboard_widgets: ['Lead response time', 'Booked calls'], seasonality: ['Always on', 'Peak demand windows'] },
+          { name: 'Paid Knowledge Product', blueprint_code: 'paid-knowledge-product', archetype: 'info product', ideal_customer_profile: 'Experts who need a paid landing page, checkout handoff, onboarding content, and fulfillment receipt.', recommended_modules: ['runtime-page', 'payment-handoff'], dashboard_widgets: ['Checkout starts', 'Paid conversions'], seasonality: ['Launch windows'] }
+        ]
+      }
+    };
+  }
+
   function render() {
     if (!state.catalog) return;
 
@@ -2056,6 +2100,21 @@
     renderAutomations();
   }
 
+  function fallbackAutomations() {
+    return {
+      total: 4,
+      categories: { 1: 'Lead intake', 2: 'Revenue', 3: 'Onboarding' },
+      packages: ['lead_capture_launch', 'paid_offer'],
+      archetypes: ['local_service', 'info_product'],
+      automations: [
+        { id: '1.1', cat: 1, category_name: 'Lead intake', name: 'New lead captured and routed', trigger: 'event', step_count: 5, packages: ['lead_capture_launch'] },
+        { id: '1.2', cat: 1, category_name: 'Lead intake', name: 'Missed inquiry follow-up', trigger: 'cron', cron: '*/15 * * * *', step_count: 4, packages: ['lead_capture_launch'] },
+        { id: '2.1', cat: 2, category_name: 'Revenue', name: 'Paid offer checkout handoff', trigger: 'event', step_count: 6, packages: ['paid_offer'] },
+        { id: '3.1', cat: 3, category_name: 'Onboarding', name: 'Customer launch checklist issued', trigger: 'event', step_count: 4, packages: ['lead_capture_launch', 'paid_offer'] }
+      ]
+    };
+  }
+
   function renderAutomations() {
     if (!autoData || !Array.isArray(autoData?.automations)) return;
     let items = autoData.automations || [];
@@ -2150,10 +2209,14 @@
       await Promise.all([loadAll(), loadAutomations()]);
       render();
     } catch (e) {
+      state.catalog = state.catalog || fallbackCatalog();
+      autoData = autoData || fallbackAutomations();
+      render();
+      renderAutomations();
       const main = document.querySelector('main');
       if (main) {
         main.insertAdjacentHTML('afterbegin',
-          `<div class="announcement"><strong>Error loading catalog:</strong> ${e.message}. Confirm /api/catalog/* is deployed.</div>`);
+          `<div class="announcement"><strong>Showing built-in catalog snapshot.</strong> Live catalog data is temporarily unavailable, so this page is using the same public delivery boundaries and representative modules instead of exposing a technical error.</div>`);
       }
     }
   })();

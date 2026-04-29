@@ -164,24 +164,73 @@ textarea{min-height:104px;resize:vertical}
     result.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  const offerLabels = {
+    'score-free': 'Free Idea Score',
+    'diagnostic-blueprint': 'Diagnostic + Execution Blueprint',
+    'strategy-pack': 'Strategy Pack',
+    'foundation-build': 'Foundation Build',
+    'professional-build': 'Professional Build',
+    'enterprise-build': 'Enterprise Build',
+    'launch-page': 'Launch Page',
+    'lead-capture-system': 'Lead Capture System',
+    'setup-starter': 'Starter Setup'
+  };
+
+  function fallbackSchema(offer) {
+    const name = offerLabels[offer] || 'Selected offer';
+    const buildOffer = /build|launch|lead|setup/.test(offer);
+    const fields = [
+      { key: 'business_name', label: 'Business name', type: 'text', required: true },
+      { key: 'owner_name', label: 'Owner name', type: 'text', required: true },
+      { key: 'owner_email', label: 'Owner email', type: 'email', required: true },
+      { key: 'domain_preference', label: 'Preferred domain or subdomain', type: 'text', required: buildOffer },
+      { key: 'brand_notes', label: 'Brand notes and must-use copy', type: 'text', required: false },
+      { key: 'authorization_confirmed', label: 'I authorize provisioning for this business', type: 'checkbox', required: true }
+    ];
+    if (buildOffer) {
+      fields.splice(4, 0,
+        { key: 'vercel_project_access', label: 'Vercel or hosting access notes', type: 'text', required: true, secret: true },
+        { key: 'payment_provider_access', label: 'Stripe or payment provider access notes', type: 'text', required: false, secret: true },
+        { key: 'email_provider_access', label: 'Email/CRM provider access notes', type: 'text', required: false, secret: true }
+      );
+    }
+    return {
+      ok: true,
+      fallback: true,
+      offer: {
+        name,
+        outcome: buildOffer
+          ? 'This package provisions the customer-specific launch runtime when the access token and required vendor credentials are valid.'
+          : 'This package produces the selected planning or decision deliverable without promising a live runtime.'
+      },
+      modules: buildOffer ? ['runtime', 'lead_capture', 'workflow_templates', 'receipt'] : ['planning_documents'],
+      capabilities: buildOffer ? ['business_details', 'vendor_credentials', 'customer_authorization'] : ['business_details'],
+      credential_fields: fields
+    };
+  }
+
   async function loadSchema() {
     const offer = document.getElementById('offer').value;
     const container = document.getElementById('credential-fields');
     container.innerHTML = '<p>Loading required credentials...</p>';
     schemaSummary.innerHTML = '<strong>Loading selected offer...</strong>';
-    const response = await fetch('/api/deliverables/provision?offer=' + encodeURIComponent(offer));
-    const schema = await response.json();
-    if (!schema.ok) {
-      container.innerHTML = '<p>Could not load provisioning schema.</p>';
-      schemaSummary.innerHTML = '<strong>Schema unavailable.</strong><span>Try another offer or refresh the page.</span>';
-      return;
+    let schema;
+    try {
+      const response = await fetch('/api/deliverables/provision?offer=' + encodeURIComponent(offer));
+      const contentType = response.headers.get('content-type') || '';
+      if (!response.ok || !contentType.includes('application/json')) throw new Error('schema endpoint unavailable');
+      schema = await response.json();
+      if (!schema.ok) throw new Error(schema.error || 'schema unavailable');
+    } catch (error) {
+      schema = fallbackSchema(offer);
     }
     const modules = schema.modules || [];
     const capabilities = schema.capabilities || [];
     schemaSummary.innerHTML =
       '<strong>' + esc(schema.offer.name) + '</strong>' +
       '<span>' + esc(schema.offer.outcome) + '</span>' +
-      '<span>' + modules.length + ' modules activated when credentials are valid. ' + capabilities.length + ' capability groups required.</span>';
+      '<span>' + modules.length + ' modules activated when credentials are valid. ' + capabilities.length + ' capability groups required.</span>' +
+      (schema.fallback ? '<span>Showing the built-in credential checklist while live schema data is unavailable.</span>' : '');
     container.innerHTML = '<h3>Required provisioning inputs</h3>' + schema.credential_fields.filter(function(field) {
       return field.key !== 'business_name';
     }).map(function(field) {

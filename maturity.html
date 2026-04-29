@@ -3,151 +3,185 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>What ships in an autonomous business unit - Your Deputy</title>
-<meta name="description" content="Honest status of the Your Deputy autonomous business-unit standard: central config, revenue engine, RevOps, CRM, AI/MCP tools, workflows, infrastructure, deployment, and limits.">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://yourdeputy.com/maturity">
-<meta property="og:title" content="What Ships In An Autonomous Business Unit - Your Deputy">
-<meta property="og:description" content="Accountability before purchase. See what ships, what is validated, what is credential-gated, and what stays self-hostable in your repo.">
-<meta property="og:url" content="https://yourdeputy.com/maturity">
-<style>
-:root{--gold:#C9A84C;--ink:#09090B;--panel:#16161B;--card:#1E1E2A;--bdr:rgba(255,255,255,.12);--tx:#FAFAF9;--sub:#A1A1AA;--dim:#9A9A9A;--live:#22C55E;--partial:#FBBF24;--ready:#60A5FA}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#0C0C14;color:var(--tx);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.6;padding:24px;max-width:1100px;margin:0 auto}
-a{color:var(--gold)}
-h1{font-size:clamp(26px,4vw,36px);font-weight:600;margin-bottom:8px}
-.lead{color:var(--sub);max-width:720px;margin-bottom:28px;font-size:15px}
-.note{font-size:12px;color:var(--dim);margin-bottom:32px;padding:12px 14px;background:var(--card);border-radius:10px;border:1px solid var(--bdr)}
-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:40px}
-th,td{border:1px solid var(--bdr);padding:10px 12px;text-align:left;vertical-align:top}
-th{background:var(--card);color:var(--gold);font-weight:600}
-.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
-.tag.live{background:rgba(34,197,94,.15);color:var(--live)}
-.tag.partial{background:rgba(251,191,36,.12);color:var(--partial)}
-.tag.ready{background:rgba(96,165,250,.12);color:var(--ready)}
-.tag.gen{background:rgba(161,161,170,.2);color:var(--sub)}
-ul{margin:12px 0 24px 20px;color:var(--sub);font-size:14px}
-.nav{margin-bottom:28px;font-size:14px}
-h2{font-size:18px;margin:28px 0 12px;color:var(--tx)}
-.sum{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 24px}
-.sum span{font-size:12px;padding:7px 10px;border-radius:999px;background:var(--card);border:1px solid var(--bdr);color:var(--sub)}
-details.matrix{margin:8px 0 24px}
-details.matrix summary{cursor:pointer;font-size:13px;color:var(--gold);margin-bottom:12px}
-details.matrix table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
-:focus-visible{outline:2px solid #C9A84C;outline-offset:2px;border-radius:4px}
-.skip:focus{position:fixed!important;left:16px;top:16px;width:auto!important;height:auto!important;overflow:visible!important}
-</style>
+<title>What ships today - Your Deputy</title>
+<meta name="description" content="Plain-language delivery boundaries for Your Deputy packages: what is live, what is generated, what is credential-gated, and what requires Custom Volume.">
+<link rel="canonical" href="https://www.yourdeputy.com/maturity">
+<meta property="og:title" content="What ships today - Your Deputy">
+<meta property="og:description" content="Accountability before purchase: exact package boundaries, credential requirements, and delivery proof.">
 <link rel="stylesheet" href="/site-shell.css">
+<style>
+:root{--blue:#2454b8;--blue-dark:#183d8f;--ink:#15171c;--text:#20232b;--muted:#566171;--faint:#7b8493;--line:#d9e0ea;--panel:#fff;--canvas:#f6f7f9;--green:#148245;--green-soft:#e9f7ef;--amber:#9a6700;--amber-soft:#fff5dc;--red:#b42318;--red-soft:#fff1f0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.58}
+main{width:min(1180px,calc(100% - 48px));margin:0 auto;padding:112px 0 72px}
+a{color:var(--blue);font-weight:760;text-decoration:none}
+a:hover{text-decoration:underline}
+.crumbs{font-size:13px;color:var(--muted);margin-bottom:32px}
+.eyebrow{color:var(--blue);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;margin:0 0 14px}
+h1{font-size:clamp(40px,5vw,62px);line-height:1.04;letter-spacing:0;margin:0 0 16px;color:var(--ink);font-weight:830;max-width:820px}
+h2{font-size:clamp(25px,3vw,36px);line-height:1.12;margin:0 0 12px;color:var(--ink);font-weight:820}
+h3{font-size:18px;line-height:1.25;margin:0 0 8px;color:var(--ink);font-weight:800}
+p{margin:0 0 14px;color:var(--muted)}
+.lead{font-size:clamp(18px,2vw,21px);max-width:790px}
+.hero{padding:32px 0 34px;border-bottom:1px solid var(--line)}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;border-radius:8px;padding:0 18px;border:1px solid var(--line);font-weight:820;text-align:center}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff!important}
+.btn.primary:hover{background:var(--blue-dark);border-color:var(--blue-dark);text-decoration:none}
+.btn.secondary{background:#fff;color:var(--ink)!important}
+.section{padding:42px 0;border-bottom:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:20px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card,.notice{background:#fff;border:1px solid var(--line);border-radius:8px;padding:20px;box-shadow:0 10px 26px rgba(24,34,53,.05)}
+.card ul{margin:12px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+.card li{margin:7px 0}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.live{background:var(--green-soft);color:var(--green)}
+.codegen{background:#eef3ff;color:var(--blue)}
+.partial{background:var(--amber-soft);color:var(--amber)}
+.planned{background:var(--red-soft);color:var(--red)}
+.notice{border-left:4px solid var(--amber);background:var(--amber-soft)}
+.proof{display:grid;grid-template-columns:180px minmax(0,1fr);border-top:1px solid var(--line);font-size:14px}
+.proof div{padding:12px 0;border-bottom:1px solid var(--line)}
+.proof div:nth-child(odd){font-weight:800;color:var(--ink)}
+.status-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:14px}
+.status-table th,.status-table td{padding:14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.status-table th{background:#f1f4f8;color:var(--ink);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.status-table tr:last-child td{border-bottom:0}
+.fine{font-size:13px;color:var(--muted)}
+form.waitlist{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+form.waitlist input{flex:1 1 240px;min-height:46px;border:1px solid var(--line);border-radius:8px;padding:0 14px;font:inherit}
+form.waitlist button{min-height:46px;border:0;border-radius:8px;background:var(--blue);color:#fff;font-weight:820;padding:0 18px}
+@media(max-width:900px){main{width:min(100% - 32px,1180px);padding-top:92px}.grid,.grid.two{grid-template-columns:1fr}.proof{grid-template-columns:1fr}.proof div:nth-child(odd){padding-bottom:0;border-bottom:0}.actions .btn{width:100%}.status-table{display:block;overflow-x:auto}}
+</style>
 </head>
 <body>
-<a href="#content" class="skip" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:999;font-size:14px;padding:8px 16px;background:#C9A84C;color:#09090B;border-radius:8px;font-weight:600">Skip to content</a>
-<main id="content" role="main">
-<p class="nav"><a href="/">← Home</a> · <a href="/app">Builder</a> · <a href="/deliverables">Full deliverables inventory</a> · <a href="/#pricing">Pricing</a></p>
-<h1>What ships in an autonomous business unit</h1>
-<p class="lead">This page exists for one reason: <strong>accountability before purchase</strong>. Your Deputy now targets a business-complete operating unit: website, funnel, products, CRM, RevOps, payments, onboarding, support, PostHog-ready analytics, AI agents, MCP tools, open-weight model routing, optional video/voice assets, repair checkpoints, workflows, and self-hosted infrastructure, with credential-gated integrations called out plainly.</p>
-<p class="note"><strong>Last reviewed:</strong> 2026-04-25. <strong>Current launch standard:</strong> generated repos are validated for master config, required schemas, required workflows, MCP tools, RevOps modules, info products, pricing, checkout, payment abstraction, onboarding, support, analytics, security baseline, niche alignment, self-hostable infrastructure, full SaaS/company SDLC coverage, OWASP ASVS/SAMM evidence, NIST AI RMF risk tracking, ISO 42001 readiness, official MCP conformance metadata, OpenTelemetry observability, PostHog-ready event plans, GitHub deployment protection, tenancy decision records, open-weight model routing, optional media asset scaffolds, resumable build checkpoints, and semantic promise-equivalence fixtures before they can report BUILD STATUS: PASS.<br><br> Seven tiers are available today:<br>
-<strong>Free Scoring</strong> ($0) — viability scorecard only.<br>
-<strong>Scoring Pro</strong> ($19/mo) — unlimited scoring with priority models.<br>
-<strong>Blueprint</strong> ($297) — deep diagnostic + execution plan.<br>
-<strong>Strategy Pack</strong> ($697) — all 90+ documents, downloadable .zip, no code or deployment. $697 credited toward Foundation within 30 days.<br>
-<strong>Foundation</strong> ($1,997) — Strategy Pack outcomes plus production code, deployment, Day-1 Success Kit, and the <strong>same 11-slot server integration allowlist</strong> as Professional in <code>api/provision.js</code> (executed when keys, archetype, and API health allow).<br>
-<strong>Professional</strong> ($4,997) — <strong>Same 11-slot integration allowlist as Foundation</strong>; priced as the higher build tier — not a wider automation surface in code today.<br>
-<strong>Enterprise</strong> ($9,997) — Professional scope plus <strong>two</strong> extra slots (<strong>13</strong> total): WordPress/managed CMS and post-deploy verification. Voice, SMS, CRM, directory, lead intel, and full video modules require <strong>Custom Volume</strong> (19-slot allowlist) or manual activation.<br><br>Items marked &quot;Planned&quot; are <strong>not</strong> implied in default Enterprise unless listed in your tier&apos;s <code>TIER_MODULES</code> row; most require Custom Volume and configured keys. <strong>Credential boundary:</strong> launcher-held keys (documented in the technical tool-config env var) are for generating deliverables and orchestrating setup; <strong>sustained operation</strong> of deployed apps is intended to use <strong>customer-owned</strong> vendor credentials in the shipped project (<code>.env.example</code>, MANUAL-ACTIONS, their Vercel env) — not an ongoing dependency on the launcher’s shared API pool. Customer Vercel projects are not auto-filled with real Clerk/Stripe/DB secrets from the launcher (placeholders + dashboard handoff). Modules are implemented in the orchestrator and execute as software workflows; success still depends on your approvals, API health, and tier limits. The builder runs <strong>multi-pass post-deploy checks</strong> (repo paths, Vercel READY, strict live URL + routes) and an <strong>artifact quality gate</strong> on key docs (placeholders, template-leak patterns, niche grounding) before calling a deploy “ready.” The <strong>U.S. government contracting planning pack</strong> is <strong>opt-in</strong> in the builder and is informational only (verify on SAM, USASpending, SBA, Census NAICS).<br><br>Technical verification endpoint: <a href="/api/provision?action=inventory">/api/provision?action=inventory</a>.</p>
+<main id="main-content">
+  <p class="crumbs"><a href="/">Home</a> / <a href="/pricing">Pricing</a> / Delivery boundaries</p>
 
-<h2>Status legend</h2>
-<ul>
-<li><span class="tag live">Live</span> — In active use for paying builds, subject to tier, keys, and API health.</li>
-<li><span class="tag partial">Partial</span> — Works in many cases but has known provider/key dependencies or reduced fallback behavior.</li>
-<li><span class="tag gen">Codegen</span> — Client-side generation + repo files; no external API required.</li>
-<li><span class="tag ready">Planned</span> — Designed and specified; ships only when your paid tier&apos;s <code>TIER_MODULES</code> allowlist includes that module <strong>and</strong> vendor keys are configured (most wide integrations require Custom Volume).</li>
-</ul>
+  <section class="hero">
+    <p class="eyebrow">Accountability before purchase</p>
+    <h1>What ships today, what needs credentials, and what does not ship by default.</h1>
+    <p class="lead">This page is the plain-English contract between the website promise and the backend. Your Deputy can generate documents, build runtime records, create launch pages, prepare workflows, produce files, and issue receipts. External vendor operation depends on customer-owned credentials and the purchased tier.</p>
+    <div class="actions">
+      <a class="btn primary" href="/sign-up?offer=foundation-build">Provision a paid build</a>
+      <a class="btn secondary" href="/deliverables">See live deliverable examples</a>
+    </div>
+  </section>
 
-<div class="sum">
-<span><strong style="color:var(--live)">Live:</strong> 23</span>
-<span><strong style="color:var(--partial)">Partial:</strong> 6</span>
-<span><strong style="color:var(--sub)">Codegen:</strong> 16</span>
-<span><strong style="color:var(--ready)">Planned:</strong> 5</span>
-</div>
+  <section class="section">
+    <p class="eyebrow">Package truth table</p>
+    <h2>Buy the package that matches the output you expect.</h2>
+    <div class="grid">
+      <article class="card">
+        <span class="badge codegen">Planning</span>
+        <h3>Free, Blueprint, and Strategy Pack</h3>
+        <p>These are decision and planning products. They return scoring, strategy, documents, acceptance tests, and handoff guidance. They do not promise a live customer runtime.</p>
+      </article>
+      <article class="card">
+        <span class="badge live">Provisioned</span>
+        <h3>Foundation and Professional</h3>
+        <p>Foundation and Professional share the same 11-slot server integration allowlist as Professional in <code>api/provision.js</code>. They can create runtime records, pages, lead capture, workflows, files, seed data, and receipts when required keys and vendor health allow.</p>
+      </article>
+      <article class="card">
+        <span class="badge partial">Expanded</span>
+        <h3>Enterprise and Custom Volume</h3>
+        <p>Enterprise extends the allowlist to 13 slots. Custom Volume can unlock a 19-slot allowlist for broader modules such as voice, SMS, CRM, directory, lead intel, and expanded media automation.</p>
+      </article>
+    </div>
+  </section>
 
-<details class="matrix">
-<summary>Detailed technical matrix (50 rows)</summary>
-<table role="table" aria-label="Feature status matrix">
-<thead>
-<tr><th>Outcome area</th><th>Status</th><th>Customer-visible proof</th><th>Notes</th></tr>
-</thead>
-<tbody>
-<tr><td>Multi-model viability scoring + adversarial critique</td><td><span class="tag live">Live</span></td><td>Scorecard in app; exported narrative in docs</td><td>Free tier for scoring; depth scales with path.</td></tr>
-<tr><td>Local and open-weight AI scoring</td><td><span class="tag live">Live</span></td><td>WebLLM/WebGPU plus open-weight catalog evidence</td><td>Private local scoring is preferred when supported; generated routing notes cover GPT-OSS, Gemma 3/3n, Qwen3/Qwen3-Coder, DeepSeek R1, Phi-4, Devstral, Magistral, and hosted fallbacks when configured.</td></tr>
-<tr><td>TurboQuant pipeline compression</td><td><span class="tag live">Live</span></td><td>Parallelized AI calls and model routing by task</td><td>~40% fewer sequential AI calls. Pitch+investor+legal, emails+discovery+compete, and g8 Day-1 Kit run as parallel batches; model selection is represented as routing evidence, not a single hardcoded model claim.</td></tr>
-<tr><td>Strategy & business document bundle</td><td><span class="tag gen">Codegen</span></td><td>Markdown in repo (SPEC, GTM, revenue, investor, SBA-shaped content, etc.)</td><td>Depth scales with package; advisor review still required — not legal/financial advice.</td></tr>
-<tr><td>Plain-language companion (<code>docs/plain/</code>)</td><td><span class="tag partial">Partial</span></td><td>Toggle in builder; QA heuristics in pipeline</td><td>Additive to technical originals.</td></tr>
-<tr><td>Design system + CLAUDE.md per project</td><td><span class="tag gen">Codegen</span></td><td><code>DESIGN.md</code>, <code>CLAUDE.md</code></td><td>—</td></tr>
-<tr><td>Next.js app + validation gate (icons, branding, i18n, etc.)</td><td><span class="tag gen">Codegen</span></td><td>Runnable repo; 8-check gate in builder</td><td>—</td></tr>
-<tr><td>Artifact quality gate (critical docs / backend snippet)</td><td><span class="tag partial">Partial</span></td><td><code>/api/validate</code> + completion checklist</td><td>Placeholder &amp; template-leak patterns; project-name grounding in SPEC + BUSINESS-SYSTEM; not a compliance certification.</td></tr>
-<tr><td>Full SaaS + company SDLC contract</td><td><span class="tag gen">Codegen</span></td><td><code>sdlc/</code> artifacts plus semantic-equivalence tests</td><td>Problem discovery, product strategy, architecture, UX, MVP scoping, planning, development, QA, launch, GTM, retention, operations, and continuous improvement are required generated evidence.</td></tr>
-<tr><td>OWASP security assurance pack</td><td><span class="tag gen">Codegen</span></td><td><code>security/owasp-asvs-checklist.yaml</code>, <code>security/owasp-samm-maturity.yaml</code></td><td>Security control evidence is generated as a readiness checklist; it does not replace a penetration test or formal certification.</td></tr>
-<tr><td>AI governance readiness</td><td><span class="tag gen">Codegen</span></td><td><code>governance/nist-ai-rmf-risk-register.yaml</code>, <code>governance/iso-42001-readiness.md</code></td><td>NIST AI RMF govern/map/measure/manage coverage and ISO 42001 readiness prompts are required for AI-native builds.</td></tr>
-<tr><td>MCP conformance evidence</td><td><span class="tag gen">Codegen</span></td><td><code>mcp/mcp-conformance.yaml</code>, <code>tests/mcp-conformance.test.ts</code></td><td>Tool metadata must cover tools/list, tools/call, resources, prompts, authorization, consent, side effects, idempotency, and error states.</td></tr>
-<tr><td>OpenTelemetry observability scaffold</td><td><span class="tag gen">Codegen</span></td><td><code>observability/otel-config.yaml</code>, <code>src/observability/tracing.ts</code></td><td>Generated apps include trace, metric, log, trace_id, collector, and business-event correlation scaffolds.</td></tr>
-<tr><td>GitHub deployment protection contract</td><td><span class="tag gen">Codegen</span></td><td><code>deployment/github-actions-protection.yaml</code>, <code>tests/deployment-protection.test.ts</code></td><td>Required checks, protected environments, concurrency, branch protection, and deployment protection are encoded as launch evidence.</td></tr>
-<tr><td>Tenancy architecture decision</td><td><span class="tag gen">Codegen</span></td><td><code>architecture/tenancy-decision.md</code></td><td>Generated repos must record tenant isolation, shared-table/schema/database tradeoffs, migration, backup, and disaster-recovery posture.</td></tr>
-<tr><td>Semantic promise-equivalence evals</td><td><span class="tag gen">Codegen</span></td><td><code>evals/semantic-niche-rubric.yaml</code>, <code>evals/promise-equivalence-fixtures.yaml</code></td><td>Website promises are mapped to generated artifacts so future builds cannot silently ship generic or promise-incomplete output.</td></tr>
-<tr><td>Resumable build operator layer</td><td><span class="tag live">Live</span></td><td><code>build-state/checkpoints.json</code>, <code>codex-operator/</code>, <code>tests/resume-build.test.ts</code></td><td>Long-running builds record stage checkpoints, failure classes, repair attempts, changed files, and next actions so a future run can continue from the last verified stage instead of starting over.</td></tr>
-<tr><td>Open-weight model catalog</td><td><span class="tag gen">Codegen</span></td><td><code>ai/open-weight-models.yaml</code>, <code>ai/model-routing.yaml</code></td><td>Generated projects document recommended model families, fit-by-task, local/self-hosted options, licensing notes to verify, and hosted fallback boundaries.</td></tr>
-<tr><td>Codebase context intelligence adapters</td><td><span class="tag gen">Codegen</span></td><td><code>ai/context/</code>, <code>agents/research-skills.md</code>, <code>codex-operator/skills.md</code></td><td>Claude Context-style repo indexing, RTK-style routing, Hermes-style agent notes, and curated Codex skill references are represented as optional intelligence layers.</td></tr>
-<tr><td>Multi-pass deploy verification (GitHub, Vercel, live, routes)</td><td><span class="tag live">Live</span></td><td>Build log + honest done screen when checks fail</td><td>Strict live check (project name, no template branding leak on home + key routes). Retries/stabilization passes in client pipeline.</td></tr>
-<tr><td>U.S. government contracting planning pack</td><td><span class="tag gen">Codegen</span></td><td><code>docs/GOV-READINESS.md</code>, NAICS candidates, capabilities template, RFP outline</td><td><strong>Opt-in</strong> in builder; informational only; no fabricated solicitations or awards; verify on official .gov sources.</td></tr>
-<tr><td>Vertical niche tool scaffold (e.g. takeoff assist)</td><td><span class="tag partial">Partial</span></td><td>Routes, schema SQL, env examples; Blob/Postgres wired when configured</td><td>Assist-only positioning; not a licensed bid.</td></tr>
-<tr><td>GitHub repo + push + Vercel deploy (Phase 8 class)</td><td><span class="tag live">Live</span></td><td>Private repo, preview URL, env scaffolding</td><td>CDN build follows push.</td></tr>
-<tr><td>Express path speed + clear deferrals</td><td><span class="tag live">Live</span></td><td><code>docs/V4-DEMO-SLA.md</code>, <code>BUILD-MANIFEST.json</code></td><td>Sub–5 min targets pipeline to push; some modules may defer.</td></tr>
-<tr><td>Build scope preview (before run)</td><td><span class="tag live">Live</span></td><td>Builder UI “Expected scope” panel</td><td>Shows run / defer / skip expectations by package and tier.</td></tr>
-<tr><td>Interactive onboarding dashboard</td><td><span class="tag live">Live</span></td><td><code>public/onboard.html</code></td><td>Self-contained HTML checklist with localStorage progress, vendor links, env var copy buttons. No external dependencies.</td></tr>
-<tr><td>Automated test suite</td><td><span class="tag live">Live</span></td><td><code>src/__tests__/</code>, <code>e2e/</code>, <code>vitest.config.ts</code>, <code>playwright.config.ts</code></td><td>Vitest unit tests, RTL component tests, Playwright e2e smoke tests derived from generated code and data model.</td></tr>
-<tr><td>Seed data and demo content</td><td><span class="tag live">Live</span></td><td><code>src/data/seed/</code>, <code>src/scripts/seed.ts</code></td><td>Fictional users, content, transactions matching business type. Executable seeder script (npm run db:seed).</td></tr>
-<tr><td>API collection (OpenAPI + Postman)</td><td><span class="tag live">Live</span></td><td><code>docs/openapi.json</code>, <code>docs/postman-collection.json</code></td><td>OpenAPI 3.0 spec + Postman v2.1 collection derived from generated API routes.</td></tr>
-<tr><td>90-day launch playbook</td><td><span class="tag live">Live</span></td><td><code>LAUNCH-PLAYBOOK.md</code></td><td>Tier-aware week-by-week action plan referencing specific repo deliverables. Suggested playbook, not professional advice.</td></tr>
-<tr><td>Hosting, domain, and inbox setup</td><td><span class="tag live">Live</span></td><td>20i: domain, email, SPF/DKIM/DMARC, SSL</td><td>Foundation+ paid builds. Auto-provisions via 20i API when infrastructure credentials are configured.</td></tr>
-<tr><td>Payments and webhook flow</td><td><span class="tag live">Live</span></td><td>Stripe Connect: products, prices, webhooks, dunning</td><td>Foundation+ paid builds. Creates connected Stripe account, products, prices, and webhook endpoints.</td></tr>
-<tr><td>Email campaigns and onboarding sequence</td><td><span class="tag live">Live</span></td><td>Acumbamail: list, 5-email welcome, automation + Emailit transactional</td><td>Foundation+ paid builds. Creates subscriber list, welcome sequence, and transactional email via Emailit.</td></tr>
-<tr><td>Voice intake and booking automation</td><td><span class="tag ready">Planned</span></td><td>Custom Volume when configured</td><td>Requires <code>phone</code> in Custom Volume allowlist. CallScaler + Insighto + Trafft.</td></tr>
-<tr><td>Text-message campaign automation</td><td><span class="tag ready">Planned</span></td><td>Custom Volume when configured</td><td>Requires <code>sms</code> in Custom Volume allowlist. SMS-iT.</td></tr>
-<tr><td>Website assistant experience</td><td><span class="tag live">Live</span></td><td>AI chatbot: FAQ-trained, embeddable widget</td><td>Foundation+ paid builds. Generates FAQ-trained chatbot widget using Anthropic API. Static widget, no runtime key needed on client site.</td></tr>
-<tr><td>SEO content bundle</td><td><span class="tag live">Live</span></td><td>5 blog posts, keyword research, meta tags</td><td>Foundation+ paid builds. AI-generated blog posts with keyword targeting. You own editorial judgment before publish.</td></tr>
-<tr><td>Video and visual creative outputs</td><td><span class="tag partial">Partial</span></td><td>Design asset kit plus optional video-use/video script scaffolds</td><td>Foundation+ builds include creative briefs and design assets. Video-use-style automation, voiceover planning, and rendered video pipelines are optional and depend on configured media tooling.</td></tr>
-<tr><td>Voice and narration planning</td><td><span class="tag gen">Codegen</span></td><td><code>media/voiceover-plan.md</code>, <code>prompts/video-generation.md</code></td><td>VibeVoice-compatible narration plans can be generated for explainer, onboarding, support, and product videos; rendered voice assets require configured tooling and licensing review.</td></tr>
-<tr><td>Behavior and funnel analytics</td><td><span class="tag live">Live</span></td><td>PostHog-ready event plan, funnels, optional snippet, and Plerdy heatmap wiring</td><td>Foundation+ paid builds include analytics instrumentation guidance and adapter boundaries. Customer-owned keys control sustained production tracking.</td></tr>
-<tr><td>PostHog analytics adapter contract</td><td><span class="tag gen">Codegen</span></td><td><code>analytics/posthog-events.yaml</code>, <code>src/providers/analytics/</code></td><td>PostHog is represented as an optional adapter and event taxonomy, not a hard dependency in core business logic.</td></tr>
-<tr><td>Lead intelligence and enrichment</td><td><span class="tag ready">Planned</span></td><td>Custom Volume when configured</td><td>Requires <code>leads</code> in Custom Volume allowlist. Happierleads + Salespanel.</td></tr>
-<tr><td>Legal and policy document drafts</td><td><span class="tag live">Live</span></td><td>Documentero: formatted legal PDFs + codegen drafts</td><td>Foundation+ paid builds add Documentero PDF generation. Codegen drafts available in all build tiers. Attorney review required.</td></tr>
-<tr><td>Workflow orchestration pack</td><td><span class="tag live">Live</span></td><td>n8n: 7 automation workflows</td><td>Foundation+ paid builds. Creates n8n workflows for onboarding, billing, notifications, lead routing, content, reporting, and health checks.</td></tr>
-<tr><td>Social publishing calendar automation</td><td><span class="tag live">Live</span></td><td>Vista Social: 260-post calendar import</td><td>Foundation+ paid builds. Imports generated social media calendar into Vista Social.</td></tr>
-<tr><td>Client workspace and pipeline automation</td><td><span class="tag ready">Planned</span></td><td>Custom Volume when configured</td><td>Requires <code>crm</code> in Custom Volume allowlist. SuiteDash.</td></tr>
-<tr><td>Directory business model automation</td><td><span class="tag ready">Planned</span></td><td>Custom Volume when configured</td><td>Requires <code>directory</code> in Custom Volume allowlist. Brilliant Directories.</td></tr>
-<tr><td>Managed CMS site path</td><td><span class="tag live">Live</span></td><td>20i WordPress + Your Deputy Developer theme</td><td>Enterprise tier. WordPress provisioning via 20i with Your Deputy Developer theme.</td></tr>
-<tr><td>Post-deploy quality verification (orchestrator / modules)</td><td><span class="tag live">Live</span></td><td>Automated smoke tests on live URL</td><td>Enterprise tier. HTTP checks, content verification, and SSL validation on deployed site.</td></tr>
-<tr><td>Community (Heartbeat)</td><td><span class="tag partial">Partial</span></td><td>UI toggle in V3 wireframe</td><td>Spec only; no server-side module yet. Optional and key-gated.</td></tr>
-</tbody>
-</table>
-</details>
+  <section class="section">
+    <p class="eyebrow">The credential boundary</p>
+    <h2>Automatic does not mean pretending vendor accounts exist.</h2>
+    <div class="notice">
+      <p><strong>Customer-owned credentials are required for sustained operation.</strong> Launcher-held keys help generate deliverables and orchestrate setup. The delivered app is intended to run on the customer's vendor accounts, domains, Vercel project, Stripe account, CRM, email platform, analytics account, and other connected services.</p>
+      <p class="fine">If a credential is missing, the receipt must say what is blocked and what the customer must provide. It should not mark that vendor step complete.</p>
+    </div>
+    <div class="grid two">
+      <article class="card">
+        <h3>The backend can create</h3>
+        <ul>
+          <li>Tenant and launch records</li>
+          <li>Public runtime pages and lead capture</li>
+          <li>Workflow templates and event hooks</li>
+          <li>Generated app code and deployment scaffolding</li>
+          <li>Seed data, files, checks, manifests, and receipts</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>The customer must authorize</h3>
+        <ul>
+          <li>Production API keys and vendor permissions</li>
+          <li>Real domains, DNS, inboxes, and payment accounts</li>
+          <li>Legal, tax, financial, compliance, and brand approvals</li>
+          <li>Any regulated claims before publication</li>
+          <li>Ongoing service subscriptions outside Your Deputy</li>
+        </ul>
+      </article>
+    </div>
+  </section>
 
-<div style="margin:32px 0;background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(201,168,76,0.01));border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:28px;text-align:center">
-<h2 style="font-size:18px;color:var(--gold);margin:0 0 6px">Get notified when Managed Runtime launches</h2>
-<p style="font-size:13px;color:var(--dim);margin-bottom:14px">Managed Automation Runtime ($497/mo) — ongoing monitoring, retry queues, and optimization. Join the waitlist.</p>
-<form id="mat-waitlist" onsubmit="return matWaitlist(event)" style="display:flex;gap:8px;max-width:420px;margin:0 auto">
-<input id="mat-wl-email" type="email" placeholder="you@example.com" required aria-label="Email address for managed runtime waitlist" style="flex:1;padding:10px 14px;border:1px solid var(--bdr);border-radius:8px;background:var(--card);color:var(--tx);font-size:14px;font-family:inherit;outline:none">
-<button type="submit" style="padding:10px 20px;background:var(--gold);color:var(--ink);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap">Join waitlist</button>
-</form>
-<div id="mat-wl-msg" style="font-size:12px;margin-top:8px;min-height:18px"></div>
-</div>
-<script>
-function matWaitlist(e){e.preventDefault();var em=document.getElementById('mat-wl-email').value.trim();var msg=document.getElementById('mat-wl-msg');if(!em){msg.style.color='#EF4444';msg.textContent='Enter your email';return false}msg.style.color='var(--dim)';msg.textContent='Joining...';fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,tier_interest:'managed',source:'maturity'})}).then(function(r){return r.json()}).then(function(d){if(d.ok){msg.style.color='#22C55E';msg.textContent='You\'re on the list!';document.getElementById('mat-wl-email').value=''}else{msg.style.color='#EF4444';msg.textContent=d.error||'Error'}}).catch(function(){msg.style.color='#EF4444';msg.textContent='Network error'});return false}
-</script>
+  <section class="section">
+    <p class="eyebrow">Delivery proof</p>
+    <h2>Every completed build should leave evidence.</h2>
+    <div class="proof">
+      <div>Customer enters</div><div>Business details, buyer, pain, paid access token, and the credentials needed for the selected package.</div>
+      <div>Backend creates</div><div>Launch record, modules, runtime page, lead capture path, workflow templates, seed data, generated files, and package receipt.</div>
+      <div>Receipt shows</div><div>What shipped, what passed, what failed, which vendor actions are blocked, and the URL or file path the customer can use.</div>
+      <div>Quality gate checks</div><div>Route availability, placeholder leakage, required artifacts, tier boundaries, credential handling, and promise-to-output alignment before reporting ready.</div>
+    </div>
+  </section>
 
-<h2>Why this page matters</h2>
-<p class="lead" style="margin-bottom:16px">Most platforms oversell vague capability. <strong>This page exists so you know exactly what you’re buying.</strong> Foundation delivers everything marked Live, Codegen, or Partial for its tier allowlist. Items marked Planned need the module on your tier&apos;s <code>TIER_MODULES</code> row (most need Custom Volume) plus vendor keys — we won&apos;t imply they ship on default Enterprise unless the allowlist says so.</p>
+  <section class="section">
+    <p class="eyebrow">Status legend</p>
+    <h2>How to read the catalog and deliverables pages.</h2>
+    <table class="status-table" aria-label="Delivery status legend">
+      <thead><tr><th>Status</th><th>Meaning</th><th>Customer expectation</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge live">Live</span></td><td>Implemented in the product path and validated by smoke checks.</td><td>Can be provisioned when tier, key, and vendor conditions are satisfied.</td></tr>
+        <tr><td><span class="badge codegen">Codegen</span></td><td>Generated as files, docs, tests, schemas, scaffolds, or app code.</td><td>Usable immediately as a handoff artifact; external deployment may still need credentials.</td></tr>
+        <tr><td><span class="badge partial">Partial</span></td><td>Works in a bounded path but has known provider, approval, or health dependencies.</td><td>The receipt must explain exactly which parts completed and which did not.</td></tr>
+        <tr><td><span class="badge planned">Planned</span></td><td>Specified but not included in the default package unless the tier allowlist includes it.</td><td>Requires Custom Volume or explicit activation before it is sold as delivered.</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-<p class="nav"><a href="/for/">Guide pages</a> · <a href="/deliverables">Full deliverables inventory</a> · <a href="mailto:ikeohu@dynastyempire.com">Contact</a></p>
+  <section class="section">
+    <p class="eyebrow">Launch standard</p>
+    <h2>A build is not ready until the evidence matches the promise.</h2>
+    <div class="grid">
+      <article class="card"><h3>Business completeness</h3><p>Generated repos are checked for offer, pricing, checkout, onboarding, support, analytics, revenue operations, and operating documents before the build can claim readiness.</p></article>
+      <article class="card"><h3>Technical completeness</h3><p>Required schemas, workflows, MCP metadata, observability scaffolds, deployment protection, resumable checkpoints, and generated tests must be present.</p></article>
+      <article class="card"><h3>Risk boundaries</h3><p>OWASP, NIST AI RMF, ISO 42001 readiness, and policy artifacts are generated as readiness evidence. They are not a substitute for legal, compliance, or penetration-test approval.</p></article>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="eyebrow">Managed runtime</p>
+    <h2>Ongoing managed operations are separate from the launch build.</h2>
+    <p class="lead">Managed Automation Runtime is a future monthly operations layer for monitoring, retries, optimization, and vendor health. Today, launch packages create and hand off the build evidence; sustained operation depends on the customer's connected accounts.</p>
+    <form class="waitlist" id="mat-waitlist" onsubmit="return matWaitlist(event)">
+      <input id="mat-wl-email" type="email" placeholder="you@example.com" required aria-label="Email address for managed runtime waitlist">
+      <button type="submit">Join waitlist</button>
+    </form>
+    <div id="mat-wl-msg" class="fine" aria-live="polite"></div>
+  </section>
 </main>
+<script>
+function matWaitlist(e){
+  e.preventDefault();
+  var email=document.getElementById('mat-wl-email').value.trim();
+  var msg=document.getElementById('mat-wl-msg');
+  if(!email){msg.style.color='#b42318';msg.textContent='Enter your email.';return false}
+  msg.style.color='#566171';msg.textContent='Joining...';
+  fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,tier_interest:'managed',source:'maturity'})})
+    .then(function(r){return r.json()})
+    .then(function(d){if(d.ok){msg.style.color='#148245';msg.textContent='You are on the list.';document.getElementById('mat-wl-email').value=''}else{msg.style.color='#b42318';msg.textContent=d.error||'Could not join the waitlist.'}})
+    .catch(function(){msg.style.color='#b42318';msg.textContent='Network error. Please try again.'});
+  return false;
+}
+</script>
 <script src="/site-shell.js" defer></script>
 </body>
 </html>

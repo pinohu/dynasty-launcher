@@ -5,7 +5,7 @@
 
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/#offers", label: "Offers" },
+    { href: "/pricing", label: "Pricing" },
     { href: "/sign-up?offer=foundation-build", label: "Provision" },
     { href: "/deliverables", label: "Examples" },
     { href: "/app?returning=1", label: "Builder" },
@@ -16,7 +16,7 @@
     {
       title: "Buy",
       links: [
-        { href: "/#offers", label: "Compare offers" },
+        { href: "/pricing", label: "Compare pricing" },
         { href: "/sign-up?offer=foundation-build", label: "Provision a purchase" },
         { href: "/terms", label: "Terms" },
       ],
