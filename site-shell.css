@@ -541,6 +541,11 @@ body.yd-has-shell .hero-d h1 {
   font-weight: 820 !important;
 }
 
+body.yd-has-shell h1 em {
+  color: #15171c !important;
+  font-style: normal !important;
+}
+
 body.yd-has-shell h2,
 body.yd-has-shell .section-title {
   font-size: clamp(25px, 3vw, 38px) !important;
@@ -591,6 +596,12 @@ body.yd-has-shell .item,
 body.yd-has-shell .panel,
 body.yd-has-shell .path,
 body.yd-has-shell .step,
+body.yd-has-shell .context-box,
+body.yd-has-shell .hero-card,
+body.yd-has-shell .proof-card,
+body.yd-has-shell .use-card,
+body.yd-has-shell .inside li,
+body.yd-has-shell .file,
 body.yd-has-shell .st,
 body.yd-has-shell .note,
 body.yd-has-shell .announcement,
@@ -612,10 +623,37 @@ body.yd-has-shell .announcement strong {
 
 body.yd-has-shell .card:hover,
 body.yd-has-shell .item:hover,
-body.yd-has-shell a.card:hover {
+body.yd-has-shell a.card:hover,
+body.yd-has-shell .cats a:hover {
   border-color: #bfc7d4 !important;
   box-shadow: 0 16px 42px rgba(24, 34, 53, 0.08) !important;
   transform: none !important;
+}
+
+body.yd-has-shell .icon {
+  display: none !important;
+}
+
+body.yd-has-shell .count,
+body.yd-has-shell .file-pill,
+body.yd-has-shell .cats a,
+body.yd-has-shell .mark {
+  background: #eef3ff !important;
+  border: 1px solid #dce1ea !important;
+  border-radius: 999px !important;
+  color: #2454b8 !important;
+  box-shadow: none !important;
+}
+
+body.yd-has-shell .mark {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+}
+
+body.yd-has-shell .inside li::before {
+  content: "" !important;
+  margin: 0 !important;
 }
 
 body.yd-has-shell .grid,

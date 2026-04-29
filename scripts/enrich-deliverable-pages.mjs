@@ -76,6 +76,26 @@ function buildCategoryFileMap() {
   }
 }
 
+function modernizeCategoryPages() {
+  for (const [category] of Object.entries(categoryMeta)) {
+    const categoryPage = path.join(deliverablesDir, `${category}.html`);
+    if (!fs.existsSync(categoryPage)) continue;
+    let html = fs.readFileSync(categoryPage, 'utf8');
+    html = html
+      .replaceAll('/#pricing', '/pricing')
+      .replace(/(<a href="\/deliverables\/[a-z-]+">)[^A-Za-z<]*(.*?<\/a>)/g, '$1$2')
+      .replace(/<div class="icon" aria-hidden="true">[\s\S]*?<\/div>\n?/, '')
+      .replace('<link rel="canonical" href="https://yourdeputy.com/', '<link rel="canonical" href="https://www.yourdeputy.com/');
+    if (!html.includes('<link rel="stylesheet" href="/site-shell.css">')) {
+      html = html.replace('</style>', '</style>\n<link rel="stylesheet" href="/site-shell.css">');
+    }
+    if (!html.includes('<script src="/site-shell.js" defer></script>')) {
+      html = html.replace('</body>', '<script src="/site-shell.js" defer></script>\n</body>');
+    }
+    fs.writeFileSync(categoryPage, html);
+  }
+}
+
 function enrichInventoryLinks() {
   const inventoryPath = path.join(root, 'deliverables.html');
   let html = fs.readFileSync(inventoryPath, 'utf8');
@@ -288,6 +308,7 @@ function copyPublicTree() {
   fs.copyFileSync(path.join(root, 'deliverables.html'), path.join(root, 'public', 'deliverables.html'));
 }
 
+modernizeCategoryPages();
 buildCategoryFileMap();
 enrichInventoryLinks();
 enrichItemPages();
