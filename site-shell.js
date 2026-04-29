@@ -8,6 +8,7 @@
     { href: "/pricing", label: "Pricing" },
     { href: "/sign-up?offer=foundation-build", label: "Provision" },
     { href: "/deliverables", label: "Examples" },
+    { href: "/agency-offers", label: "AI Offers" },
     { href: "/app?returning=1", label: "Builder" },
     { href: "/maturity", label: "Limits" },
   ];
@@ -18,6 +19,7 @@
       links: [
         { href: "/pricing", label: "Compare pricing" },
         { href: "/sign-up?offer=foundation-build", label: "Provision a purchase" },
+        { href: "/agency-offers", label: "AI agency offers" },
         { href: "/terms", label: "Terms" },
       ],
     },

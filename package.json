@@ -6,6 +6,7 @@
   "description": "Business provisioning engine — tier-scoped docs, code, deploy, and integration attempts (see /maturity and TIER_MODULES in api/provision.js)",
   "scripts": {
     "build:marketplace-pages": "node scripts/build-marketplace-pages.mjs",
+    "build:agency-offers": "node scripts/build-agency-offer-pages.mjs",
     "build:demo-assets": "node scripts/build-demo-assets.mjs",
     "verify:product": "node scripts/verify-product-alignment.mjs",
     "test:validate": "node scripts/validate-smoke.mjs",
@@ -33,6 +34,7 @@
     "test:jobs": "node scripts/smoke-jobs.mjs",
     "build:live-deliverables": "node scripts/build-live-deliverables.mjs",
     "test:live-deliverables": "node scripts/check-live-deliverables.mjs",
+    "test:agency-offers": "node scripts/check-agency-offers.mjs",
     "test:fulfillment-provisioning": "node scripts/check-fulfillment-provisioning.mjs",
     "test:admin-ui-security": "node scripts/check-admin-ui-security.mjs",
     "test:generated-repair": "node scripts/generated-repo-regression.mjs",
@@ -52,7 +54,7 @@
     "lint:all": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:marketplace-readiness && npm run test:demo-coverage && npm run test:promised-services && npm run test:tenants && npm run test:tenant-auth && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:storefront-security && npm run test:ai-security && npm run test:automation-schema-guards && npm run test:automation-webhook-security && npm run test:public-ingress-security && npm run test:privileged-api-security && npm run test:github-security && npm run test:admin-key-security && npm run test:checkout-security && npm run test:deliverable-privacy && npm run test:business-factory && npm run test:jobs && npm run test:live-deliverables && npm run test:fulfillment-provisioning && npm run test:admin-ui-security && npm run lint:security && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:planning-fallbacks && npm run test:html-script-safety && npm run test:quality-gate-repair && npm run test:button-containment && npm run test:public-branding && npm run test:deployment-repair-guards && npm run test:resumable-builds"
+    "test": "npm run verify:product && npm run test:validate && npm run test:catalog && npm run test:marketplace-readiness && npm run test:demo-coverage && npm run test:promised-services && npm run test:tenants && npm run test:tenant-auth && npm run test:activation && npm run test:events && npm run test:workflows && npm run test:billing && npm run test:storefront-security && npm run test:ai-security && npm run test:automation-schema-guards && npm run test:automation-webhook-security && npm run test:public-ingress-security && npm run test:privileged-api-security && npm run test:github-security && npm run test:admin-key-security && npm run test:checkout-security && npm run test:deliverable-privacy && npm run test:business-factory && npm run test:jobs && npm run test:live-deliverables && npm run test:agency-offers && npm run test:fulfillment-provisioning && npm run test:admin-ui-security && npm run lint:security && npm run test:generated-repair && npm run test:site-links && npm run test:builder-clickability && npm run test:planning-fallbacks && npm run test:html-script-safety && npm run test:quality-gate-repair && npm run test:button-containment && npm run test:public-branding && npm run test:deployment-repair-guards && npm run test:resumable-builds"
   },
   "engines": {
     "node": "22.x"

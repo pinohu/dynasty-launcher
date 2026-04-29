@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI UGC Video Ads | Your Deputy</title>
+  <meta name="description" content="AI-generated UGC-style product videos, scripts, hooks, and testing variants.">
+  <link rel="stylesheet" href="/site-shell.css">
+  <script src="/site-shell.js" defer></script>
+  <style>
+    :root { color-scheme: light; }
+    .agency-wrap { width: min(1160px, calc(100% - 32px)); margin: 0 auto; padding: 72px 0 56px; }
+    .agency-hero { display: grid; gap: 24px; padding: 38px 0 22px; border-bottom: 1px solid rgba(15, 23, 42, 0.12); }
+    .agency-kicker { color: #0f766e; font-size: 0.8rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .agency-hero h1 { max-width: 900px; margin: 0; color: #0f172a; font-size: clamp(2.2rem, 5vw, 4.8rem); line-height: 0.95; letter-spacing: 0; }
+    .agency-lede { max-width: 820px; margin: 0; color: #475569; font-size: 1.12rem; line-height: 1.7; }
+    .agency-actions, .offer-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .agency-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; max-width: 100%; padding: 11px 16px; border: 1px solid #0f172a; border-radius: 8px; background: #0f172a; color: #fff; font-weight: 800; text-decoration: none; overflow-wrap: anywhere; white-space: normal; }
+    .agency-button.secondary { background: #fff; color: #0f172a; border-color: rgba(15, 23, 42, 0.18); }
+    .agency-stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin: 28px 0 0; }
+    .agency-stat { border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 8px; background: #fff; padding: 16px; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06); }
+    .agency-stat strong { display: block; color: #0f172a; font-size: 1.45rem; line-height: 1; }
+    .agency-stat span { display: block; margin-top: 8px; color: #64748b; line-height: 1.45; }
+    .category-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0; }
+    .category-nav a { border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 999px; color: #0f172a; padding: 8px 12px; text-decoration: none; background: #fff; }
+    .agency-section { padding: 32px 0; }
+    .agency-section h2 { margin: 0 0 14px; color: #0f172a; font-size: 1.55rem; letter-spacing: 0; }
+    .offer-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .offer-card { border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 8px; background: #fff; padding: 18px; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.05); }
+    .offer-card h3 { margin: 0 0 8px; color: #0f172a; font-size: 1.08rem; line-height: 1.3; }
+    .offer-card p { margin: 0 0 12px; color: #475569; line-height: 1.55; }
+    .offer-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+    .offer-meta span { border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 999px; color: #334155; background: #f8fafc; padding: 6px 9px; font-size: .82rem; }
+    .offer-layout { display: grid; gap: 28px; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); }
+    .offer-panel { border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 8px; background: #fff; padding: 20px; box-shadow: 0 14px 32px rgba(15, 23, 42, 0.05); }
+    .offer-panel h2, .offer-panel h3 { margin-top: 0; color: #0f172a; letter-spacing: 0; }
+    .offer-panel p, .offer-panel li { color: #475569; line-height: 1.65; }
+    .offer-panel ul, .offer-panel ol { padding-left: 20px; }
+    .offer-price { display: grid; gap: 10px; }
+    .offer-price div { border-top: 1px solid rgba(15, 23, 42, 0.1); padding-top: 10px; color: #475569; }
+    .offer-price strong { display: block; color: #0f172a; }
+    .example-flow { display: grid; gap: 12px; counter-reset: step; }
+    .example-step { border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 8px; padding: 16px; background: #fff; }
+    .example-step strong { display: block; color: #0f172a; }
+    .example-step span { display: block; margin-top: 6px; color: #475569; line-height: 1.55; }
+    @media (max-width: 820px) { .agency-wrap { width: min(100% - 24px, 1160px); padding-top: 54px; } .offer-layout { grid-template-columns: 1fr; } .agency-hero h1 { font-size: clamp(2rem, 12vw, 3.3rem); } }
+  </style>
+</head>
+<body>
+  <main id="main-content">
+    <div class="agency-wrap">
+      <section class="agency-hero" aria-labelledby="offer-title">
+        <div class="agency-kicker">Content and creative production / live</div>
+        <h1 id="offer-title">AI UGC Video Ads</h1>
+        <p class="agency-lede">A productized AI ad package using image/video generation and workflow automation to produce brand-safe video ads from product photos, audience angles, and approved claims.</p>
+        <div class="agency-actions">
+          <a class="agency-button" href="/sign-up?offer=ai-ugc-video-ads">Start this offer</a>
+          <a class="agency-button secondary" href="/api/agency-offers/provision?offer=ai-ugc-video-ads">Provisioning schema</a>
+          <a class="agency-button secondary" href="/agency-offers/examples/ai-ugc-video-ads">Live example</a>
+        </div>
+      </section>
+      <section class="agency-section offer-layout">
+        <article class="offer-panel">
+          <h2>Outcome</h2>
+          <p>AI-generated UGC-style product videos, scripts, hooks, and testing variants.</p>
+          <h2>Who buys it</h2>
+          <p>Ecommerce brands that need 10 to 40 new ad creatives each month.</p>
+          <h2>Customer receives</h2>
+          <ul><li>10, 20, or 30 UGC-style creatives</li><li>Hook bank and script variants</li><li>Product-shot generation notes</li><li>Review and approval board</li><li>Export folder organized by platform</li></ul>
+          <h2>Agent delivery workflow</h2>
+          <ol><li>Extract product benefits and customer language.</li><li>Generate hooks, shots, scripts, and visual prompts.</li><li>Render approved AI video assets.</li><li>Package platform-specific versions.</li><li>Track which angles should be remixed next.</li></ol>
+        </article>
+        <aside class="offer-panel">
+          <h2>Commercial model</h2>
+          <div class="offer-price">
+            <div><strong>Setup</strong>$750+</div>
+            <div><strong>Monthly</strong>$1,500 to $4,000</div>
+            <div><strong>Performance</strong>$100 to $300 per creative</div>
+            <div><strong>Timeline</strong>3 to 7 days per batch</div>
+          </div>
+          <h3>Required intake</h3>
+          <ul><li>business_name</li><li>owner_email</li><li>product_photos</li><li>brand_guidelines</li><li>approved_claims</li><li>target_audience</li><li>ad_platforms</li></ul>
+          <h3>Provisioned assets</h3>
+          <ul><li>UGC production board</li><li>Video prompt pack</li><li>Platform export checklist</li><li>Creative ledger</li></ul>
+          <h3>Metrics</h3>
+          <ul><li>creative volume</li><li>cost per creative</li><li>approval cycle time</li><li>winning angle count</li></ul>
+        </aside>
+      </section>
+      <section class="agency-section offer-layout">
+        <article class="offer-panel">
+          <h2>Approval gates</h2>
+          <ul><li>Customer approves the intake summary and offer economics.</li><li>Customer approves credentials, brand constraints, and compliance rules.</li><li>Customer approves the first live output before automated rollout.</li></ul>
+        </article>
+        <article class="offer-panel">
+          <h2>Fit notes</h2>
+          <p><strong>Best for:</strong> Brands with frequent paid creative fatigue.</p>
+          <p><strong>Not for:</strong> Brands that require human-only talent contracts.</p>
+          <p><strong>Source themes:</strong> Six AI agency offers, YC-style outcome agency</p>
+        </article>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
