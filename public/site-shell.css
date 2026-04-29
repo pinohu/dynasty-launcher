@@ -553,6 +553,20 @@ body.yd-has-shell .section-title {
   font-weight: 800 !important;
 }
 
+body.yd-has-shell .hero-card h2,
+body.yd-has-shell .context-box h2,
+body.yd-has-shell .use-card h2,
+body.yd-has-shell .proof-card h2 {
+  font-size: clamp(21px, 2.2vw, 30px) !important;
+  line-height: 1.14 !important;
+  font-weight: 800 !important;
+  overflow-wrap: anywhere !important;
+}
+
+body.yd-has-shell .proof-card h2 {
+  font-size: clamp(20px, 2vw, 27px) !important;
+}
+
 body.yd-has-shell h3 {
   font-size: 18px !important;
   line-height: 1.25 !important;
