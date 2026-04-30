@@ -22,6 +22,9 @@ export const maxDuration = 300;
 
 import { generateTyped } from './ai-sdk.js';
 import { startTrace } from './_langfuse.js';
+import { safeParseScore } from '../lib/scoring/parse.ts';
+import { fallbackScore } from '../lib/scoring/fallback.ts';
+import { recordScoringMetric } from '../lib/scoring/metrics.js';
 import {
   aiCorsHeaders,
   authorizeAiRequest,
@@ -45,6 +48,7 @@ async function loadLangGraph() {
 async function nodeProposeAll(state) {
   const { idea, scorecardJSON, frameworkAnalyses, models, sseWrite } = state;
   const proposals = await Promise.all(models.map(async (m) => {
+    console.log('SCORING_EXECUTED', { ideaId: state.sessionId || 'unknown', model: m.id, stage: 'pivot_propose' });
     const prompt = `You are ${m.label}, a world-class business strategist. A user described this business idea and received a viability score of ${state.composite}/10.
 
 ORIGINAL IDEA: ${idea}
@@ -136,15 +140,17 @@ function nodeConsensus(state) {
       if (r._failed || !r.ratings) continue;
       const entry = r.ratings[p._model];
       const s = entry && typeof entry === 'object' ? entry.score : entry;
-      if (typeof s === 'number') scores.push(s);
+      const numeric = Number(s);
+      if (Number.isFinite(numeric)) scores.push(numeric);
     }
     return {
       ...p,
       votes: (tally && tally[p._model]) || 0,
-      avgScore: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0,
+      avgScore: scores.length ? scores.sort((a,b)=>a-b)[Math.floor(scores.length/2)] : 0,
     };
   }).sort((a, b) => b.votes - a.votes || b.avgScore - a.avgScore);
-  return { ...state, ranked: scored, winner: scored[0], runnerUp: scored[1] };
+  const winnerScore = scored[0] ? toIdeaScore(scored[0]) : fallbackScore();
+  return { ...state, ranked: scored, winner: scored[0], runnerUp: scored[1], winnerScore };
 }
 
 async function nodeDevilsAdvocate(state) {
@@ -189,6 +195,36 @@ Return ONE critique broken into 5 focused sections: market_reality, moat_weaknes
   return { ...state, devilsCritique: merged, critiqueCount: good.length };
 }
 
+
+function logScoringObservability(input, raw_ai_output, parsed_output, final_score, fallback_used) {
+  console.log('SCORING_OBSERVABILITY', {
+    stage: 'scoring',
+    input,
+    raw_ai_output,
+    parsed_output,
+    final_score,
+    fallback_used,
+  });
+}
+
+function toIdeaScore(candidate) {
+  const rough = {
+    score: Number(candidate?.predicted_composite_score ?? 0) * 10,
+    breakdown: {
+      demand: Number(candidate?.avgScore ?? 5) * 10,
+      competition: Number(candidate?.avgScore ?? 5) * 10,
+      monetization: Number(candidate?.predicted_composite_score ?? 5) * 10,
+      feasibility: Number(candidate?.predicted_composite_score ?? 5) * 10,
+    },
+    reasoning: String(candidate?.reasoning || 'Derived from pivot scoring pipeline'),
+    confidence: 0.5,
+  };
+  const parsed = safeParseScore(rough);
+  const fallbackUsed = parsed.reasoning === fallbackScore().reasoning;
+  recordScoringMetric({ finalScore: parsed.score, fallbackUsed, failed: fallbackUsed });
+  logScoringObservability(candidate, rough, parsed, parsed.score, fallbackUsed);
+  return parsed;
+}
 // ── Graph construction (uses LangGraph when available, fallback sequence otherwise) ──
 async function runGraph(initialState) {
   const lg = await loadLangGraph();
