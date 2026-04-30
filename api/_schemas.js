@@ -143,6 +143,13 @@ export const OfferIntelligenceSchema = {
   output: OfferIntelligenceOutput,
 };
 
+
+export const OIEAdjustment = z.object({
+  adjustment: z.number().min(-20).max(20),
+  confidence: z.number().min(0).max(1),
+  reasoning: z.string(),
+});
+
 export const SCHEMAS = {
   viability: ViabilityScorecard,
   pivot: PivotProposal,
@@ -151,4 +158,5 @@ export const SCHEMAS = {
   build_diagnostic: VercelBuildDiagnostic,
   devils_critique: DevilsCritique,
   offer_intelligence: OfferIntelligenceOutput,
+  oie_adjustment: OIEAdjustment,
 };
